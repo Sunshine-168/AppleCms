@@ -20,14 +20,16 @@
         "phpunit/phpunit": "^11.5.3"
     },
     "autoload": {
+
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/AdminHelper.php",
-            "app/Helpers/ViewHelper.php"
+            "app/Support/load.php",
+            "app/Support/AdminHelper.php",
+            "app/Support/ViewHelper.php"
         ]
     },
     "autoload-dev": {
