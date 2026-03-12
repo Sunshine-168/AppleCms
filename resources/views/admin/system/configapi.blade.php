@@ -1,8 +1,8 @@
-@include('../../../application/admin/view/public/head')
+@include('admin.public.head')
 
 <div class="page-container">
-        <form class="layui-form layui-form-pane" action="">
-            <input type="hidden" name="__token__" value="{{ $Request.token }}" />
+        <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configapi') }}">
+            @csrf
             <div class="layui-tab" lay-filter="tb1">
                 <ul class="layui-tab-title">
                     <li class="layui-this" lay-id="configapi_1">{{ __('admin.admin/system/configapi/vod') }}</li>
@@ -14,29 +14,29 @@
                 <div class="layui-tab-content">
                     <div class="layui-tab-item layui-show">
 
-                        <blockquote class="layui-elem-quote layui-quote-nm">
-                            {{ __('admin.admin/system/configapi/vod_tip') }}
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                            {!! __('admin.admin/system/configapi/vod_tip') !!}
                         </blockquote>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configapi/status') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="api[vod][status]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['vod']['status'] != 1")checked @endif>
-                        <input type="radio" name="api[vod][status]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['vod']['status'] == 1")checked @endif>
+                        <input type="radio" name="vod[status]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'vod.status', '0') !== '1')>
+                        <input type="radio" name="vod[status]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'vod.status', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configapi/charge') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="api[vod][charge]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['vod']['charge'] != 1")checked @endif>
-                        <input type="radio" name="api[vod][charge]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['vod']['charge'] == 1")checked @endif>
+                        <input type="radio" name="vod[charge]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'vod.charge', '0') !== '1')>
+                        <input type="radio" name="vod[charge]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'vod.charge', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configapi/detail_inc_hits') }}：</label>
                     <div class="layui-input-inline w200">
-                        <input type="radio" name="api[vod][detail_inc_hits]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['vod']['detail_inc_hits'] != 1")checked @endif>
-                        <input type="radio" name="api[vod][detail_inc_hits]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['vod']['detail_inc_hits'] == 1")checked @endif>
+                        <input type="radio" name="vod[detail_inc_hits]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'vod.detail_inc_hits', '0') !== '1')>
+                        <input type="radio" name="vod[detail_inc_hits]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'vod.detail_inc_hits', '0') === '1')>
                     </div>
                     <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configapi/detail_inc_hits_tip') }}</div>
                 </div>
@@ -45,35 +45,35 @@
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configapi/pagesize') }}：</label>
                     <div class="layui-input-block">
-                        <input type="text" name="api[vod][pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ $config['api']['vod']['pagesize'] }}" class="layui-input">
+                        <input type="text" name="vod[pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ data_get($config, 'vod.pagesize', '') }}" class="layui-input">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configapi/imgurl') }}：</label>
                     <div class="layui-input-block">
-                        <input type="text" name="api[vod][imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ $config['api']['vod']['imgurl'] }}" class="layui-input">
+                        <input type="text" name="vod[imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ data_get($config, 'vod.imgurl', '') }}" class="layui-input">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configapi/typefilter') }}：</label>
                     <div class="layui-input-block">
-                        <input type="text" name="api[vod][typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ $config['api']['vod']['typefilter'] }}" class="layui-input">
+                        <input type="text" name="vod[typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ data_get($config, 'vod.typefilter', '') }}" class="layui-input">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configapi/datafilter') }}：</label>
                     <div class="layui-input-block">
-                        <input type="text" name="api[vod][datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip') }}" value="{{ $config['api']['vod']['datafilter'] }}" class="layui-input">
+                        <input type="text" name="vod[datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip') }}" value="{{ data_get($config, 'vod.datafilter', '') }}" class="layui-input">
                     </div>
                 </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/cachetime') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[vod][cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ $config['api']['vod']['cachetime'] }}" class="layui-input">
+                                <input type="text" name="vod[cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ data_get($config, 'vod.cachetime', '') }}" class="layui-input">
                             </div>
                         </div>
 
@@ -81,13 +81,13 @@
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/from') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[vod][from]" placeholder="{{ __('admin.admin/system/configapi/from_tip') }}" value="{{ $config['api']['vod']['from'] }}" class="layui-input">
+                                <input type="text" name="vod[from]" placeholder="{{ __('admin.admin/system/configapi/from_tip') }}" value="{{ data_get($config, 'vod.from', '') }}" class="layui-input">
                             </div>
                         </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configapi/auth') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="api[vod][auth]" class="layui-textarea">{{ $config['api']['vod']['auth']|mac_replace_text }}</textarea>
+                        <textarea name="vod[auth]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'vod.auth', '')) }}</textarea>
                     </div>
                 </div>
 
@@ -95,23 +95,23 @@
 
                     <div class="layui-tab-item">
 
-                        <blockquote class="layui-elem-quote layui-quote-nm">
-                            {{ __('admin.admin/system/configapi/art_tip') }}
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                            {!! __('admin.admin/system/configapi/art_tip') !!}
                         </blockquote>
 
 
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/status') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[art][status]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['art']['status'] != 1")checked @endif>
-                                <input type="radio" name="api[art][status]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['art']['status'] == 1")checked @endif>
+                                <input type="radio" name="art[status]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'art.status', '0') !== '1')>
+                                <input type="radio" name="art[status]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'art.status', '0') === '1')>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/charge') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[art][charge]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['art']['charge'] != 1")checked @endif>
-                                <input type="radio" name="api[art][charge]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['art']['charge'] == 1")checked @endif>
+                                <input type="radio" name="art[charge]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'art.charge', '0') !== '1')>
+                                <input type="radio" name="art[charge]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'art.charge', '0') === '1')>
                             </div>
                         </div>
 
@@ -119,41 +119,41 @@
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/pagesize') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[art][pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ $config['api']['art']['pagesize'] }}" class="layui-input">
+                                <input type="text" name="art[pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ data_get($config, 'art.pagesize', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/imgurl') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[art][imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ $config['api']['art']['imgurl'] }}" class="layui-input">
+                                <input type="text" name="art[imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ data_get($config, 'art.imgurl', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/typefilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[art][typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ $config['api']['art']['typefilter'] }}" class="layui-input">
+                                <input type="text" name="art[typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ data_get($config, 'art.typefilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/datafilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[art][datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_art') }}" value="{{ $config['api']['art']['datafilter'] }}" class="layui-input">
+                                <input type="text" name="art[datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_art') }}" value="{{ data_get($config, 'art.datafilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/cachetime') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[art][cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ $config['api']['art']['cachetime'] }}" class="layui-input">
+                                <input type="text" name="art[cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ data_get($config, 'art.cachetime', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/auth') }}：</label>
                             <div class="layui-input-block">
-                                <textarea name="api[art][auth]" class="layui-textarea">{{ $config['api']['art']['auth']|mac_replace_text }}</textarea>
+                                <textarea name="art[auth]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'art.auth', '')) }}</textarea>
                             </div>
                         </div>
 
@@ -161,23 +161,23 @@
 
                     <div class="layui-tab-item">
 
-                        <blockquote class="layui-elem-quote layui-quote-nm">
-                            {{ __('admin.admin/system/configapi/actor_tip') }}
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                            {!! __('admin.admin/system/configapi/actor_tip') !!}
                         </blockquote>
 
 
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/status') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[actor][status]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['actor']['status'] != 1")checked @endif>
-                                <input type="radio" name="api[actor][status]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['actor']['status'] == 1")checked @endif>
+                                <input type="radio" name="actor[status]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'actor.status', '0') !== '1')>
+                                <input type="radio" name="actor[status]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'actor.status', '0') === '1')>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/charge') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[actor][charge]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['actor']['charge'] != 1")checked @endif>
-                                <input type="radio" name="api[actor][charge]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['actor']['charge'] == 1")checked @endif>
+                                <input type="radio" name="actor[charge]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'actor.charge', '0') !== '1')>
+                                <input type="radio" name="actor[charge]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'actor.charge', '0') === '1')>
                             </div>
                         </div>
 
@@ -185,41 +185,41 @@
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/pagesize') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[actor][pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ $config['api']['actor']['pagesize'] }}" class="layui-input">
+                                <input type="text" name="actor[pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ data_get($config, 'actor.pagesize', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/imgurl') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[actor][imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ $config['api']['actor']['imgurl'] }}" class="layui-input">
+                                <input type="text" name="actor[imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ data_get($config, 'actor.imgurl', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/typefilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[actor][typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ $config['api']['actor']['typefilter'] }}" class="layui-input">
+                                <input type="text" name="actor[typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ data_get($config, 'actor.typefilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/datafilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[actor][datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_actor') }}" value="{{ $config['api']['actor']['datafilter'] }}" class="layui-input">
+                                <input type="text" name="actor[datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_actor') }}" value="{{ data_get($config, 'actor.datafilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/cachetime') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[actor][cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ $config['api']['actor']['cachetime'] }}" class="layui-input">
+                                <input type="text" name="actor[cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ data_get($config, 'actor.cachetime', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/auth') }}：</label>
                             <div class="layui-input-block">
-                                <textarea name="api[actor][auth]" class="layui-textarea">{{ $config['api']['actor']['auth']|mac_replace_text }}</textarea>
+                                <textarea name="actor[auth]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'actor.auth', '')) }}</textarea>
                             </div>
                         </div>
 
@@ -227,23 +227,23 @@
 
                     <div class="layui-tab-item">
 
-                        <blockquote class="layui-elem-quote layui-quote-nm">
-                            {{ __('admin.admin/system/configapi/role_tip') }}
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                            {!! __('admin.admin/system/configapi/role_tip') !!}
                         </blockquote>
 
 
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/status') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[role][status]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['role']['status'] != 1")checked @endif>
-                                <input type="radio" name="api[role][status]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['role']['status'] == 1")checked @endif>
+                                <input type="radio" name="role[status]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'role.status', '0') !== '1')>
+                                <input type="radio" name="role[status]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'role.status', '0') === '1')>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/charge') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[role][charge]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['role']['charge'] != 1")checked @endif>
-                                <input type="radio" name="api[role][charge]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['role']['charge'] == 1")checked @endif>
+                                <input type="radio" name="role[charge]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'role.charge', '0') !== '1')>
+                                <input type="radio" name="role[charge]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'role.charge', '0') === '1')>
                             </div>
                         </div>
 
@@ -251,41 +251,41 @@
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/pagesize') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[role][pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ $config['api']['role']['pagesize'] }}" class="layui-input">
+                                <input type="text" name="role[pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ data_get($config, 'role.pagesize', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/imgurl') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[role][imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ $config['api']['role']['imgurl'] }}" class="layui-input">
+                                <input type="text" name="role[imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ data_get($config, 'role.imgurl', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/typefilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[role][typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ $config['api']['role']['typefilter'] }}" class="layui-input">
+                                <input type="text" name="role[typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ data_get($config, 'role.typefilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/datafilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[role][datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_role') }}" value="{{ $config['api']['role']['datafilter'] }}" class="layui-input">
+                                <input type="text" name="role[datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_role') }}" value="{{ data_get($config, 'role.datafilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/cachetime') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[role][cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ $config['api']['role']['cachetime'] }}" class="layui-input">
+                                <input type="text" name="role[cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ data_get($config, 'role.cachetime', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/auth') }}：</label>
                             <div class="layui-input-block">
-                                <textarea name="api[role][auth]" class="layui-textarea">{{ $config['api']['role']['auth']|mac_replace_text }}</textarea>
+                                <textarea name="role[auth]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'role.auth', '')) }}</textarea>
                             </div>
                         </div>
 
@@ -293,23 +293,23 @@
 
                     <div class="layui-tab-item">
 
-                        <blockquote class="layui-elem-quote layui-quote-nm">
-                            {{ __('admin.admin/system/configapi/website_tip') }}
+                        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                            {!! __('admin.admin/system/configapi/website_tip') !!}
                         </blockquote>
 
 
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/status') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[website][status]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['website']['status'] != 1")checked @endif>
-                                <input type="radio" name="api[website][status]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['website']['status'] == 1")checked @endif>
+                                <input type="radio" name="website[status]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'website.status', '0') !== '1')>
+                                <input type="radio" name="website[status]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'website.status', '0') === '1')>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/charge') }}：</label>
                             <div class="layui-input-block">
-                                <input type="radio" name="api[website][charge]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['api']['website']['charge'] != 1")checked @endif>
-                                <input type="radio" name="api[website][charge]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['api']['website']['charge'] == 1")checked @endif>
+                                <input type="radio" name="website[charge]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'website.charge', '0') !== '1')>
+                                <input type="radio" name="website[charge]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'website.charge', '0') === '1')>
                             </div>
                         </div>
 
@@ -317,41 +317,41 @@
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/pagesize') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[website][pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ $config['api']['website']['pagesize'] }}" class="layui-input">
+                                <input type="text" name="website[pagesize]" placeholder="{{ __('admin.admin/system/configapi/pagesize_tip') }}" value="{{ data_get($config, 'website.pagesize', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/imgurl') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[website][imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ $config['api']['website']['imgurl'] }}" class="layui-input">
+                                <input type="text" name="website[imgurl]" placeholder="{{ __('admin.admin/system/configapi/imgurl_tip') }}" value="{{ data_get($config, 'website.imgurl', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/typefilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[website][typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ $config['api']['website']['typefilter'] }}" class="layui-input">
+                                <input type="text" name="website[typefilter]" placeholder="{{ __('admin.admin/system/configapi/typefilter_tip') }}" value="{{ data_get($config, 'website.typefilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/datafilter') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[website][datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_website') }}" value="{{ $config['api']['website']['datafilter'] }}" class="layui-input">
+                                <input type="text" name="website[datafilter]" placeholder="{{ __('admin.admin/system/configapi/datafilter_tip_website') }}" value="{{ data_get($config, 'website.datafilter', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">
                                 {{ __('admin.admin/system/configapi/cachetime') }}：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="api[website][cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ $config['api']['website']['cachetime'] }}" class="layui-input">
+                                <input type="text" name="website[cachetime]" placeholder="{{ __('admin.admin/system/configapi/cachetime_tip') }}" value="{{ data_get($config, 'website.cachetime', '') }}" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">{{ __('admin.admin/system/configapi/auth') }}：</label>
                             <div class="layui-input-block">
-                                <textarea name="api[website][auth]" class="layui-textarea">{{ $config['api']['website']['auth']|mac_replace_text }}</textarea>
+                                <textarea name="website[auth]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'website.auth', '')) }}</textarea>
                             </div>
                         </div>
 
@@ -368,7 +368,7 @@
     </form>
 </div>
 
-@include('../../../application/admin/view/public/foot')
+@include('admin.public.foot')
 <script type="text/javascript" src="{{ asset('static') }}/js/jquery.cookie.js"></script>
 <script type="text/javascript">
     layui.use(['element', 'form', 'layer'], function() {
