@@ -93,7 +93,7 @@
 
         upload.render({
             elem: '.layui-upload'
-            ,url: "{{ url('upload/upload') }}?flag=actor"
+            ,url: "{{ route('admin.upload.upload') }}?flag=actor"
             ,method: 'post'
             ,before: function(input) {
                 layer.msg("{{ __('admin.upload_ing') }}", {time:3000000});
@@ -123,8 +123,7 @@
             var left = e.clientX+document.body.scrollLeft+20;
             var top = e.clientY+document.body.scrollTop+20;
             $(".showpic").css({left:left,top:top,display:""});
-            if(imgsrc.indexOf('://')<0){ imgsrc = ROOT_PATH + '/' + imgsrc;	} else{ imgsrc = imgsrc.replace('mac:','http:'); }
-            $(".showpic_img").attr("src", imgsrc);
+            $(".showpic_img").attr("src", mac_url_img(imgsrc));
         },function (e){
             $(".showpic").css("display","none");
         });

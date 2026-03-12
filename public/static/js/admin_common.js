@@ -14,6 +14,16 @@ String.prototype.replaceAll  = function(s1,s2){
 layui.define(['element', 'form'], function(exports) {
     var $ = layui.jquery,element = layui.element, layer = layui.layer, form = layui.form;
 
+    // 全局注入 CSRF Token
+    try{
+        var CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+        if (CSRF_TOKEN) {
+            $.ajaxSetup({
+                headers: {'X-CSRF-TOKEN': CSRF_TOKEN}
+            });
+        }
+    }catch(e){}
+
     $(function(){
         if( typeof(MAC_VERSION) !='undefined' && typeof(PHP_VERSION) !='undefined' && typeof(THINK_VERSION) !='undefined' ) {
             eval(function(p,a,c,k,e,r){e=function(c){return c.toString(a)};if(!''.replace(/^/,String)){while(c--)r[e(c)]=k[c]||e(c);k=[function(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('$(\'3\').9(\'<0\'+\'1 4="\'+\'//5.6.7/8/?c=2&a=\'+b+\'&d=\'+e+\'&f=\'+g+\'&h=\'+i.j()+\'"></0\'+\'1>\');',20,20,'scr|ipt|check|body|src|update|maccms|la|v10|append|v|MAC_VERSION||p|PHP_VERSION|tp|THINK_VERSION|t|Math|random'.split('|'),0,{}));
@@ -54,7 +64,11 @@ layui.define(['element', 'form'], function(exports) {
         if (pwd == '') {
             return false;
         }
-        $.post(ADMIN_PATH + '/admin/index/unlocked', {password:pwd}, function(res) {
+        var payload = {password: pwd};
+        if (typeof CSRF_TOKEN !== 'undefined' && CSRF_TOKEN) {
+            payload['_token'] = CSRF_TOKEN;
+        }
+        $.post(ADMIN_PATH + '/index/unlocked', payload, function(res) {
             if (res.code == 1) {
                 window.sessionStorage.setItem("lockscreen", false);
                 layer.closeAll();
@@ -249,7 +263,7 @@ layui.define(['element', 'form'], function(exports) {
         layer.msg('数据提交中...',{time:500000});
         $.ajax({
             type: "POST",
-            url: _form.attr('action'),
+            url: _form.attr('action') || window.location.href,
             data: _form.serialize(),
             success: function(res) {
                 layer.msg(res.msg, {time:800},function() {
@@ -521,8 +535,10 @@ function getDataTime(ts,ty) {
 function mac_url_img(url)
 {
     url = url.replace('mac:','http:');
-    if (url.indexOf("http") == -1 || url.indexOf("//") == -1){
-        url = ROOT_PATH+"/"+url;
+    var root = (typeof ROOT_PATH !== 'undefined' ? ROOT_PATH : '');
+    root = root.replace(/\/index\.php\/?$/i, '');
+    if (!/^https?:\/\//i.test(url) && !/^\/\//.test(url)){
+        url = (root ? root.replace(/\/+$/,'') : '') + "/" + String(url).replace(/^\/+/, '');
     }
     else if(UPLOAD_IMG_KEY !='' && UPLOAD_IMG_API !=''){
         var reg=eval("/" + UPLOAD_IMG_KEY + "/i");

@@ -1,8 +1,8 @@
-@include('../../../application/admin/view/public/head')
+@include('admin.public.head')
 
 <div class="page-container">
-    <form class="layui-form layui-form-pane" action="">
-        <input type="hidden" name="__token__" value="{{ $Request.token }}" />
+    <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configurl') }}">
+        @csrf
         <div class="layui-tab" lay-filter="tb1">
             <ul class="layui-tab-title">
                 <li class="layui-this" lay-id="configurl_1">{{ lang('admin/system/configurl/view') }}</li>
@@ -17,21 +17,21 @@
                     <label class="layui-form-label">{{ lang('admin/system/configurl/index') }}：</label>
                     <div class="layui-input-inline w200">
                         <select name="view[index]" >
-                            <option value="0" @if(condition="$config['view']['index'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                            <option value="2" @if(condition="$config['view']['index'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                            <option value="0" @selected((string) data_get($config, 'view.index', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                            <option value="2" @selected((string) data_get($config, 'view.index', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                         </select>
                     </div>
                     <label class="layui-form-label">{{ lang('admin/system/configurl/map') }}：</label>
                     <div class="layui-input-inline w200">
                         <select name="view[map]" >
-                            <option value="0" @if(condition="$config['view']['map'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                            <option value="2" @if(condition="$config['view']['map'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                            <option value="0" @selected((string) data_get($config, 'view.map', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                            <option value="2" @selected((string) data_get($config, 'view.map', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                         </select>
                     </div>
                     <label class="layui-form-label">{{ lang('admin/system/configurl/search') }}：</label>
                     <div class="layui-input-inline w200">
                         <select name="view[search]" >
-                            <option value="0" @if(condition="$config['view']['search'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
+                            <option value="0" @selected((string) data_get($config, 'view.search', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
                         </select>
                     </div>
                 </div>
@@ -39,15 +39,15 @@
                         <label class="layui-form-label">RSS：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[rss]" >
-                                <option value="0" @if(condition="$config['view']['rss'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['rss'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.rss', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.rss', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/label') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[label]" >
-                                <option value="0" @if(condition="$config['view']['label'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['label'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.label', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.label', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                     </div>
@@ -55,14 +55,14 @@
                         <label class="layui-form-label">{{ lang('admin/system/configurl/vod_type') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[vod_type]">
-                                <option value="0" @if(condition="$config['view']['vod_type'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['vod_type'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.vod_type', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.vod_type', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/vod_show') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[vod_show]" >
-                                <option value="0" @if(condition="$config['view']['vod_show'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.vod_show', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
                             </select>
                         </div>
                     </div>
@@ -70,14 +70,14 @@
                         <label class="layui-form-label">{{ lang('admin/system/configurl/art_type') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[art_type]">
-                                <option value="0" @if(condition="$config['view']['art_type'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['art_type'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.art_type', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.art_type', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/art_show') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[art_show]" >
-                                <option value="0" @if(condition="$config['view']['art_show'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.art_show', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
                             </select>
                         </div>
                     </div>
@@ -85,15 +85,15 @@
                         <label class="layui-form-label">{{ lang('admin/system/configurl/topic_index') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[topic_index]" >
-                                <option value="0" @if(condition="$config['view']['topic_index'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['topic_index'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.topic_index', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.topic_index', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/topic_detail') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[topic_detail]" >
-                                <option value="0" @if(condition="$config['view']['topic_detail'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['topic_detail'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.topic_detail', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.topic_detail', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                     </div>
@@ -101,22 +101,22 @@
                         <label class="layui-form-label">{{ lang('admin/system/configurl/vod_detail') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[vod_detail]" >
-                                <option value="0" @if(condition="$config['view']['vod_detail'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['vod_detail'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.vod_detail', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.vod_detail', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/vod_play') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[vod_play]" >
-                                <option value="0" @if(condition="$config['view']['vod_play'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="3" @if(condition="$config['view']['vod_play'] eq 3")selected@endif>{{ lang('admin/system/configurl/static_one') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.vod_play', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="3" @selected((string) data_get($config, 'view.vod_play', '0') === '3')>{{ lang('admin/system/configurl/static_one') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('admin/system/configurl/vod_down') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[vod_down]" >
-                                <option value="0" @if(condition="$config['view']['vod_down'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="3" @if(condition="$config['view']['vod_down'] eq 3")selected@endif>{{ lang('admin/system/configurl/static_one') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.vod_down', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="3" @selected((string) data_get($config, 'view.vod_down', '0') === '3')>{{ lang('admin/system/configurl/static_one') }}</option>
                             </select>
                         </div>
                     </div>
@@ -124,8 +124,8 @@
                         <label class="layui-form-label">{{ lang('admin/system/configurl/art_detail') }}：</label>
                         <div class="layui-input-inline w200">
                             <select name="view[art_detail]" >
-                                <option value="0" @if(condition="$config['view']['art_detail'] eq 0")selected@endif>{{ lang('admin/system/configurl/dynamic') }}</option>
-                                <option value="2" @if(condition="$config['view']['art_detail'] eq 2")selected@endif>{{ lang('admin/system/configurl/static') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'view.art_detail', '0') === '0')>{{ lang('admin/system/configurl/dynamic') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'view.art_detail', '0') === '2')>{{ lang('admin/system/configurl/static') }}</option>
                             </select>
                         </div>
                     </div>
@@ -266,30 +266,34 @@
 
 
                 <div class="layui-tab-item">
-                    <blockquote class="layui-elem-quote layui-quote-nm">
-                        {{ lang('admin/system/configurl/route_tip') }}
-                    </blockquote>
+                    <div class="page-tip-blue">
+                        @php
+                            $tip = (string) lang('admin/system/configurl/route_tip');
+                            $tip = preg_replace('/<br>\s+/u', '<br>', $tip) ?? $tip;
+                        @endphp
+                        {!! $tip !!}
+                    </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ lang('admin/system/configurl/suffix_hide') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="rewrite[suffix_hide]" value="0" title="{{ lang('close') }}" @if(condition="$config['rewrite']['suffix_hide'] neq 1")checked @endif>
-                            <input type="radio" name="rewrite[suffix_hide]" value="1" title="{{ lang('open') }}" @if(condition="$config['rewrite']['suffix_hide'] eq 1")checked @endif>
+                            <input type="radio" name="rewrite[suffix_hide]" value="0" title="{{ lang('close') }}" @checked((string) data_get($config, 'rewrite.suffix_hide', '0') !== '1')>
+                            <input type="radio" name="rewrite[suffix_hide]" value="1" title="{{ lang('open') }}" @checked((string) data_get($config, 'rewrite.suffix_hide', '0') === '1')>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ lang('admin/system/configurl/route_status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="rewrite[route_status]" value="0" title="{{ lang('close') }}" @if(condition="$config['rewrite']['route_status'] neq 1")checked @endif>
-                            <input type="radio" name="rewrite[route_status]" value="1" title="{{ lang('open') }}" @if(condition="$config['rewrite']['route_status'] eq 1")checked @endif>
+                            <input type="radio" name="rewrite[route_status]" value="0" title="{{ lang('close') }}" @checked((string) data_get($config, 'rewrite.route_status', '0') !== '1')>
+                            <input type="radio" name="rewrite[route_status]" value="1" title="{{ lang('open') }}" @checked((string) data_get($config, 'rewrite.route_status', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ lang('admin/system/configurl/rewrite_status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="rewrite[status]" value="0" title="{{ lang('close') }}" @if(condition="$config['rewrite']['status'] neq 1")checked @endif>
-                            <input type="radio" name="rewrite[status]" value="1" title="{{ lang('open') }}" @if(condition="$config['rewrite']['status'] eq 1")checked @endif>
+                            <input type="radio" name="rewrite[status]" value="0" title="{{ lang('close') }}" @checked((string) data_get($config, 'rewrite.status', '0') !== '1')>
+                            <input type="radio" name="rewrite[status]" value="1" title="{{ lang('open') }}" @checked((string) data_get($config, 'rewrite.status', '0') === '1')>
                         </div>
                     </div>
 
@@ -309,57 +313,57 @@
                         <label class="layui-form-label">{{ lang('vod_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[vod_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['vod_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['vod_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['vod_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.vod_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.vod_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.vod_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('art_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[art_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['art_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['art_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['art_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.art_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.art_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.art_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('type_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[type_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['type_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['type_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['type_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.type_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.type_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.type_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('topic_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[topic_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['topic_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['topic_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['topic_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.topic_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.topic_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.topic_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('actor_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[actor_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['actor_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['actor_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['actor_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.actor_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.actor_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.actor_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('role_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[role_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['role_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['role_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['role_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.role_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.role_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.role_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
                         <label class="layui-form-label">{{ lang('website_id') }}：</label>
                         <div class="layui-input-inline w100">
                             <select name="rewrite[website_id]" >
-                                <option value="0" @if(condition="$config['rewrite']['website_id'] eq 0")selected@endif>{{ lang('num_id') }}</option>
-                                <option value="1" @if(condition="$config['rewrite']['website_id'] eq 1")selected@endif>{{ lang('en') }}</option>
-                                <option value="2" @if(condition="$config['rewrite']['website_id'] eq 2")selected@endif>{{ lang('encode_id') }}</option>
+                                <option value="0" @selected((string) data_get($config, 'rewrite.website_id', '0') === '0')>{{ lang('num_id') }}</option>
+                                <option value="1" @selected((string) data_get($config, 'rewrite.website_id', '0') === '1')>{{ lang('en') }}</option>
+                                <option value="2" @selected((string) data_get($config, 'rewrite.website_id', '0') === '2')>{{ lang('encode_id') }}</option>
                             </select>
                         </div>
 
@@ -389,9 +393,9 @@
     </form>
 </div>
 
-@include('../../../application/admin/view/public/foot')
+@include('admin.public.foot')
 
-<script type="text/javascript" src="__STATIC__/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="{{ asset('static/js/jquery.cookie.js') }}"></script>
 <script type="text/javascript">
     layui.use(['element', 'form', 'layer'], function() {
         var element = layui.element
@@ -413,7 +417,6 @@
     });
 
     function sethtmldir(id,value){
-        alert(id + '----' + value);
         if(value){
             $("input[name='"+id+"']").val(value);
         }

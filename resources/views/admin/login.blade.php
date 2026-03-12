@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+    <title>{{ __('admin/index/login/title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -12,7 +12,7 @@
             align-items: center;
             justify-content: center;
             background-color: #f5f5f5;
-            @if($background)
+            @if(!empty($background))
             background-image: url('{{ $background }}');
             background-size: cover;
             background-position: center;
@@ -31,31 +31,47 @@
 <body>
 
 <div class="login-card">
-    <h3 class="text-center mb-4">Admin Login</h3>
+    <h3 class="text-center mb-4">{{ __('admin/index/login/tip_sys') }}</h3>
     
     @if($errors->any())
+        @php
+            $translatedErrors = collect($errors->all())->map(function ($error) {
+                if ($error === 'Invalid credentials') {
+                    return __('admin/index/login/error_invalid');
+                }
+                if ($error === 'Account disabled') {
+                    return __('admin/index/login/error_disabled');
+                }
+                return $error;
+            });
+        @endphp
         <div class="alert alert-danger">
-            {{ $errors->first() }}
+            <div class="fw-semibold mb-1">{{ __('admin/index/login/error_title') }}</div>
+            <div class="small">
+                @foreach($translatedErrors as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
         </div>
     @endif
 
     <form action="{{ route('admin.login') }}" method="POST">
         @csrf
         <div class="mb-3">
-            <label for="admin_name" class="form-label">Username</label>
-            <input type="text" class="form-control" id="admin_name" name="admin_name" required>
+            <label for="admin_name" class="form-label">{{ __('admin/index/login/filed_no') }}</label>
+            <input type="text" class="form-control" id="admin_name" name="admin_name" value="{{ old('admin_name') }}" autocomplete="username" autofocus required>
         </div>
         <div class="mb-3">
-            <label for="admin_pwd" class="form-label">Password</label>
-            <input type="password" class="form-control" id="admin_pwd" name="admin_pwd" required>
+            <label for="admin_pwd" class="form-label">{{ __('admin/index/login/filed_pass') }}</label>
+            <input type="password" class="form-control" id="admin_pwd" name="admin_pwd" autocomplete="current-password" required>
         </div>
         <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary">{{ __('admin/index/login/btn_submit') }}</button>
         </div>
     </form>
     
     <div class="text-center mt-3 text-muted">
-        <small>Maccms Laravel Migration</small>
+        <small>{{ __('admin/index/login/tip_welcome') }}</small>
     </div>
 </div>
 

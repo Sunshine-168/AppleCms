@@ -13,8 +13,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        require_once app_path('Helpers/MacHelper.php');
-
         $this->app->singleton(TagService::class, function ($app) {
             return new TagService();
         });
@@ -27,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
     {
         // 注册 maccms 标签指令
         $this->registerMaccmsTags();
+
+        $this->app['translator']->handleMissingKeysUsing(function ($key, $replace, $locale, $fallback) {
+            if (is_string($key) && str_starts_with($key, 'admin.admin/')) {
+                $fixedKey = substr($key, 6);
+                return $this->app['translator']->get($fixedKey, $replace, $locale, $fallback);
+            }
+
+            return $key;
+        });
     }
 
     /**

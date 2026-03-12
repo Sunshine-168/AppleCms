@@ -1,11 +1,11 @@
-@include('../../../application/admin/view/public/head')
+@include('admin.public.head')
 <style>
     .layui-form-pane .layui-form-label { width:140px; }
     .layui-form-pane .layui-input-block { margin-left:140px; }
 </style>
 <div class="page-container">
-    <form class="layui-form layui-form-pane" action="">
-        <input type="hidden" name="__token__" value="{{ $Request.token }}" />
+    <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configcollect') }}">
+        @csrf
         <div class="layui-tab" lay-filter="tb1">
             <ul class="layui-tab-title">
                 <li class="layui-this" lay-id="configcollect_1">{{ __('admin.admin/system/configcollect/vod') }}</li>
@@ -24,8 +24,8 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[vod][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['vod']['status'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['vod']['status'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.vod.status', '0') !== '1')>
+                        <input type="radio" name="collect[vod][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.vod.status', '0') === '1')>
                     </div>
                 </div>
 
@@ -52,8 +52,8 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/score_rnd') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][score]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['score'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][score]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['score'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][score]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.score', '0') !== '1')>
+                        <input type="radio" name="collect[vod][score]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.score', '0') === '1')>
                     </div>
                 </div>
 
@@ -61,22 +61,22 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/sync_pic') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][pic]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['pic'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][pic]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['pic'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][pic]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.pic', '0') !== '1')>
+                        <input type="radio" name="collect[vod][pic]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.pic', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/auto_tag') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][tag]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['tag'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][tag]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['tag'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][tag]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.tag', '0') !== '1')>
+                        <input type="radio" name="collect[vod][tag]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.tag', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/class_filter') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][class_filter]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['class_filter'] == '0'")checked @endif>
-                        <input type="radio" name="collect[vod][class_filter]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['class_filter'] != '0'")checked @endif>
+                        <input type="radio" name="collect[vod][class_filter]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.class_filter', '0') === '0')>
+                        <input type="radio" name="collect[vod][class_filter]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.class_filter', '0') !== '0')>
                     </div>
                     <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/class_filter_tip') }}</div>
                 </div>
@@ -84,53 +84,53 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psename') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][psename]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['psename'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][psename]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['psename'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][psename]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.psename', '0') !== '1')>
+                        <input type="radio" name="collect[vod][psename]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.psename', '0') === '1')>
                     </div>
                     <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/psename_tip') }}</div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['psernd'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['psernd'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.psernd', '0') !== '1')>
+                        <input type="radio" name="collect[vod][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.psernd', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['psesyn'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['psesyn'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.psesyn', '0') !== '1')>
+                        <input type="radio" name="collect[vod][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.psesyn', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/pseplayer') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][pseplayer]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['pseplayer'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][pseplayer]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['pseplayer'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][pseplayer]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.pseplayer', '0') !== '1')>
+                        <input type="radio" name="collect[vod][pseplayer]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.pseplayer', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psearea') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][psearea]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['psearea'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][psearea]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['psearea'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][psearea]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.psearea', '0') !== '1')>
+                        <input type="radio" name="collect[vod][psearea]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.psearea', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/pselang') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][pselang]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['vod']['pselang'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][pselang]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['vod']['pselang'] == 1")checked @endif>
+                        <input type="radio" name="collect[vod][pselang]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.vod.pselang', '0') !== '1')>
+                        <input type="radio" name="collect[vod][pselang]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.vod.pselang', '0') === '1')>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/urlrole') }}：</label>
                     <div class="layui-input-inline">
-                        <input type="radio" name="collect[vod][urlrole]" value="0" title="{{ __('admin.replace') }}" @if(condition="$config['collect']['vod']['urlrole'] != 1")checked @endif>
-                        <input type="radio" name="collect[vod][urlrole]" value="1" title="{{ __('admin.merge') }}" @if(condition="$config['collect']['vod']['urlrole'] == 1")checked @endif>
-                        <!-- <input type="radio" name="collect[vod][urlrole]" value="2" title="{{ __('admin.admin/system/configcollect/urlrole/use_more') }}" @if(condition="$config['collect']['vod']['urlrole'] == 2")checked @endif> -->
+                        <input type="radio" name="collect[vod][urlrole]" value="0" title="{{ __('admin.replace') }}" @checked((string) data_get($config, 'collect.vod.urlrole', '0') !== '1')>
+                        <input type="radio" name="collect[vod][urlrole]" value="1" title="{{ __('admin.merge') }}" @checked((string) data_get($config, 'collect.vod.urlrole', '0') === '1')>
+                        <!-- <input type="radio" name="collect[vod][urlrole]" value="2" title="{{ __('admin.admin/system/configcollect/urlrole/use_more') }}" @checked((string) data_get($config, 'collect.vod.urlrole') === '2')> -->
                     </div>
                     <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/urlrole_tip') }}</div>
                 </div>
@@ -139,14 +139,14 @@
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configcollect/inrule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="{{ __('admin.name') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'a') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="{{ __('admin.type') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'b') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="{{ __('admin.years') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'c') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="{{ __('admin.area') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'d') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="{{ __('admin.lang') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'e') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="{{ __('admin.actor') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'f') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="{{ __('admin.director') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'g') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="{{ __('admin.douban_id') }}" @if(condition="strpos($config['collect']['vod']['inrule'],'h') !==false")checked @endif>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="{{ __('admin.name') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'a') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'b') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="{{ __('admin.years') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'c') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="{{ __('admin.area') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'd') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="{{ __('admin.lang') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'e') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="{{ __('admin.actor') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'f') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'g') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="{{ __('admin.douban_id') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'h') !== false)>
                     </div>
                 </div>
 
@@ -154,29 +154,29 @@
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configcollect/uprule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="{{ __('admin.playurl') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'a') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="{{ __('admin.downurl') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'b') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="{{ __('admin.serial') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'c') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="{{ __('admin.remarks') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'d') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="{{ __('admin.director') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'e') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="{{ __('admin.actor') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'f') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="{{ __('admin.years') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'g') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="{{ __('admin.area') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'h') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="{{ __('admin.lang') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'i') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="{{ __('admin.pic') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'j') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="{{ __('admin.content') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'k') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" @if(condition="strpos($config['collect']['vod']['uprule'],'l') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="{{ __('admin.sub') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'m') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="{{ __('admin.class') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'n') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="{{ __('admin.writer') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'o') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="{{ __('admin.version') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'p') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="{{ __('admin.state') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'q') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="{{ __('admin.blurb') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'r') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="{{ __('admin.tv') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'s') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="{{ __('admin.weekday') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'t') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="{{ __('admin.total') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'u') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="{{ __('admin.isend') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'v') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="{{ __('admin.plot') }}" @if(condition="strpos($config['collect']['vod']['uprule'],'w') !==false")checked @endif>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="{{ __('admin.playurl') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'a') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="{{ __('admin.downurl') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'b') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="{{ __('admin.serial') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'c') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'd') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'e') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="{{ __('admin.actor') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'f') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="{{ __('admin.years') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'g') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="{{ __('admin.area') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'h') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="{{ __('admin.lang') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'i') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'j') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'k') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'l') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="{{ __('admin.sub') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'm') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="{{ __('admin.class') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'n') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="{{ __('admin.writer') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'o') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="{{ __('admin.version') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'p') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="{{ __('admin.state') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'q') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'r') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="{{ __('admin.tv') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 's') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="{{ __('admin.weekday') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 't') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="{{ __('admin.total') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'u') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="{{ __('admin.isend') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'v') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="{{ __('admin.plot') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'w') !== false)>
                     </div>
                 </div>
 
@@ -193,8 +193,8 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['art']['status'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['art']['status'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.art.status', '0') !== '1')>
+                        <input type="radio" name="collect[art][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.art.status', '0') === '1')>
                     </div>
                 </div>
 
@@ -222,37 +222,37 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/score_rnd') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][score]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['art']['score'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][score]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['art']['score'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][score]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.art.score', '0') !== '1')>
+                        <input type="radio" name="collect[art][score]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.art.score', '0') === '1')>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/sync_pic') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][pic]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['art']['pic'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][pic]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['art']['pic'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][pic]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.art.pic', '0') !== '1')>
+                        <input type="radio" name="collect[art][pic]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.art.pic', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/auto_tag') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][tag]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['art']['tag'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][tag]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['art']['tag'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][tag]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.art.tag', '0') !== '1')>
+                        <input type="radio" name="collect[art][tag]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.art.tag', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['art']['psernd'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['art']['psernd'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.art.psernd', '0') !== '1')>
+                        <input type="radio" name="collect[art][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.art.psernd', '0') === '1')>
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                     <div class="layui-input-block">
-                        <input type="radio" name="collect[art][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['art']['psesyn'] != 1")checked @endif>
-                        <input type="radio" name="collect[art][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['art']['psesyn'] == 1")checked @endif>
+                        <input type="radio" name="collect[art][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.art.psesyn', '0') !== '1')>
+                        <input type="radio" name="collect[art][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.art.psesyn', '0') === '1')>
                     </div>
                 </div>
 
@@ -260,19 +260,19 @@
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                     <div class="layui-input-block">
                         <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="a" title="{{ __('admin.name') }}" checked disabled>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="{{ __('admin.type') }}" @if(condition="strpos($config['collect']['art']['inrule'],'b') !==false")checked @endif>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.art.inrule', ''), 'b') !== false)>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="{{ __('admin.content') }}" @if(condition="strpos($config['collect']['art']['uprule'],'a') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="{{ __('admin.author') }}" @if(condition="strpos($config['collect']['art']['uprule'],'b') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="{{ __('admin.from') }}" @if(condition="strpos($config['collect']['art']['uprule'],'c') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="{{ __('admin.pic') }}" @if(condition="strpos($config['collect']['art']['uprule'],'d') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" @if(condition="strpos($config['collect']['art']['uprule'],'e') !==false")checked @endif>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="{{ __('admin.blurb') }}" @if(condition="strpos($config['collect']['art']['uprule'],'f') !==false")checked @endif>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'a') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="{{ __('admin.author') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'b') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="{{ __('admin.from') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'c') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'd') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'e') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'f') !== false)>
                     </div>
                 </div>
 
@@ -290,8 +290,8 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[actor][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['actor']['status'] != 1")checked @endif>
-                            <input type="radio" name="collect[actor][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['actor']['status'] == 1")checked @endif>
+                            <input type="radio" name="collect[actor][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.actor.status', '0') !== '1')>
+                            <input type="radio" name="collect[actor][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.actor.status', '0') === '1')>
                         </div>
                     </div>
 
@@ -319,30 +319,30 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/score_rnd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[actor][score]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['score'] != 1")checked @endif>
-                            <input type="radio" name="collect[actor][score]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['score'] == 1")checked @endif>
+                            <input type="radio" name="collect[actor][score]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.actor.score', '0') !== '1')>
+                            <input type="radio" name="collect[actor][score]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.actor.score', '0') === '1')>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/sync_pic') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[actor][pic]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['pic'] != 1")checked @endif>
-                            <input type="radio" name="collect[actor][pic]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['pic'] == 1")checked @endif>
+                            <input type="radio" name="collect[actor][pic]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.actor.pic', '0') !== '1')>
+                            <input type="radio" name="collect[actor][pic]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.actor.pic', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[actor][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['psernd'] != 1")checked @endif>
-                            <input type="radio" name="collect[actor][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['psernd'] == 1")checked @endif>
+                            <input type="radio" name="collect[actor][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.actor.psernd', '0') !== '1')>
+                            <input type="radio" name="collect[actor][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.actor.psernd', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[actor][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['psesyn'] != 1")checked @endif>
-                            <input type="radio" name="collect[actor][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['psesyn'] == 1")checked @endif>
+                            <input type="radio" name="collect[actor][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.actor.psesyn', '0') !== '1')>
+                            <input type="radio" name="collect[actor][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.actor.psesyn', '0') === '1')>
                         </div>
                     </div>
 
@@ -350,19 +350,19 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="a" title="{{ __('admin.actor_name') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="{{ __('admin.type') }}" @if(condition="strpos($config['collect']['actor']['inrule'],'c') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="{{ __('admin.sex') }}" @if(condition="strpos($config['collect']['actor']['inrule'],'b') !==false")checked @endif>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="{{ __('admin.sex') }}" @checked(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'b') !== false)>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="{{ __('admin.content') }}" @if(condition="strpos($config['collect']['actor']['uprule'],'a') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="{{ __('admin.blurb') }}" @if(condition="strpos($config['collect']['actor']['uprule'],'b') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="{{ __('admin.remarks') }}" @if(condition="strpos($config['collect']['actor']['uprule'],'c') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="{{ __('admin.works') }}" @if(condition="strpos($config['collect']['actor']['uprule'],'d') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="{{ __('admin.pic') }}" @if(condition="strpos($config['collect']['actor']['uprule'],'e') !==false")checked @endif>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'a') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="{{ __('admin.works') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'd') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'e') !== false)>
 
                         </div>
                     </div>
@@ -381,8 +381,8 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[role][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['role']['status'] != 1")checked @endif>
-                            <input type="radio" name="collect[role][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['role']['status'] == 1")checked @endif>
+                            <input type="radio" name="collect[role][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.role.status', '0') !== '1')>
+                            <input type="radio" name="collect[role][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.role.status', '0') === '1')>
                         </div>
                     </div>
 
@@ -410,30 +410,30 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/score_rnd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[role][score]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['role']['score'] != 1")checked @endif>
-                            <input type="radio" name="collect[role][score]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['role']['score'] == 1")checked @endif>
+                            <input type="radio" name="collect[role][score]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.role.score', '0') !== '1')>
+                            <input type="radio" name="collect[role][score]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.role.score', '0') === '1')>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/sync_pic') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[role][pic]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['role']['pic'] != 1")checked @endif>
-                            <input type="radio" name="collect[role][pic]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['role']['pic'] == 1")checked @endif>
+                            <input type="radio" name="collect[role][pic]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.role.pic', '0') !== '1')>
+                            <input type="radio" name="collect[role][pic]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.role.pic', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[role][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['psernd'] != 1")checked @endif>
-                            <input type="radio" name="collect[role][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['psernd'] == 1")checked @endif>
+                            <input type="radio" name="collect[role][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.role.psernd', '0') !== '1')>
+                            <input type="radio" name="collect[role][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.role.psernd', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[role][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['role']['psesyn'] != 1")checked @endif>
-                            <input type="radio" name="collect[role][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['role']['psesyn'] == 1")checked @endif>
+                            <input type="radio" name="collect[role][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.role.psesyn', '0') !== '1')>
+                            <input type="radio" name="collect[role][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.role.psesyn', '0') === '1')>
                         </div>
                     </div>
 
@@ -442,8 +442,8 @@
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="a" title="{{ __('admin.role_name') }}" checked disabled>
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="b" title="{{ __('admin.vod_name') }}{{ __('admin.or') }}{{ __('admin.douban_id') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="{{ __('admin.actor_name') }}" @if(condition="strpos($config['collect']['role']['inrule'],'c') !==false")checked @endif >
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="{{ __('admin.director') }}" @if(condition="strpos($config['collect']['role']['inrule'],'d') !==false")checked @endif >
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="{{ __('admin.actor_name') }}" @checked(strpos((string) data_get($config, 'collect.role.inrule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.role.inrule', ''), 'd') !== false)>
                         </div>
                         <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/inrule_tip_role') }}</div>
                     </div>
@@ -451,9 +451,9 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="{{ __('admin.content') }}" @if(condition="strpos($config['collect']['role']['uprule'],'a') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="{{ __('admin.remarks') }}" @if(condition="strpos($config['collect']['role']['uprule'],'b') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="{{ __('admin.pic') }}" @if(condition="strpos($config['collect']['role']['uprule'],'c') !==false")checked @endif>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'a') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'c') !== false)>
 
                         </div>
                     </div>
@@ -472,8 +472,8 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[website][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['website']['status'] != 1")checked @endif>
-                            <input type="radio" name="collect[website][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['website']['status'] == 1")checked @endif>
+                            <input type="radio" name="collect[website][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.website.status', '0') !== '1')>
+                            <input type="radio" name="collect[website][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.website.status', '0') === '1')>
                         </div>
                     </div>
 
@@ -501,30 +501,30 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/score_rnd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[website][score]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['website']['score'] != 1")checked @endif>
-                            <input type="radio" name="collect[website][score]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['website']['score'] == 1")checked @endif>
+                            <input type="radio" name="collect[website][score]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.website.score', '0') !== '1')>
+                            <input type="radio" name="collect[website][score]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.website.score', '0') === '1')>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/sync_pic') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[website][pic]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['website']['pic'] != 1")checked @endif>
-                            <input type="radio" name="collect[website][pic]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['website']['pic'] == 1")checked @endif>
+                            <input type="radio" name="collect[website][pic]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.website.pic', '0') !== '1')>
+                            <input type="radio" name="collect[website][pic]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.website.pic', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[website][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['website']['psernd'] != 1")checked @endif>
-                            <input type="radio" name="collect[website][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['website']['psernd'] == 1")checked @endif>
+                            <input type="radio" name="collect[website][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.website.psernd', '0') !== '1')>
+                            <input type="radio" name="collect[website][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.website.psernd', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[website][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['website']['psesyn'] != 1")checked @endif>
-                            <input type="radio" name="collect[website][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['website']['psesyn'] == 1")checked @endif>
+                            <input type="radio" name="collect[website][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.website.psesyn', '0') !== '1')>
+                            <input type="radio" name="collect[website][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.website.psesyn', '0') === '1')>
                         </div>
                     </div>
 
@@ -532,19 +532,19 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="a" title="{{ __('admin.name') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="{{ __('admin.type') }}" @if(condition="strpos($config['collect']['website']['inrule'],'b') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="{{ __('admin.jumpurl') }}" @if(condition="strpos($config['collect']['website']['inrule'],'c') !==false")checked @endif>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.website.inrule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="{{ __('admin.jumpurl') }}" @checked(strpos((string) data_get($config, 'collect.website.inrule', ''), 'c') !== false)>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="{{ __('admin.content') }}" @if(condition="strpos($config['collect']['website']['uprule'],'a') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="{{ __('admin.blurb') }}" @if(condition="strpos($config['collect']['website']['uprule'],'b') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="{{ __('admin.remarks') }}" @if(condition="strpos($config['collect']['website']['uprule'],'c') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="{{ __('admin.jumpurl') }}" @if(condition="strpos($config['collect']['website']['uprule'],'d') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="{{ __('admin.pic') }}" @if(condition="strpos($config['collect']['website']['uprule'],'e') !==false")checked @endif>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'a') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="{{ __('admin.jumpurl') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'd') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'e') !== false)>
 
                         </div>
                     </div>
@@ -563,8 +563,8 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/status') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[comment][status]" value="0" title="{{ __('admin.reviewed_not') }}" @if(condition="$config['collect']['comment']['status'] != 1")checked @endif>
-                            <input type="radio" name="collect[comment][status]" value="1" title="{{ __('admin.reviewed') }}" @if(condition="$config['collect']['comment']['status'] == 1")checked @endif>
+                            <input type="radio" name="collect[comment][status]" value="0" title="{{ __('admin.reviewed_not') }}" @checked((string) data_get($config, 'collect.comment.status', '0') !== '1')>
+                            <input type="radio" name="collect[comment][status]" value="1" title="{{ __('admin.reviewed') }}" @checked((string) data_get($config, 'collect.comment.status', '0') === '1')>
                         </div>
                     </div>
 
@@ -581,15 +581,15 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psernd') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[comment][psernd]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['actor']['psernd'] != 1")checked @endif>
-                            <input type="radio" name="collect[comment][psernd]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['actor']['psernd'] == 1")checked @endif>
+                            <input type="radio" name="collect[comment][psernd]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.comment.psernd', '0') !== '1')>
+                            <input type="radio" name="collect[comment][psernd]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.comment.psernd', '0') === '1')>
                         </div>
                     </div>
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/psesyn') }}：</label>
                         <div class="layui-input-block">
-                            <input type="radio" name="collect[comment][psesyn]" value="0" title="{{ __('admin.close') }}" @if(condition="$config['collect']['comment']['psesyn'] != 1")checked @endif>
-                            <input type="radio" name="collect[comment][psesyn]" value="1" title="{{ __('admin.open') }}" @if(condition="$config['collect']['comment']['psesyn'] == 1")checked @endif>
+                            <input type="radio" name="collect[comment][psesyn]" value="0" title="{{ __('admin.close') }}" @checked((string) data_get($config, 'collect.comment.psesyn', '0') !== '1')>
+                            <input type="radio" name="collect[comment][psesyn]" value="1" title="{{ __('admin.open') }}" @checked((string) data_get($config, 'collect.comment.psesyn', '0') === '1')>
                         </div>
                     </div>
 
@@ -597,8 +597,8 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="a" title="{{ __('admin.rel_name') }}{{ __('admin.or') }}{{ __('admin.douban_id') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="{{ __('admin.comment_content') }}" @if(condition="strpos($config['collect']['comment']['inrule'],'b') !==false")checked @endif>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="{{ __('admin.comment_name') }}" @if(condition="strpos($config['collect']['comment']['inrule'],'c') !==false")checked @endif >
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="{{ __('admin.comment_content') }}" @checked(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="{{ __('admin.comment_name') }}" @checked(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'c') !== false)>
                         </div>
                         <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/inrule_tip_comment') }}</div>
                     </div>
@@ -628,112 +628,112 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_namewords') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][namewords]" class="layui-textarea">{{ $config['collect']['vod']['namewords']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][namewords]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.namewords', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_thesaurus') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][thesaurus]" class="layui-textarea">{{ $config['collect']['vod']['thesaurus']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.thesaurus', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_playerwords') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][playerwords]" class="layui-textarea">{{ $config['collect']['vod']['playerwords']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][playerwords]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.playerwords', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_areawords') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][areawords]" class="layui-textarea">{{ $config['collect']['vod']['areawords']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][areawords]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.areawords', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_langwords') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][langwords]" class="layui-textarea">{{ $config['collect']['vod']['langwords']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][langwords]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.langwords', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/vod_words') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[vod][words]" class="layui-textarea">{{ $config['collect']['vod']['words']|mac_replace_text }}</textarea>
+                        <textarea name="collect[vod][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.vod.words', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/art_thesaurus') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[art][thesaurus]" class="layui-textarea">{{ $config['collect']['art']['thesaurus']|mac_replace_text }}</textarea>
+                        <textarea name="collect[art][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.art.thesaurus', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/art_words') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[art][words]" class="layui-textarea">{{ $config['collect']['art']['words']|mac_replace_text }}</textarea>
+                        <textarea name="collect[art][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.art.words', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/actor_thesaurus') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[actor][thesaurus]" class="layui-textarea">{{ $config['collect']['actor']['thesaurus']|mac_replace_text }}</textarea>
+                        <textarea name="collect[actor][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.actor.thesaurus', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/actor_words') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[actor][words]" class="layui-textarea">{{ $config['collect']['actor']['words']|mac_replace_text }}</textarea>
+                        <textarea name="collect[actor][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.actor.words', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/role_thesaurus') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[role][thesaurus]" class="layui-textarea">{{ $config['collect']['role']['thesaurus']|mac_replace_text }}</textarea>
+                        <textarea name="collect[role][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.role.thesaurus', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/role_words') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[role][words]" class="layui-textarea">{{ $config['collect']['role']['words']|mac_replace_text }}</textarea>
+                        <textarea name="collect[role][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.role.words', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/website_thesaurus') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[website][thesaurus]" class="layui-textarea">{{ $config['collect']['website']['thesaurus']|mac_replace_text }}</textarea>
+                        <textarea name="collect[website][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.website.thesaurus', '')) }}</textarea>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/website_words') }}：</label>
                     <div class="layui-input-block">
-                        <textarea name="collect[website][words]" class="layui-textarea">{{ $config['collect']['website']['words']|mac_replace_text }}</textarea>
+                        <textarea name="collect[website][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.website.words', '')) }}</textarea>
                     </div>
                 </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/comment_thesaurus') }}：</label>
                         <div class="layui-input-block">
-                            <textarea name="collect[comment][thesaurus]" class="layui-textarea">{{ $config['collect']['comment']['thesaurus']|mac_replace_text }}</textarea>
+                            <textarea name="collect[comment][thesaurus]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.comment.thesaurus', '')) }}</textarea>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/comment_words') }}：</label>
                         <div class="layui-input-block">
-                            <textarea name="collect[comment][words]" class="layui-textarea">{{ $config['collect']['comment']['words']|mac_replace_text }}</textarea>
+                            <textarea name="collect[comment][words]" class="layui-textarea">{{ mac_replace_text((string) data_get($config, 'collect.comment.words', '')) }}</textarea>
                         </div>
                     </div>
 
@@ -742,14 +742,13 @@
         </div>
         <div class="layui-form-item center">
             <div class="layui-input-block">
-                <button type="submit" class="layui-btn" lay-submit="" lay-filter="formSubmit">{{ __('admin.btn_save') }}</button>
+                <button type="submit" class="layui-btn" lay-submit lay-filter="formSubmit">{{ __('admin.btn_save') }}</button>
                 <button class="layui-btn layui-btn-warm" type="reset">{{ __('admin.btn_reset') }}</button>
             </div>
         </div>
     </form>
 </div>
 
-@include('../../../application/admin/view/public/foot')
 <script type="text/javascript" src="{{ asset('static') }}/js/jquery.cookie.js"></script>
 <script type="text/javascript">
     layui.use(['element', 'form', 'layer'], function() {
@@ -768,6 +767,4 @@
 
     });
 </script>
-
-</body>
-</html>
+@include('admin.public.foot')

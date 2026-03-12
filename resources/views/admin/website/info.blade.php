@@ -336,7 +336,7 @@
         //多图片上传
         upload.render({
             elem: '.screenshot'
-            ,url: "{{ url('upload/upload') }}?flag=website_screenshot"
+            ,url: "{{ route('admin.upload.upload') }}?flag=website_screenshot"
             ,multiple: true
             ,before: function(obj){
                 obj.preview(function(index, file, result){
@@ -374,7 +374,7 @@
 
         upload.render({
             elem: '.layui-upload'
-            ,url: "{{ url('upload/upload') }}?flag=website"
+            ,url: "{{ route('admin.upload.upload') }}?flag=website"
             ,method: 'post'
             ,before: function(input) {
                 layer.msg("{{ lang('upload_ing') }}", {time:3000000});
@@ -404,8 +404,7 @@
             var left = e.clientX+document.body.scrollLeft+20;
             var top = e.clientY+document.body.scrollTop+20;
             $(".showpic").css({left:left,top:top,display:""});
-            if(imgsrc.indexOf('://')<0){ imgsrc = ROOT_PATH + '/' + imgsrc;	} else{ imgsrc = imgsrc.replace('mac:','http:'); }
-            $(".showpic_img").attr("src", imgsrc);
+            $(".showpic_img").attr("src", mac_url_img(imgsrc));
         },function (e){
             $(".showpic").css("display","none");
         });

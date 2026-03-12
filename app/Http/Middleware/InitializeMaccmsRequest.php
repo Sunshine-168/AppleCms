@@ -34,7 +34,17 @@ class InitializeMaccmsRequest
         $config['app']['search_len'] = max(10, (int) ($config['app']['search_len'] ?? 10));
         config(['maccms' => $config]);
 
-        $locale = $this->mapLocale($config['app']['lang'] ?? '');
+        $override = null;
+        try {
+            if (app()->bound('session')) {
+                $override = session()->get('maccms_app_lang');
+            }
+        } catch (\Throwable $e) {
+            $override = null;
+        }
+        $override = $override ?: $request->cookie('maccms_locale');
+        $localeSource = $override ?: ($config['app']['lang'] ?? '');
+        $locale = $this->mapLocale($localeSource);
         if ($locale !== '') {
             App::setLocale($locale);
             config(['app.locale' => $locale]);

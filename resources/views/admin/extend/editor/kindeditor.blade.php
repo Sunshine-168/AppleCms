@@ -6,7 +6,7 @@
     var editor = "{{ $editor }}";
     function editor_getEditor(obj)
     {
-        return KindEditor.create('#'+obj, { uploadJson:"{{ url('upload/upload') }}?from=kindeditor&flag={{ $cl|strtolower }}_editor&input=imgFile" , allowFileManager : false });
+        return KindEditor.create('#'+obj, { uploadJson:"{{ route('admin.upload.upload') }}?from=kindeditor&flag={{ $cl|strtolower }}_editor&input=imgFile" , allowFileManager : false });
     }
     function editor_setContent(obj,html)
     {

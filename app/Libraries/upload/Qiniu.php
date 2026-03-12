@@ -6,7 +6,7 @@ use Qiniu\Storage\UploadManager;
 
 class Qiniu
 {
-    public $name = '七牛云存�?;
+    public $name = '七牛云存储';
     public $ver = '1.0';
     private $config = [];
 

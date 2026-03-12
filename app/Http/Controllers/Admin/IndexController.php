@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\LoginRequest;
 use App\Models\Admin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
 class IndexController extends Controller
@@ -19,7 +20,16 @@ class IndexController extends Controller
             // Custom MD5 check
             $admin = Admin::where('admin_name', $name)->first();
 
-            if ($admin && $admin->admin_pwd === md5($pwd)) {
+            $passOk = false;
+            if ($admin) {
+                if (!empty($admin->admin_random)) {
+                    $passOk = $admin->admin_pwd === md5($pwd . $admin->admin_random);
+                } else {
+                    $passOk = $admin->admin_pwd === md5($pwd);
+                }
+            }
+
+            if ($passOk) {
                 if ($admin->admin_status == 0) {
                     return back()->withErrors(['msg' => 'Account disabled']);
                 }
@@ -108,6 +118,37 @@ class IndexController extends Controller
         return view('admin.index.quickmenu');
     }
 
+    public function unlocked(Request $request)
+    {
+        $password = trim((string) $request->input('password', ''));
+        if ($password === '') {
+            return response()->json(['code' => 0, 'msg' => __('param_err')]);
+        }
+
+        $adminId = Session::get('admin_id');
+        if (empty($adminId)) {
+            return response()->json(['code' => 0, 'msg' => '登录状态已失效，请重新登录']);
+        }
+
+        $admin = Admin::find($adminId);
+        if (!$admin) {
+            return response()->json(['code' => 0, 'msg' => '登录状态已失效，请重新登录']);
+        }
+
+        $passOk = false;
+        if (!empty($admin->admin_random)) {
+            $passOk = $admin->admin_pwd === md5($password . $admin->admin_random);
+        } else {
+            $passOk = $admin->admin_pwd === md5($password);
+        }
+
+        if (!$passOk) {
+            return response()->json(['code' => 0, 'msg' => __('admin/index/pass_err')]);
+        }
+
+        return response()->json(['code' => 1, 'msg' => __('admin/index/unlock_ok')]);
+    }
+
     public function clear()
     {
         \Illuminate\Support\Facades\Cache::flush();
@@ -142,7 +183,14 @@ class IndexController extends Controller
                         if (strpos($v2['action'], 'javascript') !== false) {
                             $url = $v2['action'];
                         } else {
-                            $url = route('admin.' . $controller . '.' . $action);
+                            $routeName = 'admin.' . $controller . '.' . $action;
+                            if (!Route::has($routeName) && $action === 'data') {
+                                $routeNameIndex = 'admin.' . $controller . '.index';
+                                if (Route::has($routeNameIndex)) {
+                                    $routeName = $routeNameIndex;
+                                }
+                            }
+                            $url = Route::has($routeName) ? route($routeName) : url('/admin/' . $controller . '/' . $action);
                         }
                         
                         if (!empty($v2['param'])) {

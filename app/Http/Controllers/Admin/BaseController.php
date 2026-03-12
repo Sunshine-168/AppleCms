@@ -7,6 +7,7 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
 
 class BaseController extends Controller
@@ -83,7 +84,7 @@ class BaseController extends Controller
         $controller = str_replace('Controller', '', $controller);
         $action = $request->route()->getActionMethod();
 
-        $auths = $this->admin->admin_auth . ',index/index,index/welcome,index/logout,';
+        $auths = $this->admin->admin_auth . ',index/index,index/welcome,index/logout,system/configlang,';
         $cur = ',' . strtolower($controller) . '/' . strtolower($action) . ',';
 
         return strpos($auths, $cur) !== false;
@@ -127,16 +128,52 @@ class BaseController extends Controller
 
     protected function clearCache()
     {
-        // 清理缓存
         Cache::flush();
-        
-        // 清理运行时缓存
-        $cachePath = storage_path('framework/cache');
-        $logPath = storage_path('logs');
-        $tempPath = storage_path('framework/sessions');
+        try {
+            Artisan::call('cache:clear');
+        } catch (\Throwable $e) {
+        }
+        try {
+            Artisan::call('config:clear');
+        } catch (\Throwable $e) {
+        }
+        try {
+            Artisan::call('view:clear');
+        } catch (\Throwable $e) {
+        }
 
+        $configCacheFile = base_path('bootstrap/cache/config.php');
+        if (is_file($configCacheFile)) {
+            @unlink($configCacheFile);
+        }
+
+        $cachePath = storage_path('framework/cache');
         if (is_dir($cachePath)) {
-            $this->deleteDirectory($cachePath);
+            $this->clearDirectory($cachePath);
+        } else {
+            @mkdir($cachePath, 0755, true);
+        }
+
+        $viewPath = storage_path('framework/views');
+        if (is_dir($viewPath)) {
+            $this->clearDirectory($viewPath);
+        } else {
+            @mkdir($viewPath, 0755, true);
+        }
+
+        return true;
+    }
+
+    protected function clearDirectory($dir)
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            is_dir($path) ? $this->deleteDirectory($path) : @unlink($path);
         }
 
         return true;

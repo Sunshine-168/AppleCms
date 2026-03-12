@@ -1,0 +1,1 @@
+<?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views\admin\index\quickmenu.blade.php ENDPATH**/ ?>

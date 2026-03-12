@@ -12,7 +12,7 @@
             menubar: 'file edit view insert format tools table help',
             toolbar: 'undo redo | bold italic underline strikethrough | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
             toolbar_sticky: true,
-            images_upload_url: "{{ url('upload/upload') }}?from=tinymce&flag={{ $cl|strtolower }}_editor&input=file",
+            images_upload_url: "{{ route('admin.upload.upload') }}?from=tinymce&flag={{ $cl|strtolower }}_editor&input=file",
             selector: '#'+obj,
             init_instance_callback : function(editor) {
                 res = editor;

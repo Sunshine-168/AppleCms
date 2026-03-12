@@ -249,6 +249,13 @@ Route::get('/rss/sm', [RssController::class, 'sm'])->name('rss.sm');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
+// Keep-alive & cache check (legacy from maccms)
+Route::get('/checkcache', fn () => response('ok', 200))->name('checkcache');
+Route::get('/index.php/checkcache', fn () => response('ok', 200))->name('checkcache.legacy');
+
+// Global language switch alias (called by admin header JS)
+Route::post('/system/configlang', [\App\Http\Controllers\Admin\SystemController::class, 'configlang'])->name('system.configlang');
+
 // Legacy ThinkPHP-style route aliases from maccms10/application/route.php
 Route::get('/index-{page?}', function (?int $page = null) {
     $params = [];
@@ -387,9 +394,17 @@ Route::prefix('admin')->group(function () {
     Route::get('/index', [AdminIndexController::class, 'index'])->name('admin.index');
     Route::get('/welcome', [AdminIndexController::class, 'welcome'])->name('admin.index.welcome');
     Route::get('/quickmenu', [AdminIndexController::class, 'quickmenu'])->name('admin.index.quickmenu');
+    Route::match(['get', 'post'], '/index/unlocked', [AdminIndexController::class, 'unlocked'])
+        ->name('admin.index.unlocked')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class, \App\Http\Middleware\VerifyCsrfToken::class]);
+    // 兼容某些前端路径拼接成 /admin/admin/index/unlocked 的情况
+    Route::match(['get', 'post'], '/admin/index/unlocked', [AdminIndexController::class, 'unlocked'])
+        ->name('admin.index.unlocked.legacy')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class, \App\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('/clear', [AdminIndexController::class, 'clear'])->name('admin.index.clear');
     
     Route::get('/actor', [AdminActorController::class, 'index'])->name('admin.actor.index');
+    Route::get('/actor/data', [AdminActorController::class, 'index'])->name('admin.actor.data');
     Route::match(['get', 'post'], '/actor/info/{id?}', [AdminActorController::class, 'info'])->name('admin.actor.info');
     Route::post('/actor/save/{id?}', [AdminActorController::class, 'info'])->name('admin.actor.info.save');
     Route::get('/actor/del', [AdminActorController::class, 'del'])->name('admin.actor.del');
@@ -404,21 +419,25 @@ Route::prefix('admin')->group(function () {
     Route::get('/admin/del', [AdminController::class, 'del'])->name('admin.admin.del');
 
     Route::get('/annex', [AnnexController::class, 'index'])->name('admin.annex.index');
+    Route::get('/annex/data', [AnnexController::class, 'index'])->name('admin.annex.data');
     Route::get('/annex/file', [AnnexController::class, 'file'])->name('admin.annex.file');
     Route::get('/annex/del', [AnnexController::class, 'del'])->name('admin.annex.del');
     Route::get('/annex/check', [AnnexController::class, 'check'])->name('admin.annex.check');
     Route::get('/annex/init', [AnnexController::class, 'init'])->name('admin.annex.init');
 
     Route::get('/art', [AdminArtController::class, 'index'])->name('admin.art.index');
+    Route::get('/art/data', [AdminArtController::class, 'index'])->name('admin.art.data');
     Route::match(['get', 'post'], '/art/info/{id?}', [AdminArtController::class, 'info'])->name('admin.art.info');
     Route::get('/art/del', [AdminArtController::class, 'del'])->name('admin.art.del');
 
     Route::get('/user', [AdminUserController::class, 'index'])->name('admin.user.index');
+    Route::get('/user/data', [AdminUserController::class, 'index'])->name('admin.user.data');
     Route::get('/user/reward', [AdminUserController::class, 'reward'])->name('admin.user.reward');
     Route::match(['get', 'post'], '/user/info/{id?}', [AdminUserController::class, 'info'])->name('admin.user.info');
     Route::get('/user/del', [AdminUserController::class, 'del'])->name('admin.user.del');
 
     Route::get('/vod', [AdminVodController::class, 'index'])->name('admin.vod.index');
+    Route::get('/vod/data', [AdminVodController::class, 'index'])->name('admin.vod.data');
     Route::match(['get', 'post'], '/vod/info/{id?}', [AdminVodController::class, 'info'])->name('admin.vod.info');
     Route::get('/vod/del', [AdminVodController::class, 'del'])->name('admin.vod.del');
 
@@ -431,6 +450,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/cash/audit', [CashController::class, 'audit'])->name('admin.cash.audit');
 
     Route::get('/gbook', [AdminGbookController::class, 'index'])->name('admin.gbook.index');
+    Route::get('/gbook/data', [AdminGbookController::class, 'index'])->name('admin.gbook.data');
     Route::get('/gbook/del', [AdminGbookController::class, 'del'])->name('admin.gbook.del');
 
     Route::get('/group', [GroupController::class, 'index'])->name('admin.group.index');
@@ -442,6 +462,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/type/del', [TypeController::class, 'del'])->name('admin.type.del');
 
     Route::get('/comment', [AdminCommentController::class, 'index'])->name('admin.comment.index');
+    Route::get('/comment/data', [AdminCommentController::class, 'index'])->name('admin.comment.data');
     Route::match(['get', 'post'], '/comment/info/{id?}', [AdminCommentController::class, 'info'])->name('admin.comment.info');
     Route::get('/comment/del', [AdminCommentController::class, 'del'])->name('admin.comment.del');
     Route::post('/comment/field', [AdminCommentController::class, 'field'])->name('admin.comment.field');
@@ -452,12 +473,13 @@ Route::prefix('admin')->group(function () {
     Route::post('/link/batch', [LinkController::class, 'batch'])->name('admin.link.batch');
 
     Route::get('/topic', [AdminTopicController::class, 'index'])->name('admin.topic.index');
+    Route::get('/topic/data', [AdminTopicController::class, 'index'])->name('admin.topic.data');
     Route::match(['get', 'post'], '/topic/info/{id?}', [AdminTopicController::class, 'info'])->name('admin.topic.info');
     Route::get('/topic/del', [AdminTopicController::class, 'del'])->name('admin.topic.del');
     Route::post('/topic/field', [AdminTopicController::class, 'field'])->name('admin.topic.field');
 
     Route::get('/upload', [UploadController::class, 'index'])->name('admin.upload.index');
-    Route::post('/upload/upload', [UploadController::class, 'upload'])->name('admin.upload.upload');
+    Route::match(['get', 'post'], '/upload/upload', [UploadController::class, 'upload'])->name('admin.upload.upload');
     Route::get('/upload/test', [UploadController::class, 'test'])->name('admin.upload.test');
 
     Route::get('/collect', [CollectController::class, 'index'])->name('admin.collect.index');
@@ -467,10 +489,12 @@ Route::prefix('admin')->group(function () {
     Route::post('/collect/test', [CollectController::class, 'test'])->name('admin.collect.test');
 
     Route::get('/role', [RoleController::class, 'index'])->name('admin.role.index');
+    Route::get('/role/data', [RoleController::class, 'index'])->name('admin.role.data');
     Route::match(['get', 'post'], '/role/info/{id?}', [RoleController::class, 'info'])->name('admin.role.info');
     Route::get('/role/del', [RoleController::class, 'del'])->name('admin.role.del');
 
     Route::get('/website', [WebsiteController::class, 'index'])->name('admin.website.index');
+    Route::get('/website/data', [WebsiteController::class, 'index'])->name('admin.website.data');
     Route::match(['get', 'post'], '/website/info/{id?}', [WebsiteController::class, 'info'])->name('admin.website.info');
     Route::get('/website/del', [WebsiteController::class, 'del'])->name('admin.website.del');
 
@@ -479,6 +503,7 @@ Route::prefix('admin')->group(function () {
 
     // 新增控制器路由
     Route::get('/manga', [MangaController::class, 'index'])->name('admin.manga.index');
+    Route::get('/manga/data', [MangaController::class, 'index'])->name('admin.manga.data');
     Route::match(['get', 'post'], '/manga/info/{id?}', [MangaController::class, 'info'])->name('admin.manga.info');
     Route::get('/manga/del', [MangaController::class, 'del'])->name('admin.manga.del');
 
@@ -574,6 +599,7 @@ Route::prefix('admin')->group(function () {
 
     // 系统设置路由
     Route::match(['get', 'post'], '/system/config', [SystemController::class, 'config'])->name('admin.system.config');
+    Route::match(['get', 'post'], '/system/configurl', [SystemController::class, 'configurl'])->name('admin.system.configurl');
     Route::match(['get', 'post'], '/system/configseo', [SystemController::class, 'configseo'])->name('admin.system.configseo');
     Route::match(['get', 'post'], '/system/configuser', [SystemController::class, 'configuser'])->name('admin.system.configuser');
     Route::match(['get', 'post'], '/system/configcomment', [SystemController::class, 'configcomment'])->name('admin.system.configcomment');

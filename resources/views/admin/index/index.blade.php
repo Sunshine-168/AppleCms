@@ -1,7 +1,8 @@
 @include('admin.public.head')
 
 @php
-$langs = ['zh', 'en'];
+$langs = ['zh-cn' => 'zh', 'en-us' => 'en'];
+$currentLang = request()->cookie('maccms_locale') ?: (config('maccms.app.lang') ?? 'zh-cn');
 @endphp
 <style type="text/css">
     .hs-iframe{width:100%;height:100%;}
@@ -15,7 +16,7 @@ $langs = ['zh', 'en'];
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header header-top">
 	
-	<div class="top-logo">{{ __('admin.admin/index/index/name') }}</div>
+	<div class="top-logo">{{ __('admin/index/index/name') }}</div>
 	<ul class="layout-right" lay-filter="">	
         <li class="nav-item">
             <a href="javascript:void(0);"  onclick="chanage_version()">New</a>
@@ -37,8 +38,8 @@ $langs = ['zh', 'en'];
 	</div>
 
 	<div class="layui-header">
-	    <div class="fl header-logo">{{ __('admin.admin/index/index/name') }}</div>
-		<div class="fl header-fold topLevelMenus"><a href="javascript:;" title="{{ __('admin.admin/index/index/menu_switch') }}" class="aicon ai-caidan" id="foldSwitch"><i class="layui-icon">&#xe65f;</i></a></div>
+	    <div class="fl header-logo">{{ __('admin/index/index/name') }}</div>
+		<div class="fl header-fold topLevelMenus"><a href="javascript:;" title="{{ __('admin/index/index/menu_switch') }}" class="aicon ai-caidan" id="foldSwitch"><i class="layui-icon">&#xe65f;</i></a></div>
 		 <a href="javascript:;" class=" site-tree-mobile layui-mobile layui-show-xs-block layui-hide-lg"><i class="layui-icon layui-icon-spread-left size-20"></i></a>
 	    <div class="bottom-nav">	
 		  <ul class="layui-nav fl nobg main-nav " >
@@ -48,7 +49,13 @@ $langs = ['zh', 'en'];
             @else
                <li class="layui-nav-item main-nav mob-nav" data-i="{{ $i }}">
             @endif
-                <a href="javascript:;" data-i="{{ $i }}">{{ $vo['name'] }}</a>
+                @php
+                $topMap = [1=>'menu/index',2=>'menu/system',3=>'menu/base',4=>'menu/vod',5=>'menu/art',6=>'menu/users',7=>'menu/templates',8=>'menu/make',9=>'menu/cjs',10=>'menu/db',11=>'menu/apps',12=>'menu/website',13=>'manga'];
+                $tKey = $topMap[$i] ?? '';
+                $tName = $tKey ? __($tKey) : __($vo['name']);
+                if ($tName === $tKey) { $tName = __($vo['name']); }
+                @endphp
+                <a href="javascript:;" data-i="{{ $i }}">{{ $tName }}</a>
 			  </li>
              @endforeach
            </ul>
@@ -56,8 +63,8 @@ $langs = ['zh', 'en'];
                 <li class="layui-nav-item layui-hide-xs"></li>
                     <div class="layui-input-inline" >
                         <select id="languageSelect" class="w150" name="app[lang]">
-                            @foreach($langs as $vo)
-                            <option value="{{ $vo }}" @if(config('maccms.app.lang') == $vo)selected @endif>{{ $vo }}</option>
+                            @foreach($langs as $code => $label)
+                            <option value="{{ $code }}" @if($currentLang == $code)selected @endif>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -65,16 +72,16 @@ $langs = ['zh', 'en'];
 				 <li class="layui-nav-item layui-hide-xs">
 					<a href="javascript:void(0);">{{ __('admin.operation') }}&nbsp;&nbsp;</a>
 					<dl class="layui-nav-child">
-                        <dd><a href="{{ route('admin.index.clear') }}" class="j-ajax" refresh="yes">{{ __('admin.admin/index/index/menu_cache_clear') }}</a></dd>
-						<dd><a href="javascript:void(0);" id="lockScreen">{{ __('admin.admin/index/index/menu_lock') }}</a></dd>
-						<dd><a href="{{ route('admin.logout') }}">{{ __('admin.admin/index/index/menu_logout') }}</a></dd>
+                        <dd><a href="{{ route('admin.index.clear') }}" class="j-ajax" refresh="yes">{{ __('admin/index/index/menu_cache_clear') }}</a></dd>
+						<dd><a href="javascript:void(0);" id="lockScreen">{{ __('admin/index/index/menu_lock') }}</a></dd>
+						<dd><a href="{{ route('admin.logout') }}">{{ __('admin/index/index/menu_logout') }}</a></dd>
 					</dl>
 				</li>
 				<li class="layui-nav-item layui-hide-xs">
-                    <a href="{{ url('/') }}" target="_blank">{{ __('admin.admin/index/index/menu_index') }}</a>
+                    <a href="{{ url('/') }}" target="_blank">{{ __('admin/index/index/menu_index') }}</a>
                 </li>
                 <li class="layui-nav-item layui-hide-xs">
-                    <a href="javascript:void(0);"  onclick="chanage_version()">{{ __('admin.admin/index/index/new_version') }}</a>
+                    <a href="javascript:void(0);"  onclick="chanage_version()">{{ __('admin/index/index/new_version') }}</a>
                 </li>
 			</ul>
 		</div>
@@ -83,10 +90,10 @@ $langs = ['zh', 'en'];
 	<div class="nav-item-ul">
 	  <div class="">
 		  <ul class="layui-nav">
-			  <li class="layui-nav-item"><a href="{{ url('/') }}" target="_blank">{{ __('admin.admin/index/index/menu_index') }}</a></li>
-			  <li class="layui-nav-item"><a href="javascript:void(0);" id="lockScreen">{{ __('admin.admin/index/index/menu_lock') }}</a></li>
-			  <li class="layui-nav-item"><a href="{{ route('admin.index.clear') }}" class="j-ajax" refresh="yes">{{ __('admin.admin/index/index/menu_cache_clear') }}</a></li>
-			  <li class="layui-nav-item"><a href="{{ route('admin.logout') }}">{{ __('admin.admin/index/index/menu_logout') }}</a></li>
+			  <li class="layui-nav-item"><a href="{{ url('/') }}" target="_blank">{{ __('admin/index/index/menu_index') }}</a></li>
+			  <li class="layui-nav-item"><a href="javascript:void(0);" id="lockScreen">{{ __('admin/index/index/menu_lock') }}</a></li>
+			  <li class="layui-nav-item"><a href="{{ route('admin.index.clear') }}" class="j-ajax" refresh="yes">{{ __('admin/index/index/menu_cache_clear') }}</a></li>
+			  <li class="layui-nav-item"><a href="{{ route('admin.logout') }}">{{ __('admin/index/index/menu_logout') }}</a></li>
 		  </ul>
 		
 	  </div>
@@ -101,13 +108,30 @@ $langs = ['zh', 'en'];
                 <ul class="layui-nav layui-nav-tree" style="display:none;">
             @endif
                     <li class="layui-nav-item layui-nav-itemed">
-                    <a href="javascript:;"><i class="{{ $v['icon'] }}"></i>{{ $v['name'] }}<span class="layui-nav-more"></span></a>
+                    @php
+                    $tKey = $topMap[$i] ?? '';
+                    $tName = $tKey ? __($tKey) : __($v['name']);
+                    if ($tName === $tKey) { $tName = __($v['name']); }
+                    @endphp
+                    <a href="javascript:;"><i class="{{ $v['icon'] }}"></i>{{ $tName }}<span class="layui-nav-more"></span></a>
 
                     <dl class="layui-nav-child">
                         @foreach($v['sub'] as $kk => $vv)
                         <dd>
                             @if(isset($vv['url']) && $vv['url'] !== '###')
-                            <a class="admin-nav-item" data-id="{{ $i }}{{ $kk }}" href="{{ $vv['url'] }}"><i class="{{ $vv['icon'] ?? '' }}"></i> {{ $vv['name'] }}</a>
+                            @php
+                            $candidates = [];
+                            if (isset($vv['action'])) { $candidates[] = 'menu/'.$vv['action']; }
+                            if (isset($vv['controller']) && isset($vv['action'])) { $candidates[] = 'menu/'.$vv['controller'].'_'.$vv['action']; }
+                            if (isset($vv['controller'])) { $candidates[] = 'menu/'.$vv['controller']; }
+                            $display = $vv['name'];
+                            foreach ($candidates as $ck) {
+                                $try = __($ck);
+                                if ($try !== $ck) { $display = $try; break; }
+                            }
+                            if ($display === $vv['name']) { $display = __($vv['name']); }
+                            @endphp
+                            <a class="admin-nav-item" data-id="{{ $i }}{{ $kk }}" href="{{ $vv['url'] }}"><i class="{{ $vv['icon'] ?? '' }}"></i> {{ $display }}</a>
                             @else
                             <hr class="layui-bg-gray">
                             @endif
@@ -129,23 +153,23 @@ $langs = ['zh', 'en'];
             <div class="tab-go-refresh" id="J_refresh"><i class="layui-icon layui-icon-refresh"></i></div>
             <div class="tab-go-left" id="page-prev"><i class="layui-icon layui-icon-zuozuo"></i></div>
             <ul class="layui-tab-title top_tab" id="B_history">
-                <li lay-id="111" class="layui-this">{{ __('admin.admin/index/index/menu_welcome') }}</li>
+                <li lay-id="111" class="layui-this">{{ __('admin/index/index/menu_welcome') }}</li>
             </ul>
             <div class="tab-right">
                 <div class="tab-go-right" id="page-next"><i class="layui-icon layui-icon-youyou"></i></div>
                 <ul class="layui-nav closeBox">
                     <li class="layui-nav-item" >
-                        <a href="javascript:;">{{ __('admin.admin/index/index/menu_opt') }}</a>
+                        <a href="javascript:;">{{ __('admin/index/index/menu_opt') }}</a>
                         <dl class="layui-nav-child">
-                            <dd><a href="javascript:;" class="closePageAll">&nbsp;{{ __('admin.admin/index/index/menu_close_all') }}</a></dd>
-                            <dd><a href="javascript:;" class="closePageOther">&nbsp;{{ __('admin.admin/index/index/menu_close_other') }}</a></dd>
+                            <dd><a href="javascript:;" class="closePageAll">&nbsp;{{ __('admin/index/index/menu_close_all') }}</a></dd>
+                            <dd><a href="javascript:;" class="closePageOther">&nbsp;{{ __('admin/index/index/menu_close_other') }}</a></dd>
                         </dl>
                     </li>
                 </ul>
             </div>
             <div class="layui-tab-content">
                 <div class="layui-tab-item layui-show">
-                    <iframe lay-id="111" src="{{ url('index/welcome') }}" width="100%" height="100%" frameborder="0" scrolling="yes" class="hs-iframe"></iframe>
+                    <iframe lay-id="111" src="{{ route('admin.index.welcome') }}" width="100%" height="100%" frameborder="0" scrolling="yes" class="hs-iframe"></iframe>
                 </div>
             </div>
 
@@ -159,7 +183,7 @@ $langs = ['zh', 'en'];
     </div>
 </div>
 
-@include('../../../application/admin/view/public/foot')
+@include('admin.public.foot')
 <!--请在下方写此页面业务相关的脚本-->
 <script>
     window.localStorage.clear();
@@ -174,22 +198,34 @@ $langs = ['zh', 'en'];
     $(document).ready(function(){
         $('#languageSelect').change(function(){
             var selectedLang = $(this).val();
+            var csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
             $.ajax({
-                url: "{{ url('system/configlang') }}",
+                url: "{{ route('system.configlang') }}",
                 type: "post",
                 dataType: "json",
-                data: {'lang': selectedLang},
+                data: {'lang': selectedLang, '_token': csrfToken},
                 beforeSend: function () {
 
                 },
                 error:function(r){
-                    layer.msg("configedit error",{time:1800});
+                    var msg = '语言切换失败';
+                    if (r && r.status) {
+                        msg += ' (' + r.status + ')';
+                    }
+                    if (r && r.responseJSON && r.responseJSON.msg) {
+                        msg += '：' + r.responseJSON.msg;
+                    }
+                    layer.msg(msg,{time:3000});
                 },
                 success: function (r) {
-                    layer.msg(r.msg,{time:1800});
-                },
-                complete: function () {
-                    location.reload();
+                    if (r && r.code == 1) {
+                        layer.msg(r.msg,{time:800});
+                        setTimeout(function(){
+                            window.location.replace(window.location.href);
+                        }, 800);
+                        return;
+                    }
+                    layer.msg((r && r.msg) ? r.msg : '语言切换失败',{time:3000});
                 }
             });
         });
@@ -219,7 +255,7 @@ $langs = ['zh', 'en'];
                 return false;
             }
             if ($('iframe').length == 10) {
-                layer.msg("{{ __('admin.admin/index/index/menu_max') }}");
+        layer.msg("{{ __('admin/index/index/menu_max') }}");
                 return false;
             }
             that.css({color:'#fff'});
@@ -302,7 +338,7 @@ $langs = ['zh', 'en'];
                 })
 
             } else {
-                layer.msg("{{ __('admin.admin/index/index/menu_close_empty') }}");
+                layer.msg("{{ __('admin/index/index/menu_close_empty') }}");
             }
         });
         //关闭其他选项卡
@@ -318,7 +354,7 @@ $langs = ['zh', 'en'];
                 })
 
             } else {
-                layer.msg("{{ __('admin.admin/index/index/menu_close_empty') }}");
+                layer.msg("{{ __('admin/index/index/menu_close_empty') }}");
             }
         });
 
@@ -349,7 +385,7 @@ $langs = ['zh', 'en'];
             cache: false,
             success: function(r){
                 if(r=='haved'){
-                    layer.msg('{{ __('admin.admin/index/cache_data') }}', {time: 3000});
+                    layer.msg('{{ __('admin/index/cache_data') }}', {time: 3000});
                 }
             }
         });

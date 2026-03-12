@@ -2,7 +2,7 @@
 <script type="text/javascript" src="{{ asset('static') }}/editor/umeditor/umeditor.config.js"></script>
 <script type="text/javascript" src="{{ asset('static') }}/editor/umeditor/umeditor.min.js"></script>
 <script type="text/javascript">
-    window.UMEDITOR_CONFIG.imageUrl = "{{ url('upload/upload') }}?from=umeditor&flag={{ $cl|strtolower }}_editor&input=upfile";
+    window.UMEDITOR_CONFIG.imageUrl = "{{ route('admin.upload.upload') }}?from=umeditor&flag={{ $cl|strtolower }}_editor&input=upfile";
     var EDITOR = UM;
 </script>
 <script>

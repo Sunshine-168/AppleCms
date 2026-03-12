@@ -57,7 +57,8 @@ body{background-color:#fff; font-family:"微软雅黑"; }
 .j-iframe-pop{margin:0 10px;}
 .help-tips{cursor:pointer;}
 .layui-layer-page .layui-layer-content {overflow: inherit !important;}
-.page-container .layui-tab-content { padding: 15px 30px 0 30px; }
+.page-container{padding:15px;}
+.page-container .layui-tab-content { padding: 15px 30px 15px 30px; }
 
 /*登录面板*/
 .login-body {background-color:#f5f5f5;}
@@ -78,6 +79,12 @@ body{background-color:#fff; font-family:"微软雅黑"; }
 /*主面板*/
 .layui-form-item{margin-bottom: 10px;}
 .layui-form-pane .layui-form-label { padding: 8px 5px; }
+.layui-input,
+.layui-textarea,
+.layui-form-select .layui-input{border-radius:4px;}
+.layui-form-pane .layui-form-label{border-radius:4px 0 0 4px;}
+.layui-form-pane .layui-input-block .layui-input,
+.layui-form-pane .layui-input-block .layui-textarea{border-radius:0 4px 4px 0;}
 .layui-layout-admin .layui-footer{ height:30px; line-height: 30px;}
 .layui-header,.layui-side {z-index:99999}
 
@@ -168,6 +175,8 @@ body{background-color:#fff; font-family:"微软雅黑"; }
 .page-filter .layui-form-pane .layui-form-item .layui-input-inline{margin-right:0;}
 .page-tips{margin-bottom:10px;}
 .page-tips .layui-colla-title{height:26px;line-height:26px;background-color:#f9f9f9;color:#999;}
+.page-tip-blue{display:block;margin:0 0 10px 0;padding:10px 15px;background:#f3f8ff;border:1px solid #e5e9f2;border-radius:2px;color:#1890ff;line-height:24px;}
+.page-tip-blue a{color:#1890ff;}
 .page-form{margin:10px 0;}
 #layerTopTips{background-color:#393D49;color:#fff;padding:5px 25px;border-radius:0 0 5px 5px;}
 /*分页*/
@@ -208,6 +217,17 @@ body{background-color:#fff; font-family:"微软雅黑"; }
 .menu-dl2 .layui-form-switch {left:500px}
 .menu-btns {left:710px}
 .menu-dl2 .menu-btns {left:688px}
+#switchNav .layui-nav-tree{background:transparent;}
+#switchNav .layui-nav-item>a{padding:0 16px;font-size:15px;}
+#switchNav .layui-nav-child{padding:6px 0 10px;}
+#switchNav .layui-nav-child dd{margin:2px 10px;border-radius:6px;overflow:hidden;}
+#switchNav .layui-nav-child dd>a{display:block;padding:8px 12px;color:rgba(255,255,255,.85);}
+#switchNav .layui-nav-child dd>a i{margin-right:6px;opacity:.9;}
+#switchNav .layui-nav-child dd:hover{background:rgba(0,150,136,.15);}
+#switchNav .layui-nav-child dd:hover>a{color:#fff;}
+#switchNav .layui-nav-child dd.layui-this{background:#009688;}
+#switchNav .layui-nav-child dd.layui-this>a{color:#fff;font-weight:600;}
+#switchNav .layui-nav-child hr{margin:6px 12px;opacity:.25;}
 .layui-nav-child dd:hover{background-color: #009688;color: #fff;}
 /*数据列表页排序字段*/
 .input-sort{height:24px;line-height:24px;width:40px;padding:0;text-align:center;color:#666;}

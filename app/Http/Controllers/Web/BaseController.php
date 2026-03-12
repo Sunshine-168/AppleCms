@@ -14,6 +14,9 @@ class BaseController extends Controller
 {
     public function __construct()
     {
+        if (app()->runningInConsole()) {
+            return;
+        }
         $this->checkSiteStatus();
         $this->shareConfig();
         $this->shareUserContext();

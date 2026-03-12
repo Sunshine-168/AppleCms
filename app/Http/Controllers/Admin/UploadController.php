@@ -27,64 +27,124 @@ class UploadController extends Controller
 
     public function upload(Request $request)
     {
-        // This would typically call a service or model method
-        // For now, we'll handle basic file upload
-        if (!$request->hasFile('file')) {
-            return response()->json(['code' => 1001, 'msg' => '没有上传文件']);
+        $from = strtolower((string) $request->input('from', ''));
+
+        if ($from !== '') {
+            $editor = match ($from) {
+                'ueditor' => new \App\Libraries\Editor\Ueditor(),
+                'umeditor' => new \App\Libraries\Editor\Umeditor(),
+                'kindeditor' => new \App\Libraries\Editor\Kindeditor(),
+                'tinymce' => new \App\Libraries\Editor\Tinymce(),
+                'ckeditor' => new \App\Libraries\Editor\Ckeditor(),
+                default => null,
+            };
+            if ($editor !== null && method_exists($editor, 'front')) {
+                $editor->front($request->all());
+            }
         }
-        
-        $file = $request->file('file');
-        $flag = $request->input('flag', 'vod');
-        $thumb = $request->input('thumb', '0');
-        
-        // Validate file
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $extension = strtolower($file->getClientOriginalExtension());
-        
-        if (!in_array($extension, $allowedExtensions)) {
-            return response()->json(['code' => 1002, 'msg' => '不支持的文件格式']);
+
+        $flag = (string) $request->input('flag', 'vod');
+        $flag = preg_replace('/[^a-z0-9_-]/i', '', $flag) ?: 'vod';
+
+        $input = (string) $request->input('input', 'file');
+        $input = preg_replace('/[^a-z0-9_-]/i', '', $input) ?: 'file';
+
+        $file = null;
+        foreach ([$input, 'file', 'imgdata', 'file1', 'upfile', 'imgFile', 'upload'] as $field) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                break;
+            }
         }
-        
-        // Generate filename
-        $filename = md5(uniqid()) . '.' . $extension;
+
+        if (!$file) {
+            if ($from !== '') {
+                $this->respondEditor($from, '未找到上传的文件', 0, ['file' => '']);
+            }
+            return response()->json(['code' => 0, 'msg' => '未找到上传的文件']);
+        }
+
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+        $allowedExtensions = match ($flag) {
+            'vod_file' => ['mp4', 'mp3', 'mkv', 'torrent', 'zip', 'txt', 'rar'],
+            default => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+        };
+
+        if ($extension === '' || !in_array($extension, $allowedExtensions, true)) {
+            $msg = '非系统允许的上传格式';
+            if ($from !== '') {
+                $this->respondEditor($from, $msg, 0, ['file' => '']);
+            }
+            return response()->json(['code' => 0, 'msg' => $msg]);
+        }
+
+        $filename = md5(uniqid('', true)) . '.' . $extension;
         $ymd = date('Ymd');
-        $nDir = $ymd;
-        
-        // Find available directory
+        $nDir = $ymd . '-1';
+        $targetDir = null;
+
         for ($i = 1; $i <= 100; $i++) {
             $nDir = $ymd . '-' . $i;
-            $path = public_path("upload/{$flag}/{$nDir}");
-            
-            if (!file_exists($path)) {
-                mkdir($path, 0755, true);
-                break;
-            }
-            
-            $files = glob($path . '/*.*');
-            if ($files && count($files) < 999) {
-                break;
+            $targetDir = public_path('upload/' . $flag . '/' . $nDir);
+            if (!is_dir($targetDir)) {
+                if (@mkdir($targetDir, 0755, true)) {
+                    break;
+                }
+            } else {
+                $files = glob($targetDir . DIRECTORY_SEPARATOR . '*.*');
+                if (!$files || count($files) < 999) {
+                    break;
+                }
             }
         }
-        
-        // Save file
-        $savePath = "upload/{$flag}/{$nDir}/{$filename}";
-        $file->move(public_path("upload/{$flag}/{$nDir}"), $filename);
-        
-        // Generate thumb if needed
-        $thumbPath = '';
-        if ($thumb == '1') {
-            // Generate thumbnail logic here
-            $thumbPath = $savePath; // Placeholder
+
+        if (!$targetDir || !is_dir($targetDir)) {
+            $msg = '上传目录不可写';
+            if ($from !== '') {
+                $this->respondEditor($from, $msg, 0, ['file' => '']);
+            }
+            return response()->json(['code' => 0, 'msg' => $msg]);
         }
-        
+
+        $file->move($targetDir, $filename);
+
+        $savePath = 'upload/' . $flag . '/' . $nDir . '/' . $filename;
+        $thumb = (string) $request->input('thumb', '0');
+        $thumbFile = $thumb === '1' ? $savePath : $savePath;
+        $thumbClass = (string) $request->input('thumb_class', '');
+
+        if ($from !== '') {
+            $this->respondEditor($from, '上传成功', 1, ['file' => $savePath]);
+        }
+
         return response()->json([
             'code' => 1,
             'msg' => '上传成功',
             'data' => [
-                'url' => asset($savePath),
-                'path' => $savePath,
-                'thumb' => $thumbPath ? asset($thumbPath) : '',
-            ]
+                'file' => $savePath,
+                'thumb' => [
+                    ['file' => $thumbFile],
+                ],
+                'thumb_class' => $thumbClass,
+            ],
         ]);
+    }
+
+    private function respondEditor(string $from, string $info, int $status, array $data): void
+    {
+        $from = strtolower($from);
+        $editor = match ($from) {
+            'ueditor' => new \App\Libraries\Editor\Ueditor(),
+            'umeditor' => new \App\Libraries\Editor\Umeditor(),
+            'kindeditor' => new \App\Libraries\Editor\Kindeditor(),
+            'tinymce' => new \App\Libraries\Editor\Tinymce(),
+            'ckeditor' => new \App\Libraries\Editor\Ckeditor(),
+            default => null,
+        };
+        if ($editor !== null && method_exists($editor, 'back')) {
+            $editor->back($info, $status, $data);
+        }
+        echo json_encode($status ? ['location' => ($data['file'] ?? '')] : ['error' => ($info ?: 'error')], 1);
+        exit;
     }
 }

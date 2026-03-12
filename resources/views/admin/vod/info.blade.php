@@ -563,7 +563,7 @@
         //多图片上传
         upload.render({
             elem: '.screenshot'
-            ,url: "{{ url('upload/upload') }}?flag=vod_screenshot"
+            ,url: "{{ route('admin.upload.upload') }}?flag=vod_screenshot"
             ,multiple: true
             ,before: function(obj){
                 obj.preview(function(index, file, result){
@@ -602,7 +602,7 @@
 
         upload.render({
             elem: '.layui-upload'
-            ,url: "{{ url('upload/upload') }}?flag=vod"
+            ,url: "{{ route('admin.upload.upload') }}?flag=vod"
             ,method: 'post'
             ,before: function(input) {
                 layer.msg("{{ lang('upload_ing') }}", {time:3000000});
@@ -626,7 +626,7 @@
         });
         upload.render({
             elem: '.j-editor-upload'
-            , url: "{{ url('upload/upload') }}?flag=vod_file"
+            , url: "{{ route('admin.upload.upload') }}?flag=vod_file"
             , method: 'post'
             , exts: 'mp4|mp3|mkv|torrent|zip|txt|rar'
             , before: function (input) {
@@ -642,7 +642,7 @@
                 if (txt != '') {
                     txt += "\r\n";
                 }
-                $(obj).parent().parent().find('textarea').val(txt + ROOT_PATH + "/" + res.data.file);
+                $(obj).parent().parent().find('textarea').val(txt + ROOT_PATH.replace(/\/index\.php\/?$/,'') + "/" + res.data.file);
             }
         });
 
@@ -650,7 +650,7 @@
             layui.each($('#'+ flag +'er_list').find('.j-editor-upload').last(), function(index, elem){
                 upload.render({
                     elem: elem
-                    , url: "{{ url('upload/upload') }}?flag=vod_file"
+                    , url: "{{ route('admin.upload.upload') }}?flag=vod_file"
                     , method: 'post'
                     , exts: 'mp4|mp3|mkv|torrent|zip|txt|rar'
                     , before: function (input) {
@@ -667,7 +667,7 @@
                             txt += "\r\n";
                         }
 
-                        $(obj).parent().parent().find('textarea').val(txt + ROOT_PATH + "/" +res.data.file);
+                        $(obj).parent().parent().find('textarea').val(txt + ROOT_PATH.replace(/\/index\.php\/?$/,'') + "/" +res.data.file);
                     }
                 });
             });
@@ -680,8 +680,7 @@
             var left = e.clientX+document.body.scrollLeft+20;
             var top = e.clientY+document.body.scrollTop+20;
             $(".showpic").css({left:left,top:top,display:""});
-            if(imgsrc.indexOf('://')<0){ imgsrc = ROOT_PATH  + '/' + imgsrc;	} else{ imgsrc = imgsrc.replace('mac:','http:'); }
-            $(".showpic_img").attr("src", imgsrc);
+            $(".showpic_img").attr("src", mac_url_img(imgsrc));
         },function (e){
             $(".showpic").css("display","none");
         });

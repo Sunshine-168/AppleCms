@@ -6,7 +6,7 @@
     var editor = "{{ $editor }}";
     function editor_getEditor(obj)
     {
-        return CKEDITOR.replace(obj,{filebrowserImageUploadUrl:"{{ url('upload/upload') }}?from=ckeditor&flag={{ $cl|strtolower }}_editor&input=upload"});
+        return CKEDITOR.replace(obj,{filebrowserImageUploadUrl:"{{ route('admin.upload.upload') }}?from=ckeditor&flag={{ $cl|strtolower }}_editor&input=upload"});
     }
     function editor_setContent(obj,html)
     {

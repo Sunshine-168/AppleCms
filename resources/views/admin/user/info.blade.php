@@ -164,10 +164,7 @@
             var left = e.clientX + document.body.scrollLeft + 20;
             var top = e.clientY + document.body.scrollTop + 20;
             $(".showpic").css({left: left, top: top, display: ""});
-            if (imgsrc.indexOf('://') < 0) {
-                imgsrc = ROOT_PATH + '/' + imgsrc;
-            }
-            $(".showpic_img").attr("src", imgsrc + '?r=' + Math.random());
+            $(".showpic_img").attr("src", mac_url_img(imgsrc) + '?r=' + Math.random());
         }, function (){
             $(".showpic").css("display", "none");
         });

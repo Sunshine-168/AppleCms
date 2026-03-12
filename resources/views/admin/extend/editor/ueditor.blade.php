@@ -1,7 +1,7 @@
 <script type="text/javascript" src="{{ asset('static') }}/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" src="{{ asset('static') }}/ueditor/ueditor.all.min.js"></script>
 <script type="text/javascript">
-    window.UEDITOR_CONFIG.serverUrl = "{{ url('upload/upload') }}?from=ueditor&flag={{ $cl|strtolower }}_editor&input=upfile";
+    window.UEDITOR_CONFIG.serverUrl = "{{ route('admin.upload.upload') }}?from=ueditor&flag={{ $cl|strtolower }}_editor&input=upfile";
     var EDITOR = UE;
 </script>
 <script>

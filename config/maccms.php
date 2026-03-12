@@ -1,4 +1,5 @@
 <?php
+
 return array (
   'db' => 
   array (
@@ -10,34 +11,34 @@ return array (
     'user' => 'root',
     'pass' => 'root',
     'tablepre' => 'mac_',
-    'backup_path' => storage_path('app/backup/database'),
+    'backup_path' => 'D:\\phpstudy_pro\\WWW\\mac\\storage\\app/backup/database',
     'part_size' => 20971520,
     'compress' => 1,
     'compress_level' => 4,
   ),
   'site' => 
   array (
-    'site_name' => '免费短视频分享大全 - 大中国',
-    'site_url' => 'www.test.cn',
-    'site_wapurl' => 'wap.test.cn',
+    'site_name' => '免费短视频分享大全1 - 大中国',
+    'site_url' => 'www.test1.cn',
+    'site_wapurl' => 'wap.test1.cn',
     'site_keywords' => '短视频,搞笑视频,视频分享,免费视频,在线视频,预告片',
-    'site_description' => '提供最新最快的视频分享数据',
-    'site_icp' => 'icp123',
-    'site_qq' => '123456',
-    'site_email' => '123456@test.cn',
+    'site_description' => '提供最新最快的视频分享数据1',
+    'site_icp' => 'icp1231',
+    'site_qq' => '1234561',
+    'site_email' => '123456@test.cn1',
     'install_dir' => '/',
-    'site_logo' => 'static/images/logo.jpg',
-    'site_waplogo' => 'static/images/logo.jpg',
+    'site_logo' => 'upload/site/20260312-1/dd05ce673660bcd0bb1970685f5264e6.png',
+    'site_waplogo' => 'upload/site/20260312-1/41acf25688c919ea243a1dec970278a9.png',
     'template_dir' => 'default',
     'html_dir' => 'html',
+    'site_polyfill' => '1',
     'mob_status' => '0',
     'mob_template_dir' => 'default',
     'mob_html_dir' => 'html',
-    'site_tj' => '统计代码',
+    'site_tj' => '统计代码123',
     'site_status' => '1',
     'site_close_tip' => '站点暂时关闭，请稍后访问',
-    'ads_dir' => 'ads',
-    'mob_ads_dir' => 'ads',
+    'mainland_ip_limit' => '0',
   ),
   'app' => 
   array (
@@ -47,8 +48,8 @@ return array (
     'cache_type' => 'file',
     'cache_host' => '127.0.0.1',
     'cache_port' => '6379',
-    'cache_username' => '',
-    'cache_password' => '',
+    'cache_username' => NULL,
+    'cache_password' => NULL,
     'cache_db' => '0',
     'cache_flag' => 'a6bcf9aa58',
     'cache_core' => '0',
@@ -56,16 +57,24 @@ return array (
     'cache_page' => '0',
     'cache_time_page' => '3600',
     'compress' => '0',
+    'input_type' => '1',
+    'ajax_page' => '0',
+    'wall_filter' => '0',
+    'show' => '0',
+    'show_verify' => '0',
     'search' => '1',
+    'search_verify' => '0',
+    'search_len' => 10,
     'search_timespan' => '3',
     'search_vod_rule' => 'vod_en|vod_sub',
     'search_art_rule' => 'art_en|art_sub',
+    'vod_search_optimise_cache_minutes' => NULL,
     'copyright_status' => '1',
     'copyright_notice' => '该视频由于版权限制，暂不提供播放。',
     'browser_junmp' => '0',
     'page_404' => '404',
     'player_sort' => '1',
-    'encrypt' => '0',
+    'encrypt' => '1',
     'search_hot' => '变形金刚,火影忍者,复仇者联盟,战狼,红海行动',
     'art_extend_class' => '段子手,私房话,八卦精,爱生活,汽车迷,科技咖,美食家,辣妈帮',
     'vod_extend_class' => '爱情,动作,喜剧,战争,科幻,剧情,武侠,冒险,枪战,恐怖,微电影,其它',
@@ -76,15 +85,14 @@ return array (
     'vod_extend_year' => '2021,2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,2008,2007,2006,2005,2004,2003,2002,2001,2000',
     'vod_extend_weekday' => '一,二,三,四,五,六,日',
     'actor_extend_area' => '大陆,香港,台湾,美国,韩国,日本,泰国,新加坡,马来西亚,印度,英国,法国,加拿大,西班牙,俄罗斯,其它',
-    'filter_words' => 'www,http,com,net',
-    'extra_var' => '',
+    'filter_words' => 'www,http,com,net,cn',
+    'extra_var' => NULL,
     'collect_timespan' => '3',
     'pagesize' => '20',
     'makesize' => '30',
     'admin_login_verify' => '1',
-    'editor' => 'Ueditor',
+    'editor' => 'ueditor',
     'lang' => 'zh-cn',
-    'input_type' => '1',
   ),
   'user' => 
   array (
@@ -107,12 +115,14 @@ return array (
     'cash_status' => '1',
     'cash_ratio' => '100',
     'cash_min' => '1',
-    'trysee' => '0',
+    'trysee' => '3',
     'vod_points_type' => '1',
     'art_points_type' => '1',
     'portrait_status' => '1',
     'portrait_size' => '100x100',
-    'filter_words' => 'admin,cao,sex,xxx',
+    'filter_words' => 'admin,cao,sex,xxx,bi',
+    'email_white_hosts' => NULL,
+    'email_black_hosts' => NULL,
   ),
   'gbook' => 
   array (
@@ -130,7 +140,7 @@ return array (
     'login' => '0',
     'verify' => '1',
     'pagesize' => '20',
-    'timespan' => '3',
+    'timespan' => '2',
   ),
   'upload' => 
   array (
@@ -151,42 +161,50 @@ return array (
     array (
       'ftp' => 
       array (
-        'host' => '',
+        'host' => NULL,
         'port' => '21',
         'user' => 'test',
         'pwd' => 'test',
         'path' => '/',
-        'url' => '',
+        'url' => NULL,
       ),
       'qiniu' => 
       array (
-        'bucket' => '',
-        'accesskey' => '',
-        'secretkey' => '',
-        'url' => '',
+        'bucket' => NULL,
+        'accesskey' => NULL,
+        'secretkey' => NULL,
+        'url' => NULL,
       ),
       'uomg' => 
       array (
-        'openid' => '',
-        'key' => '',
+        'openid' => NULL,
+        'key' => NULL,
         'type' => 'sogou',
       ),
       'upyun' => 
       array (
-        'bucket' => '',
-        'username' => '',
-        'pwd' => '',
-        'url' => '',
+        'bucket' => NULL,
+        'username' => NULL,
+        'pwd' => NULL,
+        'url' => NULL,
       ),
       'weibo' => 
       array (
-        'user' => '',
-        'pwd' => '',
+        'user' => NULL,
+        'pwd' => NULL,
         'size' => 'large',
-        'cookie' => '',
+        'cookie' => NULL,
         'time' => '1546239694',
       ),
+      's3' => 
+      array (
+        'bucket' => NULL,
+        'accesskey' => NULL,
+        'secretkey' => NULL,
+        'region' => NULL,
+      ),
     ),
+    'keep_local' => '0',
   ),
   'interface' => 
   array (
@@ -386,7 +404,7 @@ return array (
       'cachetime' => '',
       'auth' => '',
     ),
-    'website' =>
+    'website' => 
     array (
       'status' => '0',
       'charge' => '0',
@@ -397,17 +415,17 @@ return array (
       'cachetime' => '',
       'auth' => '',
     ),
-  'publicapi' =>
-      array (
-          'status' => '0',
-          'charge' => '0',
-          'pagesize' => '20',
-          'imgurl' => '',
-          'typefilter' => '',
-          'datafilter' => '',
-          'cachetime' => '',
-          'auth' => '',
-      ),
+    'publicapi' => 
+    array (
+      'status' => '0',
+      'charge' => '0',
+      'pagesize' => '20',
+      'imgurl' => '',
+      'typefilter' => '',
+      'datafilter' => '',
+      'cachetime' => '',
+      'auth' => '',
+    ),
   ),
   'connect' => 
   array (
@@ -468,11 +486,11 @@ return array (
     'vod_detail' => '0',
     'vod_play' => '0',
     'vod_down' => '0',
-    'art_detail' => '0',
+    'art_detail' => '2',
   ),
   'path' => 
   array (
-    'topic_index' => 'topic/index',
+    'topic_index' => 'topic/index1',
     'topic_detail' => 'topic/{id}/index',
     'vod_type' => 'vodtypehtml/{id}/index',
     'vod_detail' => 'vodhtml/{id}/index',
@@ -584,12 +602,12 @@ plotdetail/<id>   => plot/detail',
     'height' => '100%',
     'widthmob' => '100%',
     'heightmob' => '100%',
-    'widthpop' => '0',
-    'heightpop' => '600',
+    'widthpop' => '600',
+    'heightpop' => '500',
     'second' => '5',
     'prestrain' => '//union.maccms.la/html/prestrain.html',
-    'buffer' => '//union.maccms.la/html/buffer.html',
-    'parse' => '',
+    'buffer' => '//union.maccms.la/html/loading.html',
+    'parse' => NULL,
     'autofull' => '0',
     'showtop' => '1',
     'showlist' => '1',
@@ -621,7 +639,7 @@ plotdetail/<id>   => plot/detail',
   array (
     'vod' => 
     array (
-      'name' => '视频首页',
+      'name' => '视频首页1',
       'key' => '短视频,搞笑视频,视频分享,免费视频,在线视频,预告片',
       'des' => '提供最新最快的视频分享数据',
     ),
@@ -645,9 +663,15 @@ plotdetail/<id>   => plot/detail',
     ),
     'plot' => 
     array (
-      'name' => '剧情首页',
+      'name' => '剧情首页1',
       'key' => '剧情连载,剧情更新,剧情前瞻,剧情完结',
       'des' => '提供最新的剧情信息',
+    ),
+    'website' => 
+    array (
+      'name' => NULL,
+      'key' => NULL,
+      'des' => NULL,
     ),
   ),
   'urlsend' => 

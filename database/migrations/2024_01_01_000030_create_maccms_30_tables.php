@@ -166,7 +166,6 @@ return new class extends Migration
             $table->unsignedInteger('art_time_hits')->default(0);
             $table->unsignedInteger('art_time_make')->default(0);
             $table->decimal('art_score', 3, 1)->unsigned()->default(0.0);
-            $table->decimal('art_score', 3, 1)->unsigned()->default(0.0);
             $table->unsignedMediumInteger('art_score_all')->default(0);
             $table->unsignedMediumInteger('art_score_num')->default(0);
             $table->mediumText('art_title');
@@ -176,9 +175,6 @@ return new class extends Migration
             $table->string('art_rel_vod', 255);
             $table->string('art_pwd', 10);
             $table->string('art_pwd_url', 255);
-            $table->mediumText('art_title');
-            $table->mediumText('art_note');
-            $table->mediumText('art_content');
             $table->index('type_id', 'type_id');
             $table->index('type_id_1', 'type_id_1');
             $table->index('art_level', 'art_level');
@@ -189,7 +185,7 @@ return new class extends Migration
             $table->index('art_up', 'art_up');
             $table->index('art_tag', 'art_tag');
             $table->index('art_name', 'art_name');
-            $table->index('art_en', 'art_enn');
+            $table->index('art_en', 'art_en');
             $table->index('art_hits_day', 'art_hits_day');
             $table->index('art_hits_week', 'art_hits_week');
             $table->index('art_hits_month', 'art_hits_month');
@@ -219,7 +215,7 @@ return new class extends Migration
             $table->string('manga_pic', 1024);
             $table->string('manga_pic_thumb', 1024);
             $table->string('manga_pic_slide', 1024);
-            $table->text('manga_pic_screenshot')->nullable()->default('NULL COMMENT');
+            $table->text('manga_pic_screenshot')->nullable();
             $table->string('manga_blurb', 255);
             $table->string('manga_remarks', 100);
             $table->string('manga_jumpurl', 150);
@@ -239,7 +235,6 @@ return new class extends Migration
             $table->unsignedInteger('manga_time_hits')->default(0);
             $table->unsignedInteger('manga_time_make')->default(0);
             $table->decimal('manga_score', 3, 1)->unsigned()->default(0.0);
-            $table->decimal('manga_score', 3, 1)->unsigned()->default(0.0);
             $table->unsignedMediumInteger('manga_score_all')->default(0);
             $table->unsignedMediumInteger('manga_score_num')->default(0);
             $table->mediumText('manga_content')->nullable();
@@ -247,7 +242,6 @@ return new class extends Migration
             $table->string('manga_rel_vod', 255);
             $table->string('manga_pwd', 10);
             $table->string('manga_pwd_url', 255);
-            $table->mediumText('manga_content')->nullable();
             $table->string('manga_serial', 20)->default('0');
             $table->unsignedMediumInteger('manga_total')->default(0);
             $table->string('manga_chapter_from', 255);

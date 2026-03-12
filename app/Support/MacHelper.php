@@ -1304,7 +1304,7 @@ function mac_get_mid($controller)
         'website' => 11,
         'manga'   => 12,
     ];
-    return $arr[$controller];
+    return $arr[$controller] ?? 0;
 }
 }
 
@@ -1316,7 +1316,7 @@ function mac_get_aid($controller,$action='')
     $key = $controller.'/'.$action;
 
     $arr=['index'=>1,'map'=>2,'rss'=>3,'gbook'=>4,'comment'=>5,'user'=>6,'label'=>7,'vod'=>10,'art'=>20,'topic'=>30,'actor'=>80,'role'=>90,'plot'=>100,'website'=>110];
-    $res = $arr[$controller];
+    $res = $arr[$controller] ?? 0;
 
     // https://github.com/magicblack/maccms10/issues/960
     $arr=[
@@ -3434,4 +3434,3 @@ function copydirs($source, $dest)
         }
     }
 }
-

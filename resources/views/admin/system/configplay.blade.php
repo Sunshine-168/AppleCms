@@ -2,9 +2,13 @@
 <div class="page-container">
     <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configplay') }}">
         @csrf
-        <blockquote class="layui-elem-quote layui-quote-nm">
-            {{ __('admin.admin/system/configplay/tip') }}
-        </blockquote>
+        <div class="page-tip-blue">
+            @php
+                $tip = (string) __('admin.admin/system/configplay/tip');
+                $tip = preg_replace('/<br>\s+/u', '<br>', $tip) ?? $tip;
+            @endphp
+            {!! $tip !!}
+        </div>
 
         <div class="layui-form-item">
             <label class="layui-form-label">{{ __('admin.admin/system/configplay/width') }}：</label>
@@ -103,7 +107,7 @@
         <div class="layui-form-item center">
             <div class="layui-input-block">
                 <button type="submit" class="layui-btn" lay-submit lay-filter="formSubmit">{{ __('admin.btn_save') }}</button>
-                <button type="button" class="layui-btn layui-btn-normal" id="btnDef">{{ __('admin.default_val') }}</button>
+                <button type="button" class="layui-btn layui-btn-normal" id="btnDef">{{ __('admin/database/import') }}</button>
                 <button class="layui-btn layui-btn-warm" type="reset">{{ __('admin.btn_reset') }}</button>
             </div>
         </div>

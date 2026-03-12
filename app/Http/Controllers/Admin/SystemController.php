@@ -12,6 +12,92 @@ use Throwable;
 
 class SystemController extends BaseController
 {
+    public function configlang(Request $request)
+    {
+        try {
+            $lang = strtolower(trim((string) $request->input('lang', '')));
+            $map = [
+                'zh' => 'zh-cn',
+                'en' => 'en-us',
+                'zh-cn' => 'zh-cn',
+                'en-us' => 'en-us',
+                'zh-tw' => 'zh-tw',
+                'ja' => 'ja-jp',
+                'ko' => 'ko-kr',
+                'fr' => 'fr-fr',
+                'de' => 'de-de',
+                'es' => 'es-es',
+                'pt' => 'pt-pt',
+            ];
+            $normalized = $map[$lang] ?? $lang;
+            if ($normalized === '') {
+                return response()->json(['code' => 1001, 'msg' => __('param_err')]);
+            }
+            $this->saveConfig(['lang' => $normalized], 'app');
+            // 立即生效
+            $localeMap = [
+                'zh-cn' => 'zh',
+                'zh-tw' => 'zh_TW',
+                'en-us' => 'en',
+                'de-de' => 'de',
+                'es-es' => 'es',
+                'fr-fr' => 'fr',
+                'ja-jp' => 'ja',
+                'ko-kr' => 'ko',
+                'pt-pt' => 'pt',
+            ];
+            $laravelLocale = $localeMap[$normalized] ?? null;
+            if ($laravelLocale) {
+                app()->setLocale($laravelLocale);
+                config(['app.locale' => $laravelLocale, 'maccms.app.lang' => $normalized]);
+            }
+            $this->clearCache();
+            try {
+                if (app()->bound('session')) {
+                    session(['maccms_app_lang' => $normalized]);
+                }
+            } catch (Throwable $e) {
+            }
+
+            return response()
+                ->json(['code' => 1, 'msg' => '语言已切换'])
+                ->cookie('maccms_locale', $normalized, 60 * 24 * 365);
+        } catch (Throwable $e) {
+            return response()->json(['code' => 1001, 'msg' => '语言切换失败']);
+        }
+    }
+    public function configurl(Request $request)
+    {
+        if ($request->isMethod('post')) {
+            $view = (array) $request->input('view', []);
+            $path = (array) $request->input('path', []);
+            $rewrite = (array) $request->input('rewrite', []);
+            if (!empty($view)) {
+                $this->saveConfig($view, 'view');
+            }
+            if (!empty($path)) {
+                $this->saveConfig($path, 'path');
+            }
+            if (!empty($rewrite)) {
+                $this->saveConfig($rewrite, 'rewrite');
+            }
+            $this->clearCache();
+            return $this->success('URL配置保存成功', [], route('admin.system.configurl', ['_t' => time()]));
+        }
+        $configFile = config_path('maccms.php');
+        $config = [];
+        if (File::exists($configFile)) {
+            $loaded = include $configFile;
+            if (is_array($loaded)) {
+                $config = $loaded;
+            }
+        }
+        if (!is_array($config) || empty($config)) {
+            $config = config('maccms', []);
+        }
+        return view('admin.system.configurl', compact('config'));
+    }
+
     public function config(Request $request)
     {
         if ($request->isMethod('post')) {
@@ -26,11 +112,33 @@ class SystemController extends BaseController
             // 清理缓存
             $this->clearCache();
             
-            return $this->success('配置保存成功');
+            return $this->success('配置保存成功', [], route('admin.system.config', ['_t' => time()]));
         }
 
         $config = config('maccms');
-        return view('admin.system.config', compact('config'));
+        $templates = [];
+        $templateRoot = base_path('template');
+        if (File::isDirectory($templateRoot)) {
+            $templates = array_values(array_map('basename', File::directories($templateRoot)));
+            sort($templates);
+        }
+        if (empty($templates)) {
+            $templates = ['default'];
+        }
+
+        $langs = [
+            'zh-cn',
+            'en-us',
+            'zh-tw',
+            'ja-jp',
+            'ko-kr',
+            'fr-fr',
+            'de-de',
+            'es-es',
+            'pt-pt',
+        ];
+
+        return view('admin.system.config', compact('config', 'templates', 'langs'));
     }
 
     public function configseo(Request $request)
@@ -39,7 +147,7 @@ class SystemController extends BaseController
             $config = $request->except(['_token']);
             $this->saveConfig($config, 'seo');
             $this->clearCache();
-            return $this->success('SEO配置保存成功');
+            return $this->success('SEO配置保存成功', [], route('admin.system.configseo', ['_t' => time()]));
         }
 
         $config = config('maccms.seo', []);
@@ -49,13 +157,13 @@ class SystemController extends BaseController
     public function configuser(Request $request)
     {
         if ($request->isMethod('post')) {
-            $config = $request->except(['_token']);
+            $config = (array) $request->input('user', []);
             $this->saveConfig($config, 'user');
             $this->clearCache();
-            return $this->success('用户配置保存成功');
+            return $this->success('用户配置保存成功', [], route('admin.system.configuser', ['_t' => time()]));
         }
 
-        $config = config('maccms.user', []);
+        $config = ['user' => config('maccms.user', [])];
         return view('admin.system.configuser', compact('config'));
     }
 
@@ -65,7 +173,7 @@ class SystemController extends BaseController
             $this->saveConfig((array) $request->input('gbook', []), 'gbook');
             $this->saveConfig((array) $request->input('comment', []), 'comment');
             $this->clearCache();
-            return $this->success('评论配置保存成功');
+            return $this->success('评论配置保存成功', [], route('admin.system.configcomment', ['_t' => time()]));
         }
 
         $config = config('maccms', []);
@@ -75,14 +183,34 @@ class SystemController extends BaseController
     public function configupload(Request $request)
     {
         if ($request->isMethod('post')) {
-            $config = $request->except(['_token']);
+            $config = (array) $request->input('upload', []);
             $this->saveConfig($config, 'upload');
             $this->clearCache();
-            return $this->success('上传配置保存成功');
+            return $this->success('上传配置保存成功', [], route('admin.system.configupload', ['_t' => time()]));
         }
 
-        $config = config('maccms.upload', []);
-        return view('admin.system.configupload', compact('config'));
+        $config = ['upload' => config('maccms.upload', [])];
+
+        $extends = ['ext_list' => []];
+        $extendDir = base_path('app/Libraries/upload');
+        if (File::isDirectory($extendDir)) {
+            foreach (File::files($extendDir) as $file) {
+                $base = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                $class = 'App\\Libraries\\Upload\\' . $base;
+                if (!class_exists($class)) {
+                    continue;
+                }
+                try {
+                    $instance = new $class();
+                    $extends['ext_list'][$base] = (string) ($instance->name ?? $base);
+                } catch (Throwable $e) {
+                    $extends['ext_list'][$base] = $base;
+                }
+            }
+            ksort($extends['ext_list']);
+        }
+
+        return view('admin.system.configupload', compact('config', 'extends'));
     }
 
     public function configinterface(Request $request)
@@ -117,13 +245,13 @@ class SystemController extends BaseController
     public function configcollect(Request $request)
     {
         if ($request->isMethod('post')) {
-            $config = $request->except(['_token']);
+            $config = (array) $request->input('collect', []);
             $this->saveConfig($config, 'collect');
             $this->clearCache();
             return $this->success('采集配置保存成功');
         }
 
-        $config = config('maccms.collect', []);
+        $config = ['collect' => config('maccms.collect', [])];
         return view('admin.system.configcollect', compact('config'));
     }
 
@@ -331,20 +459,30 @@ class SystemController extends BaseController
     protected function saveConfig($config, $section = null)
     {
         $configFile = config_path('maccms.php');
-        $currentConfig = config('maccms', []);
-        
-        if ($section) {
-            $currentConfig[$section] = array_merge($currentConfig[$section] ?? [], $config);
-        } else {
-            $currentConfig = array_merge($currentConfig, $config);
+        $currentConfig = [];
+        if (File::exists($configFile)) {
+            $loaded = include $configFile;
+            if (is_array($loaded)) {
+                $currentConfig = $loaded;
+            }
         }
-        
-        // 将配置写入文件
+
+        if ($section) {
+            $currentSection = $currentConfig[$section] ?? [];
+            if (!is_array($currentSection)) {
+                $currentSection = [];
+            }
+            $currentConfig[$section] = array_replace_recursive($currentSection, (array) $config);
+        } else {
+            $currentConfig = array_replace_recursive($currentConfig, (array) $config);
+        }
+
         $content = "<?php\n\nreturn " . var_export($currentConfig, true) . ";\n";
         File::put($configFile, $content);
-        
-        // 清除配置缓存
-        Cache::forget('config');
+        clearstatcache(true, $configFile);
+        if (function_exists('opcache_invalidate')) {
+            @opcache_invalidate($configFile, true);
+        }
     }
 
     protected function sendTestMail(string $type, string $to, string $title, string $body, array $config): array

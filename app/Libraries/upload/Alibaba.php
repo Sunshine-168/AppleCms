@@ -3,7 +3,7 @@ namespace App\Libraries\Upload;
 
 class Alibaba
 {
-    public $name = '阿里巴巴云存�?;
+    public $name = '阿里巴巴云存储';
     public $ver = '1.0';
     private $config = [];
 

@@ -6,7 +6,7 @@ use Upyun\Config;
 
 class Upyun
 {
-    public $name = '又拍云存�?;
+    public $name = '又拍云存储';
     public $ver = '1.0';
     private $config = [];
 
