@@ -1,1 +1,0 @@
-<?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views\admin\public\pages.blade.php ENDPATH**/ ?>

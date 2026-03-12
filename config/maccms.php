@@ -267,12 +267,34 @@ return array (
       'psernd' => '0',
       'psesyn' => '0',
       'urlrole' => '0',
-      'inrule' => ',f,g',
-      'uprule' => ',a',
-      'filter' => '色戒,色即是空',
-      'namewords' => '第1季=第一季#第2季=第二季#第3季=第三季#第4季=第四季',
-      'thesaurus' => ' =',
-      'words' => 'aaa#bbb#ccc#ddd#eee',
+      'inrule' => 
+      array (
+        5 => 'f',
+        6 => 'g',
+        1 => 'b',
+        2 => 'c',
+      ),
+      'uprule' => 
+      array (
+        0 => 'a',
+      ),
+      'filter' => '色戒,色即是空,12',
+      'namewords' => '第1季=第一季
+第2季=第二季
+第3季=第三季
+第4季=第四季',
+      'thesaurus' => '=',
+      'words' => 'aaa
+bbb
+ccc
+ddd
+eee',
+      'pseplayer' => '0',
+      'psearea' => '0',
+      'pselang' => '0',
+      'playerwords' => NULL,
+      'areawords' => NULL,
+      'langwords' => NULL,
     ),
     'art' => 
     array (
@@ -286,11 +308,18 @@ return array (
       'tag' => '0',
       'psernd' => '0',
       'psesyn' => '0',
-      'inrule' => ',b',
-      'uprule' => ',a,d',
+      'inrule' => 
+      array (
+        1 => 'b',
+      ),
+      'uprule' => 
+      array (
+        0 => 'a',
+        3 => 'd',
+      ),
       'filter' => '无奈的人',
-      'thesaurus' => '',
-      'words' => '',
+      'thesaurus' => NULL,
+      'words' => NULL,
     ),
     'actor' => 
     array (
@@ -303,10 +332,15 @@ return array (
       'pic' => '0',
       'psernd' => '0',
       'psesyn' => '0',
-      'uprule' => ',a,b,c',
+      'uprule' => 
+      array (
+        0 => 'a',
+        1 => 'b',
+        2 => 'c',
+      ),
       'filter' => '无奈的人',
-      'thesaurus' => '',
-      'words' => '',
+      'thesaurus' => NULL,
+      'words' => NULL,
       'inrule' => ',a',
     ),
     'role' => 
@@ -320,26 +354,31 @@ return array (
       'pic' => '0',
       'psernd' => '0',
       'psesyn' => '0',
-      'uprule' => ',a,b,c',
-      'filter' => '',
-      'thesaurus' => '',
-      'words' => '',
+      'uprule' => 
+      array (
+        0 => 'a',
+        1 => 'b',
+        2 => 'c',
+      ),
+      'filter' => NULL,
+      'thesaurus' => NULL,
+      'words' => NULL,
       'inrule' => ',a',
     ),
     'website' => 
     array (
       'status' => '0',
-      'hits_start' => '',
-      'hits_end' => '',
-      'updown_start' => '',
-      'updown_end' => '',
+      'hits_start' => NULL,
+      'hits_end' => NULL,
+      'updown_start' => NULL,
+      'updown_end' => NULL,
       'score' => '0',
       'pic' => '0',
       'psernd' => '0',
       'psesyn' => '0',
-      'filter' => '',
-      'thesaurus' => '',
-      'words' => '',
+      'filter' => NULL,
+      'thesaurus' => NULL,
+      'words' => NULL,
       'inrule' => ',a',
       'uprule' => ',',
     ),
@@ -350,10 +389,13 @@ return array (
       'updown_end' => '100',
       'psernd' => '0',
       'psesyn' => '0',
-      'inrule' => ',b',
-      'filter' => '',
-      'thesaurus' => '',
-      'words' => '',
+      'inrule' => 
+      array (
+        1 => 'b',
+      ),
+      'filter' => NULL,
+      'thesaurus' => NULL,
+      'words' => NULL,
       'uprule' => ',',
     ),
   ),

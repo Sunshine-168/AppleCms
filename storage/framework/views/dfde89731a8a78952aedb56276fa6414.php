@@ -6,6 +6,15 @@
 <div class="page-container">
     <form class="layui-form layui-form-pane" method="post" action="<?php echo e(route('admin.system.configcollect')); ?>">
         <?php echo csrf_field(); ?>
+        <?php
+            $ruleHas = static function ($rule, string $key): bool {
+                if (is_array($rule)) {
+                    return in_array($key, $rule, true);
+                }
+                $rule = (string) $rule;
+                return $rule !== '' && strpos($rule, $key) !== false;
+            };
+        ?>
         <div class="layui-tab" lay-filter="tb1">
             <ul class="layui-tab-title">
                 <li class="layui-this" lay-id="configcollect_1"><?php echo e(__('admin.admin/system/configcollect/vod')); ?></li>
@@ -139,14 +148,14 @@
                     <label class="layui-form-label">
                         <?php echo e(__('admin.admin/system/configcollect/inrule')); ?>：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="<?php echo e(__('admin.name')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="<?php echo e(__('admin.years')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="<?php echo e(__('admin.area')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'd') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="<?php echo e(__('admin.lang')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'e') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="<?php echo e(__('admin.actor')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'f') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="<?php echo e(__('admin.director')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'g') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="<?php echo e(__('admin.douban_id')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'h') !== false): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="<?php echo e(__('admin.name')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'a')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'b')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="<?php echo e(__('admin.years')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'c')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="<?php echo e(__('admin.area')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'd')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="<?php echo e(__('admin.lang')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'e')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="<?php echo e(__('admin.actor')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'f')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="<?php echo e(__('admin.director')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'g')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="<?php echo e(__('admin.douban_id')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'h')): echo 'checked'; endif; ?>>
                     </div>
                 </div>
 
@@ -154,29 +163,29 @@
                     <label class="layui-form-label">
                         <?php echo e(__('admin.admin/system/configcollect/uprule')); ?>：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="<?php echo e(__('admin.playurl')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="<?php echo e(__('admin.downurl')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="<?php echo e(__('admin.serial')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="<?php echo e(__('admin.remarks')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'd') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="<?php echo e(__('admin.director')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'e') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="<?php echo e(__('admin.actor')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'f') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="<?php echo e(__('admin.years')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'g') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="<?php echo e(__('admin.area')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'h') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="<?php echo e(__('admin.lang')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'i') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="<?php echo e(__('admin.pic')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'j') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="<?php echo e(__('admin.content')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'k') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'l') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="<?php echo e(__('admin.sub')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'm') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="<?php echo e(__('admin.class')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'n') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="<?php echo e(__('admin.writer')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'o') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="<?php echo e(__('admin.version')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'p') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="<?php echo e(__('admin.state')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'q') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="<?php echo e(__('admin.blurb')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'r') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="<?php echo e(__('admin.tv')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 's') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="<?php echo e(__('admin.weekday')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 't') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="<?php echo e(__('admin.total')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'u') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="<?php echo e(__('admin.isend')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'v') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="<?php echo e(__('admin.plot')); ?>" <?php if(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'w') !== false): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="<?php echo e(__('admin.playurl')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'a')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="<?php echo e(__('admin.downurl')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'b')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="<?php echo e(__('admin.serial')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'c')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="<?php echo e(__('admin.remarks')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'd')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="<?php echo e(__('admin.director')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'e')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="<?php echo e(__('admin.actor')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'f')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="<?php echo e(__('admin.years')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'g')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="<?php echo e(__('admin.area')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'h')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="<?php echo e(__('admin.lang')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'i')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="<?php echo e(__('admin.pic')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'j')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="<?php echo e(__('admin.content')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'k')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'l')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="<?php echo e(__('admin.sub')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'm')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="<?php echo e(__('admin.class')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'n')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="<?php echo e(__('admin.writer')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'o')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="<?php echo e(__('admin.version')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'p')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="<?php echo e(__('admin.state')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'q')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="<?php echo e(__('admin.blurb')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'r')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="<?php echo e(__('admin.tv')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 's')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="<?php echo e(__('admin.weekday')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 't')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="<?php echo e(__('admin.total')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'u')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="<?php echo e(__('admin.isend')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'v')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="<?php echo e(__('admin.plot')); ?>" <?php if($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'w')): echo 'checked'; endif; ?>>
                     </div>
                 </div>
 
@@ -260,19 +269,19 @@
                     <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/inrule')); ?>：</label>
                     <div class="layui-input-block">
                         <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="a" title="<?php echo e(__('admin.name')); ?>" checked disabled>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.inrule', ''), 'b') !== false): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.inrule', ''), 'b')): echo 'checked'; endif; ?>>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/uprule')); ?>：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="<?php echo e(__('admin.author')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="<?php echo e(__('admin.from')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="<?php echo e(__('admin.pic')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'd') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'e') !== false): echo 'checked'; endif; ?>>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="<?php echo e(__('admin.blurb')); ?>" <?php if(strpos((string) data_get($config, 'collect.art.uprule', ''), 'f') !== false): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'a')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="<?php echo e(__('admin.author')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'b')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="<?php echo e(__('admin.from')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'c')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="<?php echo e(__('admin.pic')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'd')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'e')): echo 'checked'; endif; ?>>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="<?php echo e(__('admin.blurb')); ?>" <?php if($ruleHas(data_get($config, 'collect.art.uprule', ''), 'f')): echo 'checked'; endif; ?>>
                     </div>
                 </div>
 
@@ -350,19 +359,19 @@
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/inrule')); ?>：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="a" title="<?php echo e(__('admin.actor_name')); ?>" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="<?php echo e(__('admin.type')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="<?php echo e(__('admin.sex')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'b') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="<?php echo e(__('admin.type')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.inrule', ''), 'c')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="<?php echo e(__('admin.sex')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.inrule', ''), 'b')): echo 'checked'; endif; ?>>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/uprule')); ?>：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="<?php echo e(__('admin.blurb')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="<?php echo e(__('admin.remarks')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="<?php echo e(__('admin.works')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'd') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="<?php echo e(__('admin.pic')); ?>" <?php if(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'e') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'a')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="<?php echo e(__('admin.blurb')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'b')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="<?php echo e(__('admin.remarks')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'c')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="<?php echo e(__('admin.works')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'd')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="<?php echo e(__('admin.pic')); ?>" <?php if($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'e')): echo 'checked'; endif; ?>>
 
                         </div>
                     </div>
@@ -442,8 +451,8 @@
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="a" title="<?php echo e(__('admin.role_name')); ?>" checked disabled>
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="b" title="<?php echo e(__('admin.vod_name')); ?><?php echo e(__('admin.or')); ?><?php echo e(__('admin.douban_id')); ?>" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="<?php echo e(__('admin.actor_name')); ?>" <?php if(strpos((string) data_get($config, 'collect.role.inrule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="<?php echo e(__('admin.director')); ?>" <?php if(strpos((string) data_get($config, 'collect.role.inrule', ''), 'd') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="<?php echo e(__('admin.actor_name')); ?>" <?php if($ruleHas(data_get($config, 'collect.role.inrule', ''), 'c')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="<?php echo e(__('admin.director')); ?>" <?php if($ruleHas(data_get($config, 'collect.role.inrule', ''), 'd')): echo 'checked'; endif; ?>>
                         </div>
                         <div class="layui-form-mid layui-word-aux"><?php echo e(__('admin.admin/system/configcollect/inrule_tip_role')); ?></div>
                     </div>
@@ -451,9 +460,9 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/uprule')); ?>：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if(strpos((string) data_get($config, 'collect.role.uprule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="<?php echo e(__('admin.remarks')); ?>" <?php if(strpos((string) data_get($config, 'collect.role.uprule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="<?php echo e(__('admin.pic')); ?>" <?php if(strpos((string) data_get($config, 'collect.role.uprule', ''), 'c') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if($ruleHas(data_get($config, 'collect.role.uprule', ''), 'a')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="<?php echo e(__('admin.remarks')); ?>" <?php if($ruleHas(data_get($config, 'collect.role.uprule', ''), 'b')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="<?php echo e(__('admin.pic')); ?>" <?php if($ruleHas(data_get($config, 'collect.role.uprule', ''), 'c')): echo 'checked'; endif; ?>>
 
                         </div>
                     </div>
@@ -532,19 +541,19 @@
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/inrule')); ?>：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="a" title="<?php echo e(__('admin.name')); ?>" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.inrule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="<?php echo e(__('admin.jumpurl')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.inrule', ''), 'c') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="<?php echo e(__('admin.type')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.inrule', ''), 'b')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="<?php echo e(__('admin.jumpurl')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.inrule', ''), 'c')): echo 'checked'; endif; ?>>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/uprule')); ?>：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.uprule', ''), 'a') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="<?php echo e(__('admin.blurb')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.uprule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="<?php echo e(__('admin.remarks')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.uprule', ''), 'c') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="<?php echo e(__('admin.jumpurl')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.uprule', ''), 'd') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="<?php echo e(__('admin.pic')); ?>" <?php if(strpos((string) data_get($config, 'collect.website.uprule', ''), 'e') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="<?php echo e(__('admin.content')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.uprule', ''), 'a')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="<?php echo e(__('admin.blurb')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.uprule', ''), 'b')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="<?php echo e(__('admin.remarks')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.uprule', ''), 'c')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="<?php echo e(__('admin.jumpurl')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.uprule', ''), 'd')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="<?php echo e(__('admin.pic')); ?>" <?php if($ruleHas(data_get($config, 'collect.website.uprule', ''), 'e')): echo 'checked'; endif; ?>>
 
                         </div>
                     </div>
@@ -597,8 +606,8 @@
                         <label class="layui-form-label"><?php echo e(__('admin.admin/system/configcollect/inrule')); ?>：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="a" title="<?php echo e(__('admin.rel_name')); ?><?php echo e(__('admin.or')); ?><?php echo e(__('admin.douban_id')); ?>" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="<?php echo e(__('admin.comment_content')); ?>" <?php if(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'b') !== false): echo 'checked'; endif; ?>>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="<?php echo e(__('admin.comment_name')); ?>" <?php if(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'c') !== false): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="<?php echo e(__('admin.comment_content')); ?>" <?php if($ruleHas(data_get($config, 'collect.comment.inrule', ''), 'b')): echo 'checked'; endif; ?>>
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="<?php echo e(__('admin.comment_name')); ?>" <?php if($ruleHas(data_get($config, 'collect.comment.inrule', ''), 'c')): echo 'checked'; endif; ?>>
                         </div>
                         <div class="layui-form-mid layui-word-aux"><?php echo e(__('admin.admin/system/configcollect/inrule_tip_comment')); ?></div>
                     </div>
@@ -621,8 +630,8 @@
                 </div>
 
                 <div class="layui-tab-item">
-                <blockquote class="layui-elem-quote layui-quote-nm">
-                    <?php echo e(__('admin.admin/system/configcollect/words_tip')); ?>
+                <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                    <?php echo __('admin.admin/system/configcollect/words_tip'); ?>
 
                 </blockquote>
 

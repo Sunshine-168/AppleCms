@@ -6,6 +6,15 @@
 <div class="page-container">
     <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configcollect') }}">
         @csrf
+        @php
+            $ruleHas = static function ($rule, string $key): bool {
+                if (is_array($rule)) {
+                    return in_array($key, $rule, true);
+                }
+                $rule = (string) $rule;
+                return $rule !== '' && strpos($rule, $key) !== false;
+            };
+        @endphp
         <div class="layui-tab" lay-filter="tb1">
             <ul class="layui-tab-title">
                 <li class="layui-this" lay-id="configcollect_1">{{ __('admin.admin/system/configcollect/vod') }}</li>
@@ -139,14 +148,14 @@
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configcollect/inrule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="{{ __('admin.name') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'a') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'b') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="{{ __('admin.years') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'c') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="{{ __('admin.area') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'd') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="{{ __('admin.lang') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'e') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="{{ __('admin.actor') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'f') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'g') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="{{ __('admin.douban_id') }}" @checked(strpos((string) data_get($config, 'collect.vod.inrule', ''), 'h') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="a" title="{{ __('admin.name') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'a'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="b" title="{{ __('admin.type') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'b'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="c" title="{{ __('admin.years') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'c'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="d" title="{{ __('admin.area') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'd'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="e" title="{{ __('admin.lang') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'e'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="f" title="{{ __('admin.actor') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'f'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="g" title="{{ __('admin.director') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'g'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][inrule][]" value="h" title="{{ __('admin.douban_id') }}" @checked($ruleHas(data_get($config, 'collect.vod.inrule', ''), 'h'))>
                     </div>
                 </div>
 
@@ -154,29 +163,29 @@
                     <label class="layui-form-label">
                         {{ __('admin.admin/system/configcollect/uprule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="{{ __('admin.playurl') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'a') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="{{ __('admin.downurl') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'b') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="{{ __('admin.serial') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'c') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'd') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'e') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="{{ __('admin.actor') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'f') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="{{ __('admin.years') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'g') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="{{ __('admin.area') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'h') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="{{ __('admin.lang') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'i') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'j') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'k') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'l') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="{{ __('admin.sub') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'm') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="{{ __('admin.class') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'n') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="{{ __('admin.writer') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'o') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="{{ __('admin.version') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'p') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="{{ __('admin.state') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'q') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'r') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="{{ __('admin.tv') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 's') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="{{ __('admin.weekday') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 't') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="{{ __('admin.total') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'u') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="{{ __('admin.isend') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'v') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="{{ __('admin.plot') }}" @checked(strpos((string) data_get($config, 'collect.vod.uprule', ''), 'w') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="a" title="{{ __('admin.playurl') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'a'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="b" title="{{ __('admin.downurl') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'b'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="c" title="{{ __('admin.serial') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'c'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="d" title="{{ __('admin.remarks') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'd'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="e" title="{{ __('admin.director') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'e'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="f" title="{{ __('admin.actor') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'f'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="g" title="{{ __('admin.years') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'g'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="h" title="{{ __('admin.area') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'h'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="i" title="{{ __('admin.lang') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'i'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="j" title="{{ __('admin.pic') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'j'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="k" title="{{ __('admin.content') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'k'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="l" title="TAG" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'l'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="m" title="{{ __('admin.sub') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'm'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="n" title="{{ __('admin.class') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'n'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="o" title="{{ __('admin.writer') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'o'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="p" title="{{ __('admin.version') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'p'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="q" title="{{ __('admin.state') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'q'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="r" title="{{ __('admin.blurb') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'r'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="s" title="{{ __('admin.tv') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 's'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="t" title="{{ __('admin.weekday') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 't'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="u" title="{{ __('admin.total') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'u'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="v" title="{{ __('admin.isend') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'v'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[vod][uprule][]" value="w" title="{{ __('admin.plot') }}" @checked($ruleHas(data_get($config, 'collect.vod.uprule', ''), 'w'))>
                     </div>
                 </div>
 
@@ -260,19 +269,19 @@
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                     <div class="layui-input-block">
                         <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="a" title="{{ __('admin.name') }}" checked disabled>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.art.inrule', ''), 'b') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][inrule][]" value="b" title="{{ __('admin.type') }}" @checked($ruleHas(data_get($config, 'collect.art.inrule', ''), 'b'))>
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                     <div class="layui-input-block">
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'a') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="{{ __('admin.author') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'b') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="{{ __('admin.from') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'c') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'd') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'e') !== false)>
-                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.art.uprule', ''), 'f') !== false)>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="a" title="{{ __('admin.content') }}" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'a'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="b" title="{{ __('admin.author') }}" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'b'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="c" title="{{ __('admin.from') }}" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'c'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="d" title="{{ __('admin.pic') }}" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'd'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="e" title="TAG" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'e'))>
+                        <input type="checkbox" lay-skin="primary" name="collect[art][uprule][]" value="f" title="{{ __('admin.blurb') }}" @checked($ruleHas(data_get($config, 'collect.art.uprule', ''), 'f'))>
                     </div>
                 </div>
 
@@ -350,19 +359,19 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="a" title="{{ __('admin.actor_name') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'c') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="{{ __('admin.sex') }}" @checked(strpos((string) data_get($config, 'collect.actor.inrule', ''), 'b') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="c" title="{{ __('admin.type') }}" @checked($ruleHas(data_get($config, 'collect.actor.inrule', ''), 'c'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][inrule][]" value="b" title="{{ __('admin.sex') }}" @checked($ruleHas(data_get($config, 'collect.actor.inrule', ''), 'b'))>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'a') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'b') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'c') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="{{ __('admin.works') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'd') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.actor.uprule', ''), 'e') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="a" title="{{ __('admin.content') }}" @checked($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'a'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'b'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'c'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="d" title="{{ __('admin.works') }}" @checked($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'd'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[actor][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked($ruleHas(data_get($config, 'collect.actor.uprule', ''), 'e'))>
 
                         </div>
                     </div>
@@ -442,8 +451,8 @@
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="a" title="{{ __('admin.role_name') }}" checked disabled>
                             <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="b" title="{{ __('admin.vod_name') }}{{ __('admin.or') }}{{ __('admin.douban_id') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="{{ __('admin.actor_name') }}" @checked(strpos((string) data_get($config, 'collect.role.inrule', ''), 'c') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="{{ __('admin.director') }}" @checked(strpos((string) data_get($config, 'collect.role.inrule', ''), 'd') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="c" title="{{ __('admin.actor_name') }}" @checked($ruleHas(data_get($config, 'collect.role.inrule', ''), 'c'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][inrule][]" value="d" title="{{ __('admin.director') }}" @checked($ruleHas(data_get($config, 'collect.role.inrule', ''), 'd'))>
                         </div>
                         <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/inrule_tip_role') }}</div>
                     </div>
@@ -451,9 +460,9 @@
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'a') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'b') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.role.uprule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="a" title="{{ __('admin.content') }}" @checked($ruleHas(data_get($config, 'collect.role.uprule', ''), 'a'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="b" title="{{ __('admin.remarks') }}" @checked($ruleHas(data_get($config, 'collect.role.uprule', ''), 'b'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[role][uprule][]" value="c" title="{{ __('admin.pic') }}" @checked($ruleHas(data_get($config, 'collect.role.uprule', ''), 'c'))>
 
                         </div>
                     </div>
@@ -532,19 +541,19 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="a" title="{{ __('admin.name') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="{{ __('admin.type') }}" @checked(strpos((string) data_get($config, 'collect.website.inrule', ''), 'b') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="{{ __('admin.jumpurl') }}" @checked(strpos((string) data_get($config, 'collect.website.inrule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="b" title="{{ __('admin.type') }}" @checked($ruleHas(data_get($config, 'collect.website.inrule', ''), 'b'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][inrule][]" value="c" title="{{ __('admin.jumpurl') }}" @checked($ruleHas(data_get($config, 'collect.website.inrule', ''), 'c'))>
                         </div>
                     </div>
 
                     <div class="layui-form-item">
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/uprule') }}：</label>
                         <div class="layui-input-block">
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="{{ __('admin.content') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'a') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'b') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'c') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="{{ __('admin.jumpurl') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'd') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked(strpos((string) data_get($config, 'collect.website.uprule', ''), 'e') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="a" title="{{ __('admin.content') }}" @checked($ruleHas(data_get($config, 'collect.website.uprule', ''), 'a'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="b" title="{{ __('admin.blurb') }}" @checked($ruleHas(data_get($config, 'collect.website.uprule', ''), 'b'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="c" title="{{ __('admin.remarks') }}" @checked($ruleHas(data_get($config, 'collect.website.uprule', ''), 'c'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="d" title="{{ __('admin.jumpurl') }}" @checked($ruleHas(data_get($config, 'collect.website.uprule', ''), 'd'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[website][uprule][]" value="e" title="{{ __('admin.pic') }}" @checked($ruleHas(data_get($config, 'collect.website.uprule', ''), 'e'))>
 
                         </div>
                     </div>
@@ -597,8 +606,8 @@
                         <label class="layui-form-label">{{ __('admin.admin/system/configcollect/inrule') }}：</label>
                         <div class="layui-input-block">
                             <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="a" title="{{ __('admin.rel_name') }}{{ __('admin.or') }}{{ __('admin.douban_id') }}" checked disabled>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="{{ __('admin.comment_content') }}" @checked(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'b') !== false)>
-                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="{{ __('admin.comment_name') }}" @checked(strpos((string) data_get($config, 'collect.comment.inrule', ''), 'c') !== false)>
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="b" title="{{ __('admin.comment_content') }}" @checked($ruleHas(data_get($config, 'collect.comment.inrule', ''), 'b'))>
+                            <input type="checkbox" lay-skin="primary" name="collect[comment][inrule][]" value="c" title="{{ __('admin.comment_name') }}" @checked($ruleHas(data_get($config, 'collect.comment.inrule', ''), 'c'))>
                         </div>
                         <div class="layui-form-mid layui-word-aux">{{ __('admin.admin/system/configcollect/inrule_tip_comment') }}</div>
                     </div>
@@ -621,8 +630,8 @@
                 </div>
 
                 <div class="layui-tab-item">
-                <blockquote class="layui-elem-quote layui-quote-nm">
-                    {{ __('admin.admin/system/configcollect/words_tip') }}
+                <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+                    {!! __('admin.admin/system/configcollect/words_tip') !!}
                 </blockquote>
 
                 <div class="layui-form-item">
