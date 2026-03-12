@@ -2,8 +2,8 @@
 <div class="page-container">
     <form class="layui-form layui-form-pane" method="post" action="{{ route('admin.system.configinterface') }}">
         @csrf
-        <blockquote class="layui-elem-quote layui-quote-nm">
-            {{ __('admin.admin/system/configinterface/tip') }}
+        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+            {!! __('admin.admin/system/configinterface/tip') !!}
         </blockquote>
 
         <div class="layui-form-item">

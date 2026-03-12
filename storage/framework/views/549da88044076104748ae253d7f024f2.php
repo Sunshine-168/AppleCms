@@ -2,8 +2,8 @@
 <div class="page-container">
     <form class="layui-form layui-form-pane" method="post" action="<?php echo e(route('admin.system.configinterface')); ?>">
         <?php echo csrf_field(); ?>
-        <blockquote class="layui-elem-quote layui-quote-nm">
-            <?php echo e(__('admin.admin/system/configinterface/tip')); ?>
+        <blockquote class="layui-elem-quote layui-quote-nm" style="color:#01AAED;">
+            <?php echo __('admin.admin/system/configinterface/tip'); ?>
 
         </blockquote>
 
@@ -49,4 +49,5 @@
         </div>
     </form>
 </div>
-<?php echo $__env->make('admin.public.foot', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views/admin/system/configinterface.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.public.foot', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views/admin/system/configinterface.blade.php ENDPATH**/ ?>
