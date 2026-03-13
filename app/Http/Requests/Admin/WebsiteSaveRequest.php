@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Http\Requests\MaccmsFormRequest;
+use App\Http\Requests\CmsFormRequest;
 
-class WebsiteSaveRequest extends MaccmsFormRequest
+class WebsiteSaveRequest extends CmsFormRequest
 {
     public function rules(): array
     {

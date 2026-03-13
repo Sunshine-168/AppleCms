@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 
 /**
- * 秒级任务
+ * 测试
  */
 class Test extends Command
 {
