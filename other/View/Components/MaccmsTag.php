@@ -1,9 +1,9 @@
 <?php
 
-namespace App\View\Components;
+namespace other\View\Components;
 
-use Illuminate\View\Component;
 use App\Services\TagService;
+use Illuminate\View\Component;
 
 class MaccmsTag extends Component
 {
