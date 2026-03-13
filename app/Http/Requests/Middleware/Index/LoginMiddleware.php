@@ -2,13 +2,11 @@
 namespace App\Http\Middleware\Index;
 
 use App\Models\User;
-use App\Utils\Result;
 use Closure;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
-
+use Utils\Result;
 
 
 /**

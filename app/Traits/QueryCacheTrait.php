@@ -1,22 +1,22 @@
 <?php
 namespace App\Traits;
 
-use App\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use Utils\Syslog;
 
 /**
  * 缓存仓储层 Trait
  * 集成 CacheTTL 缓存功能与 Repository 查询功能
- * 
+ *
  * 使用示例：
  * class MemberRepository extends Member {
  *     use CommonTrait, QueryCacheTrait;
- *     
+ *
  *     protected static string $cachePrefix = 'member';
  *     protected static int $defaultTtl = 600;
  * }
- * 
+ *
  * // 使用缓存查询
  * $member = MemberRepository::findByIdWithCache(1);
  * $members = MemberRepository::selectByConditionWithCache(['status' => 1]);
@@ -25,13 +25,13 @@ trait QueryCacheTrait
 {
     // 请求级静态缓存
     protected static array $requestCache = [];
-    
+
     // 缓存前缀，子类需要定义
     protected static string $cachePrefix = '';
-    
+
     // 默认TTL，子类可以重写
     protected static int $defaultTtl = 600;
-    
+
     /************ 缓存 Key 生成 ************/
     protected static function getCachePrefix(): string
     {
@@ -39,19 +39,19 @@ trait QueryCacheTrait
         {
             return static::$cachePrefix;
         }
-        
+
         $class = static::class;
         $short = substr(strrchr($class, '\\'), 1);
         $short = preg_replace('/Repository$/i', '', $short);
         return strtolower($short);
     }
-    
+
     protected static function buildCacheKey(string $key, int|string $id = null): string
     {
         $prefix = static::getCachePrefix();
         return $id === null ? "{$prefix}:{$key}" : "{$prefix}:{$key}:{$id}";
     }
-    
+
     protected static function buildConditionKey(array $condition): string
     {
         ksort($condition);
@@ -68,7 +68,7 @@ trait QueryCacheTrait
         self::$requestCache[$cacheKey] = $data;
         return $ok;
     }
-    
+
     protected static function cacheGet(string $key): mixed
     {
         $cacheKey = static::buildCacheKey($key);
@@ -77,7 +77,7 @@ trait QueryCacheTrait
         {
             return self::$requestCache[$cacheKey];
         }
-        
+
         $value = Cache::get($cacheKey);
 
         if ($value !== null)
@@ -87,7 +87,7 @@ trait QueryCacheTrait
 
         return $value;
     }
-    
+
     protected static function cacheDel(string $key): bool
     {
         $cacheKey = static::buildCacheKey($key);
@@ -96,35 +96,35 @@ trait QueryCacheTrait
 
         return Cache::delete($cacheKey);
     }
-    
+
     /************ Hash 缓存操作 ************/
     public static function setHashCache(int|string $id, array $data, int $ttl = null): bool
     {
         if (empty($data)) return false;
-        
+
         $ttl        = $ttl ?? static::$defaultTtl;
         $cacheKey   = static::buildCacheKey('hash', $id);
         $redis      = Cache::store('redis')->handler();
-        
+
         $redis->hMSet($cacheKey, $data);
 
         if ($ttl > 0) $redis->expire($cacheKey, $ttl);
-        
+
         self::$requestCache[$cacheKey] = array_merge(self::$requestCache[$cacheKey] ?? [], $data);
 
         return true;
     }
-    
+
     public static function getHashCache(int|string $id, string $field = null): mixed
     {
         $cacheKey = static::buildCacheKey('hash', $id);
-        
+
         if (isset(self::$requestCache[$cacheKey]))
         {
             $cacheData = self::$requestCache[$cacheKey];
             return $field === null ? $cacheData : ($cacheData[$field] ?? null);
         }
-        
+
         $redis = Cache::store('redis')->handler();
 
         if ($field === null)
@@ -149,32 +149,32 @@ trait QueryCacheTrait
                 self::$requestCache[$cacheKey][$field] = $value;
             }
         }
-        
+
         return $value;
     }
-    
+
     public static function updateHashCache(int|string $id, array $data, int $ttl = null): bool
     {
         if (empty($data)) return false;
-        
+
         $ttl        = $ttl ?? static::$defaultTtl;
         $cacheKey   = static::buildCacheKey('hash', $id);
         $redis      = Cache::store('redis')->handler();
-        
+
         $redis->hMSet($cacheKey, $data);
 
         if ($ttl > 0) $redis->expire($cacheKey, $ttl);
-        
+
         if (!isset(self::$requestCache[$cacheKey]))
         {
             self::$requestCache[$cacheKey] = [];
         }
 
         self::$requestCache[$cacheKey] = array_merge(self::$requestCache[$cacheKey], $data);
-        
+
         return true;
     }
-    
+
     public static function delHashCache(int|string $id): bool
     {
         $cacheKey   = static::buildCacheKey('hash', $id);
@@ -186,9 +186,9 @@ trait QueryCacheTrait
 
         return true;
     }
-    
+
     /************ 带缓存的查询方法 ************/
-    
+
     /**
      * 根据ID查询单条记录（带缓存）
      * @param int $id
@@ -211,12 +211,12 @@ trait QueryCacheTrait
                 {
                     return $cached;
                 }
-                
+
                 // 处理指定字段
                 $fields         = explode(',', str_replace(' ', '', $field));
                 $result         = [];
                 $hasAllFields   = true;
-                
+
                 foreach ($fields as $f)
                 {
                     if (isset($cached[$f]))
@@ -228,37 +228,37 @@ trait QueryCacheTrait
                         break;
                     }
                 }
-                
+
                 if ($hasAllFields)
                 {
                     return $result;
                 }
             }
-            
+
             // 缓存未命中，查询数据库
             $info = $this->master($master)->lock($lock)->where($this->getPk(), '=', $id)->order($order)->field($field)->find();
-            
+
             if (empty($info))
             {
                 return [];
             }
-            
+
             $data = $info->toArray();
-            
+
             // 缓存结果
             if ($field === '*')
             {
                 static::setHashCache($id, $data, $ttl);
             }
-            
+
             return $data;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->findByIdWithCache');
             return [];
         }
     }
-    
+
     /**
      * 根据条件查询单条记录（带缓存）
      * @param array $condition
@@ -275,39 +275,39 @@ trait QueryCacheTrait
             // 生成条件缓存key
             $conditionKey   = static::buildConditionKey($condition);
             $cached         = static::getCache($conditionKey);
-            
+
             if (!empty($cached))
             {
                 return $cached;
             }
-            
+
             // 缓存未命中，查询数据库
             $info = $this->master($master)->lock($lock)->where($condition)->order($order)->field($field)->find();
-            
+
             if (empty($info))
             {
                 return [];
             }
-            
+
             $data = $info->toArray();
-            
+
             // 缓存结果
             static::setCache($conditionKey, $data, $ttl);
-            
+
             // 如果查询了完整记录，也缓存到Hash中
             if ($field === '*' && isset($data[$this->getPk()]))
             {
                 static::setHashCache($data[$this->getPk()], $data, $ttl);
             }
-            
+
             return $data;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->findByConditionWithCache');
             return [];
         }
     }
-    
+
     /**
      * 根据条件查询多条记录（带缓存）
      * @param array $condition
@@ -323,22 +323,22 @@ trait QueryCacheTrait
             // 生成条件缓存key
             $conditionKey   = static::buildConditionKey(array_merge($condition, ['_select' => true, '_field' => $field, '_order' => $order]));
             $cached         = static::getCache($conditionKey);
-            
+
             if (!empty($cached))
             {
                 return $cached;
             }
-            
+
             // 缓存未命中，查询数据库
             empty($order) && $order = [$this->getPk() => 'desc'];
 
             $info = $this->master($master)->where($condition)->field($field)->order($order)->select();
-            
+
             $data = $info->toArray();
-            
+
             // 缓存结果
             static::setCache($conditionKey, $data, $ttl);
-            
+
             // 如果查询了完整记录，也缓存到Hash中
             if ($field === '*')
             {
@@ -350,15 +350,15 @@ trait QueryCacheTrait
                     }
                 }
             }
-            
+
             return $data;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->selectByConditionWithCache');
             return [];
         }
     }
-    
+
     /**
      * 分页查询（带缓存）
      * @param array $condition
@@ -383,27 +383,27 @@ trait QueryCacheTrait
             ]));
 
             $cached = static::getCache($conditionKey);
-            
+
             if (!empty($cached))
             {
                 return $cached;
             }
-            
+
             // 缓存未命中，查询数据库
             empty($order) && $order = [$this->getPk() => 'desc'];
 
             $info = $this->master($master)->where($condition)->field($field)->order($order)->limit($offset, $limit)->select();
-            
+
             if (empty($info))
             {
                 return [];
             }
-            
+
             $data = $info->toArray();
-            
+
             // 缓存结果
             static::setCache($conditionKey, $data, $ttl);
-            
+
             // 如果查询了完整记录，也缓存到Hash中
             if ($field === '*')
             {
@@ -415,17 +415,17 @@ trait QueryCacheTrait
                     }
                 }
             }
-            
+
             return $data;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->limitsWithCache');
             return [];
         }
     }
-    
+
     /************ 数据更新与缓存同步 ************/
-    
+
     /**
      * 根据ID更新数据（同步缓存）
      * @param int $id
@@ -438,24 +438,24 @@ trait QueryCacheTrait
         try {
             // 更新数据库
             $result = $this->updateById($id, $data);
-            
+
             if ($result > 0)
             {
                 // 更新Hash缓存
                 static::updateHashCache($id, $data, $ttl);
-                
+
                 // 清除相关条件缓存
                 static::clearConditionCache();
             }
-            
+
             return $result;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->updateByIdWithCache');
             return 0;
         }
     }
-    
+
     /**
      * 根据条件更新数据（清除缓存）
      * @param array $condition
@@ -467,21 +467,21 @@ trait QueryCacheTrait
         try {
             // 更新数据库
             $result = $this->updateByCondition($condition, $data);
-            
+
             if ($result > 0)
             {
                 // 清除所有相关缓存
                 static::clearAllCache();
             }
-            
+
             return $result;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->updateByConditionWithCache');
             return 0;
         }
     }
-    
+
     /**
      * 删除记录（清除缓存）
      * @param int $id
@@ -492,26 +492,26 @@ trait QueryCacheTrait
         try {
             // 删除数据库记录
             $result = $this->deleteById($id);
-            
+
             if ($result > 0)
             {
                 // 删除Hash缓存
                 static::delHashCache($id);
-                
+
                 // 清除相关条件缓存
                 static::clearConditionCache();
             }
-            
+
             return $result;
-            
+
         } catch (Exception $exception) {
             Syslog::exception('repository', $exception, 'QueryCacheTrait->deleteByIdWithCache');
             return 0;
         }
     }
-    
+
     /************ 缓存清理方法 ************/
-    
+
     /**
      * 清除条件缓存
      */
@@ -531,7 +531,7 @@ trait QueryCacheTrait
             Syslog::exception('cache', $e, 'QueryCacheTrait->clearConditionCache');
         }
     }
-    
+
     /**
      * 清除所有缓存
      */
@@ -547,7 +547,7 @@ trait QueryCacheTrait
             {
                 $redis->del($keys);
             }
-            
+
             // 清除请求级缓存
             self::$requestCache = [];
 
@@ -556,7 +556,7 @@ trait QueryCacheTrait
             Syslog::exception('cache', $e, 'QueryCacheTrait->clearAllCache');
         }
     }
-    
+
     /**
      * 预热缓存
      * @param array $ids
@@ -568,9 +568,9 @@ trait QueryCacheTrait
         try {
 
             if (empty($ids)) return;
-            
+
             $data = $this->selectByCondition([$this->getPk() => ['in', $ids]], $field);
-            
+
             foreach ($data as $row)
             {
                 if (isset($row[$this->getPk()]))

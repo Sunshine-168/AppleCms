@@ -4,10 +4,10 @@
 namespace App\Http\Middleware;
 
 use App\Enums\System\StatusEnum;
-use App\Utils\IpAddress;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Utils\IpAddress;
 
 
 /**

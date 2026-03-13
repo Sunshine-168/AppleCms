@@ -2,11 +2,10 @@
 
 namespace App\Http\Middleware\Common;
 
-use App\Utils\File;
 use Closure;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Utils\File;
 
 /**
  * 加载多余配置

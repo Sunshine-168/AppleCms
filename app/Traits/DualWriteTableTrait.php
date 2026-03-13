@@ -2,10 +2,10 @@
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
-use App\Utils\Syslog;
+use Illuminate\Support\Facades\DB;
 use Throwable;
+use Utils\Syslog;
 
 trait DualWriteTableTrait
 {

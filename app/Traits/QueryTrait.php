@@ -1,12 +1,12 @@
 <?php
 namespace App\Traits;
 
-use App\Utils\Syslog;
 use Exception;
-use ReflectionException;
-use ReflectionFunction;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use ReflectionException;
+use ReflectionFunction;
+use Utils\Syslog;
 
 /**
  * 通用查询 Trait
