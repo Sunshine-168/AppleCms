@@ -93,6 +93,22 @@
     ,search = router.search;
 
     form.render();
+    
+    if (layui.view && typeof layui.view.popup === 'function') {
+      layui.view.error = function (content, options) {
+        var text = String(content || '');
+        text = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').replace(/^\s*Error[:：]\s*/i, '');
+        var lines = text.split('\n').map(function (s) { return s.trim(); }).filter(function (s) { return s && !/^URL[:：]/i.test(s); });
+        return layer.msg(lines[0] || '操作失败', $.extend({
+          offset: 'lb',
+          shade: 0,
+          anim: 6,
+          skin: 'hk-toast',
+          icon: 2,
+          time: 2000
+        }, options));
+      };
+    }
 
     //提交
     form.on('submit(LAY-user-login-submit)', function(obj){
@@ -112,8 +128,9 @@
           
           //登入成功的提示与跳转
           layer.msg('登入成功', {
-            offset: '15px'
+            offset: 'lb'
             ,icon: 1
+            ,skin: 'hk-toast'
             ,time: 1000
           }, function(){
             location.href = '/admin';
