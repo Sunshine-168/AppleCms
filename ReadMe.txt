@@ -1,0 +1,23 @@
+#拉取测试代码
+* * * * * /www/wwwroot/facai11-api.24game.top/pull-dev.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/pull-dev.log 2>&1
+
+#拉取正式代码
+* * * * * /www/wwwroot/facai11-api.24game.top/pull-pro.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/pull-pro.log 2>&1
+
+#项目日志清理
+* * * * * /www/wwwroot/facai11-api.24game.top/clear-logs.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/clear-logs.log 2>&1
+
+#阿里云文件同步
+* * * * * /www/wwwroot/facai11-api.24game.top/oss-get.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/oss-get.log 2>&1
+
+#数据库导入
+* * * * * /www/wwwroot/facai11-api.24game.top/db-import.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/db-import.log 2>&1
+
+#数据库备份
+* * * * * /www/wwwroot/facai11-api.24game.top/db-backup.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/db-backup.log 2>&1
+
+#依赖包更新
+* * * * * /www/wwwroot/facai11-api.24game.top/composer-update.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/composer-update.log 2>&1
+
+#每秒任务
+* * * * * /www/wwwroot/facai11-api.24game.top/loop-cmd.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/loop-cmd.log 2>&1
