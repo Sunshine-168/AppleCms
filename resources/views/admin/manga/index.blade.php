@@ -1,9 +1,0 @@
-@include('../../../application/admin/view/public/head')
-<div class="page-container">
-    <blockquote class="layui-elem-quote layui-quote-nm mt10">
-        <p class="f-20 text-success">{{ __('admin.admin/manga/new_version_notice') }}</p>
-    </blockquote>
-</div>
-@include('../../../application/admin/view/public/foot')
-</body>
-</html>
