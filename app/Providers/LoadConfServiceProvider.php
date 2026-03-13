@@ -11,17 +11,23 @@ class LoadConfServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $helper = app_path('Support/helpers.php');
+
+        if (file_exists($helper)) {
+            require_once $helper;
+        }
+
         $path = config_path('system');
 
-        if (!is_dir($path))
-        {
+        if (!is_dir($path)) {
             return;
         }
 
-        foreach (glob($path.'/*.php') as $file)
-        {
+        $files = glob($path.'/*.php') ?: [];
+
+        foreach ($files as $file) {
             $name = pathinfo($file, PATHINFO_FILENAME);
-            config(["system.$name" => require $file]);
+            config()->set("system.$name", require $file);
         }
     }
 }
