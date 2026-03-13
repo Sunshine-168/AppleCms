@@ -7,7 +7,7 @@ use app\common\enum\biz\SysDictTypeEnum;
 use app\common\model\PaymentAccountModel;
 use app\common\model\PaymentChannelModel;
 use app\common\model\PaymentClassModel;
-use app\common\model\SysDictModel;
+use App\Models\Sys\SysDictModel;
 use app\common\utils\Result;
 
 class SysDictService

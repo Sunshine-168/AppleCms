@@ -1,20 +1,17 @@
 <?php
-namespace app\common\model;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use app\common\logic\traits\UserTrait;
-use think\Model;
+namespace App\Models\Sys;
 
-/**
- * 系统用户
- */
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use App\Traits\UserTrait;
+use Illuminate\Database\Eloquent\Model;
+
 class SysUserModel extends Model
 {
-    // 设置当前模型对应的完整数据表名称
-    protected  $name = 'sys_user';
-
-    // 主键
-    protected $pk    = 'id';
+    protected $table = 'sys_user';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
 
     use QueryTrait,
         UserTrait,

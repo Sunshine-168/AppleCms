@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c514d8f7b9fc5970bdd94287905ef584",
+    "content-hash": "cfb06625f5385f27a9bc07d28943bbac",
     "packages": [
         {
             "name": "brick/math",
@@ -6007,6 +6007,58 @@
                 }
             ],
             "time": "2024-11-21T01:49:47+00:00"
+        },
+        {
+            "name": "zhuzhichao/ip-location-zh",
+            "version": "v2.4.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zhuzhichao/ip-location-zh.git",
+                "reference": "24b74242d96cb318824fa9b920f5476f2bba9a41"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zhuzhichao/ip-location-zh/zipball/24b74242d96cb318824fa9b920f5476f2bba9a41",
+                "reference": "24b74242d96cb318824fa9b920f5476f2bba9a41",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Ip": "Zhuzhichao\\IpLocationZh\\Ip"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Zhuzhichao\\IpLocationZh\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "zhuzhichao",
+                    "email": "me@zhuzhichao.com"
+                }
+            ],
+            "description": "get the ip's location info with Chinese",
+            "keywords": [
+                "Chinese",
+                "IP",
+                "location"
+            ],
+            "support": {
+                "issues": "https://github.com/zhuzhichao/ip-location-zh/issues",
+                "source": "https://github.com/zhuzhichao/ip-location-zh/tree/v2.4.5"
+            },
+            "time": "2023-08-29T01:18:10+00:00"
         }
     ],
     "packages-dev": [
@@ -8393,5 +8445,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

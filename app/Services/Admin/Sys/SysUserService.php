@@ -1,22 +1,17 @@
 <?php
-namespace app\admin\service\v1;
+namespace App\Services\Admin\Sys;
 
-use app\common\model\SysDictModel;
-use app\common\model\SysUserLogModel;
-use app\common\model\SysUserRoleModel;
-use app\common\model\SysUserModel;
-use app\common\utils\GoogleAuthenticator;
-use app\common\utils\Result;
-use app\common\utils\Syslog;
+use App\Models\Sys\SysDictModel;
+use App\Models\Sys\SysUserLogModel;
+use App\Models\Sys\SysUserRoleModel;
+use App\Models\Sys\SysUserModel;
 use Exception;
-use think\facade\Db;
-use think\facade\Request;
+use Illuminate\Support\Facades\DB;
+use Utils\Result;
+use Utils\Syslog;
 use Zhuzhichao\IpLocationZh\Ip;
+use Illuminate\Support\Facades\Request;
 
-/**
- * 系统用户服务
- * 提供后台系统用户的增删改查、登录、日志查询与角色绑定管理
- */
 class SysUserService
 {
     public SysUserModel $sysUserModel;
@@ -180,19 +175,21 @@ class SysUserService
      */
     public function login(string $username, string $password, string $vscode): array
     {
-        $time    = Request::time();
+        $time = time();
 
-        $where   = [];
+        $where = [];
         $where[] = ['username', '=', $username];
         $where[] = ['password', '=', $password];
-        $user    = $this->sysUserModel->findByCondition($where);
+        $user = $this->sysUserModel->findByCondition($where);
 
         if (!$user)
         {
             return Result::fail('账号或者密码错误');
         }
 
-        if (env('APP_ENV') == 'pro' && env('GOOGLE_AUTH', false))
+        $appEnv = (string) env('APP_ENV', 'production');
+        $isPro = in_array($appEnv, ['pro', 'production'], true);
+        if ($isPro && env('GOOGLE_AUTH', false))
         {
             if ($vscode === '')
             {
@@ -205,10 +202,7 @@ class SysUserService
                 return Result::fail('谷歌验证未配置');
             }
 
-            $GoogleAuthenticator = new GoogleAuthenticator();
-            $googleCheck         = $GoogleAuthenticator->verifyCode($google, $vscode);
-
-            if (!$googleCheck)
+            if (!$this->verifyTotp((string) $google, $vscode))
             {
                 return Result::fail('谷歌验证码错误');
             }
@@ -217,15 +211,15 @@ class SysUserService
         $ip         = Request::ip();
         $ipAddress  = join(',', array_filter(Ip::find($ip)));
 
-        Db::startTrans();
+        DB::beginTransaction();
 
         try {
 
             $update = [
                 'login_time'  => $time,
-                'login_ip'    => Request::ip(),
+                'login_ip'    => $ip,
                 'ip_address'  => $ipAddress,
-                'login_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'login_agent' => (string) request()->userAgent(),
                 'token'       => md5($time . $user['id'])
             ];
 
@@ -233,15 +227,15 @@ class SysUserService
 
             if (!$res)
             {
-                Db::rollback();
+                DB::rollBack();
                 return Result::fail('登入失败');
             }
 
             $insert = [
                 'uid'         => $user['id'],
                 'username'    => $user['username'],
-                'login_ip'    => Request::ip(),
-                'login_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'login_ip'    => $ip,
+                'login_agent' => (string) request()->userAgent(),
                 'ip_address'  => $ipAddress
             ];
 
@@ -249,17 +243,17 @@ class SysUserService
 
             if (!$res)
             {
-                Db::rollback();
+                DB::rollBack();
                 return Result::fail('登入失败');
             }
 
-            Db::commit();
+            DB::commit();
 
             return Result::success($update, '登录成功');
         }
         catch (Exception $e)
         {
-            Db::rollback();
+            DB::rollBack();
             Syslog::exception('admin', $e);
             return Result::fail('登入失败');
         }
@@ -301,6 +295,81 @@ class SysUserService
         $data = $this->sysUserLogModel->paginates($where,'*',pageSize());
 
         return Result::success($data);
+    }
+
+    private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool
+    {
+        $code = preg_replace('/\s+/', '', $code);
+        if ($code === null || $code === '') {
+            return false;
+        }
+
+        if (!preg_match('/^\d+$/', $code)) {
+            return false;
+        }
+
+        $key = $this->base32Decode($secret);
+        if ($key === '') {
+            return false;
+        }
+
+        $counter = (int) floor(time() / $period);
+        for ($i = -$window; $i <= $window; $i++) {
+            $otp = $this->hotp($key, $counter + $i, $digits);
+            if (hash_equals($otp, str_pad($code, $digits, '0', STR_PAD_LEFT))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function hotp(string $key, int $counter, int $digits): string
+    {
+        $binCounter = pack('N*', 0) . pack('N*', $counter);
+        $hash = hash_hmac('sha1', $binCounter, $key, true);
+
+        $offset = ord(substr($hash, -1)) & 0x0F;
+        $part = substr($hash, $offset, 4);
+        $value = unpack('N', $part)[1] & 0x7FFFFFFF;
+
+        $mod = 10 ** $digits;
+        $otp = (string) ($value % $mod);
+        return str_pad($otp, $digits, '0', STR_PAD_LEFT);
+    }
+
+    private function base32Decode(string $secret): string
+    {
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $secret = strtoupper($secret);
+        $secret = preg_replace('/[^A-Z2-7=]/', '', $secret) ?? '';
+        $secret = rtrim($secret, '=');
+
+        if ($secret === '') {
+            return '';
+        }
+
+        $buffer = 0;
+        $bitsLeft = 0;
+        $result = '';
+
+        $len = strlen($secret);
+        for ($i = 0; $i < $len; $i++) {
+            $val = strpos($alphabet, $secret[$i]);
+            if ($val === false) {
+                return '';
+            }
+
+            $buffer = ($buffer << 5) | $val;
+            $bitsLeft += 5;
+
+            if ($bitsLeft >= 8) {
+                $bitsLeft -= 8;
+                $result .= chr(($buffer >> $bitsLeft) & 0xFF);
+            }
+        }
+
+        return $result;
     }
 
 }

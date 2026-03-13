@@ -1,7 +1,2 @@
 <?php
-
-
-
-// Admin Controllers
-
-// Install Routes (must be before other routes)
+require __DIR__ . '/admin.php';

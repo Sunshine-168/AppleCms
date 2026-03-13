@@ -36,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
+    protected function registerMaccmsTags(): void
+    {
+    }
+
     /**
      * 注册 maccms 模板标签
      */

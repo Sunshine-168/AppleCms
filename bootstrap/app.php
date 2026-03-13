@@ -17,8 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
             \App\Http\Middleware\VerifyCsrfToken::class
         );
-        $middleware->appendToGroup('web', \App\Http\Middleware\InitializeMaccmsRequest::class);
-        $middleware->appendToGroup('web', \App\Http\Middleware\TransformMaccmsHtmlResponse::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

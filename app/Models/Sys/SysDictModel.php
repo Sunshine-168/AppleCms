@@ -1,92 +1,73 @@
 <?php
-namespace app\common\model;
+namespace App\Models\Sys;
 
-use app\common\enum\biz\SysDictTypeEnum;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
-use think\model\type\Json;
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
 
-/**
- * 系统字典模型
- */
 class SysDictModel extends Model
 {
     use QueryTrait, QueryCacheTrait;
 
-    // 表名
-    protected  $name = 'sys_dict';
+    protected $table = 'sys_dict';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
 
-    // 主键
-    protected  $pk   = 'id';
-
-    // 自动类型转换
-    protected array $type = [
-        'value_json'    => 'json',
-        'enum_limit'    => 'json',
-        'value_type'    => 'integer',
-        'value_float'   => 'float',
-        'value_int'     => 'integer',
+    protected $casts = [
+        'value_type' => 'integer',
+        'value_float' => 'float',
+        'value_int' => 'integer',
+        'value_json' => 'array',
+        'enum_limit' => 'array',
     ];
 
-    /**
-     * 获取 dict_value 属性，自动根据 value_type 映射字段
-     * @param mixed $value
-     * @param array $data
-     * @return mixed
-     */
-    public function getDictValueAttr($value, array $data): mixed
+    public function getDictValueAttribute(): mixed
     {
-        switch ((int)($data['value_type'] ?? 0)) {
-            case SysDictTypeEnum::value("STRING"): // string
-                return $data['value_string'] ?? '';
-            case SysDictTypeEnum::value("INT"): // int
-                return $data['value_int'] ?? 0;
-            case SysDictTypeEnum::value("FLOAT"): // float
-                return $data['value_float'] ?? 0.0;
-            case SysDictTypeEnum::value("JSON"): // json
-            case SysDictTypeEnum::value("ARRAY"): // array
-            case SysDictTypeEnum::value("ENUM"): // enum
-                $val = $data['value_json'] ?? null;
-                return $val instanceof Json ? json_decode($val->__toString(), true) : $val ?? [];
-            case SysDictTypeEnum::value("TEXT"): // text
-                return $data['value_text'] ?? '';
-            default:
-                return $value;
-        }
+        $type = (int) ($this->attributes['value_type'] ?? 0);
+
+        return match ($type) {
+            0 => $this->attributes['value_string'] ?? '',
+            1 => (int) ($this->attributes['value_int'] ?? 0),
+            2 => (float) ($this->attributes['value_float'] ?? 0),
+            3, 4, 5 => $this->getAttribute('value_json'),
+            6 => $this->attributes['value_text'] ?? '',
+            default => $this->attributes['value_string'] ?? '',
+        };
     }
 
-    /**
-     * 获取 enum_limit 属性，保证返回数组
-     * @param mixed $value
-     * @return array
-     */
-    public function getEnumLimitAttr($value): array
+    public function setDictValueAttribute(mixed $value): void
     {
-        $val = $value instanceof Json ? json_decode($value->__toString(), true) : $value;
-        return is_array($val) ? $val : [];
-    }
+        $type = (int) ($this->attributes['value_type'] ?? 0);
 
-    /**
-     * 设置 dict_value，根据 value_type 自动写入对应字段
-     * @param mixed $value
-     * @param array $data
-     * @return void
-     */
-    public function setDictValueAttr($value, array $data): void
-    {
-        switch ((int)($data['value_type'] ?? 0))
-        {
-            case SysDictTypeEnum::value("STRING"): $this->setAttr('value_string', (string)$value); break;
-            case SysDictTypeEnum::value("INT"): $this->setAttr('value_int', (int)$value); break;
-            case SysDictTypeEnum::value("FLOAT"): $this->setAttr('value_float', (float)$value); break;
-            case SysDictTypeEnum::value("JSON"):
-            case SysDictTypeEnum::value("ARRAY"):
-            case SysDictTypeEnum::value("ENUM"):
-                $this->setAttr('value_json', json_encode($value, JSON_UNESCAPED_UNICODE));
+        switch ($type) {
+            case 0:
+                $this->attributes['value_string'] = (string) $value;
                 break;
-            case SysDictTypeEnum::value("TEXT"): $this->setAttr('value_text', (string)$value); break;
+            case 1:
+                $this->attributes['value_int'] = (int) $value;
+                break;
+            case 2:
+                $this->attributes['value_float'] = (float) $value;
+                break;
+            case 3:
+            case 4:
+            case 5:
+                $this->attributes['value_json'] = json_encode($value, JSON_UNESCAPED_UNICODE);
+                break;
+            case 6:
+                $this->attributes['value_text'] = (string) $value;
+                break;
         }
+    }
+
+    public function getEnumLimitAttribute(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        $decoded = json_decode((string) $value, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -112,7 +93,7 @@ class SysDictModel extends Model
     {
         $where = [['dict_key', '=', $key]];
         if ($type) $where[] = ['dict_type', '=', $type];
-        $row = $this->where($where)->find();
+        $row = $this->where($where)->first();
         return $row ? $row->dict_value : null;
     }
 }

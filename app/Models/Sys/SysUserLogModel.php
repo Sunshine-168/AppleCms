@@ -1,20 +1,19 @@
 <?php
-namespace app\common\model;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
+namespace App\Models\Sys;
+
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * 系统登入表
  */
 class SysUserLogModel extends Model
 {
-    // 设置当前模型对应的完整数据表名称
-    protected $name = 'sys_user_log';
-
-
-    // 主键
-    protected $pk    = 'id';
+    protected $table = 'sys_user_log';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
 
     use QueryTrait, QueryCacheTrait;
 

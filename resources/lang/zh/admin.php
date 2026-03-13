@@ -320,7 +320,7 @@ return [
     
     // 登录页面
     'admin/index/login/title' => '后台登录',
-    'admin/index/login/tip_welcome' => '欢迎使用苹果CMS',
+    'admin/index/login/tip_welcome' => '欢迎使用XHcms',
     'admin/index/login/tip_sys' => '后台管理系统',
     'admin/index/login/btn_submit' => '登录',
     'admin/index/login/verify_no' => '请输入用户名',

@@ -1,8 +1,9 @@
 <?php
-namespace app\common\model;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
+namespace App\Models\Sys;
+
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * 用户-角色关系模型
@@ -11,7 +12,9 @@ use think\Model;
  */
 class SysUserRoleModel extends Model
 {
-    protected $name = 'sys_user_role';
-    protected $pk   = 'id';
+    protected $table = 'sys_user_role';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
     use QueryTrait, QueryCacheTrait;
 }
