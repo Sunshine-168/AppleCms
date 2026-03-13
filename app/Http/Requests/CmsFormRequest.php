@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-abstract class MaccmsFormRequest extends FormRequest
+abstract class CmsFormRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -61,7 +61,7 @@ abstract class MaccmsFormRequest extends FormRequest
         }
 
         $value = (string) $value;
-        if (function_exists('mac_filter_xss')) {
+        if (function_exists('cms_filter_xss')) {
             $value = mac_filter_xss($value);
         }
 
