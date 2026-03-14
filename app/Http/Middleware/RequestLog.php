@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Utils\Syslog;
 
+/**
+ * 请求日志
+ */
 class RequestLog
 {
     public function handle(Request $request, Closure $next): Response
@@ -43,13 +46,21 @@ class RequestLog
         return $response;
     }
 
+    /**
+     * 过滤敏感数据
+     * @param array $data
+     * @return array
+     */
     private function filterSensitiveData(array $data): array
     {
         $sensitiveKeys = ['password', 'token', 'secret', 'key', 'auth'];
 
-        foreach ($data as $key => $value) {
-            foreach ($sensitiveKeys as $sensitiveKey) {
-                if (stripos((string) $key, $sensitiveKey) !== false) {
+        foreach ($data as $key => $value)
+        {
+            foreach ($sensitiveKeys as $sensitiveKey)
+            {
+                if (stripos((string) $key, $sensitiveKey) !== false)
+                {
                     $data[$key] = '***';
                     break;
                 }
