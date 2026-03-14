@@ -1,0 +1,25 @@
+themes
+ └ default
+     ├ assets              # 静态资源
+     │   ├ css
+     │   ├ js
+     │   └ img
+     │
+     ├ components          # 模板组件
+     │   ├ movie-card.blade.php
+     │   └ header.blade.php
+     │
+     ├ widgets             # 小组件
+     │   ├ hot-movies
+     │   │   ├ widget.php
+     │   │   └ view.blade.php
+     │
+     ├ index.blade.php     # 首页
+     ├ type.blade.php      # 分类页
+     ├ movie.blade.php     # 详情页
+     ├ play.blade.php      # 播放页
+     ├ search.blade.php    # 搜索页
+     │
+     ├ config.json         # 模板配置
+     ├ hooks.php           # 模板钩子
+     └ theme.php           # 模板信息
