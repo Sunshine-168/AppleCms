@@ -29,12 +29,14 @@ class Index extends Controller
     public function captcha(Request $request)
     {
         $builder = new CaptchaBuilder;
+
         $builder->build();
 
         // 保存验证码到 session
         session(['captcha' => $builder->getPhrase()]);
 
         return response($builder->get(), 200)
+        
             ->header('Content-Type', 'image/jpeg');
     }
 }

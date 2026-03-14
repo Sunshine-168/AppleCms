@@ -22,6 +22,14 @@ class SysUser extends Controller
         $this->systemUserService = new SysUserService();
     }
     /**
+     * 显示系统用户列表
+     * @return View|Factory
+     */
+    public function index(): View|Factory
+    {
+        return view('admin.system.sysuser.index');
+    }
+    /**
      * 获取系统用户列表
      * @param Request $request
      * @return JsonResponse
