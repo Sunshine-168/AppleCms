@@ -190,12 +190,14 @@ class SysUserService
         $time    = time();
 
         $captcha = trim($vscode);
+
         if ($captcha === '')
         {
             return Result::fail('请输入验证码');
         }
 
         $expectedCaptcha = (string) session('captcha', '');
+
         if ($expectedCaptcha === '')
         {
             return Result::fail('验证码已失效，请刷新');
@@ -204,6 +206,7 @@ class SysUserService
         if (strcasecmp($expectedCaptcha, $captcha) !== 0)
         {
             session()->forget('captcha');
+
             return Result::fail('验证码错误，请刷新');
         }
 
