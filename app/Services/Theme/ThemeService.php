@@ -11,7 +11,8 @@ class ThemeService
         $source = resource_path("themes/{$theme}/assets");
         $target = public_path("themes/{$theme}/assets");
 
-        if (!File::exists($source)) {
+        if (!File::exists($source))
+        {
             return false;
         }
 
