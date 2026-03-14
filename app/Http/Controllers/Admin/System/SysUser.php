@@ -114,7 +114,7 @@ class SysUser extends Controller
 
     /**
      * 显示登录页
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @return Factory|\Illuminate\View\View
      */
     public function showLogin(): Factory|View
     {
