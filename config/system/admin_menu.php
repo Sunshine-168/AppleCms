@@ -8,13 +8,13 @@ return [
 
     [
         'name' => '首页',
-        'icon' => 'xe625',
+        'icon' => 'home',
 
         'sub' => [
 
             [
                 'name' => '欢迎页',
-                'icon' => 'xe63c',
+                'icon' => 'home',
                 'route' => 'admin.welcome',
                 'permission' => 'vod.view'
             ],

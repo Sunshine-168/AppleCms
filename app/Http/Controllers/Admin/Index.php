@@ -4,24 +4,26 @@ use App\Http\Controllers\Controller;
 use Gregwar\Captcha\CaptchaBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
+use Illuminate\View\View;
 
 /**
  * 后台首页
  * @param Request $request
- * @return Factory|\Illuminate\View\View
+ * @return Factory|View
  */
 class Index extends Controller
 {
     /**
      * 后台首页
      * @param Request $request
-     * @return Factory|\Illuminate\View\View
+     * @return Factory|View
      */
     public function index(Request $request): Factory|View
     {
-        return view('admin.index');
+        $menus = config('system.admin_menu');
+
+        return view('admin.index', compact('menus'));
     }
 
     /**
