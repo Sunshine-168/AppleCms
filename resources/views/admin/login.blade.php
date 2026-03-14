@@ -16,8 +16,8 @@
 
     <div class="layadmin-user-login-main">
         <div class="layadmin-user-login-box layadmin-user-login-header">
-            <h2>HKCMS</h2>
-            <p>HKCMS 官方出品的单页面后台管理模板系统</p>
+            <h2>XHCMS</h2>
+            <p>XHCMS 官方出品的单页面后台管理模板系统</p>
         </div>
         <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
             <div class="layui-form-item">
@@ -29,8 +29,15 @@
                 <input type="password" name="password" id="LAY-user-login-password" lay-verify="required" placeholder="密码" class="layui-input">
             </div>
             <div class="layui-form-item">
-                <label class="layadmin-user-login-icon layui-icon layui-icon-vercode" for="LAY-user-login-vercode"></label>
-                <input type="text" name="vscode" id="LAY-user-login-vercode" placeholder="谷歌验证码（可选）" class="layui-input">
+                <div class="layui-row">
+                    <div class="layui-col-xs7">
+                        <label class="layadmin-user-login-icon layui-icon layui-icon-vercode" for="LAY-user-login-vercode"></label>
+                        <input type="text" name="vscode" id="LAY-user-login-vercode" lay-verify="required" placeholder="验证码" class="layui-input">
+                    </div>
+                    <div class="layui-col-xs5" style="padding-left: 10px;">
+                        <img id="captcha-img" src="/admin/captcha" style="width: 100%; height: 38px; cursor: pointer;">
+                    </div>
+                </div>
             </div>
             <div class="layui-form-item" style="margin-bottom: 20px;">
                 <input type="checkbox" name="remember" lay-skin="primary" title="记住密码">
@@ -67,6 +74,13 @@
 
         form.render();
 
+        function refreshCaptcha() {
+            $('#captcha-img').attr('src', '/admin/captcha?_=' + Date.now());
+        }
+
+        $('#captcha-img').on('click', refreshCaptcha);
+        refreshCaptcha();
+
         if (layui.view && typeof layui.view.popup === 'function') {
             layui.view.error = function (content, options) {
                 var text = String(content || '');
@@ -92,6 +106,7 @@
                 ,url: '/api/admin/login'
                 ,data: obj.field
                 ,done: function(res){
+                    refreshCaptcha();
 
                     //请求成功后，写入 access_token
                     layui.data(setter.tableName, {

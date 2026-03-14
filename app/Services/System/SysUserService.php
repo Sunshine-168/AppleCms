@@ -179,7 +179,7 @@ class SysUserService
 
     /**
      * 登入
-     * 校验账号密码（生产环境可开启谷歌验证码），写入登录日志并更新 token
+     * 校验账号密码与图片验证码，写入登录日志并更新 token
      * @param string $username
      * @param string $password
      * @param string $vscode
@@ -188,6 +188,24 @@ class SysUserService
     public function login(string $username, string $password, string $vscode): array
     {
         $time    = time();
+
+        $captcha = trim($vscode);
+        if ($captcha === '')
+        {
+            return Result::fail('请输入验证码');
+        }
+
+        $expectedCaptcha = (string) session('captcha', '');
+        if ($expectedCaptcha === '')
+        {
+            return Result::fail('验证码已失效，请刷新');
+        }
+
+        if (strcasecmp($expectedCaptcha, $captcha) !== 0)
+        {
+            session()->forget('captcha');
+            return Result::fail('验证码错误，请刷新');
+        }
 
         $where   = [];
         $where[] = ['username', '=', $username];
@@ -198,27 +216,7 @@ class SysUserService
         {
             return Result::fail('账号或者密码错误');
         }
-
-        $appEnv = (string) env('APP_ENV', 'production');
-        $isPro = in_array($appEnv, ['pro', 'production'], true);
-        if ($isPro && env('GOOGLE_AUTH', false))
-        {
-            if ($vscode === '')
-            {
-                return Result::fail('请输入谷歌验证码');
-            }
-
-            $google = $this->sysDictModel->getValue('google');
-            if (empty($google))
-            {
-                return Result::fail('谷歌验证未配置');
-            }
-
-            if (!$this->verifyTotp((string) $google, $vscode))
-            {
-                return Result::fail('谷歌验证码错误');
-            }
-        }
+        session()->forget('captcha');
 
         $ip         = Request::ip();
         $ipAddress  = join(',', array_filter(Ip::find($ip)));

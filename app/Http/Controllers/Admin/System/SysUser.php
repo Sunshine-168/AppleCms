@@ -21,7 +21,11 @@ class SysUser extends Controller
     {
         $this->systemUserService = new SysUserService();
     }
-
+    /**
+     * 获取系统用户列表
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function getSystemUserLists(Request $request): JsonResponse
     {
         $username = (string) $request->input('username', '');
@@ -29,6 +33,11 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    /**
+     * 获取系统用户详情
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function getSystemUserInfo(Request $request): JsonResponse
     {
         $id = (int) $request->input('id', 0);
@@ -103,6 +112,10 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    /**
+     * 显示登录页
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function showLogin(): Factory|View
     {
         return view('admin.login'); // resources/views/admin/login.blade.php
