@@ -185,12 +185,12 @@ class SysUserService
      */
     public function login(string $username, string $password, string $vscode): array
     {
-        $time = time();
+        $time    = time();
 
-        $where = [];
+        $where   = [];
         $where[] = ['username', '=', $username];
         $where[] = ['password', '=', $password];
-        $user = $this->sysUserModel->findByCondition($where);
+        $user    = $this->sysUserModel->findByCondition($where);
 
         if (!$user)
         {
