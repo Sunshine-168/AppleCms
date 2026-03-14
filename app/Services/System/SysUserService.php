@@ -1,15 +1,17 @@
 <?php
-namespace App\Services\Admin\Sys;
+namespace App\Services\System;
 
 use App\Models\Sys\SysDictModel;
 use App\Models\Sys\SysUserLogModel;
-use App\Models\Sys\SysUserRoleModel;
 use App\Models\Sys\SysUserModel;
+use App\Models\Sys\SysUserRoleModel;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
 use Utils\Result;
 use Utils\Syslog;
-use Illuminate\Support\Facades\Request;
+use function App\Services\Admin\Sys\pageSize;
+use function App\Services\Admin\Sys\request;
 
 class SysUserService
 {

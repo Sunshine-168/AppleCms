@@ -1,24 +1,23 @@
 <?php
-namespace App\Http\Controllers\Admin\Sys;
+namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\Admin\Sys\SysUserService;
+use App\Services\System\SysUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
-use Utils\ServiceFactory;
 
 /**
- *
+ * 系统用户
  */
 class SysUser extends Controller
 {
-  
+
     protected SysUserService $systemUserService;
 
-    public function __construct() 
+    public function __construct()
     {
-        $this->systemUserService = ServiceFactory::make(SysUserService::class);
+        $this->systemUserService = new SysUserService();
     }
 
     public function getSystemUserLists(Request $request): JsonResponse
@@ -119,7 +118,8 @@ class SysUser extends Controller
 
     /**
      * 系统用户登录日志列表
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getSystemUserLoginLists(Request $request): JsonResponse
     {

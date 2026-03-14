@@ -1,5 +1,5 @@
 <?php
-namespace app\admin\controller;
+namespace App\Http\Controllers\Admin\System;
 use app\common\utils\Ajax;
 use app\common\utils\ServiceFactory;
 use think\facade\Request;
@@ -67,7 +67,7 @@ class SysPerm
         $data = $this->service->deletePerm($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 菜单树
      * 返回仅包含 `type=1`（菜单型）的树形结构，用于前端渲染菜单

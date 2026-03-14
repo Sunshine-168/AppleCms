@@ -1,5 +1,5 @@
 <?php
-namespace app\admin\controller;
+namespace App\Http\Controllers\Admin\System;
 use app\common\utils\Ajax;
 use app\common\utils\ServiceFactory;
 use think\facade\Request;
