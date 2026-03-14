@@ -42,7 +42,8 @@
             <div class="layui-logo" lay-href="javascript:;">
                 <span>XHCMS</span>
             </div>
-            <ul class="layui-nav layui-nav-tree" lay-shrink="all" lay-filter="layadmin-system-side-menu" id="LAY-system-side-menu"></ul>
+            <ul class="layui-nav layui-nav-tree" lay-shrink="all" lay-filter="layadmin-system-side-menu" id="LAY-system-side-menu">
+            </ul>
         </div>
     </div>
 
@@ -70,8 +71,103 @@
         base: '{{ asset('static/admin') }}/'
     }).extend({
         index: 'lib/index'
-    }).use('index');
+    }).use(['index', 'element'], function () {
+        var $ = layui.$;
+        var element = layui.element;
+        var menuUrl = '{{ asset('static/admin/json/menu.js') }}';
+
+        function isArray(value) {
+            return Object.prototype.toString.call(value) === '[object Array]';
+        }
+
+        function escapeHtml(value) {
+            var str = value === undefined || value === null ? '' : String(value);
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function normalizeLayHref(item, pathSegments) {
+            if (item && typeof item.jump === 'string' && item.jump.length > 0) return item.jump;
+            var name = item && typeof item.name === 'string' ? item.name : '';
+            var segments = pathSegments.slice();
+            if (name) segments.push(name);
+            return segments.length ? segments.join('/') : '';
+        }
+
+        function buildDdList(items, pathSegments) {
+            var html = '';
+            var list = items || [];
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i] || {};
+                var title = escapeHtml(item.title || '');
+                var hasChildren = isArray(item.list) && item.list.length > 0;
+                var nextPath = pathSegments.slice();
+                if (item && typeof item.name === 'string' && item.name) nextPath.push(item.name);
+
+                if (hasChildren) {
+                    html += '<dd>';
+                    html += '<a href="javascript:;">' + title + '</a>';
+                    html += '<dl class="layui-nav-child">' + buildDdList(item.list, nextPath) + '</dl>';
+                    html += '</dd>';
+                } else {
+                    var layHref = normalizeLayHref(item, pathSegments);
+                    html += '<dd><a' + (layHref ? ' lay-href="' + escapeHtml(layHref) + '"' : '') + ' lay-text="' + title + '">' + title + '</a></dd>';
+                }
+            }
+            return html;
+        }
+
+        function buildTopMenu(items) {
+            var html = '';
+            var list = items || [];
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i] || {};
+                var title = escapeHtml(item.title || '');
+                var icon = escapeHtml(item.icon || '');
+                var hasChildren = isArray(item.list) && item.list.length > 0;
+                var classes = 'layui-nav-item' + (item.spread ? ' layui-nav-itemed' : '');
+                var nextPath = [];
+                if (item && typeof item.name === 'string' && item.name) nextPath.push(item.name);
+
+                if (hasChildren) {
+                    html += '<li class="' + classes + '">';
+                    html += '<a href="javascript:;" lay-tips="' + title + '" lay-direction="2">';
+                    html += (icon ? '<i class="layui-icon ' + icon + '"></i>' : '');
+                    html += '<cite>' + title + '</cite>';
+                    html += '</a>';
+                    html += '<dl class="layui-nav-child">' + buildDdList(item.list, nextPath) + '</dl>';
+                    html += '</li>';
+                } else {
+                    var layHref = normalizeLayHref(item, []);
+                    html += '<li class="' + classes + '">';
+                    html += '<a' + (layHref ? ' lay-href="' + escapeHtml(layHref) + '"' : '') + ' lay-text="' + title + '">';
+                    html += (icon ? '<i class="layui-icon ' + icon + '"></i>' : '');
+                    html += '<cite>' + title + '</cite>';
+                    html += '</a>';
+                    html += '</li>';
+                }
+            }
+            return html;
+        }
+
+        $.ajax({
+            url: menuUrl,
+            dataType: 'json',
+            cache: false,
+            success: function (res) {
+                var items = res && isArray(res.data) ? res.data : [];
+                $('#LAY-system-side-menu').html(buildTopMenu(items));
+                element.render('nav', 'layadmin-system-side-menu');
+            },
+            error: function () {
+                element.render('nav', 'layadmin-system-side-menu');
+            }
+        });
+    });
 </script>
 </body>
 </html>
-
