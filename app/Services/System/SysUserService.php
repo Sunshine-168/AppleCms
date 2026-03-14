@@ -5,11 +5,12 @@ use App\Models\Sys\SysDictModel;
 use App\Models\Sys\SysUserLogModel;
 use App\Models\Sys\SysUserModel;
 use App\Models\Sys\SysUserRoleModel;
+use App\Support\Utils\Result;
+use App\Support\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
-use Utils\Result;
-use Utils\Syslog;
+
 
 use Zhuzhichao\IpLocationZh\Ip;
 
@@ -206,7 +207,7 @@ class SysUserService
         if (strcasecmp($expectedCaptcha, $captcha) !== 0)
         {
             session()->forget('captcha');
-            
+
             return Result::fail('验证码错误，请刷新');
         }
 
