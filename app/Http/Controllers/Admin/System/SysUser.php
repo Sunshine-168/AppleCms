@@ -3,6 +3,8 @@ namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
 use App\Services\System\SysUserService;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
@@ -101,7 +103,7 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
-    public function showLogin()
+    public function showLogin(): Factory|View
     {
         return view('admin.login'); // resources/views/admin/login.blade.php
     }
