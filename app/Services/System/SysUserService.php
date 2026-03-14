@@ -206,7 +206,7 @@ class SysUserService
         if (strcasecmp($expectedCaptcha, $captcha) !== 0)
         {
             session()->forget('captcha');
-
+            
             return Result::fail('验证码错误，请刷新');
         }
 
