@@ -3,6 +3,8 @@ namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
 use App\Services\System\SysUserService;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
@@ -109,12 +111,13 @@ class SysUser extends Controller
         $data = $this->systemUserService->deleteSysUser($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 显示登录页
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function showLogin()
+    public function showLogin(): Factory|View
+
     {
         return view('admin.login'); // resources/views/admin/login.blade.php
     }

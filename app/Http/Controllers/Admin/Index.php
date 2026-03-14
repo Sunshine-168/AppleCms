@@ -36,3 +36,4 @@ class Index extends Controller
             ->header('Content-Type', 'image/jpeg');
     }
 }
+
