@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
-use App\Services\TagService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,9 +12,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TagService::class, function ($app) {
-            return new TagService();
-        });
     }
 
     /**
@@ -23,21 +19,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 注册 maccms 标签指令
-        $this->registerMaccmsTags();
-
-        $this->app['translator']->handleMissingKeysUsing(function ($key, $replace, $locale, $fallback) {
-            if (is_string($key) && str_starts_with($key, 'admin.admin/')) {
-                $fixedKey = substr($key, 6);
-                return $this->app['translator']->get($fixedKey, $replace, $locale, $fallback);
-            }
-
-            return $key;
-        });
+        $this->registerCmsTags();
     }
 
-    protected function registerMaccmsTags(): void
+
+    /**
+     * 注册模板标签
+     * @return void
+     */
+    protected function registerCmsTags(): void
     {
+        Blade::directive('conf', function ($expression) {
+            return "<?php echo config('system.settings.' . $expression); ?>";
+        });
     }
 
     /**
