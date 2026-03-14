@@ -3,6 +3,7 @@ namespace App\Services\System;
 use app\common\model\SysRoleModel;
 use app\common\model\SysRolePermModel;
 use app\common\utils\Result;
+use Utils\Result;
 use function app\admin\service\v1\pageSize;
 
 /**

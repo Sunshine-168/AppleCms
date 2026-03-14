@@ -37,7 +37,7 @@ class SysUser extends Controller
     public function getSystemUserLists(Request $request): JsonResponse
     {
         $username = (string) $request->input('username', '');
-        $data = $this->systemUserService->getSysUserLists($username);
+        $data     = $this->systemUserService->getSysUserLists($username);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -48,8 +48,9 @@ class SysUser extends Controller
      */
     public function getSystemUserInfo(Request $request): JsonResponse
     {
-        $id = (int) $request->input('id', 0);
+        $id   = (int) $request->input('id', 0);
         $data = $this->systemUserService->getSysUserInfo($id);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -61,7 +62,9 @@ class SysUser extends Controller
     public function getUserRoleIds(Request $request): JsonResponse
     {
         $userId = (int) $request->input('user_id', 0);
+
         $data   = $this->systemUserService->getUserRoleIds($userId);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -72,12 +75,17 @@ class SysUser extends Controller
      */
     public function setUserRoles(Request $request): JsonResponse
     {
-        $userId = (int) $request->input('user_id', 0);
+        $userId  = (int) $request->input('user_id', 0);
+
         $roleIds = $request->input('role_ids', []);
-        if (!is_array($roleIds)) {
+
+        if (!is_array($roleIds))
+        {
             $roleIds = [];
         }
+
         $data     = $this->systemUserService->setUserRoles($userId, $roleIds);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -90,7 +98,9 @@ class SysUser extends Controller
     {
         $username = (string) $request->input('username', '');
         $password = (string) $request->input('password', '123456');
+
         $data = $this->systemUserService->addSysUser($username, $password);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -101,10 +111,12 @@ class SysUser extends Controller
      */
     public function updateSystemUser(Request $request): JsonResponse
     {
-        $id = (int) $request->input('id', 0);
+        $id       = (int) $request->input('id', 0);
         $username = (string) $request->input('username', '');
         $password = (string) $request->input('password', '123456');
-        $data = $this->systemUserService->updateSysUser($id, $username, $password);
+
+        $data     = $this->systemUserService->updateSysUser($id, $username, $password);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -115,18 +127,20 @@ class SysUser extends Controller
      */
     public function deleteSystemUser(Request $request): JsonResponse
     {
-        $id = (int) $request->input('id', 0);
+        $id   = (int) $request->input('id', 0);
+
         $data = $this->systemUserService->deleteSysUser($id);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
      * 显示登录页
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @return Factory|\Illuminate\View\View
      */
     public function showLogin(): Factory|View
     {
-        return view('admin.login'); // resources/views/admin/login.blade.php
+        return view('admin.login');
     }
 
     /**
@@ -138,8 +152,10 @@ class SysUser extends Controller
     {
         $username = (string) $request->input('username', '');
         $password = (string) $request->input('password', '');
-        $vscode = (string) $request->input('vscode', '');
-        $data = $this->systemUserService->login($username, $password, $vscode);
+        $vscode   = (string) $request->input('vscode', '');
+
+        $data     = $this->systemUserService->login($username, $password, $vscode);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
 
     }
@@ -152,14 +168,16 @@ class SysUser extends Controller
     public function getSystemUserLoginLists(Request $request): JsonResponse
     {
         $params = [
-            'username' => (string) $request->input('username', ''),
-            'login_ip' => (string) $request->input('login_ip', ''),
-            'start_time' => (string) $request->input('start_time', ''),
-            'end_time' => (string) $request->input('end_time', ''),
-            'page' => (int) $request->input('page', 1),
-            'limit' => (int) $request->input('limit', 10),
+            'username'      => (string) $request->input('username', ''),
+            'login_ip'      => (string) $request->input('login_ip', ''),
+            'start_time'    => (string) $request->input('start_time', ''),
+            'end_time'      => (string) $request->input('end_time', ''),
+            'page'          => (int) $request->input('page', 1),
+            'limit'         => (int) $request->input('limit', 10),
         ];
+
         $data = $this->systemUserService->getSysUserLoginLists($params);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 }
