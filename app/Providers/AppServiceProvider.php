@@ -29,9 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerCmsTags(): void
     {
-        Blade::directive('conf', function ($expression) {
-            return "<?php echo config('system.settings.' . $expression); ?>";
-        });
+
     }
 
     /**

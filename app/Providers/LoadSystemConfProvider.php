@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 /**
  * 载入配置
  */
-class LoadConfServiceProvider extends ServiceProvider
+class LoadSystemConfProvider extends ServiceProvider
 {
     public function register(): void
     {

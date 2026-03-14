@@ -2,5 +2,6 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\LoadConfServiceProvider::class,
+    App\Providers\LoadSystemConfProvider::class,
+    App\Providers\RegisterCmsTagsProvider::class,
 ];
