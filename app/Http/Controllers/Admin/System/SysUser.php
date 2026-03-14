@@ -118,7 +118,8 @@ class SysUser extends Controller
 
     /**
      * 系统用户登录日志列表
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function getSystemUserLoginLists(Request $request): JsonResponse
     {
