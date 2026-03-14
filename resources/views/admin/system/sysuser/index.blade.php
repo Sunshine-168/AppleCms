@@ -44,7 +44,7 @@
         table.render({
             elem: '#sysuser-table',
             id: 'sysuser-table',
-            url: '/admin/sysUser/list',
+            url: '/admin/sysuser/list',
             method: 'get',
             page: true,
             parseData: function (res) {
@@ -78,4 +78,3 @@
 </script>
 </body>
 </html>
-
