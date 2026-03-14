@@ -21,7 +21,8 @@ class Index extends Controller
      */
     public function index(Request $request): Factory|View
     {
-        $menus = config('system.admin_menu');
+
+        $menus = config('system.menus');
 
         return view('admin.index', compact('menus'));
     }
