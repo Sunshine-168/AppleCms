@@ -15,7 +15,9 @@ use function App\Services\System\request;
 use Zhuzhichao\IpLocationZh\Ip;
 
 
-
+/**
+ * 系统用户服务
+ */
 class SysUserService
 {
     public SysUserModel $sysUserModel;
@@ -77,14 +79,20 @@ class SysUserService
     public function setUserRoles(int $userId, array $roleIds): array
     {
         $this->sysUserRoleModel->deleteByCondition(['user_id' => $userId]);
-        $rows = [];
-        $time = time();
-        foreach ($roleIds as $rid) {
+
+        $rows  = [];
+        $time  = time();
+
+        foreach ($roleIds as $rid)
+        {
             $rows[] = ['user_id' => (int)$userId, 'role_id' => (int)$rid, 'create_time' => $time, 'update_time' => $time];
         }
-        if (!empty($rows)) {
+
+        if (!empty($rows))
+        {
             $this->sysUserRoleModel->insertsAll($rows);
         }
+
         return Result::success();
     }
 
@@ -96,6 +104,7 @@ class SysUserService
     public function getSysUserInfo(int $id): array
     {
         $data = $this->sysUserModel->findById($id);
+
         return Result::success($data);
     }
 
@@ -179,12 +188,12 @@ class SysUserService
      */
     public function login(string $username, string $password, string $vscode): array
     {
-        $time = time();
+        $time    = time();
 
-        $where = [];
+        $where   = [];
         $where[] = ['username', '=', $username];
         $where[] = ['password', '=', $password];
-        $user = $this->sysUserModel->findByCondition($where);
+        $user    = $this->sysUserModel->findByCondition($where);
 
         if (!$user)
         {
@@ -296,7 +305,7 @@ class SysUserService
             $where[] = ['create_time', '<=', strtotime($params['end_time']) + 86400];
         }
 
-        $data = $this->sysUserLogModel->paginates($where,'*',pageSize());
+        $data = $this->sysUserLogModel->paginates($where,'*', 10);
 
         return Result::success($data);
     }
