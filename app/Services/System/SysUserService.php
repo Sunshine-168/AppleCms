@@ -12,7 +12,9 @@ use Utils\Result;
 use Utils\Syslog;
 use Zhuzhichao\IpLocationZh\Ip;
 
-
+/**
+ * 系统用户服务
+ */
 class SysUserService
 {
     public SysUserModel $sysUserModel;
