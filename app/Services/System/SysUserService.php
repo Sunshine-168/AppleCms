@@ -84,7 +84,7 @@ class SysUserService
 
         foreach ($roleIds as $rid)
         {
-            $rows[] = ['user_id' => (int)$userId, 'role_id' => (int)$rid, 'create_time' => $time, 'update_time' => $time];
+            $rows[] = ['user_id' => $userId, 'role_id' => (int)$rid, 'create_time' => $time, 'update_time' => $time];
         }
 
         if (!empty($rows))
@@ -216,6 +216,7 @@ class SysUserService
         {
             return Result::fail('账号或者密码错误');
         }
+
         session()->forget('captcha');
 
         $ip         = Request::ip();

@@ -29,7 +29,7 @@ class SysUser extends Controller
     public function getSystemUserLists(Request $request): JsonResponse
     {
         $username = (string) $request->input('username', '');
-        $data = $this->systemUserService->getSysUserLists($username);
+        $data     = $this->systemUserService->getSysUserLists($username);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -40,8 +40,9 @@ class SysUser extends Controller
      */
     public function getSystemUserInfo(Request $request): JsonResponse
     {
-        $id = (int) $request->input('id', 0);
+        $id   = (int) $request->input('id', 0);
         $data = $this->systemUserService->getSysUserInfo($id);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -64,11 +65,14 @@ class SysUser extends Controller
      */
     public function setUserRoles(Request $request): JsonResponse
     {
-        $userId = (int) $request->input('user_id', 0);
+        $userId  = (int) $request->input('user_id', 0);
         $roleIds = $request->input('role_ids', []);
-        if (!is_array($roleIds)) {
+
+        if (!is_array($roleIds))
+        {
             $roleIds = [];
         }
+
         $data     = $this->systemUserService->setUserRoles($userId, $roleIds);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
