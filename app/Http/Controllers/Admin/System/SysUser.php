@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Admin\Sys;
 
 use App\Http\Controllers\Controller;
-use App\Services\Admin\Sys\SysUserService;
+use App\Services\System\SysUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
@@ -13,10 +13,10 @@ use Utils\ServiceFactory;
  */
 class SysUser extends Controller
 {
-  
+
     protected SysUserService $systemUserService;
 
-    public function __construct() 
+    public function __construct()
     {
         $this->systemUserService = ServiceFactory::make(SysUserService::class);
     }

@@ -1,7 +1,8 @@
 <?php
-namespace app\admin\service\v1;
+namespace App\Services\System;
 use app\common\model\SysPermModel;
 use app\common\utils\Result;
+use function app\admin\service\v1\pageSize;
 
 /**
  * 权限服务
@@ -86,8 +87,8 @@ class SysPermService
     {
         // 查询所有菜单型(type=1)和按钮型(type=2)权限，按 id 升序排序
         $list = $this->sysPermModel->selectByCondition(
-            [['type', 'in', [1, 2]]], 
-            '*', 
+            [['type', 'in', [1, 2]]],
+            '*',
             ['id' => 'asc']
         );
         $map = [];
@@ -117,12 +118,12 @@ class SysPermService
     {
         // 获取所有权限数据
         $list = $this->sysPermModel->selectByCondition([], '*', ['sort' => 'desc', 'id' => 'asc']);
-        
+
         // 如果没有数据，直接返回
         if (empty($list)) {
             return Result::success([]);
         }
-        
+
         // 使用引用的方式构建树形结构
         // 先建立 id => node 的映射，并初始化 children
         $map = [];
@@ -130,7 +131,7 @@ class SysPermService
             $item['children'] = [];
             $map[$item['id']] = $item;
         }
-        
+
         // 构建树形结构（关键：使用引用传递）
         $root = [];
         foreach ($map as $id => &$node) {  // 注意这里的 &$node 使用引用
@@ -144,7 +145,7 @@ class SysPermService
             }
         }
         unset($node); // 解除引用
-        
+
         return Result::success($root);
     }
 }

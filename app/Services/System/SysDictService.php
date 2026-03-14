@@ -1,5 +1,5 @@
 <?php
-namespace app\admin\service\v1;
+namespace App\Services\System;
 
 use app\common\enum\biz\PaymentClassTypeEnum;
 use app\common\enum\biz\PaymentTypeEnum;
@@ -7,8 +7,9 @@ use app\common\enum\biz\SysDictTypeEnum;
 use app\common\model\PaymentAccountModel;
 use app\common\model\PaymentChannelModel;
 use app\common\model\PaymentClassModel;
-use App\Models\Sys\SysDictModel;
 use app\common\utils\Result;
+use App\Models\Sys\SysDictModel;
+use function app\admin\service\v1\pageSize;
 
 class SysDictService
 {
