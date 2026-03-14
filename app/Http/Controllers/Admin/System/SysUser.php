@@ -21,6 +21,7 @@ class SysUser extends Controller
     {
         $this->systemUserService = new SysUserService();
     }
+
     /**
      * 获取系统用户列表
      * @param Request $request
