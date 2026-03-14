@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Middleware\Index;
+namespace App\Http\Middleware;
 
 use App\Models\User;
 use Closure;

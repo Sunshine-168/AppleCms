@@ -3,7 +3,6 @@ namespace App\Http\Middleware;
 
 use Throwable;
 use Illuminate\Support\Facades\Redis;
-use Symfony\Component\HttpFoundation\Response;
 
 class RateLimit
 {
