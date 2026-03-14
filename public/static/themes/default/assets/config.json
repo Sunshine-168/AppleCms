@@ -1,0 +1,34 @@
+{
+    "name": "default",
+    "title": "默认影视模板",
+    "version": "1.0",
+    "author": "xhcms",
+    "mobile": true,
+    "responsive": true,
+    "config": {
+        "logo": {
+            "type": "image",
+            "label": "网站Logo"
+        },
+        "banner": {
+            "type": "image",
+            "label": "首页Banner"
+        },
+        "index_layout": {
+            "type": "select",
+            "label": "首页布局",
+            "options": {
+                "grid": "网格",
+                "list": "列表"
+            }
+        },
+        "player": {
+            "type": "select",
+            "label": "播放器",
+            "options": {
+                "dplayer": "DPlayer",
+                "artplayer": "ArtPlayer"
+            }
+        }
+    }
+}
