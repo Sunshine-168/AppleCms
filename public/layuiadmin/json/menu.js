@@ -208,11 +208,9 @@
       ,"title": "基本设置"
       ,"spread": true
       ,"list": [{
-        "name": "website"
-        ,"title": "系统设置"
-      },{
-        "name": "email"
-        ,"title": "邮件服务"
+        "name": "administrators"
+        ,"title": "管理员"
+        ,"jump": "user/administrators/list"
       }]
     },{
       "name": "security"

@@ -8,8 +8,9 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <link rel="stylesheet" href="../layuiadmin/layui/css/layui.css" media="all">
-  <link rel="stylesheet" href="../layuiadmin/style/admin.css" media="all">
+  <base href="/views/">
+  <link rel="stylesheet" href="/layuiadmin/layui/css/layui.css" media="all">
+  <link rel="stylesheet" href="/layuiadmin/style/admin.css" media="all">
   
   <script>
   /^http(s*):\/\//.test(location.href) || alert('请先部署到 localhost 下再访问');
@@ -20,7 +21,6 @@
   <div id="LAY_app">
     <div class="layui-layout layui-layout-admin">
       <div class="layui-header">
-        <!-- 头部区域 -->
         <ul class="layui-nav layui-layout-left">
           <li class="layui-nav-item layadmin-flexible" lay-unselect>
             <a href="javascript:;" layadmin-event="flexible" title="侧边伸缩">
@@ -47,7 +47,6 @@
             <a lay-href="app/message/index.html" layadmin-event="message" lay-text="消息中心">
               <i class="layui-icon layui-icon-notice"></i>  
               
-              <!-- 如果有新消息，则显示小圆点 -->
               <span class="layui-badge-dot"></span>
             </a>
           </li>
@@ -87,7 +86,6 @@
         </ul>
       </div>
       
-      <!-- 侧边菜单 -->
       <div class="layui-side layui-side-menu">
         <div class="layui-side-scroll">
           <div class="layui-logo" lay-href="home/console.html">
@@ -400,8 +398,6 @@
                 <dd class="layui-nav-itemed">
                   <a href="javascript:;">系统管理</a>
                   <dl class="layui-nav-child">
-                    <!-- <dd><a lay-href="set/system/website.html">网站设置</a></dd>
-                    <dd><a lay-href="set/system/email.html">邮件服务</a></dd> -->
                     <dd><a lay-href="user/administrators/list.html">管理员</a></dd>
                   </dl>
                 </dd>
@@ -423,8 +419,6 @@
           </ul>
         </div>
       </div>
-
-      <!-- 页面标签 -->
       <div class="layadmin-pagetabs" id="LAY_app_tabs">
         <div class="layui-icon layadmin-tabs-control layui-icon-prev" layadmin-event="leftPage"></div>
         <div class="layui-icon layadmin-tabs-control layui-icon-next" layadmin-event="rightPage"></div>
@@ -448,25 +442,24 @@
       </div>
       
       
-      <!-- 主体内容 -->
       <div class="layui-body" id="LAY_app_body">
         <div class="layadmin-tabsbody-item layui-show">
           <iframe src="home/console.html" frameborder="0" class="layadmin-iframe"></iframe>
         </div>
       </div>
       
-      <!-- 辅助元素，一般用于移动设备下遮罩 -->
       <div class="layadmin-body-shade" layadmin-event="shade"></div>
     </div>
   </div>
 
-  <script src="../layuiadmin/layui/layui.js"></script>
+  <script src="/layuiadmin/layui/layui.js"></script>
   <script>
   layui.config({
-    base: '../layuiadmin/' //静态资源所在路径
+    base: '/layuiadmin/'
   }).extend({
-    index: 'lib/index' //主入口模块
+    index: 'lib/index'
   }).use('index');
   </script>
 </body>
 </html>
+<?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views/admin/index.blade.php ENDPATH**/ ?>

@@ -1,80 +1,112 @@
+
+
 <!DOCTYPE html>
-<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo e(__('admin/index/login/title')); ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f5f5f5;
-            <?php if(!empty($background)): ?>
-            background-image: url('<?php echo e($background); ?>');
-            background-size: cover;
-            background-position: center;
-            <?php endif; ?>
-        }
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>登入 - layuiAdmin</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <base href="/views/user/">
+  <link rel="stylesheet" href="/layuiadmin/layui/css/layui.css" media="all">
+  <link rel="stylesheet" href="/layuiadmin/style/admin.css" media="all">
+  <link rel="stylesheet" href="/layuiadmin/style/login.css" media="all">
 </head>
 <body>
 
-<div class="login-card">
-    <h3 class="text-center mb-4"><?php echo e(__('admin/index/login/tip_sys')); ?></h3>
-    
-    <?php if($errors->any()): ?>
-        <?php
-            $translatedErrors = collect($errors->all())->map(function ($error) {
-                if ($error === 'Invalid credentials') {
-                    return __('admin/index/login/error_invalid');
-                }
-                if ($error === 'Account disabled') {
-                    return __('admin/index/login/error_disabled');
-                }
-                return $error;
-            });
-        ?>
-        <div class="alert alert-danger">
-            <div class="fw-semibold mb-1"><?php echo e(__('admin/index/login/error_title')); ?></div>
-            <div class="small">
-                <?php $__currentLoopData = $translatedErrors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div><?php echo e($error); ?></div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </div>
-        </div>
-    <?php endif; ?>
+  <div class="layadmin-user-login layadmin-user-display-show" id="LAY-user-login" style="display: none;">
 
-    <form action="<?php echo e(route('admin.login')); ?>" method="POST">
-        <?php echo csrf_field(); ?>
-        <div class="mb-3">
-            <label for="admin_name" class="form-label"><?php echo e(__('admin/index/login/filed_no')); ?></label>
-            <input type="text" class="form-control" id="admin_name" name="admin_name" value="<?php echo e(old('admin_name')); ?>" autocomplete="username" autofocus required>
+    <div class="layadmin-user-login-main">
+      <div class="layadmin-user-login-box layadmin-user-login-header">
+        <h2>HKCMS</h2>
+        <p>HKCMS 官方出品的单页面后台管理模板系统</p>
+      </div>
+      <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-username" for="LAY-user-login-username"></label>
+          <input type="text" name="username" id="LAY-user-login-username" lay-verify="required" placeholder="用户名" class="layui-input">
         </div>
-        <div class="mb-3">
-            <label for="admin_pwd" class="form-label"><?php echo e(__('admin/index/login/filed_pass')); ?></label>
-            <input type="password" class="form-control" id="admin_pwd" name="admin_pwd" autocomplete="current-password" required>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-password" for="LAY-user-login-password"></label>
+          <input type="password" name="password" id="LAY-user-login-password" lay-verify="required" placeholder="密码" class="layui-input">
         </div>
-        <div class="d-grid">
-            <button type="submit" class="btn btn-primary"><?php echo e(__('admin/index/login/btn_submit')); ?></button>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-vercode" for="LAY-user-login-vercode"></label>
+          <input type="text" name="vscode" id="LAY-user-login-vercode" placeholder="谷歌验证码（可选）" class="layui-input">
         </div>
-    </form>
-    
-    <div class="text-center mt-3 text-muted">
-        <small><?php echo e(__('admin/index/login/tip_welcome')); ?></small>
+        <div class="layui-form-item" style="margin-bottom: 20px;">
+          <input type="checkbox" name="remember" lay-skin="primary" title="记住密码">
+        </div>
+
+        <div class="layui-form-item">
+          <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="LAY-user-login-submit">登 入</button>
+        </div>
+      </div>
     </div>
-</div>
 
+    <div class="layui-trans layadmin-user-login-footer"></div>
+
+  </div>
+
+  <script src="/layuiadmin/layui/layui.js"></script>
+  <script>
+  layui.config({
+    base: '/layuiadmin/'
+  }).extend({
+    index: 'lib/index'
+  }).use(['index', 'user'], function(){
+    var $ = layui.$
+    ,setter = layui.setter
+    ,admin = layui.admin
+    ,form = layui.form
+    ,router = layui.router()
+    ,search = router.search;
+
+    form.render();
+    
+    if (layui.view && typeof layui.view.popup === 'function') {
+      layui.view.error = function (content, options) {
+        var text = String(content || '');
+        text = text.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').replace(/^\s*Error[:：]\s*/i, '');
+        var lines = text.split('\n').map(function (s) { return s.trim(); }).filter(function (s) { return s && !/^URL[:：]/i.test(s); });
+        return layer.msg(lines[0] || '操作失败', $.extend({
+          offset: 'lb',
+          shade: 0,
+          anim: 6,
+          skin: 'hk-toast',
+          icon: 2,
+          time: 2000
+        }, options));
+      };
+    }
+
+    form.on('submit(LAY-user-login-submit)', function(obj){
+      admin.req({
+        type: 'post'
+        ,url: '/api/admin/login'
+        ,data: obj.field
+        ,done: function(res){
+          layui.data(setter.tableName, {
+            key: setter.request.tokenName
+            ,value: res.data.token
+          });
+
+          layer.msg('登入成功', {
+            offset: 'lb'
+            ,icon: 1
+            ,skin: 'hk-toast'
+            ,time: 1000
+          }, function(){
+            location.href = '/admin';
+          });
+        }
+      });
+    });
+    
+  });
+  </script>
 </body>
 </html>
+
 <?php /**PATH D:\phpstudy_pro\WWW\mac\resources\views/admin/login.blade.php ENDPATH**/ ?>
