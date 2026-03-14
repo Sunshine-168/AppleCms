@@ -21,3 +21,6 @@
 
 #每秒任务
 * * * * * /www/wwwroot/facai11-api.24game.top/loop-cmd.sh >> /www/wwwroot/facai11-api.24game.top/runtime/crontab/loop-cmd.log 2>&1
+
+
+1111
