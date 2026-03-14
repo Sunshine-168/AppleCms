@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Utils\Result;
 use Utils\Syslog;
 use Illuminate\Support\Facades\Request;
+use Zhuzhichao\IpLocationZh\Ip;
 
 class SysUserService
 {
