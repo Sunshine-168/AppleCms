@@ -12,9 +12,12 @@ use Utils\Ajax;
  */
 class SysUser extends Controller
 {
+  
+    protected SysUserService $systemUserService;
+
     public function __construct() 
     {
-        $this->systemUserService = app()->make(SysUserService::class);
+        $this->systemUserService = ServiceFactory::make(SysUserService::class);
     }
 
     public function getSystemUserLists(Request $request): JsonResponse
