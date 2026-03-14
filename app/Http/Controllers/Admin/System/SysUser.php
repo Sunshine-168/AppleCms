@@ -101,6 +101,11 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    public function showLogin()
+    {
+        return view('admin.login'); // resources/views/admin/login.blade.php
+    }
+
     /**
      * 登入
      * @param Request $request

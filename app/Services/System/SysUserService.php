@@ -232,7 +232,7 @@ class SysUserService
                 'login_time'  => $time,
                 'login_ip'    => $ip,
                 'ip_address'  => $ipAddress,
-                'login_agent' => (string) request()->userAgent(),
+                'login_agent' => (string) \request()->userAgent(),
                 'token'       => md5($time . $user['id'])
             ];
 
@@ -248,7 +248,7 @@ class SysUserService
                 'uid'         => $user['id'],
                 'username'    => $user['username'],
                 'login_ip'    => $ip,
-                'login_agent' => (string) request()->userAgent(),
+                'login_agent' => (string) \request()->userAgent(),
                 'ip_address'  => $ipAddress
             ];
 

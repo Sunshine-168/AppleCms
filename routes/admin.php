@@ -1,11 +1,11 @@
 <?php
 use Illuminate\Support\Facades\Route;
 
-Route::get('/admin', fn () => view('admin.index'));
-Route::get('/admin/login', fn () => view('admin.login'));
-
+use App\Http\Controllers\Admin\System\SysUser;
 
 Route::prefix('admin')->group(function () {
-    Route::get('/', [AdminController::class, 'index']);
-    Route::get('/login', [LoginController::class, 'showLogin']);
+
+    Route::get('/login', [SysUser::class, 'showLogin']); // 显示登录页
+    Route::post('/login', [SysUser::class, 'login']);    // 表单提交处理登录
+
 });
