@@ -1,9 +1,11 @@
 <?php
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use Gregwar\Captcha\CaptchaBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Response;
 
 /**
  * 后台首页
@@ -24,9 +26,10 @@ class Index extends Controller
 
     /**
      * 输出验证码图片
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Response
      */
-    public function captcha(Request $request)
+    public function captcha(Request $request): Response
     {
         $builder = new CaptchaBuilder;
         $builder->build();
