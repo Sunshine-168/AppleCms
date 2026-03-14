@@ -54,7 +54,95 @@ return [
             ]
 
         ]
-
-    ]
+    ],
+    [
+        'name' => '设置',
+        'icon' => 'set',
+        'sub' => [
+            [
+                'name' => '系统管理',
+                'sub' => [
+                    [
+                        'name' => '管理员',
+                        'url' => '/admin/sysuser'
+                    ],
+                    [
+                        'name' => '角色管理',
+                        'url' => '/admin/system/roles'
+                    ],
+                    [
+                        'name' => '菜单管理',
+                        'url' => '/admin/system/menus'
+                    ],
+                    [
+                        'name' => '字典管理',
+                        'url' => '/admin/system/dicts'
+                    ],
+                    [
+                        'name' => '附件管理',
+                        'url' => '/admin/system/attachments'
+                    ]
+                ]
+            ],
+            [
+                'name' => '数据库管理',
+                'sub' => [
+                    [
+                        'name' => '数据库字典',
+                        'url' => '/admin/system/database/dict'
+                    ],
+                    [
+                        'name' => '数据库备份',
+                        'url' => '/admin/system/database/backup'
+                    ],
+                    [
+                        'name' => '数据库恢复',
+                        'url' => '/admin/system/database/restore'
+                    ],
+                    [
+                        'name' => '备份文件管理',
+                        'url' => '/admin/system/database/backup-files'
+                    ],
+                    [
+                        'name' => '数据库优化',
+                        'url' => '/admin/system/database/optimize'
+                    ],
+                    [
+                        'name' => '数据库修复',
+                        'url' => '/admin/system/database/repair'
+                    ],
+                    [
+                        'name' => 'SQL执行',
+                        'url' => '/admin/system/database/sql'
+                    ],
+                    [
+                        'name' => 'SQL高级助手',
+                        'url' => '/admin/system/database/sql-helper'
+                    ],
+                    [
+                        'name' => '数据批量替换',
+                        'url' => '/admin/system/database/replace'
+                    ]
+                ]
+            ],
+            [
+                'name' => '系统监控',
+                'sub' => [
+                    [
+                        'name' => '登录日志',
+                        'url' => '/admin/system/monitor/login-logs'
+                    ],
+                    [
+                        'name' => '操作日志',
+                        'url' => '/admin/system/monitor/operate-logs'
+                    ],
+                    [
+                        'name' => '系统日志',
+                        'url' => '/admin/system/monitor/system-logs'
+                    ]
+                ]
+            ]
+        ]
+    ],
 
 ];
