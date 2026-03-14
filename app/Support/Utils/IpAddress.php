@@ -1,5 +1,5 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 
 use Illuminate\Support\Facades\Request;
 use Zhuzhichao\IpLocationZh\Ip;

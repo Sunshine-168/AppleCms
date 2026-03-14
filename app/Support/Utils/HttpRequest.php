@@ -1,7 +1,6 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 
-use App\Services\Common\Http\Sync\HttpRequestFactory;
 
 
 /**

@@ -1,5 +1,5 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;

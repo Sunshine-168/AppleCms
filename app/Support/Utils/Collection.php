@@ -1,6 +1,6 @@
 <?php
 
-namespace Utils;
+namespace App\Support\Utils;
 
 use App\Utils\采集规则;
 use function App\Utils\mac_curl_get;

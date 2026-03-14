@@ -1,8 +1,7 @@
 <?php
 
-namespace Utils;
+namespace App\Support\Utils;
 
-use App\Jobs\SequenceJob;
 use Closure;
 
 class JobDispatcher

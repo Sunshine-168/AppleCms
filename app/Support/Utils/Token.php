@@ -1,5 +1,5 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Config;

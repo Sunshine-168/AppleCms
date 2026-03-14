@@ -1,9 +1,7 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 
 use DateInterval;
-use DateMalformedPeriodStringException;
-use DateMalformedStringException;
 use DatePeriod;
 use DateTime;
 use Exception;
@@ -55,8 +53,6 @@ class Times
      * @param string $start
      * @param string $end
      * @return array
-     * @throws DateMalformedPeriodStringException
-     * @throws DateMalformedStringException
      * @throws Exception
      */
     public static  function generateDates(string $start, string $end): array

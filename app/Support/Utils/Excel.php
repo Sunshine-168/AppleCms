@@ -1,5 +1,5 @@
 <?php
-namespace Utils;
+namespace App\Support\Utils;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
