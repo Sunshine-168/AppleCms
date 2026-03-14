@@ -101,7 +101,7 @@
                         <li class="layui-nav-item">
 
                             <a href="javascript:;">
-                                <i class="layui-icon {{$menu['icon'] ?? ''}}"></i>
+                                <i class="layui-icon layui-icon-{{$menu['icon'] ?? ''}}"></i>
                                 <cite>{{$menu['name']}}</cite>
                             </a>
 
@@ -115,20 +115,6 @@
 
                     @endforeach
 
-{{--                    @foreach($menus as $menu)--}}
-{{--                        <li data-name="{{$menu['name']}}" class="layui-nav-item">--}}
-{{--                            <a href="javascript:;" lay-tips="{{$menu['name']}}">--}}
-{{--                                <i class="layui-icon {{$menu['icon'] ?? ''}}"></i>--}}
-{{--                                <cite>{{$menu['name']}}</cite>--}}
-{{--                            </a>--}}
-
-{{--                            @if(!empty($menu['sub']))--}}
-{{--                                <dl class="layui-nav-child">--}}
-{{--                                    @include('admin.components.menu', ['menus' => $menu['sub']])--}}
-{{--                                </dl>--}}
-{{--                            @endif--}}
-{{--                        </li>--}}
-{{--                    @endforeach--}}
 
 
 

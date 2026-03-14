@@ -6,7 +6,7 @@
 
             <a href="javascript:;">
                 @if(!empty($menu['icon']))
-                    <i class="layui-icon {{$menu['icon']}}"></i>
+                    <i class="layui-icon layui-icon-{{$menu['icon']}}"></i>
                 @endif
                 {{$menu['name']}}
             </a>
