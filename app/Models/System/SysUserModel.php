@@ -1,5 +1,5 @@
 <?php
-namespace App\Models\Sys;
+namespace App\Models\System;
 
 use App\Traits\QueryCacheTrait;
 use App\Traits\QueryTrait;

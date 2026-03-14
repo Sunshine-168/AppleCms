@@ -1,16 +1,16 @@
 <?php
-namespace app\common\model;
+namespace App\Models\System;
 use app\common\logic\traits\QueryCacheTrait;
 use app\common\logic\traits\QueryTrait;
 use think\Model;
 
 /**
- * 系统文件
+ * 系统日志
  */
-class SysFileModel extends Model
+class SysLogModel extends Model
 {
     // 设置当前模型对应的完整数据表名称
-    protected $name = 'sys_file';
+    protected $name = 'sys_log';
 
 
     // 主键

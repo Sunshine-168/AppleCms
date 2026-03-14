@@ -1,5 +1,5 @@
 <?php
-namespace app\common\model;
+namespace App\Models\System;
 use app\common\logic\traits\QueryCacheTrait;
 use app\common\logic\traits\QueryTrait;
 use think\Model;
