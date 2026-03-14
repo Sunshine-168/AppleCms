@@ -2,10 +2,6 @@
 
 /**
  * 后台管理权限配置
- * 从 maccms10/application/admin/common/auth.php 迁移
- *
- * 注意：lang() 函数调用需要替换为实际的翻译键值
- * 在 Laravel 中使用 __() 或 trans() 函数
  */
 
 return [
