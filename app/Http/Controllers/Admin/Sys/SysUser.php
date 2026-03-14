@@ -7,6 +7,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
 
+/**
+ *
+ */
 class SysUser extends Controller
 {
     public function __construct(
@@ -56,7 +59,8 @@ class SysUser extends Controller
 
     /**
      * 添加用户
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function addSystemUser(Request $request): JsonResponse
     {
@@ -68,7 +72,8 @@ class SysUser extends Controller
 
     /**
      * 更新用户
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function updateSystemUser(Request $request): JsonResponse
     {
@@ -81,7 +86,8 @@ class SysUser extends Controller
 
     /**
      * 删除用户
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function deleteSystemUser(Request $request): JsonResponse
     {
@@ -92,7 +98,8 @@ class SysUser extends Controller
 
     /**
      * 登入
-     * @return Json
+     * @param Request $request
+     * @return JsonResponse
      */
     public function login(Request $request): JsonResponse
     {
