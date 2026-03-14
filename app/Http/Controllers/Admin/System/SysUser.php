@@ -6,10 +6,9 @@ use App\Services\System\SysUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Utils\Ajax;
-use Utils\ServiceFactory;
 
 /**
- *
+ * 系统用户
  */
 class SysUser extends Controller
 {
