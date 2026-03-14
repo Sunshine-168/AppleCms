@@ -95,9 +95,7 @@
 
                 <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu" lay-filter="layadmin-system-side-menu">
 
-
                     @foreach($menus as $menu)
-
                         <li class="layui-nav-item">
 
                             <a href="javascript:;">
@@ -112,7 +110,6 @@
                             @endif
 
                         </li>
-
                     @endforeach
 
                 </ul>
