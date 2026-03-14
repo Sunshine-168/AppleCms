@@ -142,7 +142,7 @@ class SysUser extends Controller
      */
     public function showLogin(): Factory|View
     {
-        return view('admin.login');
+        return view('admin.system.user.login');
     }
 
     /**

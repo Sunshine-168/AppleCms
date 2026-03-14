@@ -24,7 +24,7 @@ class Index extends Controller
 
         $menus = config('system.menus');
 
-        return view('admin.index', compact('menus'));
+        return view('admin.layouts.index', compact('menus'));
     }
 
     /**
@@ -42,7 +42,7 @@ class Index extends Controller
         session(['captcha' => $builder->getPhrase()]);
 
         return response($builder->get(), 200)
-        
+
             ->header('Content-Type', 'image/jpeg');
     }
 }
