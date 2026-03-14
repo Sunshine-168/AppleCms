@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Utils\Result;
 use Utils\Syslog;
-use function App\Services\Admin\Sys\pageSize;
-use function App\Services\Admin\Sys\request;
+use Zhuzhichao\IpLocationZh\Ip;
+
 
 class SysUserService
 {
