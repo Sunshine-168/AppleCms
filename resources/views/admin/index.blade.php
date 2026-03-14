@@ -40,7 +40,7 @@
     <div class="layui-side layui-side-menu">
         <div class="layui-side-scroll">
             <div class="layui-logo" lay-href="javascript:;">
-                <span>HKCMS</span>
+                <span>XHCMS</span>
             </div>
             <ul class="layui-nav layui-nav-tree" lay-shrink="all" lay-filter="layadmin-system-side-menu" id="LAY-system-side-menu"></ul>
         </div>
