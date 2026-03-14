@@ -30,6 +30,7 @@ class SysUser extends Controller
     {
         return view('admin.system.sysuser.index');
     }
+    
     /**
      * 获取系统用户列表
      * @param Request $request

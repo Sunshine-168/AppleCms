@@ -383,7 +383,7 @@
                                 <a lay-href="user/user/list.html">网站用户</a>
                             </dd>
                             <dd>
-                                <a lay-href="user/administrators/list.html">后台管理员</a>
+                                <a lay-href="/admin/sysuser">后台管理员</a>
                             </dd>
                             <dd>
                                 <a lay-href="user/administrators/role.html">角色管理</a>
