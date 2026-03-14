@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Utils\Result;
 use Utils\Syslog;
 use Illuminate\Support\Facades\Request;
-use Zhuzhichao\IpLocationZh\Ip;
 
 class SysUserService
 {
@@ -185,27 +184,6 @@ class SysUserService
         if (!$user)
         {
             return Result::fail('账号或者密码错误');
-        }
-
-        $appEnv = (string) env('APP_ENV', 'production');
-        $isPro = in_array($appEnv, ['pro', 'production'], true);
-        if ($isPro && env('GOOGLE_AUTH', false))
-        {
-            if ($vscode === '')
-            {
-                return Result::fail('请输入谷歌验证码');
-            }
-
-            $google = $this->sysDictModel->getValue('google');
-            if (empty($google))
-            {
-                return Result::fail('谷歌验证未配置');
-            }
-
-            if (!$this->verifyTotp((string) $google, $vscode))
-            {
-                return Result::fail('谷歌验证码错误');
-            }
         }
 
         $ip         = Request::ip();
