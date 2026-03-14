@@ -13,6 +13,7 @@ class RouteWhitelist
     public static function check(string $uri, string $module): bool
     {
         $routes = Config::get("system.whitelist.{$module}", []);
+
         if (empty($routes))
         {
             $routes = Config::get("whitelist.{$module}", []);

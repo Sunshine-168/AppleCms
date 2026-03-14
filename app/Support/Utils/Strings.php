@@ -1,7 +1,9 @@
 <?php
 namespace App\Support\Utils;
 
-
+/**
+ * 字符串处理
+ */
 class Strings
 {
 
@@ -43,8 +45,8 @@ class Strings
 
         $firstStr = mb_substr($string, 0, $start, 'UTF-8');
         $lastStr  = mb_substr($string, -2, $end, 'UTF-8');
-        return $firstStr . '****' . $lastStr;
 
+        return $firstStr . '****' . $lastStr;
     }
 
     /**
