@@ -28,9 +28,9 @@ class SysUser extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.sysuser.index');
+        return view('admin.system.user.index');
     }
-    
+
     /**
      * 获取系统用户列表
      * @param Request $request
