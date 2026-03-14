@@ -16,9 +16,10 @@
 
     <div class="layadmin-user-login-main">
         <div class="layadmin-user-login-box layadmin-user-login-header">
-            <h2>XHCMS</h2>
-            <p>XHCMS 官方出品的单页面后台管理模板系统</p>
+            <h2> {{conf('flag')}} </h2>
+            <p>  {{conf('author')}} 官方出品的单页面后台管理模板系统</p>
         </div>
+
         <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
             <div class="layui-form-item">
                 <label class="layadmin-user-login-icon layui-icon layui-icon-username" for="LAY-user-login-username"></label>
