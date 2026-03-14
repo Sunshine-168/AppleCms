@@ -76,14 +76,20 @@ class SysUserService
     public function setUserRoles(int $userId, array $roleIds): array
     {
         $this->sysUserRoleModel->deleteByCondition(['user_id' => $userId]);
-        $rows = [];
-        $time = time();
-        foreach ($roleIds as $rid) {
+
+        $rows  = [];
+        $time  = time();
+
+        foreach ($roleIds as $rid)
+        {
             $rows[] = ['user_id' => (int)$userId, 'role_id' => (int)$rid, 'create_time' => $time, 'update_time' => $time];
         }
-        if (!empty($rows)) {
+
+        if (!empty($rows))
+        {
             $this->sysUserRoleModel->insertsAll($rows);
         }
+
         return Result::success();
     }
 
@@ -95,6 +101,7 @@ class SysUserService
     public function getSysUserInfo(int $id): array
     {
         $data = $this->sysUserModel->findById($id);
+
         return Result::success($data);
     }
 
@@ -274,7 +281,7 @@ class SysUserService
             $where[] = ['create_time', '<=', strtotime($params['end_time']) + 86400];
         }
 
-        $data = $this->sysUserLogModel->paginates($where,'*',pageSize());
+        $data = $this->sysUserLogModel->paginates($where,'*', 10);
 
         return Result::success($data);
     }
