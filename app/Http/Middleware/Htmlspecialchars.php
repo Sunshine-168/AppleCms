@@ -4,7 +4,7 @@ namespace App\Http\Middleware\Agent;
 use Closure;
 use Illuminate\Http\Request;
 
-class HtmlspecialcharsMiddleware
+class Htmlspecialchars
 {
 
     public function handle(Request $request, Closure $next)
