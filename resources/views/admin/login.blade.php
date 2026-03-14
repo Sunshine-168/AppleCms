@@ -8,9 +8,9 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <link rel="stylesheet" href="../../layuiadmin/layui/css/layui.css" media="all">
-    <link rel="stylesheet" href="../../layuiadmin/style/admin.css" media="all">
-    <link rel="stylesheet" href="../../layuiadmin/style/login.css" media="all">
+    <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}" media="all">
+    <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}" media="all">
+    <link rel="stylesheet" href="{{ asset('static/admin/style/login.css') }}" media="all">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
     <!--<div class="ladmin-user-login-theme">
       <script type="text/html" template>
         <ul>
-          <li data-theme=""><img src="{{ layui.setter.base }}style/res/bg-none.jpg"></li>
+          <li data-theme=""><img src="@{{ layui.setter.base }}style/res/bg-none.jpg"></li>
           <li data-theme="#03152A" style="background-color: #03152A;"></li>
           <li data-theme="#2E241B" style="background-color: #2E241B;"></li>
           <li data-theme="#50314F" style="background-color: #50314F;"></li>
@@ -78,10 +78,10 @@
 
 </div>
 
-<script src="../../layuiadmin/layui/layui.js"></script>
+<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
 <script>
     layui.config({
-        base: '../../layuiadmin/' //静态资源所在路径
+        base: '{{ asset('static/admin') }}/' //静态资源所在路径
     }).extend({
         index: 'lib/index' //主入口模块
     }).use(['index', 'user'], function(){
@@ -89,6 +89,7 @@
             ,setter = layui.setter
             ,admin = layui.admin
             ,form = layui.form
+            ,layer = layui.layer
             ,router = layui.router()
             ,search = router.search;
 

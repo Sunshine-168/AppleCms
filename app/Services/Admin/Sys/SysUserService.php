@@ -9,7 +9,6 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Utils\Result;
 use Utils\Syslog;
-use Zhuzhichao\IpLocationZh\Ip;
 use Illuminate\Support\Facades\Request;
 
 class SysUserService
