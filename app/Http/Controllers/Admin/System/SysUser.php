@@ -132,7 +132,7 @@ class SysUser extends Controller
      */
     public function showLogin(): Factory|View
     {
-        return view('admin.login'); // resources/views/admin/login.blade.php
+        return view('admin.login');
     }
 
     /**

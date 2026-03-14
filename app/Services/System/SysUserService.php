@@ -314,23 +314,32 @@ class SysUserService
     private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool
     {
         $code = preg_replace('/\s+/', '', $code);
-        if ($code === null || $code === '') {
+
+        if ($code === null || $code === '')
+        {
             return false;
         }
 
-        if (!preg_match('/^\d+$/', $code)) {
+        if (!preg_match('/^\d+$/', $code))
+        {
             return false;
         }
 
         $key = $this->base32Decode($secret);
-        if ($key === '') {
+
+        if ($key === '')
+        {
             return false;
         }
 
         $counter = (int) floor(time() / $period);
-        for ($i = -$window; $i <= $window; $i++) {
+
+        for ($i = -$window; $i <= $window; $i++)
+        {
             $otp = $this->hotp($key, $counter + $i, $digits);
-            if (hash_equals($otp, str_pad($code, $digits, '0', STR_PAD_LEFT))) {
+
+            if (hash_equals($otp, str_pad($code, $digits, '0', STR_PAD_LEFT)))
+            {
                 return true;
             }
         }
@@ -341,43 +350,50 @@ class SysUserService
     private function hotp(string $key, int $counter, int $digits): string
     {
         $binCounter = pack('N*', 0) . pack('N*', $counter);
-        $hash = hash_hmac('sha1', $binCounter, $key, true);
+        $hash       = hash_hmac('sha1', $binCounter, $key, true);
 
-        $offset = ord(substr($hash, -1)) & 0x0F;
-        $part = substr($hash, $offset, 4);
-        $value = unpack('N', $part)[1] & 0x7FFFFFFF;
+        $offset     = ord(substr($hash, -1)) & 0x0F;
+        $part       = substr($hash, $offset, 4);
+        $value      = unpack('N', $part)[1] & 0x7FFFFFFF;
 
-        $mod = 10 ** $digits;
-        $otp = (string) ($value % $mod);
+        $mod        = 10 ** $digits;
+        $otp        = (string) ($value % $mod);
+
         return str_pad($otp, $digits, '0', STR_PAD_LEFT);
     }
 
     private function base32Decode(string $secret): string
     {
         $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        $secret = strtoupper($secret);
-        $secret = preg_replace('/[^A-Z2-7=]/', '', $secret) ?? '';
-        $secret = rtrim($secret, '=');
+        $secret   = strtoupper($secret);
+        $secret   = preg_replace('/[^A-Z2-7=]/', '', $secret) ?? '';
+        $secret   = rtrim($secret, '=');
 
-        if ($secret === '') {
+        if ($secret === '')
+        {
             return '';
         }
 
-        $buffer = 0;
+        $buffer   = 0;
         $bitsLeft = 0;
-        $result = '';
+        $result   = '';
 
-        $len = strlen($secret);
-        for ($i = 0; $i < $len; $i++) {
+        $len      = strlen($secret);
+
+        for ($i = 0; $i < $len; $i++)
+        {
             $val = strpos($alphabet, $secret[$i]);
-            if ($val === false) {
+
+            if ($val === false)
+            {
                 return '';
             }
 
             $buffer = ($buffer << 5) | $val;
             $bitsLeft += 5;
 
-            if ($bitsLeft >= 8) {
+            if ($bitsLeft >= 8)
+            {
                 $bitsLeft -= 8;
                 $result .= chr(($buffer >> $bitsLeft) & 0xFF);
             }
