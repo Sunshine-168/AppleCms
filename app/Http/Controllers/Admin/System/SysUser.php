@@ -117,7 +117,6 @@ class SysUser extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function showLogin(): Factory|View
-
     {
         return view('admin.login'); // resources/views/admin/login.blade.php
     }

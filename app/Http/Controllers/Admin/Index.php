@@ -2,6 +2,8 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Gregwar\Captcha\CaptchaBuilder;
 /**
  * 后台首页
@@ -15,7 +17,7 @@ class Index extends Controller
      * @param Request $request
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request)
+    public function index(Request $request): Factory|View
     {
         return view('admin.index'); 
     }
