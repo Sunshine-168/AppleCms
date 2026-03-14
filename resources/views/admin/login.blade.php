@@ -9,6 +9,149 @@
     <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}" media="all">
     <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}" media="all">
     <link rel="stylesheet" href="{{ asset('static/admin/style/login.css') }}" media="all">
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+                "Segoe UI Emoji";
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #040611;
+            background-image:
+                radial-gradient(1200px 800px at 15% 10%, rgba(99, 102, 241, 0.25), rgba(0, 0, 0, 0) 60%),
+                radial-gradient(980px 720px at 85% 18%, rgba(59, 130, 246, 0.16), rgba(0, 0, 0, 0) 62%),
+                radial-gradient(1100px 900px at 50% 112%, rgba(236, 72, 153, 0.10), rgba(0, 0, 0, 0) 62%),
+                linear-gradient(180deg, #040611, #050a18, #060b20);
+            background-attachment: fixed;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.65), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 20% 80%, rgba(255, 255, 255, 0.55), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 30% 30%, rgba(255, 255, 255, 0.75), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 40% 70%, rgba(255, 255, 255, 0.45), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 55% 15%, rgba(255, 255, 255, 0.60), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 65% 85%, rgba(255, 255, 255, 0.50), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 78% 28%, rgba(255, 255, 255, 0.70), rgba(0, 0, 0, 0)),
+                radial-gradient(1px 1px at 88% 72%, rgba(255, 255, 255, 0.45), rgba(0, 0, 0, 0)),
+                radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.10) 1px, rgba(0, 0, 0, 0) 0);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 28px 28px;
+            opacity: 0.35;
+            mix-blend-mode: screen;
+            animation: hkStarsTwinkle 9s ease-in-out infinite alternate;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(1100px 720px at 52% 38%, rgba(120, 140, 255, 0.12), rgba(0, 0, 0, 0) 70%),
+                radial-gradient(1000px 680px at 46% 46%, rgba(200, 120, 255, 0.08), rgba(0, 0, 0, 0) 72%),
+                linear-gradient(120deg, rgba(255, 255, 255, 0) 34%, rgba(210, 220, 255, 0.10) 46%, rgba(255, 255, 255, 0) 62%),
+                radial-gradient(1400px 900px at 50% 10%, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.55));
+            filter: blur(0.6px);
+            opacity: 0.75;
+            animation: hkGalaxyDrift 48s linear infinite;
+        }
+        @keyframes hkStarsTwinkle {
+            from { opacity: 0.45; }
+            to { opacity: 0.70; }
+        }
+        @keyframes hkGalaxyDrift {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-4%, 3%, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body::before, body::after { animation: none !important; }
+        }
+        .layadmin-user-login {
+            padding: 96px 0;
+        }
+        .layadmin-user-login-main {
+            width: 420px;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+        }
+        .layadmin-user-login-box {
+            padding: 28px;
+        }
+        .layadmin-user-login-header {
+            padding-bottom: 6px;
+        }
+        .layadmin-user-login-header h2 {
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 28px;
+            letter-spacing: 0.6px;
+            color: #0f172a;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .layadmin-user-login-header h2::before {
+            content: "";
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #a855f7, #22c55e);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+        .layadmin-user-login-header p {
+            color: rgba(15, 23, 42, 0.62);
+        }
+        .layadmin-user-login-icon {
+            width: 42px;
+            line-height: 42px;
+            color: rgba(15, 23, 42, 0.45);
+        }
+        .layadmin-user-login-body .layui-form-item .layui-input {
+            height: 44px;
+            line-height: 44px;
+            border-radius: 10px;
+            padding-left: 42px;
+            border-color: rgba(148, 163, 184, 0.55);
+        }
+        .layadmin-user-login-body .layui-form-item .layui-input:focus {
+            border-color: rgba(37, 99, 235, 0.7);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+        #captcha-img {
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(148, 163, 184, 0.55);
+        }
+        .layadmin-user-login-body .layui-btn.layui-btn-fluid {
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed, #db2777);
+            border: 0;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+        }
+        .layadmin-user-login-body .layui-btn.layui-btn-fluid:hover {
+            filter: brightness(1.02);
+        }
+        .layadmin-user-login-body .layui-form-item[style*="margin-bottom"] {
+            margin-bottom: 18px !important;
+        }
+        .layadmin-user-login-footer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 16px;
+            padding: 0 16px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.62);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        }
+    </style>
 </head>
 <body>
 
@@ -16,8 +159,8 @@
 
     <div class="layadmin-user-login-main">
         <div class="layadmin-user-login-box layadmin-user-login-header">
-            <h2>XHCMS</h2>
-            <p>XHCMS 官方出品的单页面后台管理模板系统</p>
+           
+            <h2>星河影视管理系统</h2>
         </div>
         <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
             <div class="layui-form-item">
@@ -35,7 +178,7 @@
                         <input type="text" name="vscode" id="LAY-user-login-vercode" lay-verify="required" placeholder="验证码" class="layui-input">
                     </div>
                     <div class="layui-col-xs5" style="padding-left: 10px;">
-                        <img id="captcha-img" src="/admin/captcha" style="width: 100%; height: 38px; cursor: pointer;">
+                        <img id="captcha-img" src="/admin/captcha" style="width: 100%; cursor: pointer;">
                     </div>
                 </div>
             </div>
@@ -51,7 +194,7 @@
     </div>
 
     <div class="layui-trans layadmin-user-login-footer">
-
+        © {{ date('Y') }} 星河影视管理系统
     </div>
 
 

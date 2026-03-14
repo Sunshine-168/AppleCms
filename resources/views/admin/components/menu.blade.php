@@ -20,7 +20,7 @@
     @else
 
         <dd>
-            <a href="{{ (!empty($menu['route']) && Route::has($menu['route'])) ? route($menu['route']) : 'javascript:;' }}">
+            <a href="javascript:;" lay-href="{{ (!empty($menu['route']) && Route::has($menu['route'])) ? route($menu['route']) : (!empty($menu['url']) ? $menu['url'] : '') }}">
                 {{$menu['name']}}
             </a>
         </dd>
