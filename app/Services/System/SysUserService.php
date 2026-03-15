@@ -1,17 +1,15 @@
 <?php
 namespace App\Services\System;
 
-use App\Models\Sys\SysDictModel;
-use App\Models\Sys\SysUserLogModel;
-use App\Models\Sys\SysUserModel;
-use App\Models\Sys\SysUserRoleModel;
+use App\Models\System\SysDictModel;
+use App\Models\System\SysUserLogModel;
+use App\Models\System\SysUserModel;
+use App\Models\System\SysUserRoleModel;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
-
-
 use Zhuzhichao\IpLocationZh\Ip;
 
 
