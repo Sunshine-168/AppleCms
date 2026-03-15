@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
 use App\Services\System\SysDatabaseBackupService;
+use App\Services\System\SysDatabaseReplaceService;
 use App\Services\System\SysDatabaseService;
 use App\Services\System\SysDatabaseSqlService;
 use App\Support\Utils\Ajax;
@@ -21,12 +22,14 @@ class SysDatabase extends Controller
     protected SysDatabaseService $systemDatabaseService;
     protected SysDatabaseBackupService $systemDatabaseBackupService;
     protected SysDatabaseSqlService $systemDatabaseSqlService;
+    protected SysDatabaseReplaceService $systemDatabaseReplaceService;
 
     public function __construct()
     {
         $this->systemDatabaseService = new SysDatabaseService();
         $this->systemDatabaseBackupService = new SysDatabaseBackupService();
         $this->systemDatabaseSqlService = new SysDatabaseSqlService();
+        $this->systemDatabaseReplaceService = new SysDatabaseReplaceService();
     }
     /**
      * 显示数据库字典页
@@ -164,6 +167,36 @@ class SysDatabase extends Controller
     {
         $sql = (string) $request->input('sql', '');
         $data = $this->systemDatabaseSqlService->run($sql);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    /**
+     * 显示数据批量替换页
+     * @return View|Factory
+     */
+    public function showDatabaseReplace(): View|Factory
+    {
+        return view('admin.system.database.replace');
+    }
+
+    /**
+     * 执行数据批量替换
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function runDatabaseReplace(Request $request): JsonResponse
+    {
+        $table = (string) $request->input('table', '');
+        $fields = $request->input('fields', []);
+        if (!is_array($fields))
+        {
+            $fields = [];
+        }
+        $from = (string) $request->input('from', '');
+        $to = (string) $request->input('to', '');
+        $where = (string) $request->input('where', '');
+
+        $data = $this->systemDatabaseReplaceService->run($table, $fields, $from, $to, $where);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 }

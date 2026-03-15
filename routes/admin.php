@@ -63,6 +63,9 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
 
         Route::get('/sql', 'showDatabaseSql');// 显示SQL执行页
         Route::post('/sql/run', 'runDatabaseSql');// 执行SQL
+
+        Route::get('/replace', 'showDatabaseReplace');// 显示数据批量替换页
+        Route::post('/replace/run', 'runDatabaseReplace');// 执行数据批量替换
     });
     
 
