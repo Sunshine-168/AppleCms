@@ -34,6 +34,12 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     Route::post('/user/update', [SysUser::class, 'updateSystemUser']);// 更新用户
     Route::post('/user/delete', [SysUser::class, 'deleteSystemUser']);// 删除用户
     Route::get('/user/login/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
+
+    Route::prefix('/set/user')->controller(SysUser::class)->group(function () {
+        Route::get('/password', 'showChangePassword');// 显示修改密码页
+        Route::get('/password.html', 'showChangePassword');// 兼容 lay-href 默认地址
+        Route::post('/password', 'changePassword');// 修改密码
+    });
   
     // 系统监控
     Route::prefix('/system/monitor')->controller(SysUser::class)->group(function () {

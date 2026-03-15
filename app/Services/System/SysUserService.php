@@ -537,6 +537,74 @@ class SysUserService
 
         return Result::success($data);
     }
+    /**
+     * 修改密码
+     * @param int $uid
+     * @param string $currentPassword
+     * @param string $newPassword
+     * @param string $confirmPassword
+     * @return array
+     */
+    public function changePassword(int $uid, string $currentPassword, string $newPassword, string $confirmPassword): array
+    {
+        if ($uid <= 0)
+        {
+            return Result::fail('未登录');
+        }
+
+        $currentPassword = (string) $currentPassword;
+        $newPassword     = (string) $newPassword;
+        $confirmPassword = (string) $confirmPassword;
+
+        if (trim($currentPassword) === '')
+        {
+            return Result::fail('请输入当前密码');
+        }
+
+        if (trim($newPassword) === '')
+        {
+            return Result::fail('请输入新密码');
+        }
+
+        if (strlen($newPassword) < 6)
+        {
+            return Result::fail('新密码至少6位');
+        }
+
+        if ($newPassword !== $confirmPassword)
+        {
+            return Result::fail('两次新密码不一致');
+        }
+
+        if ($currentPassword === $newPassword)
+        {
+            return Result::fail('新密码不能与当前密码相同');
+        }
+
+        $user = $this->sysUserModel->findById($uid);
+        if (!$user)
+        {
+            return Result::fail('用户不存在');
+        }
+
+        $dbPassword = (string) ($user['password'] ?? '');
+        if ($dbPassword !== $currentPassword)
+        {
+            return Result::fail('当前密码错误');
+        }
+
+        $res = $this->sysUserModel->updateById($uid, [
+            'password'    => $newPassword,
+            'update_time' => time(),
+        ]);
+
+        if (!$res)
+        {
+            return Result::fail('修改失败');
+        }
+
+        return Result::success([], '修改成功');
+    }
 
     private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool
     {

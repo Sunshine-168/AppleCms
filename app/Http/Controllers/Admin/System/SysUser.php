@@ -169,6 +169,31 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
 
     }
+
+    /**
+     * 显示修改密码页
+     * @return View|Factory
+     */
+    public function showChangePassword(): View|Factory
+    {
+        return view('admin.system.user.password');
+    }
+
+    /**
+     * 修改密码
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $uid = (int) session('admin_uid', 0);
+        $currentPassword = (string) $request->input('current_password', '');
+        $newPassword = (string) $request->input('new_password', '');
+        $confirmPassword = (string) $request->input('confirm_password', '');
+
+        $data = $this->systemUserService->changePassword($uid, $currentPassword, $newPassword, $confirmPassword);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
     /**
      * 显示系统用户登录日志页
      * @return Factory|View
