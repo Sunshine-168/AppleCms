@@ -60,7 +60,12 @@ class SysDatabaseBackupService
             $sslMode = strtoupper(trim((string) env('MYSQLDUMP_SSL_MODE', 'AUTO')));
             $sslMode = $sslMode === '' ? 'AUTO' : $sslMode;
 
-            $disabledSslArgs = $this->getMysqldumpSslArgs($mysqldump, 'DISABLED');
+            $disabledSslArgs = [];
+            $disabledRes = $this->resolveMysqldumpSslArgs($mysqldump, 'DISABLED');
+            if (($disabledRes['code'] ?? 1) === 0)
+            {
+                $disabledSslArgs = (array) ($disabledRes['data']['args'] ?? []);
+            }
             $explicitSslArgs = [];
             if ($sslMode !== 'AUTO')
             {
@@ -176,6 +181,131 @@ class SysDatabaseBackupService
             'name' => $filename,
             'size' => $size,
         ], '备份成功');
+    }
+
+    public function restoreBackup(string $file): array
+    {
+        $fileRes = $this->resolveBackupFilePath($file);
+        if (($fileRes['code'] ?? 1) !== 0)
+        {
+            return $fileRes;
+        }
+
+        $binRes = $this->resolveMysqlBinary();
+        if (($binRes['code'] ?? 1) !== 0)
+        {
+            return $binRes;
+        }
+
+        $mysql = (string) ($binRes['data']['path'] ?? 'mysql');
+
+        $connection = (string) config('database.default', 'mysql');
+        $cfg        = (array) config('database.connections.' . $connection, []);
+
+        $driver     = (string) ($cfg['driver'] ?? '');
+        if ($driver !== 'mysql' && $driver !== 'mariadb')
+        {
+            return Result::fail('仅支持 MySQL/MariaDB 恢复');
+        }
+
+        $host     = (string) ($cfg['host'] ?? '127.0.0.1');
+        $port     = (string) ($cfg['port'] ?? '3306');
+        $database = (string) ($cfg['database'] ?? '');
+        $username = (string) ($cfg['username'] ?? '');
+        $password = (string) ($cfg['password'] ?? '');
+
+        if ($database === '' || $username === '')
+        {
+            return Result::fail('数据库配置不完整');
+        }
+
+        $dir = $this->getBackupDir();
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir))
+        {
+            return Result::fail('备份目录不存在且创建失败');
+        }
+
+        $lockFile = storage_path('app' . DIRECTORY_SEPARATOR . 'db_restore.lock');
+        if (is_file($lockFile))
+        {
+            return Result::fail('恢复任务正在执行中，请稍后再试');
+        }
+
+        if (@file_put_contents($lockFile, (string) time()) === false)
+        {
+            return Result::fail('恢复锁创建失败');
+        }
+
+        $sqlPath = (string) ($fileRes['data']['path'] ?? '');
+        if ($sqlPath === '' || !is_file($sqlPath))
+        {
+            @unlink($lockFile);
+            return Result::fail('SQL 文件不存在');
+        }
+
+        $tmpCnf = $dir . DIRECTORY_SEPARATOR . '.mysql_' . uniqid('', true) . '.cnf';
+        $cnf    = "[client]\nuser={$username}\npassword={$password}\nhost={$host}\nport={$port}\n";
+
+        if (@file_put_contents($tmpCnf, $cnf) === false)
+        {
+            @unlink($lockFile);
+            return Result::fail('临时配置写入失败');
+        }
+
+        try {
+            $sslMode = strtoupper(trim((string) env('MYSQL_SSL_MODE', 'AUTO')));
+            $sslMode = $sslMode === '' ? 'AUTO' : $sslMode;
+
+            $disabledSslArgs = [];
+            $disabledRes = $this->resolveMysqlSslArgs($mysql, 'DISABLED');
+            if (($disabledRes['code'] ?? 1) === 0)
+            {
+                $disabledSslArgs = (array) ($disabledRes['data']['args'] ?? []);
+            }
+
+            $explicitSslArgs = [];
+            if ($sslMode !== 'AUTO')
+            {
+                $sslRes = $this->resolveMysqlSslArgs($mysql, $sslMode);
+                if (($sslRes['code'] ?? 1) !== 0)
+                {
+                    return $sslRes;
+                }
+                $explicitSslArgs = (array) ($sslRes['data']['args'] ?? []);
+            }
+
+            $commandBase = [
+                $mysql,
+                '--defaults-extra-file=' . $tmpCnf,
+                '--default-character-set=utf8mb4',
+                '--binary-mode=1',
+                '--database=' . $database,
+            ];
+
+            $ok = $this->runMysqlImportCommand($commandBase, $explicitSslArgs, $sqlPath);
+            if (($ok['code'] ?? 1) === 0)
+            {
+                return Result::success([], '恢复成功');
+            }
+
+            $err = (string) ($ok['msg'] ?? '');
+            if ($sslMode === 'AUTO' && $this->isMysqldumpSslError($err) && $disabledSslArgs !== [])
+            {
+                $ok2 = $this->runMysqlImportCommand($commandBase, $disabledSslArgs, $sqlPath);
+                if (($ok2['code'] ?? 1) === 0)
+                {
+                    return Result::success([], '恢复成功');
+                }
+
+                $err2 = (string) ($ok2['msg'] ?? '');
+                return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : '恢复失败'));
+            }
+
+            return Result::fail($err !== '' ? $err : '恢复失败');
+        } finally {
+            @unlink($tmpCnf);
+            @unlink($lockFile);
+        }
     }
     /**
      * 获取备份文件列表
@@ -352,6 +482,195 @@ class SysDatabaseBackupService
         }
 
         return Result::fail("未找到 mysqldump，请安装 MySQL 客户端或配置环境变量 MYSQLDUMP_PATH（例如：D:\\\\phpstudy_pro\\\\Extensions\\\\MySQL\\\\bin\\\\mysqldump.exe）");
+    }
+
+    private function resolveMysqlBinary(): array
+    {
+        $configured = trim((string) env('MYSQL_PATH', ''));
+        if ($configured !== '')
+        {
+            if (is_file($configured))
+            {
+                return Result::success(['path' => $configured]);
+            }
+
+            return Result::fail('MYSQL_PATH 文件不存在：' . $configured);
+        }
+
+        $isWindows = DIRECTORY_SEPARATOR === '\\';
+
+        if (class_exists(\Symfony\Component\Process\Process::class))
+        {
+            $finder    = $isWindows ? ['where', 'mysql'] : ['command', '-v', 'mysql'];
+            $process   = new \Symfony\Component\Process\Process($finder);
+            $process->setTimeout(5);
+            $process->run();
+
+            if ($process->isSuccessful())
+            {
+                $out = trim((string) $process->getOutput());
+                $out = $this->toUtf8($out);
+                $lines = preg_split("/\r\n|\n|\r/", $out) ?: [];
+                foreach ($lines as $line)
+                {
+                    $line = trim((string) $line);
+                    if ($line !== '' && is_file($line))
+                    {
+                        return Result::success(['path' => $line]);
+                    }
+                }
+            }
+        }
+
+        $candidates = [];
+        if ($isWindows)
+        {
+            $candidates = array_merge($candidates, glob('D:\\phpstudy_pro\\Extensions\\MySQL*\\bin\\mysql.exe') ?: []);
+            $candidates = array_merge($candidates, glob('C:\\phpstudy_pro\\Extensions\\MySQL*\\bin\\mysql.exe') ?: []);
+            $candidates = array_merge($candidates, glob('C:\\xampp\\mysql\\bin\\mysql.exe') ?: []);
+            $candidates = array_merge($candidates, glob('C:\\wamp64\\bin\\mysql\\mysql*\\bin\\mysql.exe') ?: []);
+            $candidates = array_merge($candidates, glob('C:\\Program Files\\MySQL\\MySQL Server*\\bin\\mysql.exe') ?: []);
+            $candidates = array_merge($candidates, glob('C:\\Program Files (x86)\\MySQL\\MySQL Server*\\bin\\mysql.exe') ?: []);
+        }
+        else
+        {
+            $candidates[] = '/usr/bin/mysql';
+            $candidates[] = '/usr/local/bin/mysql';
+            $candidates[] = '/bin/mysql';
+        }
+
+        foreach ($candidates as $path)
+        {
+            $path = (string) $path;
+            if ($path !== '' && is_file($path))
+            {
+                return Result::success(['path' => $path]);
+            }
+        }
+
+        return Result::fail("未找到 mysql，请安装 MySQL 客户端或配置环境变量 MYSQL_PATH（例如：D:\\\\phpstudy_pro\\\\Extensions\\\\MySQL\\\\bin\\\\mysql.exe）");
+    }
+
+    private function resolveMysqlSslArgs(string $mysql, string $mode): array
+    {
+        $mode = strtoupper(trim($mode));
+        $mode = $mode === '' ? 'AUTO' : $mode;
+
+        $supported = $this->detectMysqlSupportedOptions($mysql);
+        $hasSslMode = (bool) ($supported['ssl_mode'] ?? false);
+        $hasSkipSsl = (bool) ($supported['skip_ssl'] ?? false);
+
+        if ($mode === 'AUTO')
+        {
+            return Result::success(['args' => []]);
+        }
+
+        if ($mode === 'DISABLED')
+        {
+            if ($hasSslMode)
+            {
+                return Result::success(['args' => ['--ssl-mode=DISABLED']]);
+            }
+            if ($hasSkipSsl)
+            {
+                return Result::success(['args' => ['--skip-ssl']]);
+            }
+            return Result::success(['args' => []]);
+        }
+
+        if (in_array($mode, ['PREFERRED', 'REQUIRED', 'VERIFY_CA', 'VERIFY_IDENTITY'], true))
+        {
+            if ($hasSslMode)
+            {
+                return Result::success(['args' => ['--ssl-mode=' . $mode]]);
+            }
+
+            return Result::fail('当前 mysql 不支持 --ssl-mode，请升级 MySQL 客户端或改用 MYSQL_SSL_MODE=DISABLED');
+        }
+
+        return Result::fail('MYSQL_SSL_MODE 值非法：' . $mode);
+    }
+
+    private function detectMysqlSupportedOptions(string $mysql): array
+    {
+        static $cache = [];
+        if (isset($cache[$mysql]))
+        {
+            return $cache[$mysql];
+        }
+
+        $res = [
+            'ssl_mode' => false,
+            'skip_ssl' => false,
+        ];
+
+        if (class_exists(\Symfony\Component\Process\Process::class))
+        {
+            $process = new \Symfony\Component\Process\Process([$mysql, '--help']);
+            $process->setTimeout(5);
+            $process->run();
+
+            $out = (string) $process->getOutput();
+            if ($out === '')
+            {
+                $out = (string) $process->getErrorOutput();
+            }
+            $out = $this->toUtf8($out);
+
+            if ($out !== '')
+            {
+                $res['ssl_mode'] = stripos($out, '--ssl-mode') !== false;
+                $res['skip_ssl'] = stripos($out, '--skip-ssl') !== false;
+            }
+        }
+
+        $cache[$mysql] = $res;
+        return $res;
+    }
+
+    private function runMysqlImportCommand(array $commandBase, array $sslArgs, string $inputSqlPath): array
+    {
+        $command = array_values(array_merge($commandBase, $sslArgs));
+
+        $inner = '';
+        foreach ($command as $arg)
+        {
+            $inner .= ($inner === '' ? '' : ' ') . escapeshellarg((string) $arg);
+        }
+
+        $inner .= ' < ' . escapeshellarg($inputSqlPath);
+
+        $isWindows = DIRECTORY_SEPARATOR === '\\';
+        $shellCmd  = $isWindows ? ('cmd /C ' . escapeshellarg($inner)) : ('sh -c ' . escapeshellarg($inner));
+
+        if (class_exists(\Symfony\Component\Process\Process::class))
+        {
+            $process = \Symfony\Component\Process\Process::fromShellCommandline($shellCmd);
+            $process->setTimeout(null);
+            $process->run();
+
+            if ($process->isSuccessful())
+            {
+                return Result::success([]);
+            }
+
+            $err = trim((string) $process->getErrorOutput());
+            if ($err === '')
+            {
+                $err = trim((string) $process->getOutput());
+            }
+            $err = $this->toUtf8($err);
+            return Result::fail($err !== '' ? $err : '恢复失败');
+        }
+
+        $output = @shell_exec($shellCmd . ' 2>&1');
+        $err = is_string($output) ? $this->toUtf8(trim($output)) : '';
+        if ($err === '')
+        {
+            return Result::success([]);
+        }
+
+        return Result::fail($err);
     }
     /**
      * 解析 mysqldump SSL 参数

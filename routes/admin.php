@@ -56,6 +56,10 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::get('/backup/files', 'getDatabaseBackupFiles');// 获取备份文件列表
         Route::get('/backup/download', 'downloadDatabaseBackupFile');// 下载备份文件
         Route::post('/backup/delete', 'deleteDatabaseBackupFile');// 删除备份文件
+
+        Route::get('/restore', 'showDatabaseRestore');// 显示数据库恢复页
+        Route::post('/restore/run', 'runDatabaseRestore');// 执行数据库恢复
+        Route::get('/restore/files', 'getDatabaseRestoreFiles');// 获取可恢复的备份文件列表
     });
     
 

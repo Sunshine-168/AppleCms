@@ -111,4 +111,35 @@ class SysDatabase extends Controller
         $data = $this->systemDatabaseBackupService->deleteBackupFile($file);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
+    /**
+     * 显示数据库恢复页
+     * @return View|Factory
+     */
+    public function showDatabaseRestore(): View|Factory
+    {
+        return view('admin.system.database.restore');
+    }
+
+    /**
+     * 获取可恢复的备份文件列表
+     * @return JsonResponse
+     */
+    public function getDatabaseRestoreFiles(): JsonResponse
+    {
+        $data = $this->systemDatabaseBackupService->listBackupFiles();
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    /**
+     * 执行数据库恢复
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function runDatabaseRestore(Request $request): JsonResponse
+    {
+        $file = (string) $request->input('file', '');
+        $data = $this->systemDatabaseBackupService->restoreBackup($file);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 }
