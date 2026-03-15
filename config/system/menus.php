@@ -104,20 +104,8 @@ return [
                         'url' => '/admin/system/database/backup-files'
                     ],
                     [
-                        'name' => '数据库优化',
-                        'url' => '/admin/system/database/optimize'
-                    ],
-                    [
-                        'name' => '数据库修复',
-                        'url' => '/admin/system/database/repair'
-                    ],
-                    [
                         'name' => 'SQL执行',
                         'url' => '/admin/system/database/sql'
-                    ],
-                    [
-                        'name' => 'SQL高级助手',
-                        'url' => '/admin/system/database/sql-helper'
                     ],
                     [
                         'name' => '数据批量替换',

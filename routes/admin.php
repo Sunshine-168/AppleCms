@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Admin\System\SysDatabase;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminOperateLog;
@@ -33,7 +34,8 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     Route::post('/user/update', [SysUser::class, 'updateSystemUser']);// 更新用户
     Route::post('/user/delete', [SysUser::class, 'deleteSystemUser']);// 删除用户
     Route::get('/user/login/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
-
+  
+    // 系统监控
     Route::prefix('/system/monitor')->controller(SysUser::class)->group(function () {
         Route::get('/login-logs', 'showSystemUserLoginLogs');// 显示系统用户登录日志页
         Route::get('/login-logs/list', 'getSystemUserLoginLists');// 获取系统用户登录日志列表
@@ -41,6 +43,12 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::get('/operate-logs/list', 'getSystemOperateLogLists');// 获取系统用户操作日志列表
         Route::get('/system-logs', 'showSystemSystemLogs');// 显示系统日志页
         Route::get('/system-logs/list', 'getSystemSystemLogLists');// 获取系统日志列表
+    });
+    // 数据库
+    Route::prefix('/system/database')->controller(SysDatabase::class)->group(function () {
+        Route::get('/dict', 'showDatabaseDict');// 显示数据库字典页
+        Route::get('/dict/tables', 'getDatabaseTables');// 获取数据库表列表
+        Route::get('/dict/columns', 'getDatabaseColumns');// 获取数据库表字段列表
     });
     
 
