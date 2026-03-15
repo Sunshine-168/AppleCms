@@ -64,7 +64,7 @@ return [
                 'sub' => [
                     [
                         'name' => '管理员',
-                        'url' => '/admin/sysuser'
+                        'url' => '/admin/user'
                     ],
                     [
                         'name' => '角色管理',

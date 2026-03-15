@@ -100,9 +100,12 @@ class SysUser extends Controller
     public function addSystemUser(Request $request): JsonResponse
     {
         $username = (string) $request->input('username', '');
-        $password = (string) $request->input('password', '123456');
+        $password = (string) $request->input('password', '');
+        $email    = (string) $request->input('email', '');
+        $remark   = (string) $request->input('remark', '');
+        $role     = (int) $request->input('role', 1);
 
-        $data = $this->systemUserService->addSysUser($username, $password);
+        $data = $this->systemUserService->addSysUser($username, $password, $email, $remark, $role);
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
@@ -116,9 +119,12 @@ class SysUser extends Controller
     {
         $id       = (int) $request->input('id', 0);
         $username = (string) $request->input('username', '');
-        $password = (string) $request->input('password', '123456');
+        $password = (string) $request->input('password', '');
+        $email    = (string) $request->input('email', '');
+        $remark   = (string) $request->input('remark', '');
+        $role     = $request->has('role') ? (int) $request->input('role', 1) : null;
 
-        $data     = $this->systemUserService->updateSysUser($id, $username, $password);
+        $data     = $this->systemUserService->updateSysUser($id, $username, $password, $email, $remark, $role);
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }

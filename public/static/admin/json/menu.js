@@ -9,7 +9,7 @@
     ,"list": [{
       "name": "admins"
       ,"title": "管理员"
-      ,"jump": "/admin/sysuser"
+      ,"jump": "/admin/user"
     },{
       "name": "roles"
       ,"title": "角色管理"

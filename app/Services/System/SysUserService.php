@@ -112,12 +112,19 @@ class SysUserService
      * @param string $password
      * @return array
      */
-    public function addSysUser(string $username, string $password): array
+    public function addSysUser(string $username, string $password, string $email = '', string $remark = '', int $role = 1): array
     {
+        if ($password === '')
+        {
+            $password = '123456';
+        }
+
         $insert = [
             'username'      => $username,
             'password'      => $password,
-            'role'          => 1,  // 默认为普通管理员（需要角色权限），而非超级管理员
+            'email'         => $email,
+            'remark'        => $remark,
+            'role'          => $role,
             'create_time'   => time(),
             'update_time'   => time(),
         ];
@@ -140,13 +147,24 @@ class SysUserService
      * @param string $password
      * @return array
      */
-    public function updateSysUser(int $id, string $username, string $password): array
+    public function updateSysUser(int $id, string $username, string $password, string $email = '', string $remark = '', ?int $role = null): array
     {
         $update = [
             'username'      => $username,
-            'password'      => $password,
+            'email'         => $email,
+            'remark'        => $remark,
             'update_time'   => time(),
         ];
+
+        if ($password !== '')
+        {
+            $update['password'] = $password;
+        }
+
+        if ($role !== null)
+        {
+            $update['role'] = $role;
+        }
 
         $res = $this->sysUserModel->updateById($id, $update);
 

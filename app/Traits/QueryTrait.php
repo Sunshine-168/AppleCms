@@ -222,11 +222,11 @@ trait QueryTrait
         try {
             empty($order) && $order = [$this->getKeyName() => 'desc'];
 
-            $query = $this/*->master($master)*/;
+            $query =  $this->newQuery()/*->master($master)*/;
             if ($table) $query->from($table);
-
             $this->parseCondition($query, $where);
             $this->parseOrder($query, $order);
+         
             $data = $query->select($field)->paginate($limit);
 
             return $data->toArray();
