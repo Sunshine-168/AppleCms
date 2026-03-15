@@ -779,3 +779,37 @@ INSERT INTO `user_tags` (`id`,`title`,`create_time`,`update_time`,`create_at`,`u
 DELETE FROM `job_fail`;
 INSERT INTO `job_fail` (`id`,`connection`,`queue`,`payload`,`exception`,`failed_at`) VALUES
 (1,'database','default','{\"job\":\"seed\"}','Seeded failed job record',NOW());
+
+
+CREATE TABLE `sys_operate_log` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `uid` int NOT NULL DEFAULT '0' COMMENT '管理id',
+  `username` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '管理员用户名',
+  `title` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '操作标题(可选)',
+  `permission` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '权限标识(可选)',
+  `module` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '模块/业务(可选)',
+  `method` varchar(10) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '请求方法',
+  `url` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '请求URL',
+  `route` varchar(150) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '路由/接口标识(可选)',
+  `request_data` mediumtext CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '请求参数(JSON/表单)',
+  `response_code` int NOT NULL DEFAULT '0' COMMENT '响应码(业务码/HTTP码)',
+  `response_msg` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '响应消息(可选)',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态 1成功 0失败',
+  `duration_ms` int NOT NULL DEFAULT '0' COMMENT '耗时ms',
+  `login_ip` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '操作IP',
+  `ip_address` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT 'IP归属地',
+  `user_agent` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT 'UA',
+  `referer` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '来源(可选)',
+  `target_type` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '操作对象类型(可选)',
+  `target_id` bigint NOT NULL DEFAULT '0' COMMENT '操作对象ID(可选)',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_time` int NOT NULL DEFAULT '0' COMMENT '创建时间(时间戳)',
+  `update_time` int NOT NULL DEFAULT '0' COMMENT '更新时间(时间戳)',
+  PRIMARY KEY (`id`,`uid`),
+  KEY `uid` (`uid`),
+  KEY `username` (`username`),
+  KEY `route` (`route`),
+  KEY `create_time` (`create_time`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_unicode_ci COMMENT='后台操作日志表'
