@@ -125,6 +125,19 @@ return [
                         'url' => '/admin/system/monitor/system-logs'
                     ]
                 ]
+            ],
+            [
+                'name' => '系统工具',
+                'sub' => [
+                    [
+                        'name' => '定时任务',
+                        'url' => '/admin/system/tools/schedule'
+                    ],
+                    [
+                        'name' => '缓存管理',
+                        'url' => '/admin/system/tools/cache'
+                    ]
+                ]
             ]
         ]
     ],

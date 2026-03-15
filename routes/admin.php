@@ -7,6 +7,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\System\SysDatabase;
+use App\Http\Controllers\Admin\System\SysSchedule;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminOperateLog;
@@ -72,6 +73,15 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
 
         Route::get('/replace', 'showDatabaseReplace');// 显示数据批量替换页
         Route::post('/replace/run', 'runDatabaseReplace');// 执行数据批量替换
+    });
+    // 系统工具
+    Route::prefix('/system/tools')->controller(SysSchedule::class)->group(function () {
+        Route::get('/schedule', 'showSchedule');// 显示定时任务页
+        Route::get('/schedule/list', 'getScheduleList');// 获取定时任务列表
+        Route::post('/schedule/save', 'saveSchedule');// 保存定时任务
+        Route::post('/schedule/delete', 'deleteSchedule');// 删除定时任务
+        Route::post('/schedule/status', 'updateScheduleStatus');// 更新定时任务状态
+        Route::post('/schedule/run', 'runScheduleOnce');// 立即执行定时任务
     });
     
 
