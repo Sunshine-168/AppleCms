@@ -100,10 +100,6 @@ return [
                         'url' => '/admin/system/database/restore'
                     ],
                     [
-                        'name' => '备份文件管理',
-                        'url' => '/admin/system/database/backup-files'
-                    ],
-                    [
                         'name' => 'SQL执行',
                         'url' => '/admin/system/database/sql'
                     ],

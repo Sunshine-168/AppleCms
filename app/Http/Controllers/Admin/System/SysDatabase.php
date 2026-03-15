@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\System;
 use App\Http\Controllers\Controller;
 use App\Services\System\SysDatabaseBackupService;
 use App\Services\System\SysDatabaseService;
+use App\Services\System\SysDatabaseSqlService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -19,11 +20,13 @@ class SysDatabase extends Controller
 {
     protected SysDatabaseService $systemDatabaseService;
     protected SysDatabaseBackupService $systemDatabaseBackupService;
+    protected SysDatabaseSqlService $systemDatabaseSqlService;
 
     public function __construct()
     {
         $this->systemDatabaseService = new SysDatabaseService();
         $this->systemDatabaseBackupService = new SysDatabaseBackupService();
+        $this->systemDatabaseSqlService = new SysDatabaseSqlService();
     }
     /**
      * 显示数据库字典页
@@ -140,6 +143,27 @@ class SysDatabase extends Controller
     {
         $file = (string) $request->input('file', '');
         $data = $this->systemDatabaseBackupService->restoreBackup($file);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+     
+    /**
+     * 显示SQL执行页
+     * @return View|Factory
+     */
+    public function showDatabaseSql(): View|Factory
+    {
+        return view('admin.system.database.sql');
+    }
+
+    /**
+     * 执行SQL
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function runDatabaseSql(Request $request): JsonResponse
+    {
+        $sql = (string) $request->input('sql', '');
+        $data = $this->systemDatabaseSqlService->run($sql);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 }

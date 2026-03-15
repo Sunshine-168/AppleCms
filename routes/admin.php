@@ -60,6 +60,9 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::get('/restore', 'showDatabaseRestore');// 显示数据库恢复页
         Route::post('/restore/run', 'runDatabaseRestore');// 执行数据库恢复
         Route::get('/restore/files', 'getDatabaseRestoreFiles');// 获取可恢复的备份文件列表
+
+        Route::get('/sql', 'showDatabaseSql');// 显示SQL执行页
+        Route::post('/sql/run', 'runDatabaseSql');// 执行SQL
     });
     
 
