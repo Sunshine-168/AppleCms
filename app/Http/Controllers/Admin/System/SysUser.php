@@ -40,7 +40,8 @@ class SysUser extends Controller
     public function getSystemUserLists(Request $request): JsonResponse
     {
         $username = (string) $request->input('username', '');
-        $data     = $this->systemUserService->getSysUserLists($username);
+        $limit    = (int) $request->input('limit', 10);
+        $data     = $this->systemUserService->getSysUserLists($username, $limit);    
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -168,6 +169,14 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
 
     }
+    /**
+     * 显示系统用户登录日志页
+     * @return Factory|View
+     */
+    public function showSystemUserLoginLogs(): View|Factory
+    {
+        return view('admin.system.monitor.login_logs');
+    }
 
     /**
      * 系统用户登录日志列表
@@ -181,7 +190,6 @@ class SysUser extends Controller
             'login_ip'      => (string) $request->input('login_ip', ''),
             'start_time'    => (string) $request->input('start_time', ''),
             'end_time'      => (string) $request->input('end_time', ''),
-            'page'          => (int) $request->input('page', 1),
             'limit'         => (int) $request->input('limit', 10),
         ];
 

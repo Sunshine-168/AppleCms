@@ -30,6 +30,9 @@ Route::prefix('admin')->group(function () {
     Route::post('/user/add', [SysUser::class, 'addSystemUser']);// 添加用户
     Route::post('/user/update', [SysUser::class, 'updateSystemUser']);// 更新用户
     Route::post('/user/delete', [SysUser::class, 'deleteSystemUser']);// 删除用户
+    Route::get('/user/login/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
+    Route::get('/system/monitor/login-logs', [SysUser::class, 'showSystemUserLoginLogs']);// 显示系统用户登录日志页
+    Route::get('/system/monitor/login-logs/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
     
 
 

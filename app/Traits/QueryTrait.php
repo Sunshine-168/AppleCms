@@ -226,7 +226,7 @@ trait QueryTrait
             if ($table) $query->from($table);
             $this->parseCondition($query, $where);
             $this->parseOrder($query, $order);
-         
+
             $data = $query->select($field)->paginate($limit);
 
             return $data->toArray();

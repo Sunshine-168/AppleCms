@@ -41,7 +41,7 @@ class SysUserService
      * @param string $username
      * @return array
      */
-    public function getSysUserLists(string $username): array
+    public function getSysUserLists(string $username, int $limit): array
     {
         $where = [];
 
@@ -50,7 +50,7 @@ class SysUserService
             $where[] = ['username', '=', $username];
         }
 
-        $data = $this->sysUserModel->paginates($where);
+        $data = $this->sysUserModel->paginates($where, '*', $limit, ['id' => 'desc']);
 
         foreach ($data['data'] as &$item)
         {
@@ -267,7 +267,9 @@ class SysUserService
                 'username'    => $user['username'],
                 'login_ip'    => $ip,
                 'login_agent' => (string) \request()->userAgent(),
-                'ip_address'  => $ipAddress
+                'ip_address'  => $ipAddress,
+                'create_time' => $time,
+                'update_time' => $time,
             ];
 
             $res = $this->sysUserLogModel->inserts($insert);
@@ -299,6 +301,11 @@ class SysUserService
     public function getSysUserLoginLists(array $params): array
     {
         $where = [];
+        $limit = (int) ($params['limit'] ?? 10);
+        if ($limit < 1)
+        {
+            $limit = 10;
+        }
 
         // 按用户名筛选
         if (!empty($params['username']))
@@ -309,7 +316,7 @@ class SysUserService
         // 按登录IP筛选
         if (!empty($params['login_ip']))
         {
-            $where[] = ['login_ip', 'like', '%' . $params['login_ip'] . '%'];
+            $where[] = ['login_ip', '=', $params['login_ip']];
         }
 
         // 按时间范围筛选
@@ -323,7 +330,25 @@ class SysUserService
             $where[] = ['create_time', '<=', strtotime($params['end_time']) + 86400];
         }
 
-        $data = $this->sysUserLogModel->paginates($where,'*', 10);
+        $data = $this->sysUserLogModel->paginates($where, '*', $limit);
+
+        foreach ($data['data'] as &$item)
+        {
+            if (empty($item['create_time']) && !empty($item['create_at']))
+            {
+                $item['create_time'] = $item['create_at'];
+                continue;
+            }
+
+            if (!empty($item['create_time']) && is_numeric($item['create_time']))
+            {
+                $timestamp = (int) $item['create_time'];
+                if ($timestamp > 0)
+                {
+                    $item['create_time'] = date('Y-m-d H:i:s', $timestamp);
+                }
+            }
+        }
 
         return Result::success($data);
     }
