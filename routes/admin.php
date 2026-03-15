@@ -49,6 +49,13 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::get('/dict', 'showDatabaseDict');// 显示数据库字典页
         Route::get('/dict/tables', 'getDatabaseTables');// 获取数据库表列表
         Route::get('/dict/columns', 'getDatabaseColumns');// 获取数据库表字段列表
+
+        Route::get('/backup', 'showDatabaseBackup');// 显示数据库备份页
+        Route::get('/backup/run', 'showDatabaseBackup');// 兼容直接访问执行地址
+        Route::post('/backup/run', 'runDatabaseBackup');// 执行数据库备份
+        Route::get('/backup/files', 'getDatabaseBackupFiles');// 获取备份文件列表
+        Route::get('/backup/download', 'downloadDatabaseBackupFile');// 下载备份文件
+        Route::post('/backup/delete', 'deleteDatabaseBackupFile');// 删除备份文件
     });
     
 
