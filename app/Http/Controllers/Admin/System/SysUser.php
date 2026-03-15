@@ -197,4 +197,37 @@ class SysUser extends Controller
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
+    /**
+     * 显示系统用户操作日志页
+     * @return Factory|View
+     */
+    public function showSystemOperateLogs(): View|Factory
+    {
+        return view('admin.system.monitor.operate_logs');
+    }
+
+    /**
+     * 系统用户操作日志列表
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getSystemOperateLogLists(Request $request): JsonResponse
+    {
+        $params = [
+            'username'      => (string) $request->input('username', ''),
+            'login_ip'      => (string) $request->input('login_ip', ''),
+            'method'        => (string) $request->input('method', ''),
+            'url'           => (string) $request->input('url', ''),
+            'route'         => (string) $request->input('route', ''),
+            'status'        => $request->input('status', ''),
+            'start_time'    => (string) $request->input('start_time', ''),
+            'end_time'      => (string) $request->input('end_time', ''),
+            'limit'         => (int) $request->input('limit', 10),
+        ];
+
+        $data = $this->systemUserService->getSysOperateLogLists($params);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 }

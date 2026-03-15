@@ -1,0 +1,210 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\System\SysOperateLogModel;
+use App\Models\System\SysUserModel;
+use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Zhuzhichao\IpLocationZh\Ip;
+
+class AdminOperateLog
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $startAt = microtime(true);
+
+        try
+        {
+            $response = $next($request);
+        }
+        catch (\Throwable $e)
+        {
+            $this->writeLog($request, null, $startAt, 500, $e->getMessage());
+            throw $e;
+        }
+
+        $this->writeLog($request, $response, $startAt);
+
+        return $response;
+    }
+
+    private function cut(string $value, int $max): string
+    {
+        if ($max <= 0 || $value === '')
+        {
+            return $value;
+        }
+
+        return mb_strlen($value, 'UTF-8') > $max ? mb_substr($value, 0, $max, 'UTF-8') : $value;
+    }
+
+    private function shouldLog(Request $request): bool
+    {
+        if (!$request->is('admin/*') && !$request->is('api/admin/*'))
+        {
+            return false;
+        }
+
+        $method = strtoupper($request->method());
+        if (in_array($method, ['GET', 'HEAD'], true))
+        {
+            return false;
+        }
+
+        if ($request->is('admin/login') || $request->is('api/admin/login'))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function filterSensitiveData(array $data): array
+    {
+        $sensitiveKeys = [
+            'password',
+            'pwd',
+            'token',
+            'access_token',
+        ];
+
+        foreach ($sensitiveKeys as $key)
+        {
+            if (array_key_exists($key, $data))
+            {
+                $data[$key] = '***';
+            }
+        }
+
+        return $data;
+    }
+
+    private function writeLog(Request $request, ?Response $response, float $startAt, ?int $fallbackCode = null, string $fallbackMsg = ''): void
+    {
+        if (!$this->shouldLog($request))
+        {
+            return;
+        }
+
+        $durationMs = (int) round((microtime(true) - $startAt) * 1000);
+        $ip         = (string) $request->ip();
+
+        $route = '';
+        if ($request->route())
+        {
+            $route = (string) $request->route()->uri();
+        }
+
+        $pathSegments = array_values(array_filter(explode('/', $request->path())));
+        $module       = $pathSegments[0] === 'admin' ? ($pathSegments[1] ?? 'admin') : ($pathSegments[2] ?? 'admin');
+
+        $title = '后台操作';
+        $path  = $request->path();
+        if ($path === 'admin/user/add')
+        {
+            $title = '新增系统用户';
+        }
+        elseif ($path === 'admin/user/update')
+        {
+            $title = '更新系统用户';
+        }
+        elseif ($path === 'admin/user/delete')
+        {
+            $title = '删除系统用户';
+        }
+
+        $requestData = $this->filterSensitiveData($request->all());
+        $requestJson = $requestData ? json_encode($requestData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+
+        $responseCode = $fallbackCode ?? ($response ? $response->getStatusCode() : 0);
+        $responseMsg  = $fallbackMsg;
+
+        if ($response instanceof JsonResponse)
+        {
+            $payload = $response->getData(true);
+            if (is_array($payload))
+            {
+                if (isset($payload['code']) && is_numeric($payload['code']))
+                {
+                    $responseCode = (int) $payload['code'];
+                }
+                if (isset($payload['msg']) && is_string($payload['msg']))
+                {
+                    $responseMsg = $payload['msg'];
+                }
+            }
+        }
+
+        if ($responseMsg === '')
+        {
+            $responseMsg = $response ? (string) $response->getStatusCode() : '';
+        }
+
+        $uid      = (int) session('admin_uid', 0);
+        $username = (string) session('admin_username', '');
+
+        if ($uid <= 0 || $username === '')
+        {
+            $token = (string) ($request->header('token') ?: $request->input('token', ''));
+            if ($token !== '')
+            {
+                $user = (new SysUserModel())->findByCondition([['token', '=', $token]]);
+                if (!empty($user))
+                {
+                    $uid      = (int) ($user['id'] ?? 0);
+                    $username = (string) ($user['username'] ?? '');
+                }
+            }
+        }
+
+        $title = $this->cut($title, 100);
+        $permissionValue = $this->cut($route ?: $path, 100);
+        $module = $this->cut($module, 50);
+        $method = $this->cut(strtoupper($request->method()), 10);
+        $url = $this->cut($request->fullUrl(), 255);
+        $routeValue = $this->cut($route ?: $path, 150);
+        $username = $this->cut($username, 50);
+        $responseMsg = $this->cut($responseMsg, 255);
+        $userAgent = $this->cut((string) $request->userAgent(), 255);
+        $referer = $this->cut((string) $request->headers->get('referer', ''), 255);
+
+        $status = $responseCode === 0 ? 1 : 0;
+
+        $targetType = '';
+        $targetId   = 0;
+        if (str_starts_with($path, 'admin/user/'))
+        {
+            $targetType = 'sys_user';
+            $targetId   = (int) $request->input('id', 0);
+        }
+
+        $insert = [
+            'uid'           => $uid,
+            'username'      => $username,
+            'title'         => $title,
+            'permission'    => $permissionValue,
+            'module'        => $module,
+            'method'        => $method,
+            'url'           => $url,
+            'route'         => $routeValue,
+            'request_data'  => $requestJson,
+            'response_code' => $responseCode,
+            'response_msg'  => $responseMsg,
+            'status'        => $status,
+            'duration_ms'   => $durationMs,
+            'login_ip'      => $ip,
+            'ip_address'    => $this->cut(join(',', array_filter(Ip::find($ip))), 255),
+            'user_agent'    => $userAgent,
+            'referer'       => $referer,
+            'target_type'   => $targetType,
+            'target_id'     => $targetId,
+            'create_time'   => time(),
+            'update_time'   => time(),
+        ];
+
+        (new SysOperateLogModel())->inserts($insert);
+    }
+}

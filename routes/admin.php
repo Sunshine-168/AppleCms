@@ -8,16 +8,18 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
+use App\Http\Middleware\AdminOperateLog;
 
 Route::middleware([
     EncryptCookies::class,
     AddQueuedCookiesToResponse::class,
     StartSession::class,
+    AdminOperateLog::class,
 ])->withoutMiddleware([
     VerifyCsrfToken::class,
 ])->post('api/admin/login', [SysUser::class, 'login']);
 
-Route::prefix('admin')->group(function () {
+Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () {
     Route::get('/', [Index::class, 'index']); // 后台首页
     Route::get('/captcha', [Index::class, 'captcha']);   // 输出验证码图片
 
@@ -31,8 +33,13 @@ Route::prefix('admin')->group(function () {
     Route::post('/user/update', [SysUser::class, 'updateSystemUser']);// 更新用户
     Route::post('/user/delete', [SysUser::class, 'deleteSystemUser']);// 删除用户
     Route::get('/user/login/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
-    Route::get('/system/monitor/login-logs', [SysUser::class, 'showSystemUserLoginLogs']);// 显示系统用户登录日志页
-    Route::get('/system/monitor/login-logs/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
+
+    Route::prefix('/system/monitor')->controller(SysUser::class)->group(function () {
+        Route::get('/login-logs', 'showSystemUserLoginLogs');// 显示系统用户登录日志页
+        Route::get('/login-logs/list', 'getSystemUserLoginLists');// 获取系统用户登录日志列表
+        Route::get('/operate-logs', 'showSystemOperateLogs');// 显示系统用户操作日志页
+        Route::get('/operate-logs/list', 'getSystemOperateLogLists');// 获取系统用户操作日志列表
+    });
     
 
 
