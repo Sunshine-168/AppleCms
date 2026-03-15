@@ -39,6 +39,8 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::get('/login-logs/list', 'getSystemUserLoginLists');// 获取系统用户登录日志列表
         Route::get('/operate-logs', 'showSystemOperateLogs');// 显示系统用户操作日志页
         Route::get('/operate-logs/list', 'getSystemOperateLogLists');// 获取系统用户操作日志列表
+        Route::get('/system-logs', 'showSystemSystemLogs');// 显示系统日志页
+        Route::get('/system-logs/list', 'getSystemSystemLogLists');// 获取系统日志列表
     });
     
 

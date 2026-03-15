@@ -11,10 +11,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Zhuzhichao\IpLocationZh\Ip;
 
 class AdminOperateLog
-{
+{   
+    /**
+     * 处理请求
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $startAt = microtime(true);
+        [$uid, $username] = $this->resolveUser($request);
+        $request->attributes->set('admin_uid', $uid);
+        $request->attributes->set('admin_username', $username);
 
         try {
             $response = $next($request);
@@ -83,6 +89,57 @@ class AdminOperateLog
         return $data;
     }
 
+    private function resolveUser(Request $request): array
+    {
+        $uid = (int) $request->attributes->get('admin_uid', 0);
+        $username = (string) $request->attributes->get('admin_username', '');
+
+        if ($uid > 0 && $username !== '')
+        {
+            return [$uid, $username];
+        }
+
+        $uid = (int) session('admin_uid', 0);
+        $username = (string) session('admin_username', '');
+
+        if ($uid > 0 && $username !== '')
+        {
+            return [$uid, $username];
+        }
+
+        $auth = (string) $request->header('Authorization', '');
+        $bearer = '';
+        if ($auth !== '' && str_starts_with($auth, 'Bearer '))
+        {
+            $bearer = trim(substr($auth, 7));
+        }
+
+        $token = (string) (
+            $request->header('token')
+            ?: $request->header('X-Token')
+            ?: $request->header('x-token')
+            ?: $bearer
+            ?: $request->input('token', '')
+            ?: $request->input('access_token', '')
+        );
+
+        if ($token === '')
+        {
+            return [0, ''];
+        }
+
+        $user = (new SysUserModel())->findByCondition([['token', '=', $token]]);
+        if (empty($user))
+        {
+            return [0, ''];
+        }
+
+        $uid = (int) ($user['id'] ?? 0);
+        $username = (string) ($user['username'] ?? '');
+
+        return [$uid, $username];
+    }
+
     /**
      * 写入日志
      */
@@ -137,22 +194,7 @@ class AdminOperateLog
             $responseMsg = $response ? (string) $response->getStatusCode() : '';
         }
 
-        // 获取用户信息
-        $uid = (int) session('admin_uid', 0);
-        $username = (string) session('admin_username', '');
-        if ($uid <= 0 || $username === '') 
-        {
-            $token = (string) ($request->header('token') ?: $request->input('token', ''));
-            if ($token !== '') 
-            {
-                $user = (new SysUserModel())->findByCondition([['token', '=', $token]]);
-                if (!empty($user)) 
-                {
-                    $uid = (int) ($user['id'] ?? 0);
-                    $username = (string) ($user['username'] ?? '');
-                }
-            }
-        }
+        [$uid, $username] = $this->resolveUser($request);
 
         // 请求状态判断
         $status = ($responseCode === 0 || ($responseCode >= 200 && $responseCode < 300)) ? 1 : 0;

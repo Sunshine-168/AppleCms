@@ -3,6 +3,7 @@ namespace App\Services\System;
 
 use App\Models\System\SysDictModel;
 use App\Models\System\SysOperateLogModel;
+use App\Models\System\SysSystemLogModel;
 use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
@@ -22,6 +23,7 @@ class SysUserService
     public SysUserModel $sysUserModel;
     public SysUserLogModel $sysUserLogModel;
     public SysOperateLogModel $sysOperateLogModel;
+    public SysSystemLogModel $sysSystemLogModel;
     public SysDictModel $sysDictModel;
     public SysUserRoleModel $sysUserRoleModel;
 
@@ -35,6 +37,7 @@ class SysUserService
         $this->sysDictModel          = new SysDictModel();
         $this->sysUserLogModel       = new SysUserLogModel();
         $this->sysOperateLogModel    = new SysOperateLogModel();
+        $this->sysSystemLogModel     = new SysSystemLogModel();
         $this->sysUserRoleModel      = new SysUserRoleModel();
     }
 
@@ -417,6 +420,102 @@ class SysUserService
         }
 
         $data = $this->sysOperateLogModel->paginates($where, '*', $limit, ['id' => 'desc']);
+
+        foreach ($data['data'] as &$item)
+        {
+            if (empty($item['create_time']) && !empty($item['create_at']))
+            {
+                $item['create_time'] = $item['create_at'];
+                continue;
+            }
+
+            if (!empty($item['create_time']) && is_numeric($item['create_time']))
+            {
+                $timestamp = (int) $item['create_time'];
+                if ($timestamp > 0)
+                {
+                    $item['create_time'] = date('Y-m-d H:i:s', $timestamp);
+                }
+            }
+        }
+
+        return Result::success($data);
+    }
+    /**
+     * 获取系统日志列表
+     * 支持按日志级别、渠道、模块、用户名、用户ID、请求ID、方法、URL、IP、时间范围筛选，返回分页数据
+     * @param array $params
+     * @return array
+     */
+    public function getSysSystemLogLists(array $params): array
+    {
+        $where = [];
+        $limit = (int) ($params['limit'] ?? 10);
+        if ($limit < 1)
+        {
+            $limit = 10;
+        }
+
+        if (!empty($params['level']))
+        {
+            $where[] = ['level', '=', (string) $params['level']];
+        }
+
+        if (!empty($params['channel']))
+        {
+            $where[] = ['channel', '=', (string) $params['channel']];
+        }
+
+        if (!empty($params['module']))
+        {
+            $where[] = ['module', '=', (string) $params['module']];
+        }
+
+        if (!empty($params['username']))
+        {
+            $where[] = ['username', '=', (string) $params['username']];
+        }
+
+        if ($params['uid'] !== '' && $params['uid'] !== null)
+        {
+            $uid = (int) $params['uid'];
+            if ($uid > 0)
+            {
+                $where[] = ['uid', '=', $uid];
+            }
+        }
+
+        if (!empty($params['request_id']))
+        {
+            $where[] = ['request_id', '=', (string) $params['request_id']];
+        }
+
+        if (!empty($params['method']))
+        {
+            $where[] = ['method', '=', strtoupper((string) $params['method'])];
+        }
+
+        if (!empty($params['url']))
+        {
+            $where[] = ['url', '=', '%' . (string) $params['url'] . '%'];
+        }
+
+        if (!empty($params['ip']))
+        {
+            $where[] = ['ip', '=', (string) $params['ip']];
+        }
+
+        if (!empty($params['start_time']))
+        {
+            $where[] = ['create_time', '>=', strtotime((string) $params['start_time'])];
+        }
+
+        if (!empty($params['end_time']))
+        {
+            $where[] = ['create_time', '<=', strtotime((string) $params['end_time']) + 86400];
+        }
+
+        $data = $this->sysSystemLogModel->paginates($where, '*', $limit, ['id' => 'desc']);
 
         foreach ($data['data'] as &$item)
         {

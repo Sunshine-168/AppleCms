@@ -813,3 +813,35 @@ CREATE TABLE `sys_operate_log` (
   KEY `create_time` (`create_time`),
   KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_unicode_ci COMMENT='后台操作日志表'
+
+CREATE TABLE `sys_system_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `level` varchar(20) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '日志级别 debug/info/warning/error...',
+  `channel` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '日志通道/来源(可选)',
+  `module` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '模块(可选)',
+  `message` text CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '日志内容',
+  `context` mediumtext CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '上下文(JSON)',
+  `extra` mediumtext CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '额外信息(JSON)',
+  `exception_class` varchar(200) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '异常类(可选)',
+  `exception_message` text CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '异常信息(可选)',
+  `file` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '文件(可选)',
+  `line` int NOT NULL DEFAULT '0' COMMENT '行号(可选)',
+  `trace` mediumtext CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci COMMENT '堆栈(可选)',
+  `request_id` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '请求ID(链路追踪)',
+  `method` varchar(10) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '请求方法(可选)',
+  `url` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '请求URL(可选)',
+  `ip` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT 'IP(可选)',
+  `user_agent` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT 'UA(可选)',
+  `uid` int NOT NULL DEFAULT '0' COMMENT '关联管理员ID(可选)',
+  `username` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '关联管理员用户名(可选)',
+  `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_time` int NOT NULL DEFAULT '0' COMMENT '创建时间(时间戳)',
+  `update_time` int NOT NULL DEFAULT '0' COMMENT '更新时间(时间戳)',
+  PRIMARY KEY (`id`),
+  KEY `idx_create_time` (`create_time`),
+  KEY `idx_level` (`level`),
+  KEY `idx_channel` (`channel`),
+  KEY `idx_request_id` (`request_id`),
+  KEY `idx_uid` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8_unicode_ci COMMENT='系统日志表';

@@ -230,4 +230,40 @@ class SysUser extends Controller
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
+    /**
+     * 显示系统日志页
+     * @return Factory|View
+     */
+    public function showSystemSystemLogs(): View|Factory
+    {
+        return view('admin.system.monitor.system_logs');
+    }
+    
+    /**
+     * 系统日志列表
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getSystemSystemLogLists(Request $request): JsonResponse
+    {
+        $params = [
+            'level'         => (string) $request->input('level', ''),
+            'channel'       => (string) $request->input('channel', ''),
+            'module'        => (string) $request->input('module', ''),
+            'username'      => (string) $request->input('username', ''),
+            'uid'           => $request->input('uid', ''),
+            'request_id'    => (string) $request->input('request_id', ''),
+            'method'        => (string) $request->input('method', ''),
+            'url'           => (string) $request->input('url', ''),
+            'ip'            => (string) $request->input('ip', ''),
+            'start_time'    => (string) $request->input('start_time', ''),
+            'end_time'      => (string) $request->input('end_time', ''),
+            'limit'         => (int) $request->input('limit', 10),
+        ];
+
+        $data = $this->systemUserService->getSysSystemLogLists($params);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 }
