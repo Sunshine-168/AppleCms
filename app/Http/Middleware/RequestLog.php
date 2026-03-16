@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Utils\Syslog;
+use App\Support\Utils\Syslog;
 
 /**
  * 请求日志

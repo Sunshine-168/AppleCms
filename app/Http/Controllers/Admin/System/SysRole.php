@@ -1,82 +1,113 @@
 <?php
 namespace App\Http\Controllers\Admin\System;
-use app\common\utils\Ajax;
-use app\common\utils\ServiceFactory;
-use think\facade\Request;
-use think\response\Json;
+use App\Http\Controllers\Controller;
+use App\Services\System\SysRoleService;
+use App\Support\Utils\Ajax;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-/**
- * 角色管理控制器
- * 提供角色的增删改查，以及角色与权限的绑定
- */
-class SysRole
+class SysRole extends Controller
 {
-    protected mixed $service;
+    protected SysRoleService $systemRoleService;
+
     public function __construct()
     {
-        $this->service = ServiceFactory::make();
+        $this->systemRoleService = new SysRoleService();
     }
     /**
-     * 角色列表
-     * 支持按名称、标识、状态筛选，返回分页数据
+     * 显示角色列表页面
+     * @return View|Factory
      */
-    public function getRoleLists(): Json
+    public function index(): View|Factory
     {
-        $params = Request::only(['name','code','status']);
-        $data = $this->service->getRoleLists($params);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        return view('admin.system.role.index');
     }
     /**
-     * 新增角色
-     * 创建角色基础信息：名称、标识、备注、状态、排序
+     * 获取角色列表
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function addRole(): Json
+    public function getRoleLists(Request $request): JsonResponse
     {
-        $params = Request::only(['name','code','remark','status','sort']);
-        $data = $this->service->addRole($params);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $name = (string) $request->input('name', '');
+        $code = (string) $request->input('code', '');
+        $status = $request->input('status', '');
+        $limit = (int) $request->input('limit', 10);
+
+        $res = $this->systemRoleService->getRoleLists($name, $code, $status, $limit);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
+    }
+    /**
+     * 添加角色
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addRole(Request $request): JsonResponse
+    {
+        $name = (string) $request->input('name', '');
+        $code = (string) $request->input('code', '');
+        $remark = (string) $request->input('remark', '');
+        $status = (int) $request->input('status', 1);
+        $sort = (int) $request->input('sort', 0);
+
+        $res = $this->systemRoleService->addRole($name, $code, $remark, $status, $sort);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
     /**
      * 更新角色
-     * 根据 `id` 更新角色基础信息
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function updateRole(): Json
+    public function updateRole(Request $request): JsonResponse
     {
-        $id = (int)Request::param('id', 0);
-        $params = Request::only(['name','code','remark','status','sort']);
-        $data = $this->service->updateRole($id, $params);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $id = (int) $request->input('id', 0);
+        $name = (string) $request->input('name', '');
+        $code = (string) $request->input('code', '');
+        $remark = (string) $request->input('remark', '');
+        $status = (int) $request->input('status', 1);
+        $sort = (int) $request->input('sort', 0);
+
+        $res = $this->systemRoleService->updateRole($id, $name, $code, $remark, $status, $sort);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
     /**
      * 删除角色
-     * 根据 `id` 删除角色；注意会影响用户的角色绑定与权限
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function deleteRole(): Json
+    public function deleteRole(Request $request): JsonResponse
     {
-        $id = (int)Request::param('id', 0);
-        $data = $this->service->deleteRole($id);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $id = (int) $request->input('id', 0);
+        $res = $this->systemRoleService->deleteRole($id);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
     /**
      * 设置角色权限
-     * 传入 `role_id` 与 `perm_ids[]` 批量绑定权限（先清空后重建）
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function setRolePerms(): Json
+    public function setRolePerms(Request $request): JsonResponse
     {
-        $roleId = (int)Request::param('role_id', 0);
-        $permIds = Request::param('perm_ids', []);
-        if (!is_array($permIds)) $permIds = [];
-        $data = $this->service->setRolePerms($roleId, $permIds);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $roleId = (int) $request->input('role_id', 0);
+        $permIds = $request->input('perm_ids', []);
+        if (!is_array($permIds)) {
+            $permIds = [];
+        }
+
+        $res = $this->systemRoleService->setRolePerms($roleId, $permIds);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
     /**
-     * 获取角色已绑定权限ID
-     * 根据 `role_id` 返回该角色的 `perm_id` 数组
+     * 获取角色权限ID列表
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getRolePermIds(): Json
+    public function getRolePermIds(Request $request): JsonResponse
     {
-        $roleId = (int)Request::param('role_id', 0);
-        $data = $this->service->getRolePermIds($roleId);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $roleId = (int) $request->input('role_id', 0);
+        $res = $this->systemRoleService->getRolePermIds($roleId);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
 }

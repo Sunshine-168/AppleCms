@@ -3,7 +3,7 @@ namespace App\Traits;
 
 use Exception;
 use Illuminate\Support\Facades\Cache;
-use Utils\Syslog;
+use App\Support\Utils\Syslog;
 
 /**
  * 缓存仓储层 Trait

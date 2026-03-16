@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\System\SysDatabase;
 use App\Http\Controllers\Admin\System\SysCache;
 use App\Http\Controllers\Admin\System\SysSchedule;
+use App\Http\Controllers\Admin\System\SysRole;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminOperateLog;
@@ -36,6 +37,15 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     Route::post('/user/update', [SysUser::class, 'updateSystemUser']);// 更新用户
     Route::post('/user/delete', [SysUser::class, 'deleteSystemUser']);// 删除用户
     Route::get('/user/login/list', [SysUser::class, 'getSystemUserLoginLists']);// 获取系统用户登录日志列表
+
+    // 角色管理
+    Route::get('/system/roles', [SysRole::class, 'index']);// 显示角色管理页
+    Route::get('/system/roles/list', [SysRole::class, 'getRoleLists']);// 获取角色列表
+    Route::post('/system/roles/add', [SysRole::class, 'addRole']);// 新增角色
+    Route::post('/system/roles/update', [SysRole::class, 'updateRole']);// 更新角色
+    Route::post('/system/roles/delete', [SysRole::class, 'deleteRole']);// 删除角色
+    Route::post('/system/roles/perms/set', [SysRole::class, 'setRolePerms']);// 设置角色权限
+    Route::get('/system/roles/perms/ids', [SysRole::class, 'getRolePermIds']);// 获取角色权限ID列表
 
     Route::prefix('/set/user')->controller(SysUser::class)->group(function () {
         Route::get('/password', 'showChangePassword');// 显示修改密码页

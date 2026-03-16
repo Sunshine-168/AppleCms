@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Throwable;
-use Utils\Syslog;
+use App\Support\Utils\Syslog;
 
 trait DualWriteTableTrait
 {

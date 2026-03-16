@@ -1,8 +1,8 @@
 <?php
 namespace App\Models\System;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * 权限模型
@@ -11,7 +11,10 @@ use think\Model;
  */
 class SysPermModel extends Model
 {
-    protected $name = 'sys_perm';
-    protected $pk   = 'id';
+    protected $table = 'sys_perm';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
+
     use QueryTrait, QueryCacheTrait;
 }

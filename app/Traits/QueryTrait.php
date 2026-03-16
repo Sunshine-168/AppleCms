@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use ReflectionException;
 use ReflectionFunction;
-use Utils\Syslog;
+use App\Support\Utils\Syslog;
 
 /**
  * 通用查询 Trait
@@ -184,7 +184,7 @@ trait QueryTrait
     {
         try {
             empty($order) && $order = [$this->getKeyName()=>'desc'];
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             $this->parseOrder($query, $order);
             $info = $query->select($field)->get();
@@ -203,7 +203,7 @@ trait QueryTrait
         try {
             empty($order) && $order = [$this->getKeyName() => 'desc'];
 
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             if ($table) $query->from($table);
 
             $this->parseCondition($query, $condition);
@@ -349,7 +349,7 @@ trait QueryTrait
     public function updateByCondition(array $condition, array $data): bool
     {
         try {
-            $query = $this/*->master(true)*/;
+            $query = $this->newQuery()/*->master(true)*/;
             $this->parseCondition($query, $condition);
             $res = $query->update($data);
             return $res !== false;
@@ -362,7 +362,7 @@ trait QueryTrait
     public function deleteByCondition(array $condition): bool
     {
         try {
-            $query = $this/*->master(true)*/;
+            $query = $this->newQuery()/*->master(true)*/;
             $this->parseCondition($query, $condition);
             $res = $query->delete();
             return !empty($res);
@@ -375,7 +375,7 @@ trait QueryTrait
     public function valueByCondition(array $condition, string $field = '', bool $master=false): mixed
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             return $query->value($field) ?: '';
         } catch (Exception $e) {
@@ -387,7 +387,7 @@ trait QueryTrait
     public function countByCondition(array $condition, bool $master=false): int
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             return $query->count();
         } catch (Exception $e) {
@@ -399,7 +399,7 @@ trait QueryTrait
     public function sumByCondition(array $condition=[], string $field='', bool $master=false): float
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             return $query->sum($field) ?: 0.0;
         } catch (Exception $e) {
@@ -411,7 +411,7 @@ trait QueryTrait
     public function uniqueColumnByCondition(array $condition, string $field='', bool $master=false): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             return $query->distinct()->pluck($field)->toArray();
         } catch (Exception $e) {
@@ -431,7 +431,7 @@ trait QueryTrait
     public function columnByCondition(array $condition, string|array $columns, bool $master = false): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
 
             if (is_array($columns)) {
@@ -459,7 +459,7 @@ trait QueryTrait
     public function groupByCondition(array $condition, string|array $columns, string|array|null $groupBy = null, array|string $order = [], bool $master = false): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             $this->parseCondition($query, $condition);
             // TP8 compatibility: allow 2-arg usage groupByCondition($where, 'uid')
             // and return a flat unique column list.
@@ -533,7 +533,7 @@ trait QueryTrait
     public function selectWithJoin(array $joins, array $condition = [], array|string $fields = '*', array|string $order = [], bool $master = false, ?string $table = null): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             if ($table) $query->from($table);
 
             $query->select($fields);
@@ -557,7 +557,7 @@ trait QueryTrait
     public function joinLimits(array $joins, array $condition = [], array|string $fields = '*', array|string $order = [], int $offset = 0, int $limit = 10, bool $master = false, ?string $table = null): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             if ($table) $query->from($table);
 
             $query->select($fields);
@@ -581,7 +581,7 @@ trait QueryTrait
     public function joinPaginates(array $joins, array $condition = [], array|string $fields = '*', array|string $order = [], int $limit = 10, bool $master = false, ?string $table = null): array
     {
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             if ($table) $query->from($table);
 
             $query->select($fields);
@@ -705,7 +705,7 @@ trait QueryTrait
     // ------------------------------
     public function existsBy(array $condition, bool $master=false): bool
     {
-        $query = $this/*->master($master)*/;
+        $query = $this->newQuery()/*->master($master)*/;
         $this->parseCondition($query, $condition);
         return $query->limit(1)->first() !== null;
     }
@@ -801,7 +801,7 @@ trait QueryTrait
      */
     public function chunks(array $condition, int $size, callable $callback, bool $master=false): mixed
     {
-        $query = $this/*->master($master)*/;
+        $query = $this->newQuery()/*->master($master)*/;
         $this->parseCondition($query, $condition);
         return $query->chunk($size, $callback);
     }
@@ -861,7 +861,7 @@ trait QueryTrait
         }
 
         try {
-            $query = $this/*->master($master)*/;
+            $query = $this->newQuery()/*->master($master)*/;
             if ($table) $query->table($table);
 
             $this->parseCondition($query, $condition);
