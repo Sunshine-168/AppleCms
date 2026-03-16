@@ -128,9 +128,7 @@ class SysUserService
         {
             $password = '123456';
         }
-        
-        $roleName = $this->sysRoleModel->findById($roleId)['name'] ?? '';
-
+      
         $insert = [
             'username'      => $username,
             'password'      => $password,
@@ -138,7 +136,6 @@ class SysUserService
             'remark'        => $remark,
             'role'          => $role,
             'role_id'       => $roleId,
-            'role_name'     => $roleName,
             'create_time'   => time(),
             'update_time'   => time(),
         ];
@@ -179,11 +176,10 @@ class SysUserService
         {
             $update['role'] = $role;
         }
-
+         
         if ($roleId !== null)
         {
             $update['role_id'] = $roleId;
-            $update['role_name'] = $roleId;
         }
 
         $res = $this->sysUserModel->updateById($id, $update);
