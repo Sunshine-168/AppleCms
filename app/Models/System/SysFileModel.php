@@ -1,21 +1,16 @@
 <?php
 namespace App\Models\System;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
 
-/**
- * 系统文件
- */
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
+
 class SysFileModel extends Model
 {
-    // 设置当前模型对应的完整数据表名称
-    protected $name = 'sys_file';
+    protected $table = 'sys_file';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
 
-
-    // 主键
-    protected $pk    = 'id';
-
-    use QueryTrait,QueryCacheTrait;
-
+    use QueryTrait, QueryCacheTrait;
 }

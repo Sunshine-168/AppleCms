@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\System\SysCache;
 use App\Http\Controllers\Admin\System\SysSchedule;
 use App\Http\Controllers\Admin\System\SysRole;
 use App\Http\Controllers\Admin\System\SysDict;
+use App\Http\Controllers\Admin\System\SysFile;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminOperateLog;
@@ -55,15 +56,22 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     Route::post('/system/dicts/add', [SysDict::class, 'addSysSet']);// 添加系统字典
     Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
     Route::post('/system/dicts/delete', [SysDict::class, 'deleteSysSet']);// 删除系统字典
-    Route::post('/system/dicts/state', [SysDict::class, 'updateState']);
+    Route::post('/system/dicts/state', [SysDict::class, 'updateState']);// 更新系统字典状态
     
+    // 附件管理
+    Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页
+    Route::get('/system/attachments/list', [SysFile::class, 'getLists']);// 获取附件列表
+    Route::get('/system/attachments/open', [SysFile::class, 'open']);// 打开附件
+    Route::post('/system/attachments/upload', [SysFile::class, 'upload']);// 上传附件
+    Route::post('/system/attachments/delete', [SysFile::class, 'delete']);// 删除附件
+
     // 修改系统用户密码
     Route::prefix('/set/user')->controller(SysUser::class)->group(function () {
         Route::get('/password', 'showChangePassword');// 显示修改密码页
         Route::get('/password.html', 'showChangePassword');// 兼容 lay-href 默认地址
         Route::post('/password', 'changePassword');// 修改密码
     });
-  
+
     // 系统监控
     Route::prefix('/system/monitor')->controller(SysUser::class)->group(function () {
         Route::get('/login-logs', 'showSystemUserLoginLogs');// 显示系统用户登录日志页
@@ -112,8 +120,4 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::post('/cache/flush', 'flushCache');// 清空缓存
         Route::post('/cache/run', 'runCacheCommand');// 执行缓存相关命令
     });
-    
-
-
-
 });

@@ -1,97 +1,105 @@
 <?php
-namespace app\admin\controller;
+namespace App\Http\Controllers\Admin\System;
 
-use app\admin\service\v1\SysFileService;
-use app\common\utils\Ajax;
-use app\common\utils\ServiceFactory;
-use think\facade\Request;
-use think\facade\Validate;
-use think\response\Json;
+use App\Http\Controllers\Controller;
+use App\Services\System\SysFileService;
+use App\Support\Utils\Ajax;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * 系统文件
+ * 系统文件管理
  */
-class SysFile
+class SysFile extends Controller
 {
-    protected SysFileService $SysFileService;
+    protected SysFileService $systemFileService;
 
     public function __construct()
     {
-        $this->SysFileService = ServiceFactory::make(SysFileService::class);
+        $this->systemFileService = new SysFileService();
     }
-
     /**
-     * 上传
+     * 打开文件
      */
-    public function upload(): Json
+    public function index(): View|Factory
     {
-        $file = Request::file('file');
-
-        if (!$file) {
-            return Ajax::fail('请选择文件');
-        }
-
-        $validate = Validate::rule([
-            'file' => 'file|fileExt:jpg,png,gif,heic,heif,jpeg,mp3,wav,ogg,m4a,aac,mp4,mov,avi,webm,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,7z|fileSize:104857600'
-        ]);
-
-        $result = $validate->check(['file' => $file]);
-
-        if (!$result) {
-            return Ajax::fail($validate->getError());
-        }
-
-        $data = $this->SysFileService->upload($file);
-
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        return view('admin.system.file.index');
     }
 
     /**
      * 获取文件列表
      */
-    public function getLists(): Json
+    public function getLists(Request $request): JsonResponse
     {
-        $params = Request::only([
-            'keyword'
-        ]);
-
-        $keyword = $params['keyword'] ?? '';
-
-        $data = $this->SysFileService->getLists( $keyword);
-
-        return Ajax::success($data);
+        $keyword = (string) $request->input('keyword', '');
+        $limit   = (int) $request->input('limit', 10);
+        $data    = $this->systemFileService->getLists($keyword, $limit);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 删除文件（支持批量）
+     * 上传文件
      */
-    public function delete(): Json
+    public function upload(Request $request): JsonResponse
     {
-        $ids = Request::post('ids');
-
-        if (empty($ids)) {
-            return Ajax::fail('请选择要删除的数据');
+        $file = $request->file('file');
+        if (!$file instanceof UploadedFile) 
+        {
+            return Ajax::fail('请选择文件');
         }
+        $data = $this->systemFileService->upload($file);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 
-        // 支持数组或逗号分隔
-        if (is_string($ids)) {
+    /**
+     * 删除文件
+     */
+    public function delete(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) 
+        {
             $ids = explode(',', $ids);
         }
-
-        $validate = Validate::rule([
-            'ids' => 'require|array'
-        ]);
-
-        if (!$validate->check(['ids' => $ids])) {
-            return Ajax::fail('参数错误');
+        if (!is_array($ids) || empty($ids)) 
+        {
+            return Ajax::fail('请选择要删除的数据');
+        }
+        $res = $this->systemFileService->delete($ids);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
+    }
+    
+    /**
+     * 打开文件
+     */
+    public function open(Request $request): BinaryFileResponse
+    {
+        $id = (int)$request->query('id', 0);
+        $row = $this->systemFileService->findById($id);
+        if (empty($row)) {
+            abort(404);
         }
 
-        $res = $this->SysFileService->delete($ids);
-
-        if (!$res) {
-            return Ajax::fail('删除失败');
+        $path = (string)($row['path'] ?? '');
+        $path = preg_replace('#^https?://[^/]+#i', '', $path);
+        $path = ltrim((string)$path, '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
+        }
+        if ($path === '') {
+            abort(404);
         }
 
-        return Ajax::success([], '删除成功');
+        $fullPath = Storage::disk('public')->path($path);
+        if (!is_file($fullPath)) {
+            abort(404);
+        }
+
+        return response()->file($fullPath);
     }
 }
