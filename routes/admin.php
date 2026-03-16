@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\System\SysDatabase;
 use App\Http\Controllers\Admin\System\SysCache;
 use App\Http\Controllers\Admin\System\SysSchedule;
 use App\Http\Controllers\Admin\System\SysRole;
+use App\Http\Controllers\Admin\System\SysDict;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminOperateLog;
@@ -48,6 +49,15 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     Route::post('/system/roles/perms/set', [SysRole::class, 'setRolePerms']);// 设置角色权限
     Route::get('/system/roles/perms/ids', [SysRole::class, 'getRolePermIds']);// 获取角色权限ID列表
 
+    // 字段管理（系统字典）
+    Route::get('/system/dicts', [SysDict::class, 'index']);// 显示系统字典页
+    Route::get('/system/dicts/list', [SysDict::class, 'getSysLists']);// 获取系统字典列表
+    Route::post('/system/dicts/add', [SysDict::class, 'addSysSet']);// 添加系统字典
+    Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
+    Route::post('/system/dicts/delete', [SysDict::class, 'deleteSysSet']);// 删除系统字典
+    Route::post('/system/dicts/state', [SysDict::class, 'updateState']);
+    
+    // 修改系统用户密码
     Route::prefix('/set/user')->controller(SysUser::class)->group(function () {
         Route::get('/password', 'showChangePassword');// 显示修改密码页
         Route::get('/password.html', 'showChangePassword');// 兼容 lay-href 默认地址

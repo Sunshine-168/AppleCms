@@ -2,115 +2,102 @@
 
 namespace App\Http\Controllers\Admin\System;
 
-use app\common\utils\Ajax;
-use app\common\utils\ServiceFactory;
-use think\facade\Request;
-use think\response\Json;
+use App\Http\Controllers\Controller;
+use App\Services\System\SysDictService;
+use App\Support\Utils\Ajax;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * 系统设置控制器
  */
-class SysDict
+class SysDict extends Controller
 {
-    protected mixed $systemDictService;
+    protected SysDictService $systemDictService;
 
     public function __construct()
     {
-        $this->systemDictService = ServiceFactory::make();
+        $this->systemDictService = new SysDictService();
     }
-
     /**
-     * 获取系统设置列表
-     * @return Json
+     * 系统字典列表
      */
-    public function getSysLists(): Json
+    public function index(): View|Factory
     {
-        $params = Request::only([
-            'dict_key',
-            'dict_type',
-            'label'
-        ]);
+        return view('admin.system.dict.index');
+    }
+    /**
+     * 获取系统字典列表
+     */
+    public function getSysLists(Request $request): JsonResponse
+    {
+        $dictType = (string) $request->input('dict_type', '');
+        $dictKey  = (string) $request->input('dict_key', '');
+        $label    = (string) $request->input('label', '');
+        $limit    = (int) $request->input('limit', 10);
 
-        $data = $this->systemDictService->getSysLists($params);
-
+        $data = $this->systemDictService->getSysLists($dictType, $dictKey, $label, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-
     /**
-     * 更新系统设置
-     * @return Json
+     * 添加系统字典
      */
-    public function updateSysSet(): Json
+    public function addSysSet(Request $request): JsonResponse
     {
-        $params = Request::only([
-            'id'            => 0,
-            'dict_type'     => '',
-            'dict_key'      => '',
-            'dict_value'    => '',
-            'value_type'    => '',
-            'sort'          => 0,
-            'status'        => 1,
-            'remark'        => '',
-            'label'         => '',
-            'enum_limit'    => ''
-        ]);
+        $dictType  = (string) $request->input('dict_type', '');
+        $dictKey   = (string) $request->input('dict_key', '');
+        $valueType = (int) $request->input('value_type', 0);
+        $dictValue = $request->input('dict_value', null);
+        $enumLimit = $request->input('enum_limit', null);
+        $label     = (string) $request->input('label', '');
+        $sort      = (int) $request->input('sort', 0);
+        $status    = (int) $request->input('status', 0);
+        $remark    = (string) $request->input('remark', '');
 
-
-        $data = $this->systemDictService->updateSysSet($params);
-
+        $data = $this->systemDictService->addSysSet($dictType, $dictKey, $valueType, $dictValue, $enumLimit, $label, $sort, $status, $remark);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-
     /**
-     * 添加系统设置
-     * @return Json
+     * 更新系统字典
      */
-    public function addSysSet(): Json
+    public function updateSysSet(Request $request): JsonResponse
     {
-        $params = Request::only([
-            'dict_type'     => '',
-            'dict_key'      => '',
-            'dict_value'    => '',
-            'value_type'    => '',
-            'sort'          => 0,
-            'status'        => 1,
-            'remark'        => '',
-            'label'         => '',
-            'enum_limit'    => ''
-        ]);
+        $id        = (int) $request->input('id', 0);
+        $dictType  = (string) $request->input('dict_type', '');
+        $dictKey   = (string) $request->input('dict_key', '');
+        $valueType = (int) $request->input('value_type', 0);
+        $dictValue = $request->input('dict_value', null);
+        $enumLimit = $request->input('enum_limit', null);
+        $label     = (string) $request->input('label', '');
+        $sort      = (int) $request->input('sort', 0);
+        $status    = (int) $request->input('status', 0);
+        $remark    = (string) $request->input('remark', '');
 
-        $data = $this->systemDictService->addSysSet($params);
-
+        $data = $this->systemDictService->updateSysSet($id, $dictType, $dictKey, $valueType, $dictValue, $enumLimit, $label, $sort, $status, $remark);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-
+    
     /**
-     * 删除系统设置
-     * @return Json
+     * 删除系统字典
      */
-    public function deleteSysSet(): Json
+    public function deleteSysSet(Request $request): JsonResponse
     {
-        $id = Request::param('id', 0);
-
+        $id = (int) $request->input('id', 0);
         $data = $this->systemDictService->deleteSysSet($id);
-
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 更新状态设置（启用/禁用）
-     * @return Json
+     * 更新系统字典状态
      */
-    public function updateState(): Json
+    public function updateState(Request $request): JsonResponse
     {
-        $params = Request::only([
-            'id'     => 0,
-            'status' => 0
-        ]);
+        $id = (int) $request->input('id', 0);
+        $status = (int) $request->input('status', 0);
 
-        $data = $this->systemDictService->updateState($params);
-
+        $data = $this->systemDictService->updateState($id, $status);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 }
-

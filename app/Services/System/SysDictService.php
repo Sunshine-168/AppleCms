@@ -1,204 +1,307 @@
 <?php
 namespace App\Services\System;
 
-use app\common\enum\biz\PaymentClassTypeEnum;
-use app\common\enum\biz\PaymentTypeEnum;
-use app\common\enum\biz\SysDictTypeEnum;
-use app\common\model\PaymentAccountModel;
-use app\common\model\PaymentChannelModel;
-use app\common\model\PaymentClassModel;
-use app\common\utils\Result;
-use App\Models\Sys\SysDictModel;
-use function app\admin\service\v1\pageSize;
+use App\Models\System\SysDictModel;
+use App\Support\Utils\Result;
+use Illuminate\Support\Facades\Cache;
 
+/**
+ * 系统字典服务
+ */
 class SysDictService
 {
     public SysDictModel $sysDictModel;
-    public PaymentClassModel $paymentClassModel;
-    public PaymentChannelModel $paymentChannelModel;
-    public PaymentAccountModel $paymentAccountModel;
 
     public function __construct()
     {
-        $this->sysDictModel        = new SysDictModel();
-        $this->paymentClassModel   = new PaymentClassModel();
-        $this->paymentChannelModel = new PaymentChannelModel();
-        $this->paymentAccountModel = new PaymentAccountModel();
+        $this->sysDictModel = new SysDictModel();
     }
-
     /**
-     * 获取列表（支持模糊查询）
-     * @param array $params
-     * @return array
+     * 获取系统字典列表
      */
-    public function getSysLists(array $params): array
+    public function getSysLists(string $dictType, string $dictKey, string $label, int $limit): array
     {
-        $where = array_filter([
-            !empty($params['dict_type']) ? ['dict_type', 'like', '%' . $params['dict_type'] . '%'] : null,
-            !empty($params['dict_key']) ? ['dict_key', 'like', '%' . $params['dict_key'] . '%'] : null,
-            !empty($params['label']) ? ['label', 'like', '%' . $params['label'] . '%'] : null,
-        ]);
-
-        $data = $this->sysDictModel->paginates($where, '*', pageSize());
-
-        foreach ($data['data'] as &$item)
+        if ($limit < 1)
         {
-            if ($item['value_type'] == SysDictTypeEnum::value("TEXT"))
-            {
-                $item['value_text']  = html_entity_decode(html_entity_decode($item['value_text'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            }
+            $limit = 10;
         }
+
+        $where = [];
+
+        if ($dictType = trim($dictType))
+        {
+            $where[] = ['dict_type', '=', $dictType];
+        }
+
+        if ($dictKey = trim($dictKey))
+        {
+            $where[] = ['dict_key', '=', $dictKey];
+        }
+
+        if ($label = trim($label))
+        {
+            $where[] = ['label', '=', $label];
+        }
+
+        $data = $this->sysDictModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
+
+        $rows = $data['data'] ?? [];
+        if (!is_array($rows))
+        {
+            $rows = [];
+        }
+
+        foreach ($rows as &$item)
+        {
+            $item['dict_value'] = $this->formatDictValue($item);
+            $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
+            $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
+        }
+
+        $data['data'] = $rows;
 
         return Result::success($data);
     }
 
     /**
-     * 构造数据
-     * @param array $params
-     * @return null[]
+     * 添加系统字典
      */
-    private function buildValueFields(array $params): array
+    public function addSysSet(string $dictType, string $dictKey, int $valueType, mixed $dictValue, mixed $enumLimit, string $label, int $sort, int $status, string $remark): array
     {
-        $type   = intval($params['value_type'] ?? 0);
+        $dictType = trim($dictType);
+        $dictKey = trim($dictKey);
+        $label = trim($label);
+        $remark = trim($remark);
 
-        $fields = [
-            'value_string' => null,
-            'value_int'    => null,
-            'value_float'  => null,
-            'value_json'   => null,
-            'value_text'   => null,
-            'enum_limit'   => null,
-        ];
-
-        $value      = $params['dict_value'] ?? null;
-        $enumLimit  = $params['enum_limit'] ?? [];
-
-        return match ($type) {
-            SysDictTypeEnum::value("STRING")    => array_merge($fields, ['value_string' => (string)$value]),
-            SysDictTypeEnum::value("INT")       => array_merge($fields, ['value_int' => (int)$value]),
-            SysDictTypeEnum::value("FLOAT")     => array_merge($fields, ['value_float' => (float)$value]),
-            SysDictTypeEnum::value("JSON"), SysDictTypeEnum::value("ARRAY") => array_merge($fields, ['value_json' => json_encode($value, JSON_UNESCAPED_UNICODE)]),
-            SysDictTypeEnum::value("ENUM")      => array_merge($fields, [
-                'value_json' => json_encode($value, JSON_UNESCAPED_UNICODE),
-                'enum_limit' => json_encode($enumLimit, JSON_UNESCAPED_UNICODE)
-            ]),
-            SysDictTypeEnum::value("TEXT") => array_merge($fields, ['value_text' => (string)$value]),
-            default => $fields,
-        };
-    }
-
-    /**
-     * 获取基础字段
-     * @param array $params
-     * @return array
-     */
-    private function getBaseFields(array $params): array
-    {
-        $time = time();
-        return [
-            'dict_type'   => $params['dict_type'] ?? '',
-            'dict_key'    => $params['dict_key'] ?? '',
-            'value_type'  => $params['value_type'] ?? 0,
-            'sort'        => $params['sort'] ?? 0,
-            'status'      => $params['status'] ?? 0,
-            'remark'      => $params['remark'] ?? '',
-            'label'       => $params['label'] ?? '',
-            'update_time' => $time,
-            'create_time' => $params['create_time'] ?? $time,
-        ];
-    }
-
-
-    /**
-     * usdt汇率
-     * @param $rate
-     * @return void
-     */
-    private function syncUsdtRate($rate): void
-    {
-        $time = time();
-
-        $this->paymentClassModel->updateByCondition(
-            [['type', '=', PaymentClassTypeEnum::value("USDT")]],
-            ['rate' => $rate, 'update_time' => $time]
-        );
-
-        $this->paymentChannelModel->updateByCondition(
-            [['class_type', '=', PaymentTypeEnum::value("USDT")]],
-            ['class_rate' => $rate, 'update_time' => $time]
-        );
-
-        $this->paymentAccountModel->updateByCondition(
-            [['type', '=', PaymentTypeEnum::value("USDT")]],
-            ['rate' => $rate, 'update_time' => $time]
-        );
-    }
-
-    /**
-     * 更新状态
-     * @param array $params
-     * @return array
-     */
-    public function updateSysSet(array $params): array
-    {
-
-        if (empty($params['id'])) return Result::fail("缺少ID");
-
-        $update = array_merge($this->buildValueFields($params), $this->getBaseFields($params));
-
-        $res    = $this->sysDictModel->updateById($params['id'], $update);
-
-        if (!$res) return Result::fail('修改失败');
-
-        if ($params['dict_key'] === 'usdt_rate' && is_numeric($params['dict_value']))
+        if ($dictType === '' || $dictKey === '')
         {
-            $this->syncUsdtRate($params['dict_value']);
+            return Result::fail('类型和KEY不能为空');
         }
+
+        if ($this->sysDictModel->existsBy(['dict_type' => $dictType, 'dict_key' => $dictKey]))
+        {
+            return Result::fail('该类型下的KEY已存在');
+        }
+
+        $time = time();
+        $insert = array_merge(
+            $this->buildValueFields($valueType, $dictValue, $enumLimit),
+            [
+                'dict_type' => $dictType,
+                'dict_key' => $dictKey,
+                'value_type' => (int) $valueType,
+                'label' => $label,
+                'sort' => (int) $sort,
+                'status' => (int) $status,
+                'remark' => $remark,
+                'create_time' => $time,
+                'update_time' => $time,
+            ]
+        );
+
+        $res = $this->sysDictModel->inserts($insert);
+        if (!$res)
+        {
+            return Result::fail('添加失败');
+        }
+
+        $this->forgetDictCache($dictKey, $dictType);
 
         return Result::success();
     }
-
-
+    
     /**
-     * 添加设置
-     * @param array $params
-     * @return array
+     * 更新系统字典
      */
-    public function addSysSet(array $params): array
+    public function updateSysSet(int $id, string $dictType, string $dictKey, int $valueType, mixed $dictValue, mixed $enumLimit, string $label, int $sort, int $status, string $remark): array
     {
-        if (empty($params['dict_type']) || empty($params['dict_key']))
+        if ($id < 1)
         {
-            return Result::fail("类型和 KEY 不能为空");
+            return Result::fail('缺少ID');
         }
 
-        $insert = array_merge($this->buildValueFields($params), $this->getBaseFields($params));
-        $res    = $this->sysDictModel->inserts($insert);
+        $dictType = trim($dictType);
+        $dictKey = trim($dictKey);
+        $label = trim($label);
+        $remark = trim($remark);
 
-        return $res ? Result::success() : Result::fail('添加失败');
+        if ($dictType === '' || $dictKey === '')
+        {
+            return Result::fail('类型和KEY不能为空');
+        }
+
+        $old = $this->sysDictModel->findById($id);
+        if (empty($old))
+        {
+            return Result::fail('记录不存在');
+        }
+
+        $exists = $this->sysDictModel->existsBy([
+            ['id', '<>', $id],
+            ['dict_type', '=', $dictType],
+            ['dict_key', '=', $dictKey],
+        ]);
+
+        if ($exists)
+        {
+            return Result::fail('该类型下的KEY已存在');
+        }
+
+        $update = array_merge(
+            $this->buildValueFields($valueType, $dictValue, $enumLimit),
+            [
+                'dict_type' => $dictType,
+                'dict_key' => $dictKey,
+                'value_type' => (int) $valueType,
+                'label' => $label,
+                'sort' => (int) $sort,
+                'status' => (int) $status,
+                'remark' => $remark,
+                'update_time' => time(),
+            ]
+        );
+
+        $res = $this->sysDictModel->updateById($id, $update);
+        if (!$res)
+        {
+            return Result::fail('修改失败');
+        }
+
+        $this->forgetDictCache((string) ($old['dict_key'] ?? ''), (string) ($old['dict_type'] ?? ''));
+        $this->forgetDictCache($dictKey, $dictType);
+
+        return Result::success();
     }
-
+    
     /**
-     * 删掉设置
-     * @param int $id
-     * @return array
+     * 删除系统字典
      */
     public function deleteSysSet(int $id): array
     {
-        if (empty($id)) return Result::fail("缺少ID");
-        return $this->sysDictModel->deleteById($id) ? Result::success() : Result::fail('删除失败');
+        if ($id < 1)
+        {
+            return Result::fail('缺少ID');
+        }
+
+        $old = $this->sysDictModel->findById($id);
+        if (empty($old))
+        {
+            return Result::fail('记录不存在');
+        }
+
+        $res = $this->sysDictModel->deleteById($id);
+        if (!$res)
+        {
+            return Result::fail('删除失败');
+        }
+
+        $this->forgetDictCache((string) ($old['dict_key'] ?? ''), (string) ($old['dict_type'] ?? ''));
+
+        return Result::success();
     }
-
-
+    
     /**
-     * 更新状态
-     * @param array $params
-     * @return array
+     * 更新系统字典状态
      */
-    public function updateState(array $params): array
+    public function updateState(int $id, int $status): array
     {
-        if (empty($params['id'])) return Result::fail("缺少ID");
+        if ($id < 1)
+        {
+            return Result::fail('缺少ID');
+        }
 
-        $update = ['status' => $params['status'], 'update_time' => time()];
-        return $this->sysDictModel->updateById($params['id'], $update) ? Result::success() : Result::fail('修改失败');
+        $old = $this->sysDictModel->findById($id);
+        if (empty($old))
+        {
+            return Result::fail('记录不存在');
+        }
+
+        $res = $this->sysDictModel->updateById($id, ['status' => $status, 'update_time' => time()]);
+        if (!$res)
+        {
+            return Result::fail('修改失败');
+        }
+
+        $this->forgetDictCache((string) ($old['dict_key'] ?? ''), (string) ($old['dict_type'] ?? ''));
+
+        return Result::success();
+    }
+    
+    /**
+     * 构建系统字典值字段
+     */
+    private function buildValueFields(int $valueType, mixed $dictValue, mixed $enumLimit): array
+    {
+        $fields = [
+            'value_string' => null,
+            'value_int' => null,
+            'value_float' => null,
+            'value_json' => null,
+            'value_text' => null,
+            'enum_limit' => null,
+        ];
+
+        return match ((int) $valueType) {
+            0 => array_merge($fields, ['value_string' => (string) $dictValue]),
+            1 => array_merge($fields, ['value_int' => is_numeric($dictValue) ? (int) $dictValue : 0]),
+            2 => array_merge($fields, ['value_float' => is_numeric($dictValue) ? (float) $dictValue : 0]),
+            3, 4 => array_merge($fields, ['value_json' => $this->ensureJsonString($dictValue)]),
+            5 => array_merge($fields, [
+                'value_json' => $this->ensureJsonString($dictValue),
+                'enum_limit' => $this->ensureJsonString($enumLimit),
+            ]),
+            6 => array_merge($fields, ['value_text' => (string) $dictValue]),
+            default => array_merge($fields, ['value_string' => (string) $dictValue]),
+        };
+    }
+    
+    /**
+     * 确保JSON字符串格式
+     */
+    private function ensureJsonString(mixed $value): ?string
+    {
+        if ($value === null || $value === '')
+        {
+            return null;
+        }
+
+        if (is_string($value))
+        {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE)
+            {
+                return json_encode($decoded, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        return json_encode($value, JSON_UNESCAPED_UNICODE);
+    }
+    
+    /**
+     * 格式化系统字典值
+     */
+    private function formatDictValue(array $row): string
+    {
+        $type = (int) ($row['value_type'] ?? 0);
+        return match ($type) {
+            0 => (string) ($row['value_string'] ?? ''),
+            1 => (string) ((int) ($row['value_int'] ?? 0)),
+            2 => (string) ((float) ($row['value_float'] ?? 0)),
+            3, 4, 5 => json_encode($row['value_json'] ?? null, JSON_UNESCAPED_UNICODE),
+            6 => (string) ($row['value_text'] ?? ''),
+            default => (string) ($row['value_string'] ?? ''),
+        };
+    }
+    
+    /**
+     * 忘记系统字典缓存
+     */
+    private function forgetDictCache(string $key, string $type): void
+    {
+        $type = (string) $type;
+        $key = (string) $key;
+
+        Cache::forget("dict_label_{$type}_{$key}");
+        Cache::forget("dict_value_{$type}_{$key}");
     }
 }

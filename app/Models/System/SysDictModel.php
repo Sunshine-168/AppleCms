@@ -2,6 +2,8 @@
 
 namespace App\Models\System;
 
+use App\Traits\QueryCacheTrait;
+use App\Traits\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +25,8 @@ class SysDictModel extends Model
         'value_json'  => 'array',
         'enum_limit'  => 'array',
     ];
+
+    use QueryTrait, QueryCacheTrait;
 
     /*
     |--------------------------------------------------------------------------

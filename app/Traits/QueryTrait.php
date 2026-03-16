@@ -23,7 +23,9 @@ trait QueryTrait
     {
         return is_array($condition)
             && count($condition) === 3
-            && isset($condition[0], $condition[1]);
+            && isset($condition[0], $condition[1])
+            && is_string($condition[0])
+            && is_string($condition[1]);
     }
 
     protected function parseCondition($query, array $condition): void
