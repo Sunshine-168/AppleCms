@@ -7,6 +7,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\System\SysDatabase;
+use App\Http\Controllers\Admin\System\SysCache;
 use App\Http\Controllers\Admin\System\SysSchedule;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
@@ -82,6 +83,13 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
         Route::post('/schedule/delete', 'deleteSchedule');// 删除定时任务
         Route::post('/schedule/status', 'updateScheduleStatus');// 更新定时任务状态
         Route::post('/schedule/run', 'runScheduleOnce');// 立即执行定时任务
+    });
+    // 缓存管理
+    Route::prefix('/system/tools')->controller(SysCache::class)->group(function () {
+        Route::get('/cache', 'showCache');// 显示缓存管理页
+        Route::get('/cache/info', 'getCacheInfo');// 获取缓存信息
+        Route::post('/cache/flush', 'flushCache');// 清空缓存
+        Route::post('/cache/run', 'runCacheCommand');// 执行缓存相关命令
     });
     
 
