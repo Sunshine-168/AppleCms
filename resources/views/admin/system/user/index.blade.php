@@ -72,7 +72,13 @@
         </div>
       </div>
       <div class="layui-form-item">
-        <label class="layui-form-label">角色</label>
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-block">
+          <select name="role_id"></select>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">管理员类型</label>
         <div class="layui-input-block">
           <select name="role">
             <option value="0">超级管理员</option>
@@ -117,6 +123,40 @@ layui.use(['layer','form','table'], function(){
     },'json');
   }
 
+  var roleOptionsCache = null;
+
+  function loadRoleOptions(callback){
+    if(roleOptionsCache){
+      callback && callback(roleOptionsCache);
+      return;
+    }
+    $.get('/admin/system/roles/options', function(res){
+      if(res.code === 0){
+        roleOptionsCache = res.data || [];
+        callback && callback(roleOptionsCache);
+      } else {
+        layer.msg(res.msg || '获取角色失败',{icon:2});
+        callback && callback([]);
+      }
+    },'json');
+  }
+
+  function renderRoleSelect($select, roles, selectedId){
+    var html = '<option value="0">请选择</option>';
+    for(var i=0;i<roles.length;i++){
+      var r = roles[i] || {};
+      var rid = r.id == null ? '' : String(r.id);
+      var name = escapeHtml(r.name || '');
+      if(String(r.status) === '0'){
+        name = name + '（禁用）';
+      }
+      html += '<option value="'+ escapeHtml(rid) +'">'+ name +'</option>';
+    }
+    $select.html(html);
+    $select.val(String(selectedId||0));
+    form.render('select');
+  }
+
   // 打开新增/编辑弹窗
   function openUserDialog(mode,row){
     row = row||{};
@@ -136,6 +176,9 @@ layui.use(['layer','form','table'], function(){
         $layer.find('input[name=email]').val(row.email||'');
         $layer.find('input[name=remark]').val(row.remark||'');
         $layer.find('select[name=role]').val(row.role||1);
+        loadRoleOptions(function(roles){
+          renderRoleSelect($layer.find('select[name=role_id]'), roles, row.role_id||0);
+        });
         form.render();
       },
       yes:function(index, layero){
@@ -146,15 +189,16 @@ layui.use(['layer','form','table'], function(){
         var email = $.trim($layer.find('input[name=email]').val());
         var remark = $.trim($layer.find('input[name=remark]').val());
         var role = $layer.find('select[name=role]').val();
+        var roleId = $layer.find('select[name=role_id]').val();
 
         if(!username){layer.msg('请输入用户名');return;}
 
         if(isEdit){
-          var data = {id:id,username:username,email:email,remark:remark,role:role};
+          var data = {id:id,username:username,email:email,remark:remark,role:role,role_id:roleId};
           if(password) data.password = password;
           apiPost('/admin/user/update', data, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('保存成功',{icon:1}); });
         } else {
-          apiPost('/admin/user/add',{username:username,password:password||'123456',email:email,remark:remark,role:role}, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('新增成功',{icon:1}); });
+          apiPost('/admin/user/add',{username:username,password:password||'123456',email:email,remark:remark,role:role,role_id:roleId}, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('新增成功',{icon:1}); });
         }
       }
     });
@@ -179,7 +223,8 @@ layui.use(['layer','form','table'], function(){
       {field:'username',title:'用户名'},
       {field:'email',title:'邮箱'},
       {field:'remark',title:'备注'},
-      {field:'role',width:120,title:'角色',templet:function(d){return d.role==0?'<span class="layui-badge layui-bg-blue">超级管理员</span>':'<span class="layui-badge layui-bg-gray">普通管理员</span>';}},
+      {field:'role_name',title:'角色名称'},
+      {field:'role',width:120,title:'管理员类型',templet:function(d){return d.role==0?'<span class="layui-badge layui-bg-blue">超级管理员</span>':'<span class="layui-badge layui-bg-gray">普通管理员</span>';}},
       {field:'login_ip',width:140,title:'登录IP'},
       {field:'login_time',width:180,title:'登录时间'},
       {title:'操作',toolbar:'#sysuser-rowbar',width:150}

@@ -7,6 +7,7 @@ use App\Models\System\SysSystemLogModel;
 use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
+use App\Models\System\SysRoleModel;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
 use Exception;
@@ -26,6 +27,7 @@ class SysUserService
     public SysSystemLogModel $sysSystemLogModel;
     public SysDictModel $sysDictModel;
     public SysUserRoleModel $sysUserRoleModel;
+    public SysRoleModel $sysRoleModel;
 
     /**
      * 构造方法
@@ -39,6 +41,7 @@ class SysUserService
         $this->sysOperateLogModel    = new SysOperateLogModel();
         $this->sysSystemLogModel     = new SysSystemLogModel();
         $this->sysUserRoleModel      = new SysUserRoleModel();
+        $this->sysRoleModel          = new SysRoleModel();
     }
 
     /**
@@ -57,10 +60,11 @@ class SysUserService
         }
 
         $data = $this->sysUserModel->paginates($where, '*', $limit, ['id' => 'desc']);
-
+       
         foreach ($data['data'] as &$item)
         {
             $item['login_time'] = date('Y-m-d H:i:s', $item['login_time']);
+            $item['role_name']  = $this->sysRoleModel->findById($item['role_id'])['name'] ?? '';
         }
 
         return Result::success($data);
@@ -118,12 +122,14 @@ class SysUserService
      * @param string $password
      * @return array
      */
-    public function addSysUser(string $username, string $password, string $email = '', string $remark = '', int $role = 1): array
+    public function addSysUser(string $username, string $password, string $email = '', string $remark = '', int $role = 1, int $roleId = 0): array
     {
         if ($password === '')
         {
             $password = '123456';
         }
+        
+        $roleName = $this->sysRoleModel->findById($roleId)['name'] ?? '';
 
         $insert = [
             'username'      => $username,
@@ -131,6 +137,8 @@ class SysUserService
             'email'         => $email,
             'remark'        => $remark,
             'role'          => $role,
+            'role_id'       => $roleId,
+            'role_name'     => $roleName,
             'create_time'   => time(),
             'update_time'   => time(),
         ];
@@ -153,7 +161,7 @@ class SysUserService
      * @param string $password
      * @return array
      */
-    public function updateSysUser(int $id, string $username, string $password, string $email = '', string $remark = '', ?int $role = null): array
+    public function updateSysUser(int $id, string $username, string $password, string $email = '', string $remark = '', ?int $role = null, ?int $roleId = null): array
     {
         $update = [
             'username'      => $username,
@@ -170,6 +178,12 @@ class SysUserService
         if ($role !== null)
         {
             $update['role'] = $role;
+        }
+
+        if ($roleId !== null)
+        {
+            $update['role_id'] = $roleId;
+            $update['role_name'] = $roleId;
         }
 
         $res = $this->sysUserModel->updateById($id, $update);

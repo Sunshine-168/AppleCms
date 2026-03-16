@@ -40,6 +40,15 @@ class SysRole extends Controller
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
     /**
+     * 获取角色下拉选项
+     * @return JsonResponse
+     */
+    public function getRoleOptions(): JsonResponse
+    {
+        $res = $this->systemRoleService->getRoleOptions();
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
+    }
+    /**
      * 添加角色
      * @param Request $request
      * @return JsonResponse

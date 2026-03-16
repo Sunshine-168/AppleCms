@@ -105,8 +105,9 @@ class SysUser extends Controller
         $email    = (string) $request->input('email', '');
         $remark   = (string) $request->input('remark', '');
         $role     = (int) $request->input('role', 1);
+        $roleId   = (int) $request->input('role_id', 0);
 
-        $data = $this->systemUserService->addSysUser($username, $password, $email, $remark, $role);
+        $data = $this->systemUserService->addSysUser($username, $password, $email, $remark, $role, $roleId);
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
@@ -124,8 +125,9 @@ class SysUser extends Controller
         $email    = (string) $request->input('email', '');
         $remark   = (string) $request->input('remark', '');
         $role     = $request->has('role') ? (int) $request->input('role', 1) : null;
+        $roleId   = $request->has('role_id') ? (int) $request->input('role_id', 0) : null;
 
-        $data     = $this->systemUserService->updateSysUser($id, $username, $password, $email, $remark, $role);
+        $data     = $this->systemUserService->updateSysUser($id, $username, $password, $email, $remark, $role, $roleId);
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }

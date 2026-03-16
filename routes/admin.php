@@ -41,6 +41,7 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
     // 角色管理
     Route::get('/system/roles', [SysRole::class, 'index']);// 显示角色管理页
     Route::get('/system/roles/list', [SysRole::class, 'getRoleLists']);// 获取角色列表
+    Route::get('/system/roles/options', [SysRole::class, 'getRoleOptions']);// 角色下拉选项
     Route::post('/system/roles/add', [SysRole::class, 'addRole']);// 新增角色
     Route::post('/system/roles/update', [SysRole::class, 'updateRole']);// 更新角色
     Route::post('/system/roles/delete', [SysRole::class, 'deleteRole']);// 删除角色

@@ -58,6 +58,16 @@ class SysRoleService
         }
         return Result::success($data);
     }
+        
+    /**
+     * 获取角色下拉选项
+     * @return array
+     */
+    public function getRoleOptions(): array
+    {
+        $list = $this->sysRoleModel->selectByCondition([], ['id', 'name', 'status'], ['sort' => 'desc', 'id' => 'desc']);
+        return Result::success($list);
+    }
 
     /**
      * 添加角色
