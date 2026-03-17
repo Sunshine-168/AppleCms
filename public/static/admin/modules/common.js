@@ -1,2 +1,2 @@
 /** layuiAdmin.std-v1.0.0 LPPL License By http://www.layui.com/admin/ */
- ;layui.define(function(e){var i=(layui.$,layui.layer,layui.laytpl,layui.setter,layui.view,layui.admin);i.events.logout=function(){i.req({url:"/admin/logout",type:"get",data:{},done:function(e){i.exit(function(){location.href="/admin/login"})}})},e("common",{})});
+ ;layui.define(function(e){var i=(layui.$,layui.layer,layui.laytpl,layui.setter,layui.view,layui.admin),t=function(){var e=location.pathname||"",i=e.indexOf("/admin");return i>=0?e.substring(0,i):""};i.events.logout=function(){var e=t();i.req({url:e+"/admin/logout",type:"get",data:{},done:function(){i.exit(function(){location.href=e+"/admin/login"})}})},e("common",{})});
