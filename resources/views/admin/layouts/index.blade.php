@@ -88,7 +88,7 @@
         <!-- 侧边菜单 -->
         <div class="layui-side layui-side-menu">
             <div class="layui-side-scroll">
-                <div class="layui-logo" lay-href="home/console.html">
+                <div class="layui-logo" lay-href="/admin/welcome">
                     <span> {{conf('name')}} </span>
                 </div>
 
@@ -133,7 +133,7 @@
             </div>
             <div class="layui-tab" lay-unauto lay-allowClose="true" lay-filter="layadmin-layout-tabs">
                 <ul class="layui-tab-title" id="LAY_app_tabsheader">
-                    <li lay-id="home/console.html" lay-attr="home/console.html" class="layui-this"><i class="layui-icon layui-icon-home"></i></li>
+                    <li lay-id="/admin/welcome" lay-attr="/admin/welcome" class="layui-this"><i class="layui-icon layui-icon-home"></i></li>
                 </ul>
             </div>
         </div>
@@ -142,7 +142,7 @@
         <!-- 主体内容 -->
         <div class="layui-body" id="LAY_app_body">
             <div class="layadmin-tabsbody-item layui-show">
-                <iframe src="home/console.html" frameborder="0" class="layadmin-iframe"></iframe>
+                <iframe src="/admin/welcome" frameborder="0" class="layadmin-iframe"></iframe>
             </div>
         </div>
 

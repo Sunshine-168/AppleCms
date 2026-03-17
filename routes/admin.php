@@ -31,6 +31,8 @@ Route::middleware([
 Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::class])->prefix('admin')->group(function () {
     Route::get('/', [Index::class, 'index']); // 后台首页
     Route::get('/captcha', [Index::class, 'captcha']);   // 输出验证码图片
+    Route::get('/welcome', [Index::class, 'welcome'])->name('admin.welcome');// 欢迎页
+    Route::get('/welcome/stats', [Index::class, 'welcomeStats'])->name('admin.welcome.stats');// 欢迎页统计数据
 
     Route::get('/login', [SysUser::class, 'showLogin']); // 显示登录页
     Route::post('/login', [SysUser::class, 'login']);    // 表单提交处理登录
