@@ -88,18 +88,25 @@ class SysFile extends Controller
         $path = (string)($row['path'] ?? '');
         $path = preg_replace('#^https?://[^/]+#i', '', $path);
         $path = ltrim((string)$path, '/');
-        if (str_starts_with($path, 'storage/')) {
-            $path = substr($path, 8);
-        }
         if ($path === '') {
             abort(404);
         }
 
-        $fullPath = Storage::disk('public')->path($path);
-        if (!is_file($fullPath)) {
-            abort(404);
+        $publicPath = public_path($path);
+        if (is_file($publicPath)) {
+            return response()->file($publicPath);
         }
 
-        return response()->file($fullPath);
+        $diskPath = $path;
+        if (str_starts_with($diskPath, 'storage/')) {
+            $diskPath = substr($diskPath, 8);
+        }
+
+        $fullPath = Storage::disk('public')->path($diskPath);
+        if (is_file($fullPath)) {
+            return response()->file($fullPath);
+        }
+
+        abort(404);
     }
 }

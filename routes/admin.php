@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\System\SysFile;
 use App\Http\Controllers\Admin\System\SysShortcut;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\System\SysPerm;
+use App\Http\Controllers\Admin\Video\Video;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminOperateLog;
@@ -74,9 +75,55 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
     Route::post('/system/dicts/delete', [SysDict::class, 'deleteSysSet']);// 删除系统字典
     Route::post('/system/dicts/state', [SysDict::class, 'updateState']);// 更新系统字典状态
+   
+    // 快捷菜单管理
+    Route::get('/system/shortcut', [SysShortcut::class, 'index'])->name('admin.quick.system');// 显示快捷菜单管理页
+    Route::get('/system/shortcut/list', [SysShortcut::class, 'getShortcutList'])->name('admin.quick.system.list');// 获取快捷菜单列表
+    
+    // 视频管理
+    Route::get('/video', [Video::class, 'index'])->name('admin.video.index');
+    Route::get('/video/index', [Video::class, 'index']);// 视频管理首页
+    Route::get('/video/list', [Video::class, 'getVideoLists'])->name('admin.video.list');// 获取视频列表
+    Route::get('/video/info', [Video::class, 'getVideoInfo'])->name('admin.video.info');// 获取视频详情
+    Route::post('/video/save', [Video::class, 'saveVideo'])->name('admin.video.save');// 保存视频
+    Route::post('/video/delete', [Video::class, 'deleteVideo'])->name('admin.video.delete');// 删除视频
+    Route::get('/video/types/options', [Video::class, 'getTypeOptions'])->name('admin.video.types.options');// 视频类型下拉选项
+    Route::get('/video/collect/options', [Video::class, 'getCollectSourceOptions'])->name('admin.video.collect.options');// 视频采集源下拉选项
+    
+    // 视频类型管理
+    Route::get('/video/types', [Video::class, 'showTypes'])->name('admin.video.types');// 显示视频类型管理页
+    Route::get('/video/types/list', [Video::class, 'getTypeLists'])->name('admin.video.types.list');// 获取视频类型列表
+    Route::post('/video/types/save', [Video::class, 'saveType'])->name('admin.video.types.save');// 保存视频类型
+    Route::post('/video/types/delete', [Video::class, 'deleteType'])->name('admin.video.types.delete');// 删除视频类型
 
-    Route::get('/system/shortcut', [SysShortcut::class, 'index'])->name('admin.quick.system');
-    Route::get('/system/shortcut/list', [SysShortcut::class, 'getShortcutList'])->name('admin.quick.system.list');
+    // 视频采集源管理
+    Route::get('/video/collects', [Video::class, 'showCollectSources'])->name('admin.video.collects');// 显示视频采集源管理页
+    Route::get('/video/collects/list', [Video::class, 'getCollectSourceLists'])->name('admin.video.collects.list');// 获取视频采集源列表
+    Route::post('/video/collects/save', [Video::class, 'saveCollectSource'])->name('admin.video.collects.save');// 保存视频采集源
+    Route::post('/video/collects/delete', [Video::class, 'deleteCollectSource'])->name('admin.video.collects.delete');// 删除视频采集源
+
+    // 视频标签管理
+    Route::get('/video/tags', [Video::class, 'showTags'])->name('admin.video.tags');// 显示视频标签管理页
+    Route::get('/video/tags/list', [Video::class, 'getTagLists'])->name('admin.video.tags.list');// 获取视频标签列表
+    Route::post('/video/tags/save', [Video::class, 'saveTag'])->name('admin.video.tags.save');// 保存视频标签
+    Route::post('/video/tags/delete', [Video::class, 'deleteTag'])->name('admin.video.tags.delete');// 删除视频标签
+    // 视频演员管理
+    Route::get('/video/actors', [Video::class, 'showActors'])->name('admin.video.actors');// 显示视频演员管理页
+    Route::get('/video/actors/list', [Video::class, 'getActorLists'])->name('admin.video.actors.list');// 获取视频演员列表
+    Route::post('/video/actors/save', [Video::class, 'saveActor'])->name('admin.video.actors.save');// 保存视频演员     
+    Route::post('/video/actors/delete', [Video::class, 'deleteActor'])->name('admin.video.actors.delete');// 删除视频演员     
+
+    // 视频源管理
+    Route::get('/video/sources', [Video::class, 'showSources'])->name('admin.video.sources');// 显示视频源管理页
+    Route::get('/video/sources/list', [Video::class, 'getSourceLists'])->name('admin.video.sources.list');// 获取视频源列表
+    Route::post('/video/sources/save', [Video::class, 'saveSource'])->name('admin.video.sources.save');// 保存视频源
+    Route::post('/video/sources/delete', [Video::class, 'deleteSource'])->name('admin.video.sources.delete');// 删除视频源
+    
+    // 视频集管理
+    Route::get('/video/episodes', [Video::class, 'showEpisodes'])->name('admin.video.episodes');// 显示视频集管理页
+    Route::get('/video/episodes/list', [Video::class, 'getEpisodeLists'])->name('admin.video.episodes.list');// 获取视频集列表
+    Route::post('/video/episodes/save', [Video::class, 'saveEpisode'])->name('admin.video.episodes.save');// 保存视频集
+    Route::post('/video/episodes/delete', [Video::class, 'deleteEpisode'])->name('admin.video.episodes.delete');// 删除视频集
     
     // 附件管理
     Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页

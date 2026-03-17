@@ -112,17 +112,27 @@ class SysFileService
         // 年月目录
         $dir = 'uploads/' . date('Y/m');
 
-        $stored = $file->storeAs($dir, $filename, 'public');
+        $saveDir = public_path($dir);
+        if (!is_dir($saveDir) && !@mkdir($saveDir, 0755, true) && !is_dir($saveDir)) {
+            return Result::fail('上传目录创建失败');
+        }
 
-        if (!$stored) {
+        try {
+            $moved = $file->move($saveDir, $filename);
+        } catch (\Throwable $e) {
+            return Result::fail($e->getMessage() ?: '文件保存失败');
+        }
+
+        if (!$moved) {
             return Result::fail('文件保存失败');
         }
 
-        $fullPath = Storage::disk('public')->path($stored);
+        $stored = $dir . '/' . $filename;
+        $fullPath = public_path($stored);
 
         $md5 = is_file($fullPath) ? md5_file($fullPath) : '';
 
-        $url = Storage::url($stored);
+        $url = '/' . ltrim(str_replace('\\', '/', $stored), '/');
 
         $type = $this->detectType($ext);
 
@@ -178,12 +188,19 @@ class SysFileService
 
         foreach ($rows as $row) {
             $path = (string)($row['path'] ?? '');
-            $diskPath = $this->normalizePublicDiskPath($path);
-            if ($diskPath === '') {
-                continue;
-            }
+            $normalized = $this->normalizePath($path);
+            if ($normalized !== '') {
+                $publicPath = public_path($normalized);
+                if (is_file($publicPath)) {
+                    @unlink($publicPath);
+                }
 
-            Storage::disk('public')->delete($diskPath);
+                $diskPath = $normalized;
+                if (str_starts_with($diskPath, 'storage/')) {
+                    $diskPath = substr($diskPath, 8);
+                }
+                Storage::disk('public')->delete($diskPath);
+            }
         }
 
         $ok = $this->sysFileModel->deleteByCondition(
@@ -197,15 +214,10 @@ class SysFileService
         return Result::success([], '删除成功');
     }
 
-    protected function normalizePublicDiskPath(string $path): string
+    protected function normalizePath(string $path): string
     {
         $path = preg_replace('#^https?://[^/]+#i', '', $path);
         $path = ltrim((string)$path, '/');
-
-        if (str_starts_with($path, 'storage/')) {
-            $path = substr($path, 8);
-        }
-
         return (string)$path;
     }
 

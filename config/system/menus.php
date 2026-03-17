@@ -35,10 +35,10 @@ return [
 
                         'sub' => [
 
-                            [
-                                'name' => '视频管理',
-                                'route' => 'admin.vod.index',
-                            ],
+                            // [
+                            //     'name' => '视频管理',
+                            //     'route' => 'admin.video.index',
+                            // ],
 
                             [
                                 'name' => '文章管理',
