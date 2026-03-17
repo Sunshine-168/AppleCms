@@ -12,6 +12,8 @@ use App\Support\Utils\Result;
 class SysPermService
 {
     public SysPermModel $sysPermModel;
+    public SysUserModel $sysUserModel;
+    public SysRolePermModel $sysRolePermModel;
 
     /**
      * 构造方法
@@ -20,6 +22,8 @@ class SysPermService
     public function __construct()
     {
         $this->sysPermModel = new SysPermModel();
+        $this->sysUserModel = new SysUserModel();
+        $this->sysRolePermModel = new SysRolePermModel();
     }
 
     /**
@@ -498,7 +502,12 @@ class SysPermService
                     }
                     else
                     {
-                        $item['url'] = $api;
+                        $url = trim($api);
+                        if ($url !== '' && !str_starts_with($url, '/') && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://'))
+                        {
+                            $url = '/' . $url;
+                        }
+                        $item['url'] = $url;
                     }
                 }
                 $res[] = $item;

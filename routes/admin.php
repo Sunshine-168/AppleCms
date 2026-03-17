@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\System\SysSchedule;
 use App\Http\Controllers\Admin\System\SysRole;
 use App\Http\Controllers\Admin\System\SysDict;
 use App\Http\Controllers\Admin\System\SysFile;
+use App\Http\Controllers\Admin\System\SysShortcut;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\System\SysPerm;
 use App\Http\Controllers\Admin\Index;
@@ -73,6 +74,9 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
     Route::post('/system/dicts/delete', [SysDict::class, 'deleteSysSet']);// 删除系统字典
     Route::post('/system/dicts/state', [SysDict::class, 'updateState']);// 更新系统字典状态
+
+    Route::get('/system/shortcut', [SysShortcut::class, 'index'])->name('admin.quick.system');
+    Route::get('/system/shortcut/list', [SysShortcut::class, 'getShortcutList'])->name('admin.quick.system.list');
     
     // 附件管理
     Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页

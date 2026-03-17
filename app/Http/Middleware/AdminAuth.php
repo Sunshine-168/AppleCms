@@ -48,7 +48,7 @@ class AdminAuth
         return $request->is([
             'admin/login',
             'admin/captcha',
-            'admin/logout'
+            'admin/logout',
         ]);
     }
 
