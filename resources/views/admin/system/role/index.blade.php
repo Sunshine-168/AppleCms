@@ -54,9 +54,22 @@
 
 <script type="text/html" id="role-actions">
 @verbatim
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="perms">设置权限</a>
   <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">编辑</a>
   <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a>
 @endverbatim
+</script>
+
+<script type="text/html" id="role-perm-dialog-tpl">
+  <div style="padding:12px 12px 0 12px;">
+    <div class="layui-btn-container">
+      <button class="layui-btn layui-btn-sm layui-btn-primary" id="role-perm-expand">展开</button>
+      <button class="layui-btn layui-btn-sm layui-btn-primary" id="role-perm-collapse">收起</button>
+      <button class="layui-btn layui-btn-sm layui-btn-primary" id="role-perm-checkall">全选</button>
+      <button class="layui-btn layui-btn-sm layui-btn-primary" id="role-perm-uncheckall">全不选</button>
+    </div>
+    <div id="role-perm-tree" style="overflow:auto;height:420px;border:1px solid #eee;padding:8px;"></div>
+  </div>
 </script>
 
 <script type="text/html" id="role-dialog-tpl">
@@ -100,11 +113,12 @@
 
 <script src="{{ asset('static/admin/layui/layui.js') }}"></script>
 <script>
-  layui.use(['table', 'form', 'layer'], function () {
+  layui.use(['table', 'form', 'layer', 'tree'], function () {
     var $ = layui.$;
     var table = layui.table;
     var form = layui.form;
     var layer = layui.layer;
+    var tree = layui.tree;
 
     var csrfToken = $('meta[name=csrf-token]').attr('content');
     if (csrfToken) {
@@ -124,6 +138,229 @@
         layer.msg(res && res.msg ? res.msg : '操作失败', {icon: 2});
       }, 'json').fail(function () {
         layer.msg('请求失败', {icon: 2});
+      });
+    }
+
+    function fetchJson(url, data, ok, fail) {
+      $.getJSON(url, data || {}, function (res) {
+        if (res && res.code === 0) {
+          ok && ok(res);
+          return;
+        }
+        fail && fail(res);
+      }).fail(function () {
+        fail && fail(null);
+      });
+    }
+
+    function collectCheckedIds(nodes) {
+      var ids = [];
+      var walk = function (arr) {
+        for (var i = 0; i < arr.length; i++) {
+          var n = arr[i] || {};
+          if (n.id != null) {
+            ids.push(parseInt(n.id, 10));
+          }
+          if (n.children && n.children.length) {
+            walk(n.children);
+          }
+        }
+      };
+      walk(nodes || []);
+      var map = {};
+      var out = [];
+      for (var j = 0; j < ids.length; j++) {
+        var id = ids[j];
+        if (!map[id]) {
+          map[id] = true;
+          out.push(id);
+        }
+      }
+      return out;
+    }
+
+    function collectAllNodeIds(nodes) {
+      var ids = [];
+      var walk = function (arr) {
+        for (var i = 0; i < arr.length; i++) {
+          var n = arr[i] || {};
+          if (n.id != null) {
+            ids.push(parseInt(n.id, 10));
+          }
+          if (n.children && n.children.length) {
+            walk(n.children);
+          }
+        }
+      };
+      walk(nodes || []);
+      var map = {};
+      var out = [];
+      for (var j = 0; j < ids.length; j++) {
+        var id = ids[j];
+        if (!map[id]) {
+          map[id] = true;
+          out.push(id);
+        }
+      }
+      return out;
+    }
+
+    function domUncheckAll($root) {
+      var $inputs = $root.find('input[name="layuiTreeCheck"]:checked');
+      $inputs.each(function () {
+        var $input = $(this);
+        if ($input.prop('disabled')) {
+          return;
+        }
+        var $ui = $input.next();
+        if ($ui && $ui.length) {
+          $ui.trigger('click');
+        }
+      });
+    }
+
+    function applyChecked(treeData, checkedMap) {
+      var walk = function (arr) {
+        for (var i = 0; i < arr.length; i++) {
+          var n = arr[i] || {};
+          var id = n.id != null ? String(n.id) : '';
+          if (id && checkedMap[id]) {
+            n.checked = true;
+          }
+          if (n.children && n.children.length) {
+            walk(n.children);
+          }
+        }
+      };
+      walk(treeData || []);
+      return treeData;
+    }
+
+    function applyAllChecked(treeData, checked) {
+      var walk = function (arr) {
+        for (var i = 0; i < arr.length; i++) {
+          var n = arr[i] || {};
+          n.checked = !!checked;
+          if (n.children && n.children.length) {
+            walk(n.children);
+          }
+        }
+      };
+      walk(treeData || []);
+      return treeData;
+    }
+
+    function setAllSpread(treeData, spread) {
+      var walk = function (arr) {
+        for (var i = 0; i < arr.length; i++) {
+          var n = arr[i] || {};
+          n.spread = !!spread;
+          if (n.children && n.children.length) {
+            walk(n.children);
+          }
+        }
+      };
+      walk(treeData || []);
+      return treeData;
+    }
+
+    function openPerms(role) {
+      role = role || {};
+      var roleId = parseInt(role.id || '0', 10);
+      if (roleId < 1) {
+        layer.msg('缺少角色ID', {icon: 2});
+        return;
+      }
+
+      var content = $('#role-perm-dialog-tpl').html();
+      var loading = layer.load(1);
+
+      fetchJson('/admin/system/roles/perms/ids', {role_id: roleId}, function (idsRes) {
+        var checkedIds = Array.isArray(idsRes.data) ? idsRes.data : [];
+        var checkedMap = {};
+        for (var i = 0; i < checkedIds.length; i++) {
+          checkedMap[String(checkedIds[i])] = true;
+        }
+
+        fetchJson('/admin/system/perms/tree', {}, function (treeRes) {
+          layer.close(loading);
+
+          var treeData = Array.isArray(treeRes.data) ? treeRes.data : [];
+          treeData = applyChecked(treeData, checkedMap);
+          treeData = setAllSpread(treeData, true);
+
+          var treeId = 'rolePermTree';
+          var currentTreeData = treeData;
+
+          var idx = layer.open({
+            type: 1,
+            title: '设置权限 - ' + (role.name || ''),
+            area: ['720px', '560px'],
+            content: content,
+            btn: ['保存', '取消'],
+            success: function (layero) {
+              tree.render({
+                elem: $(layero).find('#role-perm-tree'),
+                data: currentTreeData,
+                showCheckbox: true,
+                id: treeId
+              });
+
+              if (checkedIds && checkedIds.length) {
+                tree.setChecked(treeId, checkedIds);
+              }
+
+              $(layero).find('#role-perm-expand').on('click', function (e) {
+                e.preventDefault();
+                var keepIds = collectCheckedIds(tree.getChecked(treeId));
+                currentTreeData = setAllSpread(currentTreeData, true);
+                tree.reload(treeId, {data: currentTreeData});
+                if (keepIds && keepIds.length) {
+                  tree.setChecked(treeId, keepIds);
+                }
+              });
+              $(layero).find('#role-perm-collapse').on('click', function (e) {
+                e.preventDefault();
+                var keepIds = collectCheckedIds(tree.getChecked(treeId));
+                currentTreeData = setAllSpread(currentTreeData, false);
+                tree.reload(treeId, {data: currentTreeData});
+                if (keepIds && keepIds.length) {
+                  tree.setChecked(treeId, keepIds);
+                }
+              });
+              $(layero).find('#role-perm-checkall').on('click', function (e) {
+                e.preventDefault();
+                var allIds = collectAllNodeIds(currentTreeData);
+                if (allIds && allIds.length) {
+                  tree.setChecked(treeId, allIds);
+                }
+              });
+              $(layero).find('#role-perm-uncheckall').on('click', function (e) {
+                e.preventDefault();
+                domUncheckAll($(layero).find('#role-perm-tree'));
+              });
+            },
+            yes: function () {
+              var checked = tree.getChecked(treeId);
+              var permIds = collectCheckedIds(checked);
+              var payload = {role_id: roleId, perm_ids: permIds};
+              var saveLoading = layer.load(1);
+              apiPost('/admin/system/roles/perms/set', payload, function () {
+                layer.close(saveLoading);
+                layer.close(idx);
+                layer.msg('保存成功', {icon: 1});
+              });
+            }
+          });
+
+        }, function (res) {
+          layer.close(loading);
+          layer.msg(res && res.msg ? res.msg : '获取权限树失败', {icon: 2});
+        });
+
+      }, function (res) {
+        layer.close(loading);
+        layer.msg(res && res.msg ? res.msg : '获取角色权限失败', {icon: 2});
       });
     }
 
@@ -210,7 +447,7 @@
         {field: 'remark', title: '备注', minWidth: 200},
         {field: 'create_time', title: '创建时间', width: 180},
         {field: 'update_time', title: '更新时间', width: 180},
-        {title: '操作', width: 140, toolbar: '#role-actions'}
+        {title: '操作', width: 220, toolbar: '#role-actions'}
       ]]
     });
 
@@ -226,6 +463,10 @@
 
     table.on('tool(role-table)', function (obj) {
       var data = obj.data || {};
+      if (obj.event === 'perms') {
+        openPerms(data);
+        return;
+      }
       if (obj.event === 'edit') {
         openForm(data);
         return;

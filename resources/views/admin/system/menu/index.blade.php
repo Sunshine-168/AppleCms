@@ -478,7 +478,18 @@
           });
         },
         yes: function (index, layero) {
-          var field = form.val('menu-form') || {};
+          var $layer = $(layero);
+          var field = {
+            id: $layer.find('input[name=id]').val() || '',
+            type: $layer.find('select[name=type]').val() || '1',
+            pid: $layer.find('select[name=pid]').val() || '0',
+            name: $.trim($layer.find('input[name=name]').val() || ''),
+            api: $.trim($layer.find('input[name=api]').val() || ''),
+            method: $.trim($layer.find('input[name=method]').val() || ''),
+            code: $.trim($layer.find('input[name=code]').val() || ''),
+            icon: $.trim($layer.find('input[name=icon]').val() || ''),
+            sort: $layer.find('input[name=sort]').val() || '0'
+          };
           field.pid = parseInt(field.pid || '0', 10);
           field.type = parseInt(field.type || '1', 10);
           field.sort = parseInt(field.sort || '0', 10);

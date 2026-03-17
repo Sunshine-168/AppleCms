@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\System\SysPerm;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminOperateLog;
+use App\Http\Middleware\AdminPermission;
 
 Route::middleware([
     EncryptCookies::class,
@@ -27,7 +28,7 @@ Route::middleware([
     VerifyCsrfToken::class,
 ])->post('api/admin/login', [SysUser::class, 'login']);
 
-Route::middleware([AdminOperateLog::class, AdminAuth::class])->prefix('admin')->group(function () {
+Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::class])->prefix('admin')->group(function () {
     Route::get('/', [Index::class, 'index']); // 后台首页
     Route::get('/captcha', [Index::class, 'captcha']);   // 输出验证码图片
 
@@ -52,6 +53,8 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class])->prefix('admin')->
     Route::post('/system/roles/delete', [SysRole::class, 'deleteRole']);// 删除角色
     Route::post('/system/roles/perms/set', [SysRole::class, 'setRolePerms']);// 设置角色权限
     Route::get('/system/roles/perms/ids', [SysRole::class, 'getRolePermIds']);// 获取角色权限ID列表
+
+    Route::get('/system/perms/tree', [SysPerm::class, 'getPermTree']);// 权限树（角色授权用）
 
     // 菜单管理（权限）
     Route::get('/system/menus', [SysPerm::class, 'index']);// 显示菜单管理页

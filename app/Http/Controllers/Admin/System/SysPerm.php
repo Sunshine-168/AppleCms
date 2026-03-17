@@ -93,4 +93,14 @@ class SysPerm extends Controller
         $data = $this->sysPermService->deletePermCascade($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+    
+    /**
+     * 获取权限树（角色授权用）
+     * @return JsonResponse
+     */
+    public function getPermTree(): JsonResponse
+    {
+        $data = $this->sysPermService->getPermTree();
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 }

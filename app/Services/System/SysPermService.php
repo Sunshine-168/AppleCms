@@ -412,6 +412,21 @@ class SysPermService
 
         $tree = $this->buildTree($list);
         $this->sortTree($tree);
+        $applyTitle = function(array &$nodes) use (&$applyTitle): void {
+            foreach ($nodes as &$n)
+            {
+                if (!isset($n['title']) || $n['title'] === '')
+                {
+                    $n['title'] = (string) ($n['name'] ?? '');
+                }
+                if (!empty($n['children']) && is_array($n['children']))
+                {
+                    $applyTitle($n['children']);
+                }
+            }
+            unset($n);
+        };
+        $applyTitle($tree);
         return Result::success($tree);
     }
     /**
