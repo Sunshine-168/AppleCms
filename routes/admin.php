@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\System\SysRole;
 use App\Http\Controllers\Admin\System\SysDict;
 use App\Http\Controllers\Admin\System\SysFile;
 use App\Http\Controllers\Admin\System\SysUser;
+use App\Http\Controllers\Admin\System\SysPerm;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminOperateLog;
@@ -51,6 +52,14 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class])->prefix('admin')->
     Route::post('/system/roles/delete', [SysRole::class, 'deleteRole']);// 删除角色
     Route::post('/system/roles/perms/set', [SysRole::class, 'setRolePerms']);// 设置角色权限
     Route::get('/system/roles/perms/ids', [SysRole::class, 'getRolePermIds']);// 获取角色权限ID列表
+
+    // 菜单管理（权限）
+    Route::get('/system/menus', [SysPerm::class, 'index']);// 显示菜单管理页
+    Route::get('/system/menus/list', [SysPerm::class, 'getMenuLists']);// 获取菜单列表（树形展开）
+    Route::get('/system/menus/parents', [SysPerm::class, 'getMenuParentOptions']);// 父级菜单下拉
+    Route::post('/system/menus/add', [SysPerm::class, 'addMenu']);// 新增菜单/权限
+    Route::post('/system/menus/update', [SysPerm::class, 'updateMenu']);// 更新菜单/权限
+    Route::post('/system/menus/delete', [SysPerm::class, 'deleteMenu']);// 删除菜单/权限（级联）
 
     // 字段管理（系统字典）
     Route::get('/system/dicts', [SysDict::class, 'index']);// 显示系统字典页

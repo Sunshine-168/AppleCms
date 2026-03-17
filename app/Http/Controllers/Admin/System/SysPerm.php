@@ -1,91 +1,96 @@
 <?php
+
 namespace App\Http\Controllers\Admin\System;
-use app\common\utils\Ajax;
-use app\common\utils\ServiceFactory;
-use think\facade\Request;
-use think\response\Json;
+use App\Http\Controllers\Controller;
+use App\Services\System\SysPermService;
+use App\Support\Utils\Ajax;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
- * 权限管理控制器
- * 负责权限点的增删改查与菜单树获取
+ * 菜单/权限控制器
  */
-class SysPerm
+class SysPerm extends Controller
 {
-    protected mixed $service;
+    protected SysPermService $sysPermService;
 
-    /**
-     * 构造方法
-     * 初始化 Service 实例（自动按版本路由到 v1）
-     */
     public function __construct()
     {
-        $this->service = ServiceFactory::make();
+        $this->sysPermService = new SysPermService();
+    }
+    /**
+     * 菜单/权限列表页
+     * @return View|Factory
+     */
+    public function index(): View|Factory
+    {
+        return view('admin.system.menu.index');
     }
 
     /**
-     * 权限列表
-     * 支持按名称、标识、类型、父级、API、HTTP 方法筛选
-     * 返回分页数据
+     * 获取菜单/权限列表
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getPermLists(): Json
+    public function getMenuLists(Request $request): JsonResponse
     {
-        $params = Request::only(['name','code','type','pid','api','method']);
-        $data = $this->service->getPermLists($params);
+        $params = $request->only(['name', 'code', 'api', 'type']);
+        $data = $this->sysPermService->getMenuFlatList($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 新增权限
-     * 允许创建菜单/按钮/接口型权限；接口型需填写 `api` 与 `method`
+     * 获取菜单/权限父级选项
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function addPerm(): Json
+    public function getMenuParentOptions(Request $request): JsonResponse
     {
-        $params = Request::only(['name','code','api','method','pid','type','icon','sort']);
-        $data = $this->service->addPerm($params);
+        $type = (int) $request->input('type', 1);
+        if (!in_array($type, [1, 2, 3], true))
+        {
+            $type = 1;
+        }
+        $data = $this->sysPermService->getParentOptions($type);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 更新权限
-     * 根据 `id` 更新权限基本信息；变更接口型方法会自动转为大写
+     * 添加菜单/权限
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function updatePerm(): Json
+    public function addMenu(Request $request): JsonResponse
     {
-        $id = (int)Request::param('id', 0);
-        $params = Request::only(['name','code','api','method','pid','type','icon','sort']);
-        $data = $this->service->updatePerm($id, $params);
+        $params = $request->only(['name', 'code', 'api', 'method', 'pid', 'type', 'icon', 'sort']);
+        $data = $this->sysPermService->addPerm($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 删除权限
-     * 根据 `id` 删除权限点；需注意可能影响已绑定的角色权限
+     * 更新菜单/权限
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function deletePerm(): Json
+    public function updateMenu(Request $request): JsonResponse
     {
-        $id = (int)Request::param('id', 0);
-        $data = $this->service->deletePerm($id);
+        $id = (int) $request->input('id', 0);
+        $params = $request->only(['name', 'code', 'api', 'method', 'pid', 'type', 'icon', 'sort']);
+        $data = $this->sysPermService->updatePerm($id, $params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
     /**
-     * 菜单树
-     * 返回仅包含 `type=1`（菜单型）的树形结构，用于前端渲染菜单
+     * 删除菜单/权限
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getMenuTree(): Json
+    public function deleteMenu(Request $request): JsonResponse
     {
-        $data = $this->service->getMenuTree();
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
-    }
-
-    /**
-     * 权限树（三级树形结构）
-     * 返回包含一级模块、二级菜单、三级按钮的完整树形结构
-     * 用于权限管理列表展示
-     */
-    public function getPermTree(): Json
-    {
-        $data = $this->service->getPermTree();
+        $id = (int) $request->input('id', 0);
+        $data = $this->sysPermService->deletePermCascade($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 }
