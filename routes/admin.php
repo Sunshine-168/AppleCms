@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\System\SysDict;
 use App\Http\Controllers\Admin\System\SysFile;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\Index;
+use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminOperateLog;
 
 Route::middleware([
@@ -25,7 +26,7 @@ Route::middleware([
     VerifyCsrfToken::class,
 ])->post('api/admin/login', [SysUser::class, 'login']);
 
-Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () {
+Route::middleware([AdminOperateLog::class, AdminAuth::class])->prefix('admin')->group(function () {
     Route::get('/', [Index::class, 'index']); // 后台首页
     Route::get('/captcha', [Index::class, 'captcha']);   // 输出验证码图片
 

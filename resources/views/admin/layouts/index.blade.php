@@ -67,12 +67,12 @@
                 </li>
                 <li class="layui-nav-item" lay-unselect>
                     <a href="javascript:;">
-                        <cite>贤心</cite>
+                        <cite>{{ session('admin_username') ?: '管理员' }}</cite>
                     </a>
                     <dl class="layui-nav-child">
                         <dd><a lay-href="/admin/set/user/password">修改密码</a></dd>
                         <hr>
-                        <dd layadmin-event="logout" style="text-align: center;"><a>退出</a></dd>
+                        <dd layadmin-event="logout" style="text-align: center;"><a>退出登录</a></dd>
                     </dl>
                 </li>
 
