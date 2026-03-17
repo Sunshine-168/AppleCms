@@ -179,11 +179,14 @@ class SysUser extends Controller
      */
     public function logout(Request $request): JsonResponse
     {  
+        $uid = (int) session('admin_uid', 0);
+        $token = (string) ($request->header('token') ?: $request->input('token', ''));
+
         $request->session()->forget(['admin_uid', 'admin_username']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $res = $this->systemUserService->logout();
+        $res = $this->systemUserService->logout($uid, $token);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
 

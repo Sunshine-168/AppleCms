@@ -312,9 +312,39 @@ class SysUserService
             return Result::fail('登入失败');
         }
     }
-
-    public function logout(): array
+    /**
+     * 退出登录
+     * 清空用户 token 并更新登录时间
+     * @param int $uid
+     * @param string $token
+     * @return array
+     */
+    public function logout(int $uid = 0, string $token = ''): array
     {
+        $time = time();
+
+        if ($uid > 0)
+        {
+            $this->sysUserModel->updateById($uid, [
+                'token' => '',
+                'update_time' => $time,
+            ]);
+        }
+        elseif ($token !== '')
+        {
+            $user = $this->sysUserModel->findByCondition([
+                ['token', '=', $token],
+            ]);
+
+            if (!empty($user) && !empty($user['id']))
+            {
+                $this->sysUserModel->updateById((int) $user['id'], [
+                    'token' => '',
+                    'update_time' => $time,
+                ]);
+            }
+        }
+
         return Result::success([], '退出成功');
     }
 
