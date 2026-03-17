@@ -171,6 +171,21 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
 
     }
+    
+    /**
+     * 退出登录
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function logout(Request $request): JsonResponse
+    {  
+        $request->session()->forget(['admin_uid', 'admin_username']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $res = $this->systemUserService->logout();
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
+    }
 
     /**
      * 显示修改密码页

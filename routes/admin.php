@@ -31,6 +31,7 @@ Route::middleware([AdminOperateLog::class])->prefix('admin')->group(function () 
 
     Route::get('/login', [SysUser::class, 'showLogin']); // 显示登录页
     Route::post('/login', [SysUser::class, 'login']);    // 表单提交处理登录
+    Route::match(['get', 'post'], '/logout', [SysUser::class, 'logout']); // 退出登录
     // 系统用户
     Route::get('/user', [SysUser::class,'index']);// 显示系统用户列表页
     Route::get('/user/list', [SysUser::class,'getSystemUserLists']);// 获取系统用户列表页

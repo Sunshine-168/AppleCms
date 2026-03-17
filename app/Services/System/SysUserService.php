@@ -313,6 +313,11 @@ class SysUserService
         }
     }
 
+    public function logout(): array
+    {
+        return Result::success([], '退出成功');
+    }
+
     /**
      * 获取系统用户登录日志列表
      * 支持按用户名、登录IP、时间范围筛选，返回分页数据
