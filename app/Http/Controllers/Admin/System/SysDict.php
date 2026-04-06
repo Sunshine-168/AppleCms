@@ -21,6 +21,7 @@ class SysDict extends Controller
     {
         $this->systemDictService = new SysDictService();
     }
+
     /**
      * 系统字典列表
      */
@@ -28,6 +29,7 @@ class SysDict extends Controller
     {
         return view('admin.system.dict.index');
     }
+
     /**
      * 获取系统字典列表
      */
@@ -41,6 +43,7 @@ class SysDict extends Controller
         $data = $this->systemDictService->getSysLists($dictType, $dictKey, $label, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
     /**
      * 添加系统字典
      */
@@ -59,6 +62,7 @@ class SysDict extends Controller
         $data = $this->systemDictService->addSysSet($dictType, $dictKey, $valueType, $dictValue, $enumLimit, $label, $sort, $status, $remark);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
     /**
      * 更新系统字典
      */
@@ -78,7 +82,7 @@ class SysDict extends Controller
         $data = $this->systemDictService->updateSysSet($id, $dictType, $dictKey, $valueType, $dictValue, $enumLimit, $label, $sort, $status, $remark);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除系统字典
      */

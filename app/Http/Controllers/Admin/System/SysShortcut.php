@@ -21,7 +21,7 @@ class SysShortcut extends Controller
     {
         $this->sysShortcutService = new SysShortcutService();
     }
-   
+
     /**
      * 显示系统快捷页
      */
@@ -29,6 +29,7 @@ class SysShortcut extends Controller
     {
         return view('admin.system.shortcut.index');
     }
+
     /**
      * 获取系统快捷列表
      */

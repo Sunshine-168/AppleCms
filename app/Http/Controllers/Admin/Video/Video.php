@@ -21,7 +21,7 @@ class Video extends Controller
     {
         $this->videoService = new VideoService();
     }
-    
+
     /**
      * 视频列表
      */
@@ -29,7 +29,7 @@ class Video extends Controller
     {
         return view('admin.video.index');
     }
-    
+
     /**
      * 获取视频列表
      */
@@ -47,7 +47,7 @@ class Video extends Controller
         $data = $this->videoService->getVideoLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 获取视频详情
      */
@@ -93,7 +93,7 @@ class Video extends Controller
         $data = $this->videoService->saveVideo($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频
      */
@@ -112,7 +112,7 @@ class Video extends Controller
         $data = $this->videoService->getTypeOptions();
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 获取采集源选项
      */
@@ -121,7 +121,7 @@ class Video extends Controller
         $data = $this->videoService->getCollectSourceOptions();
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 显示视频采集源
      */
@@ -141,7 +141,7 @@ class Video extends Controller
         $data = $this->videoService->getSourceLists($videoId, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频采集源
      */
@@ -162,7 +162,7 @@ class Video extends Controller
         $data = $this->videoService->saveSource($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频采集源
      */
@@ -181,7 +181,7 @@ class Video extends Controller
         $sourceId = (int)$request->input('source_id', 0);
         return view('admin.video.episode', compact('sourceId'));
     }
-    
+
     /**
      * 获取视频剧集列表
      */
@@ -192,7 +192,7 @@ class Video extends Controller
         $data = $this->videoService->getEpisodeLists($sourceId, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频剧集
      */
@@ -216,7 +216,7 @@ class Video extends Controller
         $data = $this->videoService->saveEpisode($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频剧集
      */
@@ -226,7 +226,7 @@ class Video extends Controller
         $data = $this->videoService->deleteEpisode($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 显示视频类型
      */
@@ -248,28 +248,30 @@ class Video extends Controller
         $data = $this->videoService->getVideoTypeLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频类型
      */
     public function saveType(Request $request): JsonResponse
     {
         $id = $request->has('id') ? (int)$request->input('id', 0) : null;
-        if ($id !== null && $id < 1) {
+
+        if ($id !== null && $id < 1)
+        {
             $id = null;
         }
 
         $payload = [
-            'name' => (string)$request->input('name', ''),
+            'name'      => (string)$request->input('name', ''),
             'parent_id' => (int)$request->input('parent_id', 0),
-            'sort' => (int)$request->input('sort', 0),
-            'status' => (int)$request->input('status', 1),
+            'sort'      => (int)$request->input('sort', 0),
+            'status'    => (int)$request->input('status', 1),
         ];
 
         $data = $this->videoService->saveVideoType($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频类型
      */
@@ -287,7 +289,7 @@ class Video extends Controller
     {
         return view('admin.video.collects');
     }
-    
+
     /**
      * 获取视频采集源列表
      */
@@ -301,7 +303,7 @@ class Video extends Controller
         $data = $this->videoService->getCollectSourceLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频采集源
      */
@@ -321,7 +323,7 @@ class Video extends Controller
         $data = $this->videoService->saveCollectSource($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频采集源
      */
@@ -339,7 +341,7 @@ class Video extends Controller
     {
         return view('admin.video.tags');
     }
-    
+
     /**
      * 获取视频标签列表
      */
@@ -352,7 +354,7 @@ class Video extends Controller
         $data = $this->videoService->getVideoTagLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频标签
      */
@@ -372,7 +374,7 @@ class Video extends Controller
         $data = $this->videoService->saveVideoTag($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频标签
      */
@@ -390,7 +392,7 @@ class Video extends Controller
     {
         return view('admin.video.actors');
     }
-    
+
     /**
      * 获取视频演员列表
      */
@@ -403,7 +405,7 @@ class Video extends Controller
         $data = $this->videoService->getActorLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 保存视频演员
      */
@@ -424,7 +426,7 @@ class Video extends Controller
         $data = $this->videoService->saveActor($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 删除视频演员
      */

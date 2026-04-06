@@ -89,6 +89,7 @@ class SysSchedule extends Controller
             $remark,
             $sort
         );
+
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
 

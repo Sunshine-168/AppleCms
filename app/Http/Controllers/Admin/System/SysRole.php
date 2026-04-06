@@ -16,6 +16,7 @@ class SysRole extends Controller
     {
         $this->systemRoleService = new SysRoleService();
     }
+
     /**
      * 显示角色列表页面
      * @return View|Factory
@@ -24,6 +25,7 @@ class SysRole extends Controller
     {
         return view('admin.system.role.index');
     }
+
     /**
      * 获取角色列表
      * @param Request $request
@@ -39,6 +41,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->getRoleLists($name, $code, $status, $limit);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 获取角色下拉选项
      * @return JsonResponse
@@ -48,6 +51,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->getRoleOptions();
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 添加角色
      * @param Request $request
@@ -64,6 +68,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->addRole($name, $code, $remark, $status, $sort);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 更新角色
      * @param Request $request
@@ -81,6 +86,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->updateRole($id, $name, $code, $remark, $status, $sort);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 删除角色
      * @param Request $request
@@ -92,6 +98,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->deleteRole($id);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 设置角色权限
      * @param Request $request
@@ -108,6 +115,7 @@ class SysRole extends Controller
         $res = $this->systemRoleService->setRolePerms($roleId, $permIds);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
+
     /**
      * 获取角色权限ID列表
      * @param Request $request
