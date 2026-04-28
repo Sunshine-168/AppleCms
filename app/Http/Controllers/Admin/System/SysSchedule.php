@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\System\SysScheduleService;
+use App\Services\Admin\System\SysScheduleService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;

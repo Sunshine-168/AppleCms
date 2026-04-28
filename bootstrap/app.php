@@ -1,13 +1,13 @@
 <?php
 
 use App\Models\System\SysScheduleModel;
-use App\Services\System\SysScheduleService;
+use App\Services\Admin\System\SysScheduleService;
+use App\Support\Utils\Syslog;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Schema;
-use App\Support\Utils\Syslog;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         try {
             // 表不存在则直接返回
-            if (!Schema::hasTable('sys_schedule')) 
+            if (!Schema::hasTable('sys_schedule'))
             {
                 return;
             }
@@ -33,10 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // 使用 IOC 注入 Service
             $service = app(SysScheduleService::class);
 
-            foreach ($tasks as $task) 
+            foreach ($tasks as $task)
             {
                 $id = (int) ($task['id'] ?? 0);
-                if ($id <= 0) 
+                if ($id <= 0)
                 {
                     continue;
                 }
@@ -52,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 $timezone = trim((string) ($task['timezone'] ?? ''));
 
-                if (!in_array($timezone, timezone_identifiers_list())) 
+                if (!in_array($timezone, timezone_identifiers_list()))
                 {
                     $timezone = config('app.timezone', 'Asia/Shanghai');
                 }
@@ -67,17 +67,17 @@ return Application::configure(basePath: dirname(__DIR__))
                   ->cron($cron)
                   ->timezone($timezone);
 
-                if ($withoutOverlapping) 
+                if ($withoutOverlapping)
                 {
                     $event->withoutOverlapping();
                 }
 
-                if ($onOneServer) 
+                if ($onOneServer)
                 {
                     $event->onOneServer();
                 }
 
-                if ($runInMaintenance) 
+                if ($runInMaintenance)
                 {
                     $event->evenInMaintenanceMode();
                 }

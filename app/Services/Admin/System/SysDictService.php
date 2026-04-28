@@ -1,5 +1,5 @@
 <?php
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Models\System\SysDictModel;
 use App\Support\Utils\Result;
@@ -109,7 +109,7 @@ class SysDictService
 
         return Result::success();
     }
-    
+
     /**
      * 更新系统字典
      */
@@ -172,7 +172,7 @@ class SysDictService
 
         return Result::success();
     }
-    
+
     /**
      * 删除系统字典
      */
@@ -199,7 +199,7 @@ class SysDictService
 
         return Result::success();
     }
-    
+
     /**
      * 更新系统字典状态
      */
@@ -226,7 +226,7 @@ class SysDictService
 
         return Result::success();
     }
-    
+
     /**
      * 构建系统字典值字段
      */
@@ -254,7 +254,7 @@ class SysDictService
             default => array_merge($fields, ['value_string' => (string) $dictValue]),
         };
     }
-    
+
     /**
      * 确保JSON字符串格式
      */
@@ -276,7 +276,7 @@ class SysDictService
 
         return json_encode($value, JSON_UNESCAPED_UNICODE);
     }
-    
+
     /**
      * 格式化系统字典值
      */
@@ -292,7 +292,7 @@ class SysDictService
             default => (string) ($row['value_string'] ?? ''),
         };
     }
-    
+
     /**
      * 忘记系统字典缓存
      */

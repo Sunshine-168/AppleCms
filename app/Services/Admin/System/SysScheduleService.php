@@ -1,16 +1,16 @@
 <?php
 
 
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Models\System\SysScheduleModel;
 use App\Support\Utils\Result;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Artisan;
-use Symfony\Component\Process\Process;
 use Cron\CronExpression;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 
 class SysScheduleService
 {
@@ -28,24 +28,24 @@ class SysScheduleService
     public function getScheduleLists(string $name, string $type, mixed $status, int $limit): array
     {
 
-        if ($limit < 1) 
+        if ($limit < 1)
         {
             $limit = 10;
         }
 
         $where = [];
 
-        if ($name = trim($name)) 
+        if ($name = trim($name))
         {
             $where[] = ['name', '=', $name];
         }
 
-        if ($type = trim($type)) 
+        if ($type = trim($type))
         {
             $where[] = ['type', '=', $type];
         }
 
-        if ($status !== '' && $status !== null) 
+        if ($status !== '' && $status !== null)
         {
             $where[] = ['status', '=', (int)$status];
         }
@@ -57,7 +57,7 @@ class SysScheduleService
             ['sort' => 'desc', 'id' => 'desc']
         );
 
-        foreach ($data['data'] as &$item) 
+        foreach ($data['data'] as &$item)
         {
 
             $item['last_run_time'] = !empty($item['last_run_time'])
@@ -96,23 +96,23 @@ class SysScheduleService
     ): array {
 
         $name = trim($name);
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('请输入任务名称');
         }
 
-        if (!in_array($type, ['artisan', 'shell', 'http'], true)) 
+        if (!in_array($type, ['artisan', 'shell', 'http'], true))
         {
             return Result::fail('任务类型不正确');
         }
 
         $command = trim($command);
-        if ($command === '') 
+        if ($command === '')
         {
             return Result::fail('请输入执行内容');
         }
 
-        if (mb_strlen($command) > 2000) 
+        if (mb_strlen($command) > 2000)
         {
             return Result::fail('执行内容过长');
         }
@@ -125,7 +125,7 @@ class SysScheduleService
             return Result::fail('cron表达式格式错误');
         }
 
-        if ($timezone === '' || !in_array($timezone, timezone_identifiers_list())) 
+        if ($timezone === '' || !in_array($timezone, timezone_identifiers_list()))
         {
             $timezone = 'Asia/Shanghai';
         }
@@ -176,12 +176,12 @@ class SysScheduleService
             $existsWhere[] = ['id', '<>', $id];
         }
 
-        if ($this->sysScheduleModel->existsBy($existsWhere)) 
+        if ($this->sysScheduleModel->existsBy($existsWhere))
         {
             return Result::fail('任务名称已存在');
         }
 
-        if ($id > 0) 
+        if ($id > 0)
         {
 
             $ok = $this->sysScheduleModel->updateById($id, $update);
@@ -214,14 +214,14 @@ class SysScheduleService
     public function deleteSchedule(int $id): array
     {
 
-        if ($id <= 0) 
+        if ($id <= 0)
         {
             return Result::fail('参数错误');
         }
 
         $row = $this->sysScheduleModel->findById($id);
 
-        if (!$row) 
+        if (!$row)
         {
             return Result::fail('任务不存在');
         }
@@ -268,7 +268,7 @@ class SysScheduleService
 
         $lock = null;
 
-        if ($task['without_overlapping']) 
+        if ($task['without_overlapping'])
         {
 
             $lock = Cache::lock('schedule_lock_' . $id, 600);
@@ -285,17 +285,17 @@ class SysScheduleService
 
         try {
 
-            if ($task['type'] === 'artisan') 
+            if ($task['type'] === 'artisan')
             {
 
                 $output = $this->runArtisanCommand($task['command']);
 
-            } elseif ($task['type'] === 'shell') 
+            } elseif ($task['type'] === 'shell')
             {
 
                 $output = $this->runShellCommand($task['command'], $task['timeout']);
 
-            } elseif ($task['type'] === 'http') 
+            } elseif ($task['type'] === 'http')
             {
 
                 $output = $this->runHttpRequest($task['command'], $task['timeout']);
@@ -410,4 +410,4 @@ class SysScheduleService
     }
 
 }
-   
+

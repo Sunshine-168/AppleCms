@@ -1,5 +1,5 @@
 <?php
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 use App\Models\System\SysRoleModel;
 use App\Models\System\SysRolePermModel;
 use App\Support\Utils\Result;
@@ -30,35 +30,35 @@ class SysRoleService
     {
         $where = [];
 
-        if ($limit < 1) 
+        if ($limit < 1)
         {
             $limit = 10;
         }
 
-        if ($name = trim($name)) 
+        if ($name = trim($name))
         {
             $where[] = ['name', '=', $name];
         }
 
-        if ($code = trim($code)) 
+        if ($code = trim($code))
         {
             $where[] = ['code', '=', $code];
         }
-        if ($status !== '' && $status !== null) 
+        if ($status !== '' && $status !== null)
         {
             $where[] = ['status', '=', (int) $status];
         }
 
         $data = $this->sysRoleModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
 
-        foreach ($data['data'] as &$item) 
+        foreach ($data['data'] as &$item)
         {
             $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
             $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
         }
         return Result::success($data);
     }
-        
+
     /**
      * 获取角色下拉选项
      * @return array
@@ -84,12 +84,12 @@ class SysRoleService
         $code = trim($code);
         $remark = trim($remark);
 
-        if ($name === '' || $code === '') 
+        if ($name === '' || $code === '')
         {
             return Result::fail('参数错误');
         }
 
-        if ($this->sysRoleModel->existsBy(['code' => $code])) 
+        if ($this->sysRoleModel->existsBy(['code' => $code]))
         {
             return Result::fail('角色标识已存在');
         }
@@ -105,7 +105,7 @@ class SysRoleService
             'update_time' => $time,
         ]);
 
-        if (!$res) 
+        if (!$res)
         {
             return Result::fail('新增失败');
         }
@@ -124,7 +124,7 @@ class SysRoleService
      */
     public function updateRole(int $id, string $name, string $code, string $remark = '', int $status = 1, int $sort = 0): array
     {
-        if ($id < 1) 
+        if ($id < 1)
         {
             return Result::fail('参数错误');
         }
@@ -133,13 +133,13 @@ class SysRoleService
         $code = trim($code);
         $remark = trim($remark);
 
-        if ($name === '' || $code === '') 
+        if ($name === '' || $code === '')
         {
             return Result::fail('参数错误');
         }
 
         $exists = $this->sysRoleModel->where('code', $code)->where('id', '<>', $id)->exists();
-        if ($exists) 
+        if ($exists)
         {
             return Result::fail('角色标识已存在');
         }
@@ -166,13 +166,13 @@ class SysRoleService
      */
     public function deleteRole(int $id): array
     {
-        if ($id < 1) 
+        if ($id < 1)
         {
             return Result::fail('参数错误');
         }
 
         $res = $this->sysRoleModel->deleteById($id);
-        if (!$res) 
+        if (!$res)
         {
             return Result::fail('删除失败');
         }
@@ -189,7 +189,7 @@ class SysRoleService
      */
     public function setRolePerms(int $roleId, array $permIds): array
     {
-        if ($roleId < 1) 
+        if ($roleId < 1)
         {
             return Result::fail('参数错误');
         }
@@ -197,11 +197,11 @@ class SysRoleService
         $this->sysRolePermModel->deleteByCondition(['role_id' => $roleId]);
         $rows = [];
         $time = time();
-        foreach ($permIds as $pid) 
+        foreach ($permIds as $pid)
         {
             $rows[] = ['role_id' => (int)$roleId, 'perm_id' => (int)$pid, 'create_time' => $time, 'update_time' => $time];
         }
-        if (!empty($rows)) 
+        if (!empty($rows))
         {
             $this->sysRolePermModel->insertsAll($rows);
         }
@@ -214,7 +214,7 @@ class SysRoleService
      */
     public function getRolePermIds(int $roleId): array
     {
-        if ($roleId < 1) 
+        if ($roleId < 1)
         {
             return Result::success([]);
         }

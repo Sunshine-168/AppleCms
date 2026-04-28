@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use function App\Services\System\config;
 
 class SysCacheService
 {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\System\SysCacheService;
+use App\Services\Admin\System\SysCacheService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;

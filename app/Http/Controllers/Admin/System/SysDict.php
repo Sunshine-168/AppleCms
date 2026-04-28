@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\System\SysDictService;
+use App\Services\Admin\System\SysDictService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;

@@ -1,12 +1,12 @@
 <?php
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
-use App\Services\System\SysPermService;
+use App\Services\Admin\System\SysPermService;
 use App\Support\Utils\Ajax;
 use Gregwar\Captcha\CaptchaBuilder;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -35,7 +35,7 @@ class Index extends Controller
 
         return view('admin.layouts.index', compact('menus'));
     }
-    
+
     /**
      * 欢迎页
      * @return View|Factory
@@ -44,7 +44,7 @@ class Index extends Controller
     {
         return view('admin.welcome');
     }
-    
+
     /**
      * 欢迎页统计数据
      * @return JsonResponse

@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Services\Theme;
+namespace App\Services\Admin\Theme;
 
 use Illuminate\Support\Facades\File;
+use function App\Services\Theme\public_path;
+use function App\Services\Theme\resource_path;
 
 class ThemeService
 {

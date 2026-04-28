@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin\System;
 use App\Http\Controllers\Controller;
-use App\Services\System\SysPermService;
+use App\Services\Admin\System\SysPermService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -93,7 +93,7 @@ class SysPerm extends Controller
         $data = $this->sysPermService->deletePermCascade($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
-    
+
     /**
      * 获取权限树（角色授权用）
      * @return JsonResponse

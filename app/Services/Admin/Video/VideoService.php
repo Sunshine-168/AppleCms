@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Services\Video;
+namespace App\Services\Admin\Video;
 
 use App\Models\Video\ActorModel;
 use App\Models\Video\CollectSourceModel;
+use App\Models\Video\VideoActorRelModel;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
-use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTagModel;
+use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTypeModel;
-use App\Models\Video\VideoActorRelModel;
 use App\Support\Utils\Result;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +46,7 @@ class VideoService
         $this->videoTagRelModel = new VideoTagRelModel();
         $this->videoActorRelModel = new VideoActorRelModel();
     }
-        
+
     /**
      * 获取视频列表
      */
@@ -55,31 +55,31 @@ class VideoService
         $where = [];
 
         $title = trim((string)($params['title'] ?? ''));
-        if ($title !== '') 
+        if ($title !== '')
         {
             $where['title'] = ['=' => $title];
         }
 
         $typeId = $params['type_id'] ?? null;
-        if ($typeId !== null && $typeId !== '') 
+        if ($typeId !== null && $typeId !== '')
         {
             $where[] = ['type_id', '=', (int)$typeId];
         }
 
         $status = $params['status'] ?? null;
-        if ($status !== null && $status !== '') 
+        if ($status !== null && $status !== '')
         {
             $where[] = ['status', '=', (int)$status];
         }
 
         $isRecommend = $params['is_recommend'] ?? null;
-        if ($isRecommend !== null && $isRecommend !== '') 
+        if ($isRecommend !== null && $isRecommend !== '')
         {
             $where[] = ['is_recommend', '=', (int)$isRecommend];
         }
 
         $isHot = $params['is_hot'] ?? null;
-        if ($isHot !== null && $isHot !== '') 
+        if ($isHot !== null && $isHot !== '')
         {
             $where[] = ['is_hot', '=', (int)$isHot];
         }
@@ -93,43 +93,43 @@ class VideoService
 
         $typeIds = [];
         $videoIds = [];
-        foreach (($data['data'] ?? []) as $row) 
+        foreach (($data['data'] ?? []) as $row)
         {
-            if (!empty($row['type_id'])) 
+            if (!empty($row['type_id']))
             {
                 $typeIds[] = (int)$row['type_id'];
             }
             $videoIds[] = (int)$row['id'];
         }
         $typeIds = array_values(array_unique(array_filter($typeIds)));
-       
+
         $typeMap = [];
-        if (!empty($typeIds)) 
+        if (!empty($typeIds))
         {
             $types = $this->videoTypeModel->selectByCondition([['id', 'in', $typeIds]], ['id', 'name', 'parent_id']);
-        
-            foreach ($types as $t) 
+
+            foreach ($types as $t)
             {
                 $typeMap[(int)$t['id']] = $t;
             }
         }
-    
+
         $statMap = [];
-        if (!empty($videoIds)) 
+        if (!empty($videoIds))
         {
             $stats = $this->videoStatModel->selectByCondition([['video_id', 'in', $videoIds]], ['video_id', 'hits']);
-            foreach ($stats as $s) 
+            foreach ($stats as $s)
             {
                 $statMap[(int)$s['video_id']] = $s;
             }
         }
 
-        if (!empty($data['data']) && is_array($data['data'])) 
+        if (!empty($data['data']) && is_array($data['data']))
         {
-            foreach ($data['data'] as &$item) 
+            foreach ($data['data'] as &$item)
         {
             $tid = (int)($item['type_id'] ?? 0);
-            $item['type_name'] = $tid > 0 && isset($typeMap[$tid]) ? (string)$typeMap[$tid]['name'] : '';         
+            $item['type_name'] = $tid > 0 && isset($typeMap[$tid]) ? (string)$typeMap[$tid]['name'] : '';
             $item['hits'] = (int)($statMap[(int)$item['id']]['hits'] ?? 0);
             $createdTs = (int)($item['created_at'] ?? ($item['create_time'] ?? 0));
             $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
@@ -153,16 +153,16 @@ class VideoService
 
         $tagRelRows = $this->videoTagRelModel->selectByCondition([['video_id', '=', $id]], ['tag_id'], ['tag_id' => 'asc']);
         $tagIds = [];
-        foreach ($tagRelRows as $r) 
+        foreach ($tagRelRows as $r)
         {
             $tagIds[] = (int)($r['tag_id'] ?? 0);
         }
         $tagIds = array_values(array_unique(array_filter($tagIds)));
         $tags = [];
-        if (!empty($tagIds)) 
+        if (!empty($tagIds))
         {
             $tagRows = $this->videoTagModel->selectByCondition([['id', 'in', $tagIds]], ['id', 'name'], ['id' => 'asc']);
-            foreach ($tagRows as $t) 
+            foreach ($tagRows as $t)
             {
                 $tags[] = (string)($t['name'] ?? '');
             }
@@ -177,24 +177,24 @@ class VideoService
             ['sort' => 'desc']
         );
         $actorIds = [];
-        foreach ($actorRelRows as $r) 
+        foreach ($actorRelRows as $r)
         {
             $actorIds[] = (int)($r['actor_id'] ?? 0);
         }
         $actorIds = array_values(array_unique(array_filter($actorIds)));
 
         $actors = [];
-        if (!empty($actorIds)) 
+        if (!empty($actorIds))
         {
             $actorRows = $this->actorModel->selectByCondition([['id', 'in', $actorIds]], ['id', 'name']);
             $actorMap = [];
-            foreach ($actorRows as $a) 
+            foreach ($actorRows as $a)
             {
                 $actorMap[(int)$a['id']] = (string)($a['name'] ?? '');
             }
-            foreach ($actorIds as $aid) 
+            foreach ($actorIds as $aid)
             {
-                if (isset($actorMap[$aid])) 
+                if (isset($actorMap[$aid]))
                 {
                     $actors[] = $actorMap[$aid];
                 }
@@ -244,16 +244,16 @@ class VideoService
 
         try {
             return DB::transaction(function () use ($id, $payload, $now, $tagsText, $actorsText) {
-                if ($id) 
+                if ($id)
                 {
                     $exists = $this->videoModel->findById($id);
-                    if (empty($exists)) 
+                    if (empty($exists))
                     {
                         return Result::fail('数据不存在');
                     }
 
                     $ok = $this->videoModel->updateById($id, $payload);
-                    if (!$ok) 
+                    if (!$ok)
                     {
                         return Result::fail();
                     }
@@ -262,11 +262,11 @@ class VideoService
                         'score' => (float)$payload['score'],
                         'updated_at' => $now,
                     ]);
-                } else 
+                } else
                 {
                     $payload['created_at'] = $now;
                     $newId = $this->videoModel->insertsGetId($payload);
-                    if (!$newId) 
+                    if (!$newId)
                     {
                         return Result::fail();
                     }
@@ -290,7 +290,7 @@ class VideoService
 
                 return Result::success(['id' => $id]);
             });
-        } catch (Exception $e) 
+        } catch (Exception $e)
         {
             return Result::fail($e->getMessage() ?: '操作失败');
         }
@@ -301,7 +301,7 @@ class VideoService
     public function deleteVideo(int $id): array
     {
         $info = $this->videoModel->findById($id);
-        if (empty($info)) 
+        if (empty($info))
         {
             return Result::fail('数据不存在');
         }
@@ -309,13 +309,13 @@ class VideoService
             return DB::transaction(function () use ($id) {
                 $sourceRows = $this->videoSourceModel->selectByCondition([['video_id', '=', $id]], ['id']);
                 $sourceIds = [];
-                foreach ($sourceRows as $r) 
+                foreach ($sourceRows as $r)
                 {
                     $sourceIds[] = (int)($r['id'] ?? 0);
                 }
                 $sourceIds = array_values(array_unique(array_filter($sourceIds)));
 
-                if (!empty($sourceIds)) 
+                if (!empty($sourceIds))
                 {
                     $this->videoEpisodeModel->deleteByCondition([['source_id', 'in', $sourceIds]]);
                 }
@@ -333,7 +333,7 @@ class VideoService
 
                 return Result::success();
             });
-        } catch (Exception $e) 
+        } catch (Exception $e)
         {
             return Result::fail($e->getMessage() ?: '删除失败');
         }
@@ -345,17 +345,17 @@ class VideoService
     {
         $all = $this->videoTypeModel->selectByCondition([], ['id', 'parent_id', 'name'], ['sort' => 'desc', 'id' => 'asc']);
         $byParent = [];
-        foreach ($all as $row) 
+        foreach ($all as $row)
         {
             $pid = (int)($row['parent_id'] ?? 0);
             $byParent[$pid][] = $row;
         }
 
         $options = [];
-        foreach (($byParent[0] ?? []) as $p) 
+        foreach (($byParent[0] ?? []) as $p)
         {
             $options[] = ['id' => (int)$p['id'], 'name' => (string)$p['name']];
-            foreach (($byParent[(int)$p['id']] ?? []) as $c) 
+            foreach (($byParent[(int)$p['id']] ?? []) as $c)
             {
                 $options[] = ['id' => (int)$c['id'], 'name' => '— ' . (string)$c['name']];
             }
@@ -384,12 +384,12 @@ class VideoService
 
         $where = [];
         $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '') 
+        if ($name !== '')
         {
             $where['name'] = ['like' => "%{$name}%"];
         }
 
-        if (array_key_exists('parent_id', $params) && $params['parent_id'] !== '' && $params['parent_id'] !== null) 
+        if (array_key_exists('parent_id', $params) && $params['parent_id'] !== '' && $params['parent_id'] !== null)
         {
             $where['parent_id'] = (int)$params['parent_id'];
         }
@@ -398,7 +398,7 @@ class VideoService
         $rows = $data['data'] ?? [];
 
         $parentIds = [];
-        foreach ($rows as $r) 
+        foreach ($rows as $r)
         {
             $pid = (int)($r['parent_id'] ?? 0);
             if ($pid > 0) {
@@ -408,16 +408,16 @@ class VideoService
         $parentIds = array_values(array_unique($parentIds));
 
         $parentMap = [];
-        if (!empty($parentIds)) 
+        if (!empty($parentIds))
         {
             $parents = $this->videoTypeModel->selectByCondition([['id', 'in', $parentIds]], ['id', 'name']);
-            foreach ($parents as $p) 
+            foreach ($parents as $p)
             {
                 $parentMap[(int)$p['id']] = (string)($p['name'] ?? '');
             }
         }
 
-        foreach ($rows as &$item) 
+        foreach ($rows as &$item)
         {
             $pid = (int)($item['parent_id'] ?? 0);
             $item['parent_name'] = $pid > 0 ? (string)($parentMap[$pid] ?? '') : '顶级';
@@ -435,7 +435,7 @@ class VideoService
     public function saveVideoType(array $data, ?int $id = null): array
     {
         $name = trim((string)($data['name'] ?? ''));
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('分类名称不能为空');
         }
@@ -448,17 +448,17 @@ class VideoService
             'status' => (int)($data['status'] ?? 1),
             'updated_at' => $now,
         ];
-        if ($id === null || $id < 1) 
+        if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
         }
 
         $payload = $this->filterPayloadByTableColumns('video_types', $candidate);
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->videoTypeModel->findById($id);
-            if (empty($exists)) 
+            if (empty($exists))
             {
                 return Result::fail('数据不存在');
             }
@@ -475,19 +475,19 @@ class VideoService
     public function deleteVideoType(int $id): array
     {
         $exists = $this->videoTypeModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
 
         $childCount = $this->videoTypeModel->countByCondition([['parent_id', '=', $id]]);
-        if ($childCount > 0) 
+        if ($childCount > 0)
         {
             return Result::fail('请先删除子分类');
         }
 
         $useCount = $this->videoModel->countByCondition([['type_id', '=', $id]]);
-        if ($useCount > 0) 
+        if ($useCount > 0)
         {
             return Result::fail('该分类下存在视频，无法删除');
         }
@@ -507,11 +507,11 @@ class VideoService
 
         $where = [];
         $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '') 
+        if ($name !== '')
         {
             $where['name'] = ['like' => "%{$name}%"];
         }
-        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) 
+        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null)
         {
             $where[] = ['status', '=', (int)$params['status']];
         }
@@ -519,7 +519,7 @@ class VideoService
         $data = $this->collectSourceModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
         $rows = $data['data'] ?? [];
 
-        foreach ($rows as &$item) 
+        foreach ($rows as &$item)
         {
             $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
             $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
@@ -535,7 +535,7 @@ class VideoService
     public function saveCollectSource(array $data, ?int $id = null): array
     {
         $name = trim((string)($data['name'] ?? ''));
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('采集源名称不能为空');
         }
@@ -547,16 +547,16 @@ class VideoService
             'sort' => (int)($data['sort'] ?? 0),
             'updated_at' => $now,
         ];
-        if ($id === null || $id < 1) 
+        if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
         }
         $payload = $this->filterPayloadByTableColumns('collect_sources', $candidate);
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->collectSourceModel->findById($id);
-            if (empty($exists)) 
+            if (empty($exists))
             {
                 return Result::fail('数据不存在');
             }
@@ -573,13 +573,13 @@ class VideoService
     public function deleteCollectSource(int $id): array
     {
         $exists = $this->collectSourceModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
 
         $useCount = $this->videoModel->countByCondition([['collect_source_id', '=', $id]]);
-        if ($useCount > 0) 
+        if ($useCount > 0)
         {
             return Result::fail('该采集源已被视频使用，无法删除');
         }
@@ -599,7 +599,7 @@ class VideoService
 
         $where = [];
         $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '') 
+        if ($name !== '')
         {
             $where['name'] = ['like' => "%{$name}%"];
         }
@@ -607,7 +607,7 @@ class VideoService
         $data = $this->videoTagModel->paginates($where, '*', $limit, ['id' => 'desc']);
         $rows = $data['data'] ?? [];
 
-        foreach ($rows as &$item) 
+        foreach ($rows as &$item)
         {
             $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
             $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
@@ -623,7 +623,7 @@ class VideoService
     public function saveVideoTag(array $data, ?int $id = null): array
     {
         $name = trim((string)($data['name'] ?? ''));
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('标签名称不能为空');
         }
@@ -635,16 +635,16 @@ class VideoService
             'status' => (int)($data['status'] ?? 1),
             'updated_at' => $now,
         ];
-        if ($id === null || $id < 1) 
+        if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
         }
         $payload = $this->filterPayloadByTableColumns('video_tags', $candidate);
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->videoTagModel->findById($id);
-            if (empty($exists)) 
+            if (empty($exists))
             {
                 return Result::fail('数据不存在');
             }
@@ -661,7 +661,7 @@ class VideoService
     public function deleteVideoTag(int $id): array
     {
         $exists = $this->videoTagModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
@@ -683,7 +683,7 @@ class VideoService
 
         $where = [];
         $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '') 
+        if ($name !== '')
         {
             $where['name'] = ['like' => "%{$name}%"];
         }
@@ -691,7 +691,7 @@ class VideoService
         $data = $this->actorModel->paginates($where, '*', $limit, ['id' => 'desc']);
         $rows = $data['data'] ?? [];
 
-        foreach ($rows as &$item) 
+        foreach ($rows as &$item)
         {
             $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
             $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
@@ -707,7 +707,7 @@ class VideoService
     public function saveActor(array $data, ?int $id = null): array
     {
         $name = trim((string)($data['name'] ?? ''));
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('演员名称不能为空');
         }
@@ -720,16 +720,16 @@ class VideoService
             'status' => (int)($data['status'] ?? 1),
             'updated_at' => $now,
         ];
-        if ($id === null || $id < 1) 
+        if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
         }
         $payload = $this->filterPayloadByTableColumns('actors', $candidate);
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->actorModel->findById($id);
-            if (empty($exists)) 
+            if (empty($exists))
             {
                 return Result::fail('数据不存在');
             }
@@ -746,7 +746,7 @@ class VideoService
     public function deleteActor(int $id): array
     {
         $exists = $this->actorModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
@@ -768,24 +768,24 @@ class VideoService
         $data = $this->videoSourceModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
 
         $sourceIds = [];
-        foreach (($data['data'] ?? []) as $row) 
+        foreach (($data['data'] ?? []) as $row)
         {
             $sourceIds[] = (int)$row['id'];
         }
 
         $episodeCountMap = [];
-        if (!empty($sourceIds)) 
+        if (!empty($sourceIds))
         {
             $counts = $this->videoEpisodeModel->groupByCondition([['source_id', 'in', $sourceIds]], ['source_id', DB::raw('COUNT(id) as total')], 'source_id');
-            foreach ($counts as $c) 
+            foreach ($counts as $c)
             {
                 $episodeCountMap[(int)$c['source_id']] = (int)$c['total'];
             }
         }
 
-        if (!empty($data['data']) && is_array($data['data'])) 
+        if (!empty($data['data']) && is_array($data['data']))
         {
-            foreach ($data['data'] as &$item) 
+            foreach ($data['data'] as &$item)
             {
                 $sid = (int)($item['id'] ?? 0);
                 $item['episode_total'] = (int)($episodeCountMap[$sid] ?? 0);
@@ -805,13 +805,13 @@ class VideoService
     public function saveSource(array $data, ?int $id = null): array
     {
         $videoId = (int)($data['video_id'] ?? 0);
-        if ($videoId < 1) 
+        if ($videoId < 1)
         {
             return Result::fail('参数错误');
         }
 
         $name = trim((string)($data['name'] ?? ''));
-        if ($name === '') 
+        if ($name === '')
         {
             return Result::fail('线路名不能为空');
         }
@@ -825,7 +825,7 @@ class VideoService
             'updated_at' => $now,
         ];
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->videoSourceModel->findById($id);
             if (empty($exists))
@@ -846,7 +846,7 @@ class VideoService
     public function deleteSource(int $id): array
     {
         $exists = $this->videoSourceModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
@@ -856,7 +856,7 @@ class VideoService
 
     /**
      * 获取视频采集源剧集列表
-     */ 
+     */
     public function getEpisodeLists(int $sourceId, int $limit): array
     {
         $where = [
@@ -866,7 +866,7 @@ class VideoService
         $data = $this->videoEpisodeModel->paginates($where, '*', $limit, ['episode_num' => 'asc', 'id' => 'asc']);
 
         if (!empty($data['data']) && is_array($data['data'])) {
-            foreach ($data['data'] as &$item) 
+            foreach ($data['data'] as &$item)
             {
                 $createdTs = (int)($item['created_at'] ?? ($item['create_time'] ?? 0));
                 $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
@@ -885,25 +885,25 @@ class VideoService
     public function saveEpisode(array $data, ?int $id = null): array
     {
         $sourceId = (int)($data['source_id'] ?? 0);
-        if ($sourceId < 1) 
+        if ($sourceId < 1)
         {
             return Result::fail('参数错误');
         }
 
         $source = $this->videoSourceModel->findById($sourceId);
-        if (empty($source)) 
+        if (empty($source))
         {
             return Result::fail('线路不存在');
         }
 
         $episodeNum = (int)($data['episode_num'] ?? 1);
-        if ($episodeNum < 1) 
+        if ($episodeNum < 1)
         {
             $episodeNum = 1;
         }
 
         $url = trim((string)($data['url'] ?? ''));
-        if ($url === '') 
+        if ($url === '')
         {
             return Result::fail('播放地址不能为空');
         }
@@ -921,10 +921,10 @@ class VideoService
             'updated_at' => $now,
         ];
 
-        if ($id !== null && $id > 0) 
+        if ($id !== null && $id > 0)
         {
             $exists = $this->videoEpisodeModel->findById($id);
-            if (empty($exists)) 
+            if (empty($exists))
             {
                 return Result::fail('数据不存在');
             }
@@ -942,7 +942,7 @@ class VideoService
     public function deleteEpisode(int $id): array
     {
         $exists = $this->videoEpisodeModel->findById($id);
-        if (empty($exists)) 
+        if (empty($exists))
         {
             return Result::fail('数据不存在');
         }
@@ -954,12 +954,12 @@ class VideoService
      */
     private function getTableColumns(string $table): array
     {
-        if (isset(self::$tableColumnsCache[$table])) 
+        if (isset(self::$tableColumnsCache[$table]))
         {
             return self::$tableColumnsCache[$table];
         }
 
-        if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) 
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $table))
         {
             self::$tableColumnsCache[$table] = [];
             return [];
@@ -967,7 +967,7 @@ class VideoService
 
         $rows = DB::select('SHOW FULL COLUMNS FROM `' . $table . '`');
         $cols = [];
-        foreach ($rows as $r) 
+        foreach ($rows as $r)
         {
             $col = (string)($r->Field ?? '');
             if ($col !== '') {
@@ -983,16 +983,16 @@ class VideoService
     private function filterPayloadByTableColumns(string $table, array $payload): array
     {
         $cols = $this->getTableColumns($table);
-        if (empty($cols)) 
+        if (empty($cols))
         {
             return [];
         }
 
         $flip = array_fill_keys($cols, true);
         $filtered = [];
-        foreach ($payload as $k => $v) 
+        foreach ($payload as $k => $v)
         {
-            if (isset($flip[$k])) 
+            if (isset($flip[$k]))
             {
                 $filtered[$k] = $v;
             }
@@ -1019,15 +1019,15 @@ class VideoService
 
         $existing = $this->videoTagModel->selectByCondition([['name', 'in', $names]], ['id', 'name']);
         $tagMap = [];
-        foreach ($existing as $t) 
+        foreach ($existing as $t)
         {
             $tagMap[(string)$t['name']] = (int)$t['id'];
         }
 
         $now = time();
-        foreach ($names as $name) 
+        foreach ($names as $name)
         {
-            if (!isset($tagMap[$name])) 
+            if (!isset($tagMap[$name]))
             {
                 $id = $this->videoTagModel->insertsGetId(['name' => $name, 'created_at' => $now]);
                 if ($id) {
@@ -1037,14 +1037,14 @@ class VideoService
         }
 
         $rows = [];
-        foreach ($names as $name) 
+        foreach ($names as $name)
         {
-            if (!empty($tagMap[$name])) 
+            if (!empty($tagMap[$name]))
             {
                 $rows[] = ['video_id' => $videoId, 'tag_id' => (int)$tagMap[$name], 'created_at' => $now];
             }
         }
-        if (!empty($rows)) 
+        if (!empty($rows))
         {
             $this->videoTagRelModel->inserts($rows);
         }
@@ -1064,22 +1064,22 @@ class VideoService
             ['role_type', '=', 1],
         ]);
 
-        if (empty($names)) 
+        if (empty($names))
         {
             return;
         }
 
         $existing = $this->actorModel->selectByCondition([['name', 'in', $names]], ['id', 'name']);
         $actorMap = [];
-        foreach ($existing as $a) 
+        foreach ($existing as $a)
         {
             $actorMap[(string)$a['name']] = (int)$a['id'];
         }
 
         $now = time();
-        foreach ($names as $name) 
+        foreach ($names as $name)
         {
-            if (!isset($actorMap[$name])) 
+            if (!isset($actorMap[$name]))
             {
                 $id = $this->actorModel->insertsGetId(['name' => $name, 'avatar' => '', 'created_at' => $now]);
                 if ($id) {
@@ -1090,9 +1090,9 @@ class VideoService
 
         $rows = [];
         $sort = count($names);
-        foreach ($names as $name) 
+        foreach ($names as $name)
         {
-            if (!empty($actorMap[$name])) 
+            if (!empty($actorMap[$name]))
             {
                 $rows[] = [
                     'video_id' => $videoId,
@@ -1104,7 +1104,7 @@ class VideoService
                 ];
             }
         }
-        if (!empty($rows)) 
+        if (!empty($rows))
         {
             $this->videoActorRelModel->inserts($rows);
         }

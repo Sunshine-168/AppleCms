@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\System\SysUserService;
+use App\Services\Admin\System\SysUserService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -41,7 +41,7 @@ class SysUser extends Controller
     {
         $username = (string) $request->input('username', '');
         $limit    = (int) $request->input('limit', 10);
-        $data     = $this->systemUserService->getSysUserLists($username, $limit);    
+        $data     = $this->systemUserService->getSysUserLists($username, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -171,14 +171,14 @@ class SysUser extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
 
     }
-    
+
     /**
      * 退出登录
      * @param Request $request
      * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
-    {  
+    {
         $uid = (int) session('admin_uid', 0);
         $token = (string) ($request->header('token') ?: $request->input('token', ''));
 
@@ -284,7 +284,7 @@ class SysUser extends Controller
     {
         return view('admin.system.monitor.system_logs');
     }
-    
+
     /**
      * 系统日志列表
      * @param Request $request

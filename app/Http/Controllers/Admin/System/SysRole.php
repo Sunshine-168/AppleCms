@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Admin\System;
 use App\Http\Controllers\Controller;
-use App\Services\System\SysRoleService;
+use App\Services\Admin\System\SysRoleService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;

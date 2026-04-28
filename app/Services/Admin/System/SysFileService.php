@@ -1,10 +1,11 @@
 <?php
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Models\System\SysFileModel;
 use App\Support\Utils\Result;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use function App\Services\System\public_path;
 
 /**
  * 系统文件服务
@@ -104,7 +105,7 @@ class SysFileService
         // 文件名生成
         $filename = date('YmdHis') . '_' . mt_rand(1000,9999);
 
-        if ($ext) 
+        if ($ext)
         {
             $filename .= '.' . $ext;
         }

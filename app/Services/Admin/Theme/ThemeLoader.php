@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Services\Theme;
+namespace App\Services\Admin\Theme;
 
 use Illuminate\Support\Facades\View;
+use function App\Services\Theme\resource_path;
 
 class ThemeLoader
 {

@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Http\Controllers\Controller;
-use App\Services\System\SysFileService;
+use App\Services\Admin\System\SysFileService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -48,7 +48,7 @@ class SysFile extends Controller
     public function upload(Request $request): JsonResponse
     {
         $file = $request->file('file');
-        if (!$file instanceof UploadedFile) 
+        if (!$file instanceof UploadedFile)
         {
             return Ajax::fail('请选择文件');
         }
@@ -62,18 +62,18 @@ class SysFile extends Controller
     public function delete(Request $request): JsonResponse
     {
         $ids = $request->input('ids', []);
-        if (is_string($ids)) 
+        if (is_string($ids))
         {
             $ids = explode(',', $ids);
         }
-        if (!is_array($ids) || empty($ids)) 
+        if (!is_array($ids) || empty($ids))
         {
             return Ajax::fail('请选择要删除的数据');
         }
         $res = $this->systemFileService->delete($ids);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
-    
+
     /**
      * 打开文件
      */

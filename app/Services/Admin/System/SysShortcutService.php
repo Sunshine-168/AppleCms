@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Support\Utils\Result;
 

@@ -1,19 +1,20 @@
 <?php
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Models\System\SysDictModel;
 use App\Models\System\SysOperateLogModel;
+use App\Models\System\SysRoleModel;
 use App\Models\System\SysSystemLogModel;
 use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
-use App\Models\System\SysRoleModel;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Zhuzhichao\IpLocationZh\Ip;
+use function App\Services\System\session;
 
 
 /**
@@ -60,7 +61,7 @@ class SysUserService
         }
 
         $data = $this->sysUserModel->paginates($where, '*', $limit, ['id' => 'desc']);
-       
+
         foreach ($data['data'] as &$item)
         {
             $item['login_time'] = date('Y-m-d H:i:s', $item['login_time']);
@@ -128,7 +129,7 @@ class SysUserService
         {
             $password = '123456';
         }
-      
+
         $insert = [
             'username'      => $username,
             'password'      => $password,
@@ -176,7 +177,7 @@ class SysUserService
         {
             $update['role'] = $role;
         }
-         
+
         if ($roleId !== null)
         {
             $update['role_id'] = $roleId;

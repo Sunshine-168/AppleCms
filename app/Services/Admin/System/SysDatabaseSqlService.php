@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,7 @@ class SysDatabaseSqlService
     public function run(string $sql): array
     {
         $sql = trim($sql);
-        if ($sql === '') 
+        if ($sql === '')
         {
             return Result::fail('请输入SQL');
         }
@@ -26,7 +26,7 @@ class SysDatabaseSqlService
         // 按分号拆分 SQL，忽略分号在引号内的情况
         $parts = preg_split('/;(?=(?:[^\'"]|\'[^\']*\'|"[^"]*")*$)/', $sql) ?: [];
         $statements = [];
-        foreach ($parts as $p) 
+        foreach ($parts as $p)
         {
             $p = trim($p);
             if ($p !== '') {
@@ -34,7 +34,7 @@ class SysDatabaseSqlService
             }
         }
 
-        if (count($statements) !== 1) 
+        if (count($statements) !== 1)
         {
             return Result::fail('仅支持执行一条SQL语句');
         }
@@ -44,14 +44,14 @@ class SysDatabaseSqlService
 
         // 安全检查：禁止危险 SQL
         $forbidden = ['drop', 'truncate', 'alter', 'create', 'rename'];
-        if (in_array($keyword, $forbidden, true)) 
+        if (in_array($keyword, $forbidden, true))
         {
             return Result::fail('禁止执行此类 SQL');
         }
 
         try {
             // 查询类 SQL
-            if (in_array($keyword, ['select', 'show', 'describe', 'desc', 'explain'], true)) 
+            if (in_array($keyword, ['select', 'show', 'describe', 'desc', 'explain'], true))
             {
                 $rows = DB::select($statement);
                 $list = [];
@@ -60,7 +60,7 @@ class SysDatabaseSqlService
                 }
 
                 $columns = [];
-                if (isset($list[0]) && is_array($list[0])) 
+                if (isset($list[0]) && is_array($list[0]))
                 {
                     $columns = array_keys($list[0]);
                 }
@@ -75,7 +75,7 @@ class SysDatabaseSqlService
 
             // 数据修改类 SQL（事务保护）
             if (in_array($keyword, ['insert', 'update', 'delete', 'replace'], true)) {
-                $affected = DB::transaction(function() use ($statement) 
+                $affected = DB::transaction(function() use ($statement)
                 {
                     return DB::affectingStatement($statement);
                 });
@@ -93,7 +93,7 @@ class SysDatabaseSqlService
                 'result' => (bool) $ok,
             ], '执行成功');
 
-        } catch (\Throwable $e) 
+        } catch (\Throwable $e)
         {
             return Result::fail('执行失败: ' . $e->getMessage());
         }

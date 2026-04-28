@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\Video;
 
 use App\Http\Controllers\Controller;
-use App\Services\Video\VideoService;
+use App\Services\Admin\Video\VideoService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;

@@ -1,9 +1,10 @@
 <?php
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 use App\Models\System\SysPermModel;
 use App\Models\System\SysRolePermModel;
 use App\Models\System\SysUserModel;
 use App\Support\Utils\Result;
+use function App\Services\System\config;
 
 /**
  * 权限服务
@@ -97,7 +98,7 @@ class SysPermService
         {
             $where[] = ['api', '=', trim((string) $params['api'])];
         }
-        
+
         if (!empty($params['method']))
         {
             $where[] = ['method', '=', strtoupper(trim((string) $params['method']))];
@@ -312,7 +313,7 @@ class SysPermService
         if (!$res) return Result::fail('删除失败');
         return Result::success();
     }
-        
+
     /**
      * 级联删除权限
      * 根据 `id` 级联删除权限点及其所有子项（菜单/按钮/接口）
@@ -395,7 +396,7 @@ class SysPermService
         $this->sortTree($tree);
         return Result::success($tree);
     }
-        
+
     /**
      * 管理员菜单列表
      * 根据用户ID返回其有权限访问的菜单列表（包含按钮）
@@ -645,7 +646,7 @@ class SysPermService
 
         return $build($root);
     }
-    
+
     /**
      * 递归排序权限树
      * 按 sort 降序排序，相同 sort 按 id 升序排序
@@ -671,7 +672,7 @@ class SysPermService
         }
         unset($n);
     }
-    
+
     /**
      * 递归展开权限树
      * 将树形结构展开为一维数组，包含层级信息

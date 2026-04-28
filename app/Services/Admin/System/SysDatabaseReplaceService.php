@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Services\System;
+namespace App\Services\Admin\System;
 
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\DB;
+use function App\Services\System\config;
 
 /**
  * 数据库数据批量替换服务（安全版）
  */
 class SysDatabaseReplaceService
-{   
+{
     /**
      * 执行数据批量替换
      * @param string $table 表名
@@ -26,14 +27,14 @@ class SysDatabaseReplaceService
         $cfg = config('database.connections.' . $connection, []);
         $driver = $cfg['driver'] ?? '';
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) 
+        if (!in_array($driver, ['mysql', 'mariadb'], true))
         {
             return Result::fail('仅支持 MySQL/MariaDB');
         }
 
         $table = trim($table);
 
-        if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table)) 
+        if ($table === '' || !preg_match('/^[A-Za-z0-9_]+$/', $table))
         {
             return Result::fail('非法表名');
         }
@@ -41,20 +42,20 @@ class SysDatabaseReplaceService
         $from = (string)$from;
         $to   = (string)$to;
 
-        if ($from === '') 
+        if ($from === '')
         {
             return Result::fail('请输入被替换内容');
         }
 
         $fields = array_values(array_filter(array_map('trim', $fields)));
-        if (empty($fields)) 
+        if (empty($fields))
         {
             return Result::fail('请选择字段');
         }
 
-        foreach ($fields as $f) 
+        foreach ($fields as $f)
         {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $f)) 
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $f))
             {
                 return Result::fail('非法字段名: ' . $f);
             }
@@ -73,9 +74,9 @@ class SysDatabaseReplaceService
         // 检查字段是否存在
         $columns = DB::select('SHOW FULL COLUMNS FROM `' . $table . '`');
         $allowedColumns = array_column($columns, null, 'Field');
-        foreach ($fields as $f) 
+        foreach ($fields as $f)
         {
-            if (!isset($allowedColumns[$f])) 
+            if (!isset($allowedColumns[$f]))
             {
                 return Result::fail('字段不存在：' . $f);
             }
@@ -84,7 +85,7 @@ class SysDatabaseReplaceService
         // 构建 SET 语句
         $setParts = [];
         $setBindings = [];
-        foreach ($fields as $col) 
+        foreach ($fields as $col)
         {
             $setParts[] = "`$col` = REPLACE(`$col`, ?, ?)";
             $setBindings[] = $from;
@@ -95,7 +96,7 @@ class SysDatabaseReplaceService
 
         // 拼接 WHERE 条件
         $whereRaw = trim($whereRaw);
-        if ($whereRaw !== '') 
+        if ($whereRaw !== '')
         {
             $sql .= ' WHERE ' . $whereRaw;
         }
@@ -112,7 +113,7 @@ class SysDatabaseReplaceService
                 'affected' => (int)$affected,
             ], "替换成功，影响 {$affected} 条数据");
 
-        } catch (\Throwable $e) 
+        } catch (\Throwable $e)
         {
             return Result::fail('替换失败: ' . $e->getMessage());
         }
