@@ -27,6 +27,9 @@ class VideoIndexPageTest extends TestCase
         $this->assertStringContainsString('无封面', $html);
         $this->assertStringContainsString('video-batch', $html);
         $this->assertStringContainsString('更多筛选', $html);
+        $this->assertStringContainsString('/admin/video/create', $html);
+        $this->assertStringNotContainsString('video-dialog-tpl', $html);
+        $this->assertStringNotContainsString('openVideoDialog', $html);
         $this->assertStringNotContainsString('id="refreshPage"', $html);
         $this->assertStringNotContainsString('批量删除', $html);
 

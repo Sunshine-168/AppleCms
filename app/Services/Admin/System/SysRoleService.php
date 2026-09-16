@@ -1,225 +1,291 @@
 <?php
+
 namespace App\Services\Admin\System;
+
 use App\Models\System\SysRoleModel;
 use App\Models\System\SysRolePermModel;
+use App\Models\System\SysUserModel;
 use App\Support\Utils\Result;
+use Illuminate\Support\Facades\Cache;
 
-
-/**
- * 角色服务类
- */
 class SysRoleService
 {
     public SysRoleModel $sysRoleModel;
+
     public SysRolePermModel $sysRolePermModel;
+
+    public SysUserModel $sysUserModel;
 
     public function __construct()
     {
         $this->sysRoleModel = new SysRoleModel();
         $this->sysRolePermModel = new SysRolePermModel();
+        $this->sysUserModel = new SysUserModel();
     }
+
     /**
-     * 获取角色列表
-     * @param string $name 角色名称
-     * @param string $code 角色标识
-     * @param mixed $status 状态
-     * @param int $limit 每页数量
-     * @return array
+     * @return array{queues:array<string,int>}
      */
-    public function getRoleLists(string $name, string $code, mixed $status, int $limit): array
+    public function roleBoard(): array
+    {
+        $queues = ['all' => 0, 'used' => 0, 'empty' => 0, 'off' => 0];
+        try {
+            $queues['all'] = $this->sysRoleModel->countByCondition([]);
+            $queues['off'] = $this->sysRoleModel->countByCondition([['status', '=', 0]]);
+            $usedIds = $this->usedRoleIds();
+            $queues['used'] = count($usedIds);
+            $queues['empty'] = max(0, $queues['all'] - $queues['used']);
+        } catch (\Throwable) {
+        }
+
+        return compact('queues');
+    }
+
+    /**
+     * @param  array{q?:string,kind?:string,limit?:int}  $params
+     */
+    public function getRoleLists(array $params): array
     {
         $where = [];
-
-        if ($limit < 1)
-        {
-            $limit = 10;
+        $q = trim((string) ($params['q'] ?? ''));
+        $kind = (string) ($params['kind'] ?? '');
+        $limit = (int) ($params['limit'] ?? 20);
+        if ($limit < 1) {
+            $limit = 20;
+        }
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $where['or'] = [
+                ['name', 'like', $like],
+                ['code', 'like', $like],
+                ['remark', 'like', $like],
+            ];
+        }
+        $usedIds = $this->usedRoleIds();
+        if ($kind === 'used') {
+            if ($usedIds === []) {
+                return Result::success(['total' => 0, 'data' => []]);
+            }
+            $where[] = ['id', 'in', $usedIds];
+        } elseif ($kind === 'empty') {
+            if ($usedIds !== []) {
+                $where[] = ['id', 'not in', $usedIds];
+            }
+        } elseif ($kind === 'off') {
+            $where[] = ['status', '=', 0];
         }
 
-        if ($name = trim($name))
-        {
-            $where[] = ['name', '=', $name];
+        $data = $this->sysRoleModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'asc']);
+        $permCounts = $this->permCounts();
+        $userCounts = $this->userCounts();
+        foreach ($data['data'] as &$item) {
+            $id = (int) ($item['id'] ?? 0);
+            $users = (int) ($userCounts[$id] ?? 0);
+            $perms = (int) ($permCounts[$id] ?? 0);
+            $item['users_count'] = $users;
+            $item['perms_count'] = $perms;
+            $item['can_delete'] = $users === 0;
+            $item['in_use'] = $users > 0;
+            $item['create_time'] = ! empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
+            $item['update_time'] = ! empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
         }
+        unset($item);
 
-        if ($code = trim($code))
-        {
-            $where[] = ['code', '=', $code];
-        }
-        if ($status !== '' && $status !== null)
-        {
-            $where[] = ['status', '=', (int) $status];
-        }
-
-        $data = $this->sysRoleModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
-
-        foreach ($data['data'] as &$item)
-        {
-            $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
-            $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
-        }
         return Result::success($data);
     }
 
-    /**
-     * 获取角色下拉选项
-     * @return array
-     */
     public function getRoleOptions(): array
     {
         $list = $this->sysRoleModel->selectByCondition([], ['id', 'name', 'status'], ['sort' => 'desc', 'id' => 'desc']);
+
         return Result::success($list);
     }
 
-    /**
-     * 添加角色
-     * @param string $name 角色名称
-     * @param string $code 角色标识
-     * @param string $remark 备注
-     * @param int $status 状态
-     * @param int $sort 排序
-     * @return array
-     */
     public function addRole(string $name, string $code, string $remark = '', int $status = 1, int $sort = 0): array
     {
         $name = trim($name);
         $code = trim($code);
         $remark = trim($remark);
-
-        if ($name === '' || $code === '')
-        {
-            return Result::fail('参数错误');
+        if ($name === '') {
+            return Result::fail('请填写名称');
         }
-
-        if ($this->sysRoleModel->existsBy(['code' => $code]))
-        {
-            return Result::fail('角色标识已存在');
+        if ($code === '') {
+            $code = $this->uniqueCode($name);
+        } elseif ($this->sysRoleModel->existsBy([['code', '=', $code]])) {
+            return Result::fail('这个标识已经有了');
         }
 
         $time = time();
-        $res = $this->sysRoleModel->inserts([
+        $id = $this->sysRoleModel->insertsGetId([
             'name' => $name,
             'code' => $code,
             'remark' => $remark,
-            'status' => (int) $status,
+            'status' => $status === 0 ? 0 : 1,
             'sort' => (int) $sort,
             'create_time' => $time,
             'update_time' => $time,
         ]);
-
-        if (!$res)
-        {
-            return Result::fail('新增失败');
+        if (! $id) {
+            return Result::fail('没能添加');
         }
 
-        return Result::success([], '新增成功');
+        return Result::success(['id' => (int) $id], '已添加，接着勾能进哪些菜单');
     }
-    /**
-     * 更新角色
-     * @param int $id 角色ID
-     * @param string $name 角色名称
-     * @param string $code 角色标识
-     * @param string $remark 备注
-     * @param int $status 状态
-     * @param int $sort 排序
-     * @return array
-     */
+
     public function updateRole(int $id, string $name, string $code, string $remark = '', int $status = 1, int $sort = 0): array
     {
-        if ($id < 1)
-        {
-            return Result::fail('参数错误');
+        if ($id < 1) {
+            return Result::fail('角色不存在');
         }
-
+        $row = $this->sysRoleModel->findById($id);
+        if (! $row) {
+            return Result::fail('角色不存在');
+        }
         $name = trim($name);
         $code = trim($code);
         $remark = trim($remark);
-
-        if ($name === '' || $code === '')
-        {
-            return Result::fail('参数错误');
+        if ($name === '') {
+            return Result::fail('请填写名称');
         }
-
-        $exists = $this->sysRoleModel->where('code', $code)->where('id', '<>', $id)->exists();
-        if ($exists)
-        {
-            return Result::fail('角色标识已存在');
+        if ($code === '') {
+            $code = (string) ($row['code'] ?? $this->uniqueCode($name, $id));
+        }
+        $dup = $this->sysRoleModel->findByCondition([['code', '=', $code]]);
+        if ($dup && (int) ($dup['id'] ?? 0) !== $id) {
+            return Result::fail('这个标识已经有了');
         }
 
         $res = $this->sysRoleModel->updateById($id, [
             'name' => $name,
             'code' => $code,
             'remark' => $remark,
-            'status' => (int) $status,
+            'status' => $status === 0 ? 0 : 1,
             'sort' => (int) $sort,
             'update_time' => time(),
         ]);
-
-        if (!$res) {
-            return Result::fail('更新失败');
+        if (! $res) {
+            return Result::fail('没能保存');
         }
 
-        return Result::success([], '更新成功');
+        return Result::success([], '已保存');
     }
-    /**
-     * 删除角色
-     * @param int $id 角色ID
-     * @return array
-     */
+
     public function deleteRole(int $id): array
     {
-        if ($id < 1)
-        {
-            return Result::fail('参数错误');
+        if ($id < 1) {
+            return Result::fail('角色不存在');
+        }
+        $users = $this->sysUserModel->countByCondition([['role_id', '=', $id]]);
+        if ($users > 0) {
+            return Result::fail('有人在用这个角色，先换人再删');
         }
 
         $res = $this->sysRoleModel->deleteById($id);
-        if (!$res)
-        {
-            return Result::fail('删除失败');
+        if (! $res) {
+            return Result::fail('没能删除');
         }
-
         $this->sysRolePermModel->deleteByCondition(['role_id' => $id]);
+        Cache::forget('role_perm_'.$id);
 
-        return Result::success([], '删除成功');
+        return Result::success([], '已删除');
     }
-    /**
-     * 设置角色权限
-     * @param int $roleId 角色ID
-     * @param array $permIds 权限ID列表
-     * @return array
-     */
+
     public function setRolePerms(int $roleId, array $permIds): array
     {
-        if ($roleId < 1)
-        {
-            return Result::fail('参数错误');
+        if ($roleId < 1) {
+            return Result::fail('角色不存在');
         }
 
         $this->sysRolePermModel->deleteByCondition(['role_id' => $roleId]);
         $rows = [];
         $time = time();
-        foreach ($permIds as $pid)
-        {
-            $rows[] = ['role_id' => (int)$roleId, 'perm_id' => (int)$pid, 'create_time' => $time, 'update_time' => $time];
+        foreach ($permIds as $pid) {
+            $pid = (int) $pid;
+            if ($pid < 1) {
+                continue;
+            }
+            $rows[] = ['role_id' => $roleId, 'perm_id' => $pid, 'create_time' => $time, 'update_time' => $time];
         }
-        if (!empty($rows))
-        {
+        if ($rows !== []) {
             $this->sysRolePermModel->insertsAll($rows);
         }
-        return Result::success();
+        Cache::forget('role_perm_'.$roleId);
+
+        return Result::success([], '已保存权限');
     }
-    /**
-     * 获取角色权限ID列表
-     * @param int $roleId 角色ID
-     * @return array
-     */
+
     public function getRolePermIds(int $roleId): array
     {
-        if ($roleId < 1)
-        {
+        if ($roleId < 1) {
             return Result::success([]);
         }
 
         $ids = $this->sysRolePermModel->uniqueColumnByCondition(['role_id' => $roleId], 'perm_id');
+
         return Result::success($ids);
+    }
+
+    /** @return list<int> */
+    protected function usedRoleIds(): array
+    {
+        $ids = $this->sysUserModel->uniqueColumnByCondition([['role_id', '>', 0]], 'role_id');
+        $out = [];
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id > 0) {
+                $out[] = $id;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    /** @return array<int,int> */
+    protected function userCounts(): array
+    {
+        $rows = $this->sysUserModel->selectByCondition([['role_id', '>', 0]], ['id', 'role_id']);
+        $out = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['role_id'] ?? 0);
+            if ($id > 0) {
+                $out[$id] = ($out[$id] ?? 0) + 1;
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return array<int,int> */
+    protected function permCounts(): array
+    {
+        $rows = $this->sysRolePermModel->selectByCondition([], ['role_id', 'perm_id']);
+        $out = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['role_id'] ?? 0);
+            if ($id > 0) {
+                $out[$id] = ($out[$id] ?? 0) + 1;
+            }
+        }
+
+        return $out;
+    }
+
+    protected function uniqueCode(string $name, int $exceptId = 0): string
+    {
+        $base = strtolower(trim((string) preg_replace('/[^a-zA-Z0-9]+/', '_', $name)));
+        $base = trim($base, '_');
+        if ($base === '' || is_numeric($base)) {
+            $base = 'role';
+        }
+        $code = $base;
+        $n = 2;
+        while (true) {
+            $dup = $this->sysRoleModel->findByCondition([['code', '=', $code]]);
+            if (! $dup || (int) ($dup['id'] ?? 0) === $exceptId) {
+                return $code;
+            }
+            $code = $base.'_'.$n;
+            $n++;
+        }
     }
 }

@@ -8,7 +8,7 @@
     <div class="toolbar">
         <button type="button" class="btn btn-sm" id="mod-add">新增</button>
         <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">刷新</button>
-        @if(in_array($module, ['cards', 'invites'], true))
+        @if($module === 'invites')
             <button type="button" class="btn btn-muted btn-sm" id="mod-gen">批量生成</button>
         @endif
         @if($module === 'collect_tasks')

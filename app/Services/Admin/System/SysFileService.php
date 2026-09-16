@@ -15,10 +15,10 @@ class SysFileService
 
     // 允许上传的扩展名
     protected array $allowExt = [
-        'jpg','jpeg','png','gif','webp',
+        'jpg','jpeg','png','gif','webp','svg','ico',
         'mp4','avi','mov',
         'pdf','doc','docx','xls','xlsx',
-        'zip','rar'
+        'zip','rar','css'
     ];
 
     // 最大文件大小 10MB
@@ -41,10 +41,11 @@ class SysFileService
         $where = [];
 
         if ($keyword = trim($keyword)) {
+            $like = '%' . $keyword . '%';
             $where['or'] = [
-                ['name', '=', $keyword],
-                ['mime', '=', $keyword],
-                ['url', '=', $keyword],
+                ['name', 'like', $like],
+                ['mime', 'like', $like],
+                ['url', 'like', $like],
             ];
         }
 
@@ -244,7 +245,7 @@ class SysFileService
      */
     protected function detectType(string $ext): int
     {
-        $image = ['jpg','jpeg','png','gif','webp'];
+        $image = ['jpg','jpeg','png','gif','webp','svg','ico'];
         $video = ['mp4','avi','mov'];
 
         if (in_array($ext, $image)) {

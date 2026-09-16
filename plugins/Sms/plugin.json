@@ -42,7 +42,9 @@
             "more.security": [
                 {
                     "url": "/admin/video/config/sms",
-                    "label": "item.config_sms"
+                    "label": "item.config_sms",
+                    "hint": "hint.config_sms",
+                    "tag": "plugin"
                 }
             ]
         },

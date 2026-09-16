@@ -4,10 +4,15 @@
     var save = document.getElementById('site-save');
     var form = document.getElementById('site-form');
     if (save && form) {
-        save.addEventListener('click', function () {
+        var doSave = function () {
             AdminUi.post('/admin/video/settings', AdminUi.formData(form)).then(function (res) {
                 AdminUi.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
             });
+        };
+        save.addEventListener('click', doSave);
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            doSave();
         });
     }
     var test = document.getElementById('site-test-mail');

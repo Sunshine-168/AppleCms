@@ -69,7 +69,9 @@
             "more.collect": [
                 {
                     "url": "/admin/video/cj",
-                    "label": "item.cj"
+                    "label": "item.cj",
+                    "hint": "hint.cj",
+                    "tag": "plugin"
                 }
             ]
         }

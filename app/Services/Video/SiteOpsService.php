@@ -21,7 +21,6 @@ use App\Models\Video\VideoWebsite;
 use App\Services\Collect\CollectIngestService;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -37,24 +36,61 @@ class SiteOpsService
         private readonly CollectIngestService $ingest,
     ) {}
 
-    /** @return list<array{path:string,name:string}> */
+    /**
+     * @return list<array{key:string,label:string,files:list<array{path:string,name:string,label:string}>}>
+     */
     public function themeFiles(): array
     {
         $root = $this->themeRoot();
         if (! is_dir($root)) {
             return [];
         }
-        $out = [];
+        $grouped = [];
         foreach (File::allFiles($root) as $file) {
-            if ($file->getExtension() !== 'php') {
+            $rel = str_replace('\\', '/', $file->getRelativePathname());
+            if (! str_ends_with(strtolower($rel), '.blade.php')) {
                 continue;
             }
-            $rel = str_replace('\\', '/', $file->getRelativePathname());
-            $out[] = ['path' => $rel, 'name' => $rel];
+            $meta = $this->themeFileMeta($rel);
+            $grouped[$meta['group']]['label'] = $meta['group_label'];
+            $grouped[$meta['group']]['files'][] = [
+                'path' => $rel,
+                'name' => basename($rel),
+                'label' => $meta['label'],
+            ];
         }
-        usort($out, fn ($a, $b) => strcmp($a['path'], $b['path']));
+        $order = ['layout' => '首页与布局', 'vod' => '影片', 'member' => '会员', 'partials' => '公共块', 'other' => '其他'];
+        $out = [];
+        foreach ($order as $key => $label) {
+            if (empty($grouped[$key]['files'])) {
+                continue;
+            }
+            $files = $grouped[$key]['files'];
+            usort($files, fn ($a, $b) => strcmp($a['label'], $b['label']));
+            $out[] = [
+                'key' => $key,
+                'label' => $grouped[$key]['label'] ?? $label,
+                'files' => $files,
+            ];
+        }
 
         return $out;
+    }
+
+    /** @return array{slug:string,title:string} */
+    public function themeInfo(): array
+    {
+        $slug = (string) config('video.theme', 'default');
+        $title = $slug;
+        $json = $this->themeRoot().DIRECTORY_SEPARATOR.'config.json';
+        if (is_file($json)) {
+            $data = json_decode((string) file_get_contents($json), true);
+            if (is_array($data)) {
+                $title = (string) ($data['title'] ?? $data['name'] ?? $slug);
+            }
+        }
+
+        return ['slug' => $slug, 'title' => $title !== '' ? $title : $slug];
     }
 
     public function readThemeFile(string $rel): array
@@ -70,6 +106,8 @@ class SiteOpsService
         return Result::success([
             'path' => str_replace('\\', '/', $rel),
             'content' => (string) file_get_contents($path),
+            'backup_at' => $this->latestBackupTime($rel),
+            'label' => $this->themeFileMeta($rel)['label'],
         ]);
     }
 
@@ -82,11 +120,17 @@ class SiteOpsService
         if (! str_ends_with(strtolower($rel), '.blade.php')) {
             return Result::fail('只能编辑 blade 模板');
         }
-        File::ensureDirectoryExists(dirname($path));
+        if (! is_file($path)) {
+            return Result::fail('文件不存在');
+        }
         $this->backupThemeFile($rel);
         File::put($path, $content);
+        try {
+            Artisan::call('view:clear');
+        } catch (\Throwable) {
+        }
 
-        return Result::success([], '已保存');
+        return Result::success(['backup_at' => $this->latestBackupTime($rel)], '已保存，并做了备份');
     }
 
     public function backupThemeFile(string $rel): array
@@ -100,7 +144,7 @@ class SiteOpsService
         File::ensureDirectoryExists(dirname($dest));
         File::copy($path, $dest);
 
-        return Result::success(['backup' => $dest], '已备份');
+        return Result::success(['backup' => $dest, 'backup_at' => $this->latestBackupTime($rel)], '已备份');
     }
 
     public function rollbackThemeFile(string $rel): array
@@ -113,8 +157,10 @@ class SiteOpsService
         if (! is_dir($root)) {
             return Result::fail('没有备份');
         }
+        $dirs = File::directories($root);
+        rsort($dirs);
         $latest = null;
-        foreach (array_reverse(File::directories($root)) as $dir) {
+        foreach ($dirs as $dir) {
             $cand = $dir.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $rel);
             if (is_file($cand)) {
                 $latest = $cand;
@@ -125,8 +171,12 @@ class SiteOpsService
             return Result::fail('没有该文件的备份');
         }
         File::copy($latest, $path);
+        try {
+            Artisan::call('view:clear');
+        } catch (\Throwable) {
+        }
 
-        return Result::success([], '已回滚');
+        return Result::success(['backup_at' => $this->latestBackupTime($rel)], '已回到上次备份');
     }
 
     public function runDueCollectTasks(): int
@@ -204,70 +254,7 @@ class SiteOpsService
 
     public function makeHtml(string $scope = 'all'): array
     {
-        Artisan::call('view:clear');
-        Cache::flush();
-        $dir = public_path('html');
-        File::ensureDirectoryExists($dir);
-        $written = [];
-        $kernel = app(HttpKernel::class);
-
-        $capture = function (string $uri, string $file) use ($kernel, $dir, &$written): void {
-            $request = Request::create($uri, 'GET');
-            $response = $kernel->handle($request);
-            if ($response->getStatusCode() === 200) {
-                $path = $dir.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $file);
-                File::ensureDirectoryExists(dirname($path));
-                File::put($path, (string) $response->getContent());
-                $written[] = 'html/'.$file;
-            }
-            $kernel->terminate($request, $response);
-        };
-
-        if (in_array($scope, ['all', 'index'], true)) {
-            $capture('/', 'index.html');
-        }
-        if (in_array($scope, ['all', 'type'], true)) {
-            foreach (VideoTypeModel::query()->where('status', 1)->orderBy('id')->limit(80)->get() as $type) {
-                $capture('/type/'.$type->id, 'type/'.$type->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'detail'], true)) {
-            foreach (VideoModel::query()->published()->orderByDesc('id')->limit(120)->get() as $video) {
-                $capture('/vod/'.$video->id, 'detail/'.$video->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'actor'], true) && Schema::hasTable('actors')) {
-            foreach (ActorModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $actor) {
-                $capture('/actor/'.$actor->id, 'actor/'.$actor->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'topic'], true) && Schema::hasTable('video_topics')) {
-            foreach (VideoTopicModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $topic) {
-                $capture('/topic/'.$topic->id, 'topic/'.$topic->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'tag'], true) && Schema::hasTable('video_tags')) {
-            foreach (VideoTagModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $tag) {
-                $slug = trim((string) $tag->slug) !== '' ? (string) $tag->slug : (string) $tag->id;
-                $capture('/tag/'.$slug, 'tag/'.$tag->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'art'], true) && Schema::hasTable('video_arts')) {
-            foreach (VideoArt::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $art) {
-                $capture('/art/'.$art->id, 'art/'.$art->id.'.html');
-            }
-        }
-        if (in_array($scope, ['all', 'website'], true) && Schema::hasTable('video_websites')) {
-            foreach (VideoWebsite::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $website) {
-                $capture('/website/'.$website->id, 'website/'.$website->id.'.html');
-            }
-        }
-
-        return Result::success([
-            'dir' => $dir,
-            'files' => $written,
-            'count' => count($written),
-        ], '已写出 '.count($written).' 个静态文件到 public/html');
+        return app(DiskHtmlService::class)->buildOnce($scope);
     }
 
     public function makeMap(string $scope = 'sitemap'): array
@@ -529,6 +516,80 @@ APACHE;
         });
 
         return Result::success(['count' => $n], '已替换 '.$n.' 条');
+    }
+
+    /** @return array{label:string,group:string,group_label:string} */
+    private function themeFileMeta(string $rel): array
+    {
+        $map = [
+            'layout.blade.php' => ['整站头尾', 'layout', '首页与布局'],
+            'index/index.blade.php' => ['首页', 'layout', '首页与布局'],
+            'partials/vod-card.blade.php' => ['影片卡片', 'partials', '公共块'],
+            'partials/filters.blade.php' => ['筛选条', 'partials', '公共块'],
+            'partials/paginate.blade.php' => ['分页', 'partials', '公共块'],
+            'vod/type.blade.php' => ['分类列表', 'vod', '影片'],
+            'vod/show.blade.php' => ['筛选结果', 'vod', '影片'],
+            'vod/detail.blade.php' => ['影片详情', 'vod', '影片'],
+            'vod/play.blade.php' => ['播放页', 'vod', '影片'],
+            'vod/player.blade.php' => ['播放器', 'vod', '影片'],
+            'vod/down.blade.php' => ['下载页', 'vod', '影片'],
+            'vod/search.blade.php' => ['搜索', 'vod', '影片'],
+            'vod/latest.blade.php' => ['最近更新', 'vod', '影片'],
+            'vod/tag.blade.php' => ['标签页', 'vod', '影片'],
+            'vod/topic.blade.php' => ['专题详情', 'vod', '影片'],
+            'vod/topics.blade.php' => ['专题列表', 'vod', '影片'],
+            'vod/actor.blade.php' => ['演员详情', 'vod', '影片'],
+            'vod/actors.blade.php' => ['演员列表', 'vod', '影片'],
+            'vod/art.blade.php' => ['文章详情', 'vod', '影片'],
+            'vod/arts.blade.php' => ['文章列表', 'vod', '影片'],
+            'vod/gbook.blade.php' => ['留言本', 'vod', '影片'],
+            'vod/role.blade.php' => ['角色详情', 'vod', '影片'],
+            'vod/roles.blade.php' => ['角色列表', 'vod', '影片'],
+            'vod/website.blade.php' => ['网址详情', 'vod', '影片'],
+            'vod/websites.blade.php' => ['网址列表', 'vod', '影片'],
+            'vod/plot.blade.php' => ['剧情', 'vod', '影片'],
+            'member/login.blade.php' => ['登录', 'member', '会员'],
+            'member/register.blade.php' => ['注册', 'member', '会员'],
+            'member/center.blade.php' => ['会员中心', 'member', '会员'],
+            'member/list.blade.php' => ['我的影片', 'member', '会员'],
+            'member/inbox.blade.php' => ['站内信', 'member', '会员'],
+        ];
+        if (isset($map[$rel])) {
+            return ['label' => $map[$rel][0], 'group' => $map[$rel][1], 'group_label' => $map[$rel][2]];
+        }
+        $base = basename($rel, '.blade.php');
+        if (str_starts_with($rel, 'member/')) {
+            return ['label' => $base, 'group' => 'member', 'group_label' => '会员'];
+        }
+        if (str_starts_with($rel, 'partials/')) {
+            return ['label' => $base, 'group' => 'partials', 'group_label' => '公共块'];
+        }
+        if (str_starts_with($rel, 'index/')) {
+            return ['label' => $base, 'group' => 'layout', 'group_label' => '首页与布局'];
+        }
+        if (str_starts_with($rel, 'vod/')) {
+            return ['label' => $base, 'group' => 'vod', 'group_label' => '影片'];
+        }
+
+        return ['label' => $base, 'group' => 'other', 'group_label' => '其他'];
+    }
+
+    private function latestBackupTime(string $rel): int
+    {
+        $root = storage_path('app/theme-backups');
+        if (! is_dir($root)) {
+            return 0;
+        }
+        $latest = 0;
+        $relPath = str_replace('/', DIRECTORY_SEPARATOR, $rel);
+        foreach (File::directories($root) as $dir) {
+            $cand = $dir.DIRECTORY_SEPARATOR.$relPath;
+            if (is_file($cand)) {
+                $latest = max($latest, (int) filemtime($cand));
+            }
+        }
+
+        return $latest;
     }
 
     private function themeRoot(): string

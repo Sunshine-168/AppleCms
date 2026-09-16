@@ -41,7 +41,9 @@
             "more.member": [
                 {
                     "url": "/admin/video/config/pay",
-                    "label": "item.config_pay"
+                    "label": "item.config_pay",
+                    "hint": "hint.config_pay",
+                    "tag": "plugin"
                 }
             ]
         },

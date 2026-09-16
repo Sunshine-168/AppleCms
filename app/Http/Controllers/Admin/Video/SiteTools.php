@@ -31,6 +31,20 @@ class SiteTools extends Controller
         if ($tool === 'hub' && Schema::hasTable('video_unions')) {
             $unions = VideoUnion::query()->orderByDesc('sort')->orderBy('id')->get();
         }
+        if ($tool === 'recycle') {
+            $types = [];
+            try {
+                $opt = app(VideoService::class)->getTypeOptions();
+                $types = ($opt['code'] ?? 1) === 0 ? ($opt['data'] ?? []) : [];
+            } catch (\Throwable) {
+            }
+
+            return view('admin.video.recycle', [
+                'title' => admin_t('page.tool_recycle'),
+                'count' => $this->tools->recycleCount(),
+                'types' => is_array($types) ? $types : [],
+            ]);
+        }
 
         return view('admin.video.tools', compact('tool', 'players', 'unions'));
     }
@@ -42,6 +56,7 @@ class SiteTools extends Controller
             'recycle.list' => $this->tools->recycleList($request->all()),
             'recycle.restore' => $this->tools->restore($request->input('ids', [])),
             'recycle.purge' => $this->purge($request->input('ids', [])),
+            'recycle.empty' => $this->emptyBin(),
             'images.scan' => $this->tools->scanImages((int) $request->input('limit', 80)),
             'images.localize' => $this->tools->localizeImages((int) $request->input('limit', 40)),
             'quality.scan' => $this->tools->quality((int) $request->input('limit', 50)),
@@ -71,24 +86,40 @@ class SiteTools extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
+    private function emptyBin(): array
+    {
+        $ids = $this->tools->recycleIds();
+        if ($ids === []) {
+            return ['code' => 1, 'msg' => '回收站是空的', 'data' => []];
+        }
+
+        return $this->purge($ids);
+    }
+
     private function purge(mixed $ids): array
     {
         $service = app(VideoService::class);
         if (is_string($ids)) {
             $ids = explode(',', $ids);
         }
-        $n = 0;
+        $list = [];
         foreach ((array) $ids as $id) {
             $id = (int) $id;
-            if ($id < 1) {
-                continue;
+            if ($id > 0) {
+                $list[] = $id;
             }
+        }
+        if ($list === []) {
+            return ['code' => 1, 'msg' => '请先勾选影片', 'data' => []];
+        }
+        $n = 0;
+        foreach ($list as $id) {
             $res = $service->purgeVideo($id);
             if (($res['code'] ?? 1) === 0) {
                 $n++;
             }
         }
 
-        return ['code' => 0, 'msg' => '已彻底删除 '.$n.' 条', 'data' => ['count' => $n]];
+        return ['code' => 0, 'msg' => '已彻底删除 '.$n.' 部', 'data' => ['count' => $n]];
     }
 }

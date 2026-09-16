@@ -14,10 +14,17 @@ class SiteSetting extends Controller
 {
     public function __construct(private readonly VideoSettingService $settings) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $tab = (string) $request->query('tab', 'site');
+        if (! in_array($tab, ['site', 'look', 'interact', 'more'], true)) {
+            $tab = 'site';
+        }
+
         return view('admin.video.settings', [
             'site' => $this->settings->site(),
+            'tab' => $tab,
+            'pluginLinks' => app(\App\Plugins\PluginHost::class)->settingsLinks(),
         ]);
     }
 

@@ -103,6 +103,8 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     // 视频管理
     Route::get('/video', [Video::class, 'index'])->name('admin.video.index');
     Route::get('/video/index', [Video::class, 'index']);// 视频管理首页
+    Route::get('/video/create', [Video::class, 'create'])->name('admin.video.create');
+    Route::get('/video/{id}/edit', [Video::class, 'edit'])->whereNumber('id')->name('admin.video.edit');
     Route::get('/video/list', [Video::class, 'getVideoLists'])->name('admin.video.list');// 获取视频列表
     Route::get('/video/info', [Video::class, 'getVideoInfo'])->name('admin.video.info');// 获取视频详情
     Route::post('/video/save', [Video::class, 'saveVideo'])->name('admin.video.save');// 保存视频
@@ -112,8 +114,10 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/collect/options', [Video::class, 'getCollectSourceOptions'])->name('admin.video.collect.options');// 视频采集源下拉选项
     
     // 视频类型管理
-    Route::get('/video/types', [Video::class, 'showTypes'])->name('admin.video.types');// 显示视频类型管理页
-    Route::get('/video/types/list', [Video::class, 'getTypeLists'])->name('admin.video.types.list');// 获取视频类型列表
+    Route::get('/video/types', [Video::class, 'showTypes'])->name('admin.video.types');
+    Route::get('/video/types/create', [Video::class, 'createType'])->name('admin.video.types.create');
+    Route::get('/video/types/{id}/edit', [Video::class, 'editType'])->whereNumber('id')->name('admin.video.types.edit');
+    Route::get('/video/types/list', [Video::class, 'getTypeLists'])->name('admin.video.types.list');
     Route::post('/video/types/save', [Video::class, 'saveType'])->name('admin.video.types.save');// 保存视频类型
     Route::post('/video/types/delete', [Video::class, 'deleteType'])->name('admin.video.types.delete');// 删除视频类型
     Route::post('/video/types/batch', [Video::class, 'batchTypes'])->name('admin.video.types.batch');
@@ -168,6 +172,10 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
     Route::post('/video/invites/generate', [SiteModule::class, 'generateInvites']);
     Route::post('/video/collect_tasks/run', [SiteModule::class, 'runCollectTask']);
+    Route::post('/video/players/ensure', [SiteModule::class, 'ensurePlayers']);
+    Route::get('/video/unions/create', [SiteModule::class, 'createUnion']);
+    Route::get('/video/unions/{id}/edit', [SiteModule::class, 'editUnion'])->whereNumber('id');
+    Route::post('/video/unions/adopt', [SiteModule::class, 'adoptUnion']);
     Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
     Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');
 
@@ -180,6 +188,15 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/push', [SiteOps::class, 'push']);
     Route::post('/video/push/run', [SiteOps::class, 'pushRun']);
     Route::get('/video/make', [SiteOps::class, 'make']);
+    Route::post('/video/make/cache', [SiteOps::class, 'makeCacheSave']);
+    Route::post('/video/make/cache-clear', [SiteOps::class, 'makeCacheClear']);
+    Route::post('/video/make/cache-warm', [SiteOps::class, 'makeCacheWarm']);
+    Route::post('/video/make/disk', [SiteOps::class, 'makeDiskSave']);
+    Route::post('/video/make/start', [SiteOps::class, 'makeStart']);
+    Route::post('/video/make/step', [SiteOps::class, 'makeStep']);
+    Route::get('/video/make/status', [SiteOps::class, 'makeStatus']);
+    Route::post('/video/make/cancel', [SiteOps::class, 'makeCancel']);
+    Route::post('/video/make/clear', [SiteOps::class, 'makeClear']);
     Route::post('/video/make/run', [SiteOps::class, 'makeRun']);
     Route::post('/video/make/map', [SiteOps::class, 'makeMap']);
     Route::post('/video/playfails/offline', [SiteOps::class, 'disableFailSource']);

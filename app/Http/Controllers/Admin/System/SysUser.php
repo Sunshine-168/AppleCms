@@ -29,7 +29,13 @@ class SysUser extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.user.index');
+        $board = $this->systemUserService->adminBoard();
+
+        return view('admin.system.user.index', [
+            'roles' => $board['roles'] ?? [],
+            'queues' => $board['queues'] ?? [],
+            'currentId' => (int) session('admin_uid', 0),
+        ]);
     }
 
     /**
@@ -39,9 +45,13 @@ class SysUser extends Controller
      */
     public function getSystemUserLists(Request $request): JsonResponse
     {
-        $username = (string) $request->input('username', '');
-        $limit    = (int) $request->input('limit', 10);
-        $data     = $this->systemUserService->getSysUserLists($username, $limit);
+        $data = $this->systemUserService->getSysUserLists([
+            'q' => (string) ($request->input('q', '') !== '' ? $request->input('q') : $request->input('username', '')),
+            'kind' => (string) $request->input('kind', ''),
+            'role_id' => (string) $request->input('role_id', ''),
+            'limit' => (int) $request->input('limit', 20),
+        ]);
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -220,7 +230,15 @@ class SysUser extends Controller
      */
     public function showSystemUserLoginLogs(): View|Factory
     {
-        return view('admin.system.monitor.login_logs');
+        $now = now();
+
+        return view('admin.system.monitor.login_logs', [
+            'currentName' => (string) session('admin_username', ''),
+            'today' => $now->toDateString(),
+            'yesterday' => $now->copy()->subDay()->toDateString(),
+            'weekFrom' => $now->copy()->subDays(6)->toDateString(),
+            'monthFrom' => $now->copy()->subDays(29)->toDateString(),
+        ]);
     }
 
     /**
@@ -230,12 +248,16 @@ class SysUser extends Controller
      */
     public function getSystemUserLoginLists(Request $request): JsonResponse
     {
+        $q = (string) $request->input('q', '');
+        $username = (string) $request->input('username', '');
         $params = [
-            'username'      => (string) $request->input('username', ''),
-            'login_ip'      => (string) $request->input('login_ip', ''),
-            'start_time'    => (string) $request->input('start_time', ''),
-            'end_time'      => (string) $request->input('end_time', ''),
-            'limit'         => (int) $request->input('limit', 10),
+            'q' => $q !== '' ? $q : $username,
+            'username' => $username,
+            'login_ip' => (string) ($request->input('login_ip', '') ?: $request->input('ip', '')),
+            'mine' => $request->boolean('mine'),
+            'start_time' => (string) ($request->input('start_time', '') ?: $request->input('from', '')),
+            'end_time' => (string) ($request->input('end_time', '') ?: $request->input('to', '')),
+            'limit' => (int) $request->input('limit', 20),
         ];
 
         $data = $this->systemUserService->getSysUserLoginLists($params);

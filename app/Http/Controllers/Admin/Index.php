@@ -1,7 +1,9 @@
 <?php
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use App\Plugins\PluginManager;
 use App\Services\Admin\VideoDashboardService;
+use App\Support\AdminNav;
 use App\Support\AdminUi;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
@@ -32,10 +34,14 @@ class Index extends Controller
     /**
      * 全部功能目录
      */
-    public function more(): View|Factory
+    public function more(PluginManager $plugins): View|Factory
     {
+        $list = $plugins->listForAdmin();
+
         return view('admin.more', [
-            'catalog' => \App\Support\AdminNav::catalog(),
+            'catalog' => AdminNav::catalog(),
+            'plugins' => array_values(array_filter($list, static fn (array $row): bool => ! empty($row['enabled']))),
+            'pluginTotal' => count($list),
         ]);
     }
 

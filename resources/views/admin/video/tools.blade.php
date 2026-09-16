@@ -48,13 +48,6 @@
             <button type="button" class="btn btn-danger btn-sm" id="btn-del">删除未引用</button>
         </div>
         <pre id="out" class="out"></pre>
-    @elseif($tool === 'recycle')
-        <p class="hint">删除的影片先进入回收站，可还原或彻底删除。</p>
-        <div class="toolbar">
-            <button type="button" class="btn btn-sm" id="btn-restore">还原选中</button>
-            <button type="button" class="btn btn-danger btn-sm" id="btn-purge">彻底删除</button>
-        </div>
-        <div id="rec-table"></div>
     @else
         <p class="hint">填写苹果 CMS 兼容接口地址，探测分类和样例。也可在「推荐资源」里保存常用源。</p>
         <div class="field-inline">
@@ -82,7 +75,6 @@
 (function () {
     var U = AdminUi;
     var tool = @json($tool);
-    var recTable = null;
     function post(action, extra, cb) {
         U.loading(true);
         U.post('/admin/video/tools/' + tool + '/run', Object.assign({action: action}, extra || {})).then(function (res) {
@@ -112,40 +104,6 @@
             U.q('#hub-url').value = a.getAttribute('data-url') || '';
         });
     });
-    if (tool === 'recycle') {
-        recTable = U.table({
-            el: '#rec-table',
-            url: '/admin/video/list',
-            where: {trash: 1},
-            cols: [
-                {check: true, width: 36},
-                {key: 'id', title: 'ID', width: 70},
-                {key: 'title', title: '标题'},
-                {key: 'type_name', title: '分类', width: 120},
-                {title: '删除时间', width: 160, html: function (d) {
-                    var t = parseInt(d.deleted_at || 0, 10);
-                    return t ? new Date(t * 1000).toLocaleString() : '';
-                }}
-            ]
-        });
-        U.on('#btn-restore', 'click', function () {
-            var ids = recTable.selectedIds();
-            if (!ids.length) { U.toast('请选择', 'err'); return; }
-            post('restore', {ids: ids.join(',')}, function (res) {
-                U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
-                recTable.refresh();
-            });
-        });
-        U.on('#btn-purge', 'click', function () {
-            var ids = recTable.selectedIds();
-            if (!ids.length) { U.toast('请选择', 'err'); return; }
-            if (!U.confirm('彻底删除后无法恢复')) return;
-            post('purge', {ids: ids.join(',')}, function (res) {
-                U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
-                recTable.refresh();
-            });
-        });
-    }
 })();
 </script>
 @endpush

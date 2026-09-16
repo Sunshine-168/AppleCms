@@ -34,6 +34,68 @@ class SiteModule extends Controller
                 'queues' => $this->modules->artQueues(),
             ]);
         }
+        if ($module === 'slides') {
+            return view('admin.video.slides', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->slideQueues(),
+            ]);
+        }
+        if ($module === 'members') {
+            return view('admin.video.members', [
+                'title' => $cfg['title'],
+                'groups' => $this->modules->memberGroupOptions(),
+                'queues' => $this->modules->memberQueues(),
+            ]);
+        }
+        if ($module === 'orders') {
+            return view('admin.video.orders', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->orderQueues(),
+            ]);
+        }
+        if ($module === 'groups') {
+            return view('admin.video.groups', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->groupQueues(),
+            ]);
+        }
+        if ($module === 'cards') {
+            return view('admin.video.cards', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->cardQueues(),
+            ]);
+        }
+        if ($module === 'plogs') {
+            return view('admin.video.plogs', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->plogQueues(),
+            ]);
+        }
+        if ($module === 'ads') {
+            return view('admin.video.ads', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->adQueues(),
+                'types' => $this->modules->vodTypeOptions(),
+            ]);
+        }
+        if ($module === 'links') {
+            return view('admin.video.links', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->linkQueues(),
+            ]);
+        }
+        if ($module === 'players') {
+            return view('admin.video.players', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->playerQueues(),
+            ]);
+        }
+        if ($module === 'unions') {
+            return view('admin.video.unions', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->unionQueues(),
+            ]);
+        }
 
         return view('admin.video.module', [
             'module' => $module,
@@ -122,6 +184,49 @@ class SiteModule extends Controller
     public function runCollectTask(Request $request): JsonResponse
     {
         $data = $this->modules->runCollectTask((int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function ensurePlayers(): JsonResponse
+    {
+        $data = $this->modules->ensurePlayers();
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function createUnion(): View
+    {
+        return view('admin.video.union_form', [
+            'union' => ['status' => 1, 'sort' => 0],
+            'isEdit' => false,
+        ]);
+    }
+
+    public function editUnion(int $id): View
+    {
+        $union = $this->modules->getUnion($id);
+        if ($union === null) {
+            abort(404);
+        }
+
+        return view('admin.video.union_form', [
+            'union' => $union,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function adoptUnion(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        if (is_array($ids) && $ids !== []) {
+            $data = $this->modules->adoptUnions($ids);
+        } else {
+            $data = $this->modules->adoptUnion((int) $request->input('id', 0));
+        }
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

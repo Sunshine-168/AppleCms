@@ -146,8 +146,17 @@ class VideoService
 
         if ((string) ($params['trash'] ?? '') === '1' && Schema::hasColumn('videos', 'deleted_at')) {
             $q = VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0);
-            if ($title !== '') {
-                $q->where('title', 'like', '%'.$title.'%');
+            $kw = trim((string) ($params['q'] ?? $title));
+            if ($kw !== '') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            }
+            if ($typeId !== null && $typeId !== '') {
+                $q->where('type_id', (int) $typeId);
             }
             $page = $q->orderByDesc('deleted_at')->paginate($limit);
             $data = [
@@ -311,7 +320,7 @@ class VideoService
     /** @return array<string, int> */
     public function queueCounts(): array
     {
-        $zero = ['all' => 0, 'pending' => 0, 'empty_url' => 0, 'empty_pic' => 0, 'repeat' => 0];
+        $zero = ['all' => 0, 'pending' => 0, 'empty_url' => 0, 'empty_pic' => 0, 'repeat' => 0, 'recycle' => 0];
         try {
             if (! Schema::hasTable('videos')) {
                 return $zero;
@@ -337,6 +346,9 @@ class VideoService
                     $q->whereNull('cover')->orWhere('cover', '');
                 })->count(),
                 'repeat' => $repeat,
+                'recycle' => Schema::hasColumn('videos', 'deleted_at')
+                    ? (int) VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->count()
+                    : 0,
             ];
         } catch (\Throwable) {
             return $zero;
@@ -702,6 +714,16 @@ class VideoService
             'last_page' => 1,
             'per_page' => max(count($flat), 1),
         ]);
+    }
+
+    public function getTypeInfo(int $id): array
+    {
+        $row = $this->videoTypeModel->findById($id);
+        if (empty($row)) {
+            return Result::fail('分类不存在');
+        }
+
+        return Result::success($row);
     }
 
     /**

@@ -337,8 +337,10 @@ class InteractionService
         $card->used_at = time();
         $card->save();
         $member->increment('points', (int) $card->points);
+        $fresh = $member->fresh();
+        $this->writePointLog($fresh, (int) $card->points, 'card', '卡密 '.$code);
 
-        return Result::success(['points' => $member->fresh()->points], '充值成功，到账 '.$card->points.' 积分');
+        return Result::success(['points' => (int) $fresh->points], '充值成功，到账 '.$card->points.' 积分');
     }
 
     public function redeemCoupon(Member $member, string $code): array
@@ -364,8 +366,10 @@ class InteractionService
         $coupon->used_at = time();
         $coupon->save();
         $member->increment('points', (int) $coupon->points);
+        $fresh = $member->fresh();
+        $this->writePointLog($fresh, (int) $coupon->points, 'coupon', '优惠券 '.$code);
 
-        return Result::success(['points' => $member->fresh()->points], '优惠券已兑换，到账 '.$coupon->points.' 积分');
+        return Result::success(['points' => (int) $fresh->points], '优惠券已兑换，到账 '.$coupon->points.' 积分');
     }
 
     public function consumePlayPoints(?\App\Models\Member\Member $member, VideoModel $video): array
@@ -385,7 +389,7 @@ class InteractionService
             }
             if ((int) $member->points >= $need) {
                 $member->decrement('points', $need);
-                $this->writePlayPointLog($member->fresh(), -$need);
+                $this->writePointLog($member->fresh(), -$need, 'play', '点播');
 
                 return Result::success(['points' => $need], '已扣除 '.$need.' 积分');
             }
@@ -432,7 +436,7 @@ class InteractionService
         return max(0, $limit - $used);
     }
 
-    private function writePlayPointLog(?Member $member, int $points): void
+    private function writePointLog(?Member $member, int $points, string $type, string $remark): void
     {
         if (! $member || ! Schema::hasTable('member_point_logs')) {
             return;
@@ -442,8 +446,8 @@ class InteractionService
                 'member_id' => (int) $member->id,
                 'points' => $points,
                 'balance' => (int) $member->points,
-                'type' => 'play',
-                'remark' => '点播',
+                'type' => $type,
+                'remark' => mb_substr($remark, 0, 250),
                 'created_at' => time(),
             ]);
         } catch (\Throwable) {

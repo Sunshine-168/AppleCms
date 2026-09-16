@@ -44,19 +44,27 @@ class PlayerController extends Controller
             }
         }
 
-        $playUrl = $payError !== '' ? '' : (string) ($episode?->url ?? '');
-        $playerCode = (string) ($source?->player ?: $source?->name ?: '');
-        $parser = VideoPlayerModel::query()->where('status', 1)
-            ->when($playerCode !== '', fn ($q) => $q->where('code', $playerCode))
-            ->orderByDesc('sort')
-            ->first();
-        if ($parser && trim((string) $parser->parse) !== '' && $playUrl !== '') {
-            $playUrl = str_replace(['{url}', '{id}'], [rawurlencode((string) $episode?->url), (string) $id], (string) $parser->parse);
+        $rawUrl = $payError !== '' ? '' : (string) ($episode?->url ?? '');
+        $playUrl = $rawUrl;
+        $playerCode = trim((string) ($source?->player ?: $source?->name ?: ''));
+        $parser = null;
+        if ($playerCode !== '') {
+            $parser = VideoPlayerModel::query()->where('status', 1)->where('code', $playerCode)->orderByDesc('sort')->first();
         }
+        if (! $parser) {
+            $parser = VideoPlayerModel::query()->where('status', 1)->orderByDesc('sort')->first();
+        }
+        if ($parser && trim((string) $parser->parse) !== '' && $rawUrl !== '') {
+            $playUrl = str_replace(['{url}', '{id}'], [rawurlencode($rawUrl), (string) $id], (string) $parser->parse);
+        }
+        $engine = VideoPlayerModel::resolveEngine($parser, $playUrl, $rawUrl);
         $settings = app(\App\Services\Video\VideoSettingService::class);
         $playEncrypt = (int) $settings->get('play_encrypt', '0');
         $playBuffer = (int) $settings->get('play_buffer', '5');
 
-        return view($this->front->themeView('vod.player'), compact('site', 'video', 'source', 'episode', 'playUrl', 'parser', 'trysee', 'payError', 'playEncrypt', 'playBuffer'));
+        return view($this->front->themeView('vod.player'), compact(
+            'site', 'video', 'source', 'episode', 'playUrl', 'rawUrl', 'parser', 'engine',
+            'trysee', 'payError', 'playEncrypt', 'playBuffer'
+        ));
     }
 }

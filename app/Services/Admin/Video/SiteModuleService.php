@@ -2,16 +2,27 @@
 
 namespace App\Services\Admin\Video;
 
+use App\Models\Member\Member;
+use App\Models\Member\MemberGroup;
+use App\Models\Member\MemberOrder;
+use App\Models\Member\MemberPointLog;
+use App\Models\Video\CollectSourceModel;
+use App\Models\Video\FriendLink;
+use App\Models\Video\VideoAd;
 use App\Models\Video\VideoArt;
 use App\Models\Video\VideoCard;
 use App\Models\Video\VideoComment;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoSlide;
+use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTopicRelModel;
 use App\Models\Video\VideoTypeModel;
+use App\Models\Video\VideoUnion;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -45,24 +56,27 @@ class SiteModuleService
             ],
             'players' => [
                 'title' => '播放器',
+                'hint' => '播放器是线路用的内核。直链用 ArtPlayer / DPlayer / Video.js；加密采集地址填解析接口。标识要和线路上的播放器字段一致。',
                 'model' => \App\Models\Video\VideoPlayerModel::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'code', 'label' => '标识', 'type' => 'text'],
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'parse', 'label' => '解析(可用{url})', 'type' => 'textarea'],
+                    ['name' => 'engine', 'label' => '内核', 'type' => 'text'],
+                    ['name' => 'parse', 'label' => '解析', 'type' => 'textarea'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
-                'cols' => ['id', 'code', 'name', 'status', 'sort'],
+                'cols' => ['id', 'code', 'name', 'engine', 'status', 'sort'],
             ],
             'links' => [
                 'title' => '友情链接',
+                'hint' => '友链出现在页脚。默认主题只显示文字；有 Logo 时自定义主题可改成图链。隐藏后前台不再输出。',
                 'model' => \App\Models\Video\FriendLink::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'url', 'label' => '链接', 'type' => 'text'],
+                    ['name' => 'url', 'label' => '网址', 'type' => 'text'],
                     ['name' => 'logo', 'label' => 'Logo', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
@@ -94,21 +108,23 @@ class SiteModuleService
                 'cols' => ['id', 'video_id', 'content', 'status'],
             ],
             'members' => [
-                'title' => '会员管理',
+                'title' => '会员',
+                'hint' => '会员登录的是网站，不是后台。积分用来点播，分组决定试看和门槛。',
                 'model' => \App\Models\Member\Member::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '昵称', 'type' => 'text'],
                     ['name' => 'email', 'label' => '邮箱', 'type' => 'text'],
-                    ['name' => 'password', 'label' => '密码(留空不改)', 'type' => 'text'],
+                    ['name' => 'password', 'label' => '密码', 'type' => 'text'],
                     ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'group_id', 'label' => '会员组ID', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '正常', '0' => '禁用']],
+                    ['name' => 'group_id', 'label' => '会员组', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '正常', '0' => '停用']],
                 ],
                 'cols' => ['id', 'name', 'email', 'points', 'group_id', 'status'],
             ],
             'cards' => [
                 'title' => '积分卡密',
+                'hint' => '批量生成后发给会员，他们在会员中心兑换加积分。每张只能用一次。已兑的不能改、不能删。',
                 'model' => VideoCard::class,
                 'search' => 'code',
                 'fields' => [
@@ -187,16 +203,17 @@ class SiteModuleService
             ],
             'ads' => [
                 'title' => '广告位',
+                'hint' => '广告按位置出现。页头在导航旁，页脚在版权上，播放页在播放器下。过期或停用后前台不再输出。',
                 'model' => \App\Models\Video\VideoAd::class,
                 'search' => 'name',
                 'fields' => [
-                    ['name' => 'slot', 'label' => '标识 header/footer/play', 'type' => 'text'],
+                    ['name' => 'slot', 'label' => '位置', 'type' => 'text'],
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'type_id', 'label' => '分类ID(0全部)', 'type' => 'number'],
-                    ['name' => 'expire_at', 'label' => '过期时间戳(0不过期)', 'type' => 'number'],
-                    ['name' => 'content', 'label' => 'HTML', 'type' => 'textarea'],
+                    ['name' => 'type_id', 'label' => '分类', 'type' => 'number'],
+                    ['name' => 'expire_at', 'label' => '到期', 'type' => 'text'],
+                    ['name' => 'content', 'label' => '代码', 'type' => 'textarea'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'slot', 'name', 'type_id', 'expire_at', 'status', 'sort'],
             ],
@@ -214,6 +231,7 @@ class SiteModuleService
             ],
             'groups' => [
                 'title' => '会员组',
+                'hint' => '会员组是点播档位。积分门槛、试看秒数、每天免费条数在这里。停用后这组权限关掉，人还在名单里。删掉后会员变成未分组。',
                 'model' => \App\Models\Member\MemberGroup::class,
                 'search' => 'name',
                 'fields' => [
@@ -223,12 +241,13 @@ class SiteModuleService
                     ['name' => 'day_free', 'label' => '每天免费条数', 'type' => 'number'],
                     ['name' => 'need_login', 'label' => '点播需登录', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'name', 'points_min', 'trysee', 'day_free', 'status', 'sort'],
             ],
             'orders' => [
-                'title' => '会员订单',
+                'title' => '订单',
+                'hint' => '订单是充值入账。确认已付会给会员加积分，每笔只加一次。关掉或删除不会扣回去。',
                 'model' => \App\Models\Member\MemberOrder::class,
                 'search' => 'order_no',
                 'fields' => [
@@ -236,7 +255,7 @@ class SiteModuleService
                     ['name' => 'order_no', 'label' => '单号', 'type' => 'text'],
                     ['name' => 'amount', 'label' => '金额分', 'type' => 'number'],
                     ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'channel', 'label' => '渠道 wechat/alipay/manual', 'type' => 'text'],
+                    ['name' => 'channel', 'label' => '渠道', 'type' => 'select', 'options' => ['manual' => '人工', 'wechat' => '微信', 'alipay' => '支付宝']],
                     ['name' => 'trade_no', 'label' => '支付流水', 'type' => 'text'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '待付', '1' => '已付', '2' => '关闭']],
                     ['name' => 'remark', 'label' => '备注', 'type' => 'text'],
@@ -286,13 +305,12 @@ class SiteModuleService
             ],
             'plogs' => [
                 'title' => '积分流水',
-                'model' => \App\Models\Member\MemberPointLog::class,
+                'hint' => '点播、充值、卡密、后台调积分都会记在这里。删记录不会改会员积分。',
+                'model' => MemberPointLog::class,
                 'search' => 'remark',
                 'fields' => [
                     ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
                     ['name' => 'points', 'label' => '变动', 'type' => 'number'],
-                    ['name' => 'balance', 'label' => '余额', 'type' => 'number'],
-                    ['name' => 'type', 'label' => '类型', 'type' => 'text'],
                     ['name' => 'remark', 'label' => '备注', 'type' => 'text'],
                 ],
                 'cols' => ['id', 'member_id', 'points', 'balance', 'type', 'remark', 'created_at'],
@@ -358,6 +376,7 @@ class SiteModuleService
             ],
             'unions' => [
                 'title' => '推荐资源',
+                'hint' => '收藏别人给的苹果接口。点接入后才会出现在采集源里。',
                 'model' => \App\Models\Video\VideoUnion::class,
                 'search' => 'name',
                 'fields' => [
@@ -557,11 +576,116 @@ class SiteModuleService
                         $inner->orWhere('id', (int) $kw);
                     }
                 });
+            } elseif ($module === 'members') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('email', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'orders') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('order_no', 'like', '%'.$kw.'%');
+                    if (Schema::hasColumn('member_orders', 'trade_no')) {
+                        $inner->orWhere('trade_no', 'like', '%'.$kw.'%');
+                    }
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'cards') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('code', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('used_by', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('used_by', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'plogs') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('remark', 'like', '%'.$kw.'%')
+                        ->orWhere('type', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'ads') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('slot', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'links') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('url', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'players') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('code', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'unions') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('api_url', 'like', '%'.$kw.'%')
+                        ->orWhere('note', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
             } else {
                 $q->where($cfg['search'], 'like', '%'.$kw.'%');
             }
         }
-        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides') {
+        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
             }
@@ -574,8 +698,97 @@ class SiteModuleService
             if ($module === 'slides' && trim((string) ($params['slot'] ?? '')) !== '') {
                 $q->where('slot', trim((string) $params['slot']));
             }
+            if ($module === 'members' && array_key_exists('group_id', $params) && $params['group_id'] !== '' && $params['group_id'] !== null) {
+                $gid = (int) $params['group_id'];
+                if ($gid === 0) {
+                    $q->where(function ($inner) {
+                        $inner->where('group_id', 0)->orWhereNull('group_id');
+                    });
+                } else {
+                    $q->where('group_id', $gid);
+                }
+            }
+            if ($module === 'orders' && trim((string) ($params['channel'] ?? '')) !== '') {
+                $q->where('channel', trim((string) $params['channel']));
+            }
         }
-        if ($module === 'topics' || $module === 'slides') {
+        if ($module === 'cards') {
+            $queue = trim((string) ($params['queue'] ?? ''));
+            if ($queue === 'unused') {
+                $q->where('status', 1)->where('used_by', 0);
+            } elseif ($queue === 'used') {
+                $q->where('used_by', '>', 0);
+            } elseif ($queue === 'void') {
+                $q->where('status', 0)->where('used_by', 0);
+            }
+            if (array_key_exists('used_by', $params) && $params['used_by'] !== '' && $params['used_by'] !== null) {
+                $q->where('used_by', (int) $params['used_by']);
+            }
+        }
+        if ($module === 'plogs') {
+            $dir = trim((string) ($params['dir'] ?? ''));
+            if ($dir === 'in') {
+                $q->where('points', '>', 0);
+            } elseif ($dir === 'out') {
+                $q->where('points', '<', 0);
+            }
+            $type = trim((string) ($params['type'] ?? ''));
+            $types = ['play', 'order', 'admin', 'card', 'coupon', 'invite', 'withdraw', 'sys'];
+            if (in_array($type, $types, true)) {
+                $q->where('type', $type);
+            }
+            if (array_key_exists('member_id', $params) && $params['member_id'] !== '' && $params['member_id'] !== null) {
+                $q->where('member_id', (int) $params['member_id']);
+            }
+        }
+        if ($module === 'ads') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if (trim((string) ($params['slot'] ?? '')) !== '') {
+                $q->where('slot', trim((string) $params['slot']));
+            }
+            if ((string) ($params['expired'] ?? '') === '1' && $this->hasColumn(new $class, 'expire_at')) {
+                $now = time();
+                $q->where('expire_at', '>', 0)->where('expire_at', '<', $now);
+            }
+        }
+        if ($module === 'links') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['logo'] ?? '') === '1') {
+                $q->where('logo', '!=', '')->whereNotNull('logo');
+            }
+        }
+        if ($module === 'players') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            $engine = strtolower(trim((string) ($params['engine'] ?? '')));
+            if (in_array($engine, VideoPlayerModel::engines(), true) && $this->hasColumn(new $class, 'engine')) {
+                $q->where('engine', $engine);
+            }
+        }
+        if ($module === 'unions') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            $adopted = $params['adopted'] ?? '';
+            if ($adopted !== '' && $adopted !== null) {
+                $variants = $this->collectApiUrlVariants();
+                if ((int) $adopted === 1) {
+                    if ($variants === []) {
+                        $q->whereRaw('0 = 1');
+                    } else {
+                        $q->whereIn('api_url', $variants);
+                    }
+                } elseif ($variants !== []) {
+                    $q->whereNotIn('api_url', $variants);
+                }
+            }
+        }
+        if ($module === 'topics' || $module === 'slides' || $module === 'groups' || $module === 'ads' || $module === 'links' || $module === 'players' || $module === 'unions') {
             $q->orderByDesc('sort')->orderByDesc('id');
         } elseif ($module === 'arts') {
             $q->orderByDesc('updated_at')->orderByDesc('id');
@@ -600,6 +813,33 @@ class SiteModuleService
         }
         if ($module === 'slides') {
             $rows = $this->decorateSlides($rows);
+        }
+        if ($module === 'members') {
+            $rows = $this->decorateMembers($rows);
+        }
+        if ($module === 'orders') {
+            $rows = $this->decorateOrders($rows);
+        }
+        if ($module === 'groups') {
+            $rows = $this->decorateGroups($rows);
+        }
+        if ($module === 'cards') {
+            $rows = $this->decorateCards($rows);
+        }
+        if ($module === 'plogs') {
+            $rows = $this->decoratePlogs($rows);
+        }
+        if ($module === 'ads') {
+            $rows = $this->decorateAds($rows);
+        }
+        if ($module === 'links') {
+            $rows = $this->decorateLinks($rows);
+        }
+        if ($module === 'players') {
+            $rows = $this->decoratePlayers($rows);
+        }
+        if ($module === 'unions') {
+            $rows = $this->decorateUnions($rows);
         }
 
         return Result::success([
@@ -628,6 +868,38 @@ class SiteModuleService
             } else {
                 $payload['password'] = Hash::make($pwd);
             }
+            $name = trim((string) ($payload['name'] ?? ''));
+            $email = trim((string) ($payload['email'] ?? ''));
+            if ($id === null) {
+                if ($name === '') {
+                    return Result::fail('请填写昵称');
+                }
+                if ($email === '') {
+                    return Result::fail('请填写邮箱');
+                }
+                if (! isset($payload['password'])) {
+                    return Result::fail('请填写密码');
+                }
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if ($email !== '') {
+                $payload['email'] = $email;
+                $dup = Member::query()->where('email', $email);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个邮箱已经注册过');
+                }
+            }
+            if (array_key_exists('group_id', $payload)) {
+                $payload['group_id'] = max(0, (int) $payload['group_id']);
+            }
+            if (array_key_exists('points', $payload)) {
+                $payload['points'] = max(0, (int) $payload['points']);
+            }
         }
         if ($module === 'orders' && $id === null && trim((string) ($payload['order_no'] ?? '')) === '') {
             $payload['order_no'] = 'V'.date('YmdHis').Str::upper(Str::random(4));
@@ -638,8 +910,259 @@ class SiteModuleService
         if ($module === 'arts' && $id === null && trim((string) ($payload['title'] ?? '')) === '') {
             return Result::fail('请填写标题');
         }
+        if ($module === 'slides') {
+            if ($id === null) {
+                if (trim((string) ($payload['name'] ?? '')) === '') {
+                    return Result::fail('请填写名称');
+                }
+                if (trim((string) ($payload['pic'] ?? '')) === '') {
+                    return Result::fail('请上传图片');
+                }
+            }
+            if (array_key_exists('slot', $payload)) {
+                $slot = trim((string) $payload['slot']);
+                if ($slot === '') {
+                    $payload['slot'] = 'home';
+                } elseif (! in_array($slot, ['home', 'play'], true)) {
+                    return Result::fail('位置只能是首页或播放页');
+                } else {
+                    $payload['slot'] = $slot;
+                }
+            } elseif ($id === null) {
+                $payload['slot'] = 'home';
+            }
+        }
+        if ($module === 'orders') {
+            if (array_key_exists('amount_yuan', $data) && $this->hasColumn($probe, 'amount')) {
+                $payload['amount'] = max(0, (int) round((float) $data['amount_yuan'] * 100));
+            }
+            if ($id === null && (int) ($payload['member_id'] ?? 0) < 1) {
+                return Result::fail('请填写会员 ID');
+            }
+            if (array_key_exists('member_id', $payload)) {
+                $payload['member_id'] = (int) $payload['member_id'];
+            }
+            if (array_key_exists('points', $payload)) {
+                $payload['points'] = max(0, (int) $payload['points']);
+            }
+            if (array_key_exists('amount', $payload)) {
+                $payload['amount'] = max(0, (int) $payload['amount']);
+            }
+            if (array_key_exists('channel', $payload)) {
+                $channel = trim((string) $payload['channel']);
+                $payload['channel'] = in_array($channel, ['wechat', 'alipay', 'manual'], true) ? $channel : 'manual';
+            } elseif ($id === null && $this->hasColumn($probe, 'channel')) {
+                $payload['channel'] = 'manual';
+            }
+        }
+        if ($module === 'groups') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            foreach (['points_min', 'trysee', 'day_free', 'sort', 'need_login', 'status'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+        }
+        if ($module === 'cards') {
+            if (array_key_exists('code', $payload)) {
+                $payload['code'] = strtoupper((string) preg_replace('/\s+/', '', trim((string) $payload['code'])));
+            }
+            if (array_key_exists('points', $payload)) {
+                $payload['points'] = max(1, (int) $payload['points']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null) {
+                $code = trim((string) ($payload['code'] ?? ''));
+                $payload['code'] = $code !== '' ? $code : $this->uniqueCardCode();
+                if ((int) ($payload['points'] ?? 0) < 1) {
+                    return Result::fail('积分至少为 1');
+                }
+                $payload['status'] = 1;
+                $payload['used_by'] = 0;
+                $payload['used_at'] = 0;
+            }
+            $code = trim((string) ($payload['code'] ?? ''));
+            if ($code !== '') {
+                $dup = VideoCard::query()->where('code', $code);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个卡密已经存在');
+                }
+            }
+        }
+        if ($module === 'plogs') {
+            if ($id) {
+                return Result::fail('流水不能改。删记录也不会改会员积分。');
+            }
+            $memberId = (int) ($payload['member_id'] ?? 0);
+            $delta = (int) ($payload['points'] ?? 0);
+            $remark = trim((string) ($payload['remark'] ?? ''));
+            if ($memberId < 1) {
+                return Result::fail('请填写会员 ID');
+            }
+            if ($delta === 0) {
+                return Result::fail('变动不能为 0');
+            }
+            if (! Member::query()->find($memberId)) {
+                return Result::fail('会员不存在');
+            }
+            $this->changePoints($memberId, $delta, 'admin', $remark !== '' ? $remark : '后台调积分');
+
+            return Result::success(['member_id' => $memberId]);
+        }
+        if ($module === 'ads') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('slot', $payload) || $id === null) {
+                $slot = strtolower(trim((string) ($payload['slot'] ?? '')));
+                if ($slot === '') {
+                    $slot = 'header';
+                }
+                if (! preg_match('/^[a-z][a-z0-9_-]{0,39}$/', $slot)) {
+                    return Result::fail('位置用英文字母开头，如 header、footer、play');
+                }
+                $payload['slot'] = $slot;
+            }
+            if (array_key_exists('content', $payload)) {
+                $payload['content'] = (string) $payload['content'];
+            } elseif ($id === null) {
+                $payload['content'] = '';
+            }
+            if (array_key_exists('expire_at', $payload)) {
+                $payload['expire_at'] = $this->parseExpireAt($payload['expire_at']);
+            }
+            foreach (['type_id', 'sort', 'status'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'links') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写网站名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('url', $payload) || $id === null) {
+                $raw = trim((string) ($payload['url'] ?? ''));
+                if ($raw === '') {
+                    return Result::fail('请填写网址');
+                }
+                $url = $this->normalizeLinkUrl($raw);
+                if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
+                    return Result::fail('网址格式不对');
+                }
+                $payload['url'] = $url;
+            }
+            if (array_key_exists('logo', $payload)) {
+                $payload['logo'] = trim((string) $payload['logo']);
+            }
+            foreach (['sort', 'status'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'unions') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('api_url', $payload) || $id === null) {
+                $url = $this->normalizeUnionUrl((string) ($payload['api_url'] ?? ''));
+                if ($url === '') {
+                    return Result::fail('请填写接口地址');
+                }
+                $payload['api_url'] = $url;
+            }
+            if (array_key_exists('note', $payload)) {
+                $payload['note'] = trim((string) $payload['note']);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'players') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('code', $payload) || $id === null) {
+                $code = strtolower(trim((string) ($payload['code'] ?? '')));
+                if ($code === '') {
+                    return Result::fail('请填写标识，要和线路上的播放器字段一致');
+                }
+                if (! preg_match('/^[a-z][a-z0-9._-]{0,39}$/', $code)) {
+                    return Result::fail('标识用英文字母开头，如 artplayer、dplayer');
+                }
+                $dup = VideoPlayerModel::query()->where('code', $code);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个标识已经有了');
+                }
+                $payload['code'] = $code;
+            }
+            if (array_key_exists('engine', $payload) && $this->hasColumn($probe, 'engine')) {
+                $engine = strtolower(trim((string) $payload['engine']));
+                $payload['engine'] = in_array($engine, VideoPlayerModel::engines(), true)
+                    ? $engine
+                    : VideoPlayerModel::inferEngine((string) ($payload['code'] ?? ''), (string) ($payload['parse'] ?? ''));
+            } elseif ($id === null && $this->hasColumn($probe, 'engine')) {
+                $payload['engine'] = VideoPlayerModel::inferEngine((string) ($payload['code'] ?? ''), (string) ($payload['parse'] ?? ''));
+            }
+            if (array_key_exists('parse', $payload)) {
+                $payload['parse'] = trim((string) $payload['parse']);
+            }
+            foreach (['sort', 'status'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
         $now = time();
         $oldStatus = null;
+        $memberPointsTo = null;
+        if ($module === 'members' && $id && array_key_exists('points', $payload)) {
+            $memberPointsTo = (int) $payload['points'];
+            unset($payload['points']);
+        }
         if ($id) {
             $row = $class::query()->find($id);
             if (! $row) {
@@ -648,10 +1171,19 @@ class SiteModuleService
             if ($this->hasColumn($row, 'status')) {
                 $oldStatus = (int) $row->status;
             }
+            if ($module === 'orders' && $oldStatus === 1 && array_key_exists('status', $payload) && (int) $payload['status'] === 0) {
+                return Result::fail('已付订单不能改回待付，只能关闭。关闭不会扣积分。');
+            }
+            if ($module === 'cards' && (int) ($row->used_by ?? 0) > 0) {
+                return Result::fail('已兑换的卡密不能改。');
+            }
             if ($this->hasColumn($row, 'updated_at')) {
                 $payload['updated_at'] = $now;
             }
             $row->fill($payload)->save();
+            if ($memberPointsTo !== null) {
+                $this->changePoints($id, $memberPointsTo - (int) $row->points, 'admin', '后台改积分');
+            }
             $this->afterMoneySave($module, $row, $oldStatus);
 
             return Result::success(['id' => $id]);
@@ -719,6 +1251,21 @@ class SiteModuleService
         if ($module === 'topics' && Schema::hasTable('video_topic_rel')) {
             VideoTopicRelModel::query()->where('topic_id', $id)->delete();
         }
+        if ($module === 'groups' && Schema::hasTable('members') && Schema::hasColumn('members', 'group_id')) {
+            Member::query()->where('group_id', $id)->update(['group_id' => 0]);
+        }
+        if ($module === 'cards' && (int) ($row->used_by ?? 0) > 0) {
+            return Result::fail('已兑换的卡密不能删，留着对账。');
+        }
+        if ($module === 'players') {
+            $code = trim((string) ($row->code ?? ''));
+            if ($code !== '' && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'player')) {
+                $used = (int) VideoSourceModel::query()->where('player', $code)->count();
+                if ($used > 0) {
+                    return Result::fail('还有 '.$used.' 条线路在用这个播放器。先到「批量播放器」换掉再删。');
+                }
+            }
+        }
         $row->delete();
 
         return Result::success();
@@ -751,7 +1298,7 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -759,6 +1306,15 @@ class SiteModuleService
             return Result::fail(match ($module) {
                 'topics' => '请先勾选专题',
                 'arts' => '请先勾选文章',
+                'slides' => '请先勾选幻灯片',
+                'members' => '请先勾选会员',
+                'orders' => '请先勾选订单',
+                'groups' => '请先勾选会员组',
+                'cards' => '请先勾选卡密',
+                'plogs' => '请先勾选流水',
+                'ads' => '请先勾选广告',
+                'links' => '请先勾选友链',
+                'players' => '请先勾选播放器',
                 default => '请先勾选评论',
             });
         }
@@ -768,6 +1324,10 @@ class SiteModuleService
             $res = match ($action) {
                 'status' => $this->save($module, ['status' => (int) $value], $id),
                 'type' => $this->save($module, ['type_id' => (int) $value], $id),
+                'slot' => $this->save($module, ['slot' => (string) $value], $id),
+                'group' => $this->save($module, ['group_id' => (int) $value], $id),
+                'engine' => $this->save($module, ['engine' => (string) $value], $id),
+                'points' => $this->adjustMemberPoints($id, (int) $value),
                 'delete' => $this->delete($module, $id),
                 default => Result::fail('不支持的操作'),
             };
@@ -782,6 +1342,319 @@ class SiteModuleService
         }
 
         return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 条，'.$fail.' 条未处理') : '操作成功');
+    }
+
+    private function adjustMemberPoints(int $id, int $delta): array
+    {
+        if ($delta === 0) {
+            return Result::fail('请填写不为 0 的积分');
+        }
+        $member = Member::query()->find($id);
+        if (! $member) {
+            return Result::fail('数据不存在');
+        }
+        $this->changePoints($id, $delta, 'admin', '后台调整');
+
+        return Result::success(['id' => $id]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function memberGroupOptions(): array
+    {
+        try {
+            if (! Schema::hasTable('member_groups')) {
+                return [];
+            }
+            $counts = [];
+            if (Schema::hasTable('members')) {
+                $countRows = Member::query()
+                    ->selectRaw('group_id, COUNT(*) as c')
+                    ->groupBy('group_id')
+                    ->get();
+                foreach ($countRows as $row) {
+                    $counts[(int) $row->group_id] = (int) $row->c;
+                }
+            }
+            $out = [];
+            foreach (MemberGroup::query()->orderByDesc('sort')->orderBy('id')->get() as $group) {
+                $id = (int) $group->id;
+                $out[] = [
+                    'id' => $id,
+                    'name' => (string) $group->name,
+                    'status' => (int) $group->status,
+                    'count' => $counts[$id] ?? 0,
+                ];
+            }
+
+            return $out;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @return array<string, int> */
+    public function memberQueues(): array
+    {
+        $zero = ['all' => 0, 'off' => 0, 'none' => 0];
+        try {
+            if (! Schema::hasTable('members')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) Member::query()->count(),
+                'off' => (int) Member::query()->where('status', 0)->count(),
+                'none' => (int) Member::query()->where(function ($inner) {
+                    $inner->where('group_id', 0)->orWhereNull('group_id');
+                })->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMembers(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $gid = (int) ($row['group_id'] ?? 0);
+            if ($gid > 0) {
+                $ids[] = $gid;
+            }
+        }
+        $names = [];
+        if ($ids !== [] && Schema::hasTable('member_groups')) {
+            $names = MemberGroup::query()->whereIn('id', array_values(array_unique($ids)))->pluck('name', 'id')->all();
+        }
+        foreach ($rows as &$row) {
+            $gid = (int) ($row['group_id'] ?? 0);
+            $row['group_name'] = $gid > 0 ? (string) ($names[$gid] ?? '未知分组') : '未分组';
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['joined_text'] = $ts > 0 ? date('Y-m-d', $ts) : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function orderQueues(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'paid' => 0, 'closed' => 0];
+        try {
+            if (! Schema::hasTable('member_orders')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) MemberOrder::query()->count(),
+                'pending' => (int) MemberOrder::query()->where('status', 0)->count(),
+                'paid' => (int) MemberOrder::query()->where('status', 1)->count(),
+                'closed' => (int) MemberOrder::query()->where('status', 2)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateOrders(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $ids[] = $mid;
+            }
+        }
+        $members = [];
+        if ($ids !== [] && Schema::hasTable('members')) {
+            $members = Member::query()->whereIn('id', array_values(array_unique($ids)))->get(['id', 'name', 'email'])->keyBy('id');
+        }
+        $channels = ['wechat' => '微信', 'alipay' => '支付宝', 'manual' => '人工'];
+        $statuses = ['0' => '待付', '1' => '已付', '2' => '关闭'];
+        foreach ($rows as &$row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            $member = $members[$mid] ?? null;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) $member->email : '';
+            $fen = (int) ($row['amount'] ?? 0);
+            $row['amount_yuan'] = number_format($fen / 100, 2, '.', '');
+            $ch = trim((string) ($row['channel'] ?? ''));
+            $row['channel_label'] = $channels[$ch] ?? ($ch !== '' ? $ch : '人工');
+            $row['status_label'] = $statuses[(string) ($row['status'] ?? '0')] ?? '待付';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function groupQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0];
+        try {
+            if (! Schema::hasTable('member_groups')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) MemberGroup::query()->count(),
+                'on' => (int) MemberGroup::query()->where('status', 1)->count(),
+                'off' => (int) MemberGroup::query()->where('status', 0)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateGroups(array $rows): array
+    {
+        $counts = [];
+        if (Schema::hasTable('members') && Schema::hasColumn('members', 'group_id')) {
+            $countRows = Member::query()
+                ->selectRaw('group_id, COUNT(*) as c')
+                ->groupBy('group_id')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(int) $row->group_id] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $id = (int) ($row['id'] ?? 0);
+            $row['member_count'] = $counts[$id] ?? 0;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function cardQueues(): array
+    {
+        $zero = ['all' => 0, 'unused' => 0, 'used' => 0, 'void' => 0];
+        try {
+            if (! Schema::hasTable('video_cards')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoCard::query()->count(),
+                'unused' => (int) VideoCard::query()->where('status', 1)->where('used_by', 0)->count(),
+                'used' => (int) VideoCard::query()->where('used_by', '>', 0)->count(),
+                'void' => (int) VideoCard::query()->where('status', 0)->where('used_by', 0)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateCards(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $uid = (int) ($row['used_by'] ?? 0);
+            if ($uid > 0) {
+                $ids[] = $uid;
+            }
+        }
+        $members = [];
+        if ($ids !== [] && Schema::hasTable('members')) {
+            $members = Member::query()
+                ->whereIn('id', array_values(array_unique($ids)))
+                ->get(['id', 'name', 'email'])
+                ->keyBy('id')
+                ->all();
+        }
+        foreach ($rows as &$row) {
+            $usedBy = (int) ($row['used_by'] ?? 0);
+            $status = (int) ($row['status'] ?? 1);
+            if ($usedBy > 0) {
+                $row['state'] = 'used';
+                $row['state_label'] = '已兑';
+            } elseif ($status !== 1) {
+                $row['state'] = 'void';
+                $row['state_label'] = '作废';
+            } else {
+                $row['state'] = 'unused';
+                $row['state_label'] = '未用';
+            }
+            $member = $members[$usedBy] ?? null;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) $member->email : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function plogQueues(): array
+    {
+        $zero = ['all' => 0, 'in' => 0, 'out' => 0, 'play' => 0, 'order' => 0, 'card' => 0, 'admin' => 0];
+        try {
+            if (! Schema::hasTable('member_point_logs')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) MemberPointLog::query()->count(),
+                'in' => (int) MemberPointLog::query()->where('points', '>', 0)->count(),
+                'out' => (int) MemberPointLog::query()->where('points', '<', 0)->count(),
+                'play' => (int) MemberPointLog::query()->where('type', 'play')->count(),
+                'order' => (int) MemberPointLog::query()->where('type', 'order')->count(),
+                'card' => (int) MemberPointLog::query()->where('type', 'card')->count(),
+                'admin' => (int) MemberPointLog::query()->where('type', 'admin')->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decoratePlogs(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $ids[] = $mid;
+            }
+        }
+        $members = [];
+        if ($ids !== [] && Schema::hasTable('members')) {
+            $members = Member::query()
+                ->whereIn('id', array_values(array_unique($ids)))
+                ->get(['id', 'name', 'email'])
+                ->keyBy('id')
+                ->all();
+        }
+        $types = [
+            'play' => '点播',
+            'order' => '订单',
+            'admin' => '后台',
+            'card' => '卡密',
+            'coupon' => '优惠券',
+            'invite' => '邀请',
+            'withdraw' => '提现',
+            'sys' => '系统',
+        ];
+        foreach ($rows as &$row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            $delta = (int) ($row['points'] ?? 0);
+            $type = trim((string) ($row['type'] ?? ''));
+            $member = $members[$mid] ?? null;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) $member->email : '';
+            $row['type_label'] = $types[$type] ?? ($type !== '' ? $type : '系统');
+            $row['dir'] = $delta < 0 ? 'out' : 'in';
+        }
+        unset($row);
+
+        return $rows;
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
@@ -912,6 +1785,537 @@ class SiteModuleService
         return $rows;
     }
 
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateSlides(array $rows): array
+    {
+        $labels = ['home' => '首页', 'play' => '播放页'];
+        foreach ($rows as &$row) {
+            $slot = trim((string) ($row['slot'] ?? ''));
+            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : '未分区');
+            $row['has_pic'] = trim((string) ($row['pic'] ?? '')) !== '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function slideQueues(): array
+    {
+        $zero = ['all' => 0, 'home' => 0, 'play' => 0, 'hidden' => 0];
+        try {
+            if (! Schema::hasTable('video_slides')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoSlide::query()->count(),
+                'home' => (int) VideoSlide::query()->where('slot', 'home')->count(),
+                'play' => (int) VideoSlide::query()->where('slot', 'play')->count(),
+                'hidden' => (int) VideoSlide::query()->where('status', 0)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return list<array{id:int,name:string,parent_id:int}> */
+    public function vodTypeOptions(): array
+    {
+        try {
+            if (! Schema::hasTable('video_types')) {
+                return [];
+            }
+            $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
+            if (Schema::hasColumn('video_types', 'mid')) {
+                $q->where('mid', 1);
+            }
+
+            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
+                return [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'parent_id' => (int) ($row->parent_id ?? 0),
+                ];
+            })->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateAds(array $rows): array
+    {
+        $labels = ['header' => '页头', 'footer' => '页脚', 'play' => '播放页'];
+        $typeIds = [];
+        foreach ($rows as $row) {
+            $tid = (int) ($row['type_id'] ?? 0);
+            if ($tid > 0) {
+                $typeIds[] = $tid;
+            }
+        }
+        $typeNames = [];
+        if ($typeIds !== [] && Schema::hasTable('video_types')) {
+            $typeNames = VideoTypeModel::query()
+                ->whereIn('id', array_values(array_unique($typeIds)))
+                ->pluck('name', 'id')
+                ->all();
+        }
+        $now = time();
+        foreach ($rows as &$row) {
+            $slot = trim((string) ($row['slot'] ?? ''));
+            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : '未分区');
+            $tid = (int) ($row['type_id'] ?? 0);
+            $row['type_name'] = $tid > 0 ? (string) ($typeNames[$tid] ?? $typeNames[(string) $tid] ?? '分类#'.$tid) : '全部分类';
+            $exp = (int) ($row['expire_at'] ?? 0);
+            $row['is_expired'] = $exp > 0 && $exp < $now;
+            $row['expire_text'] = $exp < 1 ? '不过期' : date('Y-m-d H:i', $exp);
+            $row['expire_local'] = $exp < 1 ? '' : date('Y-m-d\TH:i', $exp);
+            $html = (string) ($row['content'] ?? '');
+            $img = '';
+            if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $m)) {
+                $img = (string) $m[1];
+            }
+            $row['preview_img'] = $img;
+            $plain = trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES, 'UTF-8')));
+            $row['preview_text'] = $plain === '' ? '' : mb_substr($plain, 0, 48);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function adQueues(): array
+    {
+        $zero = ['all' => 0, 'header' => 0, 'footer' => 0, 'play' => 0, 'expired' => 0, 'off' => 0];
+        try {
+            if (! Schema::hasTable('video_ads')) {
+                return $zero;
+            }
+            $now = time();
+            $expired = 0;
+            if (Schema::hasColumn('video_ads', 'expire_at')) {
+                $expired = (int) VideoAd::query()->where('expire_at', '>', 0)->where('expire_at', '<', $now)->count();
+            }
+
+            return [
+                'all' => (int) VideoAd::query()->count(),
+                'header' => (int) VideoAd::query()->where('slot', 'header')->count(),
+                'footer' => (int) VideoAd::query()->where('slot', 'footer')->count(),
+                'play' => (int) VideoAd::query()->where('slot', 'play')->count(),
+                'expired' => $expired,
+                'off' => (int) VideoAd::query()->where('status', 0)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    private function parseExpireAt(mixed $raw): int
+    {
+        if ($raw === null || $raw === '' || $raw === '0' || $raw === 0) {
+            return 0;
+        }
+        if (is_numeric($raw)) {
+            return max(0, (int) $raw);
+        }
+        $ts = strtotime((string) $raw);
+
+        return $ts ? $ts : 0;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateLinks(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $logo = trim((string) ($row['logo'] ?? ''));
+            $row['has_logo'] = $logo !== '';
+            $row['kind_label'] = $logo !== '' ? '图片' : '文字';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function linkQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'logo' => 0];
+        try {
+            if (! Schema::hasTable('friend_links')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) FriendLink::query()->count(),
+                'on' => (int) FriendLink::query()->where('status', 1)->count(),
+                'off' => (int) FriendLink::query()->where('status', 0)->count(),
+                'logo' => (int) FriendLink::query()->where('logo', '!=', '')->whereNotNull('logo')->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    private function normalizeLinkUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^(javascript|data|vbscript):#i', $url)) {
+            return '';
+        }
+        if (! preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
+            $url = 'https://'.ltrim($url, '/');
+        }
+
+        return $url;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decoratePlayers(array $rows): array
+    {
+        $codes = [];
+        foreach ($rows as $row) {
+            $code = trim((string) ($row['code'] ?? ''));
+            if ($code !== '') {
+                $codes[] = $code;
+            }
+        }
+        $counts = [];
+        if ($codes !== [] && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'player')) {
+            $countRows = VideoSourceModel::query()
+                ->selectRaw('player, COUNT(*) as c')
+                ->whereIn('player', array_values(array_unique($codes)))
+                ->groupBy('player')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(string) $row->player] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $model = new VideoPlayerModel;
+            $model->forceFill($row);
+            $engine = VideoPlayerModel::resolveEngine($model, '', '');
+            $row['engine'] = $engine;
+            $row['engine_label'] = VideoPlayerModel::engineLabel($engine);
+            $code = trim((string) ($row['code'] ?? ''));
+            $row['source_count'] = $counts[$code] ?? 0;
+            $row['is_direct'] = $engine !== 'iframe';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function playerQueues(): array
+    {
+        $zero = ['all' => 0, 'artplayer' => 0, 'dplayer' => 0, 'videojs' => 0, 'iframe' => 0, 'off' => 0];
+        try {
+            if (! Schema::hasTable('video_players')) {
+                return $zero;
+            }
+            $this->ensurePlayerEngineColumn();
+            $q = VideoPlayerModel::query();
+            $out = [
+                'all' => (int) (clone $q)->count(),
+                'artplayer' => 0,
+                'dplayer' => 0,
+                'videojs' => 0,
+                'iframe' => 0,
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+            ];
+            foreach ((clone $q)->get() as $row) {
+                $engine = VideoPlayerModel::resolveEngine($row, '', '');
+                if (isset($out[$engine])) {
+                    $out[$engine]++;
+                }
+            }
+
+            return $out;
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    public function ensurePlayers(): array
+    {
+        try {
+            if (! Schema::hasTable('video_players')) {
+                return Result::fail('请先执行数据库迁移');
+            }
+        } catch (\Throwable) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $this->ensurePlayerEngineColumn();
+        $probe = new VideoPlayerModel;
+        $added = 0;
+        foreach (VideoPlayerModel::presets() as $row) {
+            if (! $this->hasColumn($probe, 'engine')) {
+                unset($row['engine']);
+            }
+            $exist = VideoPlayerModel::query()->where('code', $row['code'])->first();
+            if ($exist) {
+                if (isset($row['engine']) && $this->hasColumn($exist, 'engine') && trim((string) ($exist->engine ?? '')) === '') {
+                    $exist->engine = $row['engine'];
+                    $exist->save();
+                }
+                continue;
+            }
+            VideoPlayerModel::query()->create($row);
+            $added++;
+        }
+
+        return Result::success(['added' => $added], $added > 0 ? ('已补齐 '.$added.' 个内置播放器') : '内置播放器已齐全');
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getUnion(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        try {
+            if (! Schema::hasTable('video_unions')) {
+                return null;
+            }
+            $row = VideoUnion::query()->find($id);
+            if (! $row) {
+                return null;
+            }
+            $decorated = $this->decorateUnions([$row->toArray()]);
+
+            return $decorated[0] ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function unionQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'pending' => 0, 'adopted' => 0];
+        try {
+            if (! Schema::hasTable('video_unions')) {
+                return $zero;
+            }
+            $rows = $this->decorateUnions(VideoUnion::query()->get()->map(fn ($row) => $row->toArray())->all());
+            $all = count($rows);
+            $on = 0;
+            $adopted = 0;
+            foreach ($rows as $row) {
+                if ((int) ($row['status'] ?? 0) === 1) {
+                    $on++;
+                }
+                if ((int) ($row['adopted'] ?? 0) === 1) {
+                    $adopted++;
+                }
+            }
+
+            return [
+                'all' => $all,
+                'on' => $on,
+                'off' => $all - $on,
+                'adopted' => $adopted,
+                'pending' => $all - $adopted,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    public function adoptUnion(int $id): array
+    {
+        $union = $this->getUnion($id);
+        if ($union === null) {
+            return Result::fail('这条推荐不存在');
+        }
+        $url = $this->normalizeUnionUrl((string) ($union['api_url'] ?? ''));
+        if ($url === '') {
+            return Result::fail('没有接口地址，先编辑补上');
+        }
+        if (! Schema::hasTable('collect_sources')) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $exist = $this->findCollectByApiUrl($url);
+        if ($exist) {
+            return Result::success(['id' => (int) $exist->id, 'existed' => true], '采集源里已经有这个接口');
+        }
+        $name = trim((string) ($union['name'] ?? ''));
+        if ($name === '') {
+            $name = (string) ($union['host'] ?? '');
+        }
+        if ($name === '') {
+            $name = '资源站';
+        }
+        $now = time();
+        $probe = new CollectSourceModel;
+        $payload = [
+            'name' => mb_substr($name, 0, 60),
+            'api_url' => mb_substr($url, 0, 255),
+            'api_type' => 'auto',
+            'status' => 1,
+            'sort' => max(0, (int) ($union['sort'] ?? 0)),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+        foreach ($payload as $col => $val) {
+            if (! $this->hasColumn($probe, $col)) {
+                unset($payload[$col]);
+            }
+        }
+        $newId = (int) CollectSourceModel::query()->insertGetId($payload);
+        if ($newId < 1) {
+            return Result::fail('接入失败');
+        }
+
+        return Result::success(['id' => $newId, 'existed' => false], '已接入采集源');
+    }
+
+    /** @param list<mixed> $ids */
+    public function adoptUnions(array $ids): array
+    {
+        $created = 0;
+        $existed = 0;
+        $fail = 0;
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id < 1) {
+                continue;
+            }
+            $res = $this->adoptUnion($id);
+            if ((int) ($res['code'] ?? 1) !== 0) {
+                $fail++;
+                continue;
+            }
+            if (! empty($res['data']['existed'])) {
+                $existed++;
+            } else {
+                $created++;
+            }
+        }
+        if ($created + $existed === 0) {
+            return Result::fail($fail > 0 ? '没有接入成功' : '请先勾选');
+        }
+        $msg = '已接入 '.$created.' 个';
+        if ($existed > 0) {
+            $msg .= '，'.$existed.' 个本来就在采集源里';
+        }
+
+        return Result::success(['created' => $created, 'existed' => $existed, 'fail' => $fail], $msg);
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateUnions(array $rows): array
+    {
+        $map = [];
+        if (Schema::hasTable('collect_sources')) {
+            try {
+                foreach (CollectSourceModel::query()->get(['id', 'api_url']) as $src) {
+                    $normalized = $this->normalizeUnionUrl((string) $src->api_url);
+                    if ($normalized === '') {
+                        continue;
+                    }
+                    $id = (int) $src->id;
+                    $map[$normalized] = $id;
+                    $map[rtrim($normalized, '/')] = $id;
+                }
+            } catch (\Throwable) {
+            }
+        }
+        foreach ($rows as &$row) {
+            $url = $this->normalizeUnionUrl((string) ($row['api_url'] ?? ''));
+            $collectId = 0;
+            if ($url !== '') {
+                $collectId = (int) ($map[$url] ?? $map[rtrim($url, '/')] ?? 0);
+            }
+            $host = $url !== '' ? (string) (parse_url($url, PHP_URL_HOST) ?: '') : '';
+            $row['host'] = $host;
+            $row['collect_id'] = $collectId;
+            $row['adopted'] = $collectId > 0 ? 1 : 0;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return list<string> */
+    private function collectApiUrlVariants(): array
+    {
+        if (! Schema::hasTable('collect_sources')) {
+            return [];
+        }
+        try {
+            $out = [];
+            foreach (CollectSourceModel::query()->pluck('api_url') as $raw) {
+                $url = $this->normalizeUnionUrl((string) $raw);
+                if ($url === '') {
+                    continue;
+                }
+                $out[] = $url;
+                $out[] = rtrim($url, '/');
+                $out[] = rtrim($url, '/').'/';
+                $out[] = (string) $raw;
+            }
+
+            return array_values(array_unique(array_filter($out)));
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function findCollectByApiUrl(string $url): ?CollectSourceModel
+    {
+        $alts = array_values(array_unique(array_filter([
+            $url,
+            rtrim($url, '/'),
+            rtrim($url, '/').'/',
+        ])));
+        if ($alts === []) {
+            return null;
+        }
+        try {
+            /** @var CollectSourceModel|null $row */
+            $row = CollectSourceModel::query()->whereIn('api_url', $alts)->orderBy('id')->first();
+
+            return $row;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function normalizeUnionUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^(javascript|data|vbscript):#i', $url)) {
+            return '';
+        }
+        if (! preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
+            $url = 'https://'.ltrim($url, '/');
+        }
+
+        return $url;
+    }
+
+    private function ensurePlayerEngineColumn(): void
+    {
+        try {
+            if (! Schema::hasTable('video_players') || Schema::hasColumn('video_players', 'engine')) {
+                return;
+            }
+            Schema::table('video_players', function (Blueprint $table) {
+                $table->string('engine', 20)->default('artplayer');
+            });
+        } catch (\Throwable) {
+        }
+    }
+
     public function topicVideos(int $topicId): array
     {
         $topic = VideoTopicModel::query()->find($topicId);
@@ -964,6 +2368,15 @@ class SiteModuleService
         return Result::success([], '已绑定 '.count($list).' 部');
     }
 
+    private function uniqueCardCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(16));
+        } while (VideoCard::query()->where('code', $code)->exists());
+
+        return $code;
+    }
+
     public function generateCards(int $count, int $points): array
     {
         $count = min(200, max(1, $count));
@@ -971,7 +2384,7 @@ class SiteModuleService
         $now = time();
         $codes = [];
         for ($i = 0; $i < $count; $i++) {
-            $code = strtoupper(Str::random(16));
+            $code = $this->uniqueCardCode();
             VideoCard::query()->create([
                 'code' => $code,
                 'points' => $points,

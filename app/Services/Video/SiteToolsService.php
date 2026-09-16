@@ -9,6 +9,7 @@ use App\Models\Video\VideoCollectTemp;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoSourceModel;
+use App\Services\Admin\Video\VideoService;
 use App\Services\Collect\CollectIngestService;
 use App\Services\Collect\MacResourceClient;
 use App\Support\Utils\Result;
@@ -26,35 +27,56 @@ class SiteToolsService
     /** @return array{code:int,msg:string,data:array} */
     public function recycleList(array $params): array
     {
-        if (! Schema::hasColumn('videos', 'deleted_at')) {
-            return Result::fail('请先执行数据库迁移');
+        $params['trash'] = '1';
+        if (! isset($params['limit'])) {
+            $params['limit'] = 20;
         }
-        $limit = max(1, (int) ($params['limit'] ?? 20));
-        $q = VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0);
-        $title = trim((string) ($params['title'] ?? ''));
-        if ($title !== '') {
-            $q->where('title', 'like', '%'.$title.'%');
-        }
-        $page = $q->orderByDesc('deleted_at')->paginate($limit);
 
-        return Result::success([
-            'total' => $page->total(),
-            'data' => collect($page->items())->map(fn ($row) => $row->toArray())->all(),
-        ]);
+        return app(VideoService::class)->getVideoLists($params);
     }
 
-    public function restore(array $ids): array
+    public function recycleCount(): int
+    {
+        try {
+            if (! Schema::hasColumn('videos', 'deleted_at')) {
+                return 0;
+            }
+
+            return (int) VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->count();
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
+    public function restore(mixed $ids): array
     {
         $ids = $this->ids($ids);
         if ($ids === []) {
-            return Result::fail('请选择数据');
+            return Result::fail('请先勾选影片');
         }
-        VideoModel::query()->withoutGlobalScope('alive')->whereIn('id', $ids)->update([
+        if (! Schema::hasColumn('videos', 'deleted_at')) {
+            return Result::fail('未启用回收站');
+        }
+        $n = VideoModel::query()->withoutGlobalScope('alive')->whereIn('id', $ids)->where('deleted_at', '>', 0)->update([
             'deleted_at' => 0,
             'updated_at' => time(),
         ]);
 
-        return Result::success(['count' => count($ids)], '已还原');
+        return $n > 0 ? Result::success(['count' => $n], '已还原 '.$n.' 部') : Result::fail('记录不在回收站');
+    }
+
+    /** @return list<int> */
+    public function recycleIds(): array
+    {
+        try {
+            if (! Schema::hasColumn('videos', 'deleted_at')) {
+                return [];
+            }
+
+            return VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public function scanImages(int $limit = 80): array

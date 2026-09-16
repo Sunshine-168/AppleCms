@@ -27,6 +27,7 @@ class PluginAdminTest extends TestCase
         $this->assertContains('sms', $ids);
         $this->assertContains('pay', $ids);
         $this->assertContains('coupon', $ids);
+        $this->assertContains('code_editor', $ids);
         $this->assertFalse($manager->isEnabled('sms'));
 
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
@@ -34,6 +35,7 @@ class PluginAdminTest extends TestCase
             ->assertOk()
             ->assertSee('弹幕')
             ->assertSee('短信网关')
+            ->assertSee('代码编辑器')
             ->assertSee('只存配置')
             ->assertSee('/admin/plugins/sms', false);
 

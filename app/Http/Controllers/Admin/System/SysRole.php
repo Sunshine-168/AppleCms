@@ -23,7 +23,11 @@ class SysRole extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.role.index');
+        $board = $this->systemRoleService->roleBoard();
+
+        return view('admin.system.role.index', [
+            'queues' => $board['queues'] ?? [],
+        ]);
     }
 
     /**
@@ -33,12 +37,16 @@ class SysRole extends Controller
      */
     public function getRoleLists(Request $request): JsonResponse
     {
-        $name = (string) $request->input('name', '');
-        $code = (string) $request->input('code', '');
-        $status = $request->input('status', '');
-        $limit = (int) $request->input('limit', 10);
+        $q = (string) $request->input('q', '');
+        if ($q === '') {
+            $q = (string) $request->input('name', '');
+        }
+        $res = $this->systemRoleService->getRoleLists([
+            'q' => $q,
+            'kind' => (string) $request->input('kind', ''),
+            'limit' => (int) $request->input('limit', 20),
+        ]);
 
-        $res = $this->systemRoleService->getRoleLists($name, $code, $status, $limit);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
 

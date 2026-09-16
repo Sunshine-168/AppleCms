@@ -139,114 +139,152 @@ class AdminNav
     {
         $blocks = [
             [
+                'id' => 'collect',
                 'title' => 'more.collect',
                 'hint' => 'more.collect_hint',
                 'items' => [
-                    ['url' => '/admin/video/collect_logs', 'label' => 'item.collect_logs'],
-                    ['url' => '/admin/video/collect_tasks', 'label' => 'item.collect_tasks'],
-                    ['url' => '/admin/video/unions', 'label' => 'item.unions'],
-                    ['url' => '/admin/video/audits', 'label' => 'item.audits'],
-                    ['url' => '/admin/video/tools/hub', 'label' => 'item.collect_hub'],
-                    ['url' => '/admin/video/collect_temps', 'label' => 'item.collect_temps'],
-                    ['url' => '/admin/video/config/collect', 'label' => 'item.config_collect'],
-                    ['url' => '/admin/video/config/interface', 'label' => 'item.config_interface'],
+                    self::cat('/admin/video/collect_logs', 'item.collect_logs', 'hint.collect_logs'),
+                    self::cat('/admin/video/collect_tasks', 'item.collect_tasks', 'hint.collect_tasks'),
+                    self::cat('/admin/video/unions', 'item.unions', 'hint.unions'),
+                    self::cat('/admin/video/audits', 'item.audits', 'hint.audits'),
+                    self::cat('/admin/video/tools/hub', 'item.collect_hub', 'hint.collect_hub'),
+                    self::cat('/admin/video/collect_temps', 'item.collect_temps', 'hint.collect_temps'),
+                    self::cat('/admin/video/config/collect', 'item.config_collect', 'hint.config_collect'),
+                    self::cat('/admin/video/config/interface', 'item.config_interface', 'hint.config_interface'),
                 ],
             ],
             [
+                'id' => 'complete',
                 'title' => 'more.complete',
                 'hint' => 'more.complete_hint',
                 'items' => [
-                    ['url' => '/admin/video/roles', 'label' => 'item.roles'],
-                    ['url' => '/admin/video/plots', 'label' => 'item.plots'],
-                    ['url' => '/admin/video/websites', 'label' => 'item.websites'],
-                    ['url' => '/admin/video/classes', 'label' => 'item.classes'],
-                    ['url' => '/admin/video/synonyms', 'label' => 'item.synonyms'],
-                    ['url' => '/admin/video/searchwords', 'label' => 'item.searchwords'],
-                    ['url' => '/admin/video/wizard', 'label' => 'item.wizard'],
-                    ['url' => '/admin/video/downloaders', 'label' => 'item.downloaders'],
-                    ['url' => '/admin/video/servers', 'label' => 'item.servers'],
-                    ['url' => '/admin/video/tools/quality', 'label' => 'item.quality'],
-                    ['url' => '/admin/video/tools/images', 'label' => 'item.images'],
-                    ['url' => '/admin/video/tools/players', 'label' => 'item.batch_players'],
+                    self::cat('/admin/video/searchwords', 'item.searchwords', 'hint.searchwords'),
+                    self::cat('/admin/video/tools/images', 'item.images', 'hint.images'),
+                    self::cat('/admin/video/tools/players', 'item.batch_players', 'hint.batch_players'),
                 ],
             ],
             [
+                'id' => 'interact',
                 'title' => 'more.interact',
+                'hint' => 'more.interact_hint',
                 'items' => [
-                    ['url' => '/admin/video/reports', 'label' => 'item.reports'],
-                    ['url' => '/admin/video/guestbooks', 'label' => 'item.guestbooks'],
-                    ['url' => '/admin/video/playfails', 'label' => 'item.playfails'],
-                    ['url' => '/admin/video/pms', 'label' => 'item.pms'],
-                    ['url' => '/admin/video/notifies', 'label' => 'item.notifies'],
+                    self::cat('/admin/video/reports', 'item.reports', 'hint.reports'),
+                    self::cat('/admin/video/guestbooks', 'item.guestbooks', 'hint.guestbooks'),
+                    self::cat('/admin/video/playfails', 'item.playfails', 'hint.playfails'),
+                    self::cat('/admin/video/pms', 'item.pms', 'hint.pms'),
+                    self::cat('/admin/video/notifies', 'item.notifies', 'hint.notifies'),
                 ],
             ],
             [
+                'id' => 'member',
                 'title' => 'more.member',
+                'hint' => 'more.member_hint',
                 'items' => [
-                    ['url' => '/admin/video/withdraws', 'label' => 'item.withdraws'],
-                    ['url' => '/admin/video/invites', 'label' => 'item.invites'],
-                    ['url' => '/admin/video/favorites', 'label' => 'item.favorites'],
-                    ['url' => '/admin/video/config/user', 'label' => 'item.config_user'],
+                    self::cat('/admin/video/withdraws', 'item.withdraws', 'hint.withdraws'),
+                    self::cat('/admin/video/invites', 'item.invites', 'hint.invites'),
+                    self::cat('/admin/video/favorites', 'item.favorites', 'hint.favorites'),
+                    self::cat('/admin/video/settings?tab=interact', 'item.config_user', 'hint.config_user', 'moved', 'hint.config_user_keys'),
                 ],
             ],
             [
+                'id' => 'site',
                 'title' => 'more.site',
+                'hint' => 'more.site_hint',
                 'items' => [
-                    ['url' => '/admin/video/config/seo', 'label' => 'item.config_seo'],
-                    ['url' => '/admin/video/config/theme', 'label' => 'item.config_theme'],
-                    ['url' => '/admin/video/config/player', 'label' => 'item.config_player'],
-                    ['url' => '/admin/video/config/url', 'label' => 'item.config_url'],
-                    ['url' => '/admin/video/rewrite', 'label' => 'item.rewrite'],
-                    ['url' => '/admin/video/config/upload', 'label' => 'item.config_upload'],
-                    ['url' => '/admin/video/config/comment', 'label' => 'item.config_comment'],
-                    ['url' => '/admin/video/config/email', 'label' => 'item.config_email'],
-                    ['url' => '/admin/video/config/watermark', 'label' => 'item.config_watermark'],
-                    ['url' => '/admin/video/config/analytics', 'label' => 'item.config_analytics'],
-                    ['url' => '/admin/video/domains', 'label' => 'item.domains'],
-                    ['url' => '/admin/video/push', 'label' => 'item.push'],
-                    ['url' => '/admin/stats', 'label' => 'item.stats'],
-                    ['url' => '/admin/video/ulogs', 'label' => 'item.ulogs'],
+                    self::cat('/admin/video/settings', 'nav.settings', 'hint.settings', '', 'hint.settings_keys'),
+                    self::cat('/admin/video/rewrite', 'item.rewrite', 'hint.rewrite'),
+                    self::cat('/admin/video/domains', 'item.domains', 'hint.domains'),
+                    self::cat('/admin/video/push', 'item.push', 'hint.push'),
+                    self::cat('/admin/stats', 'item.stats', 'hint.stats'),
+                    self::cat('/admin/video/ulogs', 'item.ulogs', 'hint.ulogs'),
                 ],
             ],
             [
+                'id' => 'security',
                 'title' => 'more.security',
+                'hint' => 'more.security_hint',
                 'items' => [
-                    ['url' => '/admin/video/config/api', 'label' => 'item.config_api'],
-                    ['url' => '/admin/video/apidoc', 'label' => 'item.apidoc'],
-                    ['url' => '/admin/video/config/ip', 'label' => 'item.config_ip'],
-                    ['url' => '/admin/video/safety', 'label' => 'item.safety'],
-                    ['url' => '/admin/video/accesslogs', 'label' => 'item.accesslogs'],
-                    ['url' => '/admin/video/botlogs', 'label' => 'item.botlogs'],
+                    self::cat('/admin/video/config/api', 'item.config_api', 'hint.config_api'),
+                    self::cat('/admin/video/apidoc', 'item.apidoc', 'hint.apidoc'),
+                    self::cat('/admin/video/config/ip', 'item.config_ip', 'hint.config_ip'),
+                    self::cat('/admin/video/safety', 'item.safety', 'hint.safety'),
+                    self::cat('/admin/video/accesslogs', 'item.accesslogs', 'hint.accesslogs'),
+                    self::cat('/admin/video/botlogs', 'item.botlogs', 'hint.botlogs'),
                 ],
             ],
             [
+                'id' => 'system',
                 'title' => 'more.system',
+                'hint' => 'more.system_hint',
                 'items' => [
-                    ['url' => '/admin/plugins', 'label' => 'item.plugins'],
-                    ['url' => '/admin/system/menus', 'label' => 'item.menus'],
-                    ['url' => '/admin/system/dicts', 'label' => 'item.dicts'],
-                    ['url' => '/admin/system/attachments', 'label' => 'item.attachments'],
-                    ['url' => '/admin/video/tools/annex', 'label' => 'item.annex'],
-                    ['url' => '/admin/system/tools/cache', 'label' => 'item.cache'],
-                    ['url' => '/admin/system/tools/schedule', 'label' => 'item.schedule'],
-                    ['url' => '/admin/system/monitor/operate-logs', 'label' => 'item.operate_logs'],
-                    ['url' => '/admin/system/monitor/system-logs', 'label' => 'item.system_logs'],
-                    ['url' => '/admin/system/database/backup', 'label' => 'item.db_backup'],
-                    ['url' => '/admin/system/database/restore', 'label' => 'item.db_restore'],
-                    ['url' => '/admin/system/database/dict', 'label' => 'item.db_dict'],
-                    ['url' => '/admin/system/database/sql', 'label' => 'item.db_sql'],
-                    ['url' => '/admin/system/database/replace', 'label' => 'item.db_replace'],
-                    ['url' => '/admin/system/shortcut', 'label' => 'item.shortcut'],
+                    self::cat('/admin/system/menus', 'item.menus', 'hint.menus'),
+                    self::cat('/admin/system/dicts', 'item.dicts', 'hint.dicts'),
+                    self::cat('/admin/system/attachments', 'item.attachments', 'hint.attachments'),
+                    self::cat('/admin/video/tools/annex', 'item.annex', 'hint.annex'),
+                    self::cat('/admin/system/tools/cache', 'item.cache', 'hint.cache'),
+                    self::cat('/admin/system/tools/schedule', 'item.schedule', 'hint.schedule'),
+                    self::cat('/admin/system/monitor/operate-logs', 'item.operate_logs', 'hint.operate_logs'),
+                    self::cat('/admin/system/monitor/system-logs', 'item.system_logs', 'hint.system_logs'),
+                    self::cat('/admin/system/database/backup', 'item.db_backup', 'hint.db_backup'),
+                    self::cat('/admin/system/database/restore', 'item.db_restore', 'hint.db_restore'),
+                    self::cat('/admin/system/database/dict', 'item.db_dict', 'hint.db_dict'),
+                    self::cat('/admin/system/database/sql', 'item.db_sql', 'hint.db_sql'),
+                    self::cat('/admin/system/database/replace', 'item.db_replace', 'hint.db_replace'),
+                    self::cat('/admin/system/shortcut', 'item.shortcut', 'hint.shortcut'),
+                ],
+            ],
+            [
+                'id' => 'legacy',
+                'title' => 'more.legacy',
+                'hint' => 'more.legacy_hint',
+                'fold' => true,
+                'items' => [
+                    self::cat('/admin/video/roles', 'item.roles', 'hint.roles'),
+                    self::cat('/admin/video/plots', 'item.plots', 'hint.plots'),
+                    self::cat('/admin/video/websites', 'item.websites', 'hint.websites'),
+                    self::cat('/admin/video/classes', 'item.classes', 'hint.classes'),
+                    self::cat('/admin/video/synonyms', 'item.synonyms', 'hint.synonyms'),
+                    self::cat('/admin/video/wizard', 'item.wizard', 'hint.wizard'),
+                    self::cat('/admin/video/downloaders', 'item.downloaders', 'hint.downloaders'),
+                    self::cat('/admin/video/servers', 'item.servers', 'hint.servers'),
+                    self::cat('/admin/video/tools/quality', 'item.quality', 'hint.quality'),
                 ],
             ],
         ];
         $host = self::host();
         foreach ($blocks as &$block) {
-            $block['items'] = array_merge($block['items'], $host->catalogItems($block['title']));
+            $extra = $host->catalogItems($block['title']);
+            foreach ($extra as $item) {
+                if (empty($item['hint'])) {
+                    $item['hint'] = 'hint.plugin';
+                }
+                if (empty($item['tag'])) {
+                    $item['tag'] = 'plugin';
+                }
+                $block['items'][] = $item;
+            }
         }
         unset($block);
 
         return $blocks;
+    }
+
+    /** @return array{url:string,label:string,hint:string,tag?:string,keywords?:string} */
+    private static function cat(string $url, string $label, string $hint, string $tag = '', string $keywords = ''): array
+    {
+        $row = [
+            'url' => $url,
+            'label' => $label,
+            'hint' => $hint,
+        ];
+        if ($tag !== '') {
+            $row['tag'] = $tag;
+        }
+        if ($keywords !== '') {
+            $row['keywords'] = $keywords;
+        }
+
+        return $row;
     }
 
     private static function host(): PluginHost

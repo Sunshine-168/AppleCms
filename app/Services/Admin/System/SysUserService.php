@@ -46,27 +46,72 @@ class SysUserService
     }
 
     /**
-     * 用户列表
-     * 支持按用户名筛选，返回分页数据
-     * @param string $username
-     * @return array
+     * 管理员页：角色下拉与人数
+     *
+     * @return array{roles:list<array<string,mixed>>,queues:array<string,int>}
      */
-    public function getSysUserLists(string $username, int $limit): array
+    public function adminBoard(): array
+    {
+        $roles = [];
+        $queues = ['all' => 0, 'founder' => 0, 'staff' => 0, 'never' => 0];
+        try {
+            $queues['all'] = $this->sysUserModel->countByCondition([]);
+            $queues['founder'] = $this->sysUserModel->countByCondition([['id', '=', 1]]);
+            $queues['staff'] = max(0, $queues['all'] - $queues['founder']);
+            $queues['never'] = $this->sysUserModel->countByCondition([['login_time', '<=', 0]]);
+            $rows = $this->sysRoleModel->selectByCondition([], ['id', 'name', 'status'], ['sort' => 'desc', 'id' => 'desc']);
+            foreach ($rows as $row) {
+                $id = (int) ($row['id'] ?? 0);
+                if ($id < 1) {
+                    continue;
+                }
+                $row['count'] = $this->sysUserModel->countByCondition([['role_id', '=', $id]]);
+                $roles[] = $row;
+            }
+        } catch (\Throwable) {
+        }
+
+        return compact('roles', 'queues');
+    }
+
+    /**
+     * 用户列表
+     *
+     * @param  array{q?:string,kind?:string,role_id?:string,limit?:int}  $params
+     */
+    public function getSysUserLists(array $params): array
     {
         $where = [];
-
-        if ($username)
-        {
-            $where[] = ['username', '=', $username];
+        $q = trim((string) ($params['q'] ?? ''));
+        $kind = (string) ($params['kind'] ?? '');
+        $roleId = (int) ($params['role_id'] ?? 0);
+        $limit = (int) ($params['limit'] ?? 20);
+        if ($limit < 1) {
+            $limit = 20;
+        }
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $where['or'] = [
+                ['username', 'like', $like],
+                ['email', 'like', $like],
+            ];
+        }
+        if ($kind === 'founder') {
+            $where[] = ['id', '=', 1];
+        } elseif ($kind === 'staff') {
+            $where[] = ['id', '<>', 1];
+        } elseif ($kind === 'never') {
+            $where[] = ['login_time', '<=', 0];
+        } elseif ($roleId > 0) {
+            $where[] = ['role_id', '=', $roleId];
         }
 
-        $data = $this->sysUserModel->paginates($where, '*', $limit, ['id' => 'desc']);
-
-        foreach ($data['data'] as &$item)
-        {
-            $item['login_time'] = date('Y-m-d H:i:s', $item['login_time']);
-            $item['role_name']  = $this->sysRoleModel->findById($item['role_id'])['name'] ?? '';
+        $data = $this->sysUserModel->paginates($where, '*', $limit, ['id' => 'asc']);
+        $currentId = (int) session('admin_uid', 0);
+        foreach ($data['data'] as &$item) {
+            $item = $this->decorateAdmin($item, $currentId);
         }
+        unset($item);
 
         return Result::success($data);
     }
@@ -125,30 +170,44 @@ class SysUserService
      */
     public function addSysUser(string $username, string $password, string $email = '', string $remark = '', int $role = 1, int $roleId = 0): array
     {
-        if ($password === '')
-        {
-            $password = '123456';
+        $username = trim($username);
+        $password = trim($password);
+        $email = trim($email);
+        $remark = trim($remark);
+        if ($username === '') {
+            return Result::fail('请填写登录名');
+        }
+        if (mb_strlen($username) < 2) {
+            return Result::fail('登录名至少 2 个字');
+        }
+        if ($password === '') {
+            return Result::fail('请填写密码');
+        }
+        if (strlen($password) < 6) {
+            return Result::fail('密码至少 6 位');
+        }
+        if ($this->sysUserModel->findByCondition([['username', '=', $username]])) {
+            return Result::fail('这个登录名已经有人用了');
         }
 
         $insert = [
-            'username'      => $username,
-            'password'      => $password,
-            'email'         => $email,
-            'remark'        => $remark,
-            'role'          => $role,
-            'role_id'       => $roleId,
-            'create_time'   => time(),
-            'update_time'   => time(),
+            'username' => $username,
+            'password' => $password,
+            'email' => $email,
+            'remark' => $remark,
+            'role' => 1,
+            'role_id' => max(0, $roleId),
+            'login_time' => 0,
+            'create_time' => time(),
+            'update_time' => time(),
         ];
 
         $res = $this->sysUserModel->inserts($insert);
-
-        if (!$res)
-        {
-            return Result::fail();
+        if (! $res) {
+            return Result::fail('没能添加');
         }
 
-        return Result::success();
+        return Result::success([], '已添加，可以登录后台');
     }
 
     /**
@@ -161,36 +220,56 @@ class SysUserService
      */
     public function updateSysUser(int $id, string $username, string $password, string $email = '', string $remark = '', ?int $role = null, ?int $roleId = null): array
     {
-        $update = [
-            'username'      => $username,
-            'email'         => $email,
-            'remark'        => $remark,
-            'update_time'   => time(),
-        ];
+        if ($id < 1) {
+            return Result::fail('管理员不存在');
+        }
+        $user = $this->sysUserModel->findById($id);
+        if (! $user) {
+            return Result::fail('管理员不存在');
+        }
+        $username = trim($username);
+        $password = trim($password);
+        $email = trim($email);
+        $remark = trim($remark);
+        if ($username === '') {
+            return Result::fail('请填写登录名');
+        }
+        $dup = $this->sysUserModel->findByCondition([['username', '=', $username]]);
+        if ($dup && (int) ($dup['id'] ?? 0) !== $id) {
+            return Result::fail('这个登录名已经有人用了');
+        }
+        if ($password !== '' && strlen($password) < 6) {
+            return Result::fail('密码至少 6 位');
+        }
 
-        if ($password !== '')
-        {
+        $update = [
+            'username' => $username,
+            'email' => $email,
+            'remark' => $remark,
+            'update_time' => time(),
+        ];
+        if ($password !== '') {
             $update['password'] = $password;
         }
-
-        if ($role !== null)
-        {
-            $update['role'] = $role;
-        }
-
-        if ($roleId !== null)
-        {
-            $update['role_id'] = $roleId;
+        if ($id === 1) {
+            $update['role'] = 0;
+        } else {
+            $update['role'] = 1;
+            if ($roleId !== null) {
+                $update['role_id'] = max(0, $roleId);
+            }
         }
 
         $res = $this->sysUserModel->updateById($id, $update);
-
-        if (!$res)
-        {
-            return Result::fail();
+        if (! $res) {
+            return Result::fail('没能保存');
+        }
+        $this->forgetUserCache($id);
+        if ($id === (int) session('admin_uid', 0)) {
+            session(['admin_username' => $username]);
         }
 
-        return Result::success();
+        return Result::success([], '已保存');
     }
 
     /**
@@ -200,16 +279,181 @@ class SysUserService
      */
     public function deleteSysUser(int $id): array
     {
-        $res = $this->sysUserModel->deleteById($id);
-
-        if (!$res)
-        {
-            return Result::fail();
+        if ($id < 1) {
+            return Result::fail('管理员不存在');
+        }
+        if ($id === 1) {
+            return Result::fail('创始人不能删');
+        }
+        if ($id === (int) session('admin_uid', 0)) {
+            return Result::fail('不能删自己正在用的账号');
+        }
+        $total = $this->sysUserModel->countByCondition([]);
+        if ($total <= 1) {
+            return Result::fail('至少留一位管理员');
         }
 
-        return Result::success();
+        $res = $this->sysUserModel->deleteById($id);
+        if (! $res) {
+            return Result::fail('没能删除');
+        }
+        $this->forgetUserCache($id);
+
+        return Result::success([], '已删除');
     }
 
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    protected function decorateAdmin(array $item, int $currentId): array
+    {
+        $id = (int) ($item['id'] ?? 0);
+        $roleId = (int) ($item['role_id'] ?? 0);
+        $isFounder = $id === 1;
+        $isSelf = $id > 0 && $id === $currentId;
+        $roleName = '';
+        if ($roleId > 0) {
+            $roleName = (string) ($this->sysRoleModel->findById($roleId)['name'] ?? '');
+        }
+        $item['is_founder'] = $isFounder;
+        $item['is_self'] = $isSelf;
+        $item['can_delete'] = ! $isFounder && ! $isSelf;
+        $item['role_name'] = $roleName;
+        $item['kind_label'] = $isFounder ? '创始人' : ($roleName !== '' ? $roleName : '未分角色');
+        $item['login_text'] = $this->loginText($item);
+        $item['never_login'] = ($item['login_text'] === '从未登录');
+        $stamp = (int) ($item['login_time'] ?? 0);
+        $item['login_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : '';
+
+        return $item;
+    }
+
+    /** @param  array<string, mixed>  $item */
+    protected function loginText(array $item): string
+    {
+        $stamp = (int) ($item['login_time'] ?? 0);
+        if ($stamp <= 0) {
+            return '从未登录';
+        }
+        $today = strtotime('today');
+        $time = date('H:i', $stamp);
+        if ($stamp >= $today) {
+            return '今天 '.$time;
+        }
+        if ($stamp >= $today - 86400) {
+            return '昨天 '.$time;
+        }
+
+        return date('m-d H:i', $stamp);
+    }
+
+    protected function forgetUserCache(int $id): void
+    {
+        Cache::forget('admin_user_'.$id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    protected function decorateLoginLog(array $item, string $me): array
+    {
+        $stamp = 0;
+        if (! empty($item['create_time']) && is_numeric($item['create_time'])) {
+            $stamp = (int) $item['create_time'];
+        } elseif (! empty($item['create_at']) && is_numeric($item['create_at'])) {
+            $stamp = (int) $item['create_at'];
+        }
+        $ip = trim((string) ($item['login_ip'] ?? ''));
+        $ua = (string) ($item['login_agent'] ?? '');
+        $item['is_self'] = $me !== '' && (string) ($item['username'] ?? '') === $me;
+        $item['time_text'] = $this->loginLogTimeText($stamp);
+        $item['place_text'] = $this->ipPlaceText($ip, (string) ($item['ip_address'] ?? ''));
+        $item['device_text'] = $this->deviceText($ua);
+        $item['create_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : (string) ($item['create_time'] ?? '');
+
+        return $item;
+    }
+
+    protected function loginLogTimeText(int $stamp): string
+    {
+        if ($stamp <= 0) {
+            return '';
+        }
+        $clock = date('H:i:s', $stamp);
+        $today = strtotime('today');
+        if ($stamp >= $today) {
+            return '今天 '.$clock;
+        }
+        if ($stamp >= $today - 86400) {
+            return '昨天 '.$clock;
+        }
+        if ((int) date('Y', $stamp) === (int) date('Y')) {
+            return date('m-d ', $stamp).$clock;
+        }
+
+        return date('Y-m-d ', $stamp).$clock;
+    }
+
+    protected function ipPlaceText(string $ip, string $stored): string
+    {
+        $ip = trim($ip);
+        if ($ip === '' || $ip === '0.0.0.0') {
+            return '';
+        }
+        if ($ip === '::1' || $ip === '127.0.0.1' || str_starts_with($ip, '127.')) {
+            return '本机';
+        }
+        if (str_starts_with($ip, '172.17.')) {
+            return '内网（Docker）';
+        }
+        $valid = filter_var($ip, FILTER_VALIDATE_IP);
+        $public = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        if ($valid && $public === false) {
+            return '内网';
+        }
+        $stored = trim(str_replace(['，'], ',', $stored));
+        if ($stored === '' || $stored === '0') {
+            return '';
+        }
+        $parts = [];
+        foreach (explode(',', $stored) as $part) {
+            $part = trim($part);
+            if ($part !== '' && $part !== '0') {
+                $parts[] = $part;
+            }
+        }
+
+        return implode(' ', $parts);
+    }
+
+    protected function deviceText(string $ua): string
+    {
+        $ua = trim($ua);
+        if ($ua === '') {
+            return '';
+        }
+        $os = match (true) {
+            str_contains($ua, 'Windows') => 'Windows',
+            str_contains($ua, 'Android') => 'Android',
+            str_contains($ua, 'iPhone') || str_contains($ua, 'iPad') => 'iOS',
+            str_contains($ua, 'Mac OS') || str_contains($ua, 'Macintosh') => 'macOS',
+            str_contains($ua, 'Linux') => 'Linux',
+            default => '',
+        };
+        $browser = match (true) {
+            str_contains($ua, 'Edg/') || str_contains($ua, 'Edge/') => 'Edge',
+            str_contains($ua, 'OPR/') || str_contains($ua, 'Opera') => 'Opera',
+            str_contains($ua, 'Firefox/') => 'Firefox',
+            str_contains($ua, 'Cursor/') => 'Cursor',
+            str_contains($ua, 'Chrome/') => 'Chrome',
+            str_contains($ua, 'Safari/') => 'Safari',
+            default => '',
+        };
+
+        return trim($browser.($os !== '' ? ' · '.$os : ''), ' ·');
+    }
 
     /**
      * 登入
@@ -352,61 +596,54 @@ class SysUserService
 
     /**
      * 获取系统用户登录日志列表
-     * 支持按用户名、登录IP、时间范围筛选，返回分页数据
-     * @param array $params
-     * @return array
+     *
+     * @param  array{q?:string,username?:string,login_ip?:string,mine?:bool,start_time?:string,end_time?:string,limit?:int}  $params
      */
     public function getSysUserLoginLists(array $params): array
     {
         $where = [];
-        $limit = (int) ($params['limit'] ?? 10);
-        if ($limit < 1)
-        {
-            $limit = 10;
+        $limit = (int) ($params['limit'] ?? 20);
+        if ($limit < 1) {
+            $limit = 20;
         }
-
-        // 按用户名筛选
-        if (!empty($params['username']))
-        {
-            $where[] = ['username', '=', $params['username']];
-        }
-
-        // 按登录IP筛选
-        if (!empty($params['login_ip']))
-        {
-            $where[] = ['login_ip', '=', $params['login_ip']];
-        }
-
-        // 按时间范围筛选
-        if (!empty($params['start_time']))
-        {
-            $where[] = ['create_time', '>=', strtotime($params['start_time'])];
-        }
-
-        if (!empty($params['end_time']))
-        {
-            $where[] = ['create_time', '<=', strtotime($params['end_time']) + 86400];
-        }
-
-        $data = $this->sysUserLogModel->paginates($where, '*', $limit);
-
-        foreach ($data['data'] as &$item)
-        {
-            if (empty($item['create_time']) && !empty($item['create_at']))
-            {
-                $item['create_time'] = $item['create_at'];
-                continue;
+        $q = trim((string) ($params['q'] ?? ''));
+        $username = trim((string) ($params['username'] ?? ''));
+        $ip = trim((string) ($params['login_ip'] ?? ''));
+        if (! empty($params['mine'])) {
+            $me = trim((string) session('admin_username', ''));
+            if ($me !== '') {
+                $where[] = ['username', '=', $me];
             }
-
-            if (!empty($item['create_time']) && is_numeric($item['create_time']))
-            {
-                $timestamp = (int) $item['create_time'];
-                if ($timestamp > 0)
-                {
-                    $item['create_time'] = date('Y-m-d H:i:s', $timestamp);
-                }
-            }
+        } elseif ($username !== '' && $q === '') {
+            $where[] = ['username', 'like', '%'.$username.'%'];
         }
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $where['or'] = [
+                ['username', 'like', $like],
+                ['login_ip', 'like', $like],
+                ['ip_address', 'like', $like],
+            ];
+        }
+        if ($ip !== '') {
+            $where[] = ['login_ip', '=', $ip];
+        }
+        if (! empty($params['start_time'])) {
+            $where[] = ['create_time', '>=', strtotime((string) $params['start_time'])];
+        }
+        if (! empty($params['end_time'])) {
+            $where[] = ['create_time', '<=', strtotime((string) $params['end_time']) + 86400];
+        }
+
+        $data = $this->sysUserLogModel->paginates($where, '*', $limit, ['id' => 'desc']);
+        if (! isset($data['data']) || ! is_array($data['data'])) {
+            $data = ['total' => 0, 'data' => []];
+        }
+        $me = (string) session('admin_username', '');
+        foreach ($data['data'] as &$item) {
+            $item = $this->decorateLoginLog($item, $me);
+        }
+        unset($item);
 
         return Result::success($data);
     }

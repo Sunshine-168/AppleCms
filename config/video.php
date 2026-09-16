@@ -16,6 +16,12 @@ return [
         'ttl' => (int) env('VIDEO_HTML_CACHE_TTL', 3600),
     ],
 
+    'disk_html' => [
+        'enabled' => (bool) env('VIDEO_DISK_HTML', false),
+        'path' => env('VIDEO_DISK_HTML_PATH', 'html'),
+        'root' => env('VIDEO_DISK_HTML_ROOT', ''),
+    ],
+
     'rewrite' => [
         'mode' => env('VIDEO_REWRITE', 'laravel'),
         'suffix' => env('VIDEO_REWRITE_SUFFIX', '.html'),

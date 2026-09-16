@@ -1,77 +1,528 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.templates'))
 
+@php
+    $groups = $groups ?? [];
+    $theme = $theme ?? ['slug' => 'default', 'title' => '默认模板'];
+    $codeEditor = (bool) ($codeEditor ?? false);
+    $hasFiles = false;
+    foreach ($groups as $g) {
+        if (! empty($g['files'])) { $hasFiles = true; break; }
+    }
+@endphp
+
+@if($codeEditor)
+    @push('styles')
+        @include('code-editor::head')
+    @endpush
+@endif
+
 @section('plain')
-<div class="split-side">
+<div class="split-side tpl-index">
     <div class="card card-panel">
-        <div class="card-header"><span>主题文件</span></div>
+        <div class="card-header"><span>{{ $theme['title'] }}</span></div>
         <div class="card-body">
-            <div class="file-list">
-                @foreach($files ?? [] as $f)
-                    <a href="#" class="tpl-file" data-path="{{ $f['path'] }}">{{ $f['name'] }}</a>
-                @endforeach
-            </div>
+            <p class="muted recycle-lead">改页面文件。Logo 和主色在「<a href="/admin/video/settings?tab=look">站点设置 → 外观</a>」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
+            @if($hasFiles)
+                <input type="search" id="tpl-search" class="tpl-search" placeholder="搜页面，如 首页、播放" autocomplete="off" aria-label="搜索模板">
+                <div class="file-list" id="tpl-files">
+                    @foreach($groups as $group)
+                        <div class="tpl-group" data-group>
+                            <h3>{{ $group['label'] }}</h3>
+                            @foreach($group['files'] as $f)
+                                <a href="#" class="tpl-file" data-path="{{ $f['path'] }}" data-label="{{ $f['label'] }}">
+                                    {{ $f['label'] }}
+                                    <small>{{ $f['path'] }}</small>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+                <p class="muted" id="tpl-filter-empty" hidden>没有匹配的页面。</p>
+            @else
+                <div class="list-empty">
+                    <p>这个主题还没有可改的页面。</p>
+                    <p class="muted">把 Blade 文件放到 <code>resources/views/themes/{{ $theme['slug'] }}</code>。</p>
+                </div>
+            @endif
         </div>
     </div>
     <div class="card card-panel">
         <div class="card-header">
-            <span>编辑 <span id="tpl-path"></span></span>
+            <span id="tpl-title">模板</span>
             <div>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback">回滚</button>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-backup">备份</button>
-                <button type="button" class="btn btn-sm" id="tpl-save">保存</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-find" hidden title="Ctrl+F">查找</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-attach">插入附件</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback" disabled>回滚</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-backup" disabled>备份</button>
+                <button type="button" class="btn btn-sm" id="tpl-save" disabled>保存</button>
             </div>
         </div>
         <div class="card-body">
-            <textarea id="tpl-content" class="tpl-editor"></textarea>
+            <p class="muted field-hint" id="tpl-meta">
+                <span id="tpl-meta-main">从左边点一个页面开始改。保存会先备份，改错了可以回滚。</span>
+                <span id="tpl-meta-pos" class="tpl-meta-pos" hidden></span>
+            </p>
+            <div class="list-empty" id="tpl-empty">
+                <p>还没有打开文件。</p>
+                <p class="muted">先点「首页」或「整站头尾」。这是 Blade 模板，不是可视化排版。需要图片时点「插入附件」。</p>
+            </div>
+            <textarea id="tpl-content" class="tpl-editor" hidden spellcheck="false"></textarea>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
+@if($codeEditor)
+    @include('code-editor::scripts')
+@endif
 <script>
 (function () {
     var U = AdminUi;
     var current = '';
+    var saved = '';
+    var backupAt = 0;
+    var eol = '\n';
+    var applying = false;
+    var loadSeq = 0;
+    var saving = false;
+    var titleEl = document.getElementById('tpl-title');
+    var metaMain = document.getElementById('tpl-meta-main');
+    var metaPos = document.getElementById('tpl-meta-pos');
+    var emptyEl = document.getElementById('tpl-empty');
+    var editor = document.getElementById('tpl-content');
+    var saveBtn = document.getElementById('tpl-save');
+    var backupBtn = document.getElementById('tpl-backup');
+    var rollbackBtn = document.getElementById('tpl-rollback');
+    var findBtn = document.getElementById('tpl-find');
+    var code = window.TplCodeEditor ? window.TplCodeEditor.mount(editor, {
+        onSave: function () { saveFile(true); },
+        onShow: function () { sizeEditor(); }
+    }) : null;
+    if (code) code.show(false);
+
+    function sniffEol(text) {
+        text = String(text == null ? '' : text);
+        if (text.indexOf('\r\n') >= 0) return '\r\n';
+        if (text.indexOf('\r') >= 0) return '\r';
+        return '\n';
+    }
+    function normalize(text) {
+        return String(text == null ? '' : text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    }
+    function encode(text) {
+        text = normalize(text);
+        return eol === '\n' ? text : text.replace(/\n/g, eol);
+    }
+    function getContent() {
+        return normalize(code ? code.get() : editor.value);
+    }
+    function setContent(value) {
+        applying = true;
+        value = normalize(value);
+        if (code) code.set(value);
+        else editor.value = value;
+        applying = false;
+    }
+    function dirty() {
+        return current !== '' && getContent() !== saved;
+    }
+    function fmtTime(ts) {
+        ts = parseInt(ts, 10) || 0;
+        if (!ts) return '';
+        var d = new Date(ts * 1000);
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    function cursorBit() {
+        if (!code || !current) return '';
+        var c = code.cursor();
+        return (c.line + 1) + '行 ' + (c.ch + 1) + '列';
+    }
+    function paintPos() {
+        var pos = cursorBit();
+        metaPos.hidden = !pos;
+        metaPos.textContent = pos;
+    }
+    function updateChrome() {
+        var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current || '模板';
+        titleEl.title = label;
+        titleEl.textContent = label + (dirty() ? ' *' : '');
+        saveBtn.disabled = !current || !dirty();
+        backupBtn.disabled = !current;
+        rollbackBtn.disabled = !current || backupAt < 1;
+        findBtn.hidden = !current || !code;
+    }
+    function setMeta(label, path, bak) {
+        backupAt = parseInt(bak, 10) || 0;
+        var bits = [path];
+        if (backupAt) bits.push('上次备份 ' + fmtTime(backupAt));
+        else bits.push('还没有备份');
+        metaMain.textContent = bits.join(' · ');
+        paintPos();
+        updateChrome();
+    }
+    function sizeEditor() {
+        if (code && code.size) code.size();
+    }
+    function showEditor(on) {
+        emptyEl.hidden = on;
+        if (code) {
+            editor.hidden = true;
+            code.show(on);
+        } else {
+            editor.hidden = !on;
+        }
+    }
+    function markDirtyTitle() {
+        updateChrome();
+        paintPos();
+    }
+    function markActive(path) {
+        document.querySelectorAll('.tpl-file').forEach(function (x) {
+            x.classList.toggle('active', x.getAttribute('data-path') === path);
+            x.classList.toggle('is-loading', false);
+        });
+    }
+    function openFile(a) {
+        var path = a.getAttribute('data-path');
+        var label = a.getAttribute('data-label') || path;
+        if (path === current) {
+            if (code) code.focus();
+            else editor.focus();
+            return;
+        }
+        if (current && dirty() && !U.confirm('当前文件还没保存，换过去会丢掉改动。确定？')) return;
+        var seq = ++loadSeq;
+        a.classList.add('is-loading');
+        U.get('/admin/video/templates/read', {path: path}).then(function (res) {
+            a.classList.remove('is-loading');
+            if (seq !== loadSeq) return;
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '读取失败', 'err'); return; }
+            var raw = (res.data && res.data.content) || '';
+            eol = sniffEol(raw);
+            current = path;
+            saved = normalize(raw);
+            setContent(saved);
+            showEditor(true);
+            markActive(path);
+            setMeta((res.data && res.data.label) || label, path, res.data && res.data.backup_at);
+            var url = new URL(window.location.href);
+            url.searchParams.set('path', path);
+            history.replaceState(null, '', url);
+        }).catch(function () {
+            a.classList.remove('is-loading');
+            if (seq !== loadSeq) return;
+            U.toast('读取失败', 'err');
+        });
+    }
+
     document.querySelectorAll('.tpl-file').forEach(function (a) {
         a.addEventListener('click', function (e) {
             e.preventDefault();
-            document.querySelectorAll('.tpl-file').forEach(function (x) { x.classList.remove('active'); });
-            a.classList.add('active');
-            current = a.getAttribute('data-path');
-            document.getElementById('tpl-path').textContent = current;
-            U.get('/admin/video/templates/read', {path: current}).then(function (res) {
-                if (res && res.code === 0) document.getElementById('tpl-content').value = (res.data && res.data.content) || '';
-                else U.toast((res && res.msg) || '读取失败', 'err');
-            });
+            openFile(a);
         });
     });
-    U.on('#tpl-save', 'click', function () {
-        if (!current) { U.toast('请选择文件', 'err'); return; }
-        if (!U.confirm('确认保存并覆盖主题文件？保存前会自动备份。')) return;
-        U.post('/admin/video/templates/save', {path: current, content: document.getElementById('tpl-content').value}).then(function (res) {
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+    function onEditorInput() { if (!applying) markDirtyTitle(); }
+    if (code) {
+        code.onChange(onEditorInput);
+        code.onCursor(paintPos);
+    } else {
+        editor.addEventListener('input', onEditorInput);
+    }
+    window.addEventListener('beforeunload', function (e) {
+        if (!dirty()) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+    window.addEventListener('resize', function () {
+        if (current) sizeEditor();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (!(e.ctrlKey || e.metaKey) || (e.key !== 's' && e.key !== 'S')) return;
+        e.preventDefault();
+        saveFile(true);
+    });
+
+    var search = document.getElementById('tpl-search');
+    var filterEmpty = document.getElementById('tpl-filter-empty');
+    function filterFiles() {
+        if (!search) return;
+        var q = (search.value || '').trim().toLowerCase();
+        var hit = false;
+        document.querySelectorAll('[data-group]').forEach(function (box) {
+            var any = false;
+            box.querySelectorAll('.tpl-file').forEach(function (a) {
+                var hay = ((a.getAttribute('data-label') || '') + ' ' + (a.getAttribute('data-path') || '')).toLowerCase();
+                var on = !q || hay.indexOf(q) >= 0;
+                a.hidden = !on;
+                if (on) any = true;
+            });
+            box.hidden = !any;
+            if (any) hit = true;
         });
+        if (filterEmpty) filterEmpty.hidden = !q || hit;
+    }
+    if (search) {
+        search.addEventListener('input', filterFiles);
+        search.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape' || !search.value) return;
+            search.value = '';
+            filterFiles();
+            e.preventDefault();
+        });
+    }
+
+    function saveFile(quiet) {
+        if (!current) {
+            if (!quiet) U.toast('请先选一个页面', 'err');
+            return;
+        }
+        if (!dirty() || saving) return;
+        if (!quiet && !U.confirm('保存会覆盖这个页面，并先做一份备份。确定？')) return;
+        saving = true;
+        var payload = encode(getContent());
+        var snap = normalize(payload);
+        U.post('/admin/video/templates/save', {path: current, content: payload}).then(function (res) {
+            if (res && res.code === 0) {
+                saved = snap;
+                var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current;
+                setMeta(label, current, res.data && res.data.backup_at);
+            }
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        }).catch(function () {
+            U.toast('保存失败', 'err');
+        }).then(function () {
+            saving = false;
+        });
+    }
+    U.on('#tpl-save', 'click', function () { saveFile(false); });
+    U.on('#tpl-find', 'click', function () {
+        if (code && code.find) code.find();
     });
     U.on('#tpl-backup', 'click', function () {
-        if (!current) { U.toast('请选择文件', 'err'); return; }
+        if (!current) { U.toast('请先选一个页面', 'err'); return; }
         U.post('/admin/video/templates/backup', {path: current}).then(function (res) {
+            if (res && res.code === 0) {
+                var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current;
+                setMeta(label, current, res.data && res.data.backup_at);
+            }
             U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
         });
     });
     U.on('#tpl-rollback', 'click', function () {
-        if (!current) { U.toast('请选择文件', 'err'); return; }
-        if (!U.confirm('回滚到最近一次备份？')) return;
+        if (!current) { U.toast('请先选一个页面', 'err'); return; }
+        if (!U.confirm('回到最近一次备份？现在编辑器里没保存的改动会丢掉。')) return;
         U.post('/admin/video/templates/rollback', {path: current}).then(function (res) {
             if (res && res.code === 0) {
                 U.get('/admin/video/templates/read', {path: current}).then(function (r) {
-                    if (r && r.code === 0) document.getElementById('tpl-content').value = (r.data && r.data.content) || '';
+                    if (r && r.code === 0) {
+                        saved = normalize((r.data && r.data.content) || '');
+                        setContent(saved);
+                        var label = (r.data && r.data.label) || current;
+                        setMeta(label, current, r.data && r.data.backup_at);
+                    }
                 });
             }
             U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
         });
     });
+
+    function isImage(row) {
+        var mime = String((row && row.mime) || '');
+        var url = String((row && row.url) || (row && row.path) || '');
+        if (parseInt(row && row.type, 10) === 1) return true;
+        if (mime.indexOf('image/') === 0) return true;
+        return /\.(jpe?g|png|gif|webp|svg|ico)(\?|$)/i.test(url);
+    }
+    function fileUrl(row) {
+        return String((row && row.url) || '').trim();
+    }
+    function snippet(row) {
+        var url = fileUrl(row);
+        if (!url) return '';
+        if (isImage(row)) return '<img src="' + url + '" alt="">';
+        return url;
+    }
+    function insertAtCursor(text) {
+        if (!text) return;
+        if (!current) {
+            copyText(text);
+            U.toast('已复制，打开页面后可粘贴到光标处', 'ok');
+            return;
+        }
+        if (code) {
+            code.insert(text);
+            markDirtyTitle();
+            U.toast('已插入', 'ok');
+            return;
+        }
+        editor.focus();
+        var start = editor.selectionStart;
+        var end = editor.selectionEnd;
+        var val = editor.value;
+        editor.value = val.slice(0, start) + text + val.slice(end);
+        editor.selectionStart = editor.selectionEnd = start + text.length;
+        editor.dispatchEvent(new Event('input'));
+        U.toast('已插入', 'ok');
+    }
+    function copyText(text) {
+        if (!text) return Promise.resolve();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).catch(function () {});
+        }
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        return Promise.resolve();
+    }
+    function uploadFiles(files, after) {
+        files = Array.prototype.slice.call(files || []).filter(Boolean);
+        if (!files.length) return Promise.resolve();
+        U.loading(true);
+        var chain = Promise.resolve();
+        files.forEach(function (file) {
+            chain = chain.then(function () {
+                return U.upload(file, '/admin/system/attachments/upload').then(function (res) {
+                    if (!res || res.code !== 0) {
+                        U.toast((res && res.msg) || (file.name + ' 失败'), 'err');
+                        return;
+                    }
+                    if (after) after(res.data || {});
+                    else U.toast(file.name + ' 已上传', 'ok');
+                });
+            });
+        });
+        return chain.then(function () { U.loading(false); });
+    }
+    function bindDrop(el, onFiles) {
+        if (!el) return;
+        el.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            el.classList.add('is-drag');
+        });
+        el.addEventListener('dragleave', function () { el.classList.remove('is-drag'); });
+        el.addEventListener('drop', function (e) {
+            e.preventDefault();
+            el.classList.remove('is-drag');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                onFiles(e.dataTransfer.files);
+            }
+        });
+    }
+    function openPicker() {
+        U.dialog({
+            title: '插入附件',
+            wide: true,
+            hideOk: true,
+            cancelText: '关闭',
+            content: '<p class="muted">图片会写成 img 标签。没打开页面时只复制地址。也可在<a href="/admin/system/attachments">附件库</a>管理。</p>'
+                + '<div class="tpl-picker-drop" id="tpl-picker-drop">点击或拖入文件（图片 / svg / zip，最大 10MB）'
+                + '<input type="file" id="tpl-picker-input" multiple hidden accept="image/*,.svg,.ico,.css,.zip,.pdf,.webp"></div>'
+                + '<div class="tpl-picker-bar"><input type="search" id="tpl-picker-q" placeholder="搜文件名" autocomplete="off">'
+                + '<button type="button" class="btn btn-muted btn-sm" id="tpl-picker-reload">刷新</button></div>'
+                + '<div id="tpl-picker-grid" class="tpl-picker-grid"></div>'
+                + '<div id="tpl-picker-pager"></div>',
+            onOpen: function (body) {
+                var state = { page: 1, keyword: '' };
+                var grid = body.querySelector('#tpl-picker-grid');
+                var pagerEl = body.querySelector('#tpl-picker-pager');
+                var drop = body.querySelector('#tpl-picker-drop');
+                var input = body.querySelector('#tpl-picker-input');
+                var q = body.querySelector('#tpl-picker-q');
+                function load() {
+                    U.get('/admin/system/attachments/list', {
+                        page: state.page,
+                        limit: 12,
+                        keyword: state.keyword
+                    }).then(function (res) {
+                        var d = (res && res.data) || {};
+                        var list = Array.isArray(d) ? d : (d.data || []);
+                        var total = d.total != null ? d.total : list.length;
+                        if (!list.length) {
+                            grid.innerHTML = '<div class="list-empty tpl-picker-empty"><p>还没有附件。</p><p class="muted">把海报、图标拖进来，再点插入。</p></div>';
+                            pagerEl.innerHTML = '';
+                            return;
+                        }
+                        grid.innerHTML = list.map(function (row) {
+                            var url = U.escape(fileUrl(row));
+                            var name = U.escape(row.name || url);
+                            var thumb = isImage(row)
+                                ? '<div class="tpl-picker-thumb"><img src="' + url + '" alt=""></div>'
+                                : '<div class="tpl-picker-file">文件</div>';
+                            return '<div class="tpl-picker-card" data-id="' + U.escape(row.id) + '">'
+                                + thumb
+                                + '<span class="entry-row-title" title="' + name + '">' + name + '</span>'
+                                + '<p class="muted">' + U.escape(row.size_text || '') + '</p>'
+                                + '<div class="tpl-picker-actions">'
+                                + '<button type="button" class="btn btn-sm js-insert">插入</button>'
+                                + '<button type="button" class="btn btn-muted btn-sm js-copy">复制</button>'
+                                + '</div></div>';
+                        }).join('');
+                        grid._rows = list;
+                        U.pager(pagerEl, {
+                            page: d.current_page || state.page,
+                            last: d.last_page || Math.max(1, Math.ceil(total / 12)),
+                            total: total
+                        }, function (p) {
+                            state.page = p;
+                            load();
+                        });
+                    });
+                }
+                function afterUpload(row) {
+                    insertAtCursor(snippet(row));
+                    state.page = 1;
+                    load();
+                }
+                drop.addEventListener('click', function () { input.click(); });
+                input.addEventListener('change', function () {
+                    uploadFiles(input.files, afterUpload).then(function () { input.value = ''; });
+                });
+                bindDrop(drop, function (files) { uploadFiles(files, afterUpload); });
+                body.querySelector('#tpl-picker-reload').addEventListener('click', function () { load(); });
+                var timer = 0;
+                q.addEventListener('input', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        state.keyword = (q.value || '').trim();
+                        state.page = 1;
+                        load();
+                    }, 250);
+                });
+                grid.addEventListener('click', function (e) {
+                    var btn = e.target.closest('button');
+                    if (!btn) return;
+                    var card = e.target.closest('.tpl-picker-card');
+                    if (!card) return;
+                    var row = (grid._rows || []).filter(function (r) {
+                        return String(r.id) === String(card.getAttribute('data-id'));
+                    })[0];
+                    if (!row) return;
+                    if (btn.classList.contains('js-insert')) insertAtCursor(snippet(row));
+                    if (btn.classList.contains('js-copy')) {
+                        copyText(fileUrl(row)).then(function () { U.toast('已复制地址', 'ok'); });
+                    }
+                });
+                load();
+            }
+        });
+    }
+    U.on('#tpl-attach', 'click', openPicker);
+    bindDrop(code ? code.wrap : editor, function (files) {
+        uploadFiles(files, function (row) { insertAtCursor(snippet(row)); });
+    });
+
+    var boot = new URLSearchParams(location.search).get('path');
+    if (boot) {
+        document.querySelectorAll('.tpl-file').forEach(function (a) {
+            if (a.getAttribute('data-path') === boot) openFile(a);
+        });
+    }
 })();
 </script>
 @endpush

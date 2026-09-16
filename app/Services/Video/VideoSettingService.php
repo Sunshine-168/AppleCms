@@ -20,6 +20,7 @@ class VideoSettingService
             'site_description' => (string) config('video.site.description', ''),
             'html_cache_enabled' => (string) (int) config('video.html_cache.enabled', false),
             'html_cache_ttl' => (string) (int) config('video.html_cache.ttl', 3600),
+            'disk_html_enabled' => (string) (int) config('video.disk_html.enabled', false),
             'rewrite_mode' => (string) config('video.rewrite.mode', 'laravel'),
             'rewrite_suffix' => (string) config('video.rewrite.suffix', '.html'),
             'baidu_push_token' => '',
@@ -122,7 +123,7 @@ class VideoSettingService
         }
         $now = time();
         $keys = [
-            'site_title', 'site_keyword', 'site_description', 'html_cache_enabled', 'html_cache_ttl',
+            'site_title', 'site_keyword', 'site_description', 'html_cache_enabled', 'html_cache_ttl', 'disk_html_enabled',
             'rewrite_mode', 'rewrite_suffix', 'baidu_push_token', 'shenma_push_token', 'bing_push_token',
             'pay_wechat_mchid', 'pay_wechat_key', 'pay_alipay_appid', 'pay_alipay_key', 'storage_disk',
             's3_key', 's3_secret', 's3_region', 's3_bucket', 's3_endpoint', 's3_url',
@@ -148,11 +149,15 @@ class VideoSettingService
         } catch (\Throwable) {
         }
         $keys = array_values(array_unique($keys));
+        $keepIfBlank = ['smtp_pass', 's3_secret'];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;
             }
             $value = is_scalar($data[$key]) ? (string) $data[$key] : '';
+            if (in_array($key, $keepIfBlank, true) && $value === '') {
+                continue;
+            }
             VideoOption::query()->updateOrCreate(
                 ['k' => $key],
                 ['v' => $value, 'updated_at' => $now]
@@ -160,6 +165,28 @@ class VideoSettingService
         }
         Cache::forget(self::CACHE_KEY);
         Cache::flush();
+        $this->applyRuntime();
+
+        return Result::success([], '已保存');
+    }
+
+    /** 只改列出的项，不清整站缓存（给静态生成工作台用） */
+    public function saveOptions(array $data): array
+    {
+        if (! $this->ready()) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $now = time();
+        foreach ($data as $key => $value) {
+            if (! is_string($key) || $key === '') {
+                continue;
+            }
+            VideoOption::query()->updateOrCreate(
+                ['k' => $key],
+                ['v' => is_scalar($value) ? (string) $value : '', 'updated_at' => $now]
+            );
+        }
+        Cache::forget(self::CACHE_KEY);
         $this->applyRuntime();
 
         return Result::success([], '已保存');
@@ -223,6 +250,7 @@ class VideoSettingService
             'theme' => (string) config('video.theme', 'default'),
             'html_cache_enabled' => (int) ($all['html_cache_enabled'] ?? 0) === 1,
             'html_cache_ttl' => max(0, (int) ($all['html_cache_ttl'] ?? 3600)),
+            'disk_html_enabled' => (int) ($all['disk_html_enabled'] ?? 0) === 1,
             'rewrite_mode' => (string) ($all['rewrite_mode'] ?? config('video.rewrite.mode', 'laravel')),
             'rewrite_suffix' => (string) ($all['rewrite_suffix'] ?? config('video.rewrite.suffix', '.html')),
             'baidu_push_token' => (string) ($all['baidu_push_token'] ?? ''),

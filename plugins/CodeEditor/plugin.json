@@ -1,0 +1,12 @@
+{
+    "id": "code_editor",
+    "name": "代码编辑器",
+    "name_en": "Code editor",
+    "description": "模板页用 CodeMirror 高亮 Blade 和 @vod 标签。关掉后仍可用纯文本框。",
+    "description_en": "CodeMirror on the template page with Blade and @vod highlighting. Falls back to a textarea when off.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "other",
+    "provider": "Plugins\\CodeEditor\\CodeEditorServiceProvider"
+}

@@ -32,6 +32,48 @@ class Video extends Controller
         ]);
     }
 
+    public function create(): View|Factory
+    {
+        return $this->formPage([]);
+    }
+
+    public function edit(int $id): View|Factory
+    {
+        $res = $this->videoService->getVideoInfo($id);
+        if ((int) ($res['code'] ?? 1) !== 0) {
+            abort(404);
+        }
+
+        return $this->formPage(is_array($res['data'] ?? null) ? $res['data'] : []);
+    }
+
+    /** @param array<string, mixed> $video */
+    private function formPage(array $video): View|Factory
+    {
+        $types = $this->videoService->getTypeOptions()['data'] ?? [];
+        $collects = $this->videoService->getCollectSourceOptions()['data'] ?? [];
+        $settings = [];
+        try {
+            $settings = app(\App\Services\Video\VideoSettingService::class)->all();
+        } catch (\Throwable) {
+        }
+        $split = static function (string $raw): array {
+            return array_values(array_filter(array_map('trim', preg_split('/[,，]/u', $raw) ?: [])));
+        };
+        $ts = (int) ($video['publish_at'] ?? 0);
+
+        return view('admin.video.form', [
+            'video' => $video,
+            'isEdit' => (int) ($video['id'] ?? 0) > 0,
+            'types' => is_array($types) ? $types : [],
+            'collects' => is_array($collects) ? $collects : [],
+            'areas' => $split((string) ($settings['filter_area'] ?? '')),
+            'langs' => $split((string) ($settings['filter_lang'] ?? '')),
+            'years' => $split((string) ($settings['filter_year'] ?? '')),
+            'publishAt' => $ts > 0 ? date('Y-m-d\TH:i', $ts) : '',
+        ]);
+    }
+
     /**
      * 获取视频列表
      */
@@ -39,6 +81,7 @@ class Video extends Controller
     {
         $params = [
             'title' => (string)$request->input('title', ''),
+            'q' => (string) $request->input('q', ''),
             'type_id' => $request->input('type_id', ''),
             'status' => $request->input('status', ''),
             'is_recommend' => $request->input('is_recommend', ''),
@@ -276,6 +319,107 @@ class Video extends Controller
     public function showTypes(): View|Factory
     {
         return view('admin.video.types');
+    }
+
+    public function createType(Request $request): View|Factory
+    {
+        $parentId = (int) $request->query('parent_id', 0);
+        $parents = $this->typeParentOptions(null);
+        $parent = $this->findTypeOption($parents, $parentId);
+        if ($parentId > 0 && $parent === null) {
+            $parentId = 0;
+        }
+
+        return $this->typeFormPage([
+            'parent_id' => $parentId,
+            'mid' => (int) ($parent['mid'] ?? 1),
+            'sort' => 0,
+            'status' => 1,
+        ], $parents, $parent);
+    }
+
+    public function editType(int $id): View|Factory
+    {
+        $res = $this->videoService->getTypeInfo($id);
+        if ((int) ($res['code'] ?? 1) !== 0) {
+            abort(404);
+        }
+        $type = is_array($res['data'] ?? null) ? $res['data'] : [];
+        $parents = $this->typeParentOptions($id);
+        $parentId = (int) ($type['parent_id'] ?? 0);
+
+        return $this->typeFormPage($type, $parents, $this->findTypeOption($parents, $parentId));
+    }
+
+    /**
+     * @param array<string, mixed> $type
+     * @param list<array<string, mixed>> $parents
+     * @param array<string, mixed>|null $parent
+     */
+    private function typeFormPage(array $type, array $parents, ?array $parent): View|Factory
+    {
+        return view('admin.video.type_form', [
+            'type' => $type,
+            'isEdit' => (int) ($type['id'] ?? 0) > 0,
+            'parents' => $parents,
+            'parent' => $parent,
+        ]);
+    }
+
+    /** @return list<array{id:int,name:string,depth:int,parent_id:int,mid:int}> */
+    private function typeParentOptions(?int $excludeId): array
+    {
+        $res = $this->videoService->getVideoTypeLists(['name' => '']);
+        $rows = $res['data']['data'] ?? [];
+        if (! is_array($rows)) {
+            return [];
+        }
+        $skip = [];
+        $ex = (int) ($excludeId ?? 0);
+        if ($ex > 0) {
+            $skip[$ex] = true;
+        }
+        $out = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $id = (int) ($row['id'] ?? 0);
+            $pid = (int) ($row['parent_id'] ?? 0);
+            if ($pid > 0 && isset($skip[$pid])) {
+                $skip[$id] = true;
+            }
+            if (isset($skip[$id])) {
+                continue;
+            }
+            $out[] = [
+                'id' => $id,
+                'name' => (string) ($row['name'] ?? ''),
+                'depth' => (int) ($row['depth'] ?? 0),
+                'parent_id' => $pid,
+                'mid' => (int) ($row['mid'] ?? 1),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return array<string, mixed>|null
+     */
+    private function findTypeOption(array $rows, int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        foreach ($rows as $row) {
+            if ((int) ($row['id'] ?? 0) === $id) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 
     /**

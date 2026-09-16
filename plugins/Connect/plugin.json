@@ -22,7 +22,7 @@
         },
         "catalog": {
             "more.security": [
-                {"url": "/admin/video/config/connect", "label": "item.config_connect"}
+                {"url": "/admin/video/config/connect", "label": "item.config_connect", "hint": "hint.config_connect", "tag": "plugin"}
             ]
         },
         "settings_links": [

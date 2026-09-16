@@ -36,7 +36,9 @@
             "more.security": [
                 {
                     "url": "/admin/video/config/weixin",
-                    "label": "item.config_weixin"
+                    "label": "item.config_weixin",
+                    "hint": "hint.config_weixin",
+                    "tag": "plugin"
                 }
             ]
         },

@@ -38,7 +38,9 @@
             "more.complete": [
                 {
                     "url": "/admin/video/config/ai",
-                    "label": "item.config_ai"
+                    "label": "item.config_ai",
+                    "hint": "hint.config_ai",
+                    "tag": "plugin"
                 }
             ]
         }

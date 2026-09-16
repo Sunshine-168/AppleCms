@@ -41,10 +41,15 @@ class VideoInitCommand extends Command
         }
 
         if (Schema::hasTable('video_players') && VideoPlayerModel::query()->count() === 0) {
-            VideoPlayerModel::query()->insert([
-                ['code' => 'dplayer', 'name' => '直链播放', 'parse' => '', 'sort' => 10, 'status' => 1],
-                ['code' => 'parse', 'name' => '解析接口', 'parse' => '', 'sort' => 0, 'status' => 1],
-            ]);
+            $rows = VideoPlayerModel::presets();
+            if (! Schema::hasColumn('video_players', 'engine')) {
+                $rows = array_map(function ($row) {
+                    unset($row['engine']);
+
+                    return $row;
+                }, $rows);
+            }
+            VideoPlayerModel::query()->insert($rows);
             $this->info('已写入默认播放器');
         }
 

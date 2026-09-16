@@ -153,19 +153,27 @@
             "more.member": [
                 {
                     "url": "/admin/video/follows",
-                    "label": "item.follows"
+                    "label": "item.follows",
+                    "hint": "hint.follows",
+                    "tag": "plugin"
                 },
                 {
                     "url": "/admin/video/dynamics",
-                    "label": "item.dynamics"
+                    "label": "item.dynamics",
+                    "hint": "hint.dynamics",
+                    "tag": "plugin"
                 },
                 {
                     "url": "/admin/video/shares",
-                    "label": "item.shares"
+                    "label": "item.shares",
+                    "hint": "hint.shares",
+                    "tag": "plugin"
                 },
                 {
                     "url": "/admin/video/signs",
-                    "label": "item.signs"
+                    "label": "item.signs",
+                    "hint": "hint.signs",
+                    "tag": "plugin"
                 }
             ]
         }

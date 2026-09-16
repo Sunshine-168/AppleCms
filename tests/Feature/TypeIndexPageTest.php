@@ -24,7 +24,10 @@ class TypeIndexPageTest extends TestCase
 
         $this->assertStringContainsString('搜分类名', $html);
         $this->assertStringContainsString('js-child', $html);
+        $this->assertStringContainsString('/admin/video/types/create', $html);
         $this->assertStringContainsString('type-batch', $html);
+        $this->assertStringNotContainsString('video-type-dialog-tpl', $html);
+        $this->assertStringNotContainsString('openDialog', $html);
         $this->assertStringNotContainsString('video-type-refresh-btn', $html);
         $this->assertStringNotContainsString('创建时间', $html);
     }
