@@ -109,7 +109,7 @@ class CollectIngestService
         return Result::success(['bind' => $clean]);
     }
 
-    public function ingestRemote(array $item): array
+    public function ingestRemote(array $item, bool $allowTemp = true): array
     {
         $now = time();
         $source = CollectSourceModel::query()->firstOrCreate(
@@ -135,7 +135,13 @@ class CollectIngestService
             $source->save();
         }
 
-        return $this->upsert($source, $item);
+        return $this->upsert($source, $item, $allowTemp);
+    }
+
+    /** @param  array<string, mixed>  $item */
+    public function ingestDirect(CollectSourceModel $source, array $item): array
+    {
+        return $this->upsert($source, $item, false);
     }
 
     public function run(int $sourceId, array $params = []): array
@@ -271,7 +277,7 @@ class CollectIngestService
     }
 
     /** @param  array<string, mixed>  $item */
-    private function upsert(CollectSourceModel $source, array $item): array
+    private function upsert(CollectSourceModel $source, array $item, bool $allowTemp = true): array
     {
         $title = app(SynonymService::class)->expand(trim((string) ($item['vod_name'] ?? '')));
         if ($title === '') {
@@ -303,6 +309,36 @@ class CollectIngestService
         $typePid = (int) ($type?->parent_id ?: 0);
         $collectId = (string) ($item['vod_id'] ?? '');
         $now = time();
+        $settings = app(\App\Services\Video\VideoSettingService::class);
+
+        if ($allowTemp && (int) $settings->get('collect_to_temp', '0') === 1 && Schema::hasTable('video_collect_temps')) {
+            $exists = null;
+            if ($collectId !== '') {
+                $exists = VideoModel::query()
+                    ->where('collect_source_id', $source->id)
+                    ->where('collect_id', $collectId)
+                    ->first();
+            }
+            if (! $exists) {
+                \App\Models\Video\VideoCollectTemp::query()->updateOrCreate(
+                    [
+                        'collect_source_id' => $source->id,
+                        'collect_id' => $collectId !== '' ? $collectId : md5($title),
+                    ],
+                    [
+                        'title' => $title,
+                        'cover' => (string) ($item['vod_pic'] ?? ''),
+                        'type_id' => $typeId,
+                        'payload' => json_encode($item, JSON_UNESCAPED_UNICODE),
+                        'status' => 0,
+                        'msg' => '待转入',
+                        'created_at' => $now,
+                    ]
+                );
+
+                return ['action' => 'temp', 'msg' => '写入临时表', 'title' => $title];
+            }
+        }
 
         $video = null;
         if ($collectId !== '') {
@@ -324,7 +360,6 @@ class CollectIngestService
             return ['action' => 'skipped', 'msg' => '已锁定', 'title' => $title, 'id' => $video->id];
         }
 
-        $settings = app(\App\Services\Video\VideoSettingService::class);
         $cover = ((int) $settings->get('collect_sync_pic', '1') === 1)
             ? (string) ($item['vod_pic'] ?? '')
             : '';

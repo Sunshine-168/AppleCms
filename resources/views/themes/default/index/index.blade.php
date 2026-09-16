@@ -1,6 +1,14 @@
 @extends('themes.default.layout')
 
 @section('content')
+    <div class="slides">
+        @vodSlide(['slot' => 'home', 'num' => 8])
+            <a class="slide" href="{{ $item->url ?: '#' }}">
+                @if($item->pic)<img src="{{ $item->pic }}" alt="{{ $item->name }}">@endif
+                <span>{{ $item->name }}</span>
+            </a>
+        @endvodSlide
+    </div>
     <h1>{{ $site['title'] ?? 'LaraVideo' }}</h1>
     <p class="muted">{{ $site['description'] ?? '' }}</p>
 

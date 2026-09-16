@@ -113,6 +113,40 @@ class VideoService
             $where[] = ['weekday', '=', $weekday];
         }
 
+        if ((string) ($params['trash'] ?? '') === '1' && Schema::hasColumn('videos', 'deleted_at')) {
+            $q = VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0);
+            if ($title !== '') {
+                $q->where('title', 'like', '%'.$title.'%');
+            }
+            $page = $q->orderByDesc('deleted_at')->paginate($limit);
+            $data = [
+                'total' => $page->total(),
+                'data' => collect($page->items())->map(fn ($row) => $row->toArray())->all(),
+            ];
+            $typeIds = [];
+            $videoIds = [];
+            foreach (($data['data'] ?? []) as $row) {
+                if (! empty($row['type_id'])) {
+                    $typeIds[] = (int) $row['type_id'];
+                }
+                $videoIds[] = (int) $row['id'];
+            }
+            $typeMap = [];
+            if ($typeIds !== []) {
+                $types = $this->videoTypeModel->selectByCondition([['id', 'in', array_values(array_unique($typeIds))]], ['id', 'name', 'parent_id']);
+                foreach ($types as $t) {
+                    $typeMap[(int) $t['id']] = $t;
+                }
+            }
+            foreach ($data['data'] as &$row) {
+                $tid = (int) ($row['type_id'] ?? 0);
+                $row['type_name'] = (string) ($typeMap[$tid]['name'] ?? '');
+            }
+            unset($row);
+
+            return Result::success($data);
+        }
+
         $emptyUrl = (string) ($params['empty_url'] ?? '') === '1';
         $repeat = (string) ($params['repeat'] ?? '') === '1';
         $needPoints = (string) ($params['need_points'] ?? '') === '1';
@@ -405,6 +439,37 @@ class VideoService
         {
             return Result::fail('数据不存在');
         }
+        if (Schema::hasColumn('videos', 'deleted_at')) {
+            VideoModel::query()->where('id', $id)->update([
+                'deleted_at' => time(),
+                'updated_at' => time(),
+            ]);
+
+            return Result::success([], '已移入回收站');
+        }
+
+        return $this->purgeVideo($id);
+    }
+
+    public function restoreVideo(int $id): array
+    {
+        if (! Schema::hasColumn('videos', 'deleted_at')) {
+            return Result::fail('未启用回收站');
+        }
+        $n = VideoModel::query()->withoutGlobalScope('alive')->where('id', $id)->where('deleted_at', '>', 0)->update([
+            'deleted_at' => 0,
+            'updated_at' => time(),
+        ]);
+
+        return $n > 0 ? Result::success() : Result::fail('记录不在回收站');
+    }
+
+    public function purgeVideo(int $id): array
+    {
+        $row = VideoModel::query()->withoutGlobalScope('alive')->find($id);
+        if (! $row) {
+            return Result::fail('数据不存在');
+        }
         try {
             return DB::transaction(function () use ($id) {
                 $sourceRows = $this->videoSourceModel->selectByCondition([['video_id', '=', $id]], ['id']);
@@ -426,7 +491,7 @@ class VideoService
                 $this->videoActorRelModel->deleteByCondition([['video_id', '=', $id]]);
                 $this->videoStatModel->deleteById($id);
 
-                $ok = $this->videoModel->deleteById($id);
+                $ok = VideoModel::query()->withoutGlobalScope('alive')->where('id', $id)->delete() > 0;
                 if (!$ok) {
                     return Result::fail();
                 }
@@ -1245,7 +1310,20 @@ class VideoService
             }
             return Result::success(['count' => count($ids)]);
         }
+        if ($action === 'restore') {
+            foreach ($ids as $id) {
+                $this->restoreVideo($id);
+            }
 
+            return Result::success(['count' => count($ids)]);
+        }
+        if ($action === 'purge') {
+            foreach ($ids as $id) {
+                $this->purgeVideo($id);
+            }
+
+            return Result::success(['count' => count($ids)]);
+        }
         if ($action === 'merge') {
             return $this->mergeVideos($ids, (int) $value);
         }

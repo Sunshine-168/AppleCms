@@ -14,6 +14,7 @@ use App\Services\Video\Tags\GuestbookTag;
 use App\Services\Video\Tags\LinkTag;
 use App\Services\Video\Tags\PrevNextTag;
 use App\Services\Video\Tags\SeoTag;
+use App\Services\Video\Tags\SlideTag;
 use App\Services\Video\Tags\SourceTag;
 use App\Services\Video\Tags\TagListTag;
 use App\Services\Video\Tags\TopicTag;
@@ -80,6 +81,7 @@ class CmsDirectiveRegistrar
         $this->registerLoop('vodComment', CommentTag::class);
         $this->registerLoop('vodLink', LinkTag::class);
         $this->registerLoop('vodAd', AdTag::class);
+        $this->registerLoop('vodSlide', SlideTag::class);
         $this->registerLoop('vodGbook', GuestbookTag::class);
     }
 

@@ -61,12 +61,20 @@ class SiteSetting extends Controller
             'player' => 'admin.video.config_player',
             'email' => 'admin.video.config_email',
         ];
-        if (! isset($views[$page])) {
+        if (isset($views[$page])) {
+            return view($views[$page], [
+                'site' => $this->settings->site(),
+            ]);
+        }
+        $extra = $this->settings->extraPages();
+        if (! isset($extra[$page])) {
             abort(404);
         }
 
-        return view($views[$page], [
+        return view('admin.video.config_form', [
             'site' => $this->settings->site(),
+            'title' => $extra[$page]['title'],
+            'fields' => $extra[$page]['fields'],
         ]);
     }
 }

@@ -23,6 +23,9 @@
         @if($module === 'collect_tasks')
           <button class="layui-btn layui-btn-sm layui-btn-warm" id="mod-due">执行到期采集</button>
         @endif
+        @if($module === 'collect_temps')
+          <button class="layui-btn layui-btn-sm layui-btn-normal" id="mod-promote">转入选中</button>
+        @endif
         <div class="layui-inline" style="margin-left:8px;">
           <input type="text" id="mod-q" placeholder="{{ $search }}" class="layui-input" style="width:180px;display:inline-block;height:30px;">
           <button class="layui-btn layui-btn-sm" id="mod-search">查询</button>
@@ -42,6 +45,9 @@
   @endif
   @if($module === 'playfails')
   <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="offline">下线线路</a>
+  @endif
+  @if($module === 'collect_temps')
+  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="promote">转入</a>
   @endif
   <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
 </script>
@@ -79,12 +85,14 @@ layui.use(['layer','form','table'], function(){
   var module = @json($module);
   var cols = @json($cols);
   var fields = @json($fields);
-  var tableCols = [{field:'id', width:70, title:'ID', sort:true}];
+  var tableCols = [];
+  if (module === 'collect_temps') { tableCols.push({type:'checkbox', width:48}); }
+  tableCols.push({field:'id', width:70, title:'ID', sort:true});
   cols.forEach(function(c){
     if (c === 'id') return;
     tableCols.push({field:c, title:c, minWidth:120});
   });
-  tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks','playfails'], true) ? 240 : 150 }}});
+  tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks','playfails','collect_temps'], true) ? 240 : 150 }}});
   var searchField = @json($search);
   table.render({
     elem:'#mod-table', id:'mod-table', url:'/admin/video/'+module+'/list', page:true,
@@ -144,6 +152,16 @@ layui.use(['layer','form','table'], function(){
       layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
     },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
   });
+  $('#mod-promote').on('click', function(){
+    var ids = (table.checkStatus('mod-table').data || []).map(function(r){ return r.id; });
+    if (!ids.length) { layer.msg('请先勾选', {icon:2}); return; }
+    var i = 0;
+    function next(){
+      if (i >= ids.length) { table.reload('mod-table'); return; }
+      $.post('/admin/video/collect_temps/promote', {id: ids[i++]}, function(){ next(); }, 'json').fail(function(){ next(); });
+    }
+    next();
+  });
   table.on('tool(mod-table)', function(obj){
     if(obj.event==='edit'){ open(obj.data||{}); }
     if(obj.event==='bind'){
@@ -159,6 +177,12 @@ layui.use(['layer','form','table'], function(){
     }
     if(obj.event==='run'){
       $.post('/admin/video/collect_tasks/run', {id: obj.data.id}, function(r){
+        table.reload('mod-table');
+        layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
+      },'json');
+    }
+    if(obj.event==='promote'){
+      $.post('/admin/video/collect_temps/promote', {id: obj.data.id}, function(r){
         table.reload('mod-table');
         layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
       },'json');

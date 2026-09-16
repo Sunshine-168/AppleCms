@@ -20,8 +20,10 @@ use App\Http\Controllers\Admin\Video\Collect;
 use App\Http\Controllers\Admin\Video\SiteModule;
 use App\Http\Controllers\Admin\Video\SiteOps;
 use App\Http\Controllers\Admin\Video\SiteSetting;
+use App\Http\Controllers\Admin\Video\SiteTools;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
+use App\Http\Middleware\AdminIpAllow;
 use App\Http\Middleware\AdminOperateLog;
 use App\Http\Middleware\AdminPermission;
 
@@ -29,12 +31,13 @@ Route::middleware([
     EncryptCookies::class,
     AddQueuedCookiesToResponse::class,
     StartSession::class,
+    AdminIpAllow::class,
     AdminOperateLog::class,
 ])->withoutMiddleware([
     VerifyCsrfToken::class,
 ])->post('api/admin/login', [SysUser::class, 'login']);
 
-Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::class])->prefix('admin')->group(function () {
+Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class, AdminPermission::class])->prefix('admin')->group(function () {
     Route::get('/', [Index::class, 'index']); // 后台首页
     Route::get('/captcha', [Index::class, 'captcha']);   // 输出验证码图片
     Route::get('/welcome', [Index::class, 'welcome'])->name('admin.welcome');// 欢迎页
@@ -141,7 +144,11 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::post('/video/settings', [SiteSetting::class, 'save']);
     Route::post('/video/settings/test-mail', [SiteSetting::class, 'testMail']);
     Route::get('/video/config/email', [SiteSetting::class, 'configEmail']);
-    Route::get('/video/config/{page}', [SiteSetting::class, 'configPage'])->whereIn('page', ['api', 'collect', 'player', 'email']);
+    Route::get('/video/config/{page}', [SiteSetting::class, 'configPage'])->where('page', '[a-z]+');
+    Route::get('/video/tools/{tool}', [SiteTools::class, 'page'])->whereIn('tool', ['images', 'quality', 'players', 'annex', 'recycle', 'hub']);
+    Route::post('/video/tools/{tool}/run', [SiteTools::class, 'run'])->whereIn('tool', ['images', 'quality', 'players', 'annex', 'recycle', 'hub']);
+    Route::get('/video/apidoc', [SiteTools::class, 'apidoc']);
+    Route::post('/video/collect_temps/promote', [SiteTools::class, 'promoteTemp']);
     Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
     Route::post('/video/invites/generate', [SiteModule::class, 'generateInvites']);
     Route::post('/video/collect_tasks/run', [SiteModule::class, 'runCollectTask']);

@@ -13,7 +13,18 @@
 <body>
 <div class="layui-fluid">
   <div class="layui-card">
-    <div class="layui-card-header">站点设置</div>
+    <div class="layui-card-header">站点设置
+      <span style="float:right;font-weight:normal;">
+        <a href="/admin/video/config/weixin">微信</a> ·
+        <a href="/admin/video/config/sms">短信</a> ·
+        <a href="/admin/video/config/connect">三方登录</a> ·
+        <a href="/admin/video/config/ip">后台IP</a> ·
+        <a href="/admin/video/config/theme">主题</a> ·
+        <a href="/admin/video/config/watermark">水印</a> ·
+        <a href="/admin/video/config/analytics">统计</a> ·
+        <a href="/admin/video/apidoc">API文档</a>
+      </span>
+    </div>
     <div class="layui-card-body">
       <form class="layui-form" lay-filter="site-form" style="max-width:720px;">
         <div class="layui-form-item">

@@ -70,6 +70,26 @@ class VideoSettingService
             'danmaku_login' => '0',
             'collect_areawords' => '',
             'collect_langwords' => '',
+            'collect_to_temp' => '0',
+            'admin_ip_allow' => '',
+            'weixin_appid' => '',
+            'weixin_secret' => '',
+            'weixin_token' => '',
+            'sms_provider' => '',
+            'sms_key' => '',
+            'sms_secret' => '',
+            'sms_sign' => '',
+            'oauth_qq' => '',
+            'oauth_wechat' => '',
+            'oauth_weibo' => '',
+            'theme_primary' => '',
+            'theme_logo' => '',
+            'watermark_text' => '',
+            'analytics_code' => '',
+            'seo_title_play' => '{name} 在线播放 - {site}',
+            'member_invite' => '0',
+            'upload_ext' => 'jpg,png,gif,webp,mp4',
+            'upload_max_mb' => '8',
         ];
         if (! $this->ready()) {
             return $defaults;
@@ -109,6 +129,10 @@ class VideoSettingService
             'provide_key', 'app_key', 'collect_hits_min', 'collect_hits_max', 'collect_pic_local',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
             'play_buffer', 'play_encrypt', 'danmaku_enabled', 'danmaku_login', 'collect_areawords', 'collect_langwords',
+            'collect_to_temp', 'admin_ip_allow', 'weixin_appid', 'weixin_secret', 'weixin_token',
+            'sms_provider', 'sms_key', 'sms_secret', 'sms_sign', 'oauth_qq', 'oauth_wechat', 'oauth_weibo',
+            'theme_primary', 'theme_logo', 'watermark_text', 'analytics_code', 'seo_title_play',
+            'member_invite', 'upload_ext', 'upload_max_mb',
         ];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
@@ -232,6 +256,141 @@ class VideoSettingService
             'play_encrypt' => (string) ($all['play_encrypt'] ?? '0'),
             'collect_areawords' => (string) ($all['collect_areawords'] ?? ''),
             'collect_langwords' => (string) ($all['collect_langwords'] ?? ''),
+            'collect_to_temp' => (string) ($all['collect_to_temp'] ?? '0'),
+            'admin_ip_allow' => (string) ($all['admin_ip_allow'] ?? ''),
+            'weixin_appid' => (string) ($all['weixin_appid'] ?? ''),
+            'weixin_secret' => (string) ($all['weixin_secret'] ?? ''),
+            'weixin_token' => (string) ($all['weixin_token'] ?? ''),
+            'sms_provider' => (string) ($all['sms_provider'] ?? ''),
+            'sms_key' => (string) ($all['sms_key'] ?? ''),
+            'sms_secret' => (string) ($all['sms_secret'] ?? ''),
+            'sms_sign' => (string) ($all['sms_sign'] ?? ''),
+            'oauth_qq' => (string) ($all['oauth_qq'] ?? ''),
+            'oauth_wechat' => (string) ($all['oauth_wechat'] ?? ''),
+            'oauth_weibo' => (string) ($all['oauth_weibo'] ?? ''),
+            'theme_primary' => (string) ($all['theme_primary'] ?? ''),
+            'theme_logo' => (string) ($all['theme_logo'] ?? ''),
+            'watermark_text' => (string) ($all['watermark_text'] ?? ''),
+            'analytics_code' => (string) ($all['analytics_code'] ?? ''),
+            'seo_title_play' => (string) ($all['seo_title_play'] ?? ''),
+            'member_invite' => (string) ($all['member_invite'] ?? '0'),
+            'upload_ext' => (string) ($all['upload_ext'] ?? ''),
+            'upload_max_mb' => (string) ($all['upload_max_mb'] ?? '8'),
+            'app_key' => (string) ($all['app_key'] ?? ''),
+            'danmaku_enabled' => (string) ($all['danmaku_enabled'] ?? '1'),
+            'danmaku_login' => (string) ($all['danmaku_login'] ?? '0'),
+        ];
+    }
+
+    /** @return array<string, array{title:string,fields:list<array<string,mixed>>}> */
+    public function extraPages(): array
+    {
+        return [
+            'weixin' => [
+                'title' => '微信公众号',
+                'fields' => [
+                    ['name' => 'weixin_appid', 'label' => 'AppId', 'type' => 'text'],
+                    ['name' => 'weixin_secret', 'label' => 'AppSecret', 'type' => 'text'],
+                    ['name' => 'weixin_token', 'label' => 'Token', 'type' => 'text'],
+                ],
+            ],
+            'sms' => [
+                'title' => '短信网关',
+                'fields' => [
+                    ['name' => 'sms_provider', 'label' => '服务商', 'type' => 'text', 'placeholder' => 'aliyun / tencent'],
+                    ['name' => 'sms_key', 'label' => 'AccessKey', 'type' => 'text'],
+                    ['name' => 'sms_secret', 'label' => '密钥', 'type' => 'text'],
+                    ['name' => 'sms_sign', 'label' => '签名', 'type' => 'text'],
+                ],
+            ],
+            'connect' => [
+                'title' => '第三方登录',
+                'fields' => [
+                    ['name' => 'oauth_qq', 'label' => 'QQ AppId/Key', 'type' => 'text'],
+                    ['name' => 'oauth_wechat', 'label' => '微信 AppId/Secret', 'type' => 'text'],
+                    ['name' => 'oauth_weibo', 'label' => '微博 AppKey/Secret', 'type' => 'text'],
+                ],
+            ],
+            'ip' => [
+                'title' => '后台 IP 白名单',
+                'fields' => [
+                    ['name' => 'admin_ip_allow', 'label' => '允许 IP', 'type' => 'textarea', 'placeholder' => '留空不限制。多个用逗号或换行'],
+                ],
+            ],
+            'theme' => [
+                'title' => '主题参数',
+                'fields' => [
+                    ['name' => 'theme_logo', 'label' => 'Logo 地址', 'type' => 'text'],
+                    ['name' => 'theme_primary', 'label' => '主色', 'type' => 'text', 'placeholder' => '#1e9fff'],
+                ],
+            ],
+            'watermark' => [
+                'title' => '图片水印',
+                'fields' => [
+                    ['name' => 'watermark_text', 'label' => '水印文字', 'type' => 'text', 'placeholder' => '本地化封面时写入右下角'],
+                ],
+            ],
+            'analytics' => [
+                'title' => '统计代码',
+                'fields' => [
+                    ['name' => 'analytics_code', 'label' => '统计脚本', 'type' => 'textarea', 'placeholder' => '百度/CNZZ 等粘贴到页脚'],
+                ],
+            ],
+            'seo' => [
+                'title' => 'SEO 标题',
+                'fields' => [
+                    ['name' => 'seo_title_vod', 'label' => '详情标题', 'type' => 'text'],
+                    ['name' => 'seo_title_type', 'label' => '分类标题', 'type' => 'text'],
+                    ['name' => 'seo_title_play', 'label' => '播放标题', 'type' => 'text'],
+                ],
+            ],
+            'user' => [
+                'title' => '会员参数',
+                'fields' => [
+                    ['name' => 'member_register', 'label' => '开放注册', 'type' => 'select', 'options' => ['1' => '是', '0' => '否']],
+                    ['name' => 'member_invite', 'label' => '邀请码必填', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                    ['name' => 'trysee_seconds', 'label' => '试看秒数', 'type' => 'text'],
+                ],
+            ],
+            'upload' => [
+                'title' => '上传限制',
+                'fields' => [
+                    ['name' => 'upload_ext', 'label' => '扩展名', 'type' => 'text'],
+                    ['name' => 'upload_max_mb', 'label' => '最大 MB', 'type' => 'text'],
+                ],
+            ],
+            'comment' => [
+                'title' => '评论留言',
+                'fields' => [
+                    ['name' => 'comment_audit', 'label' => '评论审核', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                    ['name' => 'gbook_audit', 'label' => '留言审核', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                    ['name' => 'member_comment_login', 'label' => '评论需登录', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                    ['name' => 'banned_words', 'label' => '屏蔽词', 'type' => 'textarea'],
+                ],
+            ],
+            'pay' => [
+                'title' => '支付参数',
+                'fields' => [
+                    ['name' => 'pay_wechat_mchid', 'label' => '微信商户号', 'type' => 'text'],
+                    ['name' => 'pay_wechat_key', 'label' => '微信密钥', 'type' => 'text'],
+                    ['name' => 'pay_alipay_appid', 'label' => '支付宝 AppId', 'type' => 'text'],
+                    ['name' => 'pay_alipay_key', 'label' => '支付宝密钥', 'type' => 'text'],
+                ],
+            ],
+            'url' => [
+                'title' => 'URL 规则',
+                'fields' => [
+                    ['name' => 'rewrite_mode', 'label' => '伪静态', 'type' => 'select', 'options' => ['laravel' => 'Laravel /vod/123', 'mac' => '苹果 index.php/vod']],
+                    ['name' => 'rewrite_suffix', 'label' => '后缀', 'type' => 'text'],
+                ],
+            ],
+            'interface' => [
+                'title' => '入库接口',
+                'fields' => [
+                    ['name' => 'inbound_key', 'label' => '站外入库密钥', 'type' => 'text'],
+                    ['name' => 'collect_to_temp', 'label' => '采集先入临时表', 'type' => 'select', 'options' => ['0' => '直接入库', '1' => '写入临时表']],
+                ],
+            ],
         ];
     }
 

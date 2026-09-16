@@ -143,6 +143,9 @@
         <a class="layui-btn layui-btn-sm" href="/admin/video?status=4">定时</a>
         <a class="layui-btn layui-btn-sm" href="/admin/video?repeat=1">重名</a>
         <a class="layui-btn layui-btn-sm" href="/admin/video?has_plot=1">有分集剧情</a>
+        <a class="layui-btn layui-btn-sm layui-btn-danger" href="/admin/video/tools/recycle">回收站</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/tools/images">远程图片</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/tools/quality">内容质量</a>
       </div>
       <table id="video-table" lay-filter="video-table"></table>
     </div>
@@ -479,7 +482,8 @@ layui.use(['layer','form','table','upload'], function(){
       empty_content: qs.get('empty_content') || '',
       no_actor: qs.get('no_actor') || '',
       weekday: qs.get('weekday') || '',
-      status: qs.get('status') || ''
+      status: qs.get('status') || '',
+      trash: qs.get('trash') || ''
     },
     page:true,
     parseData:function(res){
@@ -709,13 +713,13 @@ layui.use(['layer','form','table','upload'], function(){
       });
     });
   });
-  $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？'); });
+  $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？将进入回收站。'); });
 
   table.on('tool(video-table)', function(obj){
     var row = obj.data || {};
     if(obj.event === 'edit'){ openEditDialog(row); }
     if(obj.event === 'del'){
-      layer.confirm('确定删除该视频吗？', function(i){
+      layer.confirm('确定删除该视频吗？将进入回收站。', function(i){
         apiPost('/admin/video/delete', {id: row.id}, function(){
           layer.close(i);
           table.reload('video-table');

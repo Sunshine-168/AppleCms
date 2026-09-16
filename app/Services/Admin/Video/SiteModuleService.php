@@ -480,13 +480,124 @@ class SiteModuleService
                 ],
                 'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
             ],
+            'searchwords' => [
+                'title' => '搜索词统计',
+                'model' => \App\Models\Video\VideoSearchWord::class,
+                'search' => 'word',
+                'fields' => [
+                    ['name' => 'word', 'label' => '关键词', 'type' => 'text'],
+                    ['name' => 'hits', 'label' => '次数', 'type' => 'number'],
+                ],
+                'cols' => ['id', 'word', 'hits', 'updated_at'],
+            ],
+            'slides' => [
+                'title' => '幻灯片',
+                'model' => \App\Models\Video\VideoSlide::class,
+                'search' => 'name',
+                'fields' => [
+                    ['name' => 'name', 'label' => '名称', 'type' => 'text'],
+                    ['name' => 'pic', 'label' => '图片', 'type' => 'text'],
+                    ['name' => 'url', 'label' => '链接', 'type' => 'text'],
+                    ['name' => 'slot', 'label' => '位置 home/play', 'type' => 'text'],
+                    ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
+                ],
+                'cols' => ['id', 'name', 'slot', 'url', 'status', 'sort'],
+            ],
+            'coupons' => [
+                'title' => '优惠券',
+                'model' => \App\Models\Video\VideoCoupon::class,
+                'search' => 'code',
+                'fields' => [
+                    ['name' => 'code', 'label' => '券码', 'type' => 'text'],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'min_points', 'label' => '门槛积分', 'type' => 'number'],
+                    ['name' => 'expire_at', 'label' => '过期时间戳', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '未用', '0' => '作废']],
+                ],
+                'cols' => ['id', 'code', 'points', 'min_points', 'expire_at', 'used_by', 'status'],
+            ],
+            'notifies' => [
+                'title' => '会员通知',
+                'model' => \App\Models\Video\VideoNotify::class,
+                'search' => 'title',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID(0全部)', 'type' => 'number'],
+                    ['name' => 'title', 'label' => '标题', 'type' => 'text'],
+                    ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
+                    ['name' => 'is_read', 'label' => '已读', 'type' => 'select', 'options' => ['0' => '未读', '1' => '已读']],
+                ],
+                'cols' => ['id', 'member_id', 'title', 'is_read', 'created_at'],
+            ],
+            'follows' => [
+                'title' => '关注',
+                'model' => \App\Models\Member\MemberFollow::class,
+                'search' => 'target_type',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'target_id', 'label' => '对象ID', 'type' => 'number'],
+                    ['name' => 'target_type', 'label' => '类型 actor/user', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'member_id', 'target_type', 'target_id', 'created_at'],
+            ],
+            'dynamics' => [
+                'title' => '动态',
+                'model' => \App\Models\Member\MemberDynamic::class,
+                'search' => 'content',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'type', 'label' => '类型', 'type' => 'text'],
+                    ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
+                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
+                ],
+                'cols' => ['id', 'member_id', 'type', 'content', 'video_id', 'created_at'],
+            ],
+            'shares' => [
+                'title' => '分享记录',
+                'model' => \App\Models\Member\MemberShare::class,
+                'search' => 'channel',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
+                    ['name' => 'channel', 'label' => '渠道', 'type' => 'text'],
+                    ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'member_id', 'video_id', 'channel', 'ip', 'created_at'],
+            ],
+            'signs' => [
+                'title' => '签到里程碑',
+                'model' => \App\Models\Member\MemberSign::class,
+                'search' => 'day_key',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'days', 'label' => '连续天数', 'type' => 'number'],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'day_key', 'label' => '日期Ymd', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'member_id', 'days', 'points', 'day_key', 'created_at'],
+            ],
+            'collect_temps' => [
+                'title' => '采集临时表',
+                'model' => \App\Models\Video\VideoCollectTemp::class,
+                'search' => 'title',
+                'fields' => [
+                    ['name' => 'collect_source_id', 'label' => '采集源ID', 'type' => 'number'],
+                    ['name' => 'collect_id', 'label' => '远程ID', 'type' => 'text'],
+                    ['name' => 'title', 'label' => '标题', 'type' => 'text'],
+                    ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
+                    ['name' => 'type_id', 'label' => '分类ID', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '待转入', '1' => '已转入']],
+                    ['name' => 'msg', 'label' => '说明', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'collect_source_id', 'title', 'type_id', 'status', 'msg', 'created_at'],
+            ],
             default => throw new \InvalidArgumentException('未知模块'),
         };
     }
 
     public static function names(): array
     {
-        return ['topics', 'players', 'links', 'danmaku', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'cj', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs'];
+        return ['topics', 'players', 'links', 'danmaku', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'cj', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs', 'searchwords', 'slides', 'coupons', 'notifies', 'follows', 'dynamics', 'shares', 'signs', 'collect_temps'];
     }
 
     public function lists(string $module, array $params): array

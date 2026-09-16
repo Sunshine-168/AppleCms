@@ -1,4 +1,4 @@
-:root { --bg:#0f1115; --card:#171a21; --text:#e8eaed; --muted:#9aa0a6; --accent:#3d8bfd; }
+:root { --bg:#0f1115; --card:#171a21; --text:#e8eaed; --muted:#9aa0a6; --accent: var(--vod-primary, #3d8bfd); }
 * { box-sizing: border-box; }
 body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
 a { color:var(--accent); text-decoration:none; }
@@ -6,6 +6,12 @@ a { color:var(--accent); text-decoration:none; }
 header.site { border-bottom:1px solid #222; background:#12141a; }
 header.site .wrap { display:flex; gap:16px 24px; align-items:center; padding:14px 0; flex-wrap:wrap; }
 .logo { color:var(--text); font-weight:700; font-size:20px; }
+.logo img { height:28px; display:block; }
+.slides { display:none; gap:12px; overflow-x:auto; margin-bottom:24px; }
+.slides:has(a) { display:flex; }
+.slide { min-width:220px; background:var(--card); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; color:var(--text); }
+.slide img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#222; }
+.slide span { padding:8px 10px; font-size:13px; }
 nav.main { display:flex; gap:14px; flex-wrap:wrap; }
 nav.main a { color:var(--muted); }
 nav.main a:hover { color:var(--text); }

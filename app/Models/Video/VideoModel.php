@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 
 class VideoModel extends Model
 {
@@ -21,6 +22,22 @@ class VideoModel extends Model
     use QueryTrait, QueryCacheTrait;
 
     protected $appends = ['url', 'play_url'];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('alive', function (Builder $query) {
+            try {
+                if (! Schema::hasColumn('videos', 'deleted_at')) {
+                    return;
+                }
+            } catch (\Throwable) {
+                return;
+            }
+            $query->where(function (Builder $inner) {
+                $inner->where('deleted_at', 0)->orWhereNull('deleted_at');
+            });
+        });
+    }
 
     public function type(): BelongsTo
     {

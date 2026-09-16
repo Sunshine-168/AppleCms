@@ -108,6 +108,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', \App\Http\Middleware\SiteClosed::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VisitStat::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoAccessLog::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SearchWordLog::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

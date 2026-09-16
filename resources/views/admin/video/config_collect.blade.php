@@ -31,6 +31,15 @@
           </div>
         </div>
         <div class="layui-form-item">
+          <label class="layui-form-label">先入临时表</label>
+          <div class="layui-input-block">
+            <select name="collect_to_temp">
+              <option value="0" @selected(($site['collect_to_temp'] ?? '0')==='0')>直接入库</option>
+              <option value="1" @selected(($site['collect_to_temp'] ?? '0')==='1')>写入临时表再审核转入</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
           <div class="layui-input-block">
             <button type="button" class="layui-btn" id="site-save">保存</button>
           </div>

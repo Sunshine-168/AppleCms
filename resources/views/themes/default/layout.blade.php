@@ -6,11 +6,20 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vodSeo
     <link rel="stylesheet" href="{{ asset('css/vod.css') }}">
+    @if(!empty($site['theme_primary']))
+    <style>:root{--vod-primary: {{ $site['theme_primary'] }};}</style>
+    @endif
 </head>
 <body>
 <header class="site">
     <div class="wrap">
-        <a class="logo" href="{{ vod_url('home') }}">{{ $site['title'] ?? config('app.name') }}</a>
+        <a class="logo" href="{{ vod_url('home') }}">
+            @if(!empty($site['theme_logo']))
+                <img src="{{ $site['theme_logo'] }}" alt="{{ $site['title'] ?? config('app.name') }}">
+            @else
+                {{ $site['title'] ?? config('app.name') }}
+            @endif
+        </a>
         <nav class="main">
             @vodType(['type' => 'top'])
                 <a href="{{ $item->url }}">{{ $item->name }}</a>
@@ -55,5 +64,8 @@
         <div>{{ $site['title'] ?? config('app.name') }} · LaraVideo · <a href="{{ url('/gbook') }}">留言</a></div>
     </div>
 </footer>
+@if(!empty($site['analytics_code']))
+{!! $site['analytics_code'] !!}
+@endif
 </body>
 </html>

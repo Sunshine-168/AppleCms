@@ -9,7 +9,7 @@ services:
     environment:
       APP_URL: http://127.0.0.1:8010
       DB_CONNECTION: sqlite
-      DB_DATABASE: /var/www/html/database/laravideo.sqlite
+      DB_DATABASE: /var/www/html/database/database.sqlite
     ports:
       - "8010:8010"
     command: php artisan serve --host=0.0.0.0 --port=8010

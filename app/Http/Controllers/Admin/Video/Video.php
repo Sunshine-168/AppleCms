@@ -53,6 +53,7 @@ class Video extends Controller
             'empty_content' => $request->input('empty_content', ''),
             'no_actor' => $request->input('no_actor', ''),
             'weekday' => (string) $request->input('weekday', ''),
+            'trash' => $request->input('trash', ''),
             'limit' => (int)$request->input('limit', 10),
         ];
 

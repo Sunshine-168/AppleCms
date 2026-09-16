@@ -323,7 +323,7 @@ class InteractionService
         }
         $card = \App\Models\Video\VideoCard::query()->where('code', $code)->first();
         if (! $card) {
-            return Result::fail('卡密不存在');
+            return $this->redeemCoupon($member, $code);
         }
         if ((int) $card->status !== 1 || (int) $card->used_by > 0) {
             return Result::fail('卡密已使用或已作废');
@@ -335,6 +335,33 @@ class InteractionService
         $member->increment('points', (int) $card->points);
 
         return Result::success(['points' => $member->fresh()->points], '充值成功，到账 '.$card->points.' 积分');
+    }
+
+    public function redeemCoupon(Member $member, string $code): array
+    {
+        if (! Schema::hasTable('video_coupons')) {
+            return Result::fail('卡密不存在');
+        }
+        $coupon = \App\Models\Video\VideoCoupon::query()->where('code', $code)->first();
+        if (! $coupon) {
+            return Result::fail('卡密或优惠券不存在');
+        }
+        if ((int) $coupon->status !== 1 || (int) $coupon->used_by > 0) {
+            return Result::fail('优惠券已使用或已作废');
+        }
+        if ((int) $coupon->expire_at > 0 && (int) $coupon->expire_at < time()) {
+            return Result::fail('优惠券已过期');
+        }
+        if ((int) $coupon->min_points > 0 && (int) $member->points < (int) $coupon->min_points) {
+            return Result::fail('积分未达到使用门槛');
+        }
+        $coupon->status = 0;
+        $coupon->used_by = $member->id;
+        $coupon->used_at = time();
+        $coupon->save();
+        $member->increment('points', (int) $coupon->points);
+
+        return Result::success(['points' => $member->fresh()->points], '优惠券已兑换，到账 '.$coupon->points.' 积分');
     }
 
     public function consumePlayPoints(?\App\Models\Member\Member $member, VideoModel $video): array
