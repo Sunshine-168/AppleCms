@@ -16,7 +16,7 @@ docker compose up --build
 docker compose run --rm --entrypoint php php artisan migrate
 ```
 
-前台/后台走 http://127.0.0.1:8010 。库文件是 `database/laravideo.sqlite`（旧的 `database.sqlite` 里是残留 `mac_*`，没有动）。
+前台/后台走 http://127.0.0.1:8010 。SQLite 文件是 `database/database.sqlite`，结构以 `database/migrations/2026_*` 为准。
 
 本机 PHP：
 

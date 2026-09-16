@@ -9,6 +9,7 @@ use App\Models\Video\VideoTopicRelModel;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class SiteModuleService
@@ -605,6 +606,13 @@ class SiteModuleService
         $cfg = $this->config($module);
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
+        try {
+            if (! Schema::hasTable((new $class)->getTable())) {
+                return Result::fail('请先执行数据库迁移');
+            }
+        } catch (\Throwable) {
+            return Result::fail('请先执行数据库迁移');
+        }
         $limit = max(1, (int) ($params['limit'] ?? 10));
         $q = $class::query();
         foreach ($cfg['where'] ?? [] as $col => $val) {
