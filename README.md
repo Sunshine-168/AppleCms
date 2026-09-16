@@ -8,7 +8,17 @@ MIT。二次开发按 Laravel 常规（Service / 主题目录）。
 
 ## 安装
 
-需要 PHP **8.4+** 和 Composer（本机宝塔目前是 8.2，跑不了 Laravel 13）。
+需要 PHP **8.4+** 和 Composer（本机宝塔目前是 8.2，跑不了 Laravel 13）。可用 Docker：
+
+```bash
+docker compose up --build
+# 另开终端
+docker compose run --rm --entrypoint php php artisan migrate
+```
+
+前台/后台走 http://127.0.0.1:8010 。库文件是 `database/laravideo.sqlite`（旧的 `database.sqlite` 里是残留 `mac_*`，没有动）。
+
+本机 PHP：
 
 ```bash
 cd D:\Project\LaraVideo

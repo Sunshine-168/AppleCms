@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Video\VideoModel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Plugins\Danmaku\Models\Danmaku;
 use Tests\TestCase;
 
 class DanmakuPluginTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
@@ -41,7 +41,7 @@ class DanmakuPluginTest extends TestCase
             'episode_id' => 0,
         ])->assertOk()->assertJsonPath('code', 0);
 
-        $this->assertSame(1, Danmaku::query()->count());
+        $this->assertSame(1, Danmaku::query()->where('video_id', $video->id)->count());
         $this->get('/danmaku/'.$video->id)
             ->assertOk()
             ->assertJsonPath('data.list.0.text', '好看');
