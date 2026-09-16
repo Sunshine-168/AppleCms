@@ -11,6 +11,7 @@ use App\Models\System\SysUserRoleModel;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 
@@ -220,6 +221,11 @@ class SysUserService
     public function login(string $username, string $password, string $vscode): array
     {
         $time    = time();
+        $ip      = Request::ip();
+        $lockKey = 'admin.login.lock.'.md5((string) $ip);
+        if (Cache::has($lockKey)) {
+            return Result::fail('登录失败次数过多，请 15 分钟后再试');
+        }
 
         $captcha = trim($vscode);
 
@@ -249,12 +255,17 @@ class SysUserService
 
         if (!$user)
         {
+            $failKey = 'admin.login.fail.'.md5((string) $ip);
+            $fails = (int) Cache::get($failKey, 0) + 1;
+            Cache::put($failKey, $fails, 900);
+            if ($fails >= 5) {
+                Cache::put($lockKey, 1, 900);
+            }
+
             return Result::fail('账号或者密码错误');
         }
+        Cache::forget('admin.login.fail.'.md5((string) $ip));
 
-        session()->forget('captcha');
-
-        $ip         = Request::ip();
         $ipAddress  = \App\Support\Utils\IpAddress::region((string) $ip);
 
         DB::beginTransaction();

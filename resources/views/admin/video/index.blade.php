@@ -47,6 +47,40 @@
             </select>
           </div>
           <div class="layui-inline">
+            <select name="lock">
+              <option value="">锁定</option>
+              <option value="1">已锁</option>
+              <option value="0">未锁</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <input type="text" name="year" placeholder="年份" autocomplete="off" class="layui-input" style="width:90px;">
+          </div>
+          <div class="layui-inline">
+            <input type="text" name="area" placeholder="地区" autocomplete="off" class="layui-input" style="width:90px;">
+          </div>
+          <div class="layui-inline">
+            <input type="number" name="points_min" placeholder="积分≥" autocomplete="off" class="layui-input" style="width:90px;">
+          </div>
+          <div class="layui-inline">
+            <select name="empty_url">
+              <option value="">播放地址</option>
+              <option value="1">无地址</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="repeat">
+              <option value="">重名</option>
+              <option value="1">仅重名</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="need_points">
+              <option value="">积分片</option>
+              <option value="1">需积分</option>
+            </select>
+          </div>
+          <div class="layui-inline">
             <button type="button" class="layui-btn" id="video-search-btn">查询</button>
             <button type="reset" class="layui-btn layui-btn-primary" id="video-reset-btn">重置</button>
           </div>
@@ -63,8 +97,15 @@
         <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-off">批量下架</button>
         <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-rec">批量推荐</button>
         <button class="layui-btn layui-btn-sm" id="video-batch-lock">批量锁定</button>
+        <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-type">改分类</button>
+        <button class="layui-btn layui-btn-sm" id="video-batch-points">改积分</button>
+        <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-merge">合并重复</button>
+        <button class="layui-btn layui-btn-sm" id="video-batch-replace-url">替换播放地址</button>
         <button class="layui-btn layui-btn-sm layui-btn-danger" id="video-batch-del">批量删除</button>
         <button class="layui-btn layui-btn-sm layui-btn-primary" id="video-refresh-btn">刷新</button>
+        <a class="layui-btn layui-btn-sm layui-btn-warm" href="/admin/video?empty_url=1">无地址</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?status=0">待审</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?repeat=1">重名</a>
       </div>
       <table id="video-table" lay-filter="video-table"></table>
     </div>
@@ -364,10 +405,17 @@ layui.use(['layer','form','table','upload'], function(){
   }
   preloadSearchType();
 
+  var qs = new URLSearchParams(location.search);
   var tableIns = table.render({
     elem:'#video-table',
     url:'/admin/video/list',
     method:'get',
+    where: {
+      empty_url: qs.get('empty_url') || '',
+      repeat: qs.get('repeat') || '',
+      need_points: qs.get('need_points') || '',
+      status: qs.get('status') || ''
+    },
     page:true,
     parseData:function(res){
       return {
@@ -383,6 +431,8 @@ layui.use(['layer','form','table','upload'], function(){
       {field:'title', title:'标题', minWidth:200},
       {field:'type_name', width:140, title:'分类'},
       {field:'score', width:90, title:'评分'},
+      {field:'points', width:80, title:'积分'},
+      {field:'year', width:80, title:'年份'},
       {field:'status', width:90, title:'状态', templet:function(d){
         return String(d.status) === '1' ? '<span class="layui-badge layui-bg-green">上架</span>' : '<span class="layui-badge">下架</span>';
       }},
@@ -563,6 +613,26 @@ layui.use(['layer','form','table','upload'], function(){
   $('#video-batch-off').on('click', function(){ batch('status', 0); });
   $('#video-batch-rec').on('click', function(){ batch('recommend', 1); });
   $('#video-batch-lock').on('click', function(){ batch('lock', 1); });
+  $('#video-batch-type').on('click', function(){
+    layer.prompt({title:'目标分类ID', formType:0}, function(val, i){ layer.close(i); batch('type', val); });
+  });
+  $('#video-batch-points').on('click', function(){
+    layer.prompt({title:'积分', value:'0', formType:0}, function(val, i){ layer.close(i); batch('points', val); });
+  });
+  $('#video-batch-merge').on('click', function(){
+    var ids = selectedIds();
+    if (ids.length < 2) { layer.msg('请至少选两部', {icon:2}); return; }
+    layer.prompt({title:'保留的影片ID', value: String(Math.min.apply(null, ids)), formType:0}, function(val, i){
+      layer.close(i);
+      batch('merge', val, '确认把选中影片合并到 ID '+val+'？线路会迁过去，其余片删除。');
+    });
+  });
+  $('#video-batch-replace-url').on('click', function(){
+    layer.prompt({title:'替换播放地址 from|to', formType:0}, function(val, i){
+      layer.close(i);
+      batch('replace_url', val, '确认替换选中影片的播放地址？');
+    });
+  });
   $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？'); });
 
   table.on('tool(video-table)', function(obj){

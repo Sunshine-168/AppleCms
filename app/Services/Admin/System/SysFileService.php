@@ -212,6 +212,12 @@ class SysFileService
                     $diskPath = substr($diskPath, 8);
                 }
                 Storage::disk('public')->delete($diskPath);
+                try {
+                    if ((string) config('video.storage_disk', 'local') === 's3' && config('filesystems.disks.vod.bucket')) {
+                        Storage::disk('vod')->delete($diskPath);
+                    }
+                } catch (\Throwable) {
+                }
             }
         }
 

@@ -3,6 +3,7 @@
 namespace App\Services\Video;
 
 use App\Models\Video\ActorModel;
+use App\Models\Video\VideoDomain;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
@@ -23,6 +24,16 @@ class SiteFrontService
     public function bootSite(): array
     {
         $theme = (string) config('video.theme', 'default');
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_domains')) {
+                $host = (string) request()->getHost();
+                $bind = VideoDomain::query()->where('status', 1)->where('host', $host)->first();
+                if ($bind && trim((string) $bind->theme) !== '') {
+                    $theme = (string) $bind->theme;
+                }
+            }
+        } catch (\Throwable) {
+        }
         $site = array_merge([
             'title' => config('app.name'),
             'keyword' => '',
@@ -34,6 +45,16 @@ class SiteFrontService
         config(['video.theme' => $theme]);
 
         return $site;
+    }
+
+    public function siteClosed(): ?string
+    {
+        $site = $this->settings->site();
+        if ((int) ($site['site_closed'] ?? 0) === 1) {
+            return (string) ($site['site_close_tip'] ?? '站点维护中');
+        }
+
+        return null;
     }
 
     public function themeView(string $name): string
@@ -99,6 +120,24 @@ class SiteFrontService
         return is_numeric($id)
             ? $query->find((int) $id)
             : $query->where('slug', $id)->first();
+    }
+
+    public function findRole(int $id): ?\App\Models\Video\VideoRole
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_roles')) {
+            return null;
+        }
+
+        return \App\Models\Video\VideoRole::query()->where('status', 1)->find($id);
+    }
+
+    public function findArt(int $id): ?\App\Models\Video\VideoArt
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_arts')) {
+            return null;
+        }
+
+        return \App\Models\Video\VideoArt::query()->where('status', 1)->find($id);
     }
 
     public function resolvePlay(VideoModel $video, ?int $sid, ?int $nid, string $kind = 'play'): array

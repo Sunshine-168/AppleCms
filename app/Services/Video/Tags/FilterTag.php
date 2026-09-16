@@ -58,9 +58,9 @@ class FilterTag
         $values = match ($name) {
             'order' => array_keys(config('video.orders', [])),
             'letter' => range('A', 'Z'),
-            'year' => $this->distinct('year'),
-            'area' => $this->distinct('area'),
-            'lang' => $this->distinct('lang'),
+            'year' => $this->fromSetting('filter_year') ?: $this->distinct('year'),
+            'area' => $this->fromSetting('filter_area') ?: $this->distinct('area'),
+            'lang' => $this->fromSetting('filter_lang') ?: $this->distinct('lang'),
             'class' => $this->classValues(),
             default => [],
         };
@@ -93,6 +93,17 @@ class FilterTag
         }
 
         return $choices;
+    }
+
+    /** @return list<string> */
+    private function fromSetting(string $key): array
+    {
+        $raw = trim((string) app(\App\Services\Video\VideoSettingService::class)->get($key, ''));
+        if ($raw === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/', $raw) ?: [])));
     }
 
     private function distinct(string $column): array

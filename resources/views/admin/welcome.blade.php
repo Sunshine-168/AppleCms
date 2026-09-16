@@ -153,6 +153,34 @@
       </div>
     </div>
   </div>
+
+  <div class="layui-card" style="margin-top:8px;">
+    <div class="layui-card-header">影视后台</div>
+    <div class="layui-card-body">
+      <div class="layui-btn-container">
+        <a class="layui-btn layui-btn-sm" href="/admin/video">影片</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/collects">采集</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/collect_logs">采集日志</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/audits">审核规则</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/playfails">播放失败</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/orders">订单</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/plogs">积分流水</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/groups">会员组</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/settings">站点设置</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/make">静态生成</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/templates">模板</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/push">推送</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/visits">统计</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/wizard">标签向导</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/roles">角色库</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/arts">文章</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/websites">网址</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/ulogs">访问日志</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video/unions">推荐资源</a>
+      </div>
+      <p class="layui-word-aux">这些链接在后台 iframe 里打开对应菜单。首次请先完成 /install，再用管理员账号登录。</p>
+    </div>
+  </div>
 </div>
 
 <script src="{{ asset('static/admin/layui/layui.js') }}"></script>

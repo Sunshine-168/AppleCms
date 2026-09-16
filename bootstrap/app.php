@@ -91,11 +91,15 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prependToGroup('web', \App\Http\Middleware\CheckInstalled::class);
+        $middleware->validateCsrfTokens(except: [
+            'api.php/receive/*',
+            'api/receive/*',
+        ]);
         $middleware->alias([
             'member.auth' => \App\Http\Middleware\MemberAuth::class,
             'vod.html' => \App\Http\Middleware\VideoHtmlCache::class,
         ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SiteClosed::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VisitStat::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
     })

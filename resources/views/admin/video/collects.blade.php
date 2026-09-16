@@ -41,6 +41,7 @@
       <div class="layui-btn-container" style="margin-bottom:10px;">
         <button class="layui-btn layui-btn-sm" id="collect-source-add-btn">新增采集源</button>
         <button class="layui-btn layui-btn-sm layui-btn-primary" id="collect-source-refresh-btn">刷新</button>
+        <a class="layui-btn layui-btn-sm layui-btn-normal" href="/admin/video/collect_logs">采集日志</a>
       </div>
       <table class="layui-table" id="collect-source-table" lay-filter="collect-source-table"></table>
 
@@ -48,6 +49,9 @@
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bind">绑定</a>
         <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="run">采集</a>
+        <a class="layui-btn layui-btn-xs" lay-event="resume">续采</a>
+        <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="retry">重试</a>
+        <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="suggest">自动绑定</a>
         <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
       </script>
     </div>
@@ -194,9 +198,11 @@ layui.use(['layer','form','table'], function(){
           : '<span class="layui-badge layui-bg-gray">禁用</span>';
       }},
       {field:'sort',title:'排序',width:90,sort:true},
-      {field:'created_at_text',title:'创建时间',width:180},
-      {field:'updated_at_text',title:'更新时间',width:180},
-      {title:'操作',toolbar:'#collect-source-rowbar',width:260}
+      {field:'last_page',title:'断点页',width:90},
+      {field:'last_error',title:'失败',minWidth:120},
+      {field:'created_at_text',title:'创建时间',width:160},
+      {field:'updated_at_text',title:'更新时间',width:160},
+      {title:'操作',toolbar:'#collect-source-rowbar',width:420}
     ]]
   });
 
@@ -304,6 +310,30 @@ layui.use(['layer','form','table'], function(){
           table.reload('collect-source-table');
           layer.msg((res && res.msg) ? res.msg : '采集完成', {icon:1, time: 3000});
         });
+      });
+      return;
+    }
+    if (obj.event === 'resume') {
+      var load = layer.load(1);
+      apiPost('/admin/video/collects/resume', {id: row.id, pages: 1, hours: 24}, function(data, res){
+        layer.close(load);
+        table.reload('collect-source-table');
+        layer.msg((res && res.msg) ? res.msg : '续采完成', {icon:1, time: 3000});
+      });
+      return;
+    }
+    if (obj.event === 'retry') {
+      var load2 = layer.load(1);
+      apiPost('/admin/video/collects/retry', {id: row.id}, function(data, res){
+        layer.close(load2);
+        table.reload('collect-source-table');
+        layer.msg((res && res.msg) ? res.msg : '重试完成', {icon:1, time: 3000});
+      });
+      return;
+    }
+    if (obj.event === 'suggest') {
+      apiPost('/admin/video/collects/suggest', {id: row.id}, function(data, res){
+        layer.msg((res && res.msg) ? res.msg : '已按同名分类绑定', {icon:1});
       });
       return;
     }

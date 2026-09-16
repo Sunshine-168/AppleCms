@@ -38,7 +38,11 @@ class VodController extends Controller
         $this->context->setType($type);
         $filters = $this->front->applyRequestFilters($request);
         $this->context->setSeo(
-            $type->seo_title ?: ($type->name.' - '.$site['title']),
+            $type->seo_title ?: $this->seoTitle((string) ($site['seo_title_type'] ?? '{type} - {site}'), [
+                '{name}' => (string) $type->name,
+                '{type}' => (string) $type->name,
+                '{site}' => (string) $site['title'],
+            ]),
             $type->seo_keywords ?: $site['keyword'],
             $type->seo_description ?: $site['description']
         );
@@ -66,7 +70,15 @@ class VodController extends Controller
         $this->context->setVideo($video);
         $this->context->setType($video->type);
         $this->front->bumpHits($video);
-        $this->context->setSeo($video->title.' - '.$site['title'], $video->title, (string) $video->description);
+        $this->context->setSeo(
+            $this->seoTitle((string) ($site['seo_title_vod'] ?? '{name} - {site}'), [
+                '{name}' => (string) $video->title,
+                '{type}' => (string) ($video->type?->name ?? ''),
+                '{site}' => (string) $site['title'],
+            ]),
+            $video->title,
+            (string) $video->description
+        );
         $member = Auth::guard('member')->user();
         $favorited = $member ? $this->interaction->isFavorited((int) $member->id, $video->id) : false;
 
@@ -175,6 +187,52 @@ class VodController extends Controller
         $this->context->setPaginator($videos);
 
         return view($this->front->themeView('vod.topic'), compact('site', 'topic', 'videos'));
+    }
+
+    public function websites(): View
+    {
+        $site = $this->front->bootSite();
+        $this->context->setSeo('网址导航 - '.$site['title'], $site['keyword'], $site['description']);
+        $list = \Illuminate\Support\Facades\Schema::hasTable('video_websites')
+            ? \App\Models\Video\VideoWebsite::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get()
+            : collect();
+
+        return view($this->front->themeView('vod.websites'), compact('site', 'list'));
+    }
+
+    public function art(int|string $id): View
+    {
+        $site = $this->front->bootSite();
+        $art = $this->front->findArt($this->vodId($id));
+        if (! $art) {
+            throw new NotFoundHttpException();
+        }
+        $this->context->setSeo($art->title.' - '.$site['title'], $art->title, mb_substr(strip_tags((string) $art->content), 0, 120));
+
+        return view($this->front->themeView('vod.art'), compact('site', 'art'));
+    }
+
+    public function role(int|string $id): View
+    {
+        $site = $this->front->bootSite();
+        $role = $this->front->findRole($this->vodId($id));
+        if (! $role) {
+            throw new NotFoundHttpException();
+        }
+        $this->context->setSeo($role->name.' - '.$site['title'], $role->name, (string) $role->blurb);
+
+        return view($this->front->themeView('vod.role'), compact('site', 'role'));
+    }
+
+    /** @param  array<string, string>  $vars */
+    private function seoTitle(string $tpl, array $vars): string
+    {
+        $tpl = trim($tpl);
+        if ($tpl === '') {
+            $tpl = '{name} - {site}';
+        }
+
+        return str_replace(array_keys($vars), array_values($vars), $tpl);
     }
 
     private function vodId(int|string $id): int

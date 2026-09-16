@@ -5,14 +5,29 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoTypeModel;
+use App\Services\Video\VideoSettingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class ProvideController extends Controller
 {
-    public function vod(Request $request): JsonResponse|Response
+    public function vod(Request $request, VideoSettingService $settings): JsonResponse|Response
     {
+        $need = trim((string) $settings->get('provide_key', ''));
+        if ($need !== '') {
+            $given = (string) $request->query('key', $request->header('X-Provide-Key', $request->input('key', '')));
+            if ($given === '' || ! hash_equals($need, $given)) {
+                $at = (string) $request->query('at', $request->segment(4) ?? 'json');
+                if ($at === 'xml') {
+                    return response('<?xml version="1.0" encoding="utf-8"?><rss version="5.0"><list></list></rss>', 403, [
+                        'Content-Type' => 'text/xml; charset=utf-8',
+                    ]);
+                }
+
+                return response()->json(['code' => 0, 'msg' => '密钥无效'], 403);
+            }
+        }
         $ac = (string) $request->query('ac', 'list');
         $at = (string) $request->query('at', $request->segment(4) ?? 'json');
         $page = max(1, (int) $request->query('pg', 1));

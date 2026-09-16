@@ -22,7 +22,15 @@ class VisitStat
             }
         }
         try {
-            app(SiteOpsService::class)->hitVisit((string) $request->ip());
+            $videoId = null;
+            $typeId = null;
+            if (preg_match('#(?:^|/)vod/(\d+)#', $path, $m) || preg_match('#(?:^|/)play/(\d+)#', $path, $m)) {
+                $videoId = (int) $m[1];
+            }
+            if (preg_match('#(?:^|/)type/(\d+)#', $path, $m)) {
+                $typeId = (int) $m[1];
+            }
+            app(SiteOpsService::class)->hitVisit((string) $request->ip(), $videoId, $typeId);
         } catch (\Throwable) {
         }
 

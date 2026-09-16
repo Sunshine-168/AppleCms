@@ -42,4 +42,28 @@ class Collect extends Controller
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
+
+    public function resume(Request $request): JsonResponse
+    {
+        $data = $this->ingest->resume((int) $request->input('id', 0), [
+            'pages' => $request->input('pages', 1),
+            'hours' => $request->input('hours', 24),
+        ]);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function retry(Request $request): JsonResponse
+    {
+        $data = $this->ingest->retry((int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function suggestBind(Request $request): JsonResponse
+    {
+        $data = $this->ingest->suggestBind((int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
 }

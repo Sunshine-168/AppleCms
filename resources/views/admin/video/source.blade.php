@@ -27,6 +27,7 @@
 <script type="text/html" id="source-rowbar">
   <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="episodes">剧集</a>
   <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="offline">下线</a>
   <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
 </script>
 
@@ -207,7 +208,7 @@ layui.use(['layer','form','table'], function(){
       {field:'episode_total', width:110, title:'剧集数'},
       {field:'sort', width:90, title:'排序'},
       {field:'updated_at_text', width:180, title:'更新时间'},
-      {title:'操作', toolbar:'#source-rowbar', width:180}
+      {title:'操作', toolbar:'#source-rowbar', width:260}
     ]]
   });
 
@@ -248,6 +249,15 @@ layui.use(['layer','form','table'], function(){
   table.on('tool(source-table)', function(obj){
     var row = obj.data || {};
     if(obj.event === 'edit'){ openSourceDialog('edit', row); }
+    if(obj.event === 'offline'){
+      layer.confirm('确认下线该线路？前台将不再播放。', function(i){
+        apiPost('/admin/video/sources/disable', {id: row.id}, function(){
+          layer.close(i);
+          table.reload('source-table');
+          layer.msg('已下线',{icon:1});
+        });
+      });
+    }
     if(obj.event === 'del'){
       layer.confirm('确定删除该线路吗？', function(i){
         apiPost('/admin/video/sources/delete', {id: row.id}, function(){

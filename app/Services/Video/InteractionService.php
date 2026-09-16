@@ -5,17 +5,23 @@ namespace App\Services\Video;
 use App\Models\Member\Member;
 use App\Models\Member\MemberFavorite;
 use App\Models\Member\MemberHistory;
+use App\Models\Member\MemberInvite;
 use App\Models\Video\VideoComment;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoReport;
 use App\Models\Video\VideoStatModel;
+use App\Models\Video\VideoUlog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class InteractionService
 {
     public function register(array $data): array
     {
+        if ((int) app(VideoSettingService::class)->get('member_register', '1') !== 1) {
+            return Result::fail('已关闭注册');
+        }
         $name = trim((string) ($data['name'] ?? ''));
         $email = strtolower(trim((string) ($data['email'] ?? '')));
         $password = (string) ($data['password'] ?? '');
@@ -38,8 +44,48 @@ class InteractionService
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+        $this->applyInvite($member, (string) ($data['invite'] ?? ''));
 
         return Result::success(['id' => $member->id], '注册成功');
+    }
+
+    private function applyInvite(Member $member, string $code): void
+    {
+        $code = trim($code);
+        if ($code === '' || ! Schema::hasTable('member_invites')) {
+            return;
+        }
+        $invite = MemberInvite::query()
+            ->where('code', $code)
+            ->where('status', 1)
+            ->where('used_by', 0)
+            ->first();
+        if (! $invite) {
+            return;
+        }
+        $invite->used_by = (int) $member->id;
+        $invite->status = 0;
+        $invite->save();
+        $points = (int) $invite->points;
+        if ($points < 1) {
+            return;
+        }
+        $member->increment('points', $points);
+        $inviterId = (int) $invite->member_id;
+        if ($inviterId > 0 && $inviterId !== (int) $member->id) {
+            Member::query()->where('id', $inviterId)->increment('points', $points);
+        }
+        if (! Schema::hasTable('member_point_logs')) {
+            return;
+        }
+        \App\Models\Member\MemberPointLog::query()->create([
+            'member_id' => (int) $member->id,
+            'points' => $points,
+            'balance' => (int) $member->fresh()->points,
+            'type' => 'invite',
+            'remark' => '邀请码 '.$code,
+            'created_at' => time(),
+        ]);
     }
 
     public function toggleFavorite(int $memberId, int $videoId): array
@@ -70,6 +116,24 @@ class InteractionService
             ['member_id' => $memberId, 'video_id' => $video->id],
             ['source_id' => $sourceId, 'episode_id' => $episodeId, 'updated_at' => time()]
         );
+        $this->writeUlog($memberId, (int) $video->id, 'play', (string) request()->ip());
+    }
+
+    public function writeUlog(int $memberId, int $videoId, string $type, string $ip = ''): void
+    {
+        try {
+            if (! Schema::hasTable('video_ulogs')) {
+                return;
+            }
+            VideoUlog::query()->create([
+                'member_id' => $memberId,
+                'video_id' => $videoId,
+                'type' => $type,
+                'ip' => $ip,
+                'created_at' => time(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     public function addComment(int $videoId, string $content, ?Member $member, string $guestName, string $ip): array
@@ -77,6 +141,19 @@ class InteractionService
         $content = trim($content);
         if ($content === '') {
             return Result::fail('请填写评论');
+        }
+        $settings = app(VideoSettingService::class);
+        if ((int) $settings->get('member_comment_login', '0') === 1 && ! $member) {
+            return Result::fail('请先登录后评论');
+        }
+        $banned = trim((string) $settings->get('banned_words', ''));
+        if ($banned !== '') {
+            foreach (preg_split('/[\r\n,，]+/u', $banned) ?: [] as $word) {
+                $word = trim($word);
+                if ($word !== '' && mb_stripos($content, $word) !== false) {
+                    return Result::fail('评论包含违禁词');
+                }
+            }
         }
         $name = $member?->name ?: trim($guestName);
         if ($name === '') {
@@ -88,7 +165,7 @@ class InteractionService
             'parent_id' => 0,
             'author_name' => mb_substr($name, 0, 80),
             'content' => mb_substr($content, 0, 2000),
-            'status' => 1,
+            'status' => (int) $settings->get('comment_audit', '0') === 1 ? 0 : 1,
             'ip' => $ip,
             'created_at' => time(),
         ]);

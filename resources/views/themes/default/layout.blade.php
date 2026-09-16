@@ -18,6 +18,7 @@
             @vodTopic(['num' => 6])
                 <a href="{{ $item->url }}">{{ $item->name }}</a>
             @endvodTopic
+            <a href="{{ url('/website') }}">导航</a>
             @vodAd(['slot' => 'header'])
                 {!! $item->content !!}
             @endvodAd

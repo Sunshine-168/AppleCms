@@ -41,6 +41,13 @@ class Video extends Controller
             'status' => $request->input('status', ''),
             'is_recommend' => $request->input('is_recommend', ''),
             'is_hot' => $request->input('is_hot', ''),
+            'lock' => $request->input('lock', ''),
+            'year' => (string) $request->input('year', ''),
+            'area' => (string) $request->input('area', ''),
+            'points_min' => $request->input('points_min', ''),
+            'empty_url' => $request->input('empty_url', ''),
+            'repeat' => $request->input('repeat', ''),
+            'need_points' => $request->input('need_points', ''),
             'limit' => (int)$request->input('limit', 10),
         ];
 
@@ -119,6 +126,13 @@ class Video extends Controller
         );
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function disableSource(Request $request): JsonResponse
+    {
+        $data = $this->videoService->disableSource((int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     /**

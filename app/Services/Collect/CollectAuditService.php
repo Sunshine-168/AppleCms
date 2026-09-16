@@ -27,17 +27,47 @@ class CollectAuditService
         $rules = VideoAuditRule::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get();
         foreach ($rules as $rule) {
             $text = $hay[(string) $rule->scope] ?? $title;
+            $matched = false;
             foreach ($this->words((string) $rule->words) as $word) {
-                if ($word !== '' && mb_stripos($text, $word) !== false) {
-                    return [
-                        'action' => (string) $rule->action === 'review' ? 'review' : 'skip',
-                        'rule' => (string) $rule->name,
-                    ];
+                if ($word === '') {
+                    continue;
+                }
+                if ((int) ($rule->is_regex ?? 0) === 1) {
+                    $ok = @preg_match('/'.$word.'/iu', $text);
+                    if ($ok === 1) {
+                        $matched = true;
+                        break;
+                    }
+                } elseif (mb_stripos($text, $word) !== false) {
+                    $matched = true;
+                    break;
                 }
             }
+            if (! $matched) {
+                continue;
+            }
+            $action = (string) $rule->action;
+
+            return [
+                'action' => in_array($action, ['review', 'replace', 'skip'], true) ? $action : 'skip',
+                'rule' => (string) $rule->name,
+                'words' => (string) $rule->words,
+            ];
         }
 
         return null;
+    }
+
+    public function applyReplace(string $text, string $words): string
+    {
+        foreach ($this->words($words) as $word) {
+            if ($word === '') {
+                continue;
+            }
+            $text = str_ireplace($word, '', $text);
+        }
+
+        return $text;
     }
 
     /** @return list<string> */

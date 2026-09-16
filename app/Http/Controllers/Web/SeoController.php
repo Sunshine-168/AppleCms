@@ -9,9 +9,13 @@ use Illuminate\Http\Response;
 
 class SeoController extends Controller
 {
-    public function sitemap(): Response
+    public function sitemap(\Illuminate\Http\Request $request): Response
     {
-        $videos = VideoModel::query()->published()->orderByDesc('id')->limit(5000)->get(['id', 'title', 'updated_at']);
+        $q = VideoModel::query()->published()->orderByDesc('id');
+        if ($request->boolean('inc')) {
+            $q->where('updated_at', '>=', time() - 86400 * 2);
+        }
+        $videos = $q->limit(5000)->get(['id', 'title', 'updated_at']);
         $xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
         $xml .= '<url><loc>'.e(url('/')).'</loc><changefreq>hourly</changefreq></url>';
         foreach (VideoTypeModel::query()->active()->get() as $type) {

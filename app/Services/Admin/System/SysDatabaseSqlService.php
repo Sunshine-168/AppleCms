@@ -43,10 +43,13 @@ class SysDatabaseSqlService
         $keyword = strtolower((string) strtok(ltrim($statement), " \t\r\n"));
 
         // 安全检查：禁止危险 SQL
-        $forbidden = ['drop', 'truncate', 'alter', 'create', 'rename'];
+        $forbidden = ['drop', 'truncate', 'alter', 'create', 'rename', 'grant', 'revoke'];
         if (in_array($keyword, $forbidden, true))
         {
             return Result::fail('禁止执行此类 SQL');
+        }
+        if ($keyword === 'delete' && (int) session('admin_uid', 0) !== 1) {
+            return Result::fail('仅超级管理员可执行 DELETE');
         }
 
         try {

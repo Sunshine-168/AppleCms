@@ -16,6 +16,7 @@ use App\Http\Controllers\Web\VodController;
 use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\PlayerController;
 use App\Http\Controllers\Api\ProvideController;
+use App\Http\Controllers\Api\ReceiveController;
 
 Route::get('/', [VodController::class, 'index'])->name('vod.home');
 Route::get('/show', [VodController::class, 'show'])->name('vod.show');
@@ -32,11 +33,16 @@ Route::get('/player/{id}/{sid?}/{nid?}', [PlayerController::class, 'show'])->nam
 Route::get('/tag/{slug}', [VodController::class, 'tag'])->name('vod.tag');
 Route::get('/actor/{id}', [VodController::class, 'actor'])->name('vod.actor')->whereNumber('id');
 Route::get('/topic/{id}', [VodController::class, 'topic'])->name('vod.topic');
+Route::get('/website', [VodController::class, 'websites'])->name('vod.website');
+Route::get('/art/{id}', [VodController::class, 'art'])->name('vod.art')->whereNumber('id');
+Route::get('/role/{id}', [VodController::class, 'role'])->name('vod.role')->whereNumber('id');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('vod.sitemap');
 Route::get('/rss.xml', [SeoController::class, 'rss'])->name('vod.rss');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('vod.robots');
 Route::get('/api.php/provide/vod', [ProvideController::class, 'vod'])->name('vod.provide');
 Route::get('/api/provide/vod', [ProvideController::class, 'vod']);
+Route::post('/api.php/receive/vod', [ReceiveController::class, 'vod']);
+Route::post('/api/receive/vod', [ReceiveController::class, 'vod']);
 
 Route::prefix('index.php/vod')->group(function () {
     Route::get('type/id/{id}', [VodController::class, 'type'])->where('id', '[^/]+');

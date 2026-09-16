@@ -3,14 +3,19 @@
 namespace App\Services\Collect;
 
 use App\Models\Video\CollectSourceModel;
+use App\Models\Video\VideoCollectLog;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
+use App\Models\Video\VideoSynonym;
 use App\Models\Video\VideoTypeModel;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 
 class CollectIngestService
 {
@@ -52,6 +57,37 @@ class CollectIngestService
         ]);
     }
 
+    public function suggestBind(int $sourceId): array
+    {
+        $data = $this->fetchClasses($sourceId);
+        if (($data['code'] ?? 1) !== 0) {
+            return $data;
+        }
+        $payload = $data['data'] ?? [];
+        $locals = collect($payload['local_types'] ?? []);
+        $bind = [];
+        foreach ($payload['types'] ?? [] as $type) {
+            $name = trim((string) ($type['name'] ?? ''));
+            $rid = (int) ($type['remote_id'] ?? 0);
+            if ($rid < 1 || $name === '') {
+                continue;
+            }
+            $hit = $locals->first(function ($row) use ($name) {
+                $local = is_array($row) ? $row : $row->toArray();
+
+                return mb_strtolower((string) ($local['name'] ?? '')) === mb_strtolower($name);
+            });
+            if ($hit) {
+                $bind[(string) $rid] = (int) (is_array($hit) ? $hit['id'] : $hit->id);
+            }
+        }
+        if ($bind === []) {
+            return Result::fail('没有名称完全相同的分类可自动绑定');
+        }
+
+        return $this->saveBind($sourceId, $bind);
+    }
+
     public function saveBind(int $sourceId, array $bind): array
     {
         $source = CollectSourceModel::query()->find($sourceId);
@@ -73,6 +109,35 @@ class CollectIngestService
         return Result::success(['bind' => $clean]);
     }
 
+    public function ingestRemote(array $item): array
+    {
+        $now = time();
+        $source = CollectSourceModel::query()->firstOrCreate(
+            ['name' => '站外入库'],
+            [
+                'api_url' => 'inbound',
+                'api_type' => 'json',
+                'param' => '',
+                'bind_json' => '{}',
+                'status' => 1,
+                'sort' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+        $localType = (int) ($item['local_type_id'] ?? $item['type_id'] ?? 0);
+        if ($localType > 0) {
+            $bind = $this->bindMap($source);
+            $bind[(string) $localType] = $localType;
+            $item['type_id'] = $localType;
+            $source->bind_json = json_encode($bind, JSON_UNESCAPED_UNICODE);
+            $source->updated_at = $now;
+            $source->save();
+        }
+
+        return $this->upsert($source, $item);
+    }
+
     public function run(int $sourceId, array $params = []): array
     {
         $source = CollectSourceModel::query()->find($sourceId);
@@ -91,6 +156,8 @@ class CollectIngestService
         $logs = [];
         $pageInfo = [];
         $pageCount = $start;
+        $lastPage = $start;
+        $failMsg = '';
 
         for ($page = $start; $page < $start + $pages; $page++) {
             $query = [
@@ -114,8 +181,12 @@ class CollectIngestService
 
             $fetched = $this->client->fetch((string) $source->api_url, $query, (string) ($source->api_type ?: 'auto'));
             if (! ($fetched['ok'] ?? false)) {
-                return Result::fail((string) $fetched['msg']);
+                $failMsg = (string) $fetched['msg'];
+                $this->persistCollectState($source, $page, $created, $updated, $failMsg, false);
+
+                return Result::fail($failMsg);
             }
+            $lastPage = $page;
             $pageInfo = $fetched['page'] ?? [];
             $pageCount = (int) ($pageInfo['pagecount'] ?? $pageInfo['pageCount'] ?? $page);
             foreach ($fetched['list'] as $item) {
@@ -134,9 +205,7 @@ class CollectIngestService
             }
         }
 
-        $source->last_collect_at = time();
-        $source->updated_at = time();
-        $source->save();
+        $this->persistCollectState($source, $lastPage, $created, $updated, "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}", true, $skipped);
 
         return Result::success([
             'page' => $pageInfo,
@@ -147,13 +216,64 @@ class CollectIngestService
         ], "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}");
     }
 
+    public function resume(int $sourceId, array $params = []): array
+    {
+        $source = CollectSourceModel::query()->find($sourceId);
+        if (! $source) {
+            return Result::fail('采集源不存在');
+        }
+        $next = max(1, (int) ($source->last_page ?? 0) + 1);
+        $params['page'] = $next;
+        $params['pages'] = max(1, (int) ($params['pages'] ?? 1));
+
+        return $this->run($sourceId, $params);
+    }
+
+    public function retry(int $sourceId): array
+    {
+        $source = CollectSourceModel::query()->find($sourceId);
+        if (! $source) {
+            return Result::fail('采集源不存在');
+        }
+        $page = max(1, (int) ($source->last_page ?? 1));
+
+        return $this->run($sourceId, ['page' => $page, 'pages' => 1]);
+    }
+
+    private function persistCollectState(CollectSourceModel $source, int $page, int $created, int $updated, string $msg, bool $ok, int $skipped = 0): void
+    {
+        $source->last_collect_at = time();
+        $source->updated_at = time();
+        if (Schema::hasColumn('collect_sources', 'last_page')) {
+            $source->last_page = $page;
+            $source->last_created = $created;
+            $source->last_updated = $updated;
+            $source->last_error = $ok ? '' : mb_substr($msg, 0, 250);
+        }
+        $source->save();
+        if (! Schema::hasTable('video_collect_logs')) {
+            return;
+        }
+        VideoCollectLog::query()->create([
+            'collect_source_id' => $source->id,
+            'page' => $page,
+            'created_n' => $created,
+            'updated_n' => $updated,
+            'skipped_n' => $skipped,
+            'ok' => $ok ? 1 : 0,
+            'msg' => mb_substr($msg, 0, 250),
+            'created_at' => time(),
+        ]);
+    }
+
     /** @param  array<string, mixed>  $item */
     private function upsert(CollectSourceModel $source, array $item): array
     {
-        $title = trim((string) ($item['vod_name'] ?? ''));
+        $title = $this->applySynonyms(trim((string) ($item['vod_name'] ?? '')));
         if ($title === '') {
             return ['action' => 'skipped', 'msg' => '无标题', 'title' => ''];
         }
+        $item['vod_name'] = $title;
         $bind = $this->bindMap($source);
         $remoteType = (int) ($item['type_id'] ?? 0);
         $typeId = (int) ($bind[(string) $remoteType] ?? 0);
@@ -168,6 +288,11 @@ class CollectIngestService
         );
         if ($hit && $hit['action'] === 'skip') {
             return ['action' => 'skipped', 'msg' => '审核拦截:'.$hit['rule'], 'title' => $title];
+        }
+        if ($hit && $hit['action'] === 'replace') {
+            $title = $this->audit->applyReplace($title, (string) ($hit['words'] ?? ''));
+            $item['vod_name'] = $title;
+            $item['vod_content'] = $this->audit->applyReplace((string) ($item['vod_content'] ?? ''), (string) ($hit['words'] ?? ''));
         }
 
         $type = VideoTypeModel::query()->find($typeId);
@@ -195,10 +320,17 @@ class CollectIngestService
             return ['action' => 'skipped', 'msg' => '已锁定', 'title' => $title, 'id' => $video->id];
         }
 
+        $settings = app(\App\Services\Video\VideoSettingService::class);
+        $cover = ((int) $settings->get('collect_sync_pic', '1') === 1)
+            ? (string) ($item['vod_pic'] ?? '')
+            : '';
+        if ($cover !== '' && (int) $settings->get('collect_pic_local', '0') === 1) {
+            $cover = $this->localizeCover($cover);
+        }
         $payload = [
             'title' => $title,
             'subtitle' => (string) ($item['vod_sub'] ?? ''),
-            'cover' => (string) ($item['vod_pic'] ?? ''),
+            'cover' => $cover,
             'type_id' => $typeId,
             'type_pid' => $typePid,
             'area' => (string) ($item['vod_area'] ?? ''),
@@ -213,7 +345,7 @@ class CollectIngestService
             'isend' => (int) ($item['vod_isend'] ?? 0),
             'letter' => VideoMeta::letter($title),
             'score' => (float) ($item['vod_score'] ?? 0),
-            'status' => ($hit && $hit['action'] === 'review') ? 0 : 1,
+            'status' => ($hit && $hit['action'] === 'review') ? 0 : (int) $settings->get('collect_in_status', '1'),
             'collect_id' => $collectId,
             'collect_source_id' => $source->id,
             'updated_at' => $now,
@@ -228,7 +360,7 @@ class CollectIngestService
                 $video->save();
                 VideoStatModel::query()->create([
                     'video_id' => $video->id,
-                    'hits' => 0,
+                    'hits' => $this->randomCollectHits(),
                     'hits_day' => 0,
                     'hits_week' => 0,
                     'hits_month' => 0,
@@ -338,6 +470,68 @@ class CollectIngestService
                 ['sort' => $sort--, 'role_name' => '']
             );
         }
+    }
+
+    private function applySynonyms(string $title): string
+    {
+        if ($title === '' || ! Schema::hasTable('video_synonyms')) {
+            return $title;
+        }
+        try {
+            $rows = VideoSynonym::query()->where('status', 1)->orderBy('id')->get(['from_word', 'to_word']);
+        } catch (\Throwable) {
+            return $title;
+        }
+        foreach ($rows as $row) {
+            $from = (string) $row->from_word;
+            if ($from !== '') {
+                $title = str_replace($from, (string) $row->to_word, $title);
+            }
+        }
+
+        return trim($title);
+    }
+
+    private function localizeCover(string $url): string
+    {
+        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+            return $url;
+        }
+        try {
+            $resp = Http::timeout(15)->withHeaders(['User-Agent' => 'LaraVideo/1.0'])->get($url);
+            if (! $resp->successful() || $resp->body() === '') {
+                return $url;
+            }
+            $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
+            $ext = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+            $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'jpg';
+            if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                $ext = 'jpg';
+            }
+            $name = md5($url.microtime(true)).'.'.$ext;
+            $dir = storage_path('app/public/covers');
+            File::ensureDirectoryExists($dir);
+            File::put($dir.DIRECTORY_SEPARATOR.$name, $resp->body());
+
+            return '/storage/covers/'.$name;
+        } catch (\Throwable) {
+            return $url;
+        }
+    }
+
+    private function randomCollectHits(): int
+    {
+        $settings = app(\App\Services\Video\VideoSettingService::class);
+        $min = max(0, (int) $settings->get('collect_hits_min', '0'));
+        $max = max(0, (int) $settings->get('collect_hits_max', '0'));
+        if ($min < 1 && $max < 1) {
+            return 0;
+        }
+        if ($max < $min) {
+            $max = $min;
+        }
+
+        return random_int($min, $max);
     }
 
     /** @return array<string, int> */

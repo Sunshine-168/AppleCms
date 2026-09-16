@@ -109,6 +109,10 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/collects/classes', [Collect::class, 'classes'])->name('admin.video.collects.classes');
     Route::post('/video/collects/bind', [Collect::class, 'bind'])->name('admin.video.collects.bind');
     Route::post('/video/collects/run', [Collect::class, 'run'])->name('admin.video.collects.run');
+    Route::post('/video/collects/resume', [Collect::class, 'resume']);
+    Route::post('/video/collects/retry', [Collect::class, 'retry']);
+    Route::post('/video/collects/suggest', [Collect::class, 'suggestBind']);
+    Route::post('/video/sources/disable', [Video::class, 'disableSource']);
 
     // 视频标签管理
     Route::get('/video/tags', [Video::class, 'showTags'])->name('admin.video.tags');// 显示视频标签管理页
@@ -143,11 +147,20 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/templates', [SiteOps::class, 'templates']);
     Route::get('/video/templates/read', [SiteOps::class, 'templateRead']);
     Route::post('/video/templates/save', [SiteOps::class, 'templateSave']);
+    Route::post('/video/templates/backup', [SiteOps::class, 'templateBackup']);
+    Route::post('/video/templates/rollback', [SiteOps::class, 'templateRollback']);
     Route::get('/video/visits', [SiteOps::class, 'visits']);
     Route::get('/video/push', [SiteOps::class, 'push']);
     Route::post('/video/push/run', [SiteOps::class, 'pushRun']);
     Route::get('/video/make', [SiteOps::class, 'make']);
     Route::post('/video/make/run', [SiteOps::class, 'makeRun']);
+    Route::post('/video/playfails/offline', [SiteOps::class, 'disableFailSource']);
+    Route::get('/video/wizard', [SiteOps::class, 'wizard']);
+    Route::post('/video/hits-reset', [SiteOps::class, 'hitsReset']);
+    Route::get('/video/rewrite', [SiteOps::class, 'rewrite']);
+    Route::get('/video/safety', [SiteOps::class, 'safety']);
+    Route::post('/video/safety/scan', [SiteOps::class, 'malwareScan']);
+    Route::post('/video/batch-replace-url', [SiteOps::class, 'batchReplaceUrl']);
 
     Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
     Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());

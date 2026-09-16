@@ -85,12 +85,60 @@ class VideoService
             $where[] = ['is_hot', '=', (int)$isHot];
         }
 
+        $lock = $params['lock'] ?? null;
+        if ($lock !== null && $lock !== '') {
+            $where[] = ['lock', '=', (int) $lock];
+        }
+        $year = trim((string) ($params['year'] ?? ''));
+        if ($year !== '') {
+            $where[] = ['year', '=', $year];
+        }
+        $area = trim((string) ($params['area'] ?? ''));
+        if ($area !== '') {
+            $where['area'] = ['like' => '%'.$area.'%'];
+        }
+        $pointsMin = $params['points_min'] ?? null;
+        if ($pointsMin !== null && $pointsMin !== '') {
+            $where[] = ['points', '>=', (int) $pointsMin];
+        }
+
         $limit = (int)($params['limit'] ?? 10);
         if ($limit < 1) {
             $limit = 10;
         }
 
-        $data = $this->videoModel->paginates($where, '*', $limit, ['id' => 'desc']);
+        $emptyUrl = (string) ($params['empty_url'] ?? '') === '1';
+        $repeat = (string) ($params['repeat'] ?? '') === '1';
+        $needPoints = (string) ($params['need_points'] ?? '') === '1';
+        if ($emptyUrl || $repeat || $needPoints) {
+            $q = VideoModel::query();
+            if ($title !== '') {
+                $q->where('title', 'like', '%'.$title.'%');
+            }
+            if ($typeId !== null && $typeId !== '') {
+                $q->where('type_id', (int) $typeId);
+            }
+            if ($status !== null && $status !== '') {
+                $q->where('status', (int) $status);
+            }
+            if ($needPoints) {
+                $q->where('points', '>', 0);
+            }
+            if ($emptyUrl) {
+                $q->whereDoesntHave('episodes');
+            }
+            if ($repeat) {
+                $dup = VideoModel::query()->select('title')->groupBy('title')->havingRaw('COUNT(*) > 1')->pluck('title');
+                $q->whereIn('title', $dup);
+            }
+            $page = $q->orderByDesc('id')->paginate($limit);
+            $data = [
+                'total' => $page->total(),
+                'data' => collect($page->items())->map(fn ($row) => $row->toArray())->all(),
+            ];
+        } else {
+            $data = $this->videoModel->paginates($where, '*', $limit, ['id' => 'desc']);
+        }
 
         $typeIds = [];
         $videoIds = [];
@@ -1140,6 +1188,13 @@ class VideoService
             return Result::success(['count' => count($ids)]);
         }
 
+        if ($action === 'merge') {
+            return $this->mergeVideos($ids, (int) $value);
+        }
+        if ($action === 'replace_url') {
+            return app(\App\Services\Video\SiteOpsService::class)->replacePlayUrl('', '', $ids, (string) $value);
+        }
+
         $payload = ['updated_at' => $now];
         match ($action) {
             'status' => $payload['status'] = (int) $value,
@@ -1147,6 +1202,7 @@ class VideoService
             'hot' => $payload['is_hot'] = (int) $value,
             'lock' => $payload['lock'] = (int) $value,
             'type' => $payload['type_id'] = (int) $value,
+            'points' => $payload['points'] = (int) $value,
             default => null,
         };
         if (count($payload) === 1) {
@@ -1160,5 +1216,39 @@ class VideoService
         $ok = $this->videoModel->updateByCondition([['id', 'in', $ids]], $payload);
 
         return $ok ? Result::success(['count' => count($ids)]) : Result::fail();
+    }
+
+    public function mergeVideos(array $ids, int $keepId = 0): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (count($ids) < 2) {
+            return Result::fail('请至少选择两部影片');
+        }
+        if ($keepId < 1 || ! in_array($keepId, $ids, true)) {
+            $keepId = min($ids);
+        }
+        $keep = $this->videoModel->findById($keepId);
+        if (empty($keep)) {
+            return Result::fail('保留影片不存在');
+        }
+        $drop = array_values(array_filter($ids, fn ($id) => $id !== $keepId));
+        foreach ($drop as $id) {
+            $this->videoSourceModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId, 'updated_at' => time()]);
+            $this->videoEpisodeModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId]);
+            $this->deleteVideo($id);
+        }
+
+        return Result::success(['keep_id' => $keepId, 'merged' => count($drop)], '已合并到 ID '.$keepId);
+    }
+
+    public function disableSource(int $sourceId): array
+    {
+        $row = $this->videoSourceModel->findById($sourceId);
+        if (empty($row)) {
+            return Result::fail('线路不存在');
+        }
+        $ok = $this->videoSourceModel->updateById($sourceId, ['status' => 0, 'updated_at' => time()]);
+
+        return $ok ? Result::success([], '已下线该线路') : Result::fail();
     }
 }

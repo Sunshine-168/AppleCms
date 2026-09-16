@@ -30,8 +30,11 @@
   @if($module === 'topics')
   <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bind">绑片</a>
   @endif
-  @if($module === 'collect_tasks')
+          @if($module === 'collect_tasks')
   <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="run">执行</a>
+  @endif
+  @if($module === 'playfails')
+  <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="offline">下线线路</a>
   @endif
   <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
 </script>
@@ -74,7 +77,7 @@ layui.use(['layer','form','table'], function(){
     if (c === 'id') return;
     tableCols.push({field:c, title:c, minWidth:120});
   });
-  tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks'], true) ? 220 : 150 }}});
+  tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks','playfails'], true) ? 240 : 150 }}});
   table.render({
     elem:'#mod-table', id:'mod-table', url:'/admin/video/'+module+'/list', page:true,
     parseData:function(res){
@@ -133,6 +136,15 @@ layui.use(['layer','form','table'], function(){
         table.reload('mod-table');
         layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
       },'json');
+    }
+    if(obj.event==='offline'){
+      layer.confirm('确认下线该失败记录关联的播放线路？', function(i){
+        $.post('/admin/video/playfails/offline', {id: obj.data.id}, function(r){
+          layer.close(i);
+          table.reload('mod-table');
+          layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
+        },'json');
+      });
     }
     if(obj.event==='del'){
       layer.confirm('确认删除？', function(i){

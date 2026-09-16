@@ -7,13 +7,13 @@ use Illuminate\Console\Command;
 
 class VideoHtmlMakeCommand extends Command
 {
-    protected $signature = 'video:html-make';
+    protected $signature = 'video:html-make {scope=all}';
 
-    protected $description = '清理模板与全页 HTML 缓存';
+    protected $description = '生成 public/html 静态页';
 
     public function handle(SiteOpsService $ops): int
     {
-        $result = $ops->makeHtml();
+        $result = $ops->makeHtml((string) $this->argument('scope'));
         $this->line((string) ($result['msg'] ?? ''));
 
         return self::SUCCESS;
