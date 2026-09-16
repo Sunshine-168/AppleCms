@@ -23,5 +23,9 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::defaultView('pagination.default');
         Paginator::defaultSimpleView('pagination.simple');
+        try {
+            app(\App\Services\Video\VideoSettingService::class)->applyRuntime();
+        } catch (\Throwable) {
+        }
     }
 }

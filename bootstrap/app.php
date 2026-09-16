@@ -16,8 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('video:collect-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
+
         try {
-            // 表不存在则直接返回
             if (!Schema::hasTable('sys_schedule'))
             {
                 return;
@@ -45,7 +47,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 // Cron 表达式合法性校验
                 try {
-                    \Cron\CronExpression::factory($cron);
+                    if (! \Cron\CronExpression::isValidExpression($cron)) {
+                        $cron = '* * * * *';
+                    }
                 } catch (\Throwable) {
                     $cron = '* * * * *';
                 }
@@ -85,8 +89,6 @@ return Application::configure(basePath: dirname(__DIR__))
         } catch (\Throwable $e) {
             Syslog::exception('system', $e, 'sys_schedule scheduler');
         }
-
-        $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prependToGroup('web', \App\Http\Middleware\CheckInstalled::class);
@@ -94,6 +96,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'member.auth' => \App\Http\Middleware\MemberAuth::class,
             'vod.html' => \App\Http\Middleware\VideoHtmlCache::class,
         ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\VisitStat::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

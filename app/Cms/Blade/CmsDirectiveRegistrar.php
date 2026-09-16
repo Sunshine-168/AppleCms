@@ -4,10 +4,12 @@ namespace App\Cms\Blade;
 
 use App\Cms\CmsViewContext;
 use App\Services\Video\Tags\ActorTag;
+use App\Services\Video\Tags\AdTag;
 use App\Services\Video\Tags\CommentTag;
 use App\Services\Video\Tags\EpisodeTag;
 use App\Services\Video\Tags\FilterTag;
 use App\Services\Video\Tags\FormatTag;
+use App\Services\Video\Tags\GuestbookTag;
 use App\Services\Video\Tags\LinkTag;
 use App\Services\Video\Tags\PrevNextTag;
 use App\Services\Video\Tags\SeoTag;
@@ -75,6 +77,8 @@ class CmsDirectiveRegistrar
         $this->registerLoop('vodEpisode', EpisodeTag::class);
         $this->registerLoop('vodComment', CommentTag::class);
         $this->registerLoop('vodLink', LinkTag::class);
+        $this->registerLoop('vodAd', AdTag::class);
+        $this->registerLoop('vodGbook', GuestbookTag::class);
     }
 
     /** @param  class-string  $tagClass */

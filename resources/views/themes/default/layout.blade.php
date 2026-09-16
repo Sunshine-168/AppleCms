@@ -18,6 +18,9 @@
             @vodTopic(['num' => 6])
                 <a href="{{ $item->url }}">{{ $item->name }}</a>
             @endvodTopic
+            @vodAd(['slot' => 'header'])
+                {!! $item->content !!}
+            @endvodAd
         </nav>
         <form class="search" action="{{ vod_url('search') }}" method="get">
             <input type="search" name="wd" value="{{ request('wd', request('q')) }}" placeholder="搜影片">
@@ -40,7 +43,10 @@
         @vodLink
             <a href="{{ $item->url }}" target="_blank" rel="nofollow">{{ $item->name }}</a>
         @endvodLink
-        <div>{{ $site['title'] ?? config('app.name') }} · LaraVideo</div>
+        @vodAd(['slot' => 'footer'])
+            {!! $item->content !!}
+        @endvodAd
+        <div>{{ $site['title'] ?? config('app.name') }} · LaraVideo · <a href="{{ url('/gbook') }}">留言</a></div>
     </div>
 </footer>
 </body>

@@ -20,6 +20,16 @@ class VideoSettingService
             'site_description' => (string) config('video.site.description', ''),
             'html_cache_enabled' => (string) (int) config('video.html_cache.enabled', false),
             'html_cache_ttl' => (string) (int) config('video.html_cache.ttl', 3600),
+            'rewrite_mode' => (string) config('video.rewrite.mode', 'laravel'),
+            'rewrite_suffix' => (string) config('video.rewrite.suffix', '.html'),
+            'baidu_push_token' => '',
+            'storage_disk' => 'local',
+            's3_key' => '',
+            's3_secret' => '',
+            's3_region' => 'us-east-1',
+            's3_bucket' => '',
+            's3_endpoint' => '',
+            's3_url' => '',
         ];
         if (! $this->ready()) {
             return $defaults;
@@ -48,7 +58,11 @@ class VideoSettingService
             return Result::fail('请先执行数据库迁移');
         }
         $now = time();
-        $keys = ['site_title', 'site_keyword', 'site_description', 'html_cache_enabled', 'html_cache_ttl'];
+        $keys = [
+            'site_title', 'site_keyword', 'site_description', 'html_cache_enabled', 'html_cache_ttl',
+            'rewrite_mode', 'rewrite_suffix', 'baidu_push_token', 'storage_disk',
+            's3_key', 's3_secret', 's3_region', 's3_bucket', 's3_endpoint', 's3_url',
+        ];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;
@@ -61,8 +75,38 @@ class VideoSettingService
         }
         Cache::forget(self::CACHE_KEY);
         Cache::flush();
+        $this->applyRuntime();
 
         return Result::success([], '已保存');
+    }
+
+    public function applyRuntime(): void
+    {
+        try {
+            $all = $this->all();
+        } catch (\Throwable) {
+            return;
+        }
+        config([
+            'video.rewrite.mode' => (string) ($all['rewrite_mode'] ?? config('video.rewrite.mode', 'laravel')),
+            'video.rewrite.suffix' => (string) ($all['rewrite_suffix'] ?? config('video.rewrite.suffix', '.html')),
+            'video.storage_disk' => (string) ($all['storage_disk'] ?? 'local'),
+        ]);
+        if (($all['storage_disk'] ?? 'local') === 's3' && (string) ($all['s3_bucket'] ?? '') !== '') {
+            config([
+                'filesystems.disks.vod' => [
+                    'driver' => 's3',
+                    'key' => (string) ($all['s3_key'] ?? ''),
+                    'secret' => (string) ($all['s3_secret'] ?? ''),
+                    'region' => (string) ($all['s3_region'] ?? 'us-east-1'),
+                    'bucket' => (string) ($all['s3_bucket'] ?? ''),
+                    'url' => (string) ($all['s3_url'] ?? ''),
+                    'endpoint' => (string) ($all['s3_endpoint'] ?? '') ?: null,
+                    'use_path_style_endpoint' => true,
+                    'throw' => false,
+                ],
+            ]);
+        }
     }
 
     public function site(): array
@@ -76,6 +120,16 @@ class VideoSettingService
             'theme' => (string) config('video.theme', 'default'),
             'html_cache_enabled' => (int) ($all['html_cache_enabled'] ?? 0) === 1,
             'html_cache_ttl' => max(0, (int) ($all['html_cache_ttl'] ?? 3600)),
+            'rewrite_mode' => (string) ($all['rewrite_mode'] ?? config('video.rewrite.mode', 'laravel')),
+            'rewrite_suffix' => (string) ($all['rewrite_suffix'] ?? config('video.rewrite.suffix', '.html')),
+            'baidu_push_token' => (string) ($all['baidu_push_token'] ?? ''),
+            'storage_disk' => (string) ($all['storage_disk'] ?? 'local'),
+            's3_key' => (string) ($all['s3_key'] ?? ''),
+            's3_secret' => (string) ($all['s3_secret'] ?? ''),
+            's3_region' => (string) ($all['s3_region'] ?? ''),
+            's3_bucket' => (string) ($all['s3_bucket'] ?? ''),
+            's3_endpoint' => (string) ($all['s3_endpoint'] ?? ''),
+            's3_url' => (string) ($all['s3_url'] ?? ''),
         ];
     }
 

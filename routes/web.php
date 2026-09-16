@@ -58,6 +58,10 @@ Route::prefix('index.php/vod')->group(function () {
     Route::get('topic/id/{id}', [VodController::class, 'topic']);
 });
 
+Route::get('/gbook', [InteractionController::class, 'guestbookForm']);
+Route::post('/gbook', [InteractionController::class, 'guestbook'])->middleware('throttle:6,1');
+Route::post('/play/fail', [InteractionController::class, 'playFail'])->middleware('throttle:20,1');
+
 Route::get('/member/login', [MemberController::class, 'showLogin']);
 Route::post('/member/login', [MemberController::class, 'login'])->middleware('throttle:8,1');
 Route::get('/member/register', [MemberController::class, 'showRegister']);
@@ -69,4 +73,5 @@ Route::middleware('member.auth')->group(function () {
     Route::post('/member/redeem', [MemberController::class, 'redeem']);
     Route::get('/member/favorites', [MemberController::class, 'favorites']);
     Route::get('/member/history', [MemberController::class, 'histories']);
+    Route::get('/member/inbox', [MemberController::class, 'inbox']);
 });

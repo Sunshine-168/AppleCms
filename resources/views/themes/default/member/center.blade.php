@@ -7,6 +7,7 @@
     <p>
         <a href="{{ url('/member/favorites') }}">我的收藏</a>
         · <a href="{{ url('/member/history') }}">观看历史</a>
+        · <a href="{{ url('/member/inbox') }}">站内信</a>
     </p>
     <h2>卡密充值</h2>
     <form method="post" action="{{ url('/member/redeem') }}">

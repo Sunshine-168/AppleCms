@@ -50,6 +50,60 @@
           </div>
         </div>
         <div class="layui-form-item">
+          <label class="layui-form-label">伪静态</label>
+          <div class="layui-input-block">
+            <select name="rewrite_mode">
+              <option value="laravel" @selected(($site['rewrite_mode'] ?? 'laravel')==='laravel')>Laravel 路由</option>
+              <option value="mac" @selected(($site['rewrite_mode'] ?? '')==='mac')>苹果风格 index.php/vod</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">后缀</label>
+          <div class="layui-input-block">
+            <input type="text" name="rewrite_suffix" value="{{ $site['rewrite_suffix'] ?? '.html' }}" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">百度Token</label>
+          <div class="layui-input-block">
+            <input type="text" name="baidu_push_token" value="{{ $site['baidu_push_token'] ?? '' }}" class="layui-input" placeholder="站长平台推送 token">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">附件存储</label>
+          <div class="layui-input-block">
+            <select name="storage_disk">
+              <option value="local" @selected(($site['storage_disk'] ?? 'local')==='local')>本地 public</option>
+              <option value="s3" @selected(($site['storage_disk'] ?? '')==='s3')>S3/OSS/COS 兼容</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">S3 Key</label>
+          <div class="layui-input-block"><input type="text" name="s3_key" value="{{ $site['s3_key'] ?? '' }}" class="layui-input"></div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">S3 Secret</label>
+          <div class="layui-input-block"><input type="text" name="s3_secret" value="{{ $site['s3_secret'] ?? '' }}" class="layui-input"></div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">Region</label>
+          <div class="layui-input-block"><input type="text" name="s3_region" value="{{ $site['s3_region'] ?? '' }}" class="layui-input"></div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">Bucket</label>
+          <div class="layui-input-block"><input type="text" name="s3_bucket" value="{{ $site['s3_bucket'] ?? '' }}" class="layui-input"></div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">Endpoint</label>
+          <div class="layui-input-block"><input type="text" name="s3_endpoint" value="{{ $site['s3_endpoint'] ?? '' }}" class="layui-input" placeholder="OSS/COS 自定义域名接口"></div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">访问URL</label>
+          <div class="layui-input-block"><input type="text" name="s3_url" value="{{ $site['s3_url'] ?? '' }}" class="layui-input" placeholder="https://cdn.example.com"></div>
+        </div>
+        <div class="layui-form-item">
           <div class="layui-input-block">
             <button type="button" class="layui-btn" id="site-save">保存</button>
           </div>

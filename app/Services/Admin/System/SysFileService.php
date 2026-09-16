@@ -134,6 +134,18 @@ class SysFileService
 
         $url = '/' . ltrim(str_replace('\\', '/', $stored), '/');
 
+        try {
+            $disk = (string) app(\App\Services\Video\VideoSettingService::class)->get('storage_disk', 'local');
+            $cdn = rtrim((string) app(\App\Services\Video\VideoSettingService::class)->get('s3_url', ''), '/');
+            if ($disk === 's3' && is_file($fullPath)) {
+                \Illuminate\Support\Facades\Storage::disk('vod')->put($stored, (string) file_get_contents($fullPath));
+                if ($cdn !== '') {
+                    $url = $cdn.'/'.$stored;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
         $type = $this->detectType($ext);
 
         $now = time();

@@ -62,4 +62,41 @@ class InteractionController extends Controller
 
         return Ajax::message($result['code'], $result['msg'], $result['data']);
     }
+
+    public function playFail(Request $request): JsonResponse
+    {
+        $data = app(\App\Services\Video\SiteOpsService::class)->addPlayFail(
+            (int) $request->input('video_id', 0),
+            (int) $request->input('source_id', 0),
+            (int) $request->input('episode_id', 0),
+            (string) $request->input('url', ''),
+            (string) $request->input('content', ''),
+            (string) $request->ip()
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function guestbookForm(\App\Services\Video\SiteFrontService $front): \Illuminate\View\View
+    {
+        $site = $front->bootSite();
+
+        return view($front->themeView('vod.gbook'), compact('site'));
+    }
+
+    public function guestbook(Request $request): RedirectResponse
+    {
+        $member = Auth::guard('member')->user();
+        $data = app(\App\Services\Video\SiteOpsService::class)->addGuestbook(
+            (string) $request->input('author_name', $member->name ?? ''),
+            (string) $request->input('content', ''),
+            (int) ($member->id ?? 0),
+            (string) $request->ip()
+        );
+        if ($data['code'] !== 0) {
+            return back()->with('error', $data['msg']);
+        }
+
+        return back()->with('status', $data['msg']);
+    }
 }

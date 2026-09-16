@@ -120,7 +120,9 @@ class SysScheduleService
         $cronExpression = trim($cronExpression);
 
         try {
-            CronExpression::factory($cronExpression);
+            if (! CronExpression::isValidExpression($cronExpression)) {
+                return Result::fail('cron表达式格式错误');
+            }
         } catch (\Throwable) {
             return Result::fail('cron表达式格式错误');
         }
@@ -140,7 +142,7 @@ class SysScheduleService
 
         try {
 
-            $cron = CronExpression::factory($cronExpression);
+            $cron = new CronExpression($cronExpression);
 
             $nextRunTime = $cron->getNextRunDate()->getTimestamp();
 
@@ -322,7 +324,7 @@ class SysScheduleService
 
         try {
 
-            $cron = CronExpression::factory($task['cron_expression']);
+            $cron = new CronExpression($task['cron_expression']);
 
             $nextRun = $cron->getNextRunDate()->getTimestamp();
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\System\SysPerm;
 use App\Http\Controllers\Admin\Video\Video;
 use App\Http\Controllers\Admin\Video\Collect;
 use App\Http\Controllers\Admin\Video\SiteModule;
+use App\Http\Controllers\Admin\Video\SiteOps;
 use App\Http\Controllers\Admin\Video\SiteSetting;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
@@ -135,13 +136,23 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/settings', [SiteSetting::class, 'index']);
     Route::post('/video/settings', [SiteSetting::class, 'save']);
     Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
+    Route::post('/video/collect_tasks/run', [SiteModule::class, 'runCollectTask']);
     Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
     Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');
 
-    Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
-    Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
-    Route::post('/video/{module}/save', [SiteModule::class, 'save'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
-    Route::post('/video/{module}/delete', [SiteModule::class, 'delete'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
+    Route::get('/video/templates', [SiteOps::class, 'templates']);
+    Route::get('/video/templates/read', [SiteOps::class, 'templateRead']);
+    Route::post('/video/templates/save', [SiteOps::class, 'templateSave']);
+    Route::get('/video/visits', [SiteOps::class, 'visits']);
+    Route::get('/video/push', [SiteOps::class, 'push']);
+    Route::post('/video/push/run', [SiteOps::class, 'pushRun']);
+    Route::get('/video/make', [SiteOps::class, 'make']);
+    Route::post('/video/make/run', [SiteOps::class, 'makeRun']);
+
+    Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
+    Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
+    Route::post('/video/{module}/save', [SiteModule::class, 'save'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
+    Route::post('/video/{module}/delete', [SiteModule::class, 'delete'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
     
     // 附件管理
     Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页

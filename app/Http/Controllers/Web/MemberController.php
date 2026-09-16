@@ -135,6 +135,16 @@ class MemberController extends Controller
         ]);
     }
 
+    public function inbox(): View
+    {
+        $site = $this->front->bootSite();
+        $member = Auth::guard('member')->user();
+        $messages = app(\App\Services\Video\SiteOpsService::class)->memberInbox((int) $member->id);
+        \App\Models\Member\MemberPm::query()->where('to_id', $member->id)->where('is_read', 0)->update(['is_read' => 1]);
+
+        return view($this->front->themeView('member.inbox'), compact('site', 'member', 'messages'));
+    }
+
     private function page(string $view): View
     {
         $site = $this->front->bootSite();

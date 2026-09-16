@@ -17,6 +17,7 @@ class CollectIngestService
     public function __construct(
         private readonly MacResourceClient $client,
         private readonly PlayUrlParser $parser,
+        private readonly CollectAuditService $audit,
     ) {}
 
     public function fetchClasses(int $sourceId): array
@@ -160,6 +161,15 @@ class CollectIngestService
             return ['action' => 'skipped', 'msg' => '未绑定分类', 'title' => $title, 'remote_type' => $remoteType];
         }
 
+        $hit = $this->audit->inspect(
+            $title,
+            (string) ($item['vod_content'] ?? ''),
+            (string) ($item['vod_actor'] ?? '')
+        );
+        if ($hit && $hit['action'] === 'skip') {
+            return ['action' => 'skipped', 'msg' => '审核拦截:'.$hit['rule'], 'title' => $title];
+        }
+
         $type = VideoTypeModel::query()->find($typeId);
         $typePid = (int) ($type?->parent_id ?: 0);
         $collectId = (string) ($item['vod_id'] ?? '');
@@ -203,13 +213,13 @@ class CollectIngestService
             'isend' => (int) ($item['vod_isend'] ?? 0),
             'letter' => VideoMeta::letter($title),
             'score' => (float) ($item['vod_score'] ?? 0),
-            'status' => 1,
+            'status' => ($hit && $hit['action'] === 'review') ? 0 : 1,
             'collect_id' => $collectId,
             'collect_source_id' => $source->id,
             'updated_at' => $now,
         ];
 
-        return DB::transaction(function () use ($video, $payload, $item, $now, $title) {
+        return DB::transaction(function () use ($video, $payload, $item, $now, $title, $hit) {
             $action = 'updated';
             if (! $video) {
                 $payload['created_at'] = $now;
@@ -239,7 +249,7 @@ class CollectIngestService
             $this->mergePlay($video, (string) ($item['vod_down_from'] ?? ''), (string) ($item['vod_down_url'] ?? ''), $now, 'down');
             $this->syncPeople($video, $item);
 
-            return ['action' => $action, 'msg' => 'ok', 'title' => $title, 'id' => $video->id];
+            return ['action' => $action, 'msg' => ($hit ? '审核:'.$hit['rule'] : 'ok'), 'title' => $title, 'id' => $video->id];
         });
     }
 

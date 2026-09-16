@@ -11,6 +11,12 @@
             <p class="muted">暂无播放地址</p>
         @endif
     </div>
+    @vodAd(['slot' => 'play'])
+        <div class="desc">{!! $item->content !!}</div>
+    @endvodAd
+    <p>
+        <button type="button" id="play-fail">播放报错</button>
+    </p>
     <div class="lines">
         @vodSource(['type' => 'play'])
             <a class="{{ ($source?->id ?? 0) === $item->id ? 'on' : '' }}" href="{{ vod_url('play', ['id' => $video->id, 'sid' => $item->id]) }}">{{ $item->name }}</a>
@@ -32,5 +38,18 @@
             localStorage.setItem(key, JSON.stringify(list.slice(0, 30)));
         } catch (e) {}
     })();
+    document.getElementById('play-fail')?.addEventListener('click', function(){
+        fetch(@json(url('/play/fail')), {
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
+            body: JSON.stringify({
+                video_id: {{ (int) $video->id }},
+                source_id: {{ (int) ($source?->id ?? 0) }},
+                episode_id: {{ (int) ($episode?->id ?? 0) }},
+                url: location.href,
+                content: '播放失败'
+            })
+        }).then(function(r){ return r.json(); }).then(function(res){ alert(res.msg || '已提交'); }).catch(function(){ alert('提交失败'); });
+    });
     </script>
 @endsection
