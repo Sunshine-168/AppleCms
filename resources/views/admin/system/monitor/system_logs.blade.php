@@ -1,188 +1,78 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>{{conf('name')}}</title>
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}" media="all">
-    <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}" media="all">
-</head>
-<body>
-<div class="layui-fluid">
-    <div class="layui-card">
-        <div class="layui-card-body">
-            <form class="layui-form" lay-filter="system-log-search">
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <input type="text" name="level" placeholder="级别 info/error..." autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="channel" placeholder="通道" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="module" placeholder="模块" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="username" placeholder="用户名" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="uid" placeholder="UID" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="request_id" placeholder="RequestId" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <select name="method">
-                            <option value="">请求方法</option>
-                            <option value="GET">GET</option>
-                            <option value="POST">POST</option>
-                            <option value="PUT">PUT</option>
-                            <option value="PATCH">PATCH</option>
-                            <option value="DELETE">DELETE</option>
-                        </select>
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="url" placeholder="URL" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="ip" placeholder="IP" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="start_time" id="system-log-start" placeholder="开始日期" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <input type="text" name="end_time" id="system-log-end" placeholder="结束日期" autocomplete="off" class="layui-input">
-                    </div>
-                    <div class="layui-inline">
-                        <button class="layui-btn" lay-submit lay-filter="system-log-search-btn">查询</button>
-                        <button type="reset" class="layui-btn layui-btn-primary" id="system-log-reset-btn">重置</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+@extends('admin.layouts.inner')
+@section('title', '系统日志')
 
-    <div class="layui-card">
-        <div class="layui-card-body">
-            <table id="system-log-table" lay-filter="system-log-table"></table>
-        </div>
+@section('plain')
+<div class="card card-panel">
+    <div class="card-body">
+        <form class="filter-bar" id="system-log-search" onsubmit="return false;">
+            <input type="text" name="level" placeholder="级别 info/error...">
+            <input type="text" name="channel" placeholder="通道">
+            <input type="text" name="module" placeholder="模块">
+            <input type="text" name="username" placeholder="用户名">
+            <input type="text" name="uid" placeholder="UID">
+            <input type="text" name="request_id" placeholder="RequestId">
+            <select name="method">
+                <option value="">请求方法</option>
+                <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
+            </select>
+            <input type="text" name="url" placeholder="URL">
+            <input type="text" name="ip" placeholder="IP">
+            <input type="date" name="start_time">
+            <input type="date" name="end_time">
+            <button type="button" class="btn btn-sm" id="system-log-search-btn">查询</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="system-log-reset-btn">重置</button>
+            <button type="button" class="btn btn-muted btn-sm" id="system-log-refresh-btn">刷新</button>
+        </form>
     </div>
 </div>
+<div class="card card-panel">
+    <div class="card-body"><div id="system-log-table"></div></div>
+</div>
+@endsection
 
-<script type="text/html" id="system-log-toolbar">
-    <div class="layui-btn-container">
-        <button class="layui-btn layui-btn-sm layui-btn-primary" lay-event="refresh">刷新</button>
-    </div>
-</script>
-
-<script type="text/html" id="system-log-rowbar">
-    <a class="layui-btn layui-btn-xs" lay-event="detail">查看</a>
-</script>
-
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@push('scripts')
 <script>
-    layui.use(['table', 'form', 'layer', 'laydate'], function () {
-        var $ = layui.$;
-        var table = layui.table;
-        var form = layui.form;
-        var layer = layui.layer;
-        var laydate = layui.laydate;
-
-        laydate.render({elem: '#system-log-start', type: 'date'});
-        laydate.render({elem: '#system-log-end', type: 'date'});
-
-        table.render({
-            elem: '#system-log-table',
-            id: 'system-log-table',
-            url: '/admin/system/monitor/system-logs/list',
-            method: 'get',
-            page: true,
-            toolbar: '#system-log-toolbar',
-            defaultToolbar: [],
-            parseData: function (res) {
-                var data = res && res.data ? res.data : {};
-                return {
-                    code: res && typeof res.code === 'number' ? res.code : 1,
-                    msg: res && typeof res.msg === 'string' ? res.msg : '',
-                    count: data && typeof data.total === 'number' ? data.total : 0,
-                    data: data && Array.isArray(data.data) ? data.data : []
-                };
-            },
-            cols: [[
-                {field: 'id', title: 'ID', width: 90, sort: true},
-                {field: 'level', title: '级别', width: 100},
-                {field: 'channel', title: '通道', width: 120},
-                {field: 'module', title: '模块', width: 120},
-                {field: 'username', title: '用户名', width: 140},
-                {field: 'uid', title: 'UID', width: 90},
-                {field: 'request_id', title: 'RequestId', width: 180},
-                {field: 'method', title: '方法', width: 90},
-                {field: 'ip', title: 'IP', width: 140},
-                {field: 'url', title: 'URL', minWidth: 220},
-                {field: 'exception_class', title: '异常类', width: 200},
-                {field: 'file', title: '文件', minWidth: 220, templet: function (d) {
-                    var file = d.file || '';
-                    var line = d.line || 0;
-                    return file ? (file + ':' + line) : '';
-                }},
-                {field: 'create_time', title: '时间', width: 180},
-                {fixed: 'right', title: '操作', toolbar: '#system-log-rowbar', width: 80}
-            ]]
-        });
-
-        form.on('submit(system-log-search-btn)', function (obj) {
-            table.reload('system-log-table', {
-                where: obj.field || {},
-                page: {curr: 1}
-            });
-            return false;
-        });
-
-        $('#system-log-reset-btn').on('click', function () {
-            table.reload('system-log-table', {
-                where: {},
-                page: {curr: 1}
-            });
-        });
-
-        table.on('toolbar(system-log-table)', function (obj) {
-            if (obj.event === 'refresh') {
-                table.reload('system-log-table');
-            }
-        });
-
-        table.on('tool(system-log-table)', function (obj) {
-            if (obj.event !== 'detail') {
-                return;
-            }
-
-            var d = obj.data || {};
-            var html = ''
-                + '<div style="padding: 12px 16px;">'
-                + '<div><b>Message</b></div>'
-                + '<pre style="white-space: pre-wrap; word-break: break-all;">' + (d.message || '') + '</pre>'
-                + '<div style="margin-top: 10px;"><b>Exception</b></div>'
-                + '<pre style="white-space: pre-wrap; word-break: break-all;">' + (d.exception_message || '') + '</pre>'
-                + '<div style="margin-top: 10px;"><b>Context</b></div>'
-                + '<pre style="white-space: pre-wrap; word-break: break-all;">' + (d.context || '') + '</pre>'
-                + '<div style="margin-top: 10px;"><b>Extra</b></div>'
-                + '<pre style="white-space: pre-wrap; word-break: break-all;">' + (d.extra || '') + '</pre>'
-                + '<div style="margin-top: 10px;"><b>Trace</b></div>'
-                + '<pre style="white-space: pre-wrap; word-break: break-all; max-height: 360px; overflow: auto;">' + (d.trace || '') + '</pre>'
-                + '</div>';
-
-            layer.open({
-                type: 1,
-                title: '系统日志详情',
-                area: ['860px', '680px'],
-                shadeClose: true,
-                content: html
-            });
+(function () {
+    var U = AdminUi;
+    var table = U.table({
+        el: '#system-log-table',
+        url: '/admin/system/monitor/system-logs/list',
+        cols: [
+            {key: 'id', title: 'ID', width: 70},
+            {key: 'level', title: '级别', width: 80},
+            {key: 'channel', title: '通道', width: 90},
+            {key: 'module', title: '模块', width: 90},
+            {key: 'username', title: '用户名', width: 110},
+            {key: 'uid', title: 'UID', width: 70},
+            {key: 'request_id', title: 'RequestId', width: 140},
+            {key: 'method', title: '方法', width: 70},
+            {key: 'ip', title: 'IP', width: 110},
+            {key: 'url', title: 'URL'},
+            {key: 'exception_class', title: '异常类'},
+            {title: '文件', html: function (d) { return d.file ? U.escape(d.file + ':' + (d.line || 0)) : ''; }},
+            {key: 'create_time', title: '时间', width: 150},
+            {title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-detail">查看</a>'; }}
+        ]
+    });
+    U.on('#system-log-search-btn', 'click', function () { table.reload(U.formData('#system-log-search')); });
+    U.on('#system-log-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
+    U.on('#system-log-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#system-log-table', 'click', function (e) {
+        var a = e.target.closest('a'); if (!a || !a.classList.contains('js-detail')) return;
+        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        if (!row) return;
+        e.preventDefault();
+        U.dialog({
+            title: '系统日志详情',
+            wide: true,
+            hideOk: true,
+            content: '<p><b>Message</b></p><pre class="out">' + U.escape(row.message || '') + '</pre>'
+                + '<p><b>Exception</b></p><pre class="out">' + U.escape(row.exception_message || '') + '</pre>'
+                + '<p><b>Context</b></p><pre class="out">' + U.escape(row.context || '') + '</pre>'
+                + '<p><b>Extra</b></p><pre class="out">' + U.escape(row.extra || '') + '</pre>'
+                + '<p><b>Trace</b></p><pre class="out">' + U.escape(row.trace || '') + '</pre>'
         });
     });
+})();
 </script>
-</body>
-</html>
-
+@endpush

@@ -1,65 +1,55 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 静态生成</title>
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-</head>
-<body>
-<div class="layui-fluid" style="padding:16px;">
-  <div class="layui-card">
-    <div class="layui-card-header">写出静态 HTML 到 public/html</div>
-    <div class="layui-card-body">
-      <p class="layui-word-aux">会请求前台页面并把结果写成文件：首页、分类、详情。可配合 Web 服务器把 html 目录当静态根。</p>
-      <div class="layui-btn-container" style="margin-top:12px;">
-        <button class="layui-btn" data-scope="index">生成首页</button>
-        <button class="layui-btn layui-btn-normal" data-scope="type">生成分类</button>
-        <button class="layui-btn layui-btn-warm" data-scope="detail">生成详情</button>
-        <button class="layui-btn" data-scope="actor">生成演员</button>
-        <button class="layui-btn" data-scope="topic">生成专题</button>
-        <button class="layui-btn" data-scope="tag">生成标签</button>
-        <button class="layui-btn" data-scope="art">生成文章</button>
-        <button class="layui-btn" data-scope="website">生成网址</button>
-        <button class="layui-btn layui-btn-danger" data-scope="all">全部生成</button>
-        <button class="layui-btn" data-map="sitemap">生成地图</button>
-        <button class="layui-btn layui-btn-normal" data-map="rss">生成RSS</button>
-        <button class="layui-btn layui-btn-primary" id="hits-reset">重置日人气</button>
-      </div>
-      <pre id="make-result" class="layui-code" style="margin-top:16px;min-height:80px;"></pre>
+@extends('admin.layouts.inner')
+@section('title', '写出静态 HTML 到 public/html')
+
+@section('content')
+    <p class="hint">会请求前台页面并把结果写成文件：首页、分类、详情。可配合 Web 服务器把 html 目录当静态根。</p>
+    <div class="toolbar">
+        <button type="button" class="btn btn-sm" data-scope="index">生成首页</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="type">生成分类</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="detail">生成详情</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="actor">生成演员</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="topic">生成专题</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="tag">生成标签</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="art">生成文章</button>
+        <button type="button" class="btn btn-muted btn-sm" data-scope="website">生成网址</button>
+        <button type="button" class="btn btn-danger btn-sm" data-scope="all">全部生成</button>
+        <button type="button" class="btn btn-sm" data-map="sitemap">生成地图</button>
+        <button type="button" class="btn btn-muted btn-sm" data-map="rss">生成RSS</button>
+        <button type="button" class="btn btn-muted btn-sm" id="hits-reset">重置日人气</button>
     </div>
-  </div>
-</div>
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+    <pre id="make-result" class="out"></pre>
+@endsection
+
+@push('scripts')
 <script>
-layui.use(['layer'], function(){
-  var $ = layui.$, layer = layui.layer;
-  var csrf = $('meta[name=csrf-token]').attr('content');
-  if (csrf) { $.ajaxSetup({headers:{'X-CSRF-TOKEN': csrf}}); }
-  $('#hits-reset').on('click', function(){
-    $.post('/admin/video/hits-reset', {}, function(res){
-      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2});
-    },'json');
-  });
-  $('[data-scope]').on('click', function(){
-    var scope = $(this).data('scope');
-    var load = layer.load(1);
-    $.post('/admin/video/make/run', {scope: scope}, function(res){
-      layer.close(load);
-      $('#make-result').text(JSON.stringify(res, null, 2));
-      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
-    },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
-  });
-  $('[data-map]').on('click', function(){
-    var scope = $(this).data('map');
-    var load = layer.load(1);
-    $.post('/admin/video/make/map', {scope: scope}, function(res){
-      layer.close(load);
-      $('#make-result').text(JSON.stringify(res, null, 2));
-      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
-    },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
-  });
-});
+(function () {
+    var U = AdminUi;
+    var out = document.getElementById('make-result');
+    U.on('#hits-reset', 'click', function () {
+        U.post('/admin/video/hits-reset', {}).then(function (res) {
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        });
+    });
+    document.querySelectorAll('[data-scope]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            U.loading(true);
+            U.post('/admin/video/make/run', {scope: btn.getAttribute('data-scope')}).then(function (res) {
+                U.loading(false);
+                out.textContent = JSON.stringify(res, null, 2);
+                U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            });
+        });
+    });
+    document.querySelectorAll('[data-map]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            U.loading(true);
+            U.post('/admin/video/make/map', {scope: btn.getAttribute('data-map')}).then(function (res) {
+                U.loading(false);
+                out.textContent = JSON.stringify(res, null, 2);
+                U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            });
+        });
+    });
+})();
 </script>
-</body>
-</html>
+@endpush

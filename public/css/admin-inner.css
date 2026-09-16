@@ -1,0 +1,79 @@
+/* Skin Layui iframe pages to match the LaraCMS admin shell */
+html, body {
+    background: #f2f3f5 !important;
+}
+body {
+    margin: 0;
+}
+.layui-fluid {
+    padding: 16px !important;
+}
+.layui-card {
+    border: 1px solid #e5e6eb !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .06) !important;
+    border-radius: 4px !important;
+}
+.layui-card-header {
+    font-weight: 600;
+    color: #1d2129;
+}
+.layui-btn {
+    background-color: #007bff;
+}
+.layui-btn-primary {
+    background-color: #fff;
+    color: #1d2129;
+    border-color: #e5e6eb;
+}
+.layui-btn-primary:hover {
+    border-color: #007bff;
+    color: #007bff;
+}
+.layui-btn-danger {
+    background-color: #dc3545;
+}
+.layui-btn-warm {
+    background-color: #fd7e14;
+}
+.layui-btn-normal {
+    background-color: #007bff;
+}
+.layui-form-onswitch {
+    border-color: #007bff !important;
+    background-color: #007bff !important;
+}
+.layui-form-checked[lay-skin=primary] > i {
+    border-color: #007bff !important;
+    background-color: #007bff !important;
+}
+.layui-form-radioed > i,
+.layui-form-checked > i,
+.layui-form-checked:hover > i {
+    color: #007bff !important;
+}
+.layui-laypage .layui-laypage-curr .layui-laypage-em {
+    background-color: #007bff !important;
+}
+.layui-tab-brief > .layui-tab-title .layui-this {
+    color: #007bff !important;
+}
+.layui-tab-brief > .layui-tab-more li.layui-this:after,
+.layui-tab-brief > .layui-tab-title .layui-this:after {
+    border-bottom-color: #007bff !important;
+}
+.layui-table thead tr,
+.layui-table-header,
+.layui-table-view .layui-table-header {
+    background: #f7f8fa !important;
+}
+.layui-input:focus,
+.layui-textarea:focus,
+.layui-select:focus {
+    border-color: #007bff !important;
+}
+.layui-form-select dl dd.layui-this {
+    background-color: #007bff;
+}
+.layui-badge-dot {
+    background-color: #dc3545;
+}

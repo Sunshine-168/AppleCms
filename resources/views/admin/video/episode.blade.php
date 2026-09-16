@@ -1,197 +1,99 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 剧集管理</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}">
-</head>
-<body>
+@extends('admin.layouts.inner')
+@section('title', '剧集管理')
 
-<div class="layui-fluid">
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <div class="layui-btn-container" style="margin-bottom:10px;">
-        <button class="layui-btn layui-btn-sm" id="episode-add-btn">新增剧集</button>
-        <button class="layui-btn layui-btn-sm layui-btn-primary" id="episode-refresh-btn">刷新</button>
-      </div>
-      <table id="episode-table" lay-filter="episode-table"></table>
-    </div>
-  </div>
-</div>
+@section('header_actions')
+    <a class="btn btn-muted btn-sm" href="javascript:history.back()">返回线路</a>
+    <button type="button" class="btn btn-sm" id="episode-add-btn">新增剧集</button>
+    <button type="button" class="btn btn-muted btn-sm" id="episode-refresh-btn">刷新</button>
+@endsection
 
-<script type="text/html" id="episode-rowbar">
-  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-  <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
-</script>
+@section('content')
+    <div id="episode-table"></div>
+    <template id="episode-dialog-tpl">
+        <form>
+            <input type="hidden" name="id">
+            <input type="hidden" name="source_id" value="{{ (int)($sourceId ?? 0) }}">
+            <label>集序号</label>
+            <input type="number" name="episode_num" value="1">
+            <label>标题</label>
+            <input type="text" name="episode_name">
+            <label>地址</label>
+            <input type="text" name="url">
+            <label>时长</label>
+            <input type="number" name="duration" value="0">
+            <label>状态</label>
+            <select name="status"><option value="1">可用</option><option value="0">不可用</option></select>
+            <label>排序</label>
+            <input type="number" name="sort" value="0">
+        </form>
+    </template>
+@endsection
 
-<script type="text/html" id="episode-dialog-tpl">
-  <div style="padding:15px;">
-    <form class="layui-form" id="episode-form" lay-filter="episode-form">
-      <input type="hidden" name="id" value="">
-      <input type="hidden" name="source_id" value="{{ (int)($sourceId ?? 0) }}">
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">集序号</label>
-          <div class="layui-input-inline">
-            <input type="number" name="episode_num" value="1" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">标题</label>
-          <div class="layui-input-inline">
-            <input type="text" name="episode_name" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">地址</label>
-        <div class="layui-input-block">
-          <input type="text" name="url" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">时长</label>
-          <div class="layui-input-inline">
-            <input type="number" name="duration" value="0" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">状态</label>
-          <div class="layui-input-inline">
-            <select name="status">
-              <option value="1">可用</option>
-              <option value="0">不可用</option>
-            </select>
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">排序</label>
-          <div class="layui-input-inline">
-            <input type="number" name="sort" value="0" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
-</script>
-
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@push('scripts')
 <script>
-layui.use(['layer','form','table'], function(){
-  var $ = layui.$, layer = layui.layer, form = layui.form, table = layui.table;
-  var sourceId = {{ (int)($sourceId ?? 0) }};
-
-  var csrfToken = $('meta[name=csrf-token]').attr('content');
-  if (csrfToken) {
-    $.ajaxSetup({ headers: {'X-CSRF-TOKEN': csrfToken} });
-  }
-
-  function apiPost(url, data, ok){
-    $.post(url, data || {}, function(res){
-      if(res && res.code === 0){
-        ok && ok(res);
-      } else {
-        layer.msg(res && res.msg ? res.msg : '操作失败', {icon:2});
-      }
-    }, 'json').fail(function(){ layer.msg('请求失败', {icon:2}); });
-  }
-
-  function formToObj($form){
-    var arr = $form.serializeArray();
-    var obj = {};
-    for(var i=0;i<arr.length;i++){
-      obj[arr[i].name] = arr[i].value;
-    }
-    return obj;
-  }
-
-  var tableIns = table.render({
-    elem:'#episode-table',
-    url:'/admin/video/episodes/list',
-    method:'get',
-    where:{source_id:sourceId},
-    page:true,
-    parseData:function(res){
-      return {
-        code: res.code,
-        msg: res.msg,
-        count: res.data.total || 0,
-        data: res.data.data || []
-      };
-    },
-    cols:[[
-      {field:'id', width:80, title:'ID', sort:true},
-      {field:'episode_num', width:90, title:'集'},
-      {field:'episode_name', width:160, title:'标题'},
-      {field:'url', title:'地址', minWidth:260},
-      {field:'duration', width:90, title:'时长'},
-      {field:'status', width:90, title:'状态', templet:function(d){
-        return String(d.status) === '1' ? '<span class="layui-badge layui-bg-green">可用</span>' : '<span class="layui-badge">不可用</span>';
-      }},
-      {field:'sort', width:90, title:'排序'},
-      {field:'updated_at_text', width:180, title:'更新时间'},
-      {title:'操作', toolbar:'#episode-rowbar', width:140}
-    ]]
-  });
-
-  function openEpisodeDialog(mode, row){
-    row = row || {};
-    var isEdit = mode === 'edit';
-    layer.open({
-      type:1,
-      title: isEdit ? '编辑剧集' : '新增剧集',
-      area:['760px','420px'],
-      content: $('#episode-dialog-tpl').html(),
-      btn:['保存','取消'],
-      success:function(layero){
-        var $layer = $(layero);
-        var $form = $layer.find('#episode-form');
-        $form.find('input[name=id]').val(isEdit ? (row.id || '') : '');
-        $form.find('input[name=source_id]').val(String(sourceId));
-        $form.find('input[name=episode_num]').val(row.episode_num == null ? 1 : row.episode_num);
-        $form.find('input[name=episode_name]').val(row.episode_name || '');
-        $form.find('input[name=url]').val(row.url || '');
-        $form.find('input[name=duration]').val(row.duration == null ? 0 : row.duration);
-        $form.find('select[name=status]').val(String(row.status == null ? 1 : row.status));
-        $form.find('input[name=sort]').val(row.sort == null ? 0 : row.sort);
-        form.render();
-      },
-      yes:function(index, layero){
-        var data = formToObj($(layero).find('#episode-form'));
-        if(!data.url){ layer.msg('请输入播放地址',{icon:2}); return; }
-        apiPost('/admin/video/episodes/save', data, function(){
-          layer.close(index);
-          table.reload('episode-table');
-          layer.msg('保存成功',{icon:1});
-        });
-      }
+(function () {
+    var U = AdminUi;
+    var sourceId = {{ (int)($sourceId ?? 0) }};
+    var table = U.table({
+        el: '#episode-table',
+        url: '/admin/video/episodes/list',
+        where: {source_id: sourceId},
+        cols: [
+            {key: 'id', title: 'ID', width: 70},
+            {key: 'episode_num', title: '集', width: 70},
+            {key: 'episode_name', title: '标题', width: 140},
+            {key: 'url', title: '地址'},
+            {key: 'duration', title: '时长', width: 70},
+            {title: '状态', width: 80, html: function (d) { return String(d.status) === '1' ? U.status(true, '可用') : U.status(false, '不可用'); }},
+            {key: 'sort', title: '排序', width: 70},
+            {key: 'updated_at_text', title: '更新时间', width: 150},
+            {title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>'; }}
+        ]
     });
-  }
-
-  $('#episode-add-btn').on('click', function(){ openEpisodeDialog('add'); });
-  $('#episode-refresh-btn').on('click', function(){ table.reload('episode-table'); });
-
-  table.on('tool(episode-table)', function(obj){
-    var row = obj.data || {};
-    if(obj.event === 'edit'){ openEpisodeDialog('edit', row); }
-    if(obj.event === 'del'){
-      layer.confirm('确定删除该剧集吗？', function(i){
-        apiPost('/admin/video/episodes/delete', {id: row.id}, function(){
-          layer.close(i);
-          table.reload('episode-table');
-          layer.msg('删除成功',{icon:1});
+    function openEpisodeDialog(mode, row) {
+        row = row || {};
+        U.dialog({
+            title: mode === 'edit' ? '编辑剧集' : '新增剧集',
+            wide: true,
+            content: document.getElementById('episode-dialog-tpl').innerHTML,
+            onOpen: function (body) {
+                U.fillForm(body.querySelector('form'), {
+                    id: mode === 'edit' ? (row.id || '') : '',
+                    source_id: sourceId,
+                    episode_num: row.episode_num == null ? 1 : row.episode_num,
+                    episode_name: row.episode_name || '',
+                    url: row.url || '',
+                    duration: row.duration == null ? 0 : row.duration,
+                    status: row.status == null ? 1 : row.status,
+                    sort: row.sort == null ? 0 : row.sort
+                });
+            },
+            onSave: function (body) {
+                var data = U.formData(body.querySelector('form'));
+                if (!data.url) { U.toast('请输入播放地址', 'err'); return false; }
+                return U.post('/admin/video/episodes/save', data).then(function (res) {
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
+                    U.toast('保存成功', 'ok');
+                    table.refresh();
+                });
+            }
         });
-      });
     }
-  });
-});
+    U.on('#episode-add-btn', 'click', function () { openEpisodeDialog('add'); });
+    U.on('#episode-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#episode-table', 'click', function (e) {
+        var a = e.target.closest('a'); if (!a) return;
+        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        if (!row) return;
+        e.preventDefault();
+        if (a.classList.contains('js-edit')) openEpisodeDialog('edit', row);
+        if (a.classList.contains('js-del') && U.confirm('确定删除该剧集吗？')) {
+            U.post('/admin/video/episodes/delete', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                table.refresh(); U.toast('删除成功', 'ok');
+            });
+        }
+    });
+})();
 </script>
-</body>
-</html>
-
+@endpush

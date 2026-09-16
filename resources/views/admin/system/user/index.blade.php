@@ -1,259 +1,135 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 管理员列表</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}">
-</head>
-<body>
+@extends('admin.layouts.inner')
+@section('title', '管理员列表')
 
-<div class="layui-fluid">
-  <!-- 搜索表单 -->
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <form class="layui-form" id="sysuser-search">
-        <div class="layui-form-item">
-          <div class="layui-inline">
-            <input type="text" name="username" placeholder="用户名" autocomplete="off" class="layui-input">
-          </div>
-          <div class="layui-inline">
-            <button type="button" class="layui-btn" id="sysuser-search-btn">查询</button>
-            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-          </div>
-        </div>
-      </form>
+@section('plain')
+<div class="card card-panel">
+    <div class="card-body">
+        <form class="filter-bar" id="sysuser-search" onsubmit="return false;">
+            <input type="text" name="username" placeholder="用户名">
+            <button type="button" class="btn btn-sm" id="sysuser-search-btn">查询</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="sysuser-reset-btn">重置</button>
+        </form>
     </div>
-  </div>
-
-  <!-- 表格 -->
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <div class="layui-btn-container" style="margin-bottom:10px;">
-        <button class="layui-btn layui-btn-sm" id="sysuser-add-btn">新增管理员</button>
-        <button class="layui-btn layui-btn-sm layui-btn-primary" id="sysuser-refresh-btn">刷新</button>
-      </div>
-      <table class="layui-table" id="sysuser-table" lay-filter="sysuser-table"></table>
-
-      <!-- 行操作模板 -->
-      <script type="text/html" id="sysuser-rowbar">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
-      </script>
-    </div>
-  </div>
 </div>
-
-<!-- 弹窗模板 -->
-<div id="sysuser-dialog-tpl" style="display:none;">
-  <div style="padding:20px">
-    <form class="layui-form layui-form-pane">
-      <input type="hidden" name="id">
-      <div class="layui-form-item">
-        <label class="layui-form-label">用户名</label>
-        <div class="layui-input-block">
-          <input type="text" name="username" required class="layui-input">
+<div class="card card-panel">
+    <div class="card-header">
+        <span>管理员</span>
+        <div>
+            <button type="button" class="btn btn-sm" id="sysuser-add-btn">新增管理员</button>
+            <button type="button" class="btn btn-muted btn-sm" id="sysuser-refresh-btn">刷新</button>
         </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">邮箱</label>
-        <div class="layui-input-block">
-          <input type="text" name="email" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">备注</label>
-        <div class="layui-input-block">
-          <input type="text" name="remark" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">角色名称</label>
-        <div class="layui-input-block">
-          <select name="role_id"></select>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">管理员类型</label>
-        <div class="layui-input-block">
-          <select name="role">
+    </div>
+    <div class="card-body"><div id="sysuser-table"></div></div>
+</div>
+<template id="sysuser-dialog-tpl">
+    <form>
+        <input type="hidden" name="id">
+        <label>用户名</label>
+        <input type="text" name="username">
+        <label>邮箱</label>
+        <input type="text" name="email">
+        <label>备注</label>
+        <input type="text" name="remark">
+        <label>角色名称</label>
+        <select name="role_id"></select>
+        <label>管理员类型</label>
+        <select name="role">
             <option value="0">超级管理员</option>
             <option value="1">普通管理员</option>
-          </select>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">密码</label>
-        <div class="layui-input-block">
-          <input type="password" name="password" autocomplete="new-password" class="layui-input">
-        </div>
-      </div>
+        </select>
+        <label>密码</label>
+        <input type="password" name="password" autocomplete="new-password">
     </form>
-  </div>
-</div>
+</template>
+@endsection
 
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@push('scripts')
 <script>
-layui.use(['layer','form','table'], function(){
-  var $ = layui.$,
-      layer = layui.layer,
-      form = layui.form,
-      table = layui.table;
-
-  var csrfToken = $('meta[name=csrf-token]').attr('content');
-  $.ajaxSetup({ headers: {'X-CSRF-TOKEN': csrfToken} });
-
-  function escapeHtml(value){
-    return String(value||'').replace(/[&<>"']/g,function(s){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s];
-    });
-  }
-
-  function apiPost(url, data, callback){
-    $.post(url, data, function(res){
-      if(res.code === 0){
-        callback && callback(res);
-      } else {
-        layer.msg(res.msg || '操作失败',{icon:2});
-      }
-    },'json');
-  }
-
-  var roleOptionsCache = null;
-
-  function loadRoleOptions(callback){
-    if(roleOptionsCache){
-      callback && callback(roleOptionsCache);
-      return;
-    }
-    $.get('/admin/system/roles/options', function(res){
-      if(res.code === 0){
-        roleOptionsCache = res.data || [];
-        callback && callback(roleOptionsCache);
-      } else {
-        layer.msg(res.msg || '获取角色失败',{icon:2});
-        callback && callback([]);
-      }
-    },'json');
-  }
-
-  function renderRoleSelect($select, roles, selectedId){
-    var html = '<option value="0">请选择</option>';
-    for(var i=0;i<roles.length;i++){
-      var r = roles[i] || {};
-      var rid = r.id == null ? '' : String(r.id);
-      var name = escapeHtml(r.name || '');
-      if(String(r.status) === '0'){
-        name = name + '（禁用）';
-      }
-      html += '<option value="'+ escapeHtml(rid) +'">'+ name +'</option>';
-    }
-    $select.html(html);
-    $select.val(String(selectedId||0));
-    form.render('select');
-  }
-
-  // 打开新增/编辑弹窗
-  function openUserDialog(mode,row){
-    row = row||{};
-    var isEdit = mode==='edit';
-    var content = $('#sysuser-dialog-tpl').html();
-
-    layer.open({
-      type:1,
-      title: isEdit?'编辑管理员':'新增管理员',
-      area:['480px','420px'],
-      content:content,
-      btn:['保存','取消'],
-      success:function(layero){
-        var $layer = $(layero);
-        $layer.find('input[name=id]').val(row.id||'');
-        $layer.find('input[name=username]').val(row.username||'');
-        $layer.find('input[name=email]').val(row.email||'');
-        $layer.find('input[name=remark]').val(row.remark||'');
-        $layer.find('select[name=role]').val(row.role||1);
-        loadRoleOptions(function(roles){
-          renderRoleSelect($layer.find('select[name=role_id]'), roles, row.role_id||0);
+(function () {
+    var U = AdminUi;
+    var roleOptions = null;
+    function loadRoles(cb) {
+        if (roleOptions) { cb(roleOptions); return; }
+        U.get('/admin/system/roles/options').then(function (res) {
+            roleOptions = (res && res.code === 0) ? (res.data || []) : [];
+            cb(roleOptions);
         });
-        form.render();
-      },
-      yes:function(index, layero){
-        var $layer = $(layero);
-        var id = $layer.find('input[name=id]').val();
-        var username = $.trim($layer.find('input[name=username]').val());
-        var password = $.trim($layer.find('input[name=password]').val());
-        var email = $.trim($layer.find('input[name=email]').val());
-        var remark = $.trim($layer.find('input[name=remark]').val());
-        var role = $layer.find('select[name=role]').val();
-        var roleId = $layer.find('select[name=role_id]').val();
-
-        if(!username){layer.msg('请输入用户名');return;}
-
-        if(isEdit){
-          var data = {id:id,username:username,email:email,remark:remark,role:role,role_id:roleId};
-          if(password) data.password = password;
-          apiPost('/admin/user/update', data, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('保存成功',{icon:1}); });
-        } else {
-          apiPost('/admin/user/add',{username:username,password:password||'123456',email:email,remark:remark,role:role,role_id:roleId}, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('新增成功',{icon:1}); });
-        }
-      }
-    });
-  }
-
-  // 渲染表格
-  var tableIns = table.render({
-    elem:'#sysuser-table',
-    url:'/admin/user/list',
-    method:'get',
-    page:true,
-    parseData:function(res){
-      return {
-        code: res.code,
-        msg: res.msg,
-        count: res.data.total||0,
-        data: res.data.data||[]
-      };
-    },
-    cols:[[
-      {field:'id',width:80,title:'ID',sort:true},
-      {field:'username',title:'用户名'},
-      {field:'email',title:'邮箱'},
-      {field:'remark',title:'备注'},
-      {field:'role_name',title:'角色名称'},
-      {field:'role',width:120,title:'管理员类型',templet:function(d){return d.role==0?'<span class="layui-badge layui-bg-blue">超级管理员</span>':'<span class="layui-badge layui-bg-gray">普通管理员</span>';}},
-      {field:'login_ip',width:140,title:'登录IP'},
-      {field:'login_time',width:180,title:'登录时间'},
-      {title:'操作',toolbar:'#sysuser-rowbar',width:150}
-    ]]
-  });
-
-  // 搜索
-  $('#sysuser-search-btn').on('click', function(){
-    table.reload('sysuser-table',{where:$('#sysuser-search').serializeJSON(),page:{curr:1}});
-  });
-
-  // 刷新
-  $('#sysuser-refresh-btn').on('click', function(){ table.reload('sysuser-table'); });
-
-  // 新增
-  $('#sysuser-add-btn').on('click', function(){ openUserDialog('add'); });
-
-  // 编辑/删除
-  table.on('tool(sysuser-table)', function(obj){
-    var data = obj.data;
-    if(obj.event==='edit'){ openUserDialog('edit', data); }
-    if(obj.event==='del'){
-      layer.confirm('确定删除该管理员吗？', function(index){
-        apiPost('/admin/user/delete',{id:data.id}, function(){ layer.close(index); table.reload('sysuser-table'); layer.msg('删除成功',{icon:1}); });
-      });
     }
-  });
-
-});
+    function fillRoles(sel, roles, selectedId) {
+        var html = '<option value="0">请选择</option>';
+        (roles || []).forEach(function (r) {
+            var name = r.name || '';
+            if (String(r.status) === '0') name += '（禁用）';
+            html += '<option value="' + U.escape(r.id) + '">' + U.escape(name) + '</option>';
+        });
+        sel.innerHTML = html;
+        sel.value = String(selectedId || 0);
+    }
+    var table = U.table({
+        el: '#sysuser-table',
+        url: '/admin/user/list',
+        cols: [
+            {key: 'id', title: 'ID', width: 70},
+            {key: 'username', title: '用户名'},
+            {key: 'email', title: '邮箱'},
+            {key: 'remark', title: '备注'},
+            {key: 'role_name', title: '角色名称'},
+            {title: '管理员类型', width: 120, html: function (d) {
+                return String(d.role) === '0' ? '<span class="status status-info">超级管理员</span>' : U.status(false, '普通管理员');
+            }},
+            {key: 'login_ip', title: '登录IP', width: 120},
+            {key: 'login_time', title: '登录时间', width: 160},
+            {title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>'; }}
+        ]
+    });
+    function openUserDialog(mode, row) {
+        row = row || {};
+        U.dialog({
+            title: mode === 'edit' ? '编辑管理员' : '新增管理员',
+            content: document.getElementById('sysuser-dialog-tpl').innerHTML,
+            onOpen: function (body) {
+                U.fillForm(body.querySelector('form'), {
+                    id: row.id || '',
+                    username: row.username || '',
+                    email: row.email || '',
+                    remark: row.remark || '',
+                    role: row.role == null ? 1 : row.role
+                });
+                loadRoles(function (roles) {
+                    fillRoles(body.querySelector('select[name=role_id]'), roles, row.role_id || 0);
+                });
+            },
+            onSave: function (body) {
+                var data = U.formData(body.querySelector('form'));
+                if (!data.username) { U.toast('请输入用户名', 'err'); return false; }
+                var url = mode === 'edit' ? '/admin/user/update' : '/admin/user/add';
+                if (mode !== 'edit' && !data.password) data.password = '123456';
+                if (mode === 'edit' && !data.password) delete data.password;
+                return U.post(url, data).then(function (res) {
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
+                    U.toast(mode === 'edit' ? '保存成功' : '新增成功', 'ok');
+                    table.refresh();
+                });
+            }
+        });
+    }
+    U.on('#sysuser-search-btn', 'click', function () { table.reload(U.formData('#sysuser-search')); });
+    U.on('#sysuser-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
+    U.on('#sysuser-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#sysuser-add-btn', 'click', function () { openUserDialog('add'); });
+    U.on('#sysuser-table', 'click', function (e) {
+        var a = e.target.closest('a'); if (!a) return;
+        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        if (!row) return;
+        e.preventDefault();
+        if (a.classList.contains('js-edit')) openUserDialog('edit', row);
+        if (a.classList.contains('js-del') && U.confirm('确定删除该管理员吗？')) {
+            U.post('/admin/user/delete', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                table.refresh(); U.toast('删除成功', 'ok');
+            });
+        }
+    });
+})();
 </script>
-</body>
-</html>
+@endpush

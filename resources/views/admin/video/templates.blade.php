@@ -1,82 +1,77 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 模板编辑</title>
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-</head>
-<body>
-<div class="layui-fluid" style="padding:16px;">
-  <div class="layui-row layui-col-space12">
-    <div class="layui-col-md3">
-      <div class="layui-card"><div class="layui-card-header">主题文件</div>
-        <div class="layui-card-body" style="max-height:70vh;overflow:auto;">
-          @foreach($files as $f)
-            <p><a href="javascript:;" class="tpl-file" data-path="{{ $f['path'] }}">{{ $f['name'] }}</a></p>
-          @endforeach
+@extends('admin.layouts.inner')
+@section('title', '模板编辑')
+
+@section('plain')
+<div class="split-side">
+    <div class="card card-panel">
+        <div class="card-header"><span>主题文件</span></div>
+        <div class="card-body">
+            <div class="file-list">
+                @foreach($files ?? [] as $f)
+                    <a href="#" class="tpl-file" data-path="{{ $f['path'] }}">{{ $f['name'] }}</a>
+                @endforeach
+            </div>
         </div>
-      </div>
     </div>
-    <div class="layui-col-md9">
-      <div class="layui-card">
-        <div class="layui-card-header">编辑 <span id="tpl-path"></span>
-          <button class="layui-btn layui-btn-sm" id="tpl-save" style="float:right;">保存</button>
-          <button class="layui-btn layui-btn-sm layui-btn-primary" id="tpl-backup" style="float:right;margin-right:8px;">备份</button>
-          <button class="layui-btn layui-btn-sm layui-btn-warm" id="tpl-rollback" style="float:right;margin-right:8px;">回滚</button>
+    <div class="card card-panel">
+        <div class="card-header">
+            <span>编辑 <span id="tpl-path"></span></span>
+            <div>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback">回滚</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-backup">备份</button>
+                <button type="button" class="btn btn-sm" id="tpl-save">保存</button>
+            </div>
         </div>
-        <div class="layui-card-body">
-          <textarea id="tpl-content" class="layui-textarea" style="min-height:62vh;font-family:monospace;"></textarea>
+        <div class="card-body">
+            <textarea id="tpl-content" class="tpl-editor"></textarea>
         </div>
-      </div>
     </div>
-  </div>
 </div>
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@endsection
+
+@push('scripts')
 <script>
-layui.use(['layer'], function(){
-  var $ = layui.$, layer = layui.layer;
-  var csrf = $('meta[name=csrf-token]').attr('content');
-  if (csrf) { $.ajaxSetup({headers:{'X-CSRF-TOKEN': csrf}}); }
-  var current = '';
-  $('.tpl-file').on('click', function(){
-    current = $(this).data('path');
-    $('#tpl-path').text(current);
-    $.get('/admin/video/templates/read', {path: current}, function(res){
-      if(res && res.code===0){ $('#tpl-content').val(res.data.content||''); }
-      else { layer.msg((res&&res.msg)||'读取失败',{icon:2}); }
-    },'json');
-  });
-  $('#tpl-save').on('click', function(){
-    if(!current){ layer.msg('请选择文件'); return; }
-    layer.confirm('确认保存并覆盖主题文件？保存前会自动备份。', function(i){
-      layer.close(i);
-      $.post('/admin/video/templates/save', {path: current, content: $('#tpl-content').val()}, function(res){
-        layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2});
-      },'json');
+(function () {
+    var U = AdminUi;
+    var current = '';
+    document.querySelectorAll('.tpl-file').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('.tpl-file').forEach(function (x) { x.classList.remove('active'); });
+            a.classList.add('active');
+            current = a.getAttribute('data-path');
+            document.getElementById('tpl-path').textContent = current;
+            U.get('/admin/video/templates/read', {path: current}).then(function (res) {
+                if (res && res.code === 0) document.getElementById('tpl-content').value = (res.data && res.data.content) || '';
+                else U.toast((res && res.msg) || '读取失败', 'err');
+            });
+        });
     });
-  });
-  $('#tpl-backup').on('click', function(){
-    if(!current){ layer.msg('请选择文件'); return; }
-    $.post('/admin/video/templates/backup', {path: current}, function(res){
-      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2});
-    },'json');
-  });
-  $('#tpl-rollback').on('click', function(){
-    if(!current){ layer.msg('请选择文件'); return; }
-    layer.confirm('回滚到最近一次备份？', function(i){
-      layer.close(i);
-      $.post('/admin/video/templates/rollback', {path: current}, function(res){
-        if(res && res.code===0){
-          $.get('/admin/video/templates/read', {path: current}, function(r){
-            if(r && r.code===0){ $('#tpl-content').val(r.data.content||''); }
-          },'json');
-        }
-        layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2});
-      },'json');
+    U.on('#tpl-save', 'click', function () {
+        if (!current) { U.toast('请选择文件', 'err'); return; }
+        if (!U.confirm('确认保存并覆盖主题文件？保存前会自动备份。')) return;
+        U.post('/admin/video/templates/save', {path: current, content: document.getElementById('tpl-content').value}).then(function (res) {
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        });
     });
-  });
-});
+    U.on('#tpl-backup', 'click', function () {
+        if (!current) { U.toast('请选择文件', 'err'); return; }
+        U.post('/admin/video/templates/backup', {path: current}).then(function (res) {
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        });
+    });
+    U.on('#tpl-rollback', 'click', function () {
+        if (!current) { U.toast('请选择文件', 'err'); return; }
+        if (!U.confirm('回滚到最近一次备份？')) return;
+        U.post('/admin/video/templates/rollback', {path: current}).then(function (res) {
+            if (res && res.code === 0) {
+                U.get('/admin/video/templates/read', {path: current}).then(function (r) {
+                    if (r && r.code === 0) document.getElementById('tpl-content').value = (r.data && r.data.content) || '';
+                });
+            }
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        });
+    });
+})();
 </script>
-</body>
-</html>
+@endpush

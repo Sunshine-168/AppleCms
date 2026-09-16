@@ -1,212 +1,182 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - {{ $title }}</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}">
-</head>
-<body>
-<div class="layui-fluid">
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <div class="layui-btn-container" style="margin-bottom:10px;">
-        <button class="layui-btn layui-btn-sm" id="mod-add">新增</button>
-        <button class="layui-btn layui-btn-sm layui-btn-primary" id="mod-refresh">刷新</button>
+@extends('admin.layouts.inner')
+@section('title', $title)
+
+@section('content')
+    <div class="toolbar">
+        <button type="button" class="btn btn-sm" id="mod-add">新增</button>
+        <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">刷新</button>
         @if(in_array($module, ['cards', 'invites'], true))
-          <button class="layui-btn layui-btn-sm layui-btn-normal" id="mod-gen">批量生成</button>
+            <button type="button" class="btn btn-muted btn-sm" id="mod-gen">批量生成</button>
         @endif
         @if($module === 'collect_tasks')
-          <button class="layui-btn layui-btn-sm layui-btn-warm" id="mod-due">执行到期采集</button>
+            <button type="button" class="btn btn-muted btn-sm" id="mod-due">执行到期采集</button>
         @endif
         @if($module === 'collect_temps')
-          <button class="layui-btn layui-btn-sm layui-btn-normal" id="mod-promote">转入选中</button>
+            <button type="button" class="btn btn-muted btn-sm" id="mod-promote">转入选中</button>
         @endif
-        <div class="layui-inline" style="margin-left:8px;">
-          <input type="text" id="mod-q" placeholder="{{ $search }}" class="layui-input" style="width:180px;display:inline-block;height:30px;">
-          <button class="layui-btn layui-btn-sm" id="mod-search">查询</button>
-        </div>
-      </div>
-      <table id="mod-table" lay-filter="mod-table"></table>
+        <form class="filter-bar" id="mod-search-form" onsubmit="return false;">
+            <input type="text" id="mod-q" placeholder="{{ $search }}">
+            <button type="button" class="btn btn-sm" id="mod-search">查询</button>
+        </form>
     </div>
-  </div>
-</div>
-<script type="text/html" id="mod-rowbar">
-  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-  @if($module === 'topics')
-  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bind">绑片</a>
-  @endif
-          @if($module === 'collect_tasks')
-  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="run">执行</a>
-  @endif
-  @if($module === 'playfails')
-  <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="offline">下线线路</a>
-  @endif
-  @if($module === 'collect_temps')
-  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="promote">转入</a>
-  @endif
-  <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
-</script>
-<div id="mod-dialog" style="display:none;">
-  <div style="padding:16px 16px 0 0;">
-    <form class="layui-form layui-form-pane" lay-filter="mod-form">
-      <input type="hidden" name="id">
-      @foreach($fields as $field)
-        <div class="layui-form-item">
-          <label class="layui-form-label">{{ $field['label'] }}</label>
-          <div class="layui-input-block">
-            @if(($field['type'] ?? 'text') === 'textarea')
-              <textarea name="{{ $field['name'] }}" class="layui-textarea"></textarea>
-            @elseif(($field['type'] ?? '') === 'select')
-              <select name="{{ $field['name'] }}">
-                @foreach(($field['options'] ?? []) as $val => $lab)
-                  <option value="{{ $val }}">{{ $lab }}</option>
-                @endforeach
-              </select>
-            @else
-              <input type="{{ ($field['type'] ?? 'text') === 'number' ? 'number' : 'text' }}" name="{{ $field['name'] }}" class="layui-input">
-            @endif
-          </div>
-        </div>
-      @endforeach
-    </form>
-  </div>
-</div>
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+    <div id="mod-table"></div>
+    <template id="mod-dialog-tpl">
+        <form id="mod-form">
+            <input type="hidden" name="id">
+            @foreach($fields as $field)
+                <label>{{ $field['label'] }}</label>
+                @if(($field['type'] ?? 'text') === 'textarea')
+                    <textarea name="{{ $field['name'] }}"></textarea>
+                @elseif(($field['type'] ?? '') === 'select')
+                    <select name="{{ $field['name'] }}">
+                        @foreach(($field['options'] ?? []) as $val => $lab)
+                            <option value="{{ $val }}">{{ $lab }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <input type="{{ ($field['type'] ?? 'text') === 'number' ? 'number' : 'text' }}" name="{{ $field['name'] }}">
+                @endif
+            @endforeach
+        </form>
+    </template>
+@endsection
+
+@push('scripts')
 <script>
-layui.use(['layer','form','table'], function(){
-  var $ = layui.$, layer = layui.layer, form = layui.form, table = layui.table;
-  var csrf = $('meta[name=csrf-token]').attr('content');
-  if (csrf) { $.ajaxSetup({headers:{'X-CSRF-TOKEN': csrf}}); }
-  var module = @json($module);
-  var cols = @json($cols);
-  var fields = @json($fields);
-  var tableCols = [];
-  if (module === 'collect_temps') { tableCols.push({type:'checkbox', width:48}); }
-  tableCols.push({field:'id', width:70, title:'ID', sort:true});
-  cols.forEach(function(c){
-    if (c === 'id') return;
-    tableCols.push({field:c, title:c, minWidth:120});
-  });
-  tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks','playfails','collect_temps'], true) ? 240 : 150 }}});
-  var searchField = @json($search);
-  table.render({
-    elem:'#mod-table', id:'mod-table', url:'/admin/video/'+module+'/list', page:true,
-    parseData:function(res){
-      var data = res.data || {};
-      return {code:res.code, msg:res.msg, count:data.total||0, data:data.data||[]};
-    },
-    cols:[tableCols]
-  });
-  function open(row){
-    row = row || {};
-    var idx = layer.open({
-      type:1, title: row.id ? '编辑' : '新增', area:['640px','70%'],
-      content: $('#mod-dialog').html(), btn:['保存','取消'],
-      success:function(){
-        var val = {id: row.id || ''};
-        fields.forEach(function(f){ val[f.name] = row[f.name] == null ? '' : row[f.name]; });
-        form.val('mod-form', val); form.render();
-      },
-      yes:function(){
-        var data = {};
-        $('.layui-layer-content [lay-filter=mod-form]').serializeArray().forEach(function(it){ data[it.name]=it.value; });
-        $.post('/admin/video/'+module+'/save', data, function(res){
-          if(res && res.code===0){ layer.close(idx); table.reload('mod-table'); layer.msg('保存成功',{icon:1}); }
-          else { layer.msg((res&&res.msg)||'失败',{icon:2}); }
-        },'json');
-      }
+(function () {
+    var U = AdminUi;
+    var module = @json($module);
+    var cols = @json($cols);
+    var fields = @json($fields);
+    var searchField = @json($search);
+    var tableCols = [];
+    if (module === 'collect_temps') tableCols.push({check: true, width: 36});
+    tableCols.push({key: 'id', title: 'ID', width: 70});
+    cols.forEach(function (c) {
+        if (c === 'id') return;
+        tableCols.push({key: c, title: c});
     });
-  }
-  $('#mod-add').on('click', function(){ open({}); });
-  $('#mod-refresh').on('click', function(){ table.reload('mod-table'); });
-  $('#mod-search').on('click', function(){
-    var where = {};
-    where[searchField] = $('#mod-q').val() || '';
-    table.reload('mod-table', {where: where, page:{curr:1}});
-  });
-  $('#mod-gen').on('click', function(){
-    var isInvite = module === 'invites';
-    layer.prompt({title: isInvite ? '数量,积分,会员ID' : '数量,积分', value: isInvite ? '10,0,0' : '10,100'}, function(val, index){
-      var parts = String(val||'').split(/[,，\s]+/);
-      layer.close(index);
-      var url = isInvite ? '/admin/video/invites/generate' : '/admin/video/cards/generate';
-      var payload = isInvite
-        ? {count: parts[0]||10, points: parts[1]||0, member_id: parts[2]||0}
-        : {count: parts[0]||10, points: parts[1]||100};
-      $.post(url, payload, function(res){
-        if(res && res.code===0){ table.reload('mod-table'); layer.msg(res.msg||'已生成',{icon:1}); }
-        else { layer.msg((res&&res.msg)||'失败',{icon:2}); }
-      },'json');
+    tableCols.push({
+        title: '操作',
+        cls: 'actions',
+        html: function (row) {
+            var html = '<a href="#" class="btn-link js-edit">编辑</a>';
+            if (module === 'topics') html += '<a href="#" class="btn-link js-bind">绑片</a>';
+            if (module === 'collect_tasks') html += '<a href="#" class="btn-link js-run">执行</a>';
+            if (module === 'playfails') html += '<a href="#" class="btn-link js-off">下线线路</a>';
+            if (module === 'collect_temps') html += '<a href="#" class="btn-link js-promote">转入</a>';
+            html += '<a href="#" class="btn-link js-del">删除</a>';
+            return html;
+        }
     });
-  });
-  $('#mod-due').on('click', function(){
-    var load = layer.load(1);
-    $.post('/admin/video/collect-due', {}, function(res){
-      layer.close(load);
-      table.reload('mod-table');
-      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
-    },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
-  });
-  $('#mod-promote').on('click', function(){
-    var ids = (table.checkStatus('mod-table').data || []).map(function(r){ return r.id; });
-    if (!ids.length) { layer.msg('请先勾选', {icon:2}); return; }
-    var i = 0;
-    function next(){
-      if (i >= ids.length) { table.reload('mod-table'); return; }
-      $.post('/admin/video/collect_temps/promote', {id: ids[i++]}, function(){ next(); }, 'json').fail(function(){ next(); });
-    }
-    next();
-  });
-  table.on('tool(mod-table)', function(obj){
-    if(obj.event==='edit'){ open(obj.data||{}); }
-    if(obj.event==='bind'){
-      $.get('/admin/video/topics/'+obj.data.id+'/videos', function(res){
-        var ids = (res.data && res.data.video_ids) ? res.data.video_ids : '';
-        layer.prompt({title:'影片ID，逗号分隔', value: ids, formType:2}, function(val, index){
-          $.post('/admin/video/topics/'+obj.data.id+'/videos', {video_ids: val}, function(r){
-            layer.close(index);
-            layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
-          },'json');
+    var table = U.table({ el: '#mod-table', url: '/admin/video/' + module + '/list', cols: tableCols });
+
+    function open(row) {
+        row = row || {};
+        U.dialog({
+            title: row.id ? '编辑' : '新增',
+            content: document.getElementById('mod-dialog-tpl').innerHTML,
+            onOpen: function (body) {
+                var form = body.querySelector('form');
+                var val = {id: row.id || ''};
+                fields.forEach(function (f) { val[f.name] = row[f.name] == null ? '' : row[f.name]; });
+                U.fillForm(form, val);
+            },
+            onSave: function (body) {
+                var data = U.formData(body.querySelector('form'));
+                return U.post('/admin/video/' + module + '/save', data).then(function (res) {
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
+                    U.toast('保存成功', 'ok');
+                    table.refresh();
+                });
+            }
         });
-      },'json');
     }
-    if(obj.event==='run'){
-      $.post('/admin/video/collect_tasks/run', {id: obj.data.id}, function(r){
-        table.reload('mod-table');
-        layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
-      },'json');
-    }
-    if(obj.event==='promote'){
-      $.post('/admin/video/collect_temps/promote', {id: obj.data.id}, function(r){
-        table.reload('mod-table');
-        layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
-      },'json');
-    }
-    if(obj.event==='offline'){
-      layer.confirm('确认下线该失败记录关联的播放线路？', function(i){
-        $.post('/admin/video/playfails/offline', {id: obj.data.id}, function(r){
-          layer.close(i);
-          table.reload('mod-table');
-          layer.msg((r&&r.msg)||'完成', {icon:(r&&r.code===0)?1:2});
-        },'json');
-      });
-    }
-    if(obj.event==='del'){
-      layer.confirm('确认删除？', function(i){
-        $.post('/admin/video/'+module+'/delete', {id: obj.data.id}, function(res){
-          layer.close(i);
-          if(res && res.code===0){ table.reload('mod-table'); layer.msg('已删除',{icon:1}); }
-          else { layer.msg((res&&res.msg)||'失败',{icon:2}); }
-        },'json');
-      });
-    }
-  });
-});
+
+    U.on('#mod-add', 'click', function () { open({}); });
+    U.on('#mod-refresh', 'click', function () { table.refresh(); });
+    U.on('#mod-search', 'click', function () {
+        var where = {};
+        where[searchField] = (U.q('#mod-q').value || '');
+        table.reload(where);
+    });
+    U.on('#mod-gen', 'click', function () {
+        var isInvite = module === 'invites';
+        var val = U.prompt(isInvite ? '数量,积分,会员ID' : '数量,积分', isInvite ? '10,0,0' : '10,100');
+        if (val == null) return;
+        var parts = String(val).split(/[,，\s]+/);
+        var url = isInvite ? '/admin/video/invites/generate' : '/admin/video/cards/generate';
+        var payload = isInvite
+            ? {count: parts[0] || 10, points: parts[1] || 0, member_id: parts[2] || 0}
+            : {count: parts[0] || 10, points: parts[1] || 100};
+        U.post(url, payload).then(function (res) {
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            if (res && res.code === 0) table.refresh();
+        });
+    });
+    U.on('#mod-due', 'click', function () {
+        U.loading(true);
+        U.post('/admin/video/collect-due', {}).then(function (res) {
+            U.loading(false);
+            table.refresh();
+            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+        });
+    });
+    U.on('#mod-promote', 'click', function () {
+        var ids = table.selectedIds();
+        if (!ids.length) { U.toast('请先勾选', 'err'); return; }
+        var i = 0;
+        function next() {
+            if (i >= ids.length) { table.refresh(); return; }
+            U.post('/admin/video/collect_temps/promote', {id: ids[i++]}).then(next);
+        }
+        next();
+    });
+    U.on('#mod-table', 'click', function (e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var tr = e.target.closest('tr');
+        var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
+        if (!row) return;
+        e.preventDefault();
+        if (a.classList.contains('js-edit')) open(row);
+        if (a.classList.contains('js-bind')) {
+            U.get('/admin/video/topics/' + row.id + '/videos').then(function (res) {
+                var ids = (res.data && res.data.video_ids) ? res.data.video_ids : '';
+                var val = U.prompt('影片ID，逗号分隔', ids);
+                if (val == null) return;
+                U.post('/admin/video/topics/' + row.id + '/videos', {video_ids: val}).then(function (r) {
+                    U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+                });
+            });
+        }
+        if (a.classList.contains('js-run')) {
+            U.post('/admin/video/collect_tasks/run', {id: row.id}).then(function (r) {
+                table.refresh();
+                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-promote')) {
+            U.post('/admin/video/collect_temps/promote', {id: row.id}).then(function (r) {
+                table.refresh();
+                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-off')) {
+            if (!U.confirm('确认下线该失败记录关联的播放线路？')) return;
+            U.post('/admin/video/playfails/offline', {id: row.id}).then(function (r) {
+                table.refresh();
+                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-del')) {
+            if (!U.confirm('确认删除？')) return;
+            U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
+                if (res && res.code === 0) { table.refresh(); U.toast('已删除', 'ok'); }
+                else U.toast((res && res.msg) || '失败', 'err');
+            });
+        }
+    });
+})();
 </script>
-</body>
-</html>
+@endpush

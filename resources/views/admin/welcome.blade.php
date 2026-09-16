@@ -1,271 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 欢迎页</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}" media="all">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}" media="all">
-  <style>
-    body { background: #f6f8fb; }
-    .welcome-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    .welcome-title { display:flex; align-items:baseline; gap:12px; }
-    .welcome-title h1 { font-size: 18px; font-weight: 600; margin:0; color:#111827; }
-    .welcome-title .sub { color:#6b7280; font-size:12px; }
-    .welcome-actions { display:flex; align-items:center; gap:10px; }
-    .welcome-actions .meta { color:#9ca3af; font-size:12px; }
-    .stat-grid .layui-card { border-radius: 10px; overflow:hidden; box-shadow: 0 6px 18px rgba(15, 23, 42, .06); transition: transform .15s ease, box-shadow .15s ease; }
-    .stat-grid .layui-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(15, 23, 42, .09); }
-    .stat-card { position:relative; padding: 14px 16px 14px 16px; }
-    .stat-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; }
-    .stat-label { display:flex; align-items:center; gap:10px; color:#374151; font-size:13px; }
-    .stat-icon { width:34px; height:34px; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#fff; }
-    .stat-icon i { font-size:18px; }
-    .stat-value { font-size: 28px; font-weight: 700; letter-spacing: .2px; color:#0f172a; line-height: 1.15; }
-    .stat-foot { margin-top: 6px; display:flex; align-items:center; justify-content:space-between; color:#9ca3af; font-size:12px; }
-    .stat-foot .hint { display:flex; align-items:center; gap:6px; }
-    .stat-bar { position:absolute; left:0; top:0; height:4px; width:100%; opacity:.95; }
-    .is-loading .stat-value { color: transparent; }
-    .skeleton { position: relative; border-radius: 8px; background: linear-gradient(90deg, rgba(148,163,184,.18) 25%, rgba(148,163,184,.32) 37%, rgba(148,163,184,.18) 63%); background-size: 400% 100%; animation: sk 1.2s ease infinite; }
-    .skeleton.value { height: 28px; width: 120px; }
-    .skeleton.meta { height: 12px; width: 160px; border-radius: 999px; }
-    @keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-    .stat-grid .layui-col-xs12 { margin-bottom: 15px; }
-  </style>
+    <meta charset="utf-8">
+    <title>{{ conf('name') }} - 仪表盘</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ @filemtime(public_path('css/admin.css')) ?: '1' }}">
 </head>
-<body>
-<div class="layui-fluid">
-  <div class="welcome-topbar">
-    <div class="welcome-title">
-      <h1>今日态势</h1>
-      <div class="sub">先看待办，再进具体菜单</div>
+<body class="iframe-body">
+<div class="dash-iframe">
+    <div class="dash-hero solo">
+        <div class="stat-grid dash">
+            <a class="stat-card" href="/admin/video">
+                <div>
+                    <div class="label">视频总数</div>
+                    <div class="value" id="stat-vod-total">--</div>
+                    <div class="hint">累计</div>
+                </div>
+                <div class="icon blue"><i class="fas fa-video"></i></div>
+            </a>
+            <a class="stat-card" href="/admin/video">
+                <div>
+                    <div class="label">今日新增</div>
+                    <div class="value" id="stat-vod-today">--</div>
+                    <div class="hint">今日</div>
+                </div>
+                <div class="icon green"><i class="fas fa-plus"></i></div>
+            </a>
+            <a class="stat-card" href="/admin/video/comments">
+                <div>
+                    <div class="label">评论总数</div>
+                    <div class="value" id="stat-article-total">--</div>
+                    <div class="hint">累计</div>
+                </div>
+                <div class="icon orange"><i class="fas fa-comments"></i></div>
+            </a>
+            <a class="stat-card" href="/admin/video/members">
+                <div>
+                    <div class="label">用户总数</div>
+                    <div class="value" id="stat-user-total">--</div>
+                    <div class="hint">累计</div>
+                </div>
+                <div class="icon purple"><i class="fas fa-users"></i></div>
+            </a>
+            <a class="stat-card" href="/admin/video/visits">
+                <div>
+                    <div class="label">今日访问</div>
+                    <div class="value" id="stat-visit-today">--</div>
+                    <div class="hint">今日</div>
+                </div>
+                <div class="icon red"><i class="fas fa-chart-line"></i></div>
+            </a>
+            <a class="stat-card" href="/admin/video/ulogs">
+                <div>
+                    <div class="label">今日播放</div>
+                    <div class="value" id="stat-play-today">--</div>
+                    <div class="hint">今日</div>
+                </div>
+                <div class="icon cyan"><i class="fas fa-play"></i></div>
+            </a>
+        </div>
     </div>
-    <div class="welcome-actions">
-      <div class="meta" id="stat-updated"><span class="skeleton meta"></span></div>
-      <button class="layui-btn layui-btn-sm" id="stat-refresh-btn"><i class="layui-icon layui-icon-refresh-3"></i> 刷新</button>
-    </div>
-  </div>
 
-  <div class="layui-row layui-col-space15 stat-grid" id="stat-grid">
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="vod_total">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#60a5fa,#2563eb)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb)"><i class="layui-icon layui-icon-video"></i></span>
-              <span>视频总数</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-vod-total"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-tips"></i><span>累计</span></div>
-          </div>
+    <div class="card card-panel" id="dash-todos">
+        <div class="card-header">
+            <span>待处理</span>
+            <span class="muted" id="stat-updated">加载中…</span>
         </div>
-      </div>
-    </div>
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="vod_today">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#34d399,#10b981)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#34d399,#10b981)"><i class="layui-icon layui-icon-add-1"></i></span>
-              <span>今日新增视频</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-vod-today"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-time"></i><span>今日</span></div>
-          </div>
+        <div class="todo-actions" id="todo-list">
+            <span class="muted">加载中…</span>
         </div>
-      </div>
     </div>
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="article_total">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#fbbf24,#f59e0b)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)"><i class="layui-icon layui-icon-read"></i></span>
-              <span>评论总数</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-article-total"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-tips"></i><span>累计</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="user_total">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)"><i class="layui-icon layui-icon-user"></i></span>
-              <span>用户总数</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-user-total"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-tips"></i><span>累计</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="visit_today">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#fb7185,#e11d48)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#fb7185,#e11d48)"><i class="layui-icon layui-icon-engine"></i></span>
-              <span>今日访问量</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-visit-today"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-time"></i><span>今日</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
-      <div class="layui-card">
-        <div class="stat-card" data-key="play_today">
-          <div class="stat-bar" style="background:linear-gradient(90deg,#22d3ee,#0891b2)"></div>
-          <div class="stat-head">
-            <div class="stat-label">
-              <span class="stat-icon" style="background:linear-gradient(135deg,#22d3ee,#0891b2)"><i class="layui-icon layui-icon-play"></i></span>
-              <span>今日播放量</span>
-            </div>
-          </div>
-          <div class="stat-value" id="stat-play-today"><span class="skeleton value"></span></div>
-          <div class="stat-foot">
-            <div class="hint"><i class="layui-icon layui-icon-time"></i><span>今日</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="layui-card" style="margin-top:8px;">
-    <div class="layui-card-header">待处理</div>
-    <div class="layui-card-body" id="todo-list">
-      <p class="layui-word-aux">加载中…</p>
+    <div class="card card-panel">
+        <div class="card-header"><span>接下来做什么</span></div>
+        <div class="card-body">
+            <div class="dash-actions">
+                <a class="btn" href="/admin/video"><i class="fas fa-video"></i> 影片</a>
+                <a class="btn btn-muted" href="/admin/video/collects"><i class="fas fa-cloud-download-alt"></i> 采集</a>
+                <a class="btn btn-muted" href="/admin/video/comments"><i class="fas fa-comments"></i> 评论</a>
+                <a class="btn btn-muted" href="/admin/video/members"><i class="fas fa-users"></i> 会员</a>
+                <a class="btn btn-muted" href="/admin/video/settings"><i class="fas fa-cog"></i> 站点设置</a>
+                <a class="btn btn-muted" href="/admin/more"><i class="fas fa-th-large"></i> 全部功能</a>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <div class="layui-card" style="margin-top:8px;">
-    <div class="layui-card-header">影视后台</div>
-    <div class="layui-card-body">
-      <div class="layui-btn-container">
-        <a class="layui-btn layui-btn-sm" href="/admin/video">影片</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/collects">采集</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/collect_logs">采集日志</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/audits">审核规则</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/playfails">播放失败</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/orders">订单</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/plogs">积分流水</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/groups">会员组</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/settings">站点设置</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/make">静态生成</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/templates">模板</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/push">推送</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/visits">统计</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/wizard">标签向导</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/roles">角色库</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/arts">文章</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/websites">网址</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/ulogs">访问日志</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/unions">推荐资源</a>
-      </div>
-      <p class="layui-word-aux">这些链接在后台 iframe 里打开对应菜单。首次请先完成 /install，再用管理员账号登录。</p>
-    </div>
-  </div>
 </div>
-
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
 <script>
-layui.use(['jquery', 'layer'], function () {
-  var $ = layui.$;
-  var layer = layui.layer;
-
-  function toText(val) {
-    return (val === null || val === undefined || val === '') ? '--' : String(val);
-  }
-
-  function setUpdated() {
-    var d = new Date();
-    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-    var text = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-    $('#stat-updated').text('更新于 ' + text);
-  }
-
-  function setLoading(loading) {
-    $('#stat-refresh-btn').prop('disabled', !!loading);
-    if (loading) {
-      $('#stat-updated').html('<span class="skeleton meta"></span>');
-      $('#stat-grid .stat-value').each(function () {
-        $(this).html('<span class="skeleton value"></span>');
-      });
+(function () {
+    function text(val) {
+        return (val === null || val === undefined || val === '') ? '--' : String(val);
     }
-  }
-
-  function render(data) {
-    $('#stat-vod-total').text(toText(data.vod_total));
-    $('#stat-vod-today').text(toText(data.vod_today));
-    $('#stat-article-total').text(toText(data.comment_total ?? data.article_total));
-    $('#stat-user-total').text(toText(data.user_total));
-    $('#stat-visit-today').text(toText(data.visit_today));
-    $('#stat-play-today').text(toText(data.play_today));
-    renderTodos(data);
-    setUpdated();
-  }
-
-  function renderTodos(data) {
-    var items = [
-      {n: data.comment_pending, label: '待审评论', href: '/admin/video/comments'},
-      {n: data.report_open, label: '未处理报错', href: '/admin/video/reports'},
-      {n: data.playfail_open, label: '播放失败', href: '/admin/video/playfails'},
-      {n: data.gbook_pending, label: '待审留言', href: '/admin/video/guestbooks'},
-      {n: data.collect_fail, label: '今日采集失败', href: '/admin/video/collect_logs'}
-    ];
-    var html = items.map(function (it) {
-      var n = parseInt(it.n, 10) || 0;
-      var cls = n > 0 ? 'layui-badge' : 'layui-badge layui-bg-gray';
-      return '<a class="layui-btn layui-btn-primary layui-btn-sm" href="'+it.href+'">'+it.label+' <span class="'+cls+'">'+n+'</span></a>';
-    }).join(' ');
-    $('#todo-list').html(html);
-  }
-
-  function loadStats() {
-    setLoading(true);
-    return $.ajax({
-      url: '/admin/welcome/stats',
-      method: 'get',
-      dataType: 'json'
-    }).done(function (res) {
-      var data = res && res.data ? res.data : {};
-      render(data);
-    }).fail(function () {
-      layer.msg('加载统计失败');
-    }).always(function () {
-      setLoading(false);
-    });
-  }
-
-  $('#stat-refresh-btn').on('click', function () {
-    loadStats();
-  });
-
-  loadStats();
-});
+    function setUpdated() {
+        var d = new Date();
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        document.getElementById('stat-updated').textContent =
+            '更新于 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+            ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    function renderTodos(data) {
+        var items = [
+            {n: data.comment_pending, label: '待审评论', href: '/admin/video/comments'},
+            {n: data.report_open, label: '未处理报错', href: '/admin/video/reports'},
+            {n: data.playfail_open, label: '播放失败', href: '/admin/video/playfails'},
+            {n: data.gbook_pending, label: '待审留言', href: '/admin/video/guestbooks'},
+            {n: data.collect_fail, label: '今日采集失败', href: '/admin/video/collect_logs'}
+        ];
+        document.getElementById('todo-list').innerHTML = items.map(function (it) {
+            var n = parseInt(it.n, 10) || 0;
+            return '<a class="todo-chip" href="' + it.href + '">' + it.label +
+                ' <span class="badge ' + (n > 0 ? 'badge-warn' : '') + '">' + n + '</span></a>';
+        }).join('');
+    }
+    fetch('/admin/welcome/stats', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (res) { return res.json(); })
+        .then(function (res) {
+            var data = res && res.data ? res.data : {};
+            document.getElementById('stat-vod-total').textContent = text(data.vod_total);
+            document.getElementById('stat-vod-today').textContent = text(data.vod_today);
+            document.getElementById('stat-article-total').textContent = text(data.comment_total ?? data.article_total);
+            document.getElementById('stat-user-total').textContent = text(data.user_total);
+            document.getElementById('stat-visit-today').textContent = text(data.visit_today);
+            document.getElementById('stat-play-today').textContent = text(data.play_today);
+            renderTodos(data);
+            setUpdated();
+        })
+        .catch(function () {
+            document.getElementById('stat-updated').textContent = '统计加载失败';
+            document.getElementById('todo-list').innerHTML = '<span class="muted">暂时读不到待办。</span>';
+        });
+})();
 </script>
 </body>
 </html>

@@ -164,7 +164,7 @@ class SysUser extends Controller
     {
         $username = (string) $request->input('username', '');
         $password = (string) $request->input('password', '');
-        $vscode   = (string) $request->input('vscode', '');
+        $vscode   = (string) ($request->input('captcha', '') !== '' ? $request->input('captcha') : $request->input('vscode', ''));
 
         $data     = $this->systemUserService->login($username, $password, $vscode);
 

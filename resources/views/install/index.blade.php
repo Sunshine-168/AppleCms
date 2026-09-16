@@ -77,7 +77,7 @@
                 <section data-panel="2" hidden>
                     <h2>网站和管理员</h2>
                     <label>网站名称</label>
-                    <input type="text" name="site_name" value="星河影视" required>
+                    <input type="text" name="site_name" value="苹果v12" required>
                     <label>后台账号</label>
                     <input type="text" name="admin_name" value="admin" required minlength="2">
                     <label>邮箱（可选）</label>

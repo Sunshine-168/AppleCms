@@ -8,6 +8,7 @@ use App\Models\System\SysSystemLogModel;
 use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
+use App\Support\Captcha;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
 use Exception;
@@ -234,18 +235,9 @@ class SysUserService
             return Result::fail('请输入验证码');
         }
 
-        $expectedCaptcha = (string) session('captcha', '');
-
-        if ($expectedCaptcha === '')
+        if (! Captcha::check($captcha))
         {
-            return Result::fail('验证码已失效，请刷新');
-        }
-
-        if (strcasecmp($expectedCaptcha, $captcha) !== 0)
-        {
-            session()->forget('captcha');
-
-            return Result::fail('验证码错误，请刷新');
+            return Result::fail('验证码错误');
         }
 
         $where   = [];

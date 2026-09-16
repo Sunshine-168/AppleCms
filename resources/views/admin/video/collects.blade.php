@@ -1,353 +1,184 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 采集源管理</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}">
-</head>
-<body>
+@extends('admin.layouts.inner')
+@section('title', '采集源管理')
 
-<div class="layui-fluid">
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <form class="layui-form" id="collect-source-search">
-        <div class="layui-form-item">
-          <div class="layui-inline">
-            <input type="text" name="name" placeholder="采集源名称" autocomplete="off" class="layui-input">
-          </div>
-          <div class="layui-inline" style="width: 140px;">
+@section('plain')
+<div class="card card-panel">
+    <div class="card-body">
+        <form class="filter-bar" id="collect-source-search" onsubmit="return false;">
+            <input type="text" name="name" placeholder="采集源名称">
             <select name="status">
-              <option value="">全部状态</option>
-              <option value="1">启用</option>
-              <option value="0">禁用</option>
+                <option value="">全部状态</option>
+                <option value="1">启用</option>
+                <option value="0">禁用</option>
             </select>
-          </div>
-          <div class="layui-inline">
-            <button type="button" class="layui-btn" id="collect-source-search-btn">查询</button>
-            <button type="reset" class="layui-btn layui-btn-primary" id="collect-source-reset-btn">重置</button>
-          </div>
-        </div>
-      </form>
+            <button type="button" class="btn btn-sm" id="collect-source-search-btn">查询</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="collect-source-reset-btn">重置</button>
+        </form>
     </div>
-  </div>
-
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <div class="layui-btn-container" style="margin-bottom:10px;">
-        <button class="layui-btn layui-btn-sm" id="collect-source-add-btn">新增采集源</button>
-        <button class="layui-btn layui-btn-sm layui-btn-primary" id="collect-source-refresh-btn">刷新</button>
-        <a class="layui-btn layui-btn-sm layui-btn-normal" href="/admin/video/collect_logs">采集日志</a>
-      </div>
-      <table class="layui-table" id="collect-source-table" lay-filter="collect-source-table"></table>
-
-      <script type="text/html" id="collect-source-rowbar">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bind">绑定</a>
-        <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="run">采集</a>
-        <a class="layui-btn layui-btn-xs" lay-event="resume">续采</a>
-        <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="retry">重试</a>
-        <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="suggest">自动绑定</a>
-        <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
-      </script>
-    </div>
-  </div>
 </div>
-
-<div id="collect-source-dialog-tpl" style="display:none;">
-  <div style="padding:18px 18px 0 0;">
-    <form class="layui-form layui-form-pane" lay-filter="collect-source-form">
-      <input type="hidden" name="id">
-      <div class="layui-form-item">
-        <label class="layui-form-label">名称</label>
-        <div class="layui-input-block">
-          <input type="text" name="name" autocomplete="off" class="layui-input">
+<div class="card card-panel">
+    <div class="card-header">
+        <span>采集源</span>
+        <div>
+            <button type="button" class="btn btn-sm" id="collect-source-add-btn">新增采集源</button>
+            <button type="button" class="btn btn-muted btn-sm" id="collect-source-refresh-btn">刷新</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
         </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">接口地址</label>
-        <div class="layui-input-block">
-          <input type="text" name="api_url" autocomplete="off" class="layui-input" placeholder="https://xxx/api.php/provide/vod/">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">格式</label>
-        <div class="layui-input-block">
-          <select name="api_type">
+    </div>
+    <div class="card-body"><div id="collect-source-table"></div></div>
+</div>
+<template id="collect-source-dialog-tpl">
+    <form>
+        <input type="hidden" name="id">
+        <label>名称</label>
+        <input type="text" name="name">
+        <label>接口地址</label>
+        <input type="text" name="api_url" placeholder="https://xxx/api.php/provide/vod/">
+        <label>格式</label>
+        <select name="api_type">
             <option value="auto">自动</option>
             <option value="json">JSON</option>
             <option value="xml">XML</option>
-          </select>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">附加参数</label>
-        <div class="layui-input-block">
-          <input type="text" name="param" autocomplete="off" class="layui-input" placeholder="ac=list 以外的固定参数">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">状态</label>
-        <div class="layui-input-block">
-          <select name="status">
-            <option value="1">启用</option>
-            <option value="0">禁用</option>
-          </select>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">排序</label>
-        <div class="layui-input-block">
-          <input type="number" name="sort" autocomplete="off" class="layui-input" value="0">
-        </div>
-      </div>
+        </select>
+        <label>附加参数</label>
+        <input type="text" name="param" placeholder="ac=list 以外的固定参数">
+        <label>状态</label>
+        <select name="status"><option value="1">启用</option><option value="0">禁用</option></select>
+        <label>排序</label>
+        <input type="number" name="sort" value="0">
     </form>
-  </div>
-</div>
+</template>
+@endsection
 
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@push('scripts')
 <script>
-layui.use(['layer','form','table'], function(){
-  var $ = layui.$, layer = layui.layer, form = layui.form, table = layui.table;
-
-  var csrfToken = $('meta[name=csrf-token]').attr('content');
-  if (csrfToken) {
-    $.ajaxSetup({ headers: {'X-CSRF-TOKEN': csrfToken} });
-  }
-
-  function escapeHtml(value){
-    return String(value||'').replace(/[&<>"']/g,function(s){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s];
+(function () {
+    var U = AdminUi;
+    var table = U.table({
+        el: '#collect-source-table',
+        url: '/admin/video/collects/list',
+        cols: [
+            {key: 'id', title: 'ID', width: 70},
+            {key: 'name', title: '名称'},
+            {key: 'api_url', title: '接口'},
+            {key: 'api_type', title: '格式', width: 70},
+            {title: '状态', width: 80, html: function (d) { return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用'); }},
+            {key: 'sort', title: '排序', width: 70},
+            {key: 'last_page', title: '断点页', width: 80},
+            {key: 'last_error', title: '失败'},
+            {key: 'updated_at_text', title: '更新时间', width: 150},
+            {title: '操作', cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-bind">绑定</a><a href="#" class="btn-link js-run">采集</a><a href="#" class="btn-link js-resume">续采</a><a href="#" class="btn-link js-retry">重试</a><a href="#" class="btn-link js-suggest">自动绑定</a><a href="#" class="btn-link js-del">删除</a>';
+            }}
+        ]
     });
-  }
-
-  function formToObj($form){
-    var o = {};
-    ($form.serializeArray()||[]).forEach(function(it){
-      o[it.name] = it.value;
-    });
-    return o;
-  }
-
-  function apiGet(url, data, ok){
-    $.ajax({
-      url: url,
-      type: 'GET',
-      data: data || {},
-      dataType: 'json',
-      success: function(res){
-        if (res && res.code === 0) {
-          ok && ok(res.data || {}, res);
-          return;
-        }
-        layer.msg((res && res.msg) ? res.msg : '操作失败', {icon:2});
-      },
-      error: function(){
-        layer.msg('网络错误', {icon:2});
-      }
-    });
-  }
-
-  function apiPost(url, data, ok){
-    $.ajax({
-      url: url,
-      type: 'POST',
-      data: data || {},
-      dataType: 'json',
-      success: function(res){
-        if (res && res.code === 0) {
-          ok && ok(res.data || {}, res);
-          return;
-        }
-        layer.msg((res && res.msg) ? res.msg : '操作失败', {icon:2});
-      },
-      error: function(){
-        layer.msg('网络错误', {icon:2});
-      }
-    });
-  }
-
-  table.render({
-    elem:'#collect-source-table',
-    id: 'collect-source-table',
-    url:'/admin/video/collects/list',
-    method:'get',
-    page:true,
-    parseData:function(res){
-      var data = res && res.data ? res.data : {};
-      return {
-        code: res && typeof res.code === 'number' ? res.code : 1,
-        msg: res && typeof res.msg === 'string' ? res.msg : '',
-        count: data && typeof data.total === 'number' ? data.total : 0,
-        data: data && Array.isArray(data.data) ? data.data : []
-      };
-    },
-    cols:[[
-      {field:'id',width:80,title:'ID',sort:true},
-      {field:'name',title:'名称',minWidth:140},
-      {field:'api_url',title:'接口',minWidth:220},
-      {field:'api_type',title:'格式',width:80},
-      {field:'status',title:'状态',width:90,templet:function(d){
-        if (typeof d.status === 'undefined' || d.status === null || d.status === '') { return '-'; }
-        return String(d.status) === '1'
-          ? '<span class="layui-badge layui-bg-green">启用</span>'
-          : '<span class="layui-badge layui-bg-gray">禁用</span>';
-      }},
-      {field:'sort',title:'排序',width:90,sort:true},
-      {field:'last_page',title:'断点页',width:90},
-      {field:'last_error',title:'失败',minWidth:120},
-      {field:'created_at_text',title:'创建时间',width:160},
-      {field:'updated_at_text',title:'更新时间',width:160},
-      {title:'操作',toolbar:'#collect-source-rowbar',width:420}
-    ]]
-  });
-
-  function openDialog(mode, row){
-    row = row || {};
-    var isEdit = mode === 'edit';
-    var title = isEdit ? '编辑采集源' : '新增采集源';
-
-    var idx = layer.open({
-      type: 1,
-      title: title,
-      area: ['640px', '520px'],
-      content: $('#collect-source-dialog-tpl').html(),
-      btn: ['保存', '取消'],
-      success: function(){
-        form.val('collect-source-form', {
-          id: row.id || '',
-          name: row.name || '',
-          api_url: row.api_url || '',
-          api_type: row.api_type || 'auto',
-          param: row.param || '',
-          status: (row.status !== undefined && row.status !== null) ? String(row.status) : '1',
-          sort: row.sort !== undefined ? row.sort : 0
+    function openDialog(mode, row) {
+        row = row || {};
+        U.dialog({
+            title: mode === 'edit' ? '编辑采集源' : '新增采集源',
+            content: document.getElementById('collect-source-dialog-tpl').innerHTML,
+            onOpen: function (body) {
+                U.fillForm(body.querySelector('form'), {
+                    id: row.id || '',
+                    name: row.name || '',
+                    api_url: row.api_url || '',
+                    api_type: row.api_type || 'auto',
+                    param: row.param || '',
+                    status: row.status == null ? '1' : String(row.status),
+                    sort: row.sort == null ? 0 : row.sort
+                });
+            },
+            onSave: function (body) {
+                var data = U.formData(body.querySelector('form'));
+                if (mode !== 'edit') delete data.id; else data.id = row.id;
+                return U.post('/admin/video/collects/save', data).then(function (res) {
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
+                    U.toast('保存成功', 'ok');
+                    table.refresh();
+                });
+            }
         });
-        form.render();
-      },
-      yes: function(){
-        var $form = $('.layui-layer-content').find('form[lay-filter="collect-source-form"]');
-        var data = formToObj($form);
-        if (isEdit) {
-          data.id = row.id;
-        } else {
-          delete data.id;
-        }
-        apiPost('/admin/video/collects/save', data, function(){
-          layer.close(idx);
-          table.reload('collect-source-table');
-          layer.msg('保存成功', {icon:1});
-        });
-      }
-    });
-  }
-
-  $('#collect-source-search-btn').on('click', function(){
-    table.reload('collect-source-table', {where: formToObj($('#collect-source-search')), page: {curr: 1}});
-  });
-
-  $('#collect-source-refresh-btn').on('click', function(){
-    table.reload('collect-source-table');
-  });
-
-  $('#collect-source-add-btn').on('click', function(){
-    openDialog('add', {});
-  });
-
-  table.on('tool(collect-source-table)', function(obj){
-    var row = obj.data || {};
-    if (obj.event === 'edit') {
-      openDialog('edit', row);
-      return;
     }
-    if (obj.event === 'bind') {
-      apiGet('/admin/video/collects/classes', {id: row.id}, function(data){
-        var types = data.types || [];
-        var locals = data.local_types || [];
-        var html = '<div style="padding:12px;max-height:420px;overflow:auto;"><table class="layui-table"><thead><tr><th>资源分类</th><th>绑定本地</th></tr></thead><tbody>';
-        types.forEach(function(t){
-          html += '<tr><td>'+ escapeHtml(t.name) +' ('+ t.remote_id +')</td><td><select data-remote="'+ t.remote_id +'"><option value="0">不采集</option>';
-          locals.forEach(function(l){
-            var sel = String(l.id) === String(t.local_id) ? ' selected' : '';
-            html += '<option value="'+ l.id +'"'+ sel +'>'+ escapeHtml(l.name) +'</option>';
-          });
-          html += '</select></td></tr>';
-        });
-        html += '</tbody></table></div>';
-        layer.open({
-          type:1, title:'绑定分类 - '+ escapeHtml(row.name||''), area:['560px','520px'], content: html,
-          btn:['保存','取消'],
-          yes: function(index, layero){
-            var bind = {};
-            $(layero).find('select[data-remote]').each(function(){
-              bind[$(this).data('remote')] = $(this).val();
+    U.on('#collect-source-search-btn', 'click', function () { table.reload(U.formData('#collect-source-search')); });
+    U.on('#collect-source-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
+    U.on('#collect-source-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#collect-source-add-btn', 'click', function () { openDialog('add', {}); });
+    U.on('#collect-source-table', 'click', function (e) {
+        var a = e.target.closest('a'); if (!a) return;
+        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        if (!row) return;
+        e.preventDefault();
+        if (a.classList.contains('js-edit')) openDialog('edit', row);
+        if (a.classList.contains('js-bind')) {
+            U.get('/admin/video/collects/classes', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                var data = res.data || {};
+                var types = data.types || [];
+                var locals = data.local_types || [];
+                var html = '<table class="data"><thead><tr><th>资源分类</th><th>绑定本地</th></tr></thead><tbody>';
+                types.forEach(function (t) {
+                    html += '<tr><td>' + U.escape(t.name) + ' (' + U.escape(t.remote_id) + ')</td><td><select data-remote="' + U.escape(t.remote_id) + '"><option value="0">不采集</option>';
+                    locals.forEach(function (l) {
+                        html += '<option value="' + U.escape(l.id) + '"' + (String(l.id) === String(t.local_id) ? ' selected' : '') + '>' + U.escape(l.name) + '</option>';
+                    });
+                    html += '</select></td></tr>';
+                });
+                html += '</tbody></table>';
+                U.dialog({
+                    title: '绑定分类 - ' + (row.name || ''),
+                    content: html,
+                    onSave: function (body) {
+                        var bind = {};
+                        U.qa('select[data-remote]', body).forEach(function (sel) {
+                            bind[sel.getAttribute('data-remote')] = sel.value;
+                        });
+                        return U.post('/admin/video/collects/bind', {id: row.id, bind: JSON.stringify(bind)}).then(function (r) {
+                            if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return false; }
+                            U.toast('绑定已保存', 'ok');
+                        });
+                    }
+                });
             });
-            apiPost('/admin/video/collects/bind', {id: row.id, bind: bind}, function(){
-              layer.close(index);
-              layer.msg('绑定已保存', {icon:1});
+        }
+        if (a.classList.contains('js-run')) {
+            var val = U.prompt('起始页,采集页数,小时(0全部)', '1,1,24');
+            if (val == null) return;
+            var parts = String(val).split(/[,，\s]+/);
+            U.loading(true);
+            U.post('/admin/video/collects/run', {id: row.id, page: parts[0] || 1, pages: parts[1] || 1, hours: parts[2] || 0}).then(function (res) {
+                U.loading(false);
+                table.refresh();
+                U.toast((res && res.msg) || '采集完成', res && res.code === 0 ? 'ok' : 'err');
             });
-          }
-        });
-      });
-      return;
-    }
-    if (obj.event === 'run') {
-      layer.prompt({title:'起始页,采集页数,小时(0全部)', value:'1,1,24', formType:0}, function(val, index){
-        layer.close(index);
-        var parts = String(val||'1').split(/[,，\s]+/);
-        var load = layer.load(1);
-        apiPost('/admin/video/collects/run', {
-          id: row.id,
-          page: parts[0] || 1,
-          pages: parts[1] || 1,
-          hours: parts[2] || 0
-        }, function(data, res){
-          layer.close(load);
-          table.reload('collect-source-table');
-          layer.msg((res && res.msg) ? res.msg : '采集完成', {icon:1, time: 3000});
-        });
-      });
-      return;
-    }
-    if (obj.event === 'resume') {
-      var load = layer.load(1);
-      apiPost('/admin/video/collects/resume', {id: row.id, pages: 1, hours: 24}, function(data, res){
-        layer.close(load);
-        table.reload('collect-source-table');
-        layer.msg((res && res.msg) ? res.msg : '续采完成', {icon:1, time: 3000});
-      });
-      return;
-    }
-    if (obj.event === 'retry') {
-      var load2 = layer.load(1);
-      apiPost('/admin/video/collects/retry', {id: row.id}, function(data, res){
-        layer.close(load2);
-        table.reload('collect-source-table');
-        layer.msg((res && res.msg) ? res.msg : '重试完成', {icon:1, time: 3000});
-      });
-      return;
-    }
-    if (obj.event === 'suggest') {
-      apiPost('/admin/video/collects/suggest', {id: row.id}, function(data, res){
-        layer.msg((res && res.msg) ? res.msg : '已按同名分类绑定', {icon:1});
-      });
-      return;
-    }
-    if (obj.event === 'del') {
-      layer.confirm('确认删除该采集源？', function(index){
-        apiPost('/admin/video/collects/delete', {id: row.id}, function(){
-          layer.close(index);
-          table.reload('collect-source-table');
-          layer.msg('删除成功', {icon:1});
-        });
-      });
-    }
-  });
-});
+        }
+        if (a.classList.contains('js-resume')) {
+            U.loading(true);
+            U.post('/admin/video/collects/resume', {id: row.id, pages: 1, hours: 24}).then(function (res) {
+                U.loading(false);
+                table.refresh();
+                U.toast((res && res.msg) || '续采完成', res && res.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-retry')) {
+            U.loading(true);
+            U.post('/admin/video/collects/retry', {id: row.id}).then(function (res) {
+                U.loading(false);
+                table.refresh();
+                U.toast((res && res.msg) || '重试完成', res && res.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-suggest')) {
+            U.post('/admin/video/collects/suggest', {id: row.id}).then(function (res) {
+                U.toast((res && res.msg) || '已按同名分类绑定', res && res.code === 0 ? 'ok' : 'err');
+            });
+        }
+        if (a.classList.contains('js-del') && U.confirm('确认删除该采集源？')) {
+            U.post('/admin/video/collects/delete', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                table.refresh(); U.toast('删除成功', 'ok');
+            });
+        }
+    });
+})();
 </script>
-</body>
-</html>
+@endpush

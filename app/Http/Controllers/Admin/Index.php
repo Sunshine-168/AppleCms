@@ -4,9 +4,9 @@ use App\Http\Controllers\Controller;
 use App\Services\Admin\System\SysPermService;
 use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
+use App\Support\Captcha;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -38,11 +38,20 @@ class Index extends Controller
 
     /**
      * 欢迎页
-     * @return View|Factory
      */
     public function welcome(): View|Factory
     {
         return view('admin.welcome');
+    }
+
+    /**
+     * 全部功能目录
+     */
+    public function more(): View|Factory
+    {
+        return view('admin.more', [
+            'catalog' => \App\Support\AdminNav::catalog(),
+        ]);
     }
 
     /**
@@ -96,33 +105,14 @@ class Index extends Controller
     }
 
     /**
-     * 输出验证码图片
-     * @param Request $request
-     * @return Response
+     * 加减法验证码
      */
-    public function captcha(Request $request): Response
+    public function captcha(): JsonResponse
     {
-        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        $phrase = '';
-        for ($i = 0; $i < 4; $i++) {
-            $phrase .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        $request->session()->put('captcha', $phrase);
+        $cap = Captcha::generate();
 
-        if (! function_exists('imagecreatetruecolor')) {
-            return response($phrase, 200)->header('Content-Type', 'text/plain');
-        }
-
-        $im = imagecreatetruecolor(120, 40);
-        $bg = imagecolorallocate($im, 247, 249, 252);
-        $fg = imagecolorallocate($im, 29, 33, 41);
-        imagefilledrectangle($im, 0, 0, 120, 40, $bg);
-        imagestring($im, 5, 28, 12, $phrase, $fg);
-        ob_start();
-        imagejpeg($im, null, 80);
-        $bin = ob_get_clean();
-        imagedestroy($im);
-
-        return response($bin, 200)->header('Content-Type', 'image/jpeg');
+        return Ajax::message(0, 'success', [
+            'question' => $cap['question'],
+        ]);
     }
 }

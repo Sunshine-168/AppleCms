@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 class VideoInstallCommand extends Command
 {
-    protected $signature = 'video:install {--name=星河影视} {--admin=admin} {--password=} {--demo}';
+    protected $signature = 'video:install {--name=苹果v12} {--admin=admin} {--password=} {--demo}';
 
     protected $description = '命令行安装：迁移、默认分类、管理员';
 

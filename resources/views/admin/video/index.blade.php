@@ -1,752 +1,384 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>{{ conf('name') }} - 视频管理</title>
-  <meta name="renderer" content="webkit">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/layui/css/layui.css') }}">
-  <link rel="stylesheet" href="{{ asset('static/admin/style/admin.css') }}">
-</head>
-<body>
+@extends('admin.layouts.inner')
+@section('title', '视频管理')
 
-<div class="layui-fluid">
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <form class="layui-form" lay-filter="video-search" id="video-search">
-        <div class="layui-form-item">
-          <div class="layui-inline">
-            <input type="text" name="title" placeholder="标题" autocomplete="off" class="layui-input">
-          </div>
-          <div class="layui-inline">
-            <select name="type_id" id="video-search-type">
-              <option value="">分类</option>
-            </select>
-          </div>
-          <div class="layui-inline">
+@section('plain')
+<div class="card card-panel">
+    <div class="card-body">
+        <form class="filter-bar" id="video-search" onsubmit="return false;">
+            <input type="text" name="title" placeholder="标题">
+            <select name="type_id" id="video-search-type"><option value="">分类</option></select>
             <select name="status">
-              <option value="">状态</option>
-              <option value="1">上架</option>
-              <option value="0">下架</option>
-              <option value="2">草稿</option>
-              <option value="3">未通过</option>
-              <option value="4">定时</option>
+                <option value="">状态</option>
+                <option value="1">上架</option>
+                <option value="0">下架</option>
+                <option value="2">草稿</option>
+                <option value="3">未通过</option>
+                <option value="4">定时</option>
             </select>
-          </div>
-          <div class="layui-inline">
             <select name="is_recommend">
-              <option value="">推荐</option>
-              <option value="1">是</option>
-              <option value="0">否</option>
+                <option value="">推荐</option>
+                <option value="1">是</option>
+                <option value="0">否</option>
             </select>
-          </div>
-          <div class="layui-inline">
             <select name="is_hot">
-              <option value="">热门</option>
-              <option value="1">是</option>
-              <option value="0">否</option>
+                <option value="">热门</option>
+                <option value="1">是</option>
+                <option value="0">否</option>
             </select>
-          </div>
-          <div class="layui-inline">
             <select name="lock">
-              <option value="">锁定</option>
-              <option value="1">已锁</option>
-              <option value="0">未锁</option>
+                <option value="">锁定</option>
+                <option value="1">已锁</option>
+                <option value="0">未锁</option>
             </select>
-          </div>
-          <div class="layui-inline">
-            <input type="text" name="year" placeholder="年份" autocomplete="off" class="layui-input" style="width:90px;">
-          </div>
-          <div class="layui-inline">
-            <input type="text" name="area" placeholder="地区" autocomplete="off" class="layui-input" style="width:90px;">
-          </div>
-          <div class="layui-inline">
-            <input type="text" name="weekday" placeholder="周期" autocomplete="off" class="layui-input" style="width:90px;">
-          </div>
-          <div class="layui-inline">
-            <input type="number" name="points_min" placeholder="积分≥" autocomplete="off" class="layui-input" style="width:90px;">
-          </div>
-          <div class="layui-inline">
-            <select name="empty_url">
-              <option value="">播放地址</option>
-              <option value="1">无地址</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="repeat">
-              <option value="">重名</option>
-              <option value="1">仅重名</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="need_points">
-              <option value="">积分片</option>
-              <option value="1">需积分</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="has_plot">
-              <option value="">剧情</option>
-              <option value="1">有分集剧情</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="empty_pic">
-              <option value="">封面</option>
-              <option value="1">无封面</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="empty_content">
-              <option value="">简介</option>
-              <option value="1">无简介</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <select name="no_actor">
-              <option value="">演员</option>
-              <option value="1">无演员</option>
-            </select>
-          </div>
-          <div class="layui-inline">
-            <button type="button" class="layui-btn" id="video-search-btn">查询</button>
-            <button type="reset" class="layui-btn layui-btn-primary" id="video-reset-btn">重置</button>
-          </div>
-        </div>
-      </form>
+            <input type="text" name="year" placeholder="年份">
+            <input type="text" name="area" placeholder="地区">
+            <input type="text" name="weekday" placeholder="周期">
+            <input type="number" name="points_min" placeholder="积分≥">
+            <select name="empty_url"><option value="">播放地址</option><option value="1">无地址</option></select>
+            <select name="repeat"><option value="">重名</option><option value="1">仅重名</option></select>
+            <select name="need_points"><option value="">积分片</option><option value="1">需积分</option></select>
+            <select name="has_plot"><option value="">剧情</option><option value="1">有分集剧情</option></select>
+            <select name="empty_pic"><option value="">封面</option><option value="1">无封面</option></select>
+            <select name="empty_content"><option value="">简介</option><option value="1">无简介</option></select>
+            <select name="no_actor"><option value="">演员</option><option value="1">无演员</option></select>
+            <button type="button" class="btn btn-sm" id="video-search-btn">查询</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="video-reset-btn">重置</button>
+        </form>
     </div>
-  </div>
-
-  <div class="layui-card">
-    <div class="layui-card-body">
-      <div class="layui-btn-container" style="margin-bottom:10px;">
-        <button class="layui-btn layui-btn-sm" id="video-add-btn">新增视频</button>
-        <button class="layui-btn layui-btn-sm" id="video-batch-on">批量上架</button>
-        <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-off">批量下架</button>
-        <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-rec">批量推荐</button>
-        <button class="layui-btn layui-btn-sm" id="video-batch-lock">批量锁定</button>
-        <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-type">改分类</button>
-        <button class="layui-btn layui-btn-sm" id="video-batch-points">改积分</button>
-        <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-merge">合并重复</button>
-        <button class="layui-btn layui-btn-sm" id="video-batch-replace-url">批量换播放地址</button>
-        <button class="layui-btn layui-btn-sm layui-btn-danger" id="video-batch-del">批量删除</button>
-        <button class="layui-btn layui-btn-sm layui-btn-primary" id="video-refresh-btn">刷新</button>
-        <a class="layui-btn layui-btn-sm layui-btn-warm" href="/admin/video?empty_url=1">无地址</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?empty_pic=1">无封面</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?empty_content=1">无简介</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?no_actor=1">无演员</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?status=0">待审</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?status=2">草稿</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?status=3">未通过</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?status=4">定时</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?repeat=1">重名</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video?has_plot=1">有分集剧情</a>
-        <a class="layui-btn layui-btn-sm layui-btn-danger" href="/admin/video/tools/recycle">回收站</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/tools/images">远程图片</a>
-        <a class="layui-btn layui-btn-sm" href="/admin/video/tools/quality">内容质量</a>
-      </div>
-      <table id="video-table" lay-filter="video-table"></table>
-    </div>
-  </div>
 </div>
-
-<script type="text/html" id="video-rowbar">
-  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-  <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="sources">线路</a>
-  <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="episodes">剧集</a>
-  <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
-</script>
-
-<script type="text/html" id="video-dialog-tpl">
-  <div style="padding:15px;">
-    <form class="layui-form" lay-filter="video-form" id="video-form">
-      <input type="hidden" name="id" value="">
-      <div class="layui-form-item">
-        <label class="layui-form-label">标题</label>
-        <div class="layui-input-block">
-          <input type="text" name="title" autocomplete="off" class="layui-input">
+<div class="card card-panel">
+    <div class="card-header">
+        <span>影片列表</span>
+        <div>
+            <button type="button" class="btn btn-sm" id="video-add-btn">新增视频</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-refresh-btn">刷新</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tools/recycle">回收站</a>
         </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">副标题</label>
-        <div class="layui-input-block">
-          <input type="text" name="subtitle" autocomplete="off" class="layui-input">
+    </div>
+    <div class="card-body">
+        <div class="toolbar">
+            <button type="button" class="btn btn-sm" id="video-batch-on">批量上架</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-off">批量下架</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-rec">批量推荐</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-lock">批量锁定</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-type">改分类</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-points">改积分</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-merge">合并重复</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-replace-url">批量换播放地址</button>
+            <button type="button" class="btn btn-danger btn-sm" id="video-batch-del">批量删除</button>
         </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">分类</label>
-        <div class="layui-input-block">
-          <select name="type_id" id="video-form-type">
-            <option value="">请选择</option>
-          </select>
+        <div class="toolbar">
+            <a class="btn btn-muted btn-sm" href="/admin/video?empty_url=1">无地址</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?empty_pic=1">无封面</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?empty_content=1">无简介</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?no_actor=1">无演员</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?status=0">待审</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?status=2">草稿</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?status=3">未通过</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?status=4">定时</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?repeat=1">重名</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?has_plot=1">有分集剧情</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tools/images">远程图片</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tools/quality">内容质量</a>
         </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">年份</label>
-          <div class="layui-input-inline">
-            <input type="text" name="year" autocomplete="off" class="layui-input">
-          </div>
+        <div id="video-table"></div>
+    </div>
+</div>
+<template id="video-dialog-tpl">
+    <form id="video-form">
+        <input type="hidden" name="id">
+        <label>标题</label>
+        <input type="text" name="title">
+        <label>副标题</label>
+        <input type="text" name="subtitle">
+        <label>分类</label>
+        <select name="type_id" id="video-form-type"><option value="">请选择</option></select>
+        <label>年份</label>
+        <input type="text" name="year">
+        <label>地区</label>
+        <input type="text" name="area">
+        <label>语言</label>
+        <input type="text" name="lang">
+        <label>周期</label>
+        <input type="text" name="weekday" placeholder="一,二,三">
+        <label>导演</label>
+        <input type="text" name="director">
+        <label>备注</label>
+        <input type="text" name="remarks">
+        <label>点播积分</label>
+        <input type="number" name="points" value="0">
+        <label>锁定</label>
+        <select name="lock"><option value="0">否</option><option value="1">是</option></select>
+        <label>封面</label>
+        <div class="field-inline">
+            <input type="text" name="cover" class="video-cover-input" placeholder="图片URL">
+            <button type="button" class="btn btn-muted video-cover-upload-btn">上传</button>
         </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">地区</label>
-          <div class="layui-input-inline">
-            <input type="text" name="area" autocomplete="off" class="layui-input">
-          </div>
+        <img class="img-preview video-cover-preview" alt="">
+        <label>横幅</label>
+        <div class="field-inline">
+            <input type="text" name="banner" class="video-banner-input" placeholder="图片URL">
+            <button type="button" class="btn btn-muted video-banner-upload-btn">上传</button>
         </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">语言</label>
-          <div class="layui-input-inline">
-            <input type="text" name="lang" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">周期</label>
-          <div class="layui-input-inline">
-            <input type="text" name="weekday" autocomplete="off" class="layui-input" placeholder="一,二,三">
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">导演</label>
-        <div class="layui-input-block">
-          <input type="text" name="director" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">备注</label>
-        <div class="layui-input-block">
-          <input type="text" name="remarks" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">点播积分</label>
-          <div class="layui-input-inline">
-            <input type="number" name="points" autocomplete="off" class="layui-input" value="0">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">锁定</label>
-          <div class="layui-input-inline">
-            <select name="lock">
-              <option value="0">否</option>
-              <option value="1">是</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">封面</label>
-        <div class="layui-input-block">
-          <div class="layui-input-inline" style="width: calc(100% - 92px);">
-            <input type="text" name="cover" autocomplete="off" class="layui-input video-cover-input" placeholder="图片URL">
-          </div>
-          <div class="layui-input-inline" style="width: 80px;">
-            <button type="button" class="layui-btn layui-btn-primary video-cover-upload-btn">上传</button>
-          </div>
-          <div style="padding-top: 8px;">
-            <img class="video-cover-preview" src="" style="max-width: 160px; max-height: 90px; border-radius: 4px; display: none;">
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">横幅</label>
-        <div class="layui-input-block">
-          <div class="layui-input-inline" style="width: calc(100% - 92px);">
-            <input type="text" name="banner" autocomplete="off" class="layui-input video-banner-input" placeholder="图片URL">
-          </div>
-          <div class="layui-input-inline" style="width: 80px;">
-            <button type="button" class="layui-btn layui-btn-primary video-banner-upload-btn">上传</button>
-          </div>
-          <div style="padding-top: 8px;">
-            <img class="video-banner-preview" src="" style="max-width: 240px; max-height: 90px; border-radius: 4px; display: none;">
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">评分</label>
-          <div class="layui-input-inline">
-            <input type="number" name="score" value="0" step="0.1" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">排序</label>
-          <div class="layui-input-inline">
-            <input type="number" name="sort" value="0" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">状态</label>
-          <div class="layui-input-inline">
-            <select name="status">
-              <option value="1">上架</option>
-              <option value="0">下架</option>
-              <option value="2">草稿</option>
-              <option value="3">未通过</option>
-              <option value="4">定时</option>
-            </select>
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">定时发布时间</label>
-          <div class="layui-input-inline">
-            <input type="datetime-local" name="publish_at" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">推荐</label>
-          <div class="layui-input-inline">
-            <select name="is_recommend">
-              <option value="0">否</option>
-              <option value="1">是</option>
-            </select>
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">热门</label>
-          <div class="layui-input-inline">
-            <select name="is_hot">
-              <option value="0">否</option>
-              <option value="1">是</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">采集源</label>
-          <div class="layui-input-inline">
-            <select name="collect_source_id" id="video-form-collect-source">
-              <option value="">无</option>
-            </select>
-          </div>
-        </div>
-        <div class="layui-inline">
-          <label class="layui-form-label">采集ID</label>
-          <div class="layui-input-inline">
-            <input type="text" name="collect_id" autocomplete="off" class="layui-input">
-          </div>
-        </div>
-      </div>
-
-      <div class="layui-form-item">
-        <label class="layui-form-label">标签</label>
-        <div class="layui-input-block">
-          <input type="text" name="tags_text" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">主演</label>
-        <div class="layui-input-block">
-          <input type="text" name="actors_text" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <label class="layui-form-label">简介</label>
-        <div class="layui-input-block">
-          <textarea name="description" class="layui-textarea" style="min-height:120px;"></textarea>
-        </div>
-      </div>
+        <img class="img-preview video-banner-preview" alt="">
+        <label>评分</label>
+        <input type="number" name="score" value="0" step="0.1">
+        <label>排序</label>
+        <input type="number" name="sort" value="0">
+        <label>状态</label>
+        <select name="status">
+            <option value="1">上架</option>
+            <option value="0">下架</option>
+            <option value="2">草稿</option>
+            <option value="3">未通过</option>
+            <option value="4">定时</option>
+        </select>
+        <label>定时发布时间</label>
+        <input type="datetime-local" name="publish_at">
+        <label>推荐</label>
+        <select name="is_recommend"><option value="0">否</option><option value="1">是</option></select>
+        <label>热门</label>
+        <select name="is_hot"><option value="0">否</option><option value="1">是</option></select>
+        <label>采集源</label>
+        <select name="collect_source_id" id="video-form-collect-source"><option value="">无</option></select>
+        <label>采集ID</label>
+        <input type="text" name="collect_id">
+        <label>标签</label>
+        <input type="text" name="tags_text">
+        <label>主演</label>
+        <input type="text" name="actors_text">
+        <label>简介</label>
+        <textarea name="description"></textarea>
     </form>
-  </div>
-</script>
+</template>
+@endsection
 
-<script src="{{ asset('static/admin/layui/layui.js') }}"></script>
+@push('scripts')
 <script>
-layui.use(['layer','form','table','upload'], function(){
-  var $ = layui.$, layer = layui.layer, form = layui.form, table = layui.table, upload = layui.upload;
-
-  var csrfToken = $('meta[name=csrf-token]').attr('content');
-  if (csrfToken) {
-    $.ajaxSetup({ headers: {'X-CSRF-TOKEN': csrfToken} });
-  }
-
-  function escapeHtml(value){
-    return String(value||'').replace(/[&<>"']/g,function(s){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s];
-    });
-  }
-
-  function apiGet(url, data, ok){
-    $.get(url, data || {}, function(res){
-      if(res && res.code === 0){
-        ok && ok(res);
-      } else {
-        layer.msg(res && res.msg ? res.msg : '请求失败', {icon:2});
-      }
-    }, 'json').fail(function(){ layer.msg('请求失败', {icon:2}); });
-  }
-
-  function apiPost(url, data, ok){
-    $.post(url, data || {}, function(res){
-      if(res && res.code === 0){
-        ok && ok(res);
-      } else {
-        layer.msg(res && res.msg ? res.msg : '操作失败', {icon:2});
-      }
-    }, 'json').fail(function(){ layer.msg('请求失败', {icon:2}); });
-  }
-
-  function formToObj($form){
-    var arr = $form.serializeArray();
-    var obj = {};
-    for(var i=0;i<arr.length;i++){
-      obj[arr[i].name] = arr[i].value;
+(function () {
+    var U = AdminUi;
+    function unixToDatetimeLocal(ts) {
+        ts = parseInt(ts, 10) || 0;
+        if (!ts) return '';
+        var d = new Date(ts * 1000);
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
-    return obj;
-  }
-
-  function unixToDatetimeLocal(ts){
-    ts = parseInt(ts, 10) || 0;
-    if (!ts) { return ''; }
-    var d = new Date(ts * 1000);
-    var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-  }
-
-  var typeOptionsCache = null;
-  function loadTypeOptions(cb){
-    if(typeOptionsCache){ cb && cb(typeOptionsCache); return; }
-    apiGet('/admin/video/types/options', {}, function(res){
-      typeOptionsCache = res.data || [];
-      cb && cb(typeOptionsCache);
-    });
-  }
-
-  var collectOptionsCache = null;
-  function loadCollectOptions(cb){
-    if(collectOptionsCache){ cb && cb(collectOptionsCache); return; }
-    apiGet('/admin/video/collect/options', {}, function(res){
-      collectOptionsCache = res.data || [];
-      cb && cb(collectOptionsCache);
-    });
-  }
-
-  function renderTypeSelect($select, options, selected){
-    var html = '<option value="">请选择</option>';
-    for(var i=0;i<options.length;i++){
-      var o = options[i] || {};
-      html += '<option value="'+ escapeHtml(o.id) +'">'+ escapeHtml(o.name || '') +'</option>';
-    }
-    $select.html(html);
-    if(selected !== undefined && selected !== null && selected !== ''){
-      $select.val(String(selected));
-    } else {
-      $select.val('');
-    }
-    form.render('select');
-  }
-
-  function renderCollectSelect($select, options, selected){
-    var html = '<option value="">无</option>';
-    for(var i=0;i<options.length;i++){
-      var o = options[i] || {};
-      var name = escapeHtml(o.name || '');
-      if(String(o.status) === '0'){ name = name + '（禁用）'; }
-      html += '<option value="'+ escapeHtml(o.id) +'">'+ name +'</option>';
-    }
-    $select.html(html);
-    if(selected !== undefined && selected !== null && selected !== ''){
-      $select.val(String(selected));
-    } else {
-      $select.val('');
-    }
-    form.render('select');
-  }
-
-  function preloadSearchType(){
-    loadTypeOptions(function(options){
-      renderTypeSelect($('#video-search-type'), options, '');
-    });
-  }
-  preloadSearchType();
-
-  var qs = new URLSearchParams(location.search);
-  var tableIns = table.render({
-    elem:'#video-table',
-    url:'/admin/video/list',
-    method:'get',
-    where: {
-      empty_url: qs.get('empty_url') || '',
-      repeat: qs.get('repeat') || '',
-      need_points: qs.get('need_points') || '',
-      has_plot: qs.get('has_plot') || '',
-      empty_pic: qs.get('empty_pic') || '',
-      empty_content: qs.get('empty_content') || '',
-      no_actor: qs.get('no_actor') || '',
-      weekday: qs.get('weekday') || '',
-      status: qs.get('status') || '',
-      trash: qs.get('trash') || ''
-    },
-    page:true,
-    parseData:function(res){
-      return {
-        code: res.code,
-        msg: res.msg,
-        count: res.data.total || 0,
-        data: res.data.data || []
-      };
-    },
-    cols:[[
-      {type:'checkbox', width:48},
-      {field:'id', width:80, title:'ID', sort:true},
-      {field:'title', title:'标题', minWidth:200},
-      {field:'type_name', width:140, title:'分类'},
-      {field:'score', width:90, title:'评分'},
-      {field:'points', width:80, title:'积分'},
-      {field:'year', width:80, title:'年份'},
-      {field:'status', width:90, title:'状态', templet:function(d){
-        if (String(d.status) === '1') return '<span class="layui-badge layui-bg-green">上架</span>';
-        if (String(d.status) === '2') return '<span class="layui-badge layui-bg-orange">草稿</span>';
-        if (String(d.status) === '3') return '<span class="layui-badge">未通过</span>';
-        if (String(d.status) === '4') return '<span class="layui-badge layui-bg-blue">定时</span>';
-        return '<span class="layui-badge">下架</span>';
-      }},
-      {field:'is_recommend', width:90, title:'推荐', templet:function(d){
-        return String(d.is_recommend) === '1' ? '<span class="layui-badge layui-bg-blue">是</span>' : '<span class="layui-badge layui-bg-gray">否</span>';
-      }},
-      {field:'is_hot', width:90, title:'热门', templet:function(d){
-        return String(d.is_hot) === '1' ? '<span class="layui-badge layui-bg-orange">是</span>' : '<span class="layui-badge layui-bg-gray">否</span>';
-      }},
-      {field:'updated_at_text', width:180, title:'更新时间'},
-      {title:'操作', toolbar:'#video-rowbar', width:220}
-    ]]
-  });
-
-  function openVideoDialog(mode, row){
-    row = row || {};
-    var isEdit = mode === 'edit';
-    var content = $('#video-dialog-tpl').html();
-
-    layer.open({
-      type:1,
-      title: isEdit ? '编辑视频' : '新增视频',
-      area:['780px','680px'],
-      content: content,
-      btn:['保存','取消'],
-      success:function(layero){
-        var $layer = $(layero);
-        var $form = $layer.find('#video-form');
-
-        $form.find('input[name=id]').val(isEdit ? (row.id || '') : '');
-        $form.find('input[name=title]').val(row.title || '');
-        $form.find('input[name=subtitle]').val(row.subtitle || '');
-        $form.find('input[name=cover]').val(row.cover || '');
-        $form.find('input[name=banner]').val(row.banner || '');
-        $form.find('input[name=year]').val(row.year || '');
-        $form.find('input[name=area]').val(row.area || '');
-        $form.find('input[name=lang]').val(row.lang || '');
-        $form.find('input[name=weekday]').val(row.weekday || '');
-        $form.find('input[name=director]').val(row.director || '');
-        $form.find('input[name=remarks]').val(row.remarks || '');
-        $form.find('input[name=points]').val(row.points == null ? 0 : row.points);
-        $form.find('input[name=score]').val(row.score == null ? 0 : row.score);
-        $form.find('input[name=sort]').val(row.sort == null ? 0 : row.sort);
-        $form.find('textarea[name=description]').val(row.description || '');
-        $form.find('input[name=collect_id]').val(row.collect_id || '');
-        $form.find('input[name=tags_text]').val(row.tags_text || '');
-        $form.find('input[name=actors_text]').val(row.actors_text || '');
-
-        $form.find('select[name=status]').val(String(row.status == null ? 1 : row.status));
-        $form.find('input[name=publish_at]').val(unixToDatetimeLocal(row.publish_at));
-        $form.find('select[name=is_recommend]').val(String(row.is_recommend == null ? 0 : row.is_recommend));
-        $form.find('select[name=is_hot]').val(String(row.is_hot == null ? 0 : row.is_hot));
-        $form.find('select[name=lock]').val(String(row.lock == null ? 0 : row.lock));
-
-        loadTypeOptions(function(options){
-          renderTypeSelect($layer.find('#video-form-type'), options, row.type_id);
+    function fillSelect(sel, options, selected, emptyLabel, disabledSuffix) {
+        var html = '<option value="">' + U.escape(emptyLabel) + '</option>';
+        (options || []).forEach(function (o) {
+            var name = o.name || '';
+            if (disabledSuffix && String(o.status) === '0') name += '（禁用）';
+            html += '<option value="' + U.escape(o.id) + '">' + U.escape(name) + '</option>';
         });
-        loadCollectOptions(function(options){
-          renderCollectSelect($layer.find('#video-form-collect-source'), options, row.collect_source_id);
+        sel.innerHTML = html;
+        sel.value = selected == null || selected === '' ? '' : String(selected);
+    }
+    var typeOptions = null, collectOptions = null;
+    function loadTypes(cb) {
+        if (typeOptions) { cb(typeOptions); return; }
+        U.get('/admin/video/types/options').then(function (res) {
+            if (res && res.code === 0) typeOptions = res.data || [];
+            else typeOptions = [];
+            cb(typeOptions);
         });
+    }
+    function loadCollects(cb) {
+        if (collectOptions) { cb(collectOptions); return; }
+        U.get('/admin/video/collect/options').then(function (res) {
+            if (res && res.code === 0) collectOptions = res.data || [];
+            else collectOptions = [];
+            cb(collectOptions);
+        });
+    }
+    loadTypes(function (opts) { fillSelect(document.getElementById('video-search-type'), opts, '', '分类'); });
 
-        form.render();
+    var qs = new URLSearchParams(location.search);
+    var form = document.getElementById('video-search');
+    ['empty_url','repeat','need_points','has_plot','empty_pic','empty_content','no_actor','weekday','status','trash'].forEach(function (k) {
+        var v = qs.get(k);
+        if (v && form[k]) form[k].value = v;
+    });
+    var where = U.formData(form);
+    Object.keys(where).forEach(function (k) { if (where[k] === '') delete where[k]; });
 
-        function initImageField(field){
-          var $input = $form.find('input[name=' + field + ']');
-          var $btn = $form.find('.video-' + field + '-upload-btn');
-          var $preview = $form.find('.video-' + field + '-preview');
+    function statusHtml(d) {
+        var map = {1: ['status-ok', '上架'], 2: ['status-warn', '草稿'], 3: ['status-off', '未通过'], 4: ['status-info', '定时'], 0: ['status-off', '下架']};
+        var s = map[String(d.status)] || map[0];
+        return '<span class="status ' + s[0] + '">' + s[1] + '</span>';
+    }
+    var table = U.table({
+        el: '#video-table',
+        url: '/admin/video/list',
+        where: where,
+        cols: [
+            {check: true, width: 36},
+            {key: 'id', title: 'ID', width: 70},
+            {key: 'title', title: '标题'},
+            {key: 'type_name', title: '分类', width: 120},
+            {key: 'score', title: '评分', width: 70},
+            {key: 'points', title: '积分', width: 70},
+            {key: 'year', title: '年份', width: 70},
+            {title: '状态', width: 80, html: statusHtml},
+            {title: '推荐', width: 70, html: function (d) { return String(d.is_recommend) === '1' ? U.status(true, '是') : U.status(false, '否'); }},
+            {title: '热门', width: 70, html: function (d) { return String(d.is_hot) === '1' ? '<span class="status status-warn">是</span>' : U.status(false, '否'); }},
+            {key: 'updated_at_text', title: '更新时间', width: 160},
+            {title: '操作', cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-src">线路</a><a href="#" class="btn-link js-ep">剧集</a><a href="#" class="btn-link js-del">删除</a>';
+            }}
+        ]
+    });
 
-          function syncPreview(url){
-            url = $.trim(url || '');
-            if (url) {
-              $preview.attr('src', url).show();
-            } else {
-              $preview.hide().attr('src', '');
-            }
-          }
-
-          syncPreview($input.val());
-          $input.off('input.' + field).on('input.' + field, function(){
-            syncPreview(this.value);
-          });
-
-          if ($btn.length && !$btn.data('uploadInited')) {
-            $btn.data('uploadInited', true);
-            upload.render({
-              elem: $btn[0],
-              url: '/admin/system/attachments/upload',
-              field: 'file',
-              accept: 'images',
-              acceptMime: 'image/*',
-              exts: 'jpg|jpeg|png|gif|webp',
-              size: 10240,
-              headers: csrfToken ? {'X-CSRF-TOKEN': csrfToken} : {},
-              data: csrfToken ? {_token: csrfToken} : {},
-              before: function(obj){
-                obj.preview(function(index, file, result){
-                  $preview.attr('src', result).show();
-                });
-                layer.load(1, {shade: 0.15});
-              },
-              done: function(res){
-                layer.closeAll('loading');
-                if (res && res.code === 0) {
-                  var url = res.data && res.data.url ? String(res.data.url) : '';
-                  if (url) {
-                    $input.val(url);
-                    syncPreview(url);
-                    layer.msg('上传成功', {icon: 1});
-                    return;
-                  }
-                  layer.msg('上传成功，但未返回URL', {icon: 2});
-                  return;
-                }
-                layer.msg(res && res.msg ? res.msg : '上传失败', {icon: 2});
-              },
-              error: function(){
-                layer.closeAll('loading');
-                layer.msg('上传失败', {icon: 2});
-              }
-            });
-          }
+    function bindImage(formEl, field) {
+        var input = formEl.querySelector('input[name=' + field + ']');
+        var btn = formEl.querySelector('.video-' + field + '-upload-btn');
+        var preview = formEl.querySelector('.video-' + field + '-preview');
+        function sync(url) {
+            url = String(url || '').trim();
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.removeAttribute('src'); preview.style.display = 'none'; }
         }
-
-        initImageField('cover');
-        initImageField('banner');
-      },
-      yes:function(index, layero){
-        var $layer = $(layero);
-        var $form = $layer.find('#video-form');
-        var data = formToObj($form);
-        if(!data.title){ layer.msg('请输入标题',{icon:2}); return; }
-        apiPost('/admin/video/save', data, function(){
-          layer.close(index);
-          table.reload('video-table');
-          layer.msg('保存成功',{icon:1});
+        sync(input.value);
+        input.addEventListener('input', function () { sync(input.value); });
+        btn.addEventListener('click', function () {
+            U.pickFile('image/*').then(function (file) {
+                if (!file) return;
+                U.loading(true);
+                return U.upload(file).then(function (res) {
+                    U.loading(false);
+                    if (res && res.code === 0 && res.data && res.data.url) {
+                        input.value = res.data.url;
+                        sync(res.data.url);
+                        U.toast('上传成功', 'ok');
+                    } else U.toast((res && res.msg) || '上传失败', 'err');
+                });
+            });
         });
-      }
-    });
-  }
-
-  function openEditDialog(row){
-    apiGet('/admin/video/info', {id: row.id}, function(res){
-      openVideoDialog('edit', res.data || row);
-    });
-  }
-
-  $('#video-search-btn').on('click', function(){
-    table.reload('video-table', {where: formToObj($('#video-search')), page:{curr:1}});
-  });
-
-  $('#video-reset-btn').on('click', function(){
-    setTimeout(function(){
-      form.render();
-      table.reload('video-table', {where: {}, page:{curr:1}});
-    }, 0);
-  });
-
-  $('#video-refresh-btn').on('click', function(){ table.reload('video-table'); });
-  $('#video-add-btn').on('click', function(){ openVideoDialog('add'); });
-
-  function selectedIds(){
-    return (table.checkStatus('video-table').data || []).map(function(r){ return r.id; });
-  }
-  function batch(action, value, confirmText){
-    var ids = selectedIds();
-    if (!ids.length) { layer.msg('请选择数据', {icon:2}); return; }
-    var run = function(){
-      apiPost('/admin/video/batch', {ids: ids.join(','), action: action, value: value}, function(){
-        table.reload('video-table');
-        layer.msg('操作成功', {icon:1});
-      });
-    };
-    if (confirmText) {
-      layer.confirm(confirmText, function(i){ layer.close(i); run(); });
-      return;
     }
-    run();
-  }
-  $('#video-batch-on').on('click', function(){ batch('status', 1); });
-  $('#video-batch-off').on('click', function(){ batch('status', 0); });
-  $('#video-batch-rec').on('click', function(){ batch('recommend', 1); });
-  $('#video-batch-lock').on('click', function(){ batch('lock', 1); });
-  $('#video-batch-type').on('click', function(){
-    layer.prompt({title:'目标分类ID', formType:0}, function(val, i){ layer.close(i); batch('type', val); });
-  });
-  $('#video-batch-points').on('click', function(){
-    layer.prompt({title:'积分', value:'0', formType:0}, function(val, i){ layer.close(i); batch('points', val); });
-  });
-  $('#video-batch-merge').on('click', function(){
-    var ids = selectedIds();
-    if (ids.length < 2) { layer.msg('请至少选两部', {icon:2}); return; }
-    layer.prompt({title:'保留的影片ID', value: String(Math.min.apply(null, ids)), formType:0}, function(val, i){
-      layer.close(i);
-      batch('merge', val, '确认把选中影片合并到 ID '+val+'？线路会迁过去，其余片删除。');
-    });
-  });
-  $('#video-batch-replace-url').on('click', function(){
-    var ids = selectedIds();
-    if (!ids.length) { layer.msg('请选择数据', {icon:2}); return; }
-    layer.prompt({title:'替换播放地址 from|to', formType:0}, function(val, i){
-      layer.close(i);
-      apiPost('/admin/video/batch-replace-url', {value: val, ids: ids}, function(){
-        table.reload('video-table');
-        layer.msg('操作成功', {icon:1});
-      });
-    });
-  });
-  $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？将进入回收站。'); });
 
-  table.on('tool(video-table)', function(obj){
-    var row = obj.data || {};
-    if(obj.event === 'edit'){ openEditDialog(row); }
-    if(obj.event === 'del'){
-      layer.confirm('确定删除该视频吗？将进入回收站。', function(i){
-        apiPost('/admin/video/delete', {id: row.id}, function(){
-          layer.close(i);
-          table.reload('video-table');
-          layer.msg('删除成功',{icon:1});
+    function openVideoDialog(mode, row) {
+        row = row || {};
+        U.dialog({
+            title: mode === 'edit' ? '编辑视频' : '新增视频',
+            wide: true,
+            content: document.getElementById('video-dialog-tpl').innerHTML,
+            onOpen: function (body) {
+                var formEl = body.querySelector('form');
+                U.fillForm(formEl, {
+                    id: mode === 'edit' ? (row.id || '') : '',
+                    title: row.title || '',
+                    subtitle: row.subtitle || '',
+                    cover: row.cover || '',
+                    banner: row.banner || '',
+                    year: row.year || '',
+                    area: row.area || '',
+                    lang: row.lang || '',
+                    weekday: row.weekday || '',
+                    director: row.director || '',
+                    remarks: row.remarks || '',
+                    points: row.points == null ? 0 : row.points,
+                    score: row.score == null ? 0 : row.score,
+                    sort: row.sort == null ? 0 : row.sort,
+                    description: row.description || '',
+                    collect_id: row.collect_id || '',
+                    tags_text: row.tags_text || '',
+                    actors_text: row.actors_text || '',
+                    status: row.status == null ? 1 : row.status,
+                    publish_at: unixToDatetimeLocal(row.publish_at),
+                    is_recommend: row.is_recommend == null ? 0 : row.is_recommend,
+                    is_hot: row.is_hot == null ? 0 : row.is_hot,
+                    lock: row.lock == null ? 0 : row.lock
+                });
+                loadTypes(function (opts) { fillSelect(body.querySelector('#video-form-type'), opts, row.type_id, '请选择'); });
+                loadCollects(function (opts) { fillSelect(body.querySelector('#video-form-collect-source'), opts, row.collect_source_id, '无', true); });
+                bindImage(formEl, 'cover');
+                bindImage(formEl, 'banner');
+            },
+            onSave: function (body) {
+                var data = U.formData(body.querySelector('form'));
+                if (!data.title) { U.toast('请输入标题', 'err'); return false; }
+                return U.post('/admin/video/save', data).then(function (res) {
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return false; }
+                    U.toast('保存成功', 'ok');
+                    table.refresh();
+                });
+            }
         });
-      });
     }
-    if(obj.event === 'sources'){
-      layer.open({
-        type:2,
-        title:'线路管理 - ' + escapeHtml(row.title || ''),
-        area:['95%','95%'],
-        maxmin:true,
-        content:'/admin/video/sources?video_id=' + encodeURIComponent(row.id)
-      });
+
+    function selectedIds() { return table.selectedIds(); }
+    function batch(action, value, confirmText) {
+        var ids = selectedIds();
+        if (!ids.length) { U.toast('请选择数据', 'err'); return; }
+        if (confirmText && !U.confirm(confirmText)) return;
+        U.post('/admin/video/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            table.refresh();
+            U.toast('操作成功', 'ok');
+        });
     }
-    if(obj.event === 'episodes'){
-      layer.open({
-        type:2,
-        title:'剧集管理 - ' + escapeHtml(row.title || ''),
-        area:['95%','95%'],
-        maxmin:true,
-        content:'/admin/video/sources?video_id=' + encodeURIComponent(row.id) + '&open_episode=1'
-      });
-    }
-  });
-});
+
+    U.on('#video-search-btn', 'click', function () { table.reload(U.formData(form)); });
+    U.on('#video-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
+    U.on('#video-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#video-add-btn', 'click', function () { openVideoDialog('add'); });
+    U.on('#video-batch-on', 'click', function () { batch('status', 1); });
+    U.on('#video-batch-off', 'click', function () { batch('status', 0); });
+    U.on('#video-batch-rec', 'click', function () { batch('recommend', 1); });
+    U.on('#video-batch-lock', 'click', function () { batch('lock', 1); });
+    U.on('#video-batch-type', 'click', function () {
+        var val = U.prompt('目标分类ID');
+        if (val == null || val === '') return;
+        batch('type', val);
+    });
+    U.on('#video-batch-points', 'click', function () {
+        var val = U.prompt('积分', '0');
+        if (val == null) return;
+        batch('points', val);
+    });
+    U.on('#video-batch-merge', 'click', function () {
+        var ids = selectedIds();
+        if (ids.length < 2) { U.toast('请至少选两部', 'err'); return; }
+        var keep = U.prompt('保留的影片ID', String(Math.min.apply(null, ids.map(Number))));
+        if (keep == null) return;
+        batch('merge', keep, '确认把选中影片合并到 ID ' + keep + '？线路会迁过去，其余片删除。');
+    });
+    U.on('#video-batch-replace-url', 'click', function () {
+        var ids = selectedIds();
+        if (!ids.length) { U.toast('请选择数据', 'err'); return; }
+        var val = U.prompt('替换播放地址 from|to');
+        if (val == null) return;
+        U.post('/admin/video/batch-replace-url', {value: val, ids: ids}).then(function (res) {
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            table.refresh();
+            U.toast('操作成功', 'ok');
+        });
+    });
+    U.on('#video-batch-del', 'click', function () { batch('delete', '', '确认删除选中视频？将进入回收站。'); });
+    U.on('#video-table', 'click', function (e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var tr = e.target.closest('tr');
+        var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
+        if (!row) return;
+        e.preventDefault();
+        if (a.classList.contains('js-edit')) {
+            U.get('/admin/video/info', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '加载失败', 'err'); return; }
+                openVideoDialog('edit', res.data || row);
+            });
+        }
+        if (a.classList.contains('js-del')) {
+            if (!U.confirm('确定删除该视频吗？将进入回收站。')) return;
+            U.post('/admin/video/delete', {id: row.id}).then(function (res) {
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                table.refresh();
+                U.toast('删除成功', 'ok');
+            });
+        }
+        if (a.classList.contains('js-src')) location.href = '/admin/video/sources?video_id=' + encodeURIComponent(row.id);
+        if (a.classList.contains('js-ep')) location.href = '/admin/video/sources?video_id=' + encodeURIComponent(row.id) + '&open_episode=1';
+    });
+})();
 </script>
-</body>
-</html>
+@endpush
