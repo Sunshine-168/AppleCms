@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Ttls;
+namespace App\Support;
 
 class OnlineUserTTL
 {

@@ -2,7 +2,7 @@
 
 namespace App\Models\Video;
 
-use App\Models\Concerns\QueryTrait;
+use App\Support\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class VideoCard extends Model

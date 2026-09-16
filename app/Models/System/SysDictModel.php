@@ -2,8 +2,8 @@
 
 namespace App\Models\System;
 
-use App\Models\Concerns\QueryCacheTrait;
-use App\Models\Concerns\QueryTrait;
+use App\Support\QueryCacheTrait;
+use App\Support\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Cache;

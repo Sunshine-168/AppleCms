@@ -2,8 +2,8 @@
 
 namespace App\Models\System;
 
-use App\Models\Concerns\QueryCacheTrait;
-use App\Models\Concerns\QueryTrait;
+use App\Support\QueryCacheTrait;
+use App\Support\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class SysSystemLogModel extends Model
