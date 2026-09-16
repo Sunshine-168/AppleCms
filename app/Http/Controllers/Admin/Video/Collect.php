@@ -38,6 +38,7 @@ class Collect extends Controller
             'hours' => $request->input('hours', $request->input('h', 0)),
             'ids' => $request->input('ids', ''),
             't' => $request->input('t', ''),
+            'wd' => $request->input('wd', ''),
         ]);
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);

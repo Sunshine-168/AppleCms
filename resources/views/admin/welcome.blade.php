@@ -40,8 +40,8 @@
 <div class="layui-fluid">
   <div class="welcome-topbar">
     <div class="welcome-title">
-      <h1>数据概览</h1>
-      <div class="sub">欢迎回来，祝你工作顺利</div>
+      <h1>今日态势</h1>
+      <div class="sub">先看待办，再进具体菜单</div>
     </div>
     <div class="welcome-actions">
       <div class="meta" id="stat-updated"><span class="skeleton meta"></span></div>
@@ -155,6 +155,13 @@
   </div>
 
   <div class="layui-card" style="margin-top:8px;">
+    <div class="layui-card-header">待处理</div>
+    <div class="layui-card-body" id="todo-list">
+      <p class="layui-word-aux">加载中…</p>
+    </div>
+  </div>
+
+  <div class="layui-card" style="margin-top:8px;">
     <div class="layui-card-header">影视后台</div>
     <div class="layui-card-body">
       <div class="layui-btn-container">
@@ -217,7 +224,24 @@ layui.use(['jquery', 'layer'], function () {
     $('#stat-user-total').text(toText(data.user_total));
     $('#stat-visit-today').text(toText(data.visit_today));
     $('#stat-play-today').text(toText(data.play_today));
+    renderTodos(data);
     setUpdated();
+  }
+
+  function renderTodos(data) {
+    var items = [
+      {n: data.comment_pending, label: '待审评论', href: '/admin/video/comments'},
+      {n: data.report_open, label: '未处理报错', href: '/admin/video/reports'},
+      {n: data.playfail_open, label: '播放失败', href: '/admin/video/playfails'},
+      {n: data.gbook_pending, label: '待审留言', href: '/admin/video/guestbooks'},
+      {n: data.collect_fail, label: '今日采集失败', href: '/admin/video/collect_logs'}
+    ];
+    var html = items.map(function (it) {
+      var n = parseInt(it.n, 10) || 0;
+      var cls = n > 0 ? 'layui-badge' : 'layui-badge layui-bg-gray';
+      return '<a class="layui-btn layui-btn-primary layui-btn-sm" href="'+it.href+'">'+it.label+' <span class="'+cls+'">'+n+'</span></a>';
+    }).join(' ');
+    $('#todo-list').html(html);
   }
 
   function loadStats() {

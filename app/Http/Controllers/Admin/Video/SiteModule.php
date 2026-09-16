@@ -69,6 +69,17 @@ class SiteModule extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    public function generateInvites(Request $request): JsonResponse
+    {
+        $data = $this->modules->generateInvites(
+            (int) $request->input('count', 10),
+            (int) $request->input('points', 0),
+            (int) $request->input('member_id', 0)
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
     public function runCollectTask(Request $request): JsonResponse
     {
         $data = $this->modules->runCollectTask((int) $request->input('id', 0));

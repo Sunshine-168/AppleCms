@@ -30,6 +30,9 @@
               <option value="">状态</option>
               <option value="1">上架</option>
               <option value="0">下架</option>
+              <option value="2">草稿</option>
+              <option value="3">未通过</option>
+              <option value="4">定时</option>
             </select>
           </div>
           <div class="layui-inline">
@@ -60,6 +63,9 @@
             <input type="text" name="area" placeholder="地区" autocomplete="off" class="layui-input" style="width:90px;">
           </div>
           <div class="layui-inline">
+            <input type="text" name="weekday" placeholder="周期" autocomplete="off" class="layui-input" style="width:90px;">
+          </div>
+          <div class="layui-inline">
             <input type="number" name="points_min" placeholder="积分≥" autocomplete="off" class="layui-input" style="width:90px;">
           </div>
           <div class="layui-inline">
@@ -78,6 +84,30 @@
             <select name="need_points">
               <option value="">积分片</option>
               <option value="1">需积分</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="has_plot">
+              <option value="">剧情</option>
+              <option value="1">有分集剧情</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="empty_pic">
+              <option value="">封面</option>
+              <option value="1">无封面</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="empty_content">
+              <option value="">简介</option>
+              <option value="1">无简介</option>
+            </select>
+          </div>
+          <div class="layui-inline">
+            <select name="no_actor">
+              <option value="">演员</option>
+              <option value="1">无演员</option>
             </select>
           </div>
           <div class="layui-inline">
@@ -100,12 +130,19 @@
         <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-type">改分类</button>
         <button class="layui-btn layui-btn-sm" id="video-batch-points">改积分</button>
         <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-merge">合并重复</button>
-        <button class="layui-btn layui-btn-sm" id="video-batch-replace-url">替换播放地址</button>
+        <button class="layui-btn layui-btn-sm" id="video-batch-replace-url">批量换播放地址</button>
         <button class="layui-btn layui-btn-sm layui-btn-danger" id="video-batch-del">批量删除</button>
         <button class="layui-btn layui-btn-sm layui-btn-primary" id="video-refresh-btn">刷新</button>
         <a class="layui-btn layui-btn-sm layui-btn-warm" href="/admin/video?empty_url=1">无地址</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?empty_pic=1">无封面</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?empty_content=1">无简介</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?no_actor=1">无演员</a>
         <a class="layui-btn layui-btn-sm" href="/admin/video?status=0">待审</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?status=2">草稿</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?status=3">未通过</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?status=4">定时</a>
         <a class="layui-btn layui-btn-sm" href="/admin/video?repeat=1">重名</a>
+        <a class="layui-btn layui-btn-sm" href="/admin/video?has_plot=1">有分集剧情</a>
       </div>
       <table id="video-table" lay-filter="video-table"></table>
     </div>
@@ -160,6 +197,12 @@
           <label class="layui-form-label">语言</label>
           <div class="layui-input-inline">
             <input type="text" name="lang" autocomplete="off" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">周期</label>
+          <div class="layui-input-inline">
+            <input type="text" name="weekday" autocomplete="off" class="layui-input" placeholder="一,二,三">
           </div>
         </div>
       </div>
@@ -241,7 +284,16 @@
             <select name="status">
               <option value="1">上架</option>
               <option value="0">下架</option>
+              <option value="2">草稿</option>
+              <option value="3">未通过</option>
+              <option value="4">定时</option>
             </select>
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">定时发布时间</label>
+          <div class="layui-input-inline">
+            <input type="datetime-local" name="publish_at" autocomplete="off" class="layui-input">
           </div>
         </div>
         <div class="layui-inline">
@@ -348,6 +400,14 @@ layui.use(['layer','form','table','upload'], function(){
     return obj;
   }
 
+  function unixToDatetimeLocal(ts){
+    ts = parseInt(ts, 10) || 0;
+    if (!ts) { return ''; }
+    var d = new Date(ts * 1000);
+    var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
   var typeOptionsCache = null;
   function loadTypeOptions(cb){
     if(typeOptionsCache){ cb && cb(typeOptionsCache); return; }
@@ -414,6 +474,11 @@ layui.use(['layer','form','table','upload'], function(){
       empty_url: qs.get('empty_url') || '',
       repeat: qs.get('repeat') || '',
       need_points: qs.get('need_points') || '',
+      has_plot: qs.get('has_plot') || '',
+      empty_pic: qs.get('empty_pic') || '',
+      empty_content: qs.get('empty_content') || '',
+      no_actor: qs.get('no_actor') || '',
+      weekday: qs.get('weekday') || '',
       status: qs.get('status') || ''
     },
     page:true,
@@ -434,7 +499,11 @@ layui.use(['layer','form','table','upload'], function(){
       {field:'points', width:80, title:'积分'},
       {field:'year', width:80, title:'年份'},
       {field:'status', width:90, title:'状态', templet:function(d){
-        return String(d.status) === '1' ? '<span class="layui-badge layui-bg-green">上架</span>' : '<span class="layui-badge">下架</span>';
+        if (String(d.status) === '1') return '<span class="layui-badge layui-bg-green">上架</span>';
+        if (String(d.status) === '2') return '<span class="layui-badge layui-bg-orange">草稿</span>';
+        if (String(d.status) === '3') return '<span class="layui-badge">未通过</span>';
+        if (String(d.status) === '4') return '<span class="layui-badge layui-bg-blue">定时</span>';
+        return '<span class="layui-badge">下架</span>';
       }},
       {field:'is_recommend', width:90, title:'推荐', templet:function(d){
         return String(d.is_recommend) === '1' ? '<span class="layui-badge layui-bg-blue">是</span>' : '<span class="layui-badge layui-bg-gray">否</span>';
@@ -470,6 +539,7 @@ layui.use(['layer','form','table','upload'], function(){
         $form.find('input[name=year]').val(row.year || '');
         $form.find('input[name=area]').val(row.area || '');
         $form.find('input[name=lang]').val(row.lang || '');
+        $form.find('input[name=weekday]').val(row.weekday || '');
         $form.find('input[name=director]').val(row.director || '');
         $form.find('input[name=remarks]').val(row.remarks || '');
         $form.find('input[name=points]').val(row.points == null ? 0 : row.points);
@@ -481,6 +551,7 @@ layui.use(['layer','form','table','upload'], function(){
         $form.find('input[name=actors_text]').val(row.actors_text || '');
 
         $form.find('select[name=status]').val(String(row.status == null ? 1 : row.status));
+        $form.find('input[name=publish_at]').val(unixToDatetimeLocal(row.publish_at));
         $form.find('select[name=is_recommend]').val(String(row.is_recommend == null ? 0 : row.is_recommend));
         $form.find('select[name=is_hot]').val(String(row.is_hot == null ? 0 : row.is_hot));
         $form.find('select[name=lock]').val(String(row.lock == null ? 0 : row.lock));
@@ -628,9 +699,14 @@ layui.use(['layer','form','table','upload'], function(){
     });
   });
   $('#video-batch-replace-url').on('click', function(){
+    var ids = selectedIds();
+    if (!ids.length) { layer.msg('请选择数据', {icon:2}); return; }
     layer.prompt({title:'替换播放地址 from|to', formType:0}, function(val, i){
       layer.close(i);
-      batch('replace_url', val, '确认替换选中影片的播放地址？');
+      apiPost('/admin/video/batch-replace-url', {value: val, ids: ids}, function(){
+        table.reload('video-table');
+        layer.msg('操作成功', {icon:1});
+      });
     });
   });
   $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？'); });

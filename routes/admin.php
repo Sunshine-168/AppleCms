@@ -139,7 +139,11 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
 
     Route::get('/video/settings', [SiteSetting::class, 'index']);
     Route::post('/video/settings', [SiteSetting::class, 'save']);
+    Route::post('/video/settings/test-mail', [SiteSetting::class, 'testMail']);
+    Route::get('/video/config/email', [SiteSetting::class, 'configEmail']);
+    Route::get('/video/config/{page}', [SiteSetting::class, 'configPage'])->whereIn('page', ['api', 'collect', 'player', 'email']);
     Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
+    Route::post('/video/invites/generate', [SiteModule::class, 'generateInvites']);
     Route::post('/video/collect_tasks/run', [SiteModule::class, 'runCollectTask']);
     Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
     Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');
@@ -154,6 +158,7 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::post('/video/push/run', [SiteOps::class, 'pushRun']);
     Route::get('/video/make', [SiteOps::class, 'make']);
     Route::post('/video/make/run', [SiteOps::class, 'makeRun']);
+    Route::post('/video/make/map', [SiteOps::class, 'makeMap']);
     Route::post('/video/playfails/offline', [SiteOps::class, 'disableFailSource']);
     Route::get('/video/wizard', [SiteOps::class, 'wizard']);
     Route::post('/video/hits-reset', [SiteOps::class, 'hitsReset']);
@@ -161,6 +166,7 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/safety', [SiteOps::class, 'safety']);
     Route::post('/video/safety/scan', [SiteOps::class, 'malwareScan']);
     Route::post('/video/batch-replace-url', [SiteOps::class, 'batchReplaceUrl']);
+    Route::post('/video/collect-due', [SiteOps::class, 'collectDue']);
 
     Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
     Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());

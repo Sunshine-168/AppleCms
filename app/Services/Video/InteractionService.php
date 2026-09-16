@@ -4,8 +4,10 @@ namespace App\Services\Video;
 
 use App\Models\Member\Member;
 use App\Models\Member\MemberFavorite;
+use App\Models\Member\MemberGroup;
 use App\Models\Member\MemberHistory;
 use App\Models\Member\MemberInvite;
+use App\Models\Member\MemberPointLog;
 use App\Models\Video\VideoComment;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoReport;
@@ -14,6 +16,7 @@ use App\Models\Video\VideoUlog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class InteractionService
 {
@@ -45,6 +48,7 @@ class InteractionService
             'updated_at' => $now,
         ]);
         $this->applyInvite($member, (string) ($data['invite'] ?? ''));
+        $this->issueInvite($member);
 
         return Result::success(['id' => $member->id], '注册成功');
     }
@@ -86,6 +90,50 @@ class InteractionService
             'remark' => '邀请码 '.$code,
             'created_at' => time(),
         ]);
+    }
+
+    private function issueInvite(Member $member): void
+    {
+        if (! Schema::hasTable('member_invites')) {
+            return;
+        }
+        $code = strtoupper(Str::random(8));
+        while (MemberInvite::query()->where('code', $code)->exists()) {
+            $code = strtoupper(Str::random(8));
+        }
+        MemberInvite::query()->create([
+            'code' => $code,
+            'member_id' => (int) $member->id,
+            'used_by' => 0,
+            'points' => 10,
+            'status' => 1,
+            'created_at' => time(),
+        ]);
+    }
+
+    public function generateInvite(Member $member, int $points = 10): array
+    {
+        if (! Schema::hasTable('member_invites')) {
+            return Result::fail('邀请码未启用');
+        }
+        $unused = MemberInvite::query()->where('member_id', $member->id)->where('status', 1)->count();
+        if ($unused >= 20) {
+            return Result::fail('未使用邀请码已达 20 个');
+        }
+        $code = strtoupper(Str::random(8));
+        while (MemberInvite::query()->where('code', $code)->exists()) {
+            $code = strtoupper(Str::random(8));
+        }
+        MemberInvite::query()->create([
+            'code' => $code,
+            'member_id' => (int) $member->id,
+            'used_by' => 0,
+            'points' => max(0, $points),
+            'status' => 1,
+            'created_at' => time(),
+        ]);
+
+        return Result::success(['code' => $code], '已生成邀请码 '.$code);
     }
 
     public function toggleFavorite(int $memberId, int $videoId): array
@@ -194,6 +242,32 @@ class InteractionService
         return Result::success([], '已提交，感谢反馈');
     }
 
+    public function reportComment(int $id): array
+    {
+        $row = VideoComment::query()->find($id);
+        if (! $row) {
+            return Result::fail('评论不存在');
+        }
+        if (Schema::hasColumn('video_comments', 'comment_report')) {
+            $row->increment('comment_report');
+        }
+
+        return Result::success(['comment_report' => (int) ($row->fresh()->comment_report ?? 0)], '已举报');
+    }
+
+    public function likeComment(int $id): array
+    {
+        $row = VideoComment::query()->find($id);
+        if (! $row) {
+            return Result::fail('评论不存在');
+        }
+        if (Schema::hasColumn('video_comments', 'comment_up')) {
+            $row->increment('comment_up');
+        }
+
+        return Result::success(['comment_up' => (int) ($row->fresh()->comment_up ?? 0)], '已点赞');
+    }
+
     public function score(int $videoId, float $score): array
     {
         if ($score < 1 || $score > 10) {
@@ -269,18 +343,79 @@ class InteractionService
         if ($need < 1) {
             return Result::success();
         }
+        $group = $this->memberGroup($member);
+        if ($member) {
+            $watched = MemberHistory::query()->where('member_id', $member->id)->where('video_id', $video->id)->exists();
+            if ($watched) {
+                return Result::success();
+            }
+            if ($this->dayFreeRemain($member, $group) > 0) {
+                return Result::success(['day_free' => 1], '今日免费播放');
+            }
+            if ((int) $member->points >= $need) {
+                $member->decrement('points', $need);
+                $this->writePlayPointLog($member->fresh(), -$need);
+
+                return Result::success(['points' => $need], '已扣除 '.$need.' 积分');
+            }
+        }
+        $trysee = (int) ($group?->trysee ?? 0);
+        if ($trysee < 1) {
+            $trysee = (int) app(VideoSettingService::class)->get('trysee_seconds', '0');
+        }
+        if ($trysee > 0) {
+            return Result::success(['trysee' => $trysee, 'trysee_seconds' => $trysee], '试看 '.$trysee.' 秒');
+        }
         if (! $member) {
             return Result::fail('本片需登录并消耗 '.$need.' 积分');
         }
-        $watched = MemberHistory::query()->where('member_id', $member->id)->where('video_id', $video->id)->exists();
-        if ($watched) {
-            return Result::success();
-        }
-        if ((int) $member->points < $need) {
-            return Result::fail('积分不足，需要 '.$need.' 积分');
-        }
-        $member->decrement('points', $need);
 
-        return Result::success(['points' => $need], '已扣除 '.$need.' 积分');
+        return Result::fail('积分不足，需要 '.$need.' 积分');
+    }
+
+    private function memberGroup(?Member $member): ?MemberGroup
+    {
+        $gid = (int) ($member?->group_id ?? 0);
+        if ($gid < 1 || ! Schema::hasTable('member_groups')) {
+            return null;
+        }
+        try {
+            return MemberGroup::query()->find($gid);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function dayFreeRemain(Member $member, ?MemberGroup $group): int
+    {
+        $limit = (int) ($group?->day_free ?? 0);
+        if ($limit < 1 || ! Schema::hasTable('video_ulogs')) {
+            return 0;
+        }
+        $used = VideoUlog::query()
+            ->where('member_id', $member->id)
+            ->where('type', 'play')
+            ->where('created_at', '>=', strtotime('today'))
+            ->count();
+
+        return max(0, $limit - $used);
+    }
+
+    private function writePlayPointLog(?Member $member, int $points): void
+    {
+        if (! $member || ! Schema::hasTable('member_point_logs')) {
+            return;
+        }
+        try {
+            MemberPointLog::query()->create([
+                'member_id' => (int) $member->id,
+                'points' => $points,
+                'balance' => (int) $member->points,
+                'type' => 'play',
+                'remark' => '点播',
+                'created_at' => time(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 }

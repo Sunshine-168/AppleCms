@@ -2,7 +2,6 @@
 namespace App\Support\Utils;
 
 use Illuminate\Support\Facades\Request;
-use Zhuzhichao\IpLocationZh\Ip;
 
 /**
  * ip地址
@@ -65,7 +64,11 @@ class IpAddress
         }
 
         try {
-            $area = Ip::find($ip);
+            if (class_exists(\Zhuzhichao\IpLocationZh\Ip::class)) {
+                $area = \Zhuzhichao\IpLocationZh\Ip::find($ip);
+            } else {
+                return '';
+            }
         } catch (\Throwable) {
             return '';
         }

@@ -5,6 +5,7 @@ namespace App\Cms\Blade;
 use App\Cms\CmsViewContext;
 use App\Services\Video\Tags\ActorTag;
 use App\Services\Video\Tags\AdTag;
+use App\Services\Video\Tags\ArtTag;
 use App\Services\Video\Tags\CommentTag;
 use App\Services\Video\Tags\EpisodeTag;
 use App\Services\Video\Tags\FilterTag;
@@ -73,6 +74,7 @@ class CmsDirectiveRegistrar
         $this->registerLoop('vodTag', TagListTag::class);
         $this->registerLoop('vodActor', ActorTag::class);
         $this->registerLoop('vodTopic', TopicTag::class);
+        $this->registerLoop('vodArt', ArtTag::class);
         $this->registerLoop('vodSource', SourceTag::class);
         $this->registerLoop('vodEpisode', EpisodeTag::class);
         $this->registerLoop('vodComment', CommentTag::class);

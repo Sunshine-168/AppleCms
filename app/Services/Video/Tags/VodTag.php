@@ -8,6 +8,7 @@ use App\Cms\CmsViewContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class VodTag
 {
@@ -82,7 +83,10 @@ class VodTag
     private function applyMetaFilter(Builder $query, array $options): void
     {
         $filters = array_merge($this->context->filters(), $options);
-        foreach (['year', 'area', 'lang', 'letter', 'class'] as $field) {
+        foreach (['year', 'area', 'lang', 'letter', 'class', 'weekday', 'serial'] as $field) {
+            if (in_array($field, ['weekday', 'serial'], true) && ! Schema::hasColumn('videos', $field)) {
+                continue;
+            }
             $value = $filters[$field] ?? request($field);
             if ($value !== null && $value !== '' && $value !== 'all') {
                 if ($field === 'class') {
@@ -93,8 +97,9 @@ class VodTag
             }
         }
 
-        $kw = trim((string) ($options['wd'] ?? $options['q'] ?? ''));
+        $kw = trim((string) ($options['wd'] ?? $options['q'] ?? $filters['wd'] ?? request('wd', request('q', ''))));
         if ($kw !== '') {
+            $kw = app(\App\Services\Video\SynonymService::class)->expand($kw);
             $query->where(function (Builder $inner) use ($kw) {
                 $inner->where('title', 'like', "%{$kw}%")
                     ->orWhere('subtitle', 'like', "%{$kw}%")
@@ -111,7 +116,7 @@ class VodTag
         if (! empty($options['ids'])) {
             $ids = is_array($options['ids'])
                 ? $options['ids']
-                : preg_split('/\s*,\s*/', (string) $options['ids']) ?: [];
+                : (preg_split('/\s*,\s*/', (string) $options['ids']) ?: []);
             $query->whereIn('id', array_map('intval', $ids));
         }
     }

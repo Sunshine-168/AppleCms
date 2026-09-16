@@ -2,9 +2,11 @@
 
 namespace App\Services\Video\Tags;
 
+use App\Models\Video\VideoClass;
 use App\Models\Video\VideoModel;
 use App\Cms\CmsViewContext;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class FilterTag
 {
@@ -25,6 +27,8 @@ class FilterTag
             'lang' => '语言',
             'letter' => '字母',
             'order' => '排序',
+            'weekday' => '周期',
+            'serial' => '连载',
         ];
 
         $out = collect();
@@ -62,6 +66,8 @@ class FilterTag
             'area' => $this->fromSetting('filter_area') ?: $this->distinct('area'),
             'lang' => $this->fromSetting('filter_lang') ?: $this->distinct('lang'),
             'class' => $this->classValues(),
+            'weekday' => ['一', '二', '三', '四', '五', '六', '日'],
+            'serial' => Schema::hasColumn('videos', 'serial') ? $this->distinct('serial') : [],
             default => [],
         };
 
@@ -119,6 +125,21 @@ class FilterTag
 
     private function classValues(): array
     {
+        try {
+            if (Schema::hasTable('video_classes')) {
+                $names = VideoClass::query()
+                    ->where('status', 1)
+                    ->orderByDesc('sort')
+                    ->orderBy('id')
+                    ->pluck('name')
+                    ->all();
+                $names = array_values(array_filter(array_map('trim', array_map('strval', $names))));
+                if ($names !== []) {
+                    return $names;
+                }
+            }
+        } catch (\Throwable) {
+        }
         $rows = VideoModel::query()->published()->where('class', '!=', '')->pluck('class');
         $set = [];
         foreach ($rows as $row) {

@@ -181,19 +181,35 @@
         progress.hidden = false;
         var fd = new FormData(form);
         var phases = ['prepare', 'migrate', 'account', 'demo', 'finish'];
+        var taskUrl = @json(url('/install/task'));
+        function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+        async function postPhase(body) {
+            var last = new Error('这一步没有完成');
+            for (var attempt = 0; attempt < 6; attempt++) {
+                try {
+                    var res = await fetch(taskUrl, {
+                        method: 'POST',
+                        headers: {'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                        body: body
+                    });
+                    var data = await res.json();
+                    if (!res.ok || data.ok === false) throw new Error(data.message || '这一步没有完成');
+                    return data;
+                } catch (e) {
+                    last = e;
+                    if (e && e.message && /安装失败/.test(e.message)) throw e;
+                    await sleep(800 * (attempt + 1));
+                }
+            }
+            throw last;
+        }
         try {
             for (var i = 0; i < phases.length; i++) {
                 var li = progress.querySelector('[data-phase="'+phases[i]+'"]');
                 li.classList.add('is-on');
                 bar.style.width = Math.round((i / phases.length) * 100) + '%';
                 fd.set('phase', phases[i]);
-                var res = await fetch(@json(url('/install/task')), {
-                    method: 'POST',
-                    headers: {'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-                    body: fd
-                });
-                var data = await res.json();
-                if (!res.ok || data.ok === false) throw new Error(data.message || '这一步没有完成');
+                await postPhase(fd);
                 li.classList.remove('is-on');
                 li.classList.add('is-ok');
                 bar.style.width = Math.round(((i + 1) / phases.length) * 100) + '%';

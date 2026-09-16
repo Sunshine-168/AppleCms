@@ -39,14 +39,15 @@ class VideoInstallService
     public function checks(): array
     {
         $this->ensureEnvFile();
+        $this->ensureAppKey();
         $env = is_file(base_path('.env'));
         $key = $env && (string) config('app.key') !== '';
 
         return [
             [
                 'key' => 'php',
-                'label' => 'PHP 8.3 或更高',
-                'ok' => version_compare(PHP_VERSION, '8.3.0', '>='),
+                'label' => 'PHP 8.4 或更高',
+                'ok' => version_compare(PHP_VERSION, '8.4.0', '>='),
                 'detail' => PHP_VERSION,
                 'required' => true,
             ],
@@ -148,21 +149,17 @@ class VideoInstallService
     {
         $this->ensureEnvFile();
         $this->ensureAppKey();
-        $this->writeEnv([
-            'APP_NAME' => (string) ($input['site_name'] ?? 'LaraVideo'),
-            'APP_URL' => rtrim((string) ($input['app_url'] ?? config('app.url')), '/'),
-            'SESSION_DRIVER' => 'file',
-            'CACHE_STORE' => 'file',
-            'QUEUE_CONNECTION' => 'sync',
-        ]);
         if (($input['db_connection'] ?? '') !== '') {
-            $this->applyDatabase($input);
+            $this->applyDatabase($input, false);
         }
         $this->ensureSqliteFile();
     }
 
     public function migrate(): void
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(180);
+        }
         Artisan::call('migrate', ['--force' => true]);
     }
 
@@ -249,6 +246,16 @@ class VideoInstallService
     /** @param  array<string, mixed>  $input */
     public function finish(array $input): void
     {
+        $this->writeEnv([
+            'APP_NAME' => (string) ($input['site_name'] ?? 'LaraVideo'),
+            'APP_URL' => rtrim((string) ($input['app_url'] ?? config('app.url')), '/'),
+            'SESSION_DRIVER' => 'file',
+            'CACHE_STORE' => 'file',
+            'QUEUE_CONNECTION' => 'sync',
+        ]);
+        if (($input['db_connection'] ?? '') !== '') {
+            $this->applyDatabase($input, true);
+        }
         try {
             Artisan::call('storage:link', ['--force' => true]);
         } catch (\Throwable) {
@@ -264,11 +271,11 @@ class VideoInstallService
     }
 
     /** @param  array<string, mixed>  $input */
-    public function applyDatabase(array $input): void
+    public function applyDatabase(array $input, bool $persist = false): void
     {
         $type = (string) ($input['db_connection'] ?? '');
         if ($type === 'sqlite') {
-            $path = database_path('database.sqlite');
+            $path = str_replace('\\', '/', database_path('database.sqlite'));
             if (! is_file($path)) {
                 $dir = dirname($path);
                 if (! is_dir($dir)) {
@@ -276,14 +283,16 @@ class VideoInstallService
                 }
                 touch($path);
             }
-            $this->writeEnv([
-                'DB_CONNECTION' => 'sqlite',
-                'DB_DATABASE' => $path,
-                'DB_HOST' => '',
-                'DB_PORT' => '',
-                'DB_USERNAME' => '',
-                'DB_PASSWORD' => '',
-            ]);
+            if ($persist) {
+                $this->writeEnv([
+                    'DB_CONNECTION' => 'sqlite',
+                    'DB_DATABASE' => $path,
+                    'DB_HOST' => '',
+                    'DB_PORT' => '',
+                    'DB_USERNAME' => '',
+                    'DB_PASSWORD' => '',
+                ]);
+            }
             config([
                 'database.default' => 'sqlite',
                 'database.connections.sqlite.database' => $path,
@@ -305,14 +314,16 @@ class VideoInstallService
         if ($database === '') {
             throw new \RuntimeException('请填写数据库名');
         }
-        $this->writeEnv([
-            'DB_CONNECTION' => 'mysql',
-            'DB_HOST' => $host,
-            'DB_PORT' => $port,
-            'DB_DATABASE' => $database,
-            'DB_USERNAME' => $username,
-            'DB_PASSWORD' => $password,
-        ]);
+        if ($persist) {
+            $this->writeEnv([
+                'DB_CONNECTION' => 'mysql',
+                'DB_HOST' => $host,
+                'DB_PORT' => $port,
+                'DB_DATABASE' => $database,
+                'DB_USERNAME' => $username,
+                'DB_PASSWORD' => $password,
+            ]);
+        }
         config([
             'database.default' => 'mysql',
             'database.connections.mysql.host' => $host,
@@ -353,15 +364,18 @@ class VideoInstallService
             throw new \RuntimeException('.env 无法写入');
         }
         $content = (string) file_get_contents($path);
+        $original = $content;
         foreach ($pairs as $key => $value) {
             $line = $key.'='.$this->envEscape((string) $value);
             if (preg_match('/^'.preg_quote($key, '/').'=.*/m', $content)) {
-                $content = preg_replace('/^'.preg_quote($key, '/').'=.*/m', $line, $content, 1) ?? $content;
+                $content = preg_replace('/^'.preg_quote($key, '/').'=.*/m', addcslashes($line, '\\$'), $content, 1) ?? $content;
             } else {
                 $content = rtrim($content)."\n".$line."\n";
             }
         }
-        file_put_contents($path, $content);
+        if ($content !== $original) {
+            file_put_contents($path, $content);
+        }
     }
 
     private function ensureSqliteFile(): void

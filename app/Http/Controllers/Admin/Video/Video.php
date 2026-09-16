@@ -48,6 +48,11 @@ class Video extends Controller
             'empty_url' => $request->input('empty_url', ''),
             'repeat' => $request->input('repeat', ''),
             'need_points' => $request->input('need_points', ''),
+            'has_plot' => $request->input('has_plot', ''),
+            'empty_pic' => $request->input('empty_pic', ''),
+            'empty_content' => $request->input('empty_content', ''),
+            'no_actor' => $request->input('no_actor', ''),
+            'weekday' => (string) $request->input('weekday', ''),
             'limit' => (int)$request->input('limit', 10),
         ];
 
@@ -96,6 +101,8 @@ class Video extends Controller
             'collect_id' => (string)$request->input('collect_id', ''),
             'collect_source_id' => $request->input('collect_source_id', ''),
             'sort' => (int)$request->input('sort', 0),
+            'weekday' => (string) $request->input('weekday', ''),
+            'publish_at' => $request->input('publish_at', 0),
             'tags_text' => (string)$request->input('tags_text', ''),
             'actors_text' => (string)$request->input('actors_text', ''),
         ];

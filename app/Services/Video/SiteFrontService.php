@@ -4,6 +4,7 @@ namespace App\Services\Video;
 
 use App\Models\Video\ActorModel;
 use App\Models\Video\VideoDomain;
+use App\Models\Video\VideoDownloader;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
@@ -12,6 +13,7 @@ use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTypeModel;
 use App\Cms\CmsViewContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class SiteFrontService
 {
@@ -71,11 +73,15 @@ class SiteFrontService
     public function applyRequestFilters(Request $request): array
     {
         $filters = [];
-        foreach (['year', 'area', 'lang', 'letter', 'class', 'order'] as $key) {
+        foreach (['year', 'area', 'lang', 'letter', 'class', 'order', 'weekday', 'serial'] as $key) {
             $value = trim((string) $request->query($key, ''));
             if ($value !== '') {
                 $filters[$key] = $value;
             }
+        }
+        $wd = trim((string) $request->query('wd', $request->query('q', '')));
+        if ($wd !== '') {
+            $filters['wd'] = app(SynonymService::class)->expand($wd);
         }
         $this->context->setFilters($filters);
 
@@ -93,8 +99,16 @@ class SiteFrontService
 
     public function findVideo(int $id): ?VideoModel
     {
+        $with = ['type', 'stat', 'tags', 'actors', 'sources.episodes'];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_plots')) {
+                $with[] = 'plots';
+            }
+        } catch (\Throwable) {
+        }
+
         return VideoModel::query()
-            ->with(['type', 'stat', 'tags', 'actors', 'sources.episodes'])
+            ->with($with)
             ->published()
             ->find($id);
     }
@@ -138,6 +152,24 @@ class SiteFrontService
         }
 
         return \App\Models\Video\VideoArt::query()->where('status', 1)->find($id);
+    }
+
+    public function findPlot(int $id): ?\App\Models\Video\VideoPlot
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_plots')) {
+            return null;
+        }
+
+        return \App\Models\Video\VideoPlot::query()->with('video')->find($id);
+    }
+
+    public function findWebsite(int $id): ?\App\Models\Video\VideoWebsite
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_websites')) {
+            return null;
+        }
+
+        return \App\Models\Video\VideoWebsite::query()->where('status', 1)->find($id);
     }
 
     public function resolvePlay(VideoModel $video, ?int $sid, ?int $nid, string $kind = 'play'): array
@@ -197,5 +229,42 @@ class SiteFrontService
         $stat->increment('hits_month');
         $stat->updated_at = $now;
         $stat->save();
+    }
+
+    public function resolveDownUrl(?VideoSourceModel $source, ?VideoEpisodeModel $episode, int $videoId = 0): string
+    {
+        $url = trim((string) ($episode?->url ?? ''));
+        if ($url === '') {
+            return '';
+        }
+        if (! Schema::hasTable('video_downloaders')) {
+            return $url;
+        }
+        $downerCode = trim((string) ($source?->downer ?? $source?->player ?? $source?->name ?? ''));
+        $parser = null;
+        $base = VideoDownloader::query()->where('status', 1);
+        if ($downerCode !== '') {
+            $parser = (clone $base)->where(function ($q) use ($downerCode) {
+                $q->where('code', $downerCode)->orWhere('name', $downerCode);
+            })->orderByDesc('sort')->first();
+        }
+        if (! $parser) {
+            foreach ((clone $base)->orderByDesc('sort')->get() as $row) {
+                $code = trim((string) $row->code);
+                if ($code !== '' && (str_starts_with($url, $code) || str_starts_with(strtolower($url), strtolower($code)))) {
+                    $parser = $row;
+                    break;
+                }
+            }
+        }
+        $parse = trim((string) ($parser?->parse ?? ''));
+        if ($parse === '') {
+            return $url;
+        }
+        if (str_contains($parse, '{url}') || str_contains($parse, '{id}')) {
+            return str_replace(['{url}', '{id}'], [rawurlencode($url), (string) $videoId], $parse);
+        }
+
+        return $parse.$url;
     }
 }

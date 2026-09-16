@@ -70,6 +70,16 @@
         </div>
       </div>
       <div class="layui-form-item">
+        <label class="layui-form-label">模型</label>
+        <div class="layui-input-block">
+          <select name="mid">
+            <option value="1">视频</option>
+            <option value="2">文章</option>
+            <option value="3">网址</option>
+          </select>
+        </div>
+      </div>
+      <div class="layui-form-item">
         <label class="layui-form-label">排序</label>
         <div class="layui-input-block">
           <input type="number" name="sort" autocomplete="off" class="layui-input" value="0">
@@ -186,6 +196,11 @@ layui.use(['layer','form','table'], function(){
       {field:'id',width:80,title:'ID',sort:true},
       {field:'name',title:'名称',minWidth:160},
       {field:'parent_name',title:'父级',minWidth:140},
+      {field:'mid',title:'模型',width:90,templet:function(d){
+        if (String(d.mid) === '2') return '文章';
+        if (String(d.mid) === '3') return '网址';
+        return '视频';
+      }},
       {field:'sort',title:'排序',width:90,sort:true},
       {field:'status',title:'状态',width:90,templet:function(d){
         if (typeof d.status === 'undefined' || d.status === null || d.status === '') { return '-'; }
@@ -207,7 +222,7 @@ layui.use(['layer','form','table'], function(){
     var idx = layer.open({
       type: 1,
       title: title,
-      area: ['520px', '420px'],
+      area: ['520px', '500px'],
       content: $('#video-type-dialog-tpl').html(),
       btn: ['保存', '取消'],
       success: function(layero){
@@ -216,6 +231,7 @@ layui.use(['layer','form','table'], function(){
             id: row.id || '',
             name: row.name || '',
             parent_id: (row.parent_id !== undefined && row.parent_id !== null) ? String(row.parent_id) : '0',
+            mid: (row.mid !== undefined && row.mid !== null) ? String(row.mid) : '1',
             sort: row.sort !== undefined ? row.sort : 0,
             status: (row.status !== undefined && row.status !== null) ? String(row.status) : '1'
           };

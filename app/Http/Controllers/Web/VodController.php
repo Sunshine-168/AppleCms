@@ -81,8 +81,9 @@ class VodController extends Controller
         );
         $member = Auth::guard('member')->user();
         $favorited = $member ? $this->interaction->isFavorited((int) $member->id, $video->id) : false;
+        $plots = $video->relationLoaded('plots') ? $video->plots : collect();
 
-        return view($this->front->themeView('vod.detail'), compact('site', 'video', 'favorited'));
+        return view($this->front->themeView('vod.detail'), compact('site', 'video', 'favorited', 'plots'));
     }
 
     public function play(int|string $id, int|string|null $sid = null, int|string|null $nid = null): View|RedirectResponse
@@ -100,6 +101,7 @@ class VodController extends Controller
         if ($paid['code'] !== 0) {
             return redirect($member ? url('/member') : url('/member/login'))->with('error', $paid['msg']);
         }
+        $trysee = (int) ($paid['data']['trysee'] ?? $paid['data']['trysee_seconds'] ?? 0);
         [$source, $episode] = $this->front->resolvePlay($video, $sid, $nid, 'play');
         $this->context->setVideo($video);
         $this->context->setType($video->type);
@@ -111,11 +113,11 @@ class VodController extends Controller
             $video->title,
             (string) $video->description
         );
-        if ($member) {
+        if ($member && $trysee < 1) {
             $this->interaction->recordHistory((int) $member->id, $video, (int) ($source?->id ?: 0), (int) ($episode?->id ?: 0));
         }
 
-        return view($this->front->themeView('vod.play'), compact('site', 'video', 'source', 'episode'));
+        return view($this->front->themeView('vod.play'), compact('site', 'video', 'source', 'episode', 'trysee'));
     }
 
     public function down(int|string $id, int|string|null $sid = null, int|string|null $nid = null): View
@@ -129,19 +131,28 @@ class VodController extends Controller
             throw new NotFoundHttpException();
         }
         [$source, $episode] = $this->front->resolvePlay($video, $sid, $nid, 'down');
+        $downSources = $video->sources->where('status', 1)->filter(fn ($s) => (string) $s->type === 'down')->values();
+        if ($downSources->isEmpty()) {
+            $downSources = $video->sources->where('status', 1)->values();
+        }
+        foreach ($downSources as $src) {
+            foreach ($src->episodes as $ep) {
+                $ep->setAttribute('down_url', $this->front->resolveDownUrl($src, $ep, (int) $video->id));
+            }
+        }
         $this->context->setVideo($video);
         $this->context->setType($video->type);
         $this->context->setSource($source);
         $this->context->setEpisode($episode);
         $this->context->setSeo($video->title.' 下载 - '.$site['title'], $video->title, (string) $video->description);
 
-        return view($this->front->themeView('vod.down'), compact('site', 'video', 'source', 'episode'));
+        return view($this->front->themeView('vod.down'), compact('site', 'video', 'source', 'episode', 'downSources'));
     }
 
     public function search(Request $request): View
     {
         $site = $this->front->bootSite();
-        $q = trim((string) $request->query('wd', $request->query('q', '')));
+        $q = app(\App\Services\Video\SynonymService::class)->expand(trim((string) $request->query('wd', $request->query('q', ''))));
         $this->front->applyRequestFilters($request);
         $this->context->setSeo(($q !== '' ? $q.' - ' : '').'搜索 - '.$site['title'], $q, '');
 
@@ -158,6 +169,75 @@ class VodController extends Controller
         $this->context->setSeo($tag->name.' - '.$site['title'], $tag->name, '');
 
         return view($this->front->themeView('vod.tag'), compact('site', 'tag'));
+    }
+
+    public function latest(Request $request): View
+    {
+        $site = $this->front->bootSite();
+        $this->front->applyRequestFilters($request);
+        $this->context->setSeo('最新更新 - '.$site['title'], $site['keyword'], $site['description']);
+
+        return view($this->front->themeView('vod.latest'), compact('site'));
+    }
+
+    public function actors(): View
+    {
+        $site = $this->front->bootSite();
+        $this->context->setSeo('演员库 - '.$site['title'], $site['keyword'], $site['description']);
+        $actors = \App\Models\Video\ActorModel::query()
+            ->where('status', 1)
+            ->orderByDesc('sort')
+            ->orderByDesc('id')
+            ->paginate((int) config('video.per_page', 24));
+        $this->context->setPaginator($actors);
+
+        return view($this->front->themeView('vod.actors'), compact('site', 'actors'));
+    }
+
+    public function topics(): View
+    {
+        $site = $this->front->bootSite();
+        $this->context->setSeo('专题 - '.$site['title'], $site['keyword'], $site['description']);
+        $topics = \App\Models\Video\VideoTopicModel::query()
+            ->where('status', 1)
+            ->orderByDesc('sort')
+            ->orderByDesc('id')
+            ->paginate(20);
+        $this->context->setPaginator($topics);
+
+        return view($this->front->themeView('vod.topics'), compact('site', 'topics'));
+    }
+
+    public function arts(Request $request, int|string|null $id = null): View
+    {
+        $site = $this->front->bootSite();
+        $this->context->setSeo('资讯 - '.$site['title'], $site['keyword'], $site['description']);
+        $wd = trim((string) $request->query('wd', ''));
+        $typeId = (int) $request->query('type_id', $request->query('t', 0));
+        if ($id !== null && $id !== '') {
+            $typeKey = preg_replace('/\.html$/i', '', (string) $id);
+            $typeQuery = \App\Models\Video\VideoTypeModel::query();
+            if (\Illuminate\Support\Facades\Schema::hasColumn('video_types', 'mid')) {
+                $typeQuery->where('mid', 2);
+            }
+            $type = is_numeric($typeKey)
+                ? $typeQuery->find((int) $typeKey)
+                : (clone $typeQuery)->where('slug', $typeKey)->first();
+            if ($type) {
+                $typeId = (int) $type->id;
+                $this->context->setType($type);
+                $this->context->setSeo($type->name.' - '.$site['title'], $type->seo_keywords ?: $site['keyword'], $type->seo_description ?: $site['description']);
+            }
+        }
+        $arts = \Illuminate\Support\Facades\Schema::hasTable('video_arts')
+            ? \App\Models\Video\VideoArt::query()->where('status', 1)
+                ->when($wd !== '', fn ($q) => $q->where('title', 'like', '%'.$wd.'%'))
+                ->when($typeId > 0, fn ($q) => $q->where('type_id', $typeId))
+                ->orderByDesc('id')->paginate(20)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $this->context->setPaginator($arts);
+
+        return view($this->front->themeView('vod.arts'), compact('site', 'arts'));
     }
 
     public function actor(int|string $id): View
@@ -189,15 +269,32 @@ class VodController extends Controller
         return view($this->front->themeView('vod.topic'), compact('site', 'topic', 'videos'));
     }
 
-    public function websites(): View
+    public function websites(Request $request): View
     {
         $site = $this->front->bootSite();
         $this->context->setSeo('网址导航 - '.$site['title'], $site['keyword'], $site['description']);
+        $wd = trim((string) $request->query('wd', ''));
+        $typeId = (int) $request->query('type_id', $request->query('t', 0));
         $list = \Illuminate\Support\Facades\Schema::hasTable('video_websites')
-            ? \App\Models\Video\VideoWebsite::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get()
+            ? \App\Models\Video\VideoWebsite::query()->where('status', 1)
+                ->when($wd !== '', fn ($q) => $q->where('name', 'like', '%'.$wd.'%'))
+                ->when($typeId > 0 && \Illuminate\Support\Facades\Schema::hasColumn('video_websites', 'type_id'), fn ($q) => $q->where('type_id', $typeId))
+                ->orderByDesc('sort')->orderBy('id')->get()
             : collect();
 
         return view($this->front->themeView('vod.websites'), compact('site', 'list'));
+    }
+
+    public function website(int|string $id): View
+    {
+        $site = $this->front->bootSite();
+        $website = $this->front->findWebsite($this->vodId($id));
+        if (! $website) {
+            throw new NotFoundHttpException();
+        }
+        $this->context->setSeo($website->name.' - '.$site['title'], $website->name, (string) $website->blurb);
+
+        return view($this->front->themeView('vod.website'), compact('site', 'website'));
     }
 
     public function art(int|string $id): View
@@ -208,6 +305,7 @@ class VodController extends Controller
             throw new NotFoundHttpException();
         }
         $this->context->setSeo($art->title.' - '.$site['title'], $art->title, mb_substr(strip_tags((string) $art->content), 0, 120));
+        $art->increment('hits');
 
         return view($this->front->themeView('vod.art'), compact('site', 'art'));
     }
@@ -222,6 +320,53 @@ class VodController extends Controller
         $this->context->setSeo($role->name.' - '.$site['title'], $role->name, (string) $role->blurb);
 
         return view($this->front->themeView('vod.role'), compact('site', 'role'));
+    }
+
+    public function roles(Request $request): View
+    {
+        $site = $this->front->bootSite();
+        $this->context->setSeo('角色 - '.$site['title'], $site['keyword'], $site['description']);
+        $wd = trim((string) $request->query('wd', ''));
+        $roles = \Illuminate\Support\Facades\Schema::hasTable('video_roles')
+            ? \App\Models\Video\VideoRole::query()->where('status', 1)
+                ->when($wd !== '', fn ($q) => $q->where('name', 'like', '%'.$wd.'%'))
+                ->orderByDesc('sort')->orderByDesc('id')->paginate((int) config('video.per_page', 24))->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 24);
+        $this->context->setPaginator($roles);
+
+        return view($this->front->themeView('vod.roles'), compact('site', 'roles'));
+    }
+
+    public function plots(\Illuminate\Http\Request $request): View
+    {
+        $site = $this->front->bootSite();
+        $videoId = (int) $request->query('video_id', 0);
+        $this->context->setSeo('分集剧情 - '.$site['title'], $site['keyword'], $site['description']);
+        $q = \Illuminate\Support\Facades\Schema::hasTable('video_plots')
+            ? \App\Models\Video\VideoPlot::query()->orderBy('episode_num')->orderBy('sort')->orderBy('id')
+            : null;
+        if ($q && $videoId > 0) {
+            $q->where('video_id', $videoId);
+        }
+        $plots = $q
+            ? $q->paginate(20)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $this->context->setPaginator($plots);
+
+        return view($this->front->themeView('vod.plot'), compact('site', 'plots', 'videoId'));
+    }
+
+    public function plot(int|string $id): View
+    {
+        $site = $this->front->bootSite();
+        $plot = $this->front->findPlot($this->vodId($id));
+        if (! $plot) {
+            throw new NotFoundHttpException();
+        }
+        $video = $plot->video;
+        $this->context->setSeo(($plot->title ?: '剧情').' - '.$site['title'], (string) $plot->title, mb_substr(strip_tags((string) $plot->content), 0, 120));
+
+        return view($this->front->themeView('vod.plot'), compact('site', 'plot', 'video'));
     }
 
     /** @param  array<string, string>  $vars */

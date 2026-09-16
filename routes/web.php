@@ -17,6 +17,7 @@ use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\PlayerController;
 use App\Http\Controllers\Api\ProvideController;
 use App\Http\Controllers\Api\ReceiveController;
+use App\Http\Controllers\Api\AppController;
 
 Route::get('/', [VodController::class, 'index'])->name('vod.home');
 Route::get('/show', [VodController::class, 'show'])->name('vod.show');
@@ -27,20 +28,34 @@ Route::post('/vod/{id}/comment', [InteractionController::class, 'comment'])->mid
 Route::post('/vod/{id}/report', [InteractionController::class, 'report'])->middleware('throttle:8,1')->whereNumber('id');
 Route::post('/vod/{id}/score', [InteractionController::class, 'score'])->middleware('throttle:20,1')->whereNumber('id');
 Route::post('/vod/{id}/favorite', [InteractionController::class, 'favorite'])->middleware('throttle:20,1')->whereNumber('id');
+Route::post('/comment/{id}/report', [InteractionController::class, 'reportComment'])->middleware('throttle:20,1')->whereNumber('id');
+Route::post('/comment/{id}/like', [InteractionController::class, 'likeComment'])->middleware('throttle:30,1')->whereNumber('id');
 Route::get('/play/{id}/{sid?}/{nid?}', [VodController::class, 'play'])->name('vod.play')->whereNumber('id');
 Route::get('/down/{id}/{sid?}/{nid?}', [VodController::class, 'down'])->name('vod.down')->whereNumber('id');
 Route::get('/player/{id}/{sid?}/{nid?}', [PlayerController::class, 'show'])->name('vod.player')->whereNumber('id');
 Route::get('/tag/{slug}', [VodController::class, 'tag'])->name('vod.tag');
+Route::get('/latest', [VodController::class, 'latest'])->name('vod.latest');
+Route::get('/actors', [VodController::class, 'actors'])->name('vod.actors');
 Route::get('/actor/{id}', [VodController::class, 'actor'])->name('vod.actor')->whereNumber('id');
+Route::get('/topics', [VodController::class, 'topics'])->name('vod.topics');
 Route::get('/topic/{id}', [VodController::class, 'topic'])->name('vod.topic');
 Route::get('/website', [VodController::class, 'websites'])->name('vod.website');
+Route::get('/website/{id}', [VodController::class, 'website'])->name('vod.website.show')->whereNumber('id');
+Route::get('/arts', [VodController::class, 'arts'])->name('vod.arts');
+Route::get('/art/type/{id}', [VodController::class, 'arts'])->whereNumber('id');
 Route::get('/art/{id}', [VodController::class, 'art'])->name('vod.art')->whereNumber('id');
+Route::get('/roles', [VodController::class, 'roles'])->name('vod.roles');
 Route::get('/role/{id}', [VodController::class, 'role'])->name('vod.role')->whereNumber('id');
+Route::get('/plot', [VodController::class, 'plots'])->name('vod.plots');
+Route::get('/plot/{id}', [VodController::class, 'plot'])->name('vod.plot')->whereNumber('id');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('vod.sitemap');
 Route::get('/rss.xml', [SeoController::class, 'rss'])->name('vod.rss');
+Route::get('/rss/{engine}.xml', [SeoController::class, 'rss'])->whereIn('engine', ['baidu', 'google', 'so', 'sogou', 'bing', 'sm'])->name('vod.rss.engine');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('vod.robots');
 Route::get('/api.php/provide/vod', [ProvideController::class, 'vod'])->name('vod.provide');
 Route::get('/api/provide/vod', [ProvideController::class, 'vod']);
+Route::get('/api.php/app/vod', [AppController::class, 'vod'])->name('vod.app');
+Route::get('/api/app/vod', [AppController::class, 'vod']);
 Route::post('/api.php/receive/vod', [ReceiveController::class, 'vod']);
 Route::post('/api/receive/vod', [ReceiveController::class, 'vod']);
 
@@ -62,6 +77,15 @@ Route::prefix('index.php/vod')->group(function () {
     Route::get('tag/id/{slug}', [VodController::class, 'tag']);
     Route::get('actor/id/{id}', [VodController::class, 'actor'])->where('id', '[0-9]+(?:\.html)?');
     Route::get('topic/id/{id}', [VodController::class, 'topic']);
+    Route::get('plot/id/{id}', [VodController::class, 'plot'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('plot{suffix?}', [VodController::class, 'plots'])->where('suffix', '\.html');
+    Route::get('role/id/{id}', [VodController::class, 'role'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('role{suffix?}', [VodController::class, 'roles'])->where('suffix', '\.html');
+    Route::get('website/id/{id}', [VodController::class, 'website'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('website{suffix?}', [VodController::class, 'websites'])->where('suffix', '\.html');
+    Route::get('art/type/id/{id}', [VodController::class, 'arts'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('art/id/{id}', [VodController::class, 'art'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('art{suffix?}', [VodController::class, 'arts'])->where('suffix', '\.html');
 });
 
 Route::get('/gbook', [InteractionController::class, 'guestbookForm']);
@@ -77,6 +101,7 @@ Route::middleware('member.auth')->group(function () {
     Route::get('/member', [MemberController::class, 'center']);
     Route::post('/member/password', [MemberController::class, 'password']);
     Route::post('/member/redeem', [MemberController::class, 'redeem']);
+    Route::post('/member/invite/generate', [MemberController::class, 'generateInvite']);
     Route::get('/member/favorites', [MemberController::class, 'favorites']);
     Route::get('/member/history', [MemberController::class, 'histories']);
     Route::get('/member/inbox', [MemberController::class, 'inbox']);

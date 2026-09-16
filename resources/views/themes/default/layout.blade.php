@@ -18,7 +18,12 @@
             @vodTopic(['num' => 6])
                 <a href="{{ $item->url }}">{{ $item->name }}</a>
             @endvodTopic
-            <a href="{{ url('/website') }}">导航</a>
+            <a href="{{ vod_url('latest') }}">最新</a>
+            <a href="{{ vod_url('topics') }}">专题</a>
+            <a href="{{ vod_url('actors') }}">演员</a>
+            <a href="{{ vod_url('roles') }}">角色</a>
+            <a href="{{ vod_url('arts') }}">资讯</a>
+            <a href="{{ vod_url('websites') }}">导航</a>
             @vodAd(['slot' => 'header'])
                 {!! $item->content !!}
             @endvodAd

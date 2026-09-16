@@ -55,6 +55,7 @@ class VideoSettingService
             'filter_lang' => '国语,粤语,英语,韩语,日语',
             'filter_year' => '2026,2025,2024,2023,2022,2021,2020',
             'provide_key' => '',
+            'app_key' => '',
             'collect_hits_min' => '0',
             'collect_hits_max' => '0',
             'collect_pic_local' => '0',
@@ -63,6 +64,12 @@ class VideoSettingService
             'smtp_user' => '',
             'smtp_pass' => '',
             'smtp_from' => '',
+            'play_buffer' => '5',
+            'play_encrypt' => '0',
+            'danmaku_enabled' => '1',
+            'danmaku_login' => '0',
+            'collect_areawords' => '',
+            'collect_langwords' => '',
         ];
         if (! $this->ready()) {
             return $defaults;
@@ -99,8 +106,9 @@ class VideoSettingService
             'icp', 'site_closed', 'site_close_tip', 'collect_in_status', 'collect_sync_pic', 'collect_hours',
             'inbound_key', 'member_register', 'member_comment_login', 'comment_audit', 'gbook_audit',
             'trysee_seconds', 'banned_words', 'seo_title_vod', 'seo_title_type', 'filter_area', 'filter_lang', 'filter_year',
-            'provide_key', 'collect_hits_min', 'collect_hits_max', 'collect_pic_local',
+            'provide_key', 'app_key', 'collect_hits_min', 'collect_hits_max', 'collect_pic_local',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
+            'play_buffer', 'play_encrypt', 'danmaku_enabled', 'danmaku_login', 'collect_areawords', 'collect_langwords',
         ];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
@@ -132,12 +140,19 @@ class VideoSettingService
             'video.storage_disk' => (string) ($all['storage_disk'] ?? 'local'),
         ]);
         if (trim((string) ($all['smtp_host'] ?? '')) !== '') {
+            $port = (int) ($all['smtp_port'] ?? 465);
+            $encryption = match ($port) {
+                465 => 'ssl',
+                587 => 'tls',
+                default => null,
+            };
             config([
                 'mail.default' => 'smtp',
                 'mail.mailers.smtp.host' => (string) ($all['smtp_host'] ?? ''),
-                'mail.mailers.smtp.port' => (int) ($all['smtp_port'] ?? 465),
+                'mail.mailers.smtp.port' => $port,
                 'mail.mailers.smtp.username' => (string) ($all['smtp_user'] ?? ''),
                 'mail.mailers.smtp.password' => (string) ($all['smtp_pass'] ?? ''),
+                'mail.mailers.smtp.encryption' => $encryption,
                 'mail.from.address' => (string) ($all['smtp_from'] ?? ''),
                 'mail.from.name' => (string) ($all['site_title'] ?? config('app.name')),
             ]);
@@ -213,6 +228,10 @@ class VideoSettingService
             'smtp_user' => (string) ($all['smtp_user'] ?? ''),
             'smtp_pass' => (string) ($all['smtp_pass'] ?? ''),
             'smtp_from' => (string) ($all['smtp_from'] ?? ''),
+            'play_buffer' => (string) ($all['play_buffer'] ?? '5'),
+            'play_encrypt' => (string) ($all['play_encrypt'] ?? '0'),
+            'collect_areawords' => (string) ($all['collect_areawords'] ?? ''),
+            'collect_langwords' => (string) ($all['collect_langwords'] ?? ''),
         ];
     }
 

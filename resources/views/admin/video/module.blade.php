@@ -17,9 +17,16 @@
       <div class="layui-btn-container" style="margin-bottom:10px;">
         <button class="layui-btn layui-btn-sm" id="mod-add">新增</button>
         <button class="layui-btn layui-btn-sm layui-btn-primary" id="mod-refresh">刷新</button>
-        @if($module === 'cards')
+        @if(in_array($module, ['cards', 'invites'], true))
           <button class="layui-btn layui-btn-sm layui-btn-normal" id="mod-gen">批量生成</button>
         @endif
+        @if($module === 'collect_tasks')
+          <button class="layui-btn layui-btn-sm layui-btn-warm" id="mod-due">执行到期采集</button>
+        @endif
+        <div class="layui-inline" style="margin-left:8px;">
+          <input type="text" id="mod-q" placeholder="{{ $search }}" class="layui-input" style="width:180px;display:inline-block;height:30px;">
+          <button class="layui-btn layui-btn-sm" id="mod-search">查询</button>
+        </div>
       </div>
       <table id="mod-table" lay-filter="mod-table"></table>
     </div>
@@ -78,6 +85,7 @@ layui.use(['layer','form','table'], function(){
     tableCols.push({field:c, title:c, minWidth:120});
   });
   tableCols.push({title:'操作', toolbar:'#mod-rowbar', width: {{ in_array($module, ['topics','collect_tasks','playfails'], true) ? 240 : 150 }}});
+  var searchField = @json($search);
   table.render({
     elem:'#mod-table', id:'mod-table', url:'/admin/video/'+module+'/list', page:true,
     parseData:function(res){
@@ -108,15 +116,33 @@ layui.use(['layer','form','table'], function(){
   }
   $('#mod-add').on('click', function(){ open({}); });
   $('#mod-refresh').on('click', function(){ table.reload('mod-table'); });
+  $('#mod-search').on('click', function(){
+    var where = {};
+    where[searchField] = $('#mod-q').val() || '';
+    table.reload('mod-table', {where: where, page:{curr:1}});
+  });
   $('#mod-gen').on('click', function(){
-    layer.prompt({title:'数量,积分', value:'10,100'}, function(val, index){
+    var isInvite = module === 'invites';
+    layer.prompt({title: isInvite ? '数量,积分,会员ID' : '数量,积分', value: isInvite ? '10,0,0' : '10,100'}, function(val, index){
       var parts = String(val||'').split(/[,，\s]+/);
       layer.close(index);
-      $.post('/admin/video/cards/generate', {count: parts[0]||10, points: parts[1]||100}, function(res){
+      var url = isInvite ? '/admin/video/invites/generate' : '/admin/video/cards/generate';
+      var payload = isInvite
+        ? {count: parts[0]||10, points: parts[1]||0, member_id: parts[2]||0}
+        : {count: parts[0]||10, points: parts[1]||100};
+      $.post(url, payload, function(res){
         if(res && res.code===0){ table.reload('mod-table'); layer.msg(res.msg||'已生成',{icon:1}); }
         else { layer.msg((res&&res.msg)||'失败',{icon:2}); }
       },'json');
     });
+  });
+  $('#mod-due').on('click', function(){
+    var load = layer.load(1);
+    $.post('/admin/video/collect-due', {}, function(res){
+      layer.close(load);
+      table.reload('mod-table');
+      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
+    },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
   });
   table.on('tool(mod-table)', function(obj){
     if(obj.event==='edit'){ open(obj.data||{}); }

@@ -99,4 +99,18 @@ class InteractionController extends Controller
 
         return back()->with('status', $data['msg']);
     }
+
+    public function reportComment(int $id): JsonResponse
+    {
+        $result = $this->interaction->reportComment($id);
+
+        return Ajax::message($result['code'], $result['msg'], $result['data'] ?? []);
+    }
+
+    public function likeComment(int $id): JsonResponse
+    {
+        $result = $this->interaction->likeComment($id);
+
+        return Ajax::message($result['code'], $result['msg'], $result['data'] ?? []);
+    }
 }

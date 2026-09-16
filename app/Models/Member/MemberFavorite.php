@@ -2,11 +2,9 @@
 
 namespace App\Models\Member;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Video\VideoOpsModel;
 
-class MemberFavorite extends Model
+class MemberFavorite extends VideoOpsModel
 {
     protected $table = 'member_favorites';
-    public $timestamps = false;
-    protected $guarded = [];
 }

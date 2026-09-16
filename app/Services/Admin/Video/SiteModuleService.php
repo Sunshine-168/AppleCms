@@ -58,6 +58,20 @@ class SiteModuleService
                 ],
                 'cols' => ['id', 'name', 'url', 'status', 'sort'],
             ],
+            'danmaku' => [
+                'title' => '弹幕管理',
+                'model' => \Plugins\Danmaku\Models\Danmaku::class,
+                'search' => 'text',
+                'fields' => [
+                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
+                    ['name' => 'episode_id', 'label' => '分集ID', 'type' => 'number'],
+                    ['name' => 'text', 'label' => '内容', 'type' => 'textarea'],
+                    ['name' => 'color', 'label' => '颜色', 'type' => 'text'],
+                    ['name' => 'time', 'label' => '秒', 'type' => 'text'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
+                ],
+                'cols' => ['id', 'video_id', 'episode_id', 'text', 'time', 'ip', 'status'],
+            ],
             'comments' => [
                 'title' => '评论管理',
                 'model' => \App\Models\Video\VideoComment::class,
@@ -68,7 +82,7 @@ class SiteModuleService
                     ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
                 ],
-                'cols' => ['id', 'video_id', 'author_name', 'content', 'status'],
+                'cols' => ['id', 'video_id', 'author_name', 'content', 'comment_report', 'status'],
             ],
             'reports' => [
                 'title' => '报错管理',
@@ -291,6 +305,8 @@ class SiteModuleService
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
+                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
+                    ['name' => 'actor_id', 'label' => '演员ID', 'type' => 'number'],
                     ['name' => 'slug', 'label' => '别名', 'type' => 'text'],
                     ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
                     ['name' => 'blurb', 'label' => '简介', 'type' => 'text'],
@@ -298,7 +314,7 @@ class SiteModuleService
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
                 ],
-                'cols' => ['id', 'name', 'slug', 'status', 'sort'],
+                'cols' => ['id', 'name', 'video_id', 'actor_id', 'slug', 'status', 'sort'],
             ],
             'websites' => [
                 'title' => '网址导航',
@@ -306,13 +322,14 @@ class SiteModuleService
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
+                    ['name' => 'type_id', 'label' => '分类ID', 'type' => 'number'],
                     ['name' => 'url', 'label' => '链接', 'type' => 'text'],
                     ['name' => 'logo', 'label' => 'Logo', 'type' => 'text'],
                     ['name' => 'blurb', 'label' => '简介', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
                 ],
-                'cols' => ['id', 'name', 'url', 'status', 'sort'],
+                'cols' => ['id', 'type_id', 'name', 'url', 'status', 'sort'],
             ],
             'arts' => [
                 'title' => '文章管理',
@@ -438,13 +455,38 @@ class SiteModuleService
                 ],
                 'cols' => ['id', 'member_id', 'video_id', 'created_at'],
             ],
+            'accesslogs' => [
+                'title' => '访问风控',
+                'model' => \App\Models\Video\VideoAccessLog::class,
+                'search' => 'ip',
+                'fields' => [
+                    ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
+                    ['name' => 'url', 'label' => 'URL', 'type' => 'text'],
+                    ['name' => 'ua', 'label' => 'UA', 'type' => 'text'],
+                    ['name' => 'is_bot', 'label' => '爬虫', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                ],
+                'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
+            ],
+            'botlogs' => [
+                'title' => '爬虫日志',
+                'model' => \App\Models\Video\VideoAccessLog::class,
+                'search' => 'ua',
+                'where' => ['is_bot' => 1],
+                'fields' => [
+                    ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
+                    ['name' => 'url', 'label' => 'URL', 'type' => 'text'],
+                    ['name' => 'ua', 'label' => 'UA', 'type' => 'text'],
+                    ['name' => 'is_bot', 'label' => '爬虫', 'type' => 'select', 'options' => ['1' => '是', '0' => '否']],
+                ],
+                'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
+            ],
             default => throw new \InvalidArgumentException('未知模块'),
         };
     }
 
     public static function names(): array
     {
-        return ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'cj', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites'];
+        return ['topics', 'players', 'links', 'danmaku', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'cj', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs'];
     }
 
     public function lists(string $module, array $params): array
@@ -454,6 +496,9 @@ class SiteModuleService
         $class = $cfg['model'];
         $limit = max(1, (int) ($params['limit'] ?? 10));
         $q = $class::query();
+        foreach ($cfg['where'] ?? [] as $col => $val) {
+            $q->where($col, $val);
+        }
         $kw = trim((string) ($params[$cfg['search']] ?? $params['q'] ?? ''));
         if ($kw !== '') {
             $q->where($cfg['search'], 'like', '%'.$kw.'%');
@@ -477,10 +522,11 @@ class SiteModuleService
         $cfg = $this->config($module);
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
+        $probe = new $class;
         $payload = [];
         foreach ($cfg['fields'] as $field) {
             $name = $field['name'];
-            if (array_key_exists($name, $data)) {
+            if (array_key_exists($name, $data) && $this->hasColumn($probe, $name)) {
                 $payload[$name] = $data[$name];
             }
         }
@@ -638,6 +684,35 @@ class SiteModuleService
         }
 
         return Result::success(['codes' => $codes], '已生成 '.$count.' 张');
+    }
+
+    public function generateInvites(int $count, int $points, int $memberId = 0): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('member_invites')) {
+            return Result::fail('邀请码表不存在');
+        }
+        $count = min(200, max(1, $count));
+        $points = max(0, $points);
+        $memberId = max(0, $memberId);
+        $now = time();
+        $codes = [];
+        for ($i = 0; $i < $count; $i++) {
+            $code = strtoupper(Str::random(8));
+            while (\App\Models\Member\MemberInvite::query()->where('code', $code)->exists()) {
+                $code = strtoupper(Str::random(8));
+            }
+            \App\Models\Member\MemberInvite::query()->create([
+                'code' => $code,
+                'member_id' => $memberId,
+                'used_by' => 0,
+                'points' => $points,
+                'status' => 1,
+                'created_at' => $now,
+            ]);
+            $codes[] = $code;
+        }
+
+        return Result::success(['codes' => $codes], '已生成 '.$count.' 个');
     }
 
     public function runCollectTask(int $id): array

@@ -16,6 +16,7 @@ use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * 视频服务
@@ -107,10 +108,19 @@ class VideoService
             $limit = 10;
         }
 
+        $weekday = trim((string) ($params['weekday'] ?? ''));
+        if ($weekday !== '' && Schema::hasColumn('videos', 'weekday')) {
+            $where[] = ['weekday', '=', $weekday];
+        }
+
         $emptyUrl = (string) ($params['empty_url'] ?? '') === '1';
         $repeat = (string) ($params['repeat'] ?? '') === '1';
         $needPoints = (string) ($params['need_points'] ?? '') === '1';
-        if ($emptyUrl || $repeat || $needPoints) {
+        $hasPlot = (string) ($params['has_plot'] ?? '') === '1';
+        $emptyPic = (string) ($params['empty_pic'] ?? '') === '1';
+        $emptyContent = (string) ($params['empty_content'] ?? '') === '1';
+        $noActor = (string) ($params['no_actor'] ?? '') === '1';
+        if ($emptyUrl || $repeat || $needPoints || $hasPlot || $emptyPic || $emptyContent || $noActor) {
             $q = VideoModel::query();
             if ($title !== '') {
                 $q->where('title', 'like', '%'.$title.'%');
@@ -121,11 +131,38 @@ class VideoService
             if ($status !== null && $status !== '') {
                 $q->where('status', (int) $status);
             }
+            if ($lock !== null && $lock !== '') {
+                $q->where('lock', (int) $lock);
+            }
+            if ($weekday !== '' && Schema::hasColumn('videos', 'weekday')) {
+                $q->where('weekday', $weekday);
+            }
             if ($needPoints) {
                 $q->where('points', '>', 0);
             }
             if ($emptyUrl) {
                 $q->whereDoesntHave('episodes');
+            }
+            if ($hasPlot) {
+                $q->whereHas('plots');
+            }
+            if ($emptyPic) {
+                $q->where(function ($inner) {
+                    $inner->whereNull('cover')->orWhere('cover', '');
+                });
+            }
+            if ($emptyContent) {
+                $q->where(function ($inner) {
+                    $inner->whereNull('description')->orWhere('description', '');
+                });
+            }
+            if ($noActor) {
+                $q->where(function ($inner) {
+                    $inner->whereDoesntHave('actors');
+                    if (Schema::hasColumn('videos', 'actor')) {
+                        $inner->orWhereNull('actor')->orWhere('actor', '');
+                    }
+                });
             }
             if ($repeat) {
                 $dup = VideoModel::query()->select('title')->groupBy('title')->havingRaw('COUNT(*) > 1')->pluck('title');
@@ -291,6 +328,12 @@ class VideoService
             'letter' => VideoMeta::letter($title),
             'updated_at' => $now,
         ];
+        if (Schema::hasColumn('videos', 'weekday')) {
+            $payload['weekday'] = trim((string) ($data['weekday'] ?? ''));
+        }
+        if (Schema::hasColumn('videos', 'publish_at')) {
+            $payload['publish_at'] = $this->toUnix($data['publish_at'] ?? 0);
+        }
         if (!empty($payload['type_id'])) {
             $type = $this->videoTypeModel->findById((int) $payload['type_id']);
             $payload['type_pid'] = (int) ($type['parent_id'] ?? 0);
@@ -501,6 +544,7 @@ class VideoService
         $candidate = [
             'name' => $name,
             'parent_id' => (int)($data['parent_id'] ?? 0),
+            'mid' => (int) ($data['mid'] ?? 1),
             'sort' => (int)($data['sort'] ?? 0),
             'status' => (int)($data['status'] ?? 1),
             'updated_at' => $now,
@@ -1059,6 +1103,20 @@ class VideoService
         }
         return $filtered;
     }
+
+    private function toUnix(mixed $value): int
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+        $ts = strtotime((string) $value);
+
+        return $ts !== false ? $ts : 0;
+    }
+
     /**
      * 同步视频采集源剧集标签
      */

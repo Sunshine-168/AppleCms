@@ -73,8 +73,11 @@ class MemberController extends Controller
     {
         $site = $this->front->bootSite();
         $member = Auth::guard('member')->user();
+        $invites = \Illuminate\Support\Facades\Schema::hasTable('member_invites')
+            ? \App\Models\Member\MemberInvite::query()->where('member_id', $member->id)->orderByDesc('id')->get()
+            : collect();
 
-        return view($this->front->themeView('member.center'), compact('site', 'member'));
+        return view($this->front->themeView('member.center'), compact('site', 'member', 'invites'));
     }
 
     public function password(Request $request): RedirectResponse
@@ -99,6 +102,16 @@ class MemberController extends Controller
         );
         if ($result['code'] !== 0) {
             return back()->withErrors(['code' => $result['msg']]);
+        }
+
+        return back()->with('status', $result['msg']);
+    }
+
+    public function generateInvite(): RedirectResponse
+    {
+        $result = $this->interaction->generateInvite(Auth::guard('member')->user());
+        if ($result['code'] !== 0) {
+            return back()->withErrors(['invite' => $result['msg']]);
         }
 
         return back()->with('status', $result['msg']);

@@ -30,6 +30,21 @@ class ProvideController extends Controller
         }
         $ac = (string) $request->query('ac', 'list');
         $at = (string) $request->query('at', $request->segment(4) ?? 'json');
+        $payload = $this->vodPayload($request);
+
+        if ($at === 'xml') {
+            $detail = $ac === 'detail' || $ac === 'videolist' || trim((string) $request->query('ids', '')) !== '';
+
+            return response($this->toXml($payload, $detail), 200, ['Content-Type' => 'text/xml; charset=utf-8']);
+        }
+
+        return response()->json($payload);
+    }
+
+    /** @return array<string, mixed> */
+    public function vodPayload(Request $request): array
+    {
+        $ac = (string) $request->query('ac', 'list');
         $page = max(1, (int) $request->query('pg', 1));
         $limit = 20;
         $typeId = (int) $request->query('t', 0);
@@ -78,15 +93,11 @@ class ProvideController extends Controller
             ])->values()->all();
         }
 
-        if ($at === 'xml') {
-            return response($this->toXml($payload, $detail), 200, ['Content-Type' => 'text/xml; charset=utf-8']);
-        }
-
-        return response()->json($payload);
+        return $payload;
     }
 
     /** @param  \App\Models\Video\VideoModel  $video */
-    private function formatVideo($video, bool $detail): array
+    public function formatVideo($video, bool $detail): array
     {
         $froms = [];
         $urls = [];

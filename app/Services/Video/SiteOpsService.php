@@ -3,6 +3,8 @@
 namespace App\Services\Video;
 
 use App\Models\Member\MemberPm;
+use App\Models\Video\ActorModel;
+use App\Models\Video\VideoArt;
 use App\Models\Video\VideoCollectTask;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoGuestbook;
@@ -10,9 +12,12 @@ use App\Models\Video\VideoModel;
 use App\Models\Video\VideoPlayFail;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
+use App\Models\Video\VideoTagModel;
+use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTypeModel;
 use App\Models\Video\VideoVisitDay;
 use App\Models\Video\VideoVisitItem;
+use App\Models\Video\VideoWebsite;
 use App\Services\Collect\CollectIngestService;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
@@ -231,12 +236,57 @@ class SiteOpsService
                 $capture('/vod/'.$video->id, 'detail/'.$video->id.'.html');
             }
         }
+        if (in_array($scope, ['all', 'actor'], true) && Schema::hasTable('actors')) {
+            foreach (ActorModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $actor) {
+                $capture('/actor/'.$actor->id, 'actor/'.$actor->id.'.html');
+            }
+        }
+        if (in_array($scope, ['all', 'topic'], true) && Schema::hasTable('video_topics')) {
+            foreach (VideoTopicModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $topic) {
+                $capture('/topic/'.$topic->id, 'topic/'.$topic->id.'.html');
+            }
+        }
+        if (in_array($scope, ['all', 'tag'], true) && Schema::hasTable('video_tags')) {
+            foreach (VideoTagModel::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $tag) {
+                $slug = trim((string) $tag->slug) !== '' ? (string) $tag->slug : (string) $tag->id;
+                $capture('/tag/'.$slug, 'tag/'.$tag->id.'.html');
+            }
+        }
+        if (in_array($scope, ['all', 'art'], true) && Schema::hasTable('video_arts')) {
+            foreach (VideoArt::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $art) {
+                $capture('/art/'.$art->id, 'art/'.$art->id.'.html');
+            }
+        }
+        if (in_array($scope, ['all', 'website'], true) && Schema::hasTable('video_websites')) {
+            foreach (VideoWebsite::query()->where('status', 1)->orderByDesc('id')->limit(80)->get() as $website) {
+                $capture('/website/'.$website->id, 'website/'.$website->id.'.html');
+            }
+        }
 
         return Result::success([
             'dir' => $dir,
             'files' => $written,
             'count' => count($written),
         ], '已写出 '.count($written).' 个静态文件到 public/html');
+    }
+
+    public function makeMap(string $scope = 'sitemap'): array
+    {
+        $ctrl = app(\App\Http\Controllers\Web\SeoController::class);
+        $req = Request::create('/', 'GET');
+        $written = [];
+        if ($scope === 'rss') {
+            File::put(public_path('rss.xml'), $ctrl->rssXml(''));
+            $written[] = 'rss.xml';
+        } else {
+            File::put(public_path('sitemap.xml'), $ctrl->sitemapXml($req));
+            $written[] = 'sitemap.xml';
+        }
+
+        return Result::success([
+            'files' => $written,
+            'count' => count($written),
+        ], '已生成 public/'.implode(', ', $written));
     }
 
     public function visitSummary(): array

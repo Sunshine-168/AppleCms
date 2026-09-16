@@ -185,6 +185,18 @@
           </div>
         </div>
         <div class="layui-form-item">
+          <label class="layui-form-label">地区词库</label>
+          <div class="layui-input-block">
+            <textarea name="collect_areawords" class="layui-textarea" placeholder="每行 from=to 或 from,to，如 大陆=中国">{{ $site['collect_areawords'] ?? '' }}</textarea>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">语言词库</label>
+          <div class="layui-input-block">
+            <textarea name="collect_langwords" class="layui-textarea" placeholder="每行 from=to 或 from,to">{{ $site['collect_langwords'] ?? '' }}</textarea>
+          </div>
+        </div>
+        <div class="layui-form-item">
           <label class="layui-form-label">SMTP主机</label>
           <div class="layui-input-block">
             <input type="text" name="smtp_host" value="{{ $site['smtp_host'] ?? '' }}" class="layui-input">
@@ -212,6 +224,17 @@
           <label class="layui-form-label">发件人</label>
           <div class="layui-input-block">
             <input type="text" name="smtp_from" value="{{ $site['smtp_from'] ?? '' }}" class="layui-input" placeholder="noreply@example.com">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">测试邮箱</label>
+          <div class="layui-input-block">
+            <input type="email" id="test-mail-to" class="layui-input" placeholder="收件邮箱">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-input-block">
+            <button type="button" class="layui-btn layui-btn-primary" id="site-test-mail">发送测试邮件</button>
           </div>
         </div>
         <div class="layui-form-item">
@@ -251,15 +274,60 @@
           </div>
         </div>
         <div class="layui-form-item">
+          <label class="layui-form-label">弹幕</label>
+          <div class="layui-input-block">
+            <select name="danmaku_enabled">
+              <option value="1" @selected(($site['danmaku_enabled'] ?? '1')==='1')>开启</option>
+              <option value="0" @selected(($site['danmaku_enabled'] ?? '1')==='0')>关闭</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">弹幕需登录</label>
+          <div class="layui-input-block">
+            <select name="danmaku_login">
+              <option value="0" @selected(($site['danmaku_login'] ?? '0')==='0')>否</option>
+              <option value="1" @selected(($site['danmaku_login'] ?? '0')==='1')>是</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
           <label class="layui-form-label">试看秒数</label>
           <div class="layui-input-block">
             <input type="number" name="trysee_seconds" value="{{ $site['trysee_seconds'] ?? 0 }}" class="layui-input">
           </div>
         </div>
         <div class="layui-form-item">
+          <label class="layui-form-label">播放缓冲</label>
+          <div class="layui-input-block">
+            <input type="number" name="play_buffer" value="{{ $site['play_buffer'] ?? 5 }}" class="layui-input">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">播放加密</label>
+          <div class="layui-input-block">
+            <select name="play_encrypt">
+              <option value="0" @selected(($site['play_encrypt'] ?? '0')==='0')>明文</option>
+              <option value="1" @selected(($site['play_encrypt'] ?? '0')==='1')>前端 Base64</option>
+            </select>
+          </div>
+        </div>
+        <div class="layui-form-item">
           <label class="layui-form-label">违禁词</label>
           <div class="layui-input-block">
             <textarea name="banned_words" class="layui-textarea" placeholder="逗号或换行">{{ $site['banned_words'] ?? '' }}</textarea>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">影片标题模板</label>
+          <div class="layui-input-block">
+            <input type="text" name="seo_title_vod" value="{{ $site['seo_title_vod'] ?? '' }}" class="layui-input" placeholder="{name} - {site}">
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layui-form-label">分类标题模板</label>
+          <div class="layui-input-block">
+            <input type="text" name="seo_title_type" value="{{ $site['seo_title_type'] ?? '' }}" class="layui-input" placeholder="{type} - {site}">
           </div>
         </div>
         <div class="layui-form-item">
@@ -335,6 +403,15 @@ layui.use(['form','layer'], function(){
     $.post('/admin/video/settings', data, function(res){
       layer.msg((res && res.msg) ? res.msg : '完成', {icon: (res && res.code===0)?1:2});
     }, 'json');
+  });
+  $('#site-test-mail').on('click', function(){
+    var to = $.trim($('#test-mail-to').val() || '');
+    if (!to) { layer.msg('请填写测试邮箱', {icon:2}); return; }
+    var load = layer.load(1);
+    $.post('/admin/video/settings/test-mail', {to: to}, function(res){
+      layer.close(load);
+      layer.msg((res && res.msg) ? res.msg : '完成', {icon: (res && res.code===0)?1:2, time:4000});
+    }, 'json').fail(function(){ layer.close(load); layer.msg('发送失败',{icon:2}); });
   });
 });
 </script>

@@ -1,0 +1,6 @@
+{
+    "id": "danmaku",
+    "name": "弹幕",
+    "enabled": true,
+    "provider": "Plugins\\Danmaku\\DanmakuServiceProvider"
+}

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/../app/Support/helpers.php';
+
 use App\Models\System\SysScheduleModel;
 use App\Services\Admin\System\SysScheduleService;
 use App\Support\Utils\Syslog;
@@ -18,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
         $schedule->command('video:collect-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('video:publish-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
 
         try {
             if (!Schema::hasTable('sys_schedule'))
@@ -99,8 +102,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'member.auth' => \App\Http\Middleware\MemberAuth::class,
             'vod.html' => \App\Http\Middleware\VideoHtmlCache::class,
         ]);
+        $middleware->web(prepend: [
+            \App\Http\Middleware\CheckInstalled::class,
+        ]);
         $middleware->appendToGroup('web', \App\Http\Middleware\SiteClosed::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VisitStat::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\VideoAccessLog::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

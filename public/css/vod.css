@@ -4,12 +4,16 @@ body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color
 a { color:var(--accent); text-decoration:none; }
 .wrap { width:min(1200px, 94%); margin:0 auto; }
 header.site { border-bottom:1px solid #222; background:#12141a; }
-header.site .wrap { display:flex; gap:24px; align-items:center; padding:14px 0; }
+header.site .wrap { display:flex; gap:16px 24px; align-items:center; padding:14px 0; flex-wrap:wrap; }
 .logo { color:var(--text); font-weight:700; font-size:20px; }
 nav.main { display:flex; gap:14px; flex-wrap:wrap; }
 nav.main a { color:var(--muted); }
 nav.main a:hover { color:var(--text); }
 .search { margin-left:auto; }
+.list-plain { list-style:none; padding:0; margin:0; }
+.list-plain li { padding:12px 0; border-bottom:1px solid #222; }
+.person { display:flex; gap:16px; align-items:flex-start; margin-bottom:20px; }
+.person img { width:96px; height:128px; object-fit:cover; border-radius:8px; background:#222; }
 input, textarea, button { background:#0b0d12; border:1px solid #2a2f3a; color:var(--text); padding:8px 10px; border-radius:6px; }
 .muted { color:var(--muted); }
 .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:16px; }

@@ -77,6 +77,13 @@ class SiteOps extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
+    public function makeMap(Request $request): JsonResponse
+    {
+        $data = $this->ops->makeMap((string) $request->input('scope', 'sitemap'));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
     public function disableFailSource(Request $request): JsonResponse
     {
         $data = $this->ops->disablePlayFailSource((int) $request->input('id', 0));
@@ -130,5 +137,12 @@ class SiteOps extends Controller
         );
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function collectDue(): JsonResponse
+    {
+        \Illuminate\Support\Facades\Artisan::call('video:collect-due');
+
+        return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: '已执行', []);
     }
 }

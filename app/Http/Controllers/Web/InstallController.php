@@ -48,21 +48,25 @@ class InstallController extends Controller
             return response()->json(['ok' => false, 'message' => '已经安装过了'], 422);
         }
         $phase = (string) $request->input('phase');
+        $payload = $this->payload($request);
         try {
             if ($phase === 'prepare') {
                 $request->session()->put('install.running', true);
-                $this->install->prepare($this->payload($request));
+                $this->install->prepare($payload);
             } elseif ($phase === 'migrate') {
+                $this->install->applyDatabase($payload, false);
                 $this->install->migrate();
             } elseif ($phase === 'account') {
                 $this->validateAccount($request);
-                $this->install->seedAccount($this->payload($request));
+                $this->install->applyDatabase($payload, false);
+                $this->install->seedAccount($payload);
             } elseif ($phase === 'demo') {
+                $this->install->applyDatabase($payload, false);
                 if ($request->boolean('seed_demo')) {
                     $this->install->seedDemo();
                 }
             } elseif ($phase === 'finish') {
-                $this->install->finish($this->payload($request));
+                $this->install->finish($payload);
                 $request->session()->forget('install.running');
                 $this->flashDone($request);
             } else {

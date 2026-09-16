@@ -8,8 +8,8 @@ use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
-use App\Models\Video\VideoSynonym;
 use App\Models\Video\VideoTypeModel;
+use App\Services\Video\SynonymService;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Illuminate\Support\Facades\DB;
@@ -149,6 +149,7 @@ class CollectIngestService
         $hours = (int) ($params['hours'] ?? $params['h'] ?? 0);
         $ids = (string) ($params['ids'] ?? '');
         $remoteType = (string) ($params['t'] ?? '');
+        $wd = app(SynonymService::class)->expand(trim((string) ($params['wd'] ?? $params['keyword'] ?? '')));
 
         $created = 0;
         $updated = 0;
@@ -173,6 +174,9 @@ class CollectIngestService
             }
             if ($remoteType !== '') {
                 $query['t'] = $remoteType;
+            }
+            if ($wd !== '') {
+                $query['wd'] = $wd;
             }
             if (trim((string) $source->param) !== '') {
                 parse_str(ltrim((string) $source->param, '&'), $extra);
@@ -269,7 +273,7 @@ class CollectIngestService
     /** @param  array<string, mixed>  $item */
     private function upsert(CollectSourceModel $source, array $item): array
     {
-        $title = $this->applySynonyms(trim((string) ($item['vod_name'] ?? '')));
+        $title = app(SynonymService::class)->expand(trim((string) ($item['vod_name'] ?? '')));
         if ($title === '') {
             return ['action' => 'skipped', 'msg' => '无标题', 'title' => ''];
         }
@@ -324,17 +328,14 @@ class CollectIngestService
         $cover = ((int) $settings->get('collect_sync_pic', '1') === 1)
             ? (string) ($item['vod_pic'] ?? '')
             : '';
-        if ($cover !== '' && (int) $settings->get('collect_pic_local', '0') === 1) {
-            $cover = $this->localizeCover($cover);
-        }
         $payload = [
             'title' => $title,
             'subtitle' => (string) ($item['vod_sub'] ?? ''),
             'cover' => $cover,
             'type_id' => $typeId,
             'type_pid' => $typePid,
-            'area' => (string) ($item['vod_area'] ?? ''),
-            'lang' => (string) ($item['vod_lang'] ?? ''),
+            'area' => $this->mapWords((string) ($item['vod_area'] ?? ''), (string) $settings->get('collect_areawords', '')),
+            'lang' => $this->mapWords((string) ($item['vod_lang'] ?? ''), (string) $settings->get('collect_langwords', '')),
             'year' => (string) ($item['vod_year'] ?? ''),
             'director' => (string) ($item['vod_director'] ?? ''),
             'description' => (string) ($item['vod_content'] ?? ''),
@@ -350,8 +351,11 @@ class CollectIngestService
             'collect_source_id' => $source->id,
             'updated_at' => $now,
         ];
+        if (Schema::hasColumn('videos', 'weekday')) {
+            $payload['weekday'] = (string) ($item['vod_weekday'] ?? $item['weekday'] ?? '');
+        }
 
-        return DB::transaction(function () use ($video, $payload, $item, $now, $title, $hit) {
+        return DB::transaction(function () use ($video, $payload, $item, $now, $title, $hit, $settings) {
             $action = 'updated';
             if (! $video) {
                 $payload['created_at'] = $now;
@@ -375,6 +379,14 @@ class CollectIngestService
             } else {
                 $video->fill($payload);
                 $video->save();
+            }
+
+            if ((string) ($video->cover ?? '') !== '' && (int) $settings->get('collect_pic_local', '0') === 1) {
+                $local = $this->localizeCover((string) $video->cover, (int) $video->id);
+                if ($local !== (string) $video->cover) {
+                    $video->cover = $local;
+                    $video->save();
+                }
             }
 
             $this->mergePlay($video, (string) ($item['vod_play_from'] ?? ''), (string) ($item['vod_play_url'] ?? ''), $now, 'play');
@@ -472,29 +484,9 @@ class CollectIngestService
         }
     }
 
-    private function applySynonyms(string $title): string
+    private function localizeCover(string $url, int $videoId = 0): string
     {
-        if ($title === '' || ! Schema::hasTable('video_synonyms')) {
-            return $title;
-        }
-        try {
-            $rows = VideoSynonym::query()->where('status', 1)->orderBy('id')->get(['from_word', 'to_word']);
-        } catch (\Throwable) {
-            return $title;
-        }
-        foreach ($rows as $row) {
-            $from = (string) $row->from_word;
-            if ($from !== '') {
-                $title = str_replace($from, (string) $row->to_word, $title);
-            }
-        }
-
-        return trim($title);
-    }
-
-    private function localizeCover(string $url): string
-    {
-        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+        if ($videoId < 1 || (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://'))) {
             return $url;
         }
         try {
@@ -508,12 +500,11 @@ class CollectIngestService
             if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                 $ext = 'jpg';
             }
-            $name = md5($url.microtime(true)).'.'.$ext;
-            $dir = storage_path('app/public/covers');
+            $dir = public_path('uploads/vod');
             File::ensureDirectoryExists($dir);
-            File::put($dir.DIRECTORY_SEPARATOR.$name, $resp->body());
+            File::put($dir.DIRECTORY_SEPARATOR.$videoId.'.'.$ext, $resp->body());
 
-            return '/storage/covers/'.$name;
+            return '/uploads/vod/'.$videoId.'.'.$ext;
         } catch (\Throwable) {
             return $url;
         }
@@ -524,7 +515,7 @@ class CollectIngestService
         $settings = app(\App\Services\Video\VideoSettingService::class);
         $min = max(0, (int) $settings->get('collect_hits_min', '0'));
         $max = max(0, (int) $settings->get('collect_hits_max', '0'));
-        if ($min < 1 && $max < 1) {
+        if ($max < 1) {
             return 0;
         }
         if ($max < $min) {
@@ -532,6 +523,39 @@ class CollectIngestService
         }
 
         return random_int($min, $max);
+    }
+
+    private function mapWords(string $value, string $map): string
+    {
+        $value = trim($value);
+        if ($value === '' || trim($map) === '') {
+            return $value;
+        }
+        foreach (preg_split('/[\r\n]+/', $map) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            if (str_contains($line, '=')) {
+                foreach (explode(',', $line) as $piece) {
+                    $piece = trim($piece);
+                    if (! str_contains($piece, '=')) {
+                        continue;
+                    }
+                    [$from, $to] = array_map('trim', explode('=', $piece, 2));
+                    if ($from !== '' && $value === $from) {
+                        return $to;
+                    }
+                }
+                continue;
+            }
+            [$from, $to] = array_pad(array_map('trim', explode(',', $line, 2)), 2, '');
+            if ($from !== '' && $value === $from) {
+                return $to;
+            }
+        }
+
+        return $value;
     }
 
     /** @return array<string, int> */

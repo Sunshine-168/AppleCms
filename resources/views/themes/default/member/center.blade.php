@@ -4,6 +4,18 @@
     @if(session('status'))<p>{{ session('status') }}</p>@endif
     @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
     <p class="muted">积分：{{ $member->points }}</p>
+    @if(isset($invites) && $invites->isNotEmpty())
+        <p>邀请码：
+            @foreach($invites as $row)
+                <code>{{ $row->code }}</code>
+                @if((int)$row->status === 1)（未用）@else（已用）@endif
+            @endforeach
+        </p>
+    @endif
+    <form method="post" action="{{ url('/member/invite/generate') }}">
+        @csrf
+        <button type="submit">生成邀请码</button>
+    </form>
     <p>
         <a href="{{ url('/member/favorites') }}">我的收藏</a>
         · <a href="{{ url('/member/history') }}">观看历史</a>

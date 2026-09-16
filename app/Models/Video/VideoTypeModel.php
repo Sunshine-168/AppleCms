@@ -42,6 +42,13 @@ class VideoTypeModel extends Model
 
     public function getUrlAttribute(): string
     {
+        $mid = (int) ($this->attributes['mid'] ?? 1);
+        if ($mid === 2) {
+            return url('/art/type/'.$this->id);
+        }
+        if ($mid === 3) {
+            return url('/website').'?type_id='.$this->id;
+        }
         $slug = trim((string) $this->slug);
 
         return vod_url('type', ['id' => $slug !== '' ? $slug : $this->id]);

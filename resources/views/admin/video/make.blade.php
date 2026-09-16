@@ -16,7 +16,14 @@
         <button class="layui-btn" data-scope="index">生成首页</button>
         <button class="layui-btn layui-btn-normal" data-scope="type">生成分类</button>
         <button class="layui-btn layui-btn-warm" data-scope="detail">生成详情</button>
+        <button class="layui-btn" data-scope="actor">生成演员</button>
+        <button class="layui-btn" data-scope="topic">生成专题</button>
+        <button class="layui-btn" data-scope="tag">生成标签</button>
+        <button class="layui-btn" data-scope="art">生成文章</button>
+        <button class="layui-btn" data-scope="website">生成网址</button>
         <button class="layui-btn layui-btn-danger" data-scope="all">全部生成</button>
+        <button class="layui-btn" data-map="sitemap">生成地图</button>
+        <button class="layui-btn layui-btn-normal" data-map="rss">生成RSS</button>
         <button class="layui-btn layui-btn-primary" id="hits-reset">重置日人气</button>
       </div>
       <pre id="make-result" class="layui-code" style="margin-top:16px;min-height:80px;"></pre>
@@ -38,6 +45,15 @@ layui.use(['layer'], function(){
     var scope = $(this).data('scope');
     var load = layer.load(1);
     $.post('/admin/video/make/run', {scope: scope}, function(res){
+      layer.close(load);
+      $('#make-result').text(JSON.stringify(res, null, 2));
+      layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});
+    },'json').fail(function(){ layer.close(load); layer.msg('失败',{icon:2}); });
+  });
+  $('[data-map]').on('click', function(){
+    var scope = $(this).data('map');
+    var load = layer.load(1);
+    $.post('/admin/video/make/map', {scope: scope}, function(res){
       layer.close(load);
       $('#make-result').text(JSON.stringify(res, null, 2));
       layer.msg((res&&res.msg)||'完成', {icon:(res&&res.code===0)?1:2, time:4000});

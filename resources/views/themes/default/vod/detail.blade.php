@@ -16,6 +16,16 @@
         @endauth
     </p>
     <div class="desc">@vodSubstr(['name' => $video->description, 'len' => 400])</div>
+    @php $plotList = $plots ?? $video->plots ?? collect(); @endphp
+    @if($plotList && count($plotList))
+        <h2>分集剧情</h2>
+        <ul>
+            @foreach($plotList as $plot)
+                <li><a href="{{ vod_url('plot', ['id' => $plot->id]) }}">第{{ $plot->episode_num }}集 {{ $plot->title }}</a></li>
+            @endforeach
+        </ul>
+        <p><a href="{{ vod_url('plots') }}?video_id={{ $video->id }}">全部剧情</a></p>
+    @endif
 
     <h2>线路</h2>
     @vodSource(['type' => 'play'])
@@ -51,7 +61,11 @@
         <p><button type="submit">发表评论</button></p>
     </form>
     @vodComment
-        <p><strong>{{ $item->author_name }}</strong> · {{ date('Y-m-d H:i', (int)$item->created_at) }}<br>{{ $item->content }}</p>
+        <p><strong>{{ $item->author_name }}</strong> · {{ date('Y-m-d H:i', (int)$item->created_at) }}
+            <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
+            <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
+            <br>{{ $item->content }}
+        </p>
     @endvodComment
 
     <h2>报错</h2>
@@ -84,5 +98,27 @@
                 });
             });
         }
+        document.querySelectorAll('.comment-like').forEach(function(a){
+            a.addEventListener('click', function(){
+                var el = this;
+                fetch('/comment/' + this.dataset.id + '/like', {
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token())}
+                }).then(r=>r.json()).then(function(res){
+                    alert(res.msg||'ok');
+                    if(res.code === 0 && res.data && typeof res.data.comment_up !== 'undefined'){
+                        el.textContent = '赞 ' + res.data.comment_up;
+                    }
+                });
+            });
+        });
+        document.querySelectorAll('.comment-report').forEach(function(a){
+            a.addEventListener('click', function(){
+                fetch('/comment/' + this.dataset.id + '/report', {
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token())}
+                }).then(r=>r.json()).then(function(res){ alert(res.msg||'ok'); });
+            });
+        });
     </script>
 @endsection
