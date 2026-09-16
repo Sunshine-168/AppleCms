@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{:lang('mpt/page_title')}</title>
+<link rel="stylesheet" href="{$root_path}/static/addons/mpt/css/mpt.css{$asset_ver}">
+</head>
+<body>
+<div class="mpt-wrap">
+
+    <h1 class="mpt-h1">{:lang('mpt/page_title')}</h1>
+
+    {if condition="$configured neq 1"}
+    <div class="mpt-alert mpt-alert-warn">{:lang('mpt/tip_not_configured')}</div>
+    {/if}
+
+    {if condition="$db_error eq 1"}
+    <div class="mpt-alert mpt-alert-warn">{:lang('mpt/err_internal')}</div>
+    {/if}
+
+    <div class="mpt-stats">
+        <span>{:lang('mpt/stat_total')} <b>{$stats.total}</b></span>
+        <span>{:lang('mpt/stat_running')} <b class="c-run">{$stats.running}</b></span>
+        <span>{:lang('mpt/stat_done')} <b class="c-ok">{$stats.done}</b></span>
+        <span>{:lang('mpt/stat_failed')} <b class="c-err">{$stats.failed}</b></span>
+        {/* 转义口径与下面 cron_cmd / cron_url 一致：这两个值同样出自
+            TaskRunner::config()、同样是站长在设置页可填的自由文本，而本仓库的
+            模板变量是裸 echo（Template 没有 default_filter）。现在 script_mode
+            过三选一枚举、play_from 过 ^[a-z][a-z0-9_]{1,19}$，都跳不出来，但
+            一处转义一处不转义的话，将来谁放宽了任一白名单就只有这一行中招。 */}
+        <span class="mpt-mode">{:lang('mpt/label_script_mode')} {$script_mode|htmlspecialchars} · {:lang('mpt/label_play_from')} {$play_from|htmlspecialchars}</span>
+        <button type="button" class="mpt-btn mpt-btn-ghost" id="mpt-ping">{:lang('mpt/btn_ping')}</button>
+    </div>
+
+    <div class="mpt-card">
+        <div class="mpt-card-hd">{:lang('mpt/section_new')}</div>
+        <div class="mpt-card-bd">
+            <div class="mpt-row">
+                <input type="text" id="mpt-wd" class="mpt-input" placeholder="{:lang('mpt/ph_search_vod')}"
+                       value="{if condition="$preset_vod"}{$preset_vod.vod_id}{/if}">
+                <button type="button" class="mpt-btn" id="mpt-search">{:lang('mpt/btn_search')}</button>
+            </div>
+            <div id="mpt-vod-list" class="mpt-vodlist"></div>
+
+            <div id="mpt-preview" class="mpt-preview" style="display:none">
+                <div class="mpt-picked">{:lang('mpt/label_picked')} <b id="mpt-picked-name"></b></div>
+                <label class="mpt-label">{:lang('mpt/label_subject')}</label>
+                <input type="text" id="mpt-subject" class="mpt-input">
+                <label class="mpt-label">{:lang('mpt/label_script')}</label>
+                <textarea id="mpt-script" class="mpt-textarea" rows="5"></textarea>
+                <label class="mpt-label">{:lang('mpt/label_terms')}</label>
+                <input type="text" id="mpt-terms" class="mpt-input">
+                <div class="mpt-hint">{:lang('mpt/tip_editable')}</div>
+                <button type="button" class="mpt-btn mpt-btn-primary" id="mpt-submit">{:lang('mpt/btn_submit')}</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mpt-card">
+        <div class="mpt-card-hd">
+            {:lang('mpt/section_tasks')}
+            <span class="mpt-poll-note" id="mpt-poll-note">{:lang('mpt/tip_polling')}</span>
+        </div>
+        <div class="mpt-card-bd">
+            <table class="mpt-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>{:lang('mpt/th_vod')}</th>
+                    <th>{:lang('mpt/th_subject')}</th>
+                    <th>{:lang('mpt/th_status')}</th>
+                    <th>{:lang('mpt/th_progress')}</th>
+                    <th>{:lang('mpt/th_time')}</th>
+                    <th>{:lang('mpt/th_op')}</th>
+                </tr>
+                </thead>
+                <tbody id="mpt-tbody"></tbody>
+            </table>
+
+            <div class="mpt-pager">
+                <button type="button" class="mpt-btn mpt-btn-xs" id="mpt-prev">&lt;</button>
+                <span id="mpt-pageinfo" class="mpt-hint"></span>
+                <button type="button" class="mpt-btn mpt-btn-xs" id="mpt-next">&gt;</button>
+                <span class="mpt-pager-gap"></span>
+                <button type="button" class="mpt-btn mpt-btn-xs mpt-btn-ghost" id="mpt-cleanup">{:lang('mpt/btn_cleanup')}</button>
+                <span class="mpt-hint">{:lang('mpt/tip_cleanup')}</span>
+            </div>
+        </div>
+    </div>
+
+    {if condition="$cron_url neq ''"}
+    <div class="mpt-card">
+        <div class="mpt-card-hd">{:lang('mpt/section_cron')}</div>
+        <div class="mpt-card-bd">
+            <div class="mpt-hint">{:lang('mpt/tip_cron')}</div>
+            {/* 这两个值里含 cron_token，是站长在设置页可填的自由文本；
+                模板变量在本仓库是裸 echo（Template 没有 default_filter），
+                不转义就能从 value 属性里跳出来变成存储型 XSS。
+                TaskRunner::config() 已做字符白名单，这里再转一次兜底。 */}
+            <input type="text" class="mpt-input" readonly value="{$cron_cmd|htmlspecialchars}" onclick="this.select()">
+            <div class="mpt-hint">{:lang('mpt/tip_cron_url')}</div>
+            <input type="text" class="mpt-input" readonly value="{$cron_url|htmlspecialchars}" onclick="this.select()">
+        </div>
+    </div>
+    {/if}
+
+    <div class="mpt-card">
+        <div class="mpt-card-hd">{:lang('mpt/section_notice')}</div>
+        <div class="mpt-card-bd">
+            <div class="mpt-hint">{:lang('mpt/tip_uninstall')}</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* 整块由 Admin::index() 用 json_encode() 生成，模板里不再逐个拼字符串字面量 ——
+   任何一个语言条目里出现双引号都会打断这段脚本。理由见 Admin::index() 的注释。 */
+window.MPT = {$front_config};
+</script>
+<script src="{$root_path}/static/addons/mpt/js/mpt.js{$asset_ver}"></script>
+</body>
+</html>

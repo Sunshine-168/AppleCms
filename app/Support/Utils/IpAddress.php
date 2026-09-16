@@ -55,11 +55,34 @@ class IpAddress
      */
     public static function location(string $ip = ''): string
     {
-        $area       = Ip::find($ip);
-        $country    = iconv('GBK', 'UTF-8', $area['country']);
-        $area       = iconv('GBK', 'UTF-8', $area['area']);
+        return self::region($ip);
+    }
 
-        return $country . ($area ? '|' . $area : '');
+    public static function region(string $ip = ''): string
+    {
+        if ($ip === '') {
+            return '';
+        }
+
+        try {
+            $area = Ip::find($ip);
+        } catch (\Throwable) {
+            return '';
+        }
+
+        if (! is_array($area)) {
+            return '';
+        }
+
+        $parts = [];
+        foreach ($area as $value) {
+            $value = trim((string) $value);
+            if ($value !== '' && $value !== '0') {
+                $parts[] = $value;
+            }
+        }
+
+        return implode(',', $parts);
     }
 
 }

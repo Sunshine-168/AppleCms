@@ -1,0 +1,32 @@
+{php}
+if (!isset($obj) || !is_array($obj) || empty($obj['type_id'])) {
+    $typeModel = model('Type');
+    $typeList = $typeModel->getCache('type_list');
+    $topArts = [];
+    if (is_array($typeList)) {
+        foreach ($typeList as $typeInfo) {
+            if (!is_array($typeInfo)) {
+                continue;
+            }
+            if ((int)($typeInfo['type_mid'] ?? 0) !== 2 || (int)($typeInfo['type_pid'] ?? -1) !== 0) {
+                continue;
+            }
+            if (isset($typeInfo['type_status']) && (int)$typeInfo['type_status'] !== 1) {
+                continue;
+            }
+            $topArts[] = $typeInfo;
+        }
+    }
+    usort($topArts, function ($a, $b) {
+        return ((int)($a['type_sort'] ?? 0)) <=> ((int)($b['type_sort'] ?? 0));
+    });
+    $obj = $topArts[0] ?? ['type_id' => 0, 'type_pid' => 0, 'type_mid' => 2, 'type_name' => ''];
+}
+if (!empty($obj['type_id'])) {
+    $GLOBALS['type_id'] = (int)$obj['type_id'];
+    $GLOBALS['type_pid'] = (int)($obj['type_pid'] ?? 0);
+}
+if (!isset($param) || !is_array($param)) {
+    $param = [];
+}
+{/php}

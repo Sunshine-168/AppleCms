@@ -1,0 +1,38 @@
+<div class="mac-cw-fab fn-hide"
+    id="js-continue-watch-rail"
+    data-api-base="{:rtrim($maccms.path,'/').'/api.php'}"
+    data-limit="12"
+    data-hide-finished="1"
+    data-plays-url="{:mac_url('user/plays')}"
+    aria-hidden="true">
+    <div class="mac-cw-fab__backdrop" id="js-continue-watch-backdrop" aria-hidden="true"></div>
+    <button type="button"
+        class="mac-cw-fab__trigger"
+        id="js-continue-watch-trigger"
+        aria-expanded="false"
+        aria-controls="js-continue-watch-panel"
+        title="继续观看"
+        aria-label="继续观看">
+        <span class="mac-cw-fab__trigger-ring" aria-hidden="true">
+            <svg class="mac-cw-fab__trigger-ring-svg" viewBox="0 0 64 64" focusable="false">
+                <circle class="mac-cw-fab__trigger-ring-track" cx="32" cy="32" r="29" fill="none" stroke-width="3"></circle>
+                <circle class="mac-cw-fab__trigger-ring-fill" id="js-continue-watch-trigger-ring" cx="32" cy="32" r="29" fill="none" stroke-width="3" stroke-linecap="round" transform="rotate(-90 32 32)"></circle>
+            </svg>
+        </span>
+        <span class="mac-cw-fab__trigger-cover mac-cw-fab__trigger-cover--v" id="js-continue-watch-trigger-cover" role="img" aria-hidden="true"></span>
+    </button>
+    <div class="mac-cw-fab__panel" id="js-continue-watch-panel">
+        <div class="mac-cw-fab__panel-head">
+            <span class="mac-cw-fab__panel-title" data-lang="string_continue_watch">继续观看</span>
+            <div class="mac-cw-fab__panel-actions">
+                <a class="mac-cw-fab__panel-more" href="{:mac_url('user/plays')}" data-lang="string_continue_watch_all">查看全部</a>
+                <button type="button" class="mac-cw-fab__close" id="js-continue-watch-close" title="关闭" aria-label="关闭">
+                    <svg class="mac-cw-fab__close-svg" viewBox="0 0 16 16" width="14" height="14" focusable="false" aria-hidden="true">
+                        <path d="M3.2 3.2l9.6 9.6M12.8 3.2l-9.6 9.6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul class="mac-cw-fab__list" id="js-continue-watch-list" aria-live="polite"></ul>
+    </div>
+</div>

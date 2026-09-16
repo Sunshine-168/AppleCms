@@ -5,7 +5,6 @@ use App\Models\System\SysFileModel;
 use App\Support\Utils\Result;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use function App\Services\System\public_path;
 
 /**
  * 系统文件服务

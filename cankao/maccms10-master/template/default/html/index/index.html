@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<head>
+    {include file="public/include"}
+    <link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/home-banner.css">
+    <style id="home-skeleton-critical">
+        .home-unified .home-skeleton{position:relative}
+        .home-unified .home-skeleton-card,.home-unified .home-skeleton-banner-item,.home-unified .home-skeleton-menu-item,.home-unified .home-skeleton-link-item,.home-unified .home-skeleton-rank-box,.home-unified .home-skeleton-type-box,.home-unified .home-skeleton-line,.home-unified .home-skeleton .thumb{position:relative;overflow:hidden;background:#f3f4f6;border-radius:4px}
+        .bstem .home-unified .home-skeleton-card,.bstem .home-unified .home-skeleton-banner-item,.bstem .home-unified .home-skeleton-menu-item,.bstem .home-unified .home-skeleton-link-item,.bstem .home-unified .home-skeleton-rank-box,.bstem .home-unified .home-skeleton-type-box,.bstem .home-unified .home-skeleton-line,.bstem .home-unified .home-skeleton .thumb{background:#2f3138}
+        .home-unified .home-skeleton-card::after,.home-unified .home-skeleton-banner-item::after,.home-unified .home-skeleton-menu-item::after,.home-unified .home-skeleton-link-item::after,.home-unified .home-skeleton-rank-box::after,.home-unified .home-skeleton-type-box::after,.home-unified .home-skeleton-line::after,.home-unified .home-skeleton .thumb::after{content:'';position:absolute;top:0;left:-140px;width:140px;height:100%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.45),rgba(255,255,255,0));animation:homeSkeletonShimmer 1.3s infinite}
+        .bstem .home-unified .home-skeleton-card::after,.bstem .home-unified .home-skeleton-banner-item::after,.bstem .home-unified .home-skeleton-menu-item::after,.bstem .home-unified .home-skeleton-link-item::after,.bstem .home-unified .home-skeleton-rank-box::after,.bstem .home-unified .home-skeleton-type-box::after,.bstem .home-unified .home-skeleton-line::after,.bstem .home-unified .home-skeleton .thumb::after{background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0))}
+        @keyframes homeSkeletonShimmer{0%{transform:translateX(0)}100%{transform:translateX(420px)}}
+        .home-unified .home-skeleton-card{list-style:none;padding:8px}
+        .home-unified .home-skeleton-card .thumb{width:100%;padding-top:140%;margin-bottom:8px}
+        .home-unified .home-skeleton-line{height:12px;margin-top:8px}
+        .home-unified .home-skeleton-line.w220{width:220px}.home-unified .home-skeleton-line.w200{width:200px}.home-unified .home-skeleton-line.w180{width:180px}.home-unified .home-skeleton-line.w160{width:160px}.home-unified .home-skeleton-line.w140{width:140px}.home-unified .home-skeleton-line.w90{width:90%}.home-unified .home-skeleton-line.w70{width:70%}
+    </style>
+    <link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/index.css?v=202604169">
+    <link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/continue-watch-rail.css">
+    {include file="module/vod_tagwall_link_css" /}
+    <link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/home-topic-tangram-preview.css">
+    <script src="{$maccms.path}template/default/asset/js/jquery-adaptive.js?v=202604161"></script>
+</head>
+<body class="home-index-body" data-header-scroll-threshold="12">
+    {include file="public/th" /}
+    {include file="module/index_theme_vars" /}
+<div class="member-wrap">
+    <div class="container home-unified">
+        {include file="public/head"}
+        {include file="module/banner"}
+        {include file="ads/ads_banner1"}
+        {include file="widget/vod_tagwall" /}
+        {include file="ads/ads_icon1" ads_icon1_marquee="0"}
+
+        <div class="home-detail">
+            {if condition="!isset($tplconfig['theme']['hotvod']['btn']) || $tplconfig['theme']['hotvod']['btn'] neq '0'"}
+            <div class="layout fn-clear box show-pc" id="latest-focus" data-hot-tab-url="{:mac_url('ajax/home_hot_tab')}">
+                <div class="latest-tab-nav">
+                    <ul class="fn-clear nav-list">
+                        <li id="latest1" onmouseover="setTab('latest',1,8);" class="current">
+                            <span>
+                                <img class="laset_new_img hl_icon_light" src="{$maccms.path_tpl}/images/la/home-icon10.png" alt="">
+                                <img class="laset_new_img hl_icon_black" src="{$maccms.path_tpl}/images/black/home-icon10.png" alt="">
+                                <span style="margin: 0;">{$tplconfig.theme.hotvod.title|default='热门推荐'}</span>
+                            </span>
+                        </li>
+                        {volist name="index_hotvod_tabs" id="ht" key="hidx"}
+                        <li id="latest{$hidx+1}" data-tab="{$hidx+1}" onmouseover="setTab('latest',this.getAttribute('data-tab'),8);"><span><img class="laset_new_img hl_icon_light" src="{:mac_url_img($ht.icon_l)}" alt=""><img class="laset_new_img hl_icon_black" src="{:mac_url_img($ht.icon_b)}" alt=""><span style="margin: 0;"><span data-lang="string_hot_dy">热门</span> {$ht.name}</span></span></li>
+                        {/volist}
+                    </ul>
+                </div>
+                <div class="latest-tab-box">
+                    <div id="con_latest_1" class="latest-item wei-latest {$index_hotvod_default_poster_class}">
+                        <div class="silder-cnt">
+                            <ul class="img-list">
+                                {maccms:vod num="6" level="1,2,3,4,5,6,7,8,9" order="desc" by="hits_month"}
+                                {notempty name="vo"}{include file="widget/vod_box"}{else}{include file="public/notempty"}{/notempty}
+                                {/maccms:vod}
+                            </ul>
+                        </div>
+                        <ul class="txt-list">
+                            {maccms:vod num="12" type="1" start="6" level="1,2,3,4,5,6,7,8,9" order="desc" by="hits_month"}
+                            <li><span>{$vo.vod_time|date='m-d',###}.</span><a {if condition="$mac_vod_playlink eq 1"}href="{:mac_url_vod_play($vo,['sid'=>$vo.sid,'nid'=>1])}"{else/}href="{:mac_url_vod_detail($vo)}"{/if} title="{$vo.vod_name}">{$vo.vod_name}</a>/ {$vo.vod_remarks}</li>
+                            {/maccms:vod}
+                        </ul>
+                    </div>
+                    {volist name="index_hotvod_tabs" id="ht" key="hidx"}
+                    <div id="con_latest_{$hidx+1}" class="latest-item movie-latest fn-hide {if condition="$ht.cover eq 'h'"}mac-poster--h{else /}mac-poster--v{/if}"></div>
+                    {/volist}
+                    {if condition="$index_manga_hbtn eq 1"}
+                    <div id="con_latest_6" class="latest-item movie-latest fn-hide {$index_manga_poster_class}"></div>
+                    {else/}
+                    <div id="con_latest_6" class="latest-item movie-latest fn-hide"></div>
+                    {/if}
+                    {if condition="$index_art_hbtn eq 1"}
+                    <div id="con_latest_7" class="latest-item movie-latest fn-hide {$index_art_poster_class}"></div>
+                    {else/}
+                    <div id="con_latest_7" class="latest-item movie-latest fn-hide"></div>
+                    {/if}
+                </div>
+            </div>
+            {/if}
+
+            {if condition="isset($tplconfig['theme']['topic']['hbtn']) && $tplconfig['theme']['topic']['hbtn'] eq '1'"}
+            <div class="box">
+                <div class="latest-item">
+                    <ul class="img-list dis js-home-lazy-section"
+                        id="js-home-topic-list"
+                        data-section="home-topic"
+                        data-api-action="topic/get_recommend"
+                        data-num="5"
+                        data-start="0">
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                    </ul>
+                </div>
+            </div>
+            {/if}
+
+            {include file="module/index_hom_type" /}
+
+            {if condition="$index_manga_hbtn eq 1"}
+            <div class="box latest-tab-box {$index_manga_poster_class}">
+                <div class="title home-unified-section-head hu-section-head">
+                    <img class="laset_new_img hl_icon_light" src="{$maccms.path}template/default/images/la/home-icon5.png" ><img class="laset_new_img hl_icon_black" src="{$maccms.path}template/default/images/black/home-icon5.png" >
+                    <h2><span data-lang="string_zuixin">最新</span><span>{$index_manga_htitle}</span></h2>
+                    <a class="pc_more" href="{:mac_url('manga/index')}"><span data-lang="string_type_more2">更多</span> <i class="iconfont more_i">&#xe623;</i></a>
+                </div>
+                <div class="latest-item cbox_list">
+                    <ul class="img-list dis vodlist home-unified-vlist hu-vlist js-home-lazy-section"
+                        id="js-home-manga-list"
+                        data-section="home-manga"
+                        data-api-action="manga/get_latest"
+                        data-num="{$index_manga_hnum_str|default='6'}"
+                        data-start="0">
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                    </ul>
+                    <div class="home-refresh-wrap">
+                        <button type="button" class="home-refresh-btn" data-target="#js-home-manga-list">
+                            <i class="iconfont" aria-hidden="true">&#xe62a;</i><span>换一换</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/if}
+
+            {if condition="$index_art_hbtn eq 1"}
+            <div class="box latest-tab-box {$index_art_poster_class}">
+                <div class="title home-unified-section-head hu-section-head">
+                    <img class="laset_new_img hl_icon_light" src="{$maccms.path}template/default/images/la/home-icon8.png" ><img class="laset_new_img hl_icon_black" src="{$maccms.path}template/default/images/black/home-icon8.png" >
+                    <h2><span data-lang="string_zuixin">最新</span><span>{$index_art_home.type_name|default=$index_art_htitle}</span></h2>
+                    <dl class="home-unified-art-subtypes" id="js-home-art-subtypes"></dl>
+                    <a class="pc_more" href="{:mac_url('art/index')}"><span data-lang="string_type_more2">更多</span> <i class="iconfont more_i">&#xe623;</i></a>
+                </div>
+                <div class="latest-item cbox_list">
+                    <ul class="img-list dis vodlist home-unified-vlist hu-vlist js-home-lazy-section"
+                        id="js-home-art-list"
+                        data-section="home-art"
+                        data-api-action="art/get_latest"
+                        data-num="{$index_art_hnum|default='6'}"
+                        data-type-id="{$index_art_home.type_id|default='0'}"
+                        data-start="0">
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                    </ul>
+                    <div class="home-refresh-wrap">
+                        <button type="button" class="home-refresh-btn" data-target="#js-home-art-list">
+                            <i class="iconfont" aria-hidden="true">&#xe62a;</i><span>换一换</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/if}
+
+            {include file="ads/ads_all"}
+
+            {if condition="!empty($tplconfig['theme']['actor']['hbtn']) && $tplconfig['theme']['actor']['hbtn'] eq 1"}
+            <div class="box mingxing">
+                <div class="title home-unified-section-head hu-section-head">
+                    <img class="laset_new_img hl_icon_light" src="{$maccms.path}template/default/images/la/home-icon6.png" ><img class="laset_new_img hl_icon_black" src="{$maccms.path}template/default/images/black/home-icon6.png" >
+                    <h2><span>{$tplconfig.theme.actor.htitle|default='推荐明星'}</span></h2>
+                    <a class="pc_more" href="{:mac_url('actor/index')}"><span data-lang="string_type_more2">更多</span><i class="iconfont more_i">&#xe623;</i></a>
+                </div>
+                <div class="latest-item">
+                    <ul class="img-list dis js-home-lazy-section"
+                        id="js-home-actor-list"
+                        data-section="home-actor"
+                        data-api-action="actor/get_recommend"
+                        data-ids="{$index_actor_ids|default=''}"
+                        data-num="8"
+                        data-start="0">
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div></li>
+                    </ul>
+                    <div class="home-refresh-wrap">
+                        <button type="button" class="home-refresh-btn" data-target="#js-home-actor-list">
+                            <i class="iconfont" aria-hidden="true">&#xe62a;</i><span>换一换</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/if}
+
+            {if condition="$index_live_hbtn eq 1"}
+            <div class="box latest-tab-box {$mac_live_poster_class|default='mac-poster--v'}">
+                <div class="title home-unified-section-head hu-section-head">
+                    <img class="laset_new_img hl_icon_light" src="{$maccms.path}template/default/images/la/home_ic_Live_nor_2x.png" alt="">
+                    <img class="laset_new_img hl_icon_black" src="{$maccms.path}template/default/images/black/home_ic_Live_nor_2x.png" alt="">
+                    <h2><span data-lang="live/show_title">{$index_live_htitle}</span></h2>
+                    <a class="pc_more" href="{:mac_url('live/show')}"><span data-lang="string_type_more2">更多</span> <i class="iconfont more_i">&#xe623;</i></a>
+                </div>
+                <div class="latest-item cbox_list">
+                    <ul class="img-list dis vodlist home-unified-vlist hu-vlist js-home-lazy-section"
+                        id="js-home-live-list"
+                        data-section="home-live"
+                        data-api-action="live/get_list"
+                        data-num="{$index_live_hnum|default='6'}"
+                        data-start="0">
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                        <li class="home-skeleton-card"><div class="thumb"></div><div class="home-skeleton-line w90"></div><div class="home-skeleton-line w70"></div></li>
+                    </ul>
+                    <div class="home-refresh-wrap">
+                        <button type="button" class="home-refresh-btn" data-target="#js-home-live-list">
+                            <i class="iconfont" aria-hidden="true">&#xe62a;</i><span>换一换</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/if}
+
+            {if condition="isset($tplconfig['theme']['rank']['hbtn']) && $tplconfig['theme']['rank']['hbtn'] eq '1'"}
+            <div class="box rank_waterfall">
+                <div class="title home-unified-section-head hu-section-head">
+                    <img class="laset_new_img hl_icon_light" src="{$maccms.path}template/default/images/la/home-icon9.png" ><img class="laset_new_img hl_icon_black" src="{$maccms.path}template/default/images/black/home-icon9.png" >
+                    <h2><span>{$tplconfig.theme.rank.htitle|default='热播排行榜'}</span></h2>
+                    {if condition="!isset($tplconfig['theme']['rank']['btn']) || $tplconfig['theme']['rank']['btn'] neq '0'"}
+                    <a class="pc_more" href="{:mac_url('label/rank')}"><span data-lang="string_type_more2">更多</span><i class="iconfont more_i">&#xe623;</i></a>
+                    {/if}
+                </div>
+                <div class="latest-item js-home-lazy-section"
+                    id="js-home-rank-lazy-root"
+                    data-section="home-rank"
+                    data-api-action="vod/get_rank"
+                    data-start="0">
+                    <div class="img-list dis show-pc"
+                        id="js-home-rank-pc-list">
+                        <div class="home-skeleton-rank-box"><div class="home-skeleton-line w140"></div><div class="home-skeleton-line w200"></div><div class="home-skeleton-line w180"></div><div class="home-skeleton-line w160"></div></div>
+                        <div class="home-skeleton-rank-box"><div class="home-skeleton-line w140"></div><div class="home-skeleton-line w200"></div><div class="home-skeleton-line w180"></div><div class="home-skeleton-line w160"></div></div>
+                        <div class="home-skeleton-rank-box"><div class="home-skeleton-line w140"></div><div class="home-skeleton-line w200"></div><div class="home-skeleton-line w180"></div><div class="home-skeleton-line w160"></div></div>
+                    </div>
+                    <div class="hu-rank-mobile show-mobile">
+                        <div class="hu-rank-nav-swiper swiper-container">
+                            <div class="swiper-wrapper" id="js-home-rank-mobile-nav">
+                                <div class="swiper-slide"><button type="button" class="hu-rank-nav-item is-active home-skeleton-line w140"></button></div>
+                                <div class="swiper-slide"><button type="button" class="hu-rank-nav-item home-skeleton-line w140"></button></div>
+                            </div>
+                        </div>
+                        <div class="hu-rank-content-swiper swiper-container">
+                            <div class="swiper-wrapper" id="js-home-rank-mobile-content">
+                                <div class="swiper-slide hu-rank-slide"><div class="home-skeleton-rank-box"><div class="home-skeleton-line w140"></div><div class="home-skeleton-line w200"></div><div class="home-skeleton-line w180"></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/if}
+
+            {include file="public/friendLink"}
+            <div class="show-mobile">
+                {include file="widget/copyright"}
+            </div>
+        </div>
+    </div>
+</div>
+<script type="application/json" id="js-home-topic-cards-json">{php}echo json_encode($index_topic_cells, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);{/php}</script>
+<script type="application/json" id="js-home-rank-types-json">{php}echo json_encode($index_rank_types, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);{/php}</script>
+<script type="application/json" id="js-home-art-home-json">{php}echo json_encode($index_art_home, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);{/php}</script>
+<script type="application/json" id="js-home-banner-ads-json">{php}echo json_encode((isset($bannerSwiperRows) && is_array($bannerSwiperRows)) ? array_values($bannerSwiperRows) : [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);{/php}</script>
+<div id="js-home-api-config" data-api-base="{$maccms.path}api.php" data-vod-playlink="{:(isset($mac_vod_playlink) && (int)$mac_vod_playlink === 1) ? '1' : '0'}"></div>
+<div id="js-home-notempty-tpl" class="fn-hide" aria-hidden="true">{include file="public/notempty"}</div>
+<script src="{$maccms.path_tpl}/asset/js/mac-catalog-media.js"></script>
+<script src="{$maccms.path}template/default/asset/js/mac-home-card-render.js?v=202604161"></script>
+<script src="{$maccms.path}template/default/asset/js/index-home-parts.js?v=202604169"></script>
+<script src="{$maccms.path_tpl}/asset/js/index-continue-watch.js"></script>
+{include file="module/continue_watch_rail" /}
+{include file="module/vod_tagwall_script_js" /}
+{include file="public/foot"}
+</body>
+</html>

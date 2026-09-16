@@ -1,0 +1,93 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <div class="my-toolbar-box mb-2">
+        <div class="flex gap-5 overflow-x-auto">
+            <a class="layui-btn {if condition='$status eq 0'}{else /}layui-btn-primary{/if}" href="{:url('event')}">{:lang('all')}</a>
+            <a class="layui-btn {if condition='$status eq 1'}{else /}layui-btn-primary{/if}" href="{:url('event',['status'=>1])}">
+                {:lang('admin/monitor/ev_firing')}
+                {if condition="$firing gt 0"}<span class="layui-badge">{$firing}</span>{/if}
+            </a>
+            <a class="layui-btn {if condition='$status eq 2'}{else /}layui-btn-primary{/if}" href="{:url('event',['status'=>2])}">{:lang('admin/monitor/ev_resolved')}</a>
+            <a class="layui-btn {if condition='$status eq 3'}{else /}layui-btn-primary{/if}" href="{:url('event',['status'=>3])}">{:lang('admin/monitor/ev_acked')}</a>
+            <a class="layui-btn layui-btn-primary" href="{:url('rule')}">{:lang('admin/monitor/title_rule')}</a>
+        </div>
+    </div>
+
+    <table class="layui-table" lay-size="sm">
+        <thead>
+        <tr>
+            <th>{:lang('status')}</th>
+            <th>{:lang('admin/monitor/f_rule_name')}</th>
+            <th>{:lang('admin/monitor/f_metric')}</th>
+            <th>{:lang('admin/monitor/current_value')}</th>
+            <th>{:lang('admin/monitor/started_at')}</th>
+            <th>{:lang('admin/monitor/recovered_at')}</th>
+            <th>{:lang('admin/monitor/notify_result')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="e"}
+        <tr>
+            <td>
+                {if condition="$e['event_status'] eq 1"}<span class="layui-badge">{:lang('admin/monitor/ev_firing')}</span>
+                {elseif condition="$e['event_status'] eq 2" /}<span class="layui-badge layui-bg-green">{:lang('admin/monitor/ev_resolved')}</span>
+                {else /}<span class="layui-badge layui-bg-gray">{:lang('admin/monitor/ev_acked')}</span>{/if}
+            </td>
+            <td>{$e.rule_name}</td>
+            <td><code>{$e.event_metric}</code></td>
+            <td>{$e.event_value} / {$e.event_threshold}</td>
+            <td>{$e.event_start_ts|date='Y-m-d H:i',###}</td>
+            <td>{if condition="$e['event_end_ts'] gt 0"}{$e.event_end_ts|date='Y-m-d H:i',###}{else /}-{/if}</td>
+            <td style="color:#666;font-size:12px;">{$e.event_notify_result}</td>
+            <td>
+                {if condition="$e['event_status'] eq 1"}
+                <button class="layui-btn layui-btn-xs ev-ack" data-id="{$e.event_id}">{:lang('admin/monitor/ack')}</button>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        {if condition="empty($list)"}
+        <tr>
+            <td colspan="8" style="text-align:center;padding:36px;">
+                <div style="color:#5FB878;font-weight:600;font-size:15px;margin-bottom:6px;">
+                    {:lang('admin/monitor/event_empty_title')}
+                </div>
+                <div style="color:#666;">{:lang('admin/monitor/event_empty_hint')}</div>
+            </td>
+        </tr>
+        {/if}
+        </tbody>
+    </table>
+
+    <div id="pager"></div>
+</div>
+
+<script>
+    var ACK_URL = "{:url('event_ack')}";
+    layui.use(['laypage'], function () {
+        layui.laypage.render({
+            elem: 'pager',
+            count: {$total},
+            limit: {$limit},
+            curr: {$page},
+            jump: function (obj, first) {
+                if (!first) {
+                    location.href = "{:url('event',['status'=>$status])}" + (location.search.indexOf('?') >= 0 ? '&' : '?') + 'page=' + obj.curr;
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.ev-ack').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var fd = new FormData();
+            fd.append('id', b.getAttribute('data-id'));
+            fetch(ACK_URL, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) { layer.msg(res.msg); if (res.code === 1) { location.reload(); } });
+        });
+    });
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

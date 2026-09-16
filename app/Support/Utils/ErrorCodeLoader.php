@@ -3,7 +3,6 @@
 namespace App\Support\Utils;
 
 use Illuminate\Support\Facades\Config;
-use function App\Utils\is_file;
 
 class ErrorCodeLoader
 {

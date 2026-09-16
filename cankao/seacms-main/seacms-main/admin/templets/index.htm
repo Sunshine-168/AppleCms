@@ -1,0 +1,450 @@
+<html>
+<head><meta name="robots" content="noindex,nofollow">
+<title>管理中心 - 海洋CMS</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="renderer" content="webkit">
+<meta name="robots" content="noindex,nofollow" />
+
+<link rel="stylesheet" href="img/admin.css" type="text/css" media="all" />
+<script src="../js/common.js" type="text/javascript"></script>
+<script src="img/admin.js" type="text/javascript"></script>
+<script src="js/main.js" type="text/javascript"></script>
+<script src="img/drag.js" type="text/javascript"></script>
+
+<style type="text/css">
+#gMenuMap {
+	text-align:left;
+}
+#gMenuMap a {
+	color:#666;
+}
+.fm3, .fm4 {
+	background:url(img/34.gif) no-repeat;
+	width:7px;
+	display:block;
+	cursor:pointer
+}
+.fm4 {
+	background-position:-6px 0
+}
+.menutd2 {
+	background-color:#F2F9FD;
+	border-right:solid 1px #B5CFD9;
+}
+.cmblock li h4 img{height:14px;margin-bottom: -2px;}
+</style>
+</head>
+<script src="js/lock.js" type="text/javascript"></script>
+<script>
+myReady(function() {
+    if (document.cookie.indexOf('lock=1') != -1) {
+        document.oncontextmenu = function() {
+
+            return false;
+        }
+        document.onkeydown = function() {
+
+            if (window.event && window.event.keyCode == 123) {
+
+                event.keyCode = 0;
+                event.returnValue = false;
+            }
+            if (window.event && window.event.keyCode == 13) {
+                check();
+            }
+            if (window.event && window.event.keyCode == 8) {
+
+                window.event.returnValue = false;
+            }
+		e = window.event || e;
+        var k = e.keyCode;
+
+        if ((e.ctrlKey == true && k == 82) || (k == 116)
+                || (e.ctrlKey == true && k == 116)||k==114) {
+            e.keyCode = 0;
+           
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+ 
+        }
+
+        if (e.ctrlKey && k == 78){
+            e.keyCode = 0;
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+            }
+
+        if (k == 122) {
+            e.keyCode = 0;
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+        }
+     
+        if ((e.shiftKey && k == 121)||(e.ctrlKey && k == 121)){
+            e.keyCode = 0;
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+            }
+  
+        if ((e.altKey) && (k== 115)) {
+            window.showModelessDialog("about:blank", "",
+                    "dialogWidth:1px;dialogheight:1px");
+            e.keyCode = 0;
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+        }
+        if ((e.altKey)
+                && ((k == 37) || (k == 39))) {
+            
+            e.keyCode = 0;
+            e.returnValue = false;
+            e.cancelBubble = true;
+            return false;
+        }
+
+        }
+        ShowContent(false);
+    }
+
+
+    var delay = 604800* 1000,
+        timer;
+
+    function startTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(TimerHandler, delay);
+    }
+
+    function TimerHandler() {
+        document.cookie = 'lock=1';
+        
+        document.onmousemove = null;
+        document.oncontextmenu = function() {
+
+            return false;
+        }
+        document.onkeydown = function() {
+
+            if (window.event && window.event.keyCode == 123) {
+
+                event.keyCode = 0;
+                event.returnValue = false;
+            }
+			if (window.event && window.event.keyCode == 13) {
+                check();
+            }
+
+            if (window.event && window.event.keyCode == 8) {
+
+                window.event.returnValue = false;
+            }
+
+        }
+        ShowContent(false);
+    }
+
+    function ShowContent(show) {
+        // document.getElementById('dvContent').style.display = show ? 'block' : 'none';
+        document.getElementById('dvPassword').style.display = show ? 'none' : 'block';
+        document.getElementById('bgdvPassword').style.display = show ? 'none' : 'block';
+		
+    }
+
+
+    function check() {
+		var upwd=document.getElementById('txtPwd').value;
+		var uname="<?php echo $cuserLogin->getUserName(); ?>";
+		ajax.get(
+		"admin_ajax.php?action=locks&uname="+uname+"&upwd="+upwd+"", 
+		function(obj) {
+			if(obj.responseText == 'ok'){
+				document.cookie = 'lock=0';			
+				ShowContent(true);
+				startTimer() 
+				document.oncontextmenu = null
+				document.onkeydown = null
+			}else{
+				document.getElementById('txtPwd').value= '';
+			}
+		}
+	);
+    }
+
+    document.onmousemove = startTimer;
+    var obt = document.getElementById("bt");
+    obt.onclick = function() {
+        check();
+    }
+    startTimer();
+})
+
+function ShowContents() {
+    document.cookie = 'lock=1';
+    document.oncontextmenu = function() {
+        return false;
+    }
+    document.onkeydown = function() {
+
+        if (window.event && window.event.keyCode == 123) {
+
+            event.keyCode = 0;
+            event.returnValue = false;
+        }
+		if (window.event && window.event.keyCode == 13) {
+                check();
+            }
+
+        if (window.event && window.event.keyCode == 8) {
+  
+            window.event.returnValue = false;
+        }
+
+    }
+    //document.getElementById('dvContent').style.display = show ? 'block' : 'none';
+    document.getElementById('dvPassword').style.display = 'block';
+    document.getElementById('bgdvPassword').style.display = 'block';
+}
+
+function refreshFrame(){
+    document.getElementById('I2').contentWindow.location.reload(true);
+}
+
+var fullss=0;
+function fullscreen() {
+    var docElm = document.documentElement;
+	
+    if (docElm.requestFullscreen) {
+        docElm.requestFullscreen();
+    } else if (docElm.mozRequestFullScreen) {
+        docElm.mozRequestFullScreen();
+    } else if (docElm.webkitRequestFullScreen) {
+        docElm.webkitRequestFullScreen();
+    } else if (docElm.msRequestFullscreen) {
+        docElm.msRequestFullscreen();
+    }
+	return fullss=1;
+}
+function exitFullscreen() {
+	
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.webkitCancelFullScreen) {
+        document.webkitCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+	return  fullss=0;
+}
+
+function fullsw(fulls) {
+	if(fulls==1){exitFullscreen();}else{fullscreen();}
+}
+</script>
+<body style="margin: 0px" scroll="no">
+<div id="bgdvPassword" style="position:absolute; top:0px;left:0px;width:100%;height:100%;background:linear-gradient(-45deg, #10568a, #416ea5, #23a6d5, #23d5ab);opacity:1;z-index:888;display:none"></div>
+<div id="dvPassword" style="position: absolute;
+    top:20px;
+	right:20px;;
+    width: 160px;
+    height: 40px;
+    border-radius: 4px;
+    background:rgb(79 150 200);
+	text-align: center;
+	z-index:999;
+    display: none;">
+    <div style="position: absolute; padding:5px;">
+		<input type="password" style="display:none"/>
+        <input autofocus="autofocus" autocomplete="new-password" autocomplete="off" onfocus="this.type='password' placeholder="管理员密码" type="password" id="txtPwd" style="height: 28px;
+    width: 90px;
+    background: #7dbce1;
+    border: 0;
+	padding-left: 4px;
+    line-height: 28px;
+	margin-top: 1px;
+    float: left;">
+        <input type="button" id="bt" value="解锁"  style='height: 28px;
+    width: 50px;
+    background: #10725d;
+    margin-left:3px;
+    border: 0px;
+    text-align: center;
+    margin-top: 1px;
+    border-radius:2px;
+	font-size: 12px;
+	font-weight:500;
+    color: #fff;font-family: "Microsoft YaHei" ! important;letter-spacing: 2px;'>
+    </div>
+</div>
+<table cellpadding="0" cellspacing="0" width="100%" height="100%">
+  <tr>
+    <td colspan="3" height="90"><div class="header">
+        <div class="logo"></div>
+        <div class="pannel" style="line-height:28px;">
+          <p>
+		  <span style="cursor:pointer"  onclick="javascript:document.getElementById('I2').contentWindow.history.go(-1);;" ><img src="img/zl-0.png"  alt="后退" title="后退"  style="height: 16px;padding-right:10px;margin-bottom: -3px;"  /></span>		  
+		  <span style="cursor:pointer"  onclick="javascript:refreshFrame();" ><img src="img/zsx-0.png"  alt="刷新" title="刷新"  style="height: 16px;padding-right:8px;margin-bottom: -3px;"  /></span>
+		  <span style="cursor:pointer"  onclick="javascript:document.getElementById('I2').contentWindow.history.go(1);;" ><img src="img/zr-0.png"  alt="前进" title="前进"  style="height: 16px;padding-right:10px;margin-bottom: -3px;"  /></span>
+		  <span style="cursor:pointer"  onClick="ShowContents();" ><img src="img/zsp-0.png" alt="锁屏" title="锁屏" style="height: 16px;padding-right:10px;margin-bottom: -3px;"  /></span>
+		  
+		  <span style="cursor:pointer"  onclick="javascript:fullsw(fullss);" ><img src="img/zqp-0.png"  alt="全屏切换" title="全屏切换"  style="height: 16px;padding-right:10px;margin-bottom: -3px;"  /></span>
+		  <em style="background:#cedce6;padding-left: 6px;padding-right: 6px;border-radius: 6px;margin-bottom: -1px;">
+		  <img src="img/user.png" style="height: 10px;padding-right:2px;"  /><?php echo $cuserLogin->getUserName(); ?></em>
+		  <a href="exit.php" target="_top">退出</a>&nbsp;&nbsp;
+		  <a href="../" target="_blank">网站首页</a>&nbsp;&nbsp;
+		  <em><span onClick="clearCache()" style="cursor:pointer">更新缓存</span></em><span id="upcacheresult" style="color:#0099cc"></span>&nbsp;&nbsp;<a href="javascript:void(0);" onClick="view('gMenuMap');selfLabelWindefault('gMenuMap');"><img src="img/34.gif" title="功能地图" alt="功能地图" style="margin-bottom: -2px;" /></a></p>
+</div>
+        <div class="navbg"></div>
+        <div class="nav"> 
+          <!--上部菜单 changeMenu(左侧菜单id号后部分，右侧默认打开的url)-->
+          <ul id="topmenu">
+            <?php
+          if($cuserLogin->getUserRank()==1)
+          {
+          foreach($menu AS $key => $value)
+          {
+          ?>
+            <li><em><a href="#" id="header_<?php echo $key ;?>" onClick="changeMenu('<?php echo $key ;?>', '<?php echo $value['link']; ?>');"><img src="img/<?php echo $key ;?>.png"> <?php echo $value[0]; ?></a></em></li>
+            <?php 
+          }
+          }
+          else{
+          ?>
+            <li><em><a href="#"  onClick="changeMenu('content', 'admin_video.php?action=else');"> </a></em></li>
+          <?php 
+          }
+          ?>
+          </ul>
+          <!--当前所在位置导航 js动态插入-->
+          <div class="iamhere">
+		  <img src="img/home.png" style="margin-bottom: -2px;height: 13px;padding-left: 6px;"  />
+            <span style="line-height: 31px;" id="admincpnav"></span>
+          </div>
+          <div class="navbd"></div>
+        </div>
+      </div></td>
+  </tr>
+  <tr>
+    <td class="menutd" id="menutd" valign="top" width="171"><div id="leftmenu" class="menu" style="width:171px">
+      
+      <!--左菜单 ul id号为menu_XXXX形式，XXXX与上部导航菜单传递参数、JS中topMenus数组一至，li a中的链接与上部导航菜单传递参数一至-->
+      
+     <?php
+if($cuserLogin->getUserRank()==1)
+{
+foreach($menu AS $key => $value)
+{
+	
+?>      
+	<ul id="menu_<?php echo $key; ?>" style="display: none" >
+<?php
+    foreach($value AS $key1 => $value1)
+    {
+    if($key1>0){
+    if($value1==''){
+?>
+      <li class="menuspace"><?php echo $value1;?></li>
+      <?php
+}else{
+?>
+      <li><?php echo $value1; ?></li>
+  	<?php
+}
+}
+}
+?>
+	</ul>
+    
+	<?php
+}
+}else{
+?>
+	<ul id="menu_content"style="display: none" >
+	<?php
+    //print_r($menuedit['content']);
+    foreach($menuedit['editor'] AS $key1 => $value1)
+    {
+?>	    
+<?php
+	if($value1==''){
+?>
+		<li class="menuspace"><?php echo $value1;?></li>
+<?php
+}else{
+?>
+		<li><?php echo $value1; ?></li>
+<?php
+}
+}
+?>
+					</ul>
+<?php
+}
+?>    
+	  </div>
+      <div class="footer">
+        <p>WWW.SEACMS.COM</p>
+      </div></td>
+    <td class="menutd2" valign="middle" width="1"><div id="fm" class="fm3"> </div></td>
+    <td valign="top" class="maincontent"><iframe src="index_body.php" name="I2" id="I2" width="100%" height="100%" frameborder="0"scrolling="yes" style="overflow: visible;"></iframe></td>
+  </tr>
+</table>
+<div id="gMenuMap" class="popdiv" style="width:960px;top:100px;z-index:1000; display:none;"> </div>
+<script type="text/JavaScript">
+	var dc=$('menutd');
+	var topMenus = new Array('common','content','template','make','user','tool','gathersoft','webhelper','system');//大菜单参数数组
+	var menu_key = initMenu('leftmenu');//初始化
+	changeMenu(menu_key ? menu_key : 'index');
+	//初始化左侧菜单高度
+	var tt=0
+	$("leftmenu").style.height=document.body.clientHeight-90-7-33+"px";
+	var  resizeTimer = null;
+	function doResize(){
+	  $("leftmenu").style.height=document.body.clientHeight-90-7-33+"px";;resizeTimer=null
+	}
+	window.onresize = function(){
+	   if(resizeTimer==null){
+			resizeTimer = setTimeout("doResize()",300);
+		}
+	}
+	function MarkMenuMap(){
+		var hrefs, s;
+		s = '<div class="poptitie"><img src="../pic/btn_close.gif" onClick="hide(\'gMenuMap\');" />后台功能地图</div><table width="100%" border="0" cellspacing="0" cellpadding="0" class="tb2"  ><tr>';
+		s += '<td width="10" valign="top"><h4>&nbsp;</h4></td>';
+		for(var i=0;i<topMenus.length;i++){
+			s += '<td valign="top" width="150"><ul class="cmblock"><li><h4>' + $('header_' + topMenus[i]).innerHTML + '</h4></li>';
+			hrefs = $('menu_' + topMenus[i]).getElementsByTagName('a');
+			for(var j = 0; j < hrefs.length; j++) {
+				s += hrefs[j].innerHTML!='' ? '<li><a href="'+hrefs[j].href+'" onclick="hide(\'gMenuMap\');changeMenu(\'' + topMenus[i] + '\',\''+hrefs[j].href+'\')" target="' + hrefs[j].target + '">' + hrefs[j].innerHTML + '</a></li>' : '';
+			}
+			s += '<li>&nbsp;</li></ul></td>';
+		}
+		s += '</tr></table>';
+		return s;
+	}
+	function getClientWidth(){
+		return document.body.clientWidth;
+	}
+	function selfLabelWindefault(divid){
+		$(divid).style.left=(getClientWidth()-$(divid).offsetWidth)/2+"px";
+		$(divid).style.top=(getScroll()+100)+"px";
+	}
+	$('gMenuMap').innerHTML=MarkMenuMap();
+	function tooglemenutd(){
+		dc.style.display = dc.style.display != 'none' ? 'none' : '';
+		$('fm').className = dc.style.display != 'none' ? 'fm3' : 'fm4';
+		setCookie('MENUON',dc.style.display != 'none' ? '' : '1',365*24);
+	}
+	/*if(getCookie('MENUON')=='1'){
+		dc.style.display = 'none';
+		$('fm').className = 'fm4';
+	}*/
+</script>
+</body>
+</html>

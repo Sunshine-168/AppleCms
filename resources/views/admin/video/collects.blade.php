@@ -46,6 +46,8 @@
 
       <script type="text/html" id="collect-source-rowbar">
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="bind">绑定</a>
+        <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="run">采集</a>
         <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">删除</a>
       </script>
     </div>
@@ -60,6 +62,28 @@
         <label class="layui-form-label">名称</label>
         <div class="layui-input-block">
           <input type="text" name="name" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">接口地址</label>
+        <div class="layui-input-block">
+          <input type="text" name="api_url" autocomplete="off" class="layui-input" placeholder="https://xxx/api.php/provide/vod/">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">格式</label>
+        <div class="layui-input-block">
+          <select name="api_type">
+            <option value="auto">自动</option>
+            <option value="json">JSON</option>
+            <option value="xml">XML</option>
+          </select>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">附加参数</label>
+        <div class="layui-input-block">
+          <input type="text" name="param" autocomplete="off" class="layui-input" placeholder="ac=list 以外的固定参数">
         </div>
       </div>
       <div class="layui-form-item">
@@ -160,7 +184,9 @@ layui.use(['layer','form','table'], function(){
     },
     cols:[[
       {field:'id',width:80,title:'ID',sort:true},
-      {field:'name',title:'名称',minWidth:200},
+      {field:'name',title:'名称',minWidth:140},
+      {field:'api_url',title:'接口',minWidth:220},
+      {field:'api_type',title:'格式',width:80},
       {field:'status',title:'状态',width:90,templet:function(d){
         if (typeof d.status === 'undefined' || d.status === null || d.status === '') { return '-'; }
         return String(d.status) === '1'
@@ -170,7 +196,7 @@ layui.use(['layer','form','table'], function(){
       {field:'sort',title:'排序',width:90,sort:true},
       {field:'created_at_text',title:'创建时间',width:180},
       {field:'updated_at_text',title:'更新时间',width:180},
-      {title:'操作',toolbar:'#collect-source-rowbar',width:150}
+      {title:'操作',toolbar:'#collect-source-rowbar',width:260}
     ]]
   });
 
@@ -182,13 +208,16 @@ layui.use(['layer','form','table'], function(){
     var idx = layer.open({
       type: 1,
       title: title,
-      area: ['520px', '360px'],
+      area: ['640px', '520px'],
       content: $('#collect-source-dialog-tpl').html(),
       btn: ['保存', '取消'],
       success: function(){
         form.val('collect-source-form', {
           id: row.id || '',
           name: row.name || '',
+          api_url: row.api_url || '',
+          api_type: row.api_type || 'auto',
+          param: row.param || '',
           status: (row.status !== undefined && row.status !== null) ? String(row.status) : '1',
           sort: row.sort !== undefined ? row.sort : 0
         });
@@ -227,6 +256,55 @@ layui.use(['layer','form','table'], function(){
     var row = obj.data || {};
     if (obj.event === 'edit') {
       openDialog('edit', row);
+      return;
+    }
+    if (obj.event === 'bind') {
+      apiGet('/admin/video/collects/classes', {id: row.id}, function(data){
+        var types = data.types || [];
+        var locals = data.local_types || [];
+        var html = '<div style="padding:12px;max-height:420px;overflow:auto;"><table class="layui-table"><thead><tr><th>资源分类</th><th>绑定本地</th></tr></thead><tbody>';
+        types.forEach(function(t){
+          html += '<tr><td>'+ escapeHtml(t.name) +' ('+ t.remote_id +')</td><td><select data-remote="'+ t.remote_id +'"><option value="0">不采集</option>';
+          locals.forEach(function(l){
+            var sel = String(l.id) === String(t.local_id) ? ' selected' : '';
+            html += '<option value="'+ l.id +'"'+ sel +'>'+ escapeHtml(l.name) +'</option>';
+          });
+          html += '</select></td></tr>';
+        });
+        html += '</tbody></table></div>';
+        layer.open({
+          type:1, title:'绑定分类 - '+ escapeHtml(row.name||''), area:['560px','520px'], content: html,
+          btn:['保存','取消'],
+          yes: function(index, layero){
+            var bind = {};
+            $(layero).find('select[data-remote]').each(function(){
+              bind[$(this).data('remote')] = $(this).val();
+            });
+            apiPost('/admin/video/collects/bind', {id: row.id, bind: bind}, function(){
+              layer.close(index);
+              layer.msg('绑定已保存', {icon:1});
+            });
+          }
+        });
+      });
+      return;
+    }
+    if (obj.event === 'run') {
+      layer.prompt({title:'起始页,采集页数,小时(0全部)', value:'1,1,24', formType:0}, function(val, index){
+        layer.close(index);
+        var parts = String(val||'1').split(/[,，\s]+/);
+        var load = layer.load(1);
+        apiPost('/admin/video/collects/run', {
+          id: row.id,
+          page: parts[0] || 1,
+          pages: parts[1] || 1,
+          hours: parts[2] || 0
+        }, function(data, res){
+          layer.close(load);
+          table.reload('collect-source-table');
+          layer.msg((res && res.msg) ? res.msg : '采集完成', {icon:1, time: 3000});
+        });
+      });
       return;
     }
     if (obj.event === 'del') {

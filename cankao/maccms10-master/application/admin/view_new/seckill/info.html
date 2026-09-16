@@ -1,0 +1,116 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <blockquote class="layui-elem-quote">{:lang('admin/seckill/info_desc')}</blockquote>
+
+    <form class="layui-form" method="post" action="{:url('save')}">
+        <input type="hidden" name="seckill_id" value="{$info.seckill_id|default=''}">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/name')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="seckill_name" class="layui-input" value="{$info.seckill_name|default=''|mac_filter_xss}" placeholder="{:lang('seckill/name_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/target_type')}</label>
+            <div class="layui-input-block">
+                <select name="seckill_target_type">
+                    <option value="vip_group" selected>{:lang('seckill/target_vip_group')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/target_id')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="seckill_target_id" class="layui-input" value="{$info.seckill_target_id|default='3'}" min="3" placeholder="{:lang('seckill/target_id_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/target_long')}</label>
+            <div class="layui-input-block">
+                <select name="seckill_target_long">
+                    <option value="day" {if condition="isset($info['seckill_target_long']) and $info['seckill_target_long'] eq 'day'"}selected {/if}>{:lang('seckill/target_long_day')}</option>
+                    <option value="week" {if condition="isset($info['seckill_target_long']) and $info['seckill_target_long'] eq 'week'"}selected {/if}>{:lang('seckill/target_long_week')}</option>
+                    <option value="month" {if condition="!isset($info['seckill_target_long']) or $info['seckill_target_long'] eq 'month'"}selected {/if}>{:lang('seckill/target_long_month')}</option>
+                    <option value="year" {if condition="isset($info['seckill_target_long']) and $info['seckill_target_long'] eq 'year'"}selected {/if}>{:lang('seckill/target_long_year')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/origin_points')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="seckill_origin_points" class="layui-input" value="{$info.seckill_origin_points|default='0'}" min="1" placeholder="{:lang('seckill/origin_points_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/price_points')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="seckill_price_points" class="layui-input" value="{$info.seckill_price_points|default='0'}" min="1" placeholder="{:lang('seckill/price_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/total')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="seckill_total" class="layui-input" value="{$info.seckill_total|default='10'}" min="1" placeholder="{:lang('seckill/total_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/per_user')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="seckill_per_user" min="1" max="1" readonly class="layui-input" value="1" placeholder="{:lang('seckill/per_user_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/start_time')}</label>
+            <div class="layui-input-block">
+                <input type="datetime-local" name="seckill_start_time_input" class="layui-input" value="{$info.seckill_start_time_input|default=''}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seckill/end_time')}</label>
+            <div class="layui-input-block">
+                <input type="datetime-local" name="seckill_end_time_input" class="layui-input" value="{$info.seckill_end_time_input|default=''}" placeholder="{:lang('seckill/end_time_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('status')}</label>
+            <div class="layui-input-block">
+                <select name="seckill_status">
+                    <option value="1" {if condition="!isset($info['seckill_status']) or $info['seckill_status'] eq 1"}selected {/if}>{:lang('enable')}</option>
+                    <option value="0" {if condition="isset($info['seckill_status']) and $info['seckill_status'] eq 0"}selected {/if}>{:lang('disable')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="formSubmit">{:lang('save')}</button>
+                <a href="{:url('index')}" class="layui-btn layui-btn-primary">{:lang('btn_back')}</a>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['form'], function(){
+        var form = layui.form;
+        form.on('submit(formSubmit)', function(data){
+            return true;
+        });
+    });
+</script>
+</body>
+</html>

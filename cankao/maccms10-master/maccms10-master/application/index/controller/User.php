@@ -1,0 +1,1408 @@
+<?php
+namespace app\index\controller;
+use think\Controller;
+use think\Db;
+use think\Request;
+use login\ThinkOauth;
+use app\index\event\LoginEvent;
+use app\common\util\Qrcode;
+use app\common\util\CsrfGuard;
+
+class User extends Base
+{
+    use CsrfGuard;
+    public function __construct()
+    {
+        parent::__construct();
+
+        define('THIRD_LOGIN_CALLBACK',  $GLOBALS['http_type'] . $_SERVER['HTTP_HOST'] . '/index.php/user/logincallback/type/');
+
+        //判断用户登录状态
+        $ac = request()->action();
+        $guestAllowedActions = ['login', 'logout', 'ajax_login', 'reg', 'findpass', 'findpass_msg', 'findpass_reset', 'reg_msg', 'oauth', 'logincallback', 'visit', 'index', 'ajax_upgrade', 'ajax_buy_popedom'];
+        $guestAllowedGetActions = ['buy', 'plays', 'upgrade', 'checkin', 'ajax_mall_goods', 'ajax_mall_orders'];
+        if (in_array($ac, $guestAllowedActions) || (in_array($ac, $guestAllowedGetActions) && !Request()->isPost())) {
+            // 游客可访问的页面也注入 obj，避免模板判断分支缺少变量
+            $this->assign('obj', $GLOBALS['user']);
+        } else {
+            if ($GLOBALS['user']['user_id'] < 1) {
+                model('User')->logout();
+                redirect(url('user/login'))->send();
+                exit;
+            }
+            $this->assign('obj', $GLOBALS['user']);
+        }
+    }
+
+    public function ajax_login()
+    {
+        return $this->fetch('user/ajax_login');
+    }
+
+    public function ajax_info()
+    {
+        return $this->fetch('user/ajax_info');
+    }
+
+    public function ajax_ulog()
+    {
+        $param = input();
+        if ($param['ac'] == 'set') {
+            // 写入类操作（收藏/想看/播放/章节阅读历史）必须为 POST 且通过 CSRF 校验，
+            // 杜绝第三方页面、浏览器预加载器或爬虫借登录用户 Cookie 发起 GET 写入而污染记录。
+            // 读取路径（ac=list）不受影响，仍可 GET。
+            if (!request()->isPost()) {
+                return json(['code' => 1001, 'msg' => lang('param_err')]);
+            }
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return json($csrfErr);
+            }
+            $data = [];
+            $data['ulog_mid'] = intval($param['mid']);
+            $data['ulog_rid'] = intval($param['id']);
+            $data['ulog_type'] = intval($param['type']);
+            $data['ulog_sid'] = intval($param['sid']);
+            $data['ulog_nid'] = intval($param['nid']);
+            $data['user_id'] = $GLOBALS['user']['user_id'];
+
+            if ($data['ulog_type'] === 4 && in_array($data['ulog_mid'], [2, 12], true)) {
+                return json($this->record_read_chapter(
+                    $data['user_id'],
+                    $data['ulog_mid'],
+                    $data['ulog_rid'],
+                    $data['ulog_sid'],
+                    $data['ulog_nid']
+                ));
+            }
+
+            if ($data['ulog_mid'] == 1 && $data['ulog_type'] > 3) {
+                $where2 = [];
+                $where2['vod_id'] = $data['ulog_rid'];
+                $res = model('Vod')->infoData($where2);
+                if ($res['code'] > 1) {
+                    return $res;
+                }
+                $flag = $data['ulog_type'] == 4 ? 'play' : 'down';
+                $data['ulog_points'] = $res['info']['vod_points_' . $flag];
+            }
+            $data['ulog_points'] = intval($data['ulog_points']);
+
+            $__ualMap = [2 => 'fav', 3 => 'want', 4 => 'play', 5 => 'down'];
+            $res = model('Ulog')->infoData($data);
+            if ($res['code'] == 1) {
+                $r = model('Ulog')->where($data)->update(['ulog_time'=>time()]);
+                // update() 返回 false 才是写库失败；受影响行数为 0（时间戳值未变）仍算成功。失败不埋点。
+                if ($r !== false && isset($__ualMap[$data['ulog_type']])) {
+                    \app\common\model\UserAccessLog::record($__ualMap[$data['ulog_type']], [
+                        'user_id' => $data['user_id'],
+                        'mid'     => $data['ulog_mid'],
+                        'rid'     => $data['ulog_rid'],
+                    ]);
+                }
+                // 与 saveData 对齐：顶层 ulog_id 供前端回填 data-uid
+                if (!empty($res['info']['ulog_id'])) {
+                    $res['ulog_id'] = intval($res['info']['ulog_id']);
+                }
+                return json($res);
+            }
+            if ($data['ulog_points'] == 0) {
+                $res = model('Ulog')->saveData($data);
+            } else {
+                $res = ['code' => 2001, 'msg' => lang('index/ulog_fee')];
+            }
+            if (isset($res['code']) && intval($res['code']) === 1 && isset($__ualMap[$data['ulog_type']])) {
+                \app\common\model\UserAccessLog::record($__ualMap[$data['ulog_type']], [
+                    'user_id' => $data['user_id'],
+                    'mid'     => $data['ulog_mid'],
+                    'rid'     => $data['ulog_rid'],
+                ]);
+            }
+        } else {
+            $where = [];
+            $where['user_id'] = $GLOBALS['user']['user_id'];
+            $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+            $param['limit'] = intval($param['limit']) < 1 ? 10 : intval($param['limit']);
+            if(intval($param['mid'])>0){
+                $where['ulog_mid'] = ['eq',intval($param['mid'])];
+            }
+            if(intval($param['id'])>0){
+                $where['ulog_rid'] = ['eq',intval($param['id'])];
+            }
+            if(intval($param['type'])>0){
+                $where['ulog_type'] = ['eq',intval($param['type'])];
+            }
+            $order = 'ulog_time desc';
+            $res = model('Ulog')->listData($where, $order, $param['page'], $param['limit']);
+        }
+        return json($res);
+    }
+
+    public function ajax_buy_popedom()
+    {
+        if (empty($GLOBALS['user']['user_id']) || intval($GLOBALS['user']['user_id']) < 1) {
+            return json(['code' => 1001, 'msg' => lang('api/please_login_first')]);
+        }
+        // 会扣积分/写 ulog 的写接口：强制 POST + CSRF，防跨站诱导非自愿扣费购买
+        if (!Request()->isPost()) {
+            return json(['code' => 1002, 'msg' => lang('param_err')]);
+        }
+        $csrfErr = $this->checkCsrf();
+        if ($csrfErr !== null) {
+            return json($csrfErr);
+        }
+
+        $param = input();
+        $data = [];
+        $data['ulog_mid'] = intval($param['mid']) <=0 ? 1: intval($param['mid']);
+        $data['ulog_rid'] = intval($param['id']);
+        $data['ulog_sid'] = intval($param['sid']);
+        $data['ulog_nid'] = intval($param['nid']);
+
+        if (!in_array($param['mid'], ['1','2','12']) || !in_array($param['type'], ['1','4','5']) || empty($data['ulog_rid']) ) {
+            return json(['code' => 2001, 'msg' => lang('param_err')]);
+        }
+        $data['ulog_type'] = $param['type'];
+        $data['user_id'] = $GLOBALS['user']['user_id'];
+
+        $where = [];
+        if($param['mid']=='12'){
+            // 漫画购买（扣费额与 check_user_popedom 一致）
+            $where['manga_id'] = $data['ulog_rid'];
+            $res = model('Manga')->infoData($where);
+            if ($res['code'] > 1) {
+                return json([$res]);
+            }
+            $data['ulog_points'] = mac_content_read_points_amount('manga', $res['info']);
+            if($GLOBALS['config']['user']['manga_points_type']=='1'){
+                $data['ulog_sid']=0;
+                $data['ulog_nid']=0;
+            }
+        }
+        elseif($param['type']=='1'){
+            // 文章购买
+            $where['art_id'] = $data['ulog_rid'];
+            $res = model('Art')->infoData($where);
+            if ($res['code'] > 1) {
+                return json([$res]);
+            }
+            $data['ulog_points'] = mac_content_read_points_amount('art', $res['info']);
+            if($GLOBALS['config']['user']['art_points_type']=='1'){
+                $data['ulog_sid']=0;
+                $data['ulog_nid']=0;
+            }
+        }
+        else{
+            // 视频播放/下载购买
+            $where['vod_id'] = $data['ulog_rid'];
+            $res = model('Vod')->infoData($where);
+            if ($res['code'] > 1) {
+                return json([$res]);
+            }
+            $col = 'vod_points_' . ($param['type'] == '4' ? 'play' : 'down');
+            if($GLOBALS['config']['user']['vod_points_type']=='1'){
+                $col='vod_points';
+                $data['ulog_sid']=0;
+                $data['ulog_nid']=0;
+            }
+            $data['ulog_points'] = intval($res['info'][$col]);
+        }
+
+        // 视频下载(mid=1,type=5)已拥有判断走 hasBought：额度兑换记 ulog_points=0，
+        // 与金币购买(记原价)都应算已购，避免二次扣额度；其余类型保持原精确匹配。
+        $isDownload = ($param['mid'] == '1' && $param['type'] == '5');
+        $owned = $isDownload
+            ? model('Ulog')->hasBought($data)
+            : (model('Ulog')->infoData($data)['code'] == 1);
+        if ($owned) {
+            return json(['code' => 1, 'msg' => lang('index/buy_popedom1')]);
+        }
+
+        $quotaUser = null;
+        if ($param['mid'] == '1' && $param['type'] == '5' && $data['ulog_points'] > 0) {
+            $quotaUser = Db::name('user')->field('user_down_quota')->where('user_id', $GLOBALS['user']['user_id'])->find();
+        }
+        if ($param['mid'] == '1' && $param['type'] == '5' && $data['ulog_points'] > 0 && intval($quotaUser['user_down_quota'] ?? 0) > 0) {
+            $quotaRes = model('User')->consumeDownQuota($GLOBALS['user']['user_id'], $data);
+            if ($quotaRes['code'] == 1005) {
+                return json(['code' => 2002, 'msg' => lang('mall/download_quota_not_enough')]);
+            }
+            if ($quotaRes['code'] != 1) {
+                return json(['code' => 2003, 'msg' => lang('index/buy_popedom2')]);
+            }
+            // 风控日志（issue #149）：下载额度兑换成功（等同一次付费下载访问）
+            \app\common\model\UserAccessLog::record('buy', [
+                'user_id' => $GLOBALS['user']['user_id'],
+                'mid'     => $data['ulog_mid'],
+                'rid'     => $data['ulog_rid'],
+            ]);
+            return json($quotaRes);
+        }
+
+        if ($data['ulog_points'] > $GLOBALS['user']['user_points']) {
+            return json(['code' => 2002, 'msg' => lang('index/buy_popedom3',[$data['ulog_points'],$GLOBALS['user']['user_points']])]);
+        }
+
+        // 使用事务 + 条件更新防止并发刷积分
+        Db::startTrans();
+        try {
+            // 带条件的原子扣除：只有积分足够时才扣除
+            $affected = Db::name('user')
+                ->where('user_id', $GLOBALS['user']['user_id'])
+                ->where('user_points', '>=', $data['ulog_points'])
+                ->setDec('user_points', $data['ulog_points']);
+
+            if ($affected === 0 || $affected === false) {
+                Db::rollback();
+                return json(['code' => 2002, 'msg' => lang('index/buy_popedom3',[$data['ulog_points'],$GLOBALS['user']['user_points']])]);
+            }
+
+            //积分日志
+            $data2 = [];
+            $data2['user_id'] = $GLOBALS['user']['user_id'];
+            $data2['plog_type'] = 8;
+            $data2['plog_points'] = $data['ulog_points'];
+            // 扣分凭证必须写入成功，否则出现「已扣分但无扣分日志」的账目黑洞：任一必要写入失败即整单回滚。
+            $plogRes = model('Plog')->saveData($data2);
+            if (!is_array($plogRes) || intval(isset($plogRes['code']) ? $plogRes['code'] : 0) !== 1) {
+                Db::rollback();
+                return json(['code' => 2003, 'msg' => lang('index/buy_popedom2')]);
+            }
+
+            //分销佣金：strict 模式下，上级积分已加但佣金日志写入失败会连同本单一起回滚，保账目一致（与 API 购买流程一致）。
+            $rewardRes = model('User')->reward($data['ulog_points'], true);
+            if (!is_array($rewardRes) || intval(isset($rewardRes['code']) ? $rewardRes['code'] : 0) !== 1) {
+                Db::rollback();
+                return json(['code' => 2003, 'msg' => lang('index/buy_popedom2')]);
+            }
+
+            // 购买/使用凭证必须写入成功，否则用户扣了分却拿不到使用权。
+            // 注意 mac_ulog 仍是 MyISAM，本行不受事务回滚保护；故放在事务最后一步、紧接
+            // Db::commit()，把「已扣分未记权 / 已记权未扣分」的窗口压到最小。写入失败时，
+            // 回滚的只是 InnoDB 侧的扣分/佣金；ulog 迁移 InnoDB 以获得真正原子性，另行拆 PR。
+            $res = model('Ulog')->saveData($data);
+            if (!is_array($res) || intval(isset($res['code']) ? $res['code'] : 0) !== 1) {
+                Db::rollback();
+                return json(['code' => 2003, 'msg' => lang('index/buy_popedom2')]);
+            }
+
+            Db::commit();
+            // 风控日志（issue #149）：积分购买/点播成功埋点
+            \app\common\model\UserAccessLog::record('buy', [
+                'user_id' => $GLOBALS['user']['user_id'],
+                'mid'     => $data['ulog_mid'],
+                'rid'     => $data['ulog_rid'],
+            ]);
+            return json($res);
+        } catch (\Exception $e) {
+            Db::rollback();
+            return json(['code' => 2003, 'msg' => lang('index/buy_popedom2')]);
+        }
+    }
+
+    public function index()
+    {
+        return $this->fetch('user/index');
+    }
+
+    public function login()
+    {
+        if (Request()->isPost()) {
+            $param = input();
+            $res = model('User')->login($param);
+            return json($res);
+        }
+        if (!empty(cookie('user_id') && !empty(cookie('user_name')))) {
+            return redirect('user/index');
+        }
+        return $this->fetch('user/login');
+    }
+
+    public function logout()
+    {
+        $res = model('User')->logout();
+        if (request()->isAjax()) {
+            return json($res);
+        } else {
+            return redirect('user/login');
+        }
+    }
+
+    public function oauth($type = '')
+    {
+        empty($type) && $this->error(lang('param_err'));
+        //加载ThinkOauth类并实例化一个对象
+        $sns = ThinkOauth::getInstance($type);
+        //跳转到授权页面
+        $this->redirect($sns->getRequestCodeURL());
+    }
+
+    //授权回调地址
+    public function logincallback($type = '', $code = '')
+    {
+        if (empty($type) || empty($code)) {
+            return $this->error(lang('param_err'));
+        }
+        //加载ThinkOauth类并实例化一个对象
+        $sns = ThinkOauth::getInstance($type);
+        $extend = null;
+
+        //请妥善保管这里获取到的Token信息，方便以后API调用
+        $token = $sns->getAccessToken($code, $extend);
+        //获取当前登录用户信息
+        if (is_array($token)) {
+            $loginEvent = new LoginEvent();
+            $res = $loginEvent->$type($token);
+            if ($res['code'] == 1) {
+                $openid = $res['info']['openid'];
+                $col = 'user_openid_' . $type;
+                //如果已登录,是否需要重新绑定
+                $check = model('User')->checkLogin();
+                if ($check['code'] == 1) {
+
+                    if ($check['info'][$col] == $openid) {
+                        //无需再次绑定
+                        return json(['code' => 1001, 'msg' => lang('index/bind_haved')]);
+                    } else {
+                        //解除原有绑定
+                        $where = [];
+                        $where[$col] = $openid;
+                        $update = [];
+                        $update[$col] = '';
+                        model('User')->where($where)->update($update);
+                        //新绑定
+                        $where = [];
+                        $where['user_id'] = $GLOBALS['user']['user_id'];
+                        $update = [];
+                        $update[$col] = $openid;
+                        model('User')->where($where)->update($update);
+                        return json(['code' => 1, 'msg' => lang('index/bind_ok')]);
+                    }
+                }
+
+                $where = [];
+                $where[$col] = $openid;
+                $res2 = model('User')->infoData($where);
+                //未绑定的需要先创建用户并绑定
+                if ($res2['code'] > 1) {
+                    $data = [];
+                    $data['user_name'] = substr($openid, 0, 10);
+                    $data['user_nick_name'] = htmlspecialchars(urldecode(trim($res['info']['name'])));
+                    $pwd = time();
+                    $data['user_pwd'] = $pwd;
+                    $data['user_pwd2'] = $pwd;
+                    $data[$col] = $openid;
+                    $reg = model('User')->register($data);
+                    if ($reg['code'] > 1) {
+                        //注册失败
+                        return $this->error(lang('index/logincallback1'));
+                    }
+                }
+                //直接登录。。。
+                $login = model('User')->login(['col' => $col, 'openid' => $openid]);
+                if ($login['code'] > 1) {
+                    return $this->error($login['msg']);
+                }
+                $this->redirect('user/index');
+            } else {
+                return $this->error($res['msg']);
+            }
+        } else {
+            return $this->error(lang('index/logincallback2'));
+        }
+    }
+
+    public function bindmsg()
+    {
+        $param = input();
+        $csrfErr = $this->checkCsrf();
+        if ($csrfErr !== null) {
+            return json($csrfErr);
+        }
+        $res = model('User')->bindmsg($param);
+        return json($res);
+    }
+
+    public function bind()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return json($csrfErr);
+            }
+            $res = model('User')->bind($param);
+            return json($res);
+        }
+
+        if (empty($param['ac'])) {
+            $param['ac'] = 'email';
+        }
+        $ac = $param['ac'] === 'phone' ? 'phone' : 'email';
+        $bind_readonly = ($ac === 'email' && !empty($GLOBALS['user']['user_email']))
+            || ($ac === 'phone' && !empty($GLOBALS['user']['user_phone']));
+        $this->assign('ac', $ac);
+        $this->assign('bind_readonly', $bind_readonly ? 1 : 0);
+        $this->assign('param', $param);
+        return $this->fetch('user/bind');
+    }
+
+    public function unbind()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return json($csrfErr);
+            }
+            $res = model('User')->unbind($param);
+            return json($res);
+        }
+        $this->assign('param',$param);
+        return $this->fetch('user/unbind');
+    }
+
+    public function info()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                $this->error($csrfErr['msg']);
+                exit;
+            }
+            $res = model('User')->info($param);
+            if ($res['code'] == 1) {
+                $this->success($res['msg']);
+                exit;
+            }
+            $this->error($res['msg']);
+            exit;
+        }
+        $this->assign('param',$param);
+        return $this->fetch('user/info');
+    }
+
+    public function regcheck()
+    {
+        $param = input();
+        $t = htmlspecialchars(urldecode(trim($param['t'])));
+        $str = htmlspecialchars(urldecode(trim($param['str'])));
+        $res = model('User')->regcheck($t, $str);
+        if ($res['code'] > 1) {
+            return $str;
+        }
+        return json($res);
+    }
+
+    public function reg()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            if (!empty(cookie('uid'))) {
+                $param['uid'] = intval(cookie('uid'));
+            }
+            $res = model('User')->register($param);
+            if ($res['code'] > 1) {
+                return json($res);
+            }
+
+            $GLOBALS['config']['user']['login_verify'] = '0';
+            $res = model('User')->login($param);
+            $res['msg'] = lang('index/reg_ok').'，' . $res['msg'];
+            return json($res);
+        }
+        if (!empty($param['uid'])) {
+            cookie('uid', $param['uid']);
+        }
+
+        $user_config = $GLOBALS['config']['user'];
+        $this->assign('user_config', $user_config);
+        $this->assign('param', $param);
+        return $this->fetch('user/reg');
+    }
+
+    public function reg_msg()
+    {
+        $param = input();
+        $res = model('User')->reg_msg($param);
+        return json($res);
+    }
+
+
+    public function portrait()
+    {
+        if(request()->isPost()){
+            if ($GLOBALS['config']['user']['portrait_status'] == 0) {
+                return json(['code' => 0, 'msg' => lang('index/portrait_tip1')]);
+            }
+            $uid = (int)$GLOBALS['user']['user_id'];
+            if ($uid < 1) {
+                return json(['code' => 1003, 'msg' => lang('index/require_login')]);
+            }
+            // 删除已上传头像，恢复默认
+            if (input('op') === 'remove') {
+                // 破坏性写操作（删服务器文件 + 清空 user_portrait）前必须做 CSRF 校验，
+                // 与本控制器 info/bind/unbind/gopay/upgrade/cash/ajax_buy_popedom 等写接口保持一致基线
+                $csrfErr = $this->checkCsrf();
+                if ($csrfErr !== null) {
+                    return json($csrfErr);
+                }
+                $file = 'upload/user/' . ($uid % 10) . '/' . $uid . '.jpg';
+                if (is_file(ROOT_PATH . $file)) {
+                    @unlink(ROOT_PATH . $file);
+                }
+                model('User')->where(['user_id' => $uid])->update(['user_portrait' => '']);
+                $def = mac_get_user_portrait($uid);
+                cookie('user_portrait', $def);
+                return json(['code' => 1, 'msg' => lang('del_ok'), 'file' => $def]);
+            }
+            $param=[];
+            $param['input'] = 'file';
+            $param['flag'] = 'user';
+            $param['user_id'] = $uid;
+            $res = model('Upload')->upload($param);
+            return json($res);
+        }
+        return $this->fetch('user/portrait');
+    }
+
+    public function findpass()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $res = model('User')->findpass($param);
+            return json($res);
+        }
+        $this->assign('param',$param);
+        return $this->fetch('user/findpass');
+    }
+
+    public function findpass_msg()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $res = model('User')->findpass_msg($param);
+            return json($res);
+        }
+        $param['ac_text'] = $param['ac'] == 'phone' ? lang('mobile') : lang('email');
+        $this->assign('param', $param);
+        return $this->fetch('user/findpass_msg');
+    }
+
+    public function findpass_reset()
+    {
+        if (Request()->isPost()) {
+            $param = input();
+            $res = model('User')->findpass_reset($param);
+            return json($res);
+        }
+    }
+
+    public function buy()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $flag = input('param.flag');
+            if ($flag == 'card') {
+                $card_no = htmlspecialchars(urldecode(trim($param['card_no'])));
+                $card_pwd = htmlspecialchars(urldecode(trim($param['card_pwd'])));
+
+                $res = model('Card')->useData($card_no, $card_pwd, $GLOBALS['user']);
+                return json($res);
+            } else {
+                $price = input('param.price');
+                if (empty($price)) {
+                    return json(['code' => 1001, 'msg' => lang('param_err')]);
+                }
+
+                if ($price < $GLOBALS['config']['pay']['min']) {
+                    return json(['code' => 1002, 'msg' =>lang('index/min_pay',[$GLOBALS['config']['pay']['min']])]);
+                }
+
+                $data = [];
+                $data['user_id'] = $GLOBALS['user']['user_id'];
+                $data['order_code'] = 'PAY' . mac_get_uniqid_code();
+                $data['order_price'] = $price;
+                $data['order_time'] = time();
+                $data['order_points'] = intval($GLOBALS['config']['pay']['scale'] * $price);
+                // order_remarks 是 text NOT NULL，MySQL 的 TEXT 不能有 DEFAULT，
+                // 省略该列会在严格模式（STRICT_TRANS_TABLES）下报 1364 导致建单失败
+                $data['order_remarks'] = '';
+                $res = model('Order')->saveData($data);
+                if ($res['code'] == 1) {
+                    $orderInfo = model('Order')->infoData(['order_code' => $data['order_code'], 'user_id' => $data['user_id']]);
+                    if ($orderInfo['code'] == 1) {
+                        $data['order_id'] = $orderInfo['info']['order_id'];
+                    }
+                }
+                $res['data'] = $data;
+                return json($res);
+            }
+        }
+        $this->assign('param',$param);
+        $this->assign('config', $GLOBALS['config']['pay']);
+        $extends = mac_extends_list('pay');
+        $this->assign('ext_list', $extends['ext_list']);
+        return $this->fetch('user/buy');
+    }
+
+    public function pay()
+    {
+        $param = input();
+        $order_code = htmlspecialchars(urldecode(trim($param['order_code'])));
+        $where = [];
+        $where['order_code'] = $order_code;
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $res = model('Order')->infoData($where);
+        if ($res['code'] > 1) {
+            return $this->error($res['msg']);
+        }
+        $this->assign('param',$param);
+        $this->assign('config', $GLOBALS['config']['pay']);
+        $this->assign('info', $res['info']);
+
+        $extends = mac_extends_list('pay');
+        $this->assign('extends',$extends);
+        $this->assign('ext_list',$extends['ext_list']);
+
+        return $this->fetch('user/pay');
+    }
+
+    public function gopay()
+    {
+        $param = input();
+
+        // gopay 可由传统表单 POST 提交（非 AJAX），需 CSRF 校验
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return $this->error($csrfErr['msg']);
+            }
+        }
+
+        $order_code = htmlspecialchars(urldecode(trim($param['order_code'])));
+        $order_id = intval((trim($param['order_id'])));
+        $payment = strtolower(htmlspecialchars(urldecode(trim($param['payment']))));
+
+        if (empty($order_code) && empty($order_id) && empty($payment)) {
+            return $this->error(lang('param_err'));
+        }
+
+        if ($GLOBALS['config']['pay'][$payment]['appid'] == '') {
+            return $this->error(lang('index/payment_status'));
+        }
+
+        //核实订单
+        $where['order_id'] = $order_id;
+        $where['order_code'] = $order_code;
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $res = model('Order')->infoData($where);
+        if ($res['code'] > 1) {
+            return $this->error(lang('index/order_not'));
+        }
+        if ($res['info']['order_status'] == 1) {
+            return $this->error(lang('index/order_payed'));
+        }
+
+        $this->assign('order', $res['info']);
+        //跳转到相应页面
+        $this->assign('param',$param);
+
+        $cp = 'app\\common\\extend\\pay\\' . ucfirst($payment);
+        if (class_exists($cp)) {
+            $c = new $cp;
+            $payment_res = $c->submit($GLOBALS['user'], $res['info'], $param);
+        }
+        //$payment_res = model('Pay' . $payment)->submit($this->user, $res['info'], $param);
+        if ($payment == 'weixin') {
+            $this->assign('payment', $payment_res);
+            return $this->fetch('user/payment_weixin');
+        }
+    }
+
+    public function qrcode()
+    {
+        ob_end_clean();
+        header('Content-Type:image/png;');
+        $param = input();
+        $data = $param['data'];
+        if(substr($data, 0, 6) == "weixin") {
+            QRcode::png($data,false,QR_ECLEVEL_L,10);
+        }
+        else{
+            return $this->error(lang('param_err'));
+        }
+    }
+
+    public function upgrade()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return json($csrfErr);
+            }
+            $res = model('User')->upgrade($param);
+            return json($res);
+        }
+
+        $group_list = model('Group')->getCache();
+        $this->assign('group_list', $group_list);
+        $this->assign('pay_config', $GLOBALS['config']['pay']);
+        $this->assign('param',$param);
+        return $this->fetch('user/upgrade');
+    }
+
+    /**
+     * 会员权益说明页（需登录）
+     */
+    public function benefits()
+    {
+        return $this->fetch('user/benefits');
+    }
+
+    /**
+     * 每日签到（当前为前端展示页，业务逻辑待接入）
+     */
+    public function checkin()
+    {
+        return $this->fetch('user/checkin');
+    }
+
+    /**
+     * 弹窗用：返回升级会员表单 HTML（需登录）
+     */
+    public function ajax_upgrade()
+    {
+        $group_list = model('Group')->getCache();
+        $group_list = $this->buildVipActivityGroupList($group_list);
+        $this->assign('group_list', $group_list);
+        $this->assign('pay_config', $GLOBALS['config']['pay']);
+        $this->assign('param', input());
+        $html = $this->fetch('user/ajax_upgrade');
+        return json($html);
+    }
+
+    /**
+     * 归一化 VIP 套餐活动价：活动有效时用 group_activity_points_* 覆盖 group_points_*，
+     * 使模板渲染时 data-points 直接反映生效积分（活动价或正常价）。
+     */
+    private function buildVipActivityGroupList($group_list)
+    {
+        if (!is_array($group_list)) {
+            return $group_list;
+        }
+        foreach ($group_list as $gid => &$vo) {
+            if (!is_array($vo) || intval($vo['group_id']) <= 2) {
+                continue;
+            }
+            foreach (['day', 'week', 'month', 'year'] as $pl) {
+                $plan = model('Group')->vipPlanPrice($vo, $pl);
+                $vo['group_points_' . $pl] = intval($plan['effective_points']);
+                $vo['is_activity_' . $pl] = intval($plan['is_activity']);
+                $endKey = 'group_activity_end_time_' . $pl;
+                $now = time();
+                $vo['activity_countdown_' . $pl] = (intval($plan['is_activity']) === 1 && intval($vo[$endKey] ?? 0) > $now) ? (intval($vo[$endKey]) - $now) : 0;
+            }
+        }
+        return $group_list;
+    }
+
+    public function popedom()
+    {
+        $type_tree = model('Type')->getCache('type_tree');
+        $this->assign('type_tree', $type_tree);
+
+        $n = 1;
+        $ids = [1 => lang('index/page_type'), 2 => lang('index/page_detail'), 3 => lang('index/page_play'), 4 => lang('index/page_down'), '5' => lang('index/try_see')];
+        foreach ($type_tree as $k1 => $v1) {
+            unset($type_tree[$k1]['type_extend']);
+            $max_a = ($v1['type_mid'] == 1) ? 5 : (in_array($v1['type_mid'], [2, 12]) ? 3 : 2);
+            foreach ($ids as $a => $b) {
+                if ($a > $max_a) break;
+                $n++;
+                $type_tree[$k1]['popedom'][$b] = model('User')->popedom($v1['type_id'], $a, $GLOBALS['user']['group_id']);
+            }
+            foreach ($v1['child'] as $k2 => $v2) {
+                unset($type_tree[$k1]['child'][$k2]['type_extend']);
+                $max_a = ($v2['type_mid'] == 1) ? 5 : (in_array($v2['type_mid'], [2, 12]) ? 3 : 2);
+                foreach ($ids as $a => $b) {
+                    if ($a > $max_a) break;
+                    $n++;
+                    $type_tree[$k1]['child'][$k2]['popedom'][$b] = model('User')->popedom($v2['type_id'], $a, $GLOBALS['user']['group_id']);
+                }
+            }
+        }
+
+        $this->assign('type_tree', $type_tree);
+
+        return $this->fetch('user/popedom');
+    }
+
+    public function plays()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+        $param['mid'] = intval($param['mid']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $where['ulog_type'] = 4;
+        if (in_array($param['mid'], [1, 2, 3, 8, 12])) {
+            $where['ulog_mid'] = $param['mid'];
+        }
+        $order = 'ulog_time desc';
+        $res = model('Ulog')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $page_url = url('user/plays', ['mid' => $param['mid'], 'page' => 'PAGELINK']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], $page_url);
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/plays');
+    }
+
+    /**
+     * 站内消息中心（列表与 Push 开关由前端 API 拉取）
+     */
+    public function notify()
+    {
+        return $this->fetch('user/notify');
+    }
+
+    public function dynamics()
+    {
+        return $this->fetch('user/dynamics');
+    }
+
+    public function downs()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $where['ulog_mid'] = 1;
+        $where['ulog_type'] = 5;
+        $order = 'ulog_time desc';
+        $res = model('Ulog')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/downs', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/downs');
+    }
+
+    public function favs()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+        $param['mid'] = intval($param['mid']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        if (in_array($param['mid'], [1, 2, 3, 8, 12])) {
+            $where['ulog_mid'] = $param['mid'];
+        }
+        $where['ulog_type'] = 2;
+        $order = 'ulog_time desc';
+        $res = model('Ulog')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $page_url = url('user/favs', ['mid' => $param['mid'], 'page' => 'PAGELINK']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], $page_url);
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/favs');
+    }
+
+    public function ulog()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        if(in_array($param['mid'],['1','2','3','8'])){
+            $where['ulog_mid'] = $param['mid'];
+        }
+        if(in_array($param['type'],['1','2','3','4','5'])){
+            $where['ulog_type'] = $param['type'];
+        }
+
+        $order = 'ulog_time desc';
+        $res = model('Ulog')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/ulog', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/ulog');
+    }
+
+    public function ulog_del()
+    {
+        $param = input();
+        $ids = htmlspecialchars(urldecode(trim($param['ids'])));
+        $type = $param['type'];
+        $all = $param['all'];
+
+        if (!in_array($type, array('1', '2', '3', '4', '5'))) {
+            return json(['code' => 1001, 'msg' => lang('param_err')]);
+        }
+
+        if (empty($ids) && empty($all)) {
+            return json(['code' => 1001, 'msg' => lang('param_err')]);
+        }
+
+        $arr = [];
+        $ids = explode(',', $ids);
+        foreach ($ids as $k => $v) {
+            $v = abs(intval($v));
+            $arr[$v] = $v;
+        }
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $where['ulog_type'] = $type;
+        if ($all != '1') {
+            $where['ulog_id'] = array('in', array_values($arr));
+        }
+        $return = model('Ulog')->delData($where);
+        return json($return);
+    }
+
+    public function plog()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+        $param['filter'] = trim($param['filter']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        // 筛选：income=收入(1-6 与任务/里程碑奖励 10-11), expense=支出(7-9)
+        if ($param['filter'] == 'income') {
+            $where['plog_type'] = ['in', [1, 2, 3, 4, 5, 6, 10, 11]];
+        } elseif ($param['filter'] == 'expense') {
+            $where['plog_type'] = ['in', [7, 8, 9, 12]];
+        }
+        $order = 'plog_id desc';
+        $res = model('Plog')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $page_url = url('user/plog', ['filter' => $param['filter'], 'page' => 'PAGELINK']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], $page_url);
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/plog');
+    }
+
+    public function mall()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['mall_goods_status'] = 1;
+        if (in_array($param['type'], ['vip', 'card', 'download_quota'], true)) {
+            $where['mall_goods_type'] = ['eq', $param['type']];
+        }
+        $order = 'mall_goods_sort asc,mall_goods_id desc';
+        $res = model('MallGoods')->listData($where, $order, $param['page'], $param['limit']);
+
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/mall', ['type' => $param['type'], 'page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        $this->assign('param', $param);
+        $this->assign('list', $res['list']);
+        return $this->fetch('user/mall');
+    }
+
+    public function mall_orders()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['mo.user_id'] = $GLOBALS['user']['user_id'];
+        $order = 'mo.mall_order_id desc';
+        $res = model('MallOrder')->listData($where, $order, $param['page'], $param['limit']);
+
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/mall_orders', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        $this->assign('param', $param);
+        $this->assign('list', $res['list']);
+        return $this->fetch('user/mall_orders');
+    }
+
+    public function ajax_mall_goods()
+    {
+        if ($GLOBALS['user']['user_id'] < 1) {
+            return json(['code' => 1001, 'msg' => lang('index/no_login'), 'list' => []]);
+        }
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['mall_goods_status'] = 1;
+        if (in_array($param['type'], ['vip', 'card', 'download_quota'], true)) {
+            $where['mall_goods_type'] = ['eq', $param['type']];
+        }
+        $order = 'mall_goods_sort asc,mall_goods_id desc';
+        $res = model('MallGoods')->listData($where, $order, $param['page'], $param['limit']);
+
+        $list = [];
+        foreach ($res['list'] as $row) {
+            $ext = $row['mall_goods_ext_arr'] ?? [];
+            $item = [
+                'mall_goods_id' => intval($row['mall_goods_id']),
+                'mall_goods_name' => $row['mall_goods_name'],
+                'mall_goods_type' => $row['mall_goods_type'],
+                'mall_goods_points' => intval($row['mall_goods_points']),
+                'mall_goods_stock' => intval($row['mall_goods_stock']),
+                'mall_goods_status' => intval($row['mall_goods_status']),
+                'mall_goods_sort' => intval($row['mall_goods_sort']),
+            ];
+            if ($row['mall_goods_type'] === 'vip') {
+                $item['days'] = intval($ext['days'] ?? 0);
+            } elseif ($row['mall_goods_type'] === 'download_quota') {
+                $item['quota'] = intval($ext['quota'] ?? 0);
+            } elseif ($row['mall_goods_type'] === 'card') {
+                $item['card_money'] = intval($ext['card_money'] ?? 0);
+                $item['card_points'] = intval($ext['card_points'] ?? 0);
+            }
+            $list[] = $item;
+        }
+        $res['list'] = $list;
+        return json($res);
+    }
+
+    public function ajax_mall_orders()
+    {
+        if ($GLOBALS['user']['user_id'] < 1) {
+            return json(['code' => 1001, 'msg' => lang('index/no_login'), 'list' => []]);
+        }
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['mo.user_id'] = $GLOBALS['user']['user_id'];
+        $order = 'mo.mall_order_id desc';
+        $res = model('MallOrder')->listData($where, $order, $param['page'], $param['limit']);
+
+        $list = [];
+        foreach ($res['list'] as $row) {
+            $snapshot = $row['mall_order_snapshot_arr'] ?? [];
+            if (isset($snapshot['ext']) && is_array($snapshot['ext'])) {
+                unset($snapshot['ext']['card_mode'], $snapshot['ext']['role_no'], $snapshot['ext']['role_pwd']);
+            }
+            $list[] = [
+                'mall_order_id' => intval($row['mall_order_id']),
+                'mall_goods_name' => $row['mall_goods_name'],
+                'mall_goods_type' => $row['mall_goods_type'],
+                'mall_order_points' => intval($row['mall_order_points']),
+                'mall_order_quantity' => intval($row['mall_order_quantity']),
+                'mall_order_status' => intval($row['mall_order_status']),
+                'mall_order_time' => intval($row['mall_order_time']),
+                'mall_order_complete_time' => intval($row['mall_order_complete_time']),
+                'mall_order_remarks' => $row['mall_order_remarks'],
+                'mall_order_delivery_arr' => $row['mall_order_delivery_arr'] ?? [],
+                'mall_order_snapshot_arr' => $snapshot,
+            ];
+        }
+        $res['list'] = $list;
+        return json($res);
+    }
+
+    public function ajax_mall_exchange()
+    {
+        if (!request()->isPost()) {
+            return json(['code' => 1001, 'msg' => lang('param_err')]);
+        }
+        $csrfErr = $this->checkCsrf();
+        if ($csrfErr !== null) {
+            return json($csrfErr);
+        }
+        $param = input('post.');
+        $goods_id = intval($param['goods_id'] ?? 0);
+        $quantity = max(1, intval($param['quantity'] ?? 1));
+        $res = model('MallOrder')->exchange($goods_id, $GLOBALS['user']['user_id'], $quantity);
+        if (intval($res['code']) === 1 && !empty($res['info']['delivery']['type']) && $res['info']['delivery']['type'] === 'vip') {
+            cookie('group_id', intval($res['info']['delivery']['group_id']), ['expire' => 2592000]);
+            cookie('group_name', $res['info']['delivery']['group_name'] ?? '', ['expire' => 2592000]);
+        }
+        return json($res);
+    }
+
+    public function plog_del()
+    {
+        $param = input();
+        $ids = htmlspecialchars(urldecode(trim($param['ids'])));
+        $type = $param['type'];
+        $all = $param['all'];
+
+        if (empty($ids) && empty($all)) {
+            return json(['code' => 1001, 'msg' => lang('param_err')]);
+        }
+
+        $arr = [];
+        $ids = explode(',', $ids);
+        foreach ($ids as $k => $v) {
+            $v = abs(intval($v));
+            $arr[$v] = $v;
+        }
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        if ($all != '1') {
+            $where['plog_id'] = array('in', array_values($arr));
+        }
+        $return = model('Plog')->delData($where);
+        return json($return);
+    }
+
+    public function cash()
+    {
+        $param = input();
+        if (Request()->isPost()) {
+            $csrfErr = $this->checkCsrf();
+            if ($csrfErr !== null) {
+                return json($csrfErr);
+            }
+            $param['user_id'] = $GLOBALS['user']['user_id'];
+            $res = model('Cash')->saveData($param);
+            return json($res);
+        }
+
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $order = 'cash_id desc';
+        $res = model('Cash')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/cash', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/cash');
+    }
+
+    public function cash_del()
+    {
+        $param = input();
+        $ids = htmlspecialchars(urldecode(trim($param['ids'])));
+        $type = $param['type'];
+        $all = $param['all'];
+
+        if (empty($ids) && empty($all)) {
+            return json(['code' => 1001, 'msg' => lang('param_err')]);
+        }
+
+        $arr = [];
+        $ids = explode(',', $ids);
+        foreach ($ids as $k => $v) {
+            $v = abs(intval($v));
+            $arr[$v] = $v;
+        }
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        if ($all != '1') {
+            $where['cash_id'] = array('in', array_values($arr));
+        }
+        $return = model('Cash')->delData($where);
+        return json($return);
+    }
+
+    public function reward()
+    {
+        $param = input();
+
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        if($param['level']=='2'){
+            $where['user_pid_2'] = ['eq',$GLOBALS['user']['user_id']];
+        }
+        elseif($param['level']=='3'){
+            $where['user_pid_3'] = ['eq',$GLOBALS['user']['user_id']];
+        }
+        else{
+            $where['user_pid'] = ['eq',$GLOBALS['user']['user_id']];
+        }
+
+        $order = 'user_id desc';
+        $res = model('User')->listData($where, $order, $param['page'], $param['limit']);
+
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/reward', ['level'=>$param['level'], 'page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        return $this->fetch('user/reward');
+    }
+
+    public function orders()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['o.user_id'] = $GLOBALS['user']['user_id'];
+
+        $order = 'o.order_id desc';
+        $res = model('Order')->listData($where, $order, $param['page'], $param['limit']);
+
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/orders', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        return $this->fetch('user/orders');
+    }
+
+    public function order_info()
+    {
+        $param = input();
+        $where = [];
+        $where['order_id'] = intval($param['order_id']);
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $res = model('Order')->infoData($where);
+        if (request()->isAjax()) {
+            return json($res);
+        }
+        $this->assign('param',$param);
+        return $this->fetch('user/order_info');
+    }
+
+
+    public function cards()
+    {
+        $param = input();
+        $param['page'] = intval($param['page']) < 1 ? 1 : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 20 ? 20 : intval($param['limit']);
+
+        $where = [];
+        $where['user_id'] = $GLOBALS['user']['user_id'];
+        $where['card_use_status'] = 1;
+
+        $order = 'card_id desc';
+        $res = model('Card')->listData($where, $order, $param['page'], $param['limit']);
+
+        $pages = mac_page_param($res['total'], $param['limit'], $param['page'], url('user/cards', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+        $this->assign('param',$param);
+        $this->assign('list', $res['list']);
+        return $this->fetch('user/cards');
+    }
+
+    public function comment()
+    {
+        $param = input();
+        $this->assign('param',$param);
+        return $this->fetch('user/comment');
+    }
+
+    public function gbook()
+    {
+        $param = input();
+        $this->assign('param',$param);
+        return $this->fetch('user/gbook');
+    }
+
+    /**
+     * 邀请推广页面：展示邀请码、邀请链接及下线列表
+     */
+    public function invite()
+    {
+        $param = input();
+        $param['page']  = intval($param['page'])  < 1 ? 1  : intval($param['page']);
+        $param['limit'] = intval($param['limit']) < 1 ? 20 : intval($param['limit']);
+
+        $user_id     = $GLOBALS['user']['user_id'];
+        $invite_code = $GLOBALS['user']['user_invite_code'];
+
+        $base_url         = $GLOBALS['http_type'] . $_SERVER['HTTP_HOST'];
+        $reg_path         = mac_url('user/reg');
+        $invite_link_uid  = $base_url . $reg_path . '?uid=' . $user_id;
+        $invite_link_code = !empty($invite_code)
+            ? $base_url . $reg_path . '?invite_code=' . $invite_code
+            : '';
+
+        $total = model('User')->where('user_pid', $user_id)->count();
+
+        $invitees_raw = model('User')
+            ->field('user_id,user_name,user_nick_name,user_invite_code,user_invite_count,user_reg_time')
+            ->where('user_pid', $user_id)
+            ->order('user_id desc')
+            ->page($param['page'])
+            ->limit($param['limit'])
+            ->select();
+
+        $invitees = is_array($invitees_raw)
+            ? $invitees_raw
+            : (is_object($invitees_raw) ? $invitees_raw->toArray() : []);
+
+        if (!empty($invitees)) {
+            $level1_ids = array_column($invitees, 'user_id');
+
+            $sub_raw  = model('User')
+                ->field('user_id,user_name,user_nick_name,user_invite_count,user_reg_time,user_pid')
+                ->where('user_pid', 'in', $level1_ids)
+                ->order('user_id desc')
+                ->select();
+            $sub_list = is_array($sub_raw)
+                ? $sub_raw
+                : (is_object($sub_raw) ? $sub_raw->toArray() : []);
+
+            $sub_map = [];
+            foreach ($sub_list as $sub) {
+                $sub_map[$sub['user_pid']][] = $sub;
+            }
+            foreach ($invitees as &$invitee) {
+                $invitee['sub_invitees'] = isset($sub_map[$invitee['user_id']]) ? $sub_map[$invitee['user_id']] : [];
+                $invitee['sub_count']    = count($invitee['sub_invitees']);
+            }
+            unset($invitee);
+        }
+
+        $this->assign('invite_code',      $invite_code);
+        $this->assign('invite_link_uid',  $invite_link_uid);
+        $this->assign('invite_link_code', $invite_link_code);
+        $this->assign('total',            intval($total));
+        $this->assign('list',             $invitees);
+        $this->assign('param',            $param);
+
+        $pages = mac_page_param($total, $param['limit'], $param['page'], url('user/invite', ['page' => 'PAGELINK']));
+        $this->assign('__PAGING__', $pages);
+
+        return $this->fetch('user/invite');
+    }
+
+    public function visit()
+    {
+        $param = input();
+        $res = model('User')->visit($param);
+        $url = '/';
+        if(!empty($param['url'])){
+            $tempu = @parse_url($param['url']);
+            if($_SERVER['HTTP_HOST'] == $tempu['host']){
+                $url = $param['url'];
+            }
+        }
+        $this->redirect($url);
+    }
+
+}

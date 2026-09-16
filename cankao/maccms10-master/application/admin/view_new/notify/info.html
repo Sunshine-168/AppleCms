@@ -1,0 +1,121 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<style>
+/* label 默认约 80px，四字文案会换行；与 input-block 左边距成对加宽 */
+.page-container .layui-form-label {
+    width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.page-container .layui-input-block {
+    margin-left: 130px;
+}
+.page-container .layui-form-item .layui-word-aux {
+    display: block;
+    padding-top: 6px;
+    line-height: 1.5;
+}
+</style>
+<div class="page-container p10">
+
+    <blockquote class="layui-elem-quote">{:lang('admin/notify/broadcast_desc')}</blockquote>
+
+    <form class="layui-form" method="post" action="{:url('broadcast')}">
+        <input type="hidden" name="notify_id" value="{$info.notify_id|default=''}">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('notify/type')}</label>
+            <div class="layui-input-block">
+                <select name="notify_type">
+                    <option value="announce" {if condition="!isset($info['notify_type']) or $info['notify_type'] neq 'activity'"}selected {/if}>{:lang('notify/type_announce')}</option>
+                    <option value="activity" {if condition="isset($info['notify_type']) and $info['notify_type'] eq 'activity'"}selected {/if}>{:lang('notify/type_activity')}</option>
+                </select>
+                <div class="layui-word-aux">{:lang('admin/notify/type_manual_tip')}</div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('notify/field_title')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="notify_title" class="layui-input" value="{$info.notify_title|default=''|mac_filter_xss}" placeholder="{:lang('notify/title_required')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('notify/content')}</label>
+            <div class="layui-input-block">
+                <textarea name="notify_content" class="layui-textarea" rows="6" placeholder="{:lang('notify/content_required')}">{$info.notify_content|default=''|mac_filter_xss}</textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('notify/link')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="notify_link" class="layui-input" value="{$info.notify_link|default=''|mac_filter_xss}" placeholder="{:lang('notify/link_placeholder')}">
+            </div>
+        </div>
+
+        {if condition="!empty($push_enabled)"}
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('notify/also_push')}</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="also_push" value="1" lay-skin="switch" lay-text="ON|OFF">
+                <div class="layui-word-aux">{:lang('notify/also_push_tip')}</div>
+            </div>
+        </div>
+        {/if}
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" id="btnPreview">{:lang('notify/preview')}</button>
+                <button class="layui-btn" lay-submit lay-filter="formSubmit" id="btnSubmit" style="display:none">{:lang('notify/admin_broadcast')}</button>
+                <a href="{:url('index')}" class="layui-btn layui-btn-primary">{:lang('return')}</a>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['form', 'layer'], function(){
+        var form = layui.form;
+        var layer = layui.layer;
+        var confirmed = false;
+
+        // 发送前预览：弹出确认框展示标题/内容/链接，确认后才真正提交
+        document.getElementById('btnPreview').addEventListener('click', function(){
+            var title = (document.getElementsByName('notify_title')[0].value || '').trim();
+            var content = (document.getElementsByName('notify_content')[0].value || '').trim();
+            var link = (document.getElementsByName('notify_link')[0].value || '').trim();
+            if (!title || !content) {
+                layer.msg("{:lang('param_err')}");
+                return;
+            }
+            var esc = function(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+            var html = '<div style="padding:15px;line-height:1.8">'
+                + '<h3 style="margin-bottom:8px">' + esc(title) + '</h3>'
+                + '<div style="white-space:pre-wrap;color:#555">' + esc(content) + '</div>'
+                + (link ? '<div style="margin-top:8px;color:#999">' + esc(link) + '</div>' : '')
+                + '</div>';
+            layer.open({
+                type: 1,
+                title: "{:lang('notify/preview_title')}",
+                area: ['480px', 'auto'],
+                content: html,
+                btn: ["{:lang('notify/preview_send')}", "{:lang('return')}"],
+                yes: function(index){
+                    confirmed = true;
+                    layer.close(index);
+                    document.getElementById('btnSubmit').click();
+                }
+            });
+        });
+
+        form.on('submit(formSubmit)', function(data){
+            return confirmed;
+        });
+    });
+</script>
+</body>
+</html>

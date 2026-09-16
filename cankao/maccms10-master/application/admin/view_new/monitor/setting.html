@@ -1,0 +1,291 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <div class="layui-card mb-2">
+        <div class="layui-card-header">{:lang('admin/monitor/cron_setup')}</div>
+        <div class="layui-card-body">
+            <div style="color:#666;margin-bottom:8px;">{:lang('admin/monitor/cron_setup_hint')}</div>
+            <div class="layui-input-inline" style="width:100%;max-width:760px;">
+                <input type="text" class="layui-input" id="cronCmd" readonly
+                       value="* * * * * curl -fsS -m 50 &quot;{$cron_url}&quot; >/dev/null 2>&amp;1">
+            </div>
+            <div class="flex gap-5 overflow-x-auto mt-2">
+                <button class="layui-btn layui-btn-sm" id="copyCron">{:lang('admin/monitor/copy_crontab')}</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger" id="resetToken">{:lang('admin/monitor/reset_token')}</button>
+            </div>
+            <div style="color:#FF5722;font-size:12px;margin-top:6px;">
+                {:lang('admin/monitor/reset_token_warn')}
+            </div>
+            <div style="margin-top:10px;">
+                {if condition="$heartbeat['alive'] eq 1"}
+                    <span class="layui-badge layui-bg-green">{:lang('admin/monitor/cron_alive')}</span>
+                    <span style="color:#666;">{$heartbeat.age}s</span>
+                {else /}
+                    <span class="layui-badge">{:lang('admin/monitor/cron_dead_title')}</span>
+                {/if}
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-card">
+        <div class="layui-card-header">{:lang('admin/monitor/title_setting')}</div>
+        <div class="layui-card-body">
+            <form class="layui-form" id="settingForm">
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_enabled')}</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="enabled" value="1" title="{:lang('open')}" {if condition="$cfg['enabled'] eq '1'"}checked{/if}>
+                        <input type="radio" name="enabled" value="0" title="{:lang('close')}" {if condition="$cfg['enabled'] neq '1'"}checked{/if}>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_req_metrics')}</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="req_metrics_enabled" value="1" title="{:lang('open')}" {if condition="$cfg['req_metrics_enabled'] eq '1'"}checked{/if}>
+                        <input type="radio" name="req_metrics_enabled" value="0" title="{:lang('close')}" {if condition="$cfg['req_metrics_enabled'] neq '1'"}checked{/if}>
+                        <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_req_metrics_hint')}</div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_sample_rate')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="req_sample_rate" class="layui-input" min="1" max="100" value="{$cfg.req_sample_rate}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_sample_rate_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_slow_ms')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="slow_ms" class="layui-input" min="50" max="60000" value="{$cfg.slow_ms}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">ms</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_retain_min')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="retain_min_days" class="layui-input" min="1" max="14" value="{$cfg.retain_min_days}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_retain_min_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_retain_hour')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="retain_hour_days" class="layui-input" min="7" max="730" value="{$cfg.retain_hour_days}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_retain_hour_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_disk_mounts')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="disk_mounts" class="layui-input" value="{$cfg.disk_mounts}" placeholder="/data,/mnt/storage">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_disk_mounts_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_heartbeat_url')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="heartbeat_url" class="layui-input" value="{$cfg.heartbeat_url}" placeholder="https://hc-ping.com/xxxx">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_heartbeat_url_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="font-weight:bold;">{:lang('admin/monitor/sec_access')}</label>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/sec_access_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_access_track')}</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="access_track_enabled" value="1" title="{:lang('open')}" {if condition="$cfg['access_track_enabled'] eq '1'"}checked{/if}>
+                        <input type="radio" name="access_track_enabled" value="0" title="{:lang('close')}" {if condition="$cfg['access_track_enabled'] neq '1'"}checked{/if}>
+                        <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_access_track_hint')}</div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_cc_threshold')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="access_cc_threshold" class="layui-input" min="10" value="{$cfg.access_cc_threshold}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_cc_threshold_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_err4_threshold')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="access_err4_threshold" class="layui-input" min="5" value="{$cfg.access_err4_threshold}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_err4_threshold_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_track_max_ip')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="access_track_max_ip" class="layui-input" min="50" max="2000" value="{$cfg.access_track_max_ip}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_track_max_ip_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_ban_whitelist')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="ban_whitelist" class="layui-input" value="{$cfg.ban_whitelist}" placeholder="1.2.3.4,5.6.0.0/16">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_ban_whitelist_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="font-weight:bold;">{:lang('admin/monitor/sec_notify')}</label>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/sec_notify_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_notify_user_ids')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="notify_user_ids" class="layui-input" value="{$cfg.notify_user_ids}" placeholder="1,2">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_notify_user_ids_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_alert_emails')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="alert_emails" class="layui-input" value="{$cfg.alert_emails}" placeholder="ops@example.com">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_alert_emails_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_webhook_url')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="webhook_url" class="layui-input" value="{$cfg.webhook_url}" placeholder="https://example.com/hook">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_webhook_url_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_webhook_secret')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="webhook_secret" class="layui-input" value="{$cfg.webhook_secret}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_webhook_secret_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_webhook_private')}</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="webhook_allow_private" value="0" title="{:lang('close')}" {if condition="$cfg['webhook_allow_private'] neq '1'"}checked{/if}>
+                        <input type="radio" name="webhook_allow_private" value="1" title="{:lang('open')}" {if condition="$cfg['webhook_allow_private'] eq '1'"}checked{/if}>
+                        <div class="layui-form-mid layui-word-aux" style="color:#FF5722;">{:lang('admin/monitor/f_webhook_private_hint')}</div>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">Telegram</label>
+                    <div class="layui-input-inline" style="width:230px;">
+                        <input type="text" name="telegram_token" class="layui-input" value="{$cfg.telegram_token}" placeholder="bot token">
+                    </div>
+                    <div class="layui-input-inline" style="width:180px;">
+                        <input type="text" name="telegram_chat_id" class="layui-input" value="{$cfg.telegram_chat_id}" placeholder="chat_id">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_dingtalk')}</label>
+                    <div class="layui-input-inline" style="width:230px;">
+                        <input type="text" name="dingtalk_token" class="layui-input" value="{$cfg.dingtalk_token}" placeholder="access_token">
+                    </div>
+                    <div class="layui-input-inline" style="width:180px;">
+                        <input type="text" name="dingtalk_secret" class="layui-input" value="{$cfg.dingtalk_secret}" placeholder="secret">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_dingtalk_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_wecom')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="wecom_key" class="layui-input" value="{$cfg.wecom_key}" placeholder="key">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">ServerChan</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="serverchan_key" class="layui-input" value="{$cfg.serverchan_key}" placeholder="SCT...">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_budget')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="notify_budget_hour" class="layui-input" min="1" max="500" value="{$cfg.notify_budget_hour}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_budget_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="button" class="layui-btn" id="saveBtn">{:lang('btn_save')}</button>
+                        <a class="layui-btn layui-btn-primary" href="{:url('rule')}">{:lang('admin/monitor/test_push')}</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="layui-panel" style="padding:12px 15px;background:#fffbe6;border-left:4px solid #FFB800;">
+                <div style="color:#666;">{:lang('admin/monitor/blindspot_warn')}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var SAVE_URL = "{:url('setting_save')}";
+    var RESET_URL = "{:url('cron_token_reset')}";
+
+    layui.use(['form'], function () {
+        var form = layui.form;
+        form.render();
+
+        document.getElementById('saveBtn').addEventListener('click', function () {
+            var fd = new FormData(document.getElementById('settingForm'));
+            fetch(SAVE_URL, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    layer.msg(res.msg);
+                })
+                .catch(function (e) { layer.msg(String(e)); });
+        });
+    });
+
+    document.getElementById('copyCron').addEventListener('click', function () {
+        var el = document.getElementById('cronCmd');
+        el.select();
+        document.execCommand('copy');
+        layer.msg("{:lang('admin/monitor/copied')}");
+    });
+
+    document.getElementById('resetToken').addEventListener('click', function () {
+        layer.confirm("{:lang('admin/monitor/reset_token_warn')}", function (idx) {
+            layer.close(idx);
+            fetch(RESET_URL, {method: 'POST', credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.code === 1 && res.data && res.data.cron_url) {
+                        document.getElementById('cronCmd').value =
+                            '* * * * * curl -fsS -m 50 "' + res.data.cron_url + '" >/dev/null 2>&1';
+                    }
+                    layer.msg(res.msg);
+                });
+        });
+    });
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

@@ -18,6 +18,24 @@ return [
                 'route' => 'admin.welcome',
                 'permission' => 'vod.view'
             ],
+            [
+                'name' => '影视管理',
+                'sub' => [
+                    ['name' => '站点设置', 'url' => '/admin/video/settings'],
+                    ['name' => '影视列表', 'url' => '/admin/video'],
+                    ['name' => '分类管理', 'url' => '/admin/video/types'],
+                    ['name' => '采集资源', 'url' => '/admin/video/collects'],
+                    ['name' => '标签管理', 'url' => '/admin/video/tags'],
+                    ['name' => '演员管理', 'url' => '/admin/video/actors'],
+                    ['name' => '专题管理', 'url' => '/admin/video/topics'],
+                    ['name' => '播放器', 'url' => '/admin/video/players'],
+                    ['name' => '评论管理', 'url' => '/admin/video/comments'],
+                    ['name' => '报错管理', 'url' => '/admin/video/reports'],
+                    ['name' => '会员管理', 'url' => '/admin/video/members'],
+                    ['name' => '积分卡密', 'url' => '/admin/video/cards'],
+                    ['name' => '友情链接', 'url' => '/admin/video/links'],
+                ],
+            ],
 
             [
                 'name' => '快捷菜单',

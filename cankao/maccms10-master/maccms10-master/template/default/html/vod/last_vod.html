@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {include file="public/include"}
+    <link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/vod-type.css" />
+    <link rel="stylesheet" href="{$maccms.path_tpl}/asset/css/last-vod.css">
+    <script src="{$maccms.path}template/default/asset/js/jquery-adaptive.js?v=202604161"></script>
+</head>
+
+<body>
+<div class="member-wrap last-bg">
+    {include file="public/th" /}
+    {include file="public/head" /}
+    <div class="container last-vod-page">
+        {include file="ads/ads_all"}
+        <div class="vod_row tit_up">
+            <div class="pannel last-vod-pannel clearfix">
+                {include file="module/last_vod_grouped" /}
+            </div>
+        </div>
+    </div>
+    {include file="public/foot"}
+</div>
+<script src="{$maccms.path_tpl}/asset/js/last-vod.js"></script>
+</body>
+</html>

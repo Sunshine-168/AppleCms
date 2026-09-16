@@ -91,7 +91,7 @@
           <div class="stat-head">
             <div class="stat-label">
               <span class="stat-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)"><i class="layui-icon layui-icon-read"></i></span>
-              <span>文章总数</span>
+              <span>评论总数</span>
             </div>
           </div>
           <div class="stat-value" id="stat-article-total"><span class="skeleton value"></span></div>
@@ -185,7 +185,7 @@ layui.use(['jquery', 'layer'], function () {
   function render(data) {
     $('#stat-vod-total').text(toText(data.vod_total));
     $('#stat-vod-today').text(toText(data.vod_today));
-    $('#stat-article-total').text(toText(data.article_total));
+    $('#stat-article-total').text(toText(data.comment_total ?? data.article_total));
     $('#stat-user-total').text(toText(data.user_total));
     $('#stat-visit-today').text(toText(data.visit_today));
     $('#stat-play-today').text(toText(data.play_today));

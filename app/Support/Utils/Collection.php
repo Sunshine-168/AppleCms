@@ -2,9 +2,6 @@
 
 namespace App\Support\Utils;
 
-use App\Utils\采集规则;
-use function App\Utils\mac_curl_get;
-
 class Collection
 {
 
@@ -231,14 +228,25 @@ class Collection
      * @param array $config  配置
      */
     protected static function get_html($url, &$config) {
-        if (!empty($url) && $html = mac_curl_get($url)) {
-            if ('UTF-8' != $config['sourcecharset'] && $config['sourcetype'] != 4) {
-                $html = iconv($config['sourcecharset'], 'UTF-8//TRANSLIT//IGNORE', $html);
-            }
-            return $html;
-        } else {
+        if (empty($url)) {
             return false;
         }
+
+        try {
+            $html = (string) \Illuminate\Support\Facades\Http::timeout(15)->get($url)->body();
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if ($html === '') {
+            return false;
+        }
+
+        if ('UTF-8' != $config['sourcecharset'] && $config['sourcetype'] != 4) {
+            $html = iconv($config['sourcecharset'], 'UTF-8//TRANSLIT//IGNORE', $html);
+        }
+
+        return $html;
     }
 
     /**

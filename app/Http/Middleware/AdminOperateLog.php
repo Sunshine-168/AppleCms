@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Zhuzhichao\IpLocationZh\Ip;
 
 class AdminOperateLog
 {   
@@ -225,7 +224,7 @@ class AdminOperateLog
             'status'        => $status,
             'duration_ms'   => $durationMs,
             'login_ip'      => $ip,
-            'ip_address'    => $this->cut(join(',', array_filter(Ip::find($ip))), 255),
+            'ip_address'    => $this->cut(\App\Support\Utils\IpAddress::region((string) $ip), 255),
             'user_agent'    => $this->cut((string) $request->userAgent(), 255),
             'referer'       => $this->cut((string) $request->headers->get('referer', ''), 255),
             'target_type'   => $targetType,
@@ -235,6 +234,9 @@ class AdminOperateLog
         ];
 
         // 写入数据库
-        SysOperateLogModel::create($insert);
+        try {
+            SysOperateLogModel::create($insert);
+        } catch (\Throwable) {
+        }
     }
 }

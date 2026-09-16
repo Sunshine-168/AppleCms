@@ -3,9 +3,6 @@ namespace App\Support\Utils;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use function App\Utils\mkdir;
 
 class Excel
 {
@@ -48,7 +45,11 @@ class Excel
             ];
             $type = $readerMap[$file->extension()] ?? 'Xls';
 
-            $reader = IOFactory::createReader($type);
+            if (! class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+                return '未安装表格组件';
+            }
+
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($type);
             $reader->setReadDataOnly(true);
             $reader->setReadEmptyCells(false);
 
@@ -96,13 +97,17 @@ class Excel
 
         $filePath = $dir . '/' . $fileName . '.xlsx';
 
-        $spreadsheet    = new Spreadsheet();
+        if (! class_exists(\PhpOffice\PhpSpreadsheet\Spreadsheet::class)) {
+            return false;
+        }
+
+        $spreadsheet    = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet          = $spreadsheet->getActiveSheet();
 
         // 使用 fromArray 批量写入表头
         $sheet->fromArray($header, null, 'A1');
 
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($filePath);
 
         unset($spreadsheet, $writer);

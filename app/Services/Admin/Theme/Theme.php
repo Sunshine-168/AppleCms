@@ -2,8 +2,6 @@
 
 namespace App\Services\Admin\Theme;
 
-use function App\Services\Theme\resource_path;
-
 class Theme
 {
     protected string $name;

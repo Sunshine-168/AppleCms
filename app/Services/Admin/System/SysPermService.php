@@ -4,7 +4,6 @@ use App\Models\System\SysPermModel;
 use App\Models\System\SysRolePermModel;
 use App\Models\System\SysUserModel;
 use App\Support\Utils\Result;
-use function App\Services\System\config;
 
 /**
  * 权限服务
@@ -405,6 +404,12 @@ class SysPermService
     public function getAdminMenus(int $uid): array
     {
         $isSuperAdmin = $uid === 1;
+
+        if ($isSuperAdmin && config('video.prefer_file_menus', true)) {
+            $menus = config('system.menus');
+
+            return is_array($menus) ? $menus : [];
+        }
 
         $menuRows = $this->sysPermModel->selectByCondition([['type', '=', 1]], '*', ['sort' => 'desc', 'id' => 'asc']);
         if (empty($menuRows))

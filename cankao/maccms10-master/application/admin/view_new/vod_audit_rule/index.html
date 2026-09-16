@@ -1,0 +1,92 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+    <div class="my-toolbar-box">
+        <div class="center mb10">
+            <form class="layui-form" method="post" action="{:url('index')}">
+                <div class="layui-input-inline w150">
+                    <select name="type">
+                        <option value="">{:lang('admin/vod_audit/rule_type')}</option>
+                        <option value="title_keyword" {if condition="$param['type'] eq 'title_keyword'"}selected{/if}>{:lang('admin/vod_audit/type_title_keyword')}</option>
+                        <option value="pic_empty" {if condition="$param['type'] eq 'pic_empty'"}selected{/if}>{:lang('admin/vod_audit/type_pic_empty')}</option>
+                        <option value="pic_invalid" {if condition="$param['type'] eq 'pic_invalid'"}selected{/if}>{:lang('admin/vod_audit/type_pic_invalid')}</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline w150">
+                    <select name="status">
+                        <option value="">{:lang('select_status')}</option>
+                        <option value="1" {if condition="$param['status'] eq '1'"}selected{/if}>{:lang('open')}</option>
+                        <option value="0" {if condition="$param['status'] eq '0'"}selected{/if}>{:lang('close')}</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline">
+                    <input type="text" autocomplete="off" placeholder="{:lang('wd')}" class="layui-input" name="wd" value="{$param['wd']|mac_filter_xss}">
+                </div>
+                <button class="layui-btn mgl-20 j-search">{:lang('btn_search')}</button>
+            </form>
+        </div>
+        <div class="layui-btn-group">
+            <a data-href="{:url('info')}" class="layui-btn layui-btn-primary j-iframe" data-width="680px" data-height="560px"><i class="layui-icon">&#xe654;</i>{:lang('add')}</a>
+            <a data-href="{:url('del')}" class="layui-btn layui-btn-primary j-page-btns confirm"><i class="layui-icon">&#xe640;</i>{:lang('del')}</a>
+        </div>
+    </div>
+
+    <form class="layui-form" method="post" id="pageListForm">
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th width="25"><input type="checkbox" lay-skin="primary" lay-filter="allChoose"></th>
+                <th width="50">{:lang('id')}</th>
+                <th>{:lang('admin/vod_audit/rule_name')}</th>
+                <th width="120">{:lang('admin/vod_audit/rule_type')}</th>
+                <th width="100">{:lang('admin/vod_audit/rule_action')}</th>
+                <th width="60">{:lang('sort')}</th>
+                <th width="80">{:lang('status')}</th>
+                <th width="130">{:lang('time')}</th>
+                <th width="90">{:lang('opt')}</th>
+            </tr>
+            </thead>
+            {volist name="list" id="vo"}
+            <tr>
+                <td><input type="checkbox" name="ids[]" value="{$vo.rule_id}" class="layui-checkbox checkbox-ids" lay-skin="primary"></td>
+                <td>{$vo.rule_id}</td>
+                <td>
+                    {$vo.rule_name|htmlspecialchars}
+                    {if condition="$vo.rule_remark neq ''"}<br><span class="layui-badge-rim">{$vo.rule_remark|htmlspecialchars}</span>{/if}
+                    {if condition="$vo.rule_type eq 'title_keyword' && $vo.rule_pattern neq ''"}<br><small style="color:#999;">{$vo.rule_pattern|htmlspecialchars|mac_substring=80}</small>{/if}
+                </td>
+                <td>
+                    {if condition="$vo.rule_type eq 'title_keyword'"}{:lang('admin/vod_audit/type_title_keyword')}{elseif condition="$vo.rule_type eq 'pic_empty'"/}{:lang('admin/vod_audit/type_pic_empty')}{else/}{:lang('admin/vod_audit/type_pic_invalid')}{/if}
+                </td>
+                <td>
+                    {if condition="$vo.rule_action eq 0"}{:lang('admin/vod_audit/action_pending')}{elseif condition="$vo.rule_action eq 1"/}{:lang('admin/vod_audit/action_approve')}{else/}{:lang('admin/vod_audit/action_reject')}{/if}
+                </td>
+                <td>{$vo.rule_sort}</td>
+                <td><input type="checkbox" name="status" {if condition="$vo['rule_status'] eq 1"}checked{/if} value="{$vo['rule_status']}" lay-skin="switch" lay-filter="switchStatus" lay-text="{:lang('open')}|{:lang('close')}" data-href="{:url('field?col=rule_status&ids='.$vo['rule_id'])}"></td>
+                <td>{$vo.rule_time|mac_day='color'}</td>
+                <td>
+                    <a class="layui-badge-rim j-iframe" data-href="{:url('info?id='.$vo['rule_id'])}" data-width="680px" data-height="560px" href="javascript:;" title="{:lang('edit')}">{:lang('edit')}</a>
+                </td>
+            </tr>
+            {/volist}
+        </table>
+        <div id="pages" class="center"></div>
+    </form>
+</div>
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['laypage', 'form'], function () {
+        var laypage = layui.laypage;
+        laypage.render({
+            elem: 'pages',
+            count: {$total},
+            limit: {$limit},
+            curr: {$page},
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    location.href = '{:url("index")}?page=' + obj.curr + '&limit=' + obj.limit;
+                }
+            }
+        });
+    });
+</script>

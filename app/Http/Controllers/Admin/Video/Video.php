@@ -78,8 +78,11 @@ class Video extends Controller
             'lang' => (string)$request->input('lang', ''),
             'year' => (string)$request->input('year', ''),
             'director' => (string)$request->input('director', ''),
+            'remarks' => (string)$request->input('remarks', ''),
             'description' => (string)$request->input('description', ''),
             'status' => (int)$request->input('status', 1),
+            'lock' => (int)$request->input('lock', 0),
+            'points' => (int)$request->input('points', 0),
             'is_recommend' => (int)$request->input('is_recommend', 0),
             'is_hot' => (int)$request->input('is_hot', 0),
             'score' => $request->input('score', 0),
@@ -101,6 +104,20 @@ class Video extends Controller
     {
         $id = (int)$request->input('id', 0);
         $data = $this->videoService->deleteVideo($id);
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    /**
+     * 批量操作
+     */
+    public function batchVideo(Request $request): JsonResponse
+    {
+        $data = $this->videoService->batchVideos(
+            $request->input('ids', []),
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -316,6 +333,9 @@ class Video extends Controller
 
         $payload = [
             'name' => (string)$request->input('name', ''),
+            'api_url' => (string)$request->input('api_url', ''),
+            'api_type' => (string)$request->input('api_type', 'auto'),
+            'param' => (string)$request->input('param', ''),
             'status' => (int)$request->input('status', 1),
             'sort' => (int)$request->input('sort', 0),
         ];

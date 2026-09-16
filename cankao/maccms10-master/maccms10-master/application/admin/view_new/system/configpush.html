@@ -1,0 +1,108 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<div class="page-container">
+    <form class="layui-form layui-form-pane" action="">
+        <input type="hidden" name="__token__" value="{$Request.token}" />
+        <div class="layui-tab">
+            <ul class="layui-tab-title">
+                <li class="layui-this">{:lang('admin/system/configpush/title')}</li>
+            </ul>
+            <div class="layui-tab-content">
+                <div class="layui-tab-item layui-show">
+
+                    <blockquote class="layui-elem-quote layui-quote-nm">
+                        {:lang('admin/system/configpush/tip')}
+                    </blockquote>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/system/configpush/enable')}：</label>
+                        <div class="layui-input-inline">
+                            <input type="radio" name="push[enable]" value="1" title="{:lang('yes')}" {if condition="isset($config['push']['enable']) and $config['push']['enable'] eq '1'"}checked{/if}>
+                            <input type="radio" name="push[enable]" value="0" title="{:lang('no')}" {if condition="!isset($config['push']['enable']) or $config['push']['enable'] neq '1'"}checked{/if}>
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">{:lang('admin/system/configpush/enable_tip')}</div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/system/configpush/vapid_subject')}：</label>
+                        <div class="layui-input-inline w400">
+                            <input type="text" name="push[vapid_subject]" placeholder="mailto:admin@example.com"
+                                value="{$config['push']['vapid_subject']|default=''}" class="layui-input">
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">{:lang('admin/system/configpush/vapid_subject_tip')}</div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/system/configpush/vapid_public')}：</label>
+                        <div class="layui-input-inline w400">
+                            <input type="text" id="vapid_public" name="push[vapid_public]" placeholder=""
+                                value="{$config['push']['vapid_public']|default=''}" class="layui-input">
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">{:lang('admin/system/configpush/vapid_public_tip')}</div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/system/configpush/vapid_private')}：</label>
+                        <div class="layui-input-inline w400">
+                            <input type="text" id="vapid_private" name="push[vapid_private]" placeholder=""
+                                value="{$config['push']['vapid_private']|default=''}" class="layui-input">
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">
+                            <button type="button" class="layui-btn layui-btn-sm" id="btnGenKey">{:lang('admin/system/configpush/genkey')}</button>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <div class="layui-input-block">
+                            <div class="layui-word-aux">{:lang('admin/system/configpush/genkey_tip')}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item center">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="formSubmit">{:lang('btn_save')}</button>
+                <button class="layui-btn layui-btn-primary" type="reset">{:lang('btn_reset')}</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['layer'], function () {
+        var layer = layui.layer;
+        document.getElementById('btnGenKey').addEventListener('click', function () {
+            layer.confirm("{:lang('admin/system/configpush/genkey_confirm')}", function (idx) {
+                layer.close(idx);
+                var load = layer.load(1);
+                $.ajax({
+                    url: "{:url('system/configpush')}",
+                    type: "get",
+                    dataType: "json",
+                    data: { op: 'genkey' },
+                    success: function (r) {
+                        layer.close(load);
+                        if (r.code == 1 && r.data && r.data.public && r.data.private) {
+                            document.getElementById('vapid_public').value = r.data.public;
+                            document.getElementById('vapid_private').value = r.data.private;
+                            layer.msg(r.msg, { time: 2000 });
+                        } else {
+                            layer.msg(r.msg || 'error', { time: 2000 });
+                        }
+                    },
+                    error: function () {
+                        layer.close(load);
+                        layer.msg('error', { time: 2000 });
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+
+</html>

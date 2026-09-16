@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>后台管理中心</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="js/css/style.css" rel="stylesheet" type="text/css" />
+<link href="js/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="js/css/styles1.css" title="styles1" media="screen" />
+<style>
+.submit_btn{background: #00b7ee;}
+</style>
+
+<style type="text/css">
+  html,body{height: 100%;position: relative;background-color:#5fb878!important;background-image: linear-gradient(to right bottom, #0066CC , #5fb878)!important;}
+  .admin_login{box-shadow:0 0 15px #555555;}
+</style>
+</head>
+<body onload="javascript:document.formsearch.userid.focus();">
+  <div class="admin_login">
+    <form method="post" action="login.php" name="formsearch" id="formsearch">
+	 <input type="hidden" name="gotopage" value="<?php if(!empty($gotopage)) echo $gotopage;?>" />
+      	<input type="hidden" name="dopost" value="login" />
+    <div class="admin_title">
+       <strong>海洋<span style="color:#5FB878">CMS</span> 站点管理系统</strong>
+       <em>SeA Content Management System</em>
+    </div>
+    <div class="admin_user">
+       <input type="text" name="userid" placeholder="管理员账号" class="login_txt">
+    </div>
+    <div class="admin_pwd">
+       <input type="password" name="pwd" placeholder="管理员密码" class="login_txt">
+    </div>
+	
+	<?php $v=file_get_contents("../data/admin/adminvcode.txt"); ?>
+    <div class="admin_val" style="<?php if($v==0) echo 'display:none;'; ?>">
+       <input type="text" name="validate" placeholder="验证码" maxlength="4" class="login_txt left" style="text-transform:uppercase;">
+       <div id="yzm" class="right"><img id='code_img' onClick="this.src=this.src+'?get=' + new Date()" src='../include/vdimgck.php'></div>
+    </div>
+	
+    <div class="admin_sub">
+<?php
+//检测后台目录是否更名
+$cdir=strtolower($cdir);
+if($cdir=="/admin/login.php")
+{
+	echo '<font style="color: #c10f0f;font-weight: bold;font-size: 12px;">后台目录名不能是admin，请修改后重试！';
+}
+else
+{
+	echo '<input type="submit" value="立即登陆" class="submit_btn">';
+}
+?>
+    </div>
+    <div class="admin_info">
+        <p style="color: #555">© SEACMS.COM</p>
+    </div>
+    </form>   
+  </div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+       
+	{include file="public/include"}
+	<link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/vod-search.css" />
+</head>
+
+<body>     	
+	{include file="public/th" /}
+    {include file="public/head"}
+	<div class="member-wrap" id="vodSearchPage" data-api-base="{:rtrim($maccms.path,'/').'/api.php'}" data-search-wd="{:htmlspecialchars(isset($param['wd']) ? $param['wd'] : '', ENT_QUOTES, 'UTF-8')}" data-search-by="{:htmlspecialchars(isset($param['by']) ? $param['by'] : 'time', ENT_QUOTES, 'UTF-8')}" data-search-page="{:htmlspecialchars(isset($param['page']) ? $param['page'] : '1', ENT_QUOTES, 'UTF-8')}">
+    <div class="container ">
+        {include file="ads/ads_all"}
+        <div class="left_row fl">        	
+        	<div class="pannel search_box clearfix">  
+				<div class="pannel_head clearfix">	
+					<h3 class="title">
+						<span data-lang="string_search_ssd">搜索到与"“</span>
+						<em>{$param.wd}{$param.actor}{$param.director}{$param.area}{$param.lang}{$param.year}{$param.class}</em>
+						<span data-lang="string_search_xgd">”"相关的</span>
+						<em class="mac_total"></em> <span data-lang="string_search_jg">条结果</span>
+					</h3>
+				</div>
+
+				<div class="wrapper_fl wrapper_tm" >
+					<ul class="screen_list sx_tz vod-search-sort clearfix">
+						<li {if condition="$param.by eq '' || $param.by eq 'time'" } class="hl_fl" {/if}>
+						<a data-lang="string_search_zx" href="{:mac_url_vod_search(array_merge($param, ['by' => 'time']))}">
+							<span data-lang="string_search_zx">按最新</span>
+						</a>
+						</li>
+						<li {if condition="$param.by eq 'hits'" } class="hl_fl" {/if}>
+						<a data-lang="string_search_zr" href="{:mac_url_vod_search(array_merge($param, ['by' => 'hits']))}">
+							<span data-lang="string_search_zr">按最热</span>
+						</a>
+						</li>
+						<li {if condition="$param.by eq 'score'" } class="hl_fl" {/if}>
+						<a data-lang="string_search_pf" href="{:mac_url_vod_search(array_merge($param, ['by' => 'score']))}">
+							<span data-lang="string_search_pf">按评分</span>
+						</a>
+						</li>
+					</ul>
+				</div>
+
+					
+				<ul class="vodlist clearfix">
+				</ul>		
+				<div id="vodSearchPagination"></div>
+				
+	            <div id="vodSearchEmpty" hidden>
+					{include file="public/notempty"}
+				</div>
+			</div>
+			{include file="ads/ads_vodw"} 
+			<div class="pannel clearfix" id="vodSearchFallbackPanel" hidden>
+				<div class="pannel_head clearfix">
+				    <a class="text_muted pull_right" href="{:mac_url('map/index')}">
+						<span data-lang="string_type_more2">更多</span>
+						<i class="iconfont more_i">&#xe623;</i>
+					</a>
+					<h3 class="title">
+						<span data-lang="string_zuixin">最新</span>
+					</h3>						
+				</div>
+				<ul class="vodlist clearfix">
+					{maccms:vod num="6" type="all" order="desc" by="time"}
+					{include file="widget/search_box"}		
+					{/maccms:vod}
+				</ul>
+			</div>
+	      
+        </div>
+        <div class="right_row fr pa_left hidden_xs hidden_mi">
+            {include file="ads/ads_vodr"}
+            
+			<div class="pannel clearfix">
+				<div class="pannel_head clearfix">
+					<h3 class="title" data-lang="string_art_hot">
+						热播影视
+					</h3>						
+				</div>
+				<ul class="ranklist_r clearfix">
+					{maccms:vod num="10" type="all" order="desc" by="hits_week"}
+					{include file="widget/rank_box_text"}		
+					{/maccms:vod}
+				</ul>
+			</div>
+			
+        </div>
+    </div>
+</div>
+	{include file="public/foot"}
+	<script src="{$maccms.path_tpl}/asset/js/vod-search-page.js"></script>
+</body>
+</html>

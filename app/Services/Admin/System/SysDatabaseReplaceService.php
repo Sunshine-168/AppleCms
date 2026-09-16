@@ -4,7 +4,6 @@ namespace App\Services\Admin\System;
 
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\DB;
-use function App\Services\System\config;
 
 /**
  * 数据库数据批量替换服务（安全版）

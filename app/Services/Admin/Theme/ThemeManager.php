@@ -2,9 +2,6 @@
 
 namespace App\Services\Admin\Theme;
 
-use function App\Services\Theme\config;
-use function App\Services\Theme\resource_path;
-
 class ThemeManager
 {
     protected string $theme;

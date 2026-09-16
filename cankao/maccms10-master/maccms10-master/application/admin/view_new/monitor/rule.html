@@ -1,0 +1,122 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <div class="my-toolbar-box mb-2">
+        <div class="flex gap-5 overflow-x-auto">
+            <a class="layui-btn" href="{:url('rule_info')}">{:lang('admin/monitor/rule_add')}</a>
+            <button class="layui-btn layui-btn-normal" id="enableRecommended">{:lang('admin/monitor/enable_recommended')}</button>
+            <a class="layui-btn layui-btn-primary" href="{:url('event')}">{:lang('admin/monitor/title_event')}</a>
+            <a class="layui-btn layui-btn-primary" href="{:url('setting')}">{:lang('admin/monitor/title_setting')}</a>
+        </div>
+        <div style="color:#666;font-size:12px;margin-top:6px;">
+            {:lang('admin/monitor/rule_default_off_hint')}
+        </div>
+    </div>
+
+    <table class="layui-table" lay-size="sm">
+        <thead>
+        <tr>
+            <th>{:lang('admin/monitor/f_rule_name')}</th>
+            <th>{:lang('admin/monitor/f_metric')}</th>
+            <th>{:lang('admin/monitor/f_condition')}</th>
+            <th>{:lang('admin/monitor/f_for_min')}</th>
+            <th>{:lang('admin/monitor/f_severity')}</th>
+            <th>{:lang('admin/monitor/f_channels')}</th>
+            <th>{:lang('status')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="r"}
+        <tr>
+            <td>{$r.rule_name}</td>
+            <td><code>{$r.rule_metric}</code></td>
+            <td>{$r.rule_agg}({$r.rule_window_min}m) {$r.rule_op} {$r.rule_threshold}</td>
+            <td>{$r.rule_for_min}m</td>
+            <td>
+                {if condition="$r['rule_severity'] eq 3"}<span class="layui-badge">{:lang('admin/monitor/sev_critical')}</span>
+                {elseif condition="$r['rule_severity'] eq 2" /}<span class="layui-badge layui-bg-orange">{:lang('admin/monitor/sev_warning')}</span>
+                {else /}<span class="layui-badge layui-bg-gray">{:lang('admin/monitor/sev_info')}</span>{/if}
+            </td>
+            <td>{$r.rule_channels}</td>
+            <td>
+                <input type="checkbox" lay-filter="ruleStatus" lay-skin="switch"
+                       lay-text="{:lang('open')}|{:lang('close')}"
+                       data-id="{$r.rule_id}" {if condition="$r['rule_status'] eq 1"}checked{/if}>
+            </td>
+            <td>
+                <a class="layui-btn layui-btn-xs" href="{:url('rule_info',['id'=>$r['rule_id']])}">{:lang('edit')}</a>
+                <button class="layui-btn layui-btn-xs layui-btn-danger rule-del" data-id="{$r.rule_id}">{:lang('del')}</button>
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+    <div class="layui-card mt-2">
+        <div class="layui-card-header">{:lang('admin/monitor/test_push')}</div>
+        <div class="layui-card-body">
+            <div class="flex gap-5 overflow-x-auto">
+                {foreach name="push_channels" item="ch"}
+                <button class="layui-btn layui-btn-sm layui-btn-primary test-push" data-ch="{$ch}">{$ch}</button>
+                {/foreach}
+            </div>
+            <div style="color:#666;font-size:12px;margin-top:6px;">{:lang('admin/monitor/test_push_hint')}</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var FIELD_URL = "{:url('rule_field')}";
+    var DEL_URL = "{:url('rule_del')}";
+    var TEST_URL = "{:url('rule_test')}";
+    var RECOMMEND_URL = "{:url('rule_enable_recommended')}";
+
+    layui.use(['form'], function () {
+        var form = layui.form;
+        form.render();
+
+        form.on('switch(ruleStatus)', function (data) {
+            var fd = new FormData();
+            fd.append('id', data.elem.getAttribute('data-id'));
+            fd.append('status', data.elem.checked ? '1' : '0');
+            fetch(FIELD_URL, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) { layer.msg(res.msg); });
+        });
+    });
+
+    document.querySelectorAll('.rule-del').forEach(function (b) {
+        b.addEventListener('click', function () {
+            layer.confirm("{:lang('del_confirm')}", function (idx) {
+                layer.close(idx);
+                fetch(DEL_URL + '?id=' + b.getAttribute('data-id'), {credentials: 'same-origin'})
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) { layer.msg(res.msg); if (res.code === 1) { location.reload(); } });
+            });
+        });
+    });
+
+    document.querySelectorAll('.test-push').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var fd = new FormData();
+            fd.append('channel', b.getAttribute('data-ch'));
+            var load = layer.load(1);
+            fetch(TEST_URL, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    layer.close(load);
+                    if (res.code === 1) { layer.msg(res.msg, {icon: 1}); }
+                    else { layer.alert(res.msg, {icon: 2}); }
+                })
+                .catch(function (e) { layer.close(load); layer.alert(String(e), {icon: 2}); });
+        });
+    });
+
+    document.getElementById('enableRecommended').addEventListener('click', function () {
+        fetch(RECOMMEND_URL, {method: 'POST', credentials: 'same-origin'})
+            .then(function (r) { return r.json(); })
+            .then(function (res) { layer.msg(res.msg); if (res.code === 1) { location.reload(); } });
+    });
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

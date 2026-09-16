@@ -1,0 +1,2564 @@
+<?php
+return array (
+  1 => 
+  array (
+    'name' => lang('menu/index'),
+    'icon' => 'xe625',
+    'sub' => 
+    array (
+      11 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/welcome'),
+        'controller' => 'index',
+        'action' => 'welcome',
+      ),
+      12 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/quickmenu'),
+        'controller' => 'index',
+        'action' => 'quickmenu',
+      ),
+      1001 => 
+      array (
+        'show' => 0,
+        'name' => '--切换布局',
+        'controller' => 'index',
+        'action' => 'iframe',
+      ),
+      1002 => 
+      array (
+        'show' => 0,
+        'name' => '--清理缓存',
+        'controller' => 'index',
+        'action' => 'clear',
+      ),
+      1003 => 
+      array (
+        'show' => 0,
+        'name' => '--锁屏解锁',
+        'controller' => 'index',
+        'action' => 'unlocked',
+      ),
+      1004 => 
+      array (
+        'show' => 0,
+        'name' => '--公共下拉选择框',
+        'controller' => 'index',
+        'action' => 'select',
+      ),
+      1005 => 
+      array (
+        'show' => 0,
+        'name' => '--文件上传',
+        'controller' => 'upload',
+        'action' => 'upload',
+      ),
+    ),
+  ),
+  2 => 
+  array (
+    'name' => lang('menu/system'),
+    'icon' => 'xe62e',
+    'sub' => 
+    array (
+      21 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/config'),
+        'controller' => 'system',
+        'action' => 'config',
+      ),
+      210 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configseo'),
+        'controller' => 'system',
+        'action' => 'configseo',
+      ),
+      211 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configuser'),
+        'controller' => 'system',
+        'action' => 'configuser',
+      ),
+      2111 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/configuseraccess'),
+        'controller' => 'system',
+        'action' => 'configuseraccess',
+      ),
+      212 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configcomment'),
+        'controller' => 'system',
+        'action' => 'configcomment',
+      ),
+      213 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configupload'),
+        'controller' => 'system',
+        'action' => 'configupload',
+      ),
+      214 =>
+      array (
+        'show' => 0,
+        'name' => lang('menu/configaiseo'),
+        'controller' => 'system',
+        'action' => 'configaiseo',
+      ),
+      2141 =>
+      array (
+        'show' => 0,
+        'name' => lang('menu/configaicover'),
+        'controller' => 'system',
+        'action' => 'configaicover',
+      ),
+      215 =>
+      array (
+        'show' => 1,
+
+        'name' => lang('menu/configaisearch'),
+        'controller' => 'system',
+        'action' => 'configaisearch',
+      ),
+      
+      2151 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/meilisearch_save'),
+        'controller' => 'meilisearch',
+        'action' => 'save',
+      ),
+      2152 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/meilisearch_status'),
+        'controller' => 'meilisearch',
+        'action' => 'status',
+      ),
+      2153 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/meilisearch_selfcheck'),
+        'controller' => 'meilisearch',
+        'action' => 'selfcheck',
+      ),
+      2154 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/meilisearch_sync'),
+        'controller' => 'meilisearch',
+        'action' => 'sync',
+      ),
+      2155 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/meilisearch_setup'),
+        'controller' => 'meilisearch',
+        'action' => 'setup',
+      ),
+      216 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/meilisearch'),
+        'controller' => 'meilisearch',
+        'action' => 'index',
+      ),
+      217 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/configassistant'),
+        'controller' => 'system',
+        'action' => 'configassistant',
+      ),
+      218 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/configthemeai'),
+        'controller' => 'system',
+        'action' => 'configthemeai',
+      ),
+      219 =>
+      array (
+        'show' => 1,
+        'name' => lang('admin/system/configaicontent'),
+        'controller' => 'system',
+        'action' => 'configaicontent',
+      ),
+
+      22 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configurl'),
+        'controller' => 'system',
+        'action' => 'configurl',
+      ),
+      23 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configplay'),
+        'controller' => 'system',
+        'action' => 'configplay',
+      ),
+      24 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configcollect'),
+        'controller' => 'system',
+        'action' => 'configcollect',
+      ),
+      25 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configinterface'),
+        'controller' => 'system',
+        'action' => 'configinterface',
+      ),
+      26 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configapi'),
+        'controller' => 'system',
+        'action' => 'configapi',
+      ),
+      27 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configconnect'),
+        'controller' => 'system',
+        'action' => 'configconnect',
+      ),
+      28 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configpay'),
+        'controller' => 'system',
+        'action' => 'configpay',
+      ),
+      29 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/configweixin'),
+        'controller' => 'system',
+        'action' => 'configweixin',
+      ),
+      291 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configemail'),
+        'controller' => 'system',
+        'action' => 'configemail',
+      ),
+      292 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configsms'),
+        'controller' => 'system',
+        'action' => 'configsms',
+      ),
+      293 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/configpush'),
+        'controller' => 'system',
+        'action' => 'configpush',
+      ),
+
+      2910 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/timming'),
+        'controller' => 'timming',
+        'action' => 'index',
+      ),
+      2911 => 
+      array (
+        'show' => 0,
+        'name' => '--定时任务信息维护',
+        'controller' => 'timming',
+        'action' => 'info',
+      ),
+      2912 => 
+      array (
+        'show' => 0,
+        'name' => '--定时任务删除',
+        'controller' => 'timming',
+        'action' => 'del',
+      ),
+      2913 => 
+      array (
+        'show' => 0,
+        'name' => '--定时任务状态',
+        'controller' => 'timming',
+        'action' => 'field',
+      ),
+      2920 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/domain'),
+        'controller' => 'domain',
+        'action' => 'index',
+      ),
+      2922 => 
+      array (
+        'show' => 0,
+        'name' => '--站群删除',
+        'controller' => 'domain',
+        'action' => 'del',
+      ),
+      2923 => 
+      array (
+        'show' => 0,
+        'name' => '--站群导出',
+        'controller' => 'domain',
+        'action' => 'export',
+      ),
+      2924 =>
+      array (
+        'show' => 0,
+        'name' => '--站群导入',
+        'controller' => 'domain',
+        'action' => 'import',
+      ),
+      295 =>
+      array (
+        'show' => 1,
+        'name' => lang('admin/apidoc/title'),
+        'controller' => 'api_doc',
+        'action' => 'index',
+      ),
+      2951 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/apidoc/openapi_menu'),
+        'controller' => 'api_doc',
+        'action' => 'openapi',
+      ),
+    ),
+  ),
+  3 =>
+  array (
+    'name' => lang('menu/base'),
+    'icon' => 'xe64b',
+    'sub' => 
+    array (
+      31 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/type'),
+        'controller' => 'type',
+        'action' => 'index',
+      ),
+      3101 => 
+      array (
+        'show' => 0,
+        'name' => '--分类信息维护',
+        'controller' => 'type',
+        'action' => 'info',
+      ),
+      3102 => 
+      array (
+        'show' => 0,
+        'name' => '--分类批量修改',
+        'controller' => 'type',
+        'action' => 'batch',
+      ),
+      3103 => 
+      array (
+        'show' => 0,
+        'name' => '--分类删除',
+        'controller' => 'type',
+        'action' => 'del',
+      ),
+      3104 => 
+      array (
+        'show' => 0,
+        'name' => '--分类状态',
+        'controller' => 'type',
+        'action' => 'field',
+      ),
+      3105 => 
+      array (
+        'show' => 0,
+        'name' => '--分类扩展配置信息',
+        'controller' => 'type',
+        'action' => 'extend',
+      ),
+      32 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/topic'),
+        'controller' => 'topic',
+        'action' => 'data',
+      ),
+      3201 => 
+      array (
+        'show' => 0,
+        'name' => '--专题信息维护',
+        'controller' => 'topic',
+        'action' => 'info',
+      ),
+      3202 => 
+      array (
+        'show' => 0,
+        'name' => '--专题批量修改',
+        'controller' => 'topic',
+        'action' => 'batch',
+      ),
+      3203 => 
+      array (
+        'show' => 0,
+        'name' => '--专题删除',
+        'controller' => 'topic',
+        'action' => 'del',
+      ),
+      3204 => 
+      array (
+        'show' => 0,
+        'name' => '--专题状态',
+        'controller' => 'topic',
+        'action' => 'field',
+      ),
+      33 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/link'),
+        'controller' => 'link',
+        'action' => 'index',
+      ),
+      3301 => 
+      array (
+        'show' => 0,
+        'name' => '--友链信息维护',
+        'controller' => 'link',
+        'action' => 'info',
+      ),
+      3302 => 
+      array (
+        'show' => 0,
+        'name' => '--友链批量修改',
+        'controller' => 'link',
+        'action' => 'batch',
+      ),
+      3303 => 
+      array (
+        'show' => 0,
+        'name' => '--友链删除',
+        'controller' => 'link',
+        'action' => 'del',
+      ),
+      3304 => 
+      array (
+        'show' => 0,
+        'name' => '--友链状态',
+        'controller' => 'link',
+        'action' => 'field',
+      ),
+      34 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/gbook'),
+        'controller' => 'gbook',
+        'action' => 'data',
+      ),
+      3401 => 
+      array (
+        'show' => 0,
+        'name' => '--留言信息维护',
+        'controller' => 'gbook',
+        'action' => 'info',
+      ),
+      3402 => 
+      array (
+        'show' => 0,
+        'name' => '--留言删除',
+        'controller' => 'gbook',
+        'action' => 'del',
+      ),
+      3404 => 
+      array (
+        'show' => 0,
+        'name' => '--留言状态',
+        'controller' => 'gbook',
+        'action' => 'field',
+      ),
+      35 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/comment'),
+        'controller' => 'comment',
+        'action' => 'data',
+      ),
+      3501 => 
+      array (
+        'show' => 0,
+        'name' => '--评论信息维护',
+        'controller' => 'comment',
+        'action' => 'info',
+      ),
+      3502 => 
+      array (
+        'show' => 0,
+        'name' => '--评论删除',
+        'controller' => 'comment',
+        'action' => 'del',
+      ),
+      3504 => 
+      array (
+        'show' => 0,
+        'name' => '--评论状态',
+        'controller' => 'comment',
+        'action' => 'field',
+      ),
+      36 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/chatroom'),
+        'controller' => 'chatroom',
+        'action' => 'data',
+      ),
+      3610 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'chatroom',
+        'action' => 'del',
+      ),
+      3611 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('status'),
+        'controller' => 'chatroom',
+        'action' => 'field',
+      ),
+      37 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/danmaku'),
+        'controller' => 'danmaku',
+        'action' => 'data',
+      ),
+      3710 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'danmaku',
+        'action' => 'del',
+      ),
+      3711 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('status'),
+        'controller' => 'danmaku',
+        'action' => 'field',
+      ),
+      39 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/task'),
+        'controller' => 'task',
+        'action' => 'data',
+      ),
+      3901 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('add'),
+        'controller' => 'task',
+        'action' => 'info',
+      ),
+      3902 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'task',
+        'action' => 'del',
+      ),
+      3903 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('status'),
+        'controller' => 'task',
+        'action' => 'field',
+      ),
+      3904 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/task_log'),
+        'controller' => 'task',
+        'action' => 'log',
+      ),
+      3905 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'task',
+        'action' => 'log_del',
+      ),
+      3910 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/sign_milestone'),
+        'controller' => 'sign_milestone',
+        'action' => 'data',
+      ),
+      3911 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('add'),
+        'controller' => 'sign_milestone',
+        'action' => 'info',
+      ),
+      3912 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'sign_milestone',
+        'action' => 'del',
+      ),
+      3913 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('status'),
+        'controller' => 'sign_milestone',
+        'action' => 'field',
+      ),
+      38 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/images'),
+        'controller' => 'annex',
+        'action' => 'data',
+      ),
+      3604 => 
+      array (
+        'show' => 0,
+        'name' => '--附件文件夹',
+        'controller' => 'annex',
+        'action' => 'file',
+      ),
+      3605 => 
+      array (
+        'show' => 0,
+        'name' => '--附件检测',
+        'controller' => 'annex',
+        'action' => 'check',
+      ),
+      3606 => 
+      array (
+        'show' => 0,
+        'name' => '--附件数据初始化',
+        'controller' => 'annex',
+        'action' => 'init',
+      ),
+      3601 => 
+      array (
+        'show' => 0,
+        'name' => '--附件删除',
+        'controller' => 'annex',
+        'action' => 'del',
+      ),
+      3602 => 
+      array (
+        'show' => 0,
+        'name' => '--同步图片选项',
+        'controller' => 'images',
+        'action' => 'opt',
+      ),
+      3603 => 
+      array (
+        'show' => 0,
+        'name' => '--同步图片方法',
+        'controller' => 'images',
+        'action' => 'sync',
+      ),
+    ),
+  ),
+  5 => 
+  array (
+    'name' => lang('menu/art'),
+    'icon' => 'xe616',
+    'sub' => 
+    array (
+      51 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_data'),
+        'controller' => 'art',
+        'action' => 'data',
+      ),
+      5101 => 
+      array (
+        'show' => 0,
+        'name' => '--文章信息维护',
+        'controller' => 'art',
+        'action' => 'info',
+      ),
+      5102 => 
+      array (
+        'show' => 0,
+        'name' => '--文章删除',
+        'controller' => 'art',
+        'action' => 'del',
+      ),
+      5103 => 
+      array (
+        'show' => 0,
+        'name' => '--文章状态',
+        'controller' => 'art',
+        'action' => 'field',
+      ),
+      52 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_add'),
+        'controller' => 'art',
+        'action' => 'info',
+      ),
+      53 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_data_lock'),
+        'controller' => 'art',
+        'action' => 'data',
+        'param' => 'lock=1',
+      ),
+      54 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_data_audit'),
+        'controller' => 'art',
+        'action' => 'data',
+        'param' => 'status=0',
+      ),
+      59 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_batch'),
+        'controller' => 'art',
+        'action' => 'batch',
+      ),
+      591 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/art_repeat'),
+        'controller' => 'art',
+        'action' => 'data',
+        'param' => 'repeat=1',
+      ),
+    ),
+  ),
+  13 => 
+  array (
+    'name' => lang('manga'),
+    'icon' => 'xe616',
+    'sub' => 
+    array (
+      131 => 
+      array (
+        'show' => 1,
+        'name' => lang('admin/manga/title'),
+        'controller' => 'manga',
+        'action' => 'data',
+      ),
+      13101 => 
+      array (
+        'show' => 0,
+        'name' => '--漫画信息维护',
+        'controller' => 'manga',
+        'action' => 'info',
+      ),
+      13102 => 
+      array (
+        'show' => 0,
+        'name' => '--漫画删除',
+        'controller' => 'manga',
+        'action' => 'del',
+      ),
+      13103 => 
+      array (
+        'show' => 0,
+        'name' => '--漫画状态',
+        'controller' => 'manga',
+        'action' => 'field',
+      ),
+      132 => 
+      array (
+        'show' => 1,
+        'name' => lang('add'),
+        'controller' => 'manga',
+        'action' => 'info',
+      ),
+      133 => 
+      array (
+        'show' => 1,
+        'name' => lang('lock'),
+        'controller' => 'manga',
+        'action' => 'data',
+        'param' => 'lock=1',
+      ),
+      134 => 
+      array (
+        'show' => 1,
+        'name' => lang('reviewed_not'),
+        'controller' => 'manga',
+        'action' => 'data',
+        'param' => 'status=0',
+      ),
+      139 => 
+      array (
+        'show' => 1,
+        'name' => lang('multi_set'),
+        'controller' => 'manga',
+        'action' => 'batch',
+      ),
+      1391 => 
+      array (
+        'show' => 1,
+        'name' => lang('duplicate_data'),
+        'controller' => 'manga',
+        'action' => 'data',
+        'param' => 'repeat=1',
+      ),
+      1392 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/manga_data_url_empty'),
+        'controller' => 'manga',
+        'action' => 'data',
+        'param' => 'url=1',
+      ),
+      1393 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/manga_data_points'),
+        'controller' => 'manga',
+        'action' => 'data',
+        'param' => 'points=1',
+      ),
+    ),
+  ),
+  4 => 
+  array (
+    'name' => lang('menu/vod'),
+    'icon' => 'xe639',
+    'sub' => 
+    array (
+      41 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/server'),
+        'controller' => 'vodserver',
+        'action' => 'index',
+      ),
+      4101 => 
+      array (
+        'show' => 0,
+        'name' => '--服务器组信息维护',
+        'controller' => 'vodserver',
+        'action' => 'info',
+      ),
+      4102 => 
+      array (
+        'show' => 0,
+        'name' => '--服务器组删除',
+        'controller' => 'vodserver',
+        'action' => 'del',
+      ),
+      4103 => 
+      array (
+        'show' => 0,
+        'name' => '--服务器组状态',
+        'controller' => 'vodserver',
+        'action' => 'field',
+      ),
+      42 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/player'),
+        'controller' => 'vodplayer',
+        'action' => 'index',
+      ),
+      4201 => 
+      array (
+        'show' => 0,
+        'name' => '--播放器信息维护',
+        'controller' => 'vodplayer',
+        'action' => 'info',
+      ),
+      4202 => 
+      array (
+        'show' => 0,
+        'name' => '--播放器删除',
+        'controller' => 'vodplayer',
+        'action' => 'del',
+      ),
+      4203 => 
+      array (
+        'show' => 0,
+        'name' => '--播放器组状态',
+        'controller' => 'vodplayer',
+        'action' => 'field',
+      ),
+      43 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/downer'),
+        'controller' => 'voddowner',
+        'action' => 'index',
+      ),
+      4301 => 
+      array (
+        'show' => 0,
+        'name' => '--下载器信息维护',
+        'controller' => 'voddowner',
+        'action' => 'info',
+      ),
+      4302 => 
+      array (
+        'show' => 0,
+        'name' => '--下载器删除',
+        'controller' => 'voddowner',
+        'action' => 'del',
+      ),
+      4303 => 
+      array (
+        'show' => 0,
+        'name' => '--下载器组状态',
+        'controller' => 'voddowner',
+        'action' => 'field',
+      ),
+      44 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data'),
+        'controller' => 'vod',
+        'action' => 'data',
+      ),
+      4401 => 
+      array (
+        'show' => 0,
+        'name' => '--视频信息维护',
+        'controller' => 'vod',
+        'action' => 'info',
+      ),
+      4402 => 
+      array (
+        'show' => 0,
+        'name' => '--视频删除',
+        'controller' => 'vod',
+        'action' => 'del',
+      ),
+      4403 => 
+      array (
+        'show' => 0,
+        'name' => '--视频状态',
+        'controller' => 'vod',
+        'action' => 'field',
+      ),
+      4405 => 
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/vod_audit_select_status'),
+        'controller' => 'vod',
+        'action' => 'selectStatus',
+      ),
+      45 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_add'),
+        'controller' => 'vod',
+        'action' => 'info',
+      ),
+      46 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_url_empty'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'url=1',
+      ),
+      47 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_lock'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'lock=1',
+      ),
+      48 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_audit'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'status=0',
+      ),
+      483 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_rejected'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'status=2',
+      ),
+      485 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_draft'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'status=3',
+      ),
+      486 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_scheduled'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'status=4',
+      ),
+      484 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_audit_rule'),
+        'controller' => 'vodauditrule',
+        'action' => 'index',
+      ),
+      48401 => 
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/vod_audit_rule_info'),
+        'controller' => 'vodauditrule',
+        'action' => 'info',
+      ),
+      48402 => 
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/vod_audit_rule_del'),
+        'controller' => 'vodauditrule',
+        'action' => 'del',
+      ),
+      48403 => 
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/vod_audit_rule_field'),
+        'controller' => 'vodauditrule',
+        'action' => 'field',
+      ),
+      4404 => 
+      array (
+        'show' => 0,
+        'name' => '--'.lang('menu/vod_audit_batch'),
+        'controller' => 'vod',
+        'action' => 'audit',
+      ),
+      481 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_points'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'points=1',
+      ),
+      482 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_data_plot'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'plot=1',
+      ),
+      49 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_batch'),
+        'controller' => 'vod',
+        'action' => 'batch',
+      ),
+      491 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vod_repeat'),
+        'controller' => 'vod',
+        'action' => 'data',
+        'param' => 'repeat=1',
+      ),
+      495 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/actor'),
+        'controller' => 'actor',
+        'action' => 'data',
+        'param' => '',
+      ),
+      4951 => 
+      array (
+        'show' => 0,
+        'name' => '--演员信息维护',
+        'controller' => 'actor',
+        'action' => 'info',
+      ),
+      4952 => 
+      array (
+        'show' => 0,
+        'name' => '--演员删除',
+        'controller' => 'actor',
+        'action' => 'del',
+      ),
+      4953 => 
+      array (
+        'show' => 0,
+        'name' => '--演员状态',
+        'controller' => 'actor',
+        'action' => 'field',
+      ),
+      4954 => 
+      array (
+        'show' => 0,
+        'name' => '--添加演员',
+        'controller' => 'actor',
+        'action' => 'info',
+      ),
+      496 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/role'),
+        'controller' => 'role',
+        'action' => 'data',
+        'param' => '',
+      ),
+      4961 => 
+      array (
+        'show' => 0,
+        'name' => '--角色信息维护',
+        'controller' => 'role',
+        'action' => 'info',
+      ),
+      4962 => 
+      array (
+        'show' => 0,
+        'name' => '--角色删除',
+        'controller' => 'role',
+        'action' => 'del',
+      ),
+      4963 => 
+      array (
+        'show' => 0,
+        'name' => '--角色状态',
+        'controller' => 'role',
+        'action' => 'field',
+      ),
+      4964 => 
+      array (
+        'show' => 0,
+        'name' => '--添加角色',
+        'controller' => 'role',
+        'action' => 'info',
+      ),
+      497 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/vodplayfail'),
+        'controller' => 'vodplayfail',
+        'action' => 'index',
+      ),
+      4971 => 
+      array (
+        'show' => 0,
+        'name' => '--播放失败统计删除',
+        'controller' => 'vodplayfail',
+        'action' => 'del',
+      ),
+    ),
+  ),
+  12 => 
+  array (
+    'name' => lang('menu/website'),
+    'icon' => 'xe616',
+    'sub' => 
+    array (
+      121 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_data'),
+        'controller' => 'website',
+        'action' => 'data',
+      ),
+      12101 => 
+      array (
+        'show' => 0,
+        'name' => '--网址信息维护',
+        'controller' => 'website',
+        'action' => 'info',
+      ),
+      12102 => 
+      array (
+        'show' => 0,
+        'name' => '--网址删除',
+        'controller' => 'website',
+        'action' => 'del',
+      ),
+      12103 => 
+      array (
+        'show' => 0,
+        'name' => '--网址状态',
+        'controller' => 'website',
+        'action' => 'field',
+      ),
+      122 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_add'),
+        'controller' => 'website',
+        'action' => 'info',
+      ),
+      123 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_data_lock'),
+        'controller' => 'website',
+        'action' => 'data',
+        'param' => 'lock=1',
+      ),
+      124 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_data_audit'),
+        'controller' => 'website',
+        'action' => 'data',
+        'param' => 'status=0',
+      ),
+      129 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_batch'),
+        'controller' => 'website',
+        'action' => 'batch',
+      ),
+      1291 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/website_repeat'),
+        'controller' => 'website',
+        'action' => 'data',
+        'param' => 'repeat=1',
+      ),
+    ),
+  ),
+  6 => 
+  array (
+    'name' => lang('menu/users'),
+    'icon' => 'xe62c',
+    'sub' => 
+    array (
+      61 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/admin'),
+        'controller' => 'admin',
+        'action' => 'index',
+      ),
+      6101 => 
+      array (
+        'show' => 0,
+        'name' => '--管理员信息维护',
+        'controller' => 'admin',
+        'action' => 'info',
+      ),
+      6102 => 
+      array (
+        'show' => 0,
+        'name' => '--管理员删除',
+        'controller' => 'admin',
+        'action' => 'del',
+      ),
+      6103 => 
+      array (
+        'show' => 0,
+        'name' => '--管理员状态',
+        'controller' => 'admin',
+        'action' => 'field',
+      ),
+      62 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/group'),
+        'controller' => 'group',
+        'action' => 'index',
+      ),
+      6201 => 
+      array (
+        'show' => 0,
+        'name' => '--会员组信息维护',
+        'controller' => 'group',
+        'action' => 'info',
+      ),
+      6202 => 
+      array (
+        'show' => 0,
+        'name' => '--会员组删除',
+        'controller' => 'group',
+        'action' => 'del',
+      ),
+      6203 => 
+      array (
+        'show' => 0,
+        'name' => '--会员组状态',
+        'controller' => 'group',
+        'action' => 'field',
+      ),
+      63 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/user'),
+        'controller' => 'user',
+        'action' => 'data',
+      ),
+      6301 => 
+      array (
+        'show' => 0,
+        'name' => '--会员信息维护',
+        'controller' => 'user',
+        'action' => 'info',
+      ),
+      6302 => 
+      array (
+        'show' => 0,
+        'name' => '--会员删除',
+        'controller' => 'user',
+        'action' => 'del',
+      ),
+      6303 => 
+      array (
+        'show' => 0,
+        'name' => '--会员状态',
+        'controller' => 'user',
+        'action' => 'field',
+      ),
+      64 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/card'),
+        'controller' => 'card',
+        'action' => 'index',
+      ),
+      6401 => 
+      array (
+        'show' => 0,
+        'name' => '--充值卡信息维护',
+        'controller' => 'card',
+        'action' => 'info',
+      ),
+      6402 => 
+      array (
+        'show' => 0,
+        'name' => '--充值卡删除',
+        'controller' => 'card',
+        'action' => 'del',
+      ),
+      641 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/mall_goods'),
+        'controller' => 'mall_goods',
+        'action' => 'index',
+      ),
+      6411 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('add'),
+        'controller' => 'mall_goods',
+        'action' => 'info',
+      ),
+      6412 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'mall_goods',
+        'action' => 'del',
+      ),
+      6413 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('status'),
+        'controller' => 'mall_goods',
+        'action' => 'field',
+      ),
+      65 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/order'),
+        'controller' => 'order',
+        'action' => 'index',
+      ),
+      6501 => 
+      array (
+        'show' => 0,
+        'name' => '--订单删除',
+        'controller' => 'order',
+        'action' => 'del',
+      ),
+      66 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/ulog'),
+        'controller' => 'ulog',
+        'action' => 'index',
+      ),
+      6601 => 
+      array (
+        'show' => 0,
+        'name' => '--访问日志删除',
+        'controller' => 'ulog',
+        'action' => 'del',
+      ),
+      661 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/user_access_log'),
+        'controller' => 'user_access_log',
+        'action' => 'index',
+      ),
+      6611 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'user_access_log',
+        'action' => 'del',
+      ),
+      6612 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('detail'),
+        'controller' => 'user_access_log',
+        'action' => 'info',
+      ),
+      6613 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/monitor/ban'),
+        'controller' => 'user_access_log',
+        'action' => 'ban',
+      ),
+      6614 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/monitor/unban'),
+        'controller' => 'user_access_log',
+        'action' => 'unban',
+      ),
+      67 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/plog'),
+        'controller' => 'plog',
+        'action' => 'index',
+      ),
+      671 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/analytics'),
+        'controller' => 'analytics',
+        'action' => 'index',
+      ),
+      6711 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/system/configanalytics'),
+        'controller' => 'system',
+        'action' => 'configanalytics',
+      ),
+      6701 => 
+      array (
+        'show' => 0,
+        'name' => '--积分日志删除',
+        'controller' => 'plog',
+        'action' => 'del',
+      ),
+      69 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/notify'),
+        'controller' => 'notify',
+        'action' => 'index',
+      ),
+      6901 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('notify/admin_broadcast'),
+        'controller' => 'notify',
+        'action' => 'info',
+      ),
+      6902 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'notify',
+        'action' => 'del',
+      ),
+      6903 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('notify/admin_broadcast'),
+        'controller' => 'notify',
+        'action' => 'broadcast',
+      ),
+      6904 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('set'),
+        'controller' => 'notify',
+        'action' => 'field',
+      ),
+      67101 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/analytics/auth_trend'),
+        'controller' => 'analytics',
+        'action' => 'trend',
+      ),
+      67102 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/analytics/auth_export'),
+        'controller' => 'analytics',
+        'action' => 'export',
+      ),
+      672 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/adminaudit'),
+        'controller' => 'adminaudit',
+        'action' => 'index',
+      ),
+      67201 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/adminaudit/menu_info'),
+        'controller' => 'adminaudit',
+        'action' => 'info',
+      ),
+      673 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/aiannotation'),
+        'controller' => 'ai_annotation',
+        'action' => 'index',
+      ),
+      6731 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/aiannotation/generate'),
+        'controller' => 'ai_annotation',
+        'action' => 'generate',
+      ),
+      6732 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/aiannotation/adopt'),
+        'controller' => 'ai_annotation',
+        'action' => 'adopt',
+      ),
+      6733 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/aiannotation/reject'),
+        'controller' => 'ai_annotation',
+        'action' => 'reject',
+      ),
+      674 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/content_quality'),
+        'controller' => 'content_quality',
+        'action' => 'index',
+      ),
+      6741 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('admin/content_quality/mark_recommend'),
+        'controller' => 'content_quality',
+        'action' => 'markRecommend',
+      ),
+      68 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/cash'),
+        'controller' => 'cash',
+        'action' => 'index',
+      ),
+      6801 => 
+      array (
+        'show' => 0,
+        'name' => '--提现删除',
+        'controller' => 'cash',
+        'action' => 'del',
+      ),
+      6802 => 
+      array (
+        'show' => 0,
+        'name' => '--提现审核',
+        'controller' => 'cash',
+        'action' => 'audit',
+      ),
+      691 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/coupon'),
+        'controller' => 'coupon',
+        'action' => 'index',
+      ),
+      69101 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('add'),
+        'controller' => 'coupon',
+        'action' => 'info',
+      ),
+      69102 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'coupon',
+        'action' => 'del',
+      ),
+      69103 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('set'),
+        'controller' => 'coupon',
+        'action' => 'field',
+      ),
+      69104 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('save'),
+        'controller' => 'coupon',
+        'action' => 'save',
+      ),
+      692 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/seckill'),
+        'controller' => 'seckill',
+        'action' => 'index',
+      ),
+      69201 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('add'),
+        'controller' => 'seckill',
+        'action' => 'info',
+      ),
+      69202 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('del'),
+        'controller' => 'seckill',
+        'action' => 'del',
+      ),
+      69203 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('set'),
+        'controller' => 'seckill',
+        'action' => 'field',
+      ),
+      69204 =>
+      array (
+        'show' => 0,
+        'name' => '--'.lang('save'),
+        'controller' => 'seckill',
+        'action' => 'save',
+      ),
+    ),
+  ),
+  7 => 
+  array (
+    'name' => lang('menu/templates'),
+    'icon' => 'xe72d',
+    'sub' => 
+    array (
+      71 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/template'),
+        'controller' => 'template',
+        'action' => 'index',
+      ),
+      7101 => 
+      array (
+        'show' => 0,
+        'name' => '--模板信息维护',
+        'controller' => 'template',
+        'action' => 'info',
+      ),
+      7102 => 
+      array (
+        'show' => 0,
+        'name' => '--模板删除',
+        'controller' => 'template',
+        'action' => 'del',
+      ),
+      72 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/ads'),
+        'controller' => 'template',
+        'action' => 'ads',
+        'param' => '',
+      ),
+      73 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/wizard'),
+        'controller' => 'template',
+        'action' => 'wizard',
+      ),
+      74 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/theme/config'),
+        'controller' => 'tpl_config',
+        'action' => 'theme',
+      ),
+      75 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/theme_design'),
+        'controller' => 'theme_design',
+        'action' => 'design',
+      ),
+      7501 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计入口',
+        'controller' => 'theme_design',
+        'action' => 'index',
+      ),
+      7502 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计加载',
+        'controller' => 'theme_design',
+        'action' => 'load',
+      ),
+      7503 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计保存草稿',
+        'controller' => 'theme_design',
+        'action' => 'save_step',
+      ),
+      7504 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计预览',
+        'controller' => 'theme_design',
+        'action' => 'preview',
+      ),
+      7505 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计发布',
+        'controller' => 'theme_design',
+        'action' => 'publish',
+      ),
+      7506 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计历史',
+        'controller' => 'theme_design',
+        'action' => 'history',
+      ),
+      7507 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计回滚',
+        'controller' => 'theme_design',
+        'action' => 'rollback',
+      ),
+      7508 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计上传',
+        'controller' => 'theme_design',
+        'action' => 'upload',
+      ),
+      7509 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计AI生成',
+        'controller' => 'theme_design',
+        'action' => 'generate',
+      ),
+      7510 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计AI探测',
+        'controller' => 'theme_design',
+        'action' => 'detect',
+      ),
+      7511 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计AI应用',
+        'controller' => 'theme_design',
+        'action' => 'generate_apply',
+      ),
+      7512 =>
+      array (
+        'show' => 0,
+        'name' => '--主题设计AI生成图片',
+        'controller' => 'theme_design',
+        'action' => 'gen_image',
+      ),
+      76 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/template_market'),
+        'controller' => 'template_market',
+        'action' => 'index',
+      ),
+      7601 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/template_market/refresh_menu'),
+        'controller' => 'template_market',
+        'action' => 'refresh',
+      ),
+      7602 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/template_market/install_menu'),
+        'controller' => 'template_market',
+        'action' => 'install',
+      ),
+      7603 =>
+      array (
+        'show' => 0,
+        'name' => lang('admin/template_market/activate_menu'),
+        'controller' => 'template_market',
+        'action' => 'activate',
+      ),
+    ),
+  ),
+  8 =>
+  array (
+    'name' => lang('menu/make'),
+    'icon' => 'xe63e',
+    'sub' => 
+    array (
+      81 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/make_opt'),
+        'controller' => 'make',
+        'action' => 'opt',
+      ),
+      82 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/make_index'),
+        'controller' => 'make',
+        'action' => 'index',
+      ),
+      821 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/make_index_wap'),
+        'controller' => 'make',
+        'action' => 'index?ac2=wap',
+      ),
+      83 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/make_map'),
+        'controller' => 'make',
+        'action' => 'map',
+      ),
+      8101 => 
+      array (
+        'show' => 0,
+        'name' => '--生成入口',
+        'controller' => 'make',
+        'action' => 'make',
+      ),
+      8102 => 
+      array (
+        'show' => 0,
+        'name' => '--生成RSS',
+        'controller' => 'make',
+        'action' => 'rss',
+      ),
+      8103 => 
+      array (
+        'show' => 0,
+        'name' => '--生成分类',
+        'controller' => 'make',
+        'action' => 'type',
+      ),
+      8104 => 
+      array (
+        'show' => 0,
+        'name' => '--生成专题首页',
+        'controller' => 'make',
+        'action' => 'topic_index',
+      ),
+      8105 => 
+      array (
+        'show' => 0,
+        'name' => '--生成专题内容',
+        'controller' => 'make',
+        'action' => 'topic_info',
+      ),
+      8106 => 
+      array (
+        'show' => 0,
+        'name' => '--生成内容页',
+        'controller' => 'make',
+        'action' => 'info',
+      ),
+      8107 => 
+      array (
+        'show' => 0,
+        'name' => '--生成自定义页',
+        'controller' => 'make',
+        'action' => 'label',
+      ),
+    ),
+  ),
+  9 => 
+  array (
+    'name' => lang('menu/cjs'),
+    'icon' => 'xe727',
+    'sub' => 
+    array (
+      91 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/union'),
+        'controller' => 'collect',
+        'action' => 'union',
+      ),
+      9101 => 
+      array (
+        'show' => 0,
+        'name' => '--采集入口',
+        'controller' => 'collect',
+        'action' => 'api',
+      ),
+      9102 => 
+      array (
+        'show' => 0,
+        'name' => '--断点采集',
+        'controller' => 'collect',
+        'action' => 'load',
+      ),
+      9103 => 
+      array (
+        'show' => 0,
+        'name' => '--绑定分类',
+        'controller' => 'collect',
+        'action' => 'bind',
+      ),
+      9104 => 
+      array (
+        'show' => 0,
+        'name' => '--采集视频',
+        'controller' => 'collect',
+        'action' => 'vod',
+      ),
+      9105 => 
+      array (
+        'show' => 0,
+        'name' => '--采集文章',
+        'controller' => 'collect',
+        'action' => 'art',
+      ),
+      92 => 
+      array (
+        'show' => 0,
+        'name' => lang('menu/collect_timming'),
+        'controller' => 'collect',
+        'action' => 'timing',
+      ),
+      93 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/collect'),
+        'controller' => 'collect',
+        'action' => 'index',
+      ),
+      9301 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义资源信息维护',
+        'controller' => 'collect',
+        'action' => 'info',
+      ),
+      9302 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义资源删除',
+        'controller' => 'collect',
+        'action' => 'del',
+      ),
+      94 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/cj'),
+        'controller' => 'cj',
+        'action' => 'index',
+      ),
+      9401 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则信息维护',
+        'controller' => 'cj',
+        'action' => 'info',
+      ),
+      9402 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则删除',
+        'controller' => 'cj',
+        'action' => 'del',
+      ),
+      9403 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则发布方案',
+        'controller' => 'cj',
+        'action' => 'program',
+      ),
+      9404 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则采集网址',
+        'controller' => 'cj',
+        'action' => 'col_url',
+      ),
+      9405 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则采集内容',
+        'controller' => 'cj',
+        'action' => 'col_content',
+      ),
+      9406 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则发布内容',
+        'controller' => 'cj',
+        'action' => 'publish',
+      ),
+      9407 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则导出',
+        'controller' => 'cj',
+        'action' => 'export',
+      ),
+      9408 => 
+      array (
+        'show' => 0,
+        'name' => '--自定义规则导入',
+        'controller' => 'cj',
+        'action' => 'import',
+      ),
+      95 => 
+      array (
+        'show' => 1,
+        'name' => lang('admin/resourcehub/title'),
+        'controller' => 'resource_hub',
+        'action' => 'index',
+      ),
+      9501 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/resourcehub/multi_collect_menu'),
+        'controller' => 'resource_hub',
+        'action' => 'multi_collect',
+      ),
+      9502 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/resourcehub/poster_menu'),
+        'controller' => 'resource_hub',
+        'action' => 'poster',
+      ),
+      96 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/batchplayer/title'),
+        'controller' => 'batch_player',
+        'action' => 'index',
+      ),
+      9601 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/batchplayer/batch_status_menu'),
+        'controller' => 'batch_player',
+        'action' => 'batchStatus',
+      ),
+      9602 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/batchplayer/batch_del_menu'),
+        'controller' => 'batch_player',
+        'action' => 'batchDel',
+      ),
+      97 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/datareplace/title'),
+        'controller' => 'data_replace',
+        'action' => 'index',
+      ),
+      9701 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/datareplace/do_replace_menu'),
+        'controller' => 'data_replace',
+        'action' => 'doReplace',
+      ),
+    ),
+  ),
+  10 => 
+  array (
+    'name' => lang('menu/db'),
+    'icon' => 'xe621',
+    'sub' => 
+    array (
+      101 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/database'),
+        'controller' => 'database',
+        'action' => 'index',
+      ),
+      10001 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库备份',
+        'controller' => 'database',
+        'action' => 'export',
+      ),
+      10002 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库还原',
+        'controller' => 'database',
+        'action' => 'import',
+      ),
+      10003 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库优化',
+        'controller' => 'database',
+        'action' => 'optimize',
+      ),
+      10004 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库修复',
+        'controller' => 'database',
+        'action' => 'repair',
+      ),
+      10005 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库删除备份',
+        'controller' => 'database',
+        'action' => 'del',
+      ),
+      10006 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库表信息',
+        'controller' => 'database',
+        'action' => 'columns',
+      ),
+      10007 => 
+      array (
+        'show' => 0,
+        'name' => '--数据库备份上传对象存储',
+        'controller' => 'database',
+        'action' => 'uploadstorage',
+      ),
+      102 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/database_sql'),
+        'controller' => 'database',
+        'action' => 'sql',
+      ),
+      103 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/database_rep'),
+        'controller' => 'database',
+        'action' => 'rep',
+      ),
+    ),
+  ),
+  11 => 
+  array (
+    'name' => lang('menu/apps'),
+    'icon' => 'xe621',
+    'sub' => 
+    array (
+      111 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/addon'),
+        'controller' => 'addon',
+        'action' => 'index',
+        'param' => '',
+      ),
+      112 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/urlsend'),
+        'controller' => 'urlsend',
+        'action' => 'index',
+        'param' => '',
+      ),
+      113 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/safety_file'),
+        'controller' => 'safety',
+        'action' => 'file',
+        'param' => '',
+      ),
+      11301 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/safety_checkup'),
+        'controller' => 'safety',
+        'action' => 'checkup',
+        'param' => '',
+      ),
+      114 => 
+      array (
+        'show' => 1,
+        'name' => lang('menu/safety_data'),
+        'controller' => 'safety',
+        'action' => 'data',
+        'param' => '',
+      ),
+      11401 => 
+      array (
+        'show' => 0,
+        'name' => lang('admin/safety/fix_menu'),
+        'controller' => 'safety',
+        'action' => 'fix',
+        'param' => '',
+      ),
+      11200 => 
+      array (
+        'show' => 0,
+        'name' => '--推送入口',
+        'controller' => 'urlsend',
+        'action' => 'push',
+      ),
+      11201 => 
+      array (
+        'show' => 0,
+        'name' => '--百度主动推送',
+        'controller' => 'urlsend',
+        'action' => 'baidu_push',
+      ),
+      11202 => 
+      array (
+        'show' => 0,
+        'name' => '--百度熊掌推送',
+        'controller' => 'urlsend',
+        'action' => 'baidu_bear',
+      ),
+      11100 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件列表',
+        'controller' => 'addon',
+        'action' => 'downloaded',
+      ),
+      11101 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件安装',
+        'controller' => 'addon',
+        'action' => 'install',
+      ),
+      11102 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件卸载',
+        'controller' => 'addon',
+        'action' => 'uninstall',
+      ),
+      11103 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件配置',
+        'controller' => 'addon',
+        'action' => 'config',
+      ),
+      11104 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件状态',
+        'controller' => 'addon',
+        'action' => 'state',
+      ),
+      11105 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件上传',
+        'controller' => 'addon',
+        'action' => 'local',
+      ),
+      11106 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件升级',
+        'controller' => 'addon',
+        'action' => 'upgrade',
+      ),
+      11107 => 
+      array (
+        'show' => 0,
+        'name' => '--应用插件添加',
+        'controller' => 'addon',
+        'action' => 'add',
+      ),
+      11108 => 
+      array (
+        'show' => 0,
+        'name' => '--插件云目录刷新',
+        'controller' => 'addon',
+        'action' => 'cloudrefresh',
+      ),
+      11109 => 
+      array (
+        'show' => 0,
+        'name' => '--插件云安装',
+        'controller' => 'addon',
+        'action' => 'cloudinstall',
+      ),
+      11110 => 
+      array (
+        'show' => 0,
+        'name' => '--插件云目录',
+        'controller' => 'addon',
+        'action' => 'cloudcatalog',
+      ),
+    ),
+  ),
+  14 =>
+  array (
+    'name' => lang('menu/live'),
+    'icon' => 'xe62b',
+    'sub' =>
+    array (
+      141 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/live_list'),
+        'controller' => 'live',
+        'action' => 'index',
+      ),
+      142 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/live_category'),
+        'controller' => 'live',
+        'action' => 'category',
+      ),
+      1401 =>
+      array (
+        'show' => 0,
+        'name' => '--直播频道添加/编辑',
+        'controller' => 'live',
+        'action' => 'info',
+      ),
+      1402 =>
+      array (
+        'show' => 0,
+        'name' => '--直播频道删除',
+        'controller' => 'live',
+        'action' => 'del',
+      ),
+      1403 =>
+      array (
+        'show' => 0,
+        'name' => '--直播频道字段更新',
+        'controller' => 'live',
+        'action' => 'field',
+      ),
+      1404 =>
+      array (
+        'show' => 0,
+        'name' => '--直播分类添加/编辑',
+        'controller' => 'live',
+        'action' => 'category_info',
+      ),
+      1405 =>
+      array (
+        'show' => 0,
+        'name' => '--直播分类删除',
+        'controller' => 'live',
+        'action' => 'category_del',
+      ),
+    ),
+  ),
+  15 =>
+  array (
+    'name' => lang('menu/monitor'),
+    'icon' => 'xe621',
+    'sub' =>
+    array (
+      151 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_server'),
+        'controller' => 'monitor',
+        'action' => 'index',
+      ),
+      152 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_realtime'),
+        'controller' => 'monitor',
+        'action' => 'realtime',
+      ),
+      153 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_setting'),
+        'controller' => 'monitor',
+        'action' => 'setting',
+      ),
+      1501 =>
+      array (
+        'show' => 0,
+        'name' => '--监控曲线数据',
+        'controller' => 'monitor',
+        'action' => 'series',
+      ),
+      1502 =>
+      array (
+        'show' => 0,
+        'name' => '--监控实时数据',
+        'controller' => 'monitor',
+        'action' => 'live',
+      ),
+      1503 =>
+      array (
+        'show' => 0,
+        'name' => '--监控配置保存',
+        'controller' => 'monitor',
+        'action' => 'setting_save',
+      ),
+      1504 =>
+      array (
+        'show' => 0,
+        'name' => '--监控令牌重置',
+        'controller' => 'monitor',
+        'action' => 'cron_token_reset',
+      ),
+      154 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_rule'),
+        'controller' => 'monitor',
+        'action' => 'rule',
+      ),
+      155 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_event'),
+        'controller' => 'monitor',
+        'action' => 'event',
+      ),
+      1505 =>
+      array (
+        'show' => 0,
+        'name' => '--告警规则编辑',
+        'controller' => 'monitor',
+        'action' => 'rule_info',
+      ),
+      1506 =>
+      array (
+        'show' => 0,
+        'name' => '--告警规则保存',
+        'controller' => 'monitor',
+        'action' => 'rule_save',
+      ),
+      1507 =>
+      array (
+        'show' => 0,
+        'name' => '--告警规则删除',
+        'controller' => 'monitor',
+        'action' => 'rule_del',
+      ),
+      1508 =>
+      array (
+        'show' => 0,
+        'name' => '--告警规则状态',
+        'controller' => 'monitor',
+        'action' => 'rule_field',
+      ),
+      1509 =>
+      array (
+        'show' => 0,
+        'name' => '--启用推荐规则',
+        'controller' => 'monitor',
+        'action' => 'rule_enable_recommended',
+      ),
+      1510 =>
+      array (
+        'show' => 0,
+        'name' => '--测试推送渠道',
+        'controller' => 'monitor',
+        'action' => 'rule_test',
+      ),
+      1511 =>
+      array (
+        'show' => 0,
+        'name' => '--告警确认',
+        'controller' => 'monitor',
+        'action' => 'event_ack',
+      ),
+      156 =>
+      array (
+        'show' => 1,
+        'name' => lang('menu/monitor_access'),
+        'controller' => 'monitor',
+        'action' => 'access',
+      ),
+      1512 =>
+      array (
+        'show' => 0,
+        'name' => '--封禁IP',
+        'controller' => 'monitor',
+        'action' => 'access_ban',
+      ),
+      1513 =>
+      array (
+        'show' => 0,
+        'name' => '--解封IP',
+        'controller' => 'monitor',
+        'action' => 'access_unban',
+      ),
+    ),
+  ),
+);

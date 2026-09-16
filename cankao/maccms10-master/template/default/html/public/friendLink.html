@@ -1,0 +1,22 @@
+{if condition="isset($tplconfig['theme']['links']['btn']) && $tplconfig['theme']['links']['btn'] eq '1'"}
+<link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/friendLink.css">
+<div id="link" class="block show-pc">
+    <div id="title">{$tplconfig.theme.links.title|default=''}</div>
+    <ul class="js-home-lazy-section"
+        id="js-home-link-list"
+        data-section="friend-links"
+        data-api-action="link/get_list"
+        data-limit="{$tplconfig.theme.links.num|default='50'}"
+        data-start="0">
+        <li class="home-skeleton-link-item"></li>
+        <li class="home-skeleton-link-item"></li>
+        <li class="home-skeleton-link-item"></li>
+        <li class="home-skeleton-link-item"></li>
+        <li class="home-skeleton-link-item"></li>
+        <div class="clear"></div>
+    </ul>
+</div>
+{if condition="$maccms.aid neq 1"}
+<script type="text/javascript" src="{$maccms.path_tpl}/asset/js/friend-links-lazy.js"></script>
+{/if}
+{/if}

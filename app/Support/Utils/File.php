@@ -2,8 +2,6 @@
 
 namespace App\Support\Utils;
 
-use function App\Utils\mkdir;
-
 /**
  * 文件
  */

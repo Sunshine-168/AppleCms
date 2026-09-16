@@ -1,0 +1,23 @@
+{
+    "name": "magicblack/maccms10",
+    "description": "苹果CMS v10 (ThinkPHP 5)",
+    "type": "project",
+    "license": "Apache-2.0",
+    "config": {
+        "vendor-dir": "vendor",
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "topthink/think-installer": true
+        }
+    },
+    "require": {
+        "php": ">=7.0"
+    },
+    "suggest": {
+        "workerman/workerman": "常驻 WebSocket 服务，启用 socialws 插件时需要。安装：composer require workerman/workerman:~4.0.30 workerman/gateway-worker:^3.1（~4.0.30 兼容 PHP 7.0，4.2+ 需要 PHP 8.0）",
+        "workerman/gateway-worker": "socialws 插件依赖的 GatewayWorker（^3.1，需配合 workerman/workerman ~4.0.30）"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

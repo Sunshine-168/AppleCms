@@ -51,14 +51,25 @@ class Index extends Controller
      */
     public function welcomeStats(): JsonResponse
     {
-        return Ajax::message(0, 'success', [
-            'vod_total' => 0,
-            'vod_today' => 0,
-            'article_total' => 0,
-            'user_total' => 0,
-            'visit_today' => 0,
-            'play_today' => 0,
-        ]);
+        try {
+            return Ajax::message(0, 'success', [
+                'vod_total' => \App\Models\Video\VideoModel::query()->count(),
+                'vod_today' => \App\Models\Video\VideoModel::query()->where('created_at', '>=', strtotime('today'))->count(),
+                'comment_total' => \Illuminate\Support\Facades\Schema::hasTable('video_comments') ? \App\Models\Video\VideoComment::query()->count() : 0,
+                'user_total' => \Illuminate\Support\Facades\Schema::hasTable('members') ? \App\Models\Member\Member::query()->count() : 0,
+                'visit_today' => \App\Models\Video\VideoStatModel::query()->sum('hits_day'),
+                'play_today' => \Illuminate\Support\Facades\Schema::hasTable('member_histories') ? \App\Models\Member\MemberHistory::query()->where('updated_at', '>=', strtotime('today'))->count() : 0,
+            ]);
+        } catch (\Throwable) {
+            return Ajax::message(0, 'success', [
+                'vod_total' => 0,
+                'vod_today' => 0,
+                'comment_total' => 0,
+                'user_total' => 0,
+                'visit_today' => 0,
+                'play_today' => 0,
+            ]);
+        }
     }
 
     /**

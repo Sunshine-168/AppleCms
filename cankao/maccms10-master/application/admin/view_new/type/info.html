@@ -1,0 +1,507 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <div class="showpic" style="display:none;"><img class="showpic_img" width="120" height="160" referrerPolicy="no-referrer"></div>
+    
+    <form class="layui-form layui-form-pane" method="post" action="" id="movementTable">
+        <input type="hidden" name="type_id" value="{$info.type_id}">
+        <input type="hidden" name="__token__" value="{$Request.token}" />
+        <blockquote class="layui-elem-quote layui-quote-nm">
+            {:lang('admin/type/tip')}
+        </blockquote>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"> {:lang('genre')}：</label>
+            <div class="layui-input-inline ">
+                    <select id="type_mid" name="type_mid" lay-filter="type_mid">
+                        <option value="1" {if condition="$info['type_mid'] == '1' || ($info.type_id eq 0 && $infop['type_mid'] == '1')"}selected {/if}>{:lang('vod')}</option>
+                        <option value="2" {if condition="$info['type_mid'] == '2' || ($info.type_id eq 0 && $infop['type_mid'] == '2')"}selected {/if}>{:lang('art')}</option>
+                        <option value="8" {if condition="$info['type_mid'] == '8' || ($info.type_id eq 0 && $infop['type_mid'] == '8')"}selected {/if}>{:lang('actor')}</option>
+                        <option value="11" {if condition="$info['type_mid'] == '11' || ($info.type_id eq 0 && $infop['type_mid'] == '11')"}selected {/if}>{:lang('website')}</option>
+                        <option value="12" {if condition="$info['type_mid'] == '12' || ($info.type_id eq 0 && $infop['type_mid'] == '12')"}selected {/if}>{:lang('manga')}</option>
+                    </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/parent_type')}：</label>
+            <div class="layui-input-inline ">
+                    <select name="type_pid">
+                        <option value="0">{:lang('admin/type/top_type')}</option>
+                        {volist name="parent" id="vo"}
+                        <option value="{$vo.type_id}" {if condition="$info.type_pid eq $vo.type_id || $pid eq $vo.type_id"}selected {/if}>{$vo.type_name}</option>
+                        {/volist}
+                    </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('status')}：</label>
+            <div class="layui-input-block">
+                <input name="type_status" type="radio" id="rad-1" value="0" title="{:lang('disable')}" {if condition="$info['type_status'] neq 1"}checked {/if}>
+                <input name="type_status" type="radio" id="rad-2" value="1" title="{:lang('enable')}" {if condition="$info['type_status'] eq 1"}checked {/if}>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('sort')}：</label>
+            <div class="layui-input-inline w100">
+                <input type="text" class="layui-input" value="{$info.type_sort}" placeholder="" id="type_sort" name="type_sort">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/type_tpl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" lay-verify="type_tpl" value="{$info.type_tpl}" placeholder="" id="type_tpl" name="type_tpl">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/show_tpl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" lay-verify="type_tpl_list" value="{$info.type_tpl_list}" placeholder="" id="type_tpl_list" name="type_tpl_list">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/detail_tpl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_tpl_detail}" placeholder="" id="type_tpl_detail" name="type_tpl_detail">
+            </div>
+        </div>
+
+        <div class="layui-form-item vod-list">
+            <label class="layui-form-label">{:lang('admin/type/play_tpl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_tpl_play}" placeholder="" id="type_tpl_play" name="type_tpl_play">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list">
+            <label class="layui-form-label">{:lang('admin/type/down_tpl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_tpl_down}" placeholder="" id="type_tpl_down" name="type_tpl_down">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/logo')}：</label>
+            <div class="layui-input-inline w600">
+                <input type="text" name="type_logo" placeholder="" value="{$info['type_logo']}" class="layui-input upload-input">
+            </div>
+            <div class="layui-input-inline ">
+                <button type="button" class="layui-btn layui-upload" lay-data="{data:{thumb:0,thumb_class:'type_logo'}}" id="upload1">{:lang('upload_pic')}</button>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/type/pic')}</label>
+            <div class="layui-input-inline w600">
+                <input type="text" name="type_pic" placeholder="" value="{$info['type_pic']}" class="layui-input upload-input">
+            </div>
+            <div class="layui-input-inline ">
+                <button type="button" class="layui-btn layui-upload" lay-data="{data:{thumb:0,thumb_class:'type_pic'}}" id="upload1">{:lang('upload_pic')}</button>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('jumpurl')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_jumpurl}" placeholder="" id="type_jumpurl" name="type_jumpurl">
+            </div>
+        </div>
+
+        <blockquote class="layui-elem-quote layui-quote-nm">
+            {:lang('admin/type/content_lang_tip')}
+        </blockquote>
+
+        {if condition="$content_lang_multi"}
+        <div class="layui-tab" lay-filter="content_lang_tab">
+            <ul class="layui-tab-title">
+                {volist name="content_lang_enabled" id="lc"}
+                <li {if condition="$lc eq $content_lang_default"}class="layui-this"{/if}>{$lc}</li>
+                {/volist}
+            </ul>
+            <div class="layui-tab-content">
+                {volist name="content_lang_enabled" id="lc"}
+                <div class="layui-tab-item {if condition="$lc eq $content_lang_default"}layui-show{/if}">
+                    {if condition="$lc neq $content_lang_default"}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{$lc}</label>
+                        <div class="layui-input-inline">
+                            {if condition="!empty($content_lang_data[$lc]['type_name'])"}
+                            <span class="layui-badge layui-bg-green">{:lang('admin/vod/content_lang_translated')}</span>
+                            {else/}
+                            <span class="layui-badge layui-bg-gray">{:lang('admin/vod/content_lang_untranslated')}</span>
+                            {/if}
+                        </div>
+                    </div>
+                    {/if}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('name')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                lay-verify="{if condition="$lc eq $content_lang_default"}type_name{/if}"
+                                id="{if condition="$lc eq $content_lang_default"}type_name{else/}cl_{$lc}_type_name{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_name{else/}content_lang[{$lc}][type_name]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_name}{else/}{$content_lang_data[$lc]['type_name']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_name" data-src="#type_name">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    {if condition="$lc eq $content_lang_default"}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('en')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" id="type_en" name="type_en" value="{$info.type_en}">
+                        </div>
+                    </div>
+                    {/if}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('seo_title')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                id="{if condition="$lc eq $content_lang_default"}type_title{else/}cl_{$lc}_type_title{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_title{else/}content_lang[{$lc}][type_title]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_title}{else/}{$content_lang_data[$lc]['type_title']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_title" data-src="#type_title">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('seo_key')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                id="{if condition="$lc eq $content_lang_default"}type_key{else/}cl_{$lc}_type_key{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_key{else/}content_lang[{$lc}][type_key]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_key}{else/}{$content_lang_data[$lc]['type_key']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_key" data-src="#type_key">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('seo_des')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                id="{if condition="$lc eq $content_lang_default"}type_des{else/}cl_{$lc}_type_des{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_des{else/}content_lang[{$lc}][type_des]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_des}{else/}{$content_lang_data[$lc]['type_des']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_des" data-src="#type_des">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('class')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_class{else/}cl_{$lc}_type_extend_class{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[class]{else/}content_lang[{$lc}][type_extend][class]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.class}{else/}{$content_lang_data[$lc]['type_extend']['class']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_class" data-src="#type_extend_class">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('extend_area')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_area{else/}cl_{$lc}_type_extend_area{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[area]{else/}content_lang[{$lc}][type_extend][area]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.area}{else/}{$content_lang_data[$lc]['type_extend']['area']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_area" data-src="#type_extend_area">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('extend_lang')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_lang{else/}cl_{$lc}_type_extend_lang{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[lang]{else/}content_lang[{$lc}][type_extend][lang]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.lang}{else/}{$content_lang_data[$lc]['type_extend']['lang']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_lang" data-src="#type_extend_lang">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('extend_year')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_year{else/}cl_{$lc}_type_extend_year{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[year]{else/}content_lang[{$lc}][type_extend][year]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.year}{else/}{$content_lang_data[$lc]['type_extend']['year']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_year" data-src="#type_extend_year">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('admin/type/extend_star')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_star{else/}cl_{$lc}_type_extend_star{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[star]{else/}content_lang[{$lc}][type_extend][star]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.star}{else/}{$content_lang_data[$lc]['type_extend']['star']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_star" data-src="#type_extend_star">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('admin/type/extend_director')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_director{else/}cl_{$lc}_type_extend_director{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[director]{else/}content_lang[{$lc}][type_extend][director]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.director}{else/}{$content_lang_data[$lc]['type_extend']['director']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_director" data-src="#type_extend_director">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('admin/type/extend_state')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_state{else/}cl_{$lc}_type_extend_state{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[state]{else/}content_lang[{$lc}][type_extend][state]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.state}{else/}{$content_lang_data[$lc]['type_extend']['state']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_state" data-src="#type_extend_state">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+                        <label class="layui-form-label">{:lang('admin/type/extend_version')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" placeholder="{:lang('multi_separate_tip')}"
+                                id="{if condition="$lc eq $content_lang_default"}type_extend_version{else/}cl_{$lc}_type_extend_version{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}type_extend[version]{else/}content_lang[{$lc}][type_extend][version]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.type_extend.version}{else/}{$content_lang_data[$lc]['type_extend']['version']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="type_extend_version" data-src="#type_extend_version">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+                {/volist}
+            </div>
+        </div>
+        {else /}
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('name')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" lay-verify="type_name" value="{$info.type_name}" placeholder="" id="type_name" name="type_name">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('en')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_en}" placeholder="" id="type_en" name="type_en">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seo_title')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_title}" placeholder="" id="type_title" name="type_title">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seo_key')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_key}" placeholder="" id="type_key" name="type_key">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('seo_des')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_des}" placeholder="" id="type_des" name="type_des">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('class')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.class}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[class]" id="type_extend_class">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('extend_area')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.area}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[area]" id="type_extend_area">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('extend_lang')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.lang}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[lang]" id="type_extend_lang">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('extend_year')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.year}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[year]" id="type_extend_year">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('admin/type/extend_star')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.star}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[star]" id="type_extend_star">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('admin/type/extend_director')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.director}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[director]" id="type_extend_director">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('admin/type/extend_state')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.state}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[state]" id="type_extend_state">
+            </div>
+        </div>
+        <div class="layui-form-item vod-list" {if condition="$info.type_mid neq '1'"} style="display:none" {/if}>
+            <label class="layui-form-label">{:lang('admin/type/extend_version')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.type_extend.version}" placeholder="{:lang('multi_separate_tip')}" name="type_extend[version]" id="type_extend_version">
+            </div>
+        </div>
+        {/if}
+
+        <div class="layui-form-item center">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="formSubmit" data-child="true">{:lang('btn_save')}</button>
+                <button class="layui-btn layui-btn-primary" type="reset">{:lang('btn_reset')}</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    function selectOnChange(id)
+    {
+        var flag = id;
+        var type_tpl = 'type.html';
+        var type_tpl_list = 'show.html';
+        var type_tpl_detail = 'detail.html';
+        var type_tpl_play = 'play.html';
+        var type_tpl_down = 'down.html';
+
+        if(flag != 1){
+            $(".vod-list").hide();
+            type_tpl_play = '';
+            type_tpl_down = '';
+        }
+        else{
+            $(".vod-list").show();
+        }
+        if($('input[name="type_id"]').val() ==''){
+            $('input[name="type_tpl"]').val(type_tpl);
+            $('input[name="type_tpl_list"]').val(type_tpl_list);
+            $('input[name="type_tpl_detail"]').val(type_tpl_detail);
+            $('input[name="type_tpl_play"]').val(type_tpl_play);
+            $('input[name="type_tpl_down"]').val(type_tpl_down);
+        }
+    }
+    layui.use(['form','upload', 'layer'], function () {
+        // 操作对象
+        var form = layui.form
+                , layer = layui.layer
+                , upload = layui.upload
+                , $ = layui.jquery;
+
+        upload.render({
+            elem: '.layui-upload'
+            ,url: "{:url('upload/upload')}?flag=type"
+            ,method: 'post'
+            ,before: function(input) {
+                layer.msg("{:lang('upload_ing')}", {time:3000000});
+            },done: function(res, index, upload) {
+                var obj = this.item;
+                if (res.code == 0) {
+                    layer.msg(res.msg);
+                    return false;
+                }
+                layer.closeAll();
+                var input = $(obj).parent().parent().find('.upload-input');
+                if ($(obj).attr('lay-type') == 'image') {
+                    input.siblings('img').attr('src', res.data.file).show();
+                }
+                input.val(res.data.file);
+
+                if(res.data.thumb_class !=''){
+                    $('.'+ res.data.thumb_class).val(res.data.thumb[0].file);
+                }
+            }
+        });
+
+        $('.upload-input').hover(function (e){
+            var e = window.event || e;
+            var imgsrc = $(this).val();
+            if(imgsrc.trim()==""){ return; }
+            var left = e.clientX+document.body.scrollLeft+20;
+            var top = e.clientY+document.body.scrollTop+20;
+            $(".showpic").css({left:left,top:top,display:""});
+            if(imgsrc.indexOf('://')<0){ imgsrc = ROOT_PATH + '/' + imgsrc;	} else{ imgsrc = imgsrc.replace('mac:','http:'); }
+            $(".showpic_img").attr("src", imgsrc);
+        },function (e){
+            $(".showpic").css("display","none");
+        });
+
+        // 验证
+        form.verify({
+            type_name: function (value) {
+                if (value == "") {
+                    return "{:lang('name_empty')}";
+                }
+            },
+            type_tpl: function (value) {
+                if (value == "") {
+                    return "{:lang('admin/type/tpl_empty')}";
+                }
+            }
+        });
+
+
+        form.on('select(type_mid)', function(data){
+            selectOnChange(data.value);
+        });
+
+
+        selectOnChange({$info.type_mid});
+
+        // 内容级多语言：单字段自动翻译（保存随主表单一起提交，不单独 ajax 保存）
+        $('.cl-translate-btn').on('click', function () {
+            var $btn = $(this);
+            var lang = $btn.data('lang');
+            var field = $btn.data('field');
+            var srcSel = $btn.data('src');
+            var srcText = $(srcSel).val();
+            if (!srcText) {
+                layer.msg("{:lang('name_empty')}");
+                return;
+            }
+            $btn.prop('disabled', true);
+            $.post("{:url('type/contentLangTranslate')}", {
+                text: srcText,
+                from: "{$content_lang_default|default='zh-cn'}",
+                to: lang,
+                __token__: "{:mac_admin_csrf_token()}"
+            }, function (r) {
+                $btn.prop('disabled', false);
+                if (r && r.code == 1) {
+                    $('#cl_' + lang + '_' + field).val(r.data);
+                } else {
+                    layer.msg((r && r.msg) ? r.msg : "{:lang('admin/vod/content_lang_translate_err')}");
+                }
+            }, 'json').fail(function () {
+                $btn.prop('disabled', false);
+                layer.msg("{:lang('admin/vod/content_lang_translate_err')}");
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

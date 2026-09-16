@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title data-lang="notify_title">消息中心 - 会员中心 -{$maccms.site_name}</title>
+<meta name="keywords" content="{$maccms.site_keywords}"/>
+<meta name="description" content="{$maccms.site_description}"/>
+{include file="user/include" /}
+<link rel="stylesheet" href="{$maccms.path_tpl}asset/css/notify-page.css?v=2026071410">
+</head>
+
+<body class="page-user-notify">
+{include file="public/head" /}
+
+<div class="member-wrap member-wrap-bg">
+	<div id="member" class="fn-clear">
+		<div id="left">
+			<div class="m-nav">
+				<a href="{:url('user/index')}" class="btn-left"><i class="iconfont ico-right">&#xe625;</i></a>
+				<a href="{$maccms.path}" class="btn-right"><i class="iconfont ico-right">&#xe634;</i></a>
+				<span class="mb-title" data-lang="user_grzx">个人中心</span>
+			</div>
+			{include file="user/left_nav" /}
+		</div>
+		<div id="right">
+			<div class="m-nav">
+				<a href="{:url('user/index')}" class="btn-left"><i class="iconfont ico-right">&#xe625;</i></a>
+				<span class="mb-title" data-lang="notify_title">消息中心</span>
+			</div>
+			<div class="co-right co-right-bg"
+				data-mac-notify-page
+				data-url-login="{:rtrim($maccms.path,'/').'/index.php/user/login.html'}">
+				<div class="mac-notify-toolbar">
+					<div class="mac-notify-tabs" role="tablist">
+						<a href="javascript:;" class="is-active" data-notify-type="" data-lang="string_all" role="tab" aria-selected="true">全部</a>
+						<a href="javascript:;" data-notify-type="announce" data-lang="notify_type_announce" role="tab" aria-selected="false">公告</a>
+						<a href="javascript:;" data-notify-type="system" data-lang="notify_type_system" role="tab" aria-selected="false">系统</a>
+						<a href="javascript:;" data-notify-type="order" data-lang="notify_type_order" role="tab" aria-selected="false">订单</a>
+						<a href="javascript:;" data-notify-type="vip" data-lang="notify_type_vip" role="tab" aria-selected="false">VIP</a>
+						<a href="javascript:;" data-notify-type="activity" data-lang="notify_type_activity" role="tab" aria-selected="false">活动</a>
+						<a href="javascript:;" data-notify-type="reply" data-lang="notify_type_reply" role="tab" aria-selected="false">回复</a>
+					</div>
+					<a href="javascript:;" id="js-notify-mark-all" class="mac-notify-mark-all" data-lang="notify_mark_all_read">全部已读</a>
+				</div>
+
+				<ul id="js-notify-list" class="mac-notify-list" role="list"></ul>
+				<p id="js-notify-loading" class="mac-notify-loading" hidden data-lang="string_loading">加载中~</p>
+				<p id="js-notify-empty"
+					class="mac-notify-empty"
+					hidden
+					data-lang="notify_empty"
+					data-hint="公告、订单和系统提醒都会出现在这里">暂无消息</p>
+
+				<nav id="js-notify-pager" class="mac-notify-pager" hidden aria-label="消息分页">
+					<button type="button" data-notify-page="prev" data-lang="string_prev">上一页</button>
+					<span data-notify-page-label>1 / 1</span>
+					<button type="button" data-notify-page="next" data-lang="string_next">下一页</button>
+				</nav>
+
+				<section id="js-notify-push" class="mac-notify-push" hidden>
+					<h3 class="mac-notify-push__title" data-lang="notify_push_title">浏览器推送</h3>
+					<p id="js-notify-push-tip" class="mac-notify-push__tip" data-lang="notify_push_off_tip">开启后可收到站点公告与新剧提醒</p>
+					<button type="button" id="js-notify-push-btn" class="mac-notify-push__btn" data-state="off" data-lang="notify_push_on">开启推送通知</button>
+				</section>
+			</div>
+		</div>
+	</div>
+	<div style="width:30rem;margin: 2rem auto;">
+		{include file="public/friendLink" }
+	</div>
+</div>
+<script defer src="{$maccms.path_tpl}asset/js/push-subscribe.js?v=202607141"></script>
+<script defer src="{$maccms.path_tpl}asset/js/notify-page.js?v=202607145"></script>
+{include file="public/foot" /}
+</body>
+</html>

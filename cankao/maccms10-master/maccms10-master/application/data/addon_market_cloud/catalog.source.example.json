@@ -1,0 +1,21 @@
+{
+  "base_url": "https://cdn.maccms.ai/addons",
+  "items": [
+    {
+      "id": "adminloginbg-1",
+      "name": "adminloginbg",
+      "title": "后台登录背景",
+      "version": "1.0.0",
+      "intro": "自定义后台登录页背景图。",
+      "author": "official",
+      "image": "",
+      "price": "0.00",
+      "status": "approved",
+      "cms_compat": {
+        "min": "2025.1000.0",
+        "max": ""
+      },
+      "package_file": "packages/adminloginbg/package.zip"
+    }
+  ]
+}

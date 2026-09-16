@@ -2,9 +2,11 @@
 
 namespace App\Models\Video;
 
-use App\Traits\QueryCacheTrait;
-use App\Traits\QueryTrait;
+use App\Models\Concerns\QueryCacheTrait;
+use App\Models\Concerns\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VideoSourceModel extends Model
 {
@@ -14,5 +16,14 @@ class VideoSourceModel extends Model
     protected $guarded = [];
 
     use QueryTrait, QueryCacheTrait;
-}
 
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(VideoModel::class, 'video_id');
+    }
+
+    public function episodes(): HasMany
+    {
+        return $this->hasMany(VideoEpisodeModel::class, 'source_id')->orderBy('episode_num')->orderBy('id');
+    }
+}

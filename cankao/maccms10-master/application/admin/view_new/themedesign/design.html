@@ -1,0 +1,1864 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<style>
+/* ===== Theme Design Wizard ===== */
+/* pipeline = horizontal stepper across the top */
+.td-wrap { display:block; }
+.td-nav { display:flex; gap:4px; background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,.08); padding:8px 10px; margin-bottom:15px; overflow-x:auto; }
+.td-nav .td-nav-item { flex:1 1 0; min-width:118px; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 10px; cursor:pointer; color:#666; font-size:14px; border-bottom:3px solid transparent; border-radius:6px 6px 0 0; transition:all .15s; white-space:nowrap; }
+.td-nav .td-nav-item:hover { background:#eafaf3; color:#40CC92; }
+.td-nav .td-nav-item.active { background:#e7f8ef; color:#1f9d6e; border-bottom-color:#40CC92; font-weight:bold; }
+.td-nav .td-nav-item .td-no { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#e6e6e6; color:#fff; font-size:12px; flex:0 0 22px; }
+.td-nav .td-nav-item.active .td-no { background:#40CC92; }
+.td-nav .td-nav-item.done .td-no { background:#40CC92; }
+.td-main { width:100%; min-width:0; }
+.td-step-panel { display:none; }
+.td-step-panel.active { display:block; }
+.td-card { background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,.08); padding:20px; margin-bottom:15px; }
+.td-card h3 { font-size:16px; color:#333; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid #f0f0f0; }
+.td-card .td-tip { font-size:12px; color:#999; margin-bottom:12px; line-height:1.7; }
+.td-footer-bar { display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px; }
+.td-footer-bar .layui-btn { white-space:nowrap; }
+
+/* form labels: comfortably wide, single-line (fixes char-by-char wrapping of CN labels) */
+.td-content .layui-form-label,
+#td-app .layui-form-label,
+.td-main .layui-form-label { width:auto; min-width:96px; max-width:160px; white-space:nowrap; text-align:right; padding:9px 12px; box-sizing:border-box; }
+.td-main .layui-form-item .layui-input-block { margin-left:120px; }
+
+/* preset swatch cards */
+.td-scheme-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
+.td-scheme-card { border:2px solid #e6e6e6; border-radius:8px; padding:10px; cursor:pointer; transition:all .15s; background:#fff; }
+.td-scheme-card:hover { border-color:#40CC92; box-shadow:0 2px 8px rgba(64,204,146,.15); }
+.td-scheme-card.active { border-color:#40CC92; box-shadow:0 0 0 2px rgba(64,204,146,.25); }
+.td-scheme-card .td-scheme-name { font-size:13px; color:#333; font-weight:bold; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.td-scheme-card .td-scheme-bar { display:flex; height:26px; border-radius:4px; overflow:hidden; }
+.td-scheme-card .td-scheme-bar span { flex:1; }
+
+/* color grid (custom) */
+.td-color-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.td-color-item { display:flex; align-items:center; gap:10px; }
+.td-color-item label { width:96px; font-size:13px; color:#555; flex:0 0 96px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.td-color-item .td-color-hex { width:90px; flex:0 0 90px; }
+
+/* image upload — use <img> so logo keeps its aspect at a fixed height */
+.td-img-uploader { display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.td-img-ctrls { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.td-img-ctrls-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.td-img-preview { height:44px; width:auto; max-width:240px; border:1px dashed #ddd; border-radius:4px; background:#fafafa; object-fit:contain; display:inline-block; vertical-align:middle; padding:3px; box-sizing:border-box; }
+.td-img-preview.avatar { width:60px; height:60px; max-width:60px; border-radius:50%; object-fit:cover; padding:0; }
+.td-img-airow { display:flex; align-items:center; gap:8px; }
+.td-img-airow .td-img-aimsg { width:280px; }
+.td-img-airow .td-img-aigen { background:linear-gradient(135deg,#54d6a1,#40CC92); border:none; color:#fff; font-weight:600; white-space:nowrap; }
+.td-img-airow .td-img-aigen:hover { filter:brightness(1.05); }
+.td-img-airow .td-img-aigen.is-loading { opacity:.6; pointer-events:none; }
+
+/* section list */
+.td-section-list { list-style:none; margin:0; padding:0; }
+.td-section-list li.td-sec-item { display:block; padding:0; border:1px solid #ececec; border-radius:8px; margin-bottom:8px; background:#fff; transition:box-shadow .12s; }
+.td-section-list li.td-sec-item.td-dragging { opacity:.45; }
+.td-section-list li.td-sec-item.td-drop-before { box-shadow:0 -3px 0 #40CC92; }
+.td-section-list li.td-sec-item.td-drop-after { box-shadow:0 3px 0 #40CC92; }
+.td-sec-row { display:flex; align-items:center; gap:12px; padding:10px 12px; }
+.td-sec-drag { cursor:grab; color:#c4c9c7; font-size:15px; letter-spacing:-4px; padding:0 4px; user-select:none; flex:0 0 auto; }
+.td-sec-drag:active { cursor:grabbing; }
+.td-sec-label { flex:1; min-width:0; font-size:14px; color:#333; }
+.td-sec-label.has-props { cursor:pointer; }
+.td-sec-label.has-props:hover { color:#1f9d6e; }
+.td-sec-key { color:#bbb; font-size:12px; }
+.td-sec-gear { font-size:13px; color:#40CC92; margin-left:2px; vertical-align:middle; }
+.td-sec-meta { font-size:12px; color:#40CC92; white-space:nowrap; flex:0 0 auto; }
+.td-sec-name { font-weight:500; }
+.td-sec-custom .td-sec-name { color:#1f9d6e; }
+.td-sec-del { color:#c9938f; cursor:pointer; font-size:15px; flex:0 0 auto; }
+.td-sec-del:hover { color:#d9534f; }
+.td-sec-props { display:flex; gap:16px 22px; flex-wrap:wrap; padding:12px 14px 14px 40px; border-top:1px dashed #eef0ef; background:#fafdfb; }
+.td-sec-pf { display:flex; align-items:center; gap:8px; font-size:13px; color:#555; }
+.td-sec-pf > span { white-space:nowrap; }
+.td-sec-pf input.td-sec-num { width:84px; height:32px; }
+.td-sec-pf input.td-sec-title { width:160px; height:32px; }
+.td-sec-pf select { height:32px; border:1px solid #e0e4e3; border-radius:4px; padding:0 8px; background:#fff; outline:none; max-width:170px; }
+.td-sec-pf select:focus { border-color:#40CC92; }
+#addBlock { margin-top:10px; }
+.td-link-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+.td-link-row .layui-input { flex:1; min-width:0; }
+.td-link-row .layui-btn { flex:0 0 auto; }
+
+/* preview iframe & history */
+.td-preview { width:100%; height:74vh; min-height:600px; border:1px solid #e6e6e6; border-radius:6px; background:#fff; }
+.td-history-list { list-style:none; margin:0; padding:0; }
+.td-history-list li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-bottom:1px solid #f0f0f0; }
+.td-history-list li:last-child { border-bottom:none; }
+.td-history-list li .td-h-time { font-size:13px; color:#555; }
+.td-badge-pub { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; white-space:nowrap; }
+.td-badge-pub.yes { background:#e6f7ec; color:#2a9e54; }
+.td-badge-pub.no { background:#fdeceb; color:#d9534f; }
+
+/* ===== green accent (match admin #40CC92) ===== */
+.td-card h3 { border-bottom-color:#eef5f1; }
+.td-field { margin-bottom:18px; }
+.td-field:last-child { margin-bottom:0; }
+.td-field-label { font-size:13px; color:#555; font-weight:600; margin-bottom:8px; }
+
+/* theme picker (overview step) */
+.td-theme-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-bottom:8px; }
+.td-theme-card { position:relative; display:flex; align-items:center; gap:12px; border:2px solid #e6e6e6; border-radius:10px; padding:14px 16px; cursor:pointer; background:#fff; transition:all .15s; }
+.td-theme-card:hover { border-color:#40CC92; box-shadow:0 4px 14px rgba(64,204,146,.14); transform:translateY(-1px); }
+.td-theme-card.active { border-color:#40CC92; background:#f1fbf6; box-shadow:0 0 0 2px rgba(64,204,146,.18); }
+.td-theme-ico { font-size:26px; color:#40CC92; flex:0 0 auto; }
+.td-theme-meta { flex:1; min-width:0; }
+.td-theme-name { font-size:14px; color:#222; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.td-theme-dir { font-size:12px; color:#9aa; font-weight:400; margin-left:4px; }
+.td-theme-tags { margin-top:4px; display:flex; gap:6px; }
+.td-theme-tags:empty { display:none; }
+.td-tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; line-height:18px; }
+.td-tag.green { background:#e7f8ef; color:#1f9d6e; }
+.td-tag.muted { background:#f0f1f3; color:#9098a3; }
+.td-theme-check { font-size:18px; color:#40CC92; opacity:0; flex:0 0 auto; transition:opacity .15s; }
+.td-theme-card.active .td-theme-check { opacity:1; }
+
+/* refined footer-bar buttons */
+.td-footer-bar .td-next {
+  background:linear-gradient(135deg,#54d6a1,#40CC92); border:none; color:#fff;
+  height:40px; line-height:40px; padding:0 24px; border-radius:8px;
+  font-size:14px; font-weight:600; box-shadow:0 3px 10px rgba(64,204,146,.28);
+  transition:all .18s; display:inline-flex; align-items:center; gap:8px;
+}
+.td-footer-bar .td-next:hover { filter:brightness(1.05); box-shadow:0 6px 16px rgba(64,204,146,.36); transform:translateY(-1px); }
+.td-footer-bar .td-next:active { transform:translateY(0); box-shadow:0 2px 6px rgba(64,204,146,.3); }
+.td-footer-bar .td-next .layui-icon { font-size:13px; }
+.td-footer-bar .td-prev {
+  height:40px; line-height:38px; padding:0 18px; border-radius:8px;
+  border:1px solid #d8e0df; background:#fff; color:#5a6b69; font-size:14px;
+  display:inline-flex; align-items:center; gap:8px; transition:all .15s;
+}
+.td-footer-bar .td-prev:hover { border-color:#40CC92; color:#40CC92; background:#f1fbf6; }
+.td-footer-bar .td-save {
+  height:40px; line-height:38px; padding:0 18px; border-radius:8px;
+  border:1px solid #40CC92; background:#fff; color:#40CC92; font-weight:600;
+  transition:all .15s;
+}
+.td-footer-bar .td-save:hover { background:#40CC92; color:#fff; }
+
+/* native color swatch + range (layui 2.2.5 has no colorpicker/slider module) */
+.td-color-item .td-cp { width:36px; height:28px; padding:0; border:1px solid #ddd; border-radius:4px; background:#fff; cursor:pointer; flex:0 0 36px; }
+.td-color-item .td-cp::-webkit-color-swatch-wrapper { padding:2px; }
+.td-color-item .td-cp::-webkit-color-swatch { border:none; border-radius:2px; }
+.td-color-item .td-cp::-moz-color-swatch { border:none; border-radius:2px; }
+.td-range { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:4px; background:#e6e6e6; outline:none; }
+.td-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#40CC92; cursor:pointer; box-shadow:0 1px 3px rgba(64,204,146,.5); border:2px solid #fff; }
+.td-range::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#40CC92; cursor:pointer; border:2px solid #fff; }
+
+/* ===== category selector (navbar / footer) ===== */
+.td-tree-tools { margin-bottom:12px; display:flex; gap:14px; }
+.td-tree-act { font-size:12px; color:#40CC92; cursor:pointer; }
+.td-tree-act:hover { color:#1f9d6e; text-decoration:underline; }
+.td-catpick { border:1px solid #eef0ef; border-radius:8px; padding:8px 12px; max-height:360px; overflow:auto; }
+.td-catpick .layui-form-checkbox[lay-skin=primary] { margin-top:0; }
+.td-pick-group { padding:11px 0; border-bottom:1px solid #f4f6f5; }
+.td-pick-group:last-child { border-bottom:none; }
+.td-pick-children { padding-left:30px; margin-top:10px; display:flex; flex-wrap:wrap; gap:9px 20px; }
+/* tint the green of layui primary checkboxes to match the admin accent */
+.td-catpick .layui-form-checked[lay-skin=primary] i { border-color:#40CC92 !important; background-color:#40CC92 !important; }
+
+/* selected order: drag-sortable chips */
+.td-order-wrap { margin-top:16px; }
+.td-order-label { font-size:13px; color:#555; font-weight:600; margin-bottom:8px; }
+.td-order { display:flex; flex-wrap:wrap; gap:8px; min-height:46px; padding:10px; border:1px dashed #d8e0df; border-radius:8px; background:#fafdfb; }
+.td-order-empty { color:#bbb; font-size:13px; align-self:center; }
+.td-chip { display:inline-flex; align-items:center; gap:4px; padding:5px 8px 5px 6px; background:#e7f8ef; color:#1f8f66; border:1px solid #bfe9d8; border-radius:16px; font-size:13px; cursor:grab; user-select:none; }
+.td-chip.td-chip-drag { opacity:.45; }
+.td-chip-grip { color:#9bc7b4; font-size:13px; letter-spacing:-3px; }
+.td-chip-x { cursor:pointer; color:#8bb6a6; font-style:normal; font-weight:bold; font-size:15px; line-height:1; padding:0 2px; }
+.td-chip-x:hover { color:#d9534f; }
+
+/* ===== real-site iframe preview (steps 2-5) ===== */
+.td-live-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.td-livecard .td-live-refresh { background:linear-gradient(135deg,#54d6a1,#40CC92); border:none; color:#fff; font-weight:600; }
+.td-livecard .td-live-refresh:hover { filter:brightness(1.05); }
+.td-live-frame { width:100%; height:74vh; min-height:600px; border:1px solid #e6e6e6; border-radius:8px; background:#fff; display:block; }
+/* desktop/mobile view toggle */
+.td-view-toggle { display:inline-flex; border:1px solid #d8e0df; border-radius:6px; overflow:hidden; margin-left:auto; }
+.td-view-btn { border:none; background:#fff; color:#6a7a76; font-size:12px; padding:6px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
+.td-view-btn + .td-view-btn { border-left:1px solid #e6ebe9; }
+.td-view-btn.active { background:#40CC92; color:#fff; }
+.td-view-ico { flex:0 0 auto; }
+.td-live-toolbar { align-items:center; }
+/* mobile preview: phone-width centered frame */
+.td-card.td-mobile .td-live-frame,
+.td-card.td-mobile .td-preview { width:390px; max-width:100%; height:780px; min-height:0; margin-left:auto; margin-right:auto; box-shadow:0 6px 24px rgba(0,0,0,.14); border-radius:18px; }
+.td-live-status { font-size:12px; color:#9aa; }
+
+/* ===== publish mode (step 6) ===== */
+.td-pubmode { display:flex; gap:12px; flex-wrap:wrap; margin:6px 0 14px; }
+.td-pubopt { flex:1; min-width:240px; display:flex; align-items:flex-start; gap:10px; border:2px solid #e6e6e6; border-radius:10px; padding:12px 14px; cursor:pointer; transition:all .15s; }
+.td-pubopt:hover { border-color:#40CC92; }
+.td-pubopt.active { border-color:#40CC92; background:#f1fbf6; box-shadow:0 0 0 2px rgba(64,204,146,.16); }
+.td-pubopt input[type=radio] { margin-top:3px; accent-color:#40CC92; width:15px; height:15px; }
+.td-pubopt-body { display:flex; flex-direction:column; gap:2px; }
+.td-pubopt-body b { font-size:14px; color:#28323a; }
+.td-pubopt-body em { font-style:normal; font-size:12px; color:#9098a3; }
+.td-pubopt-body code { background:#eef4f1; color:#1f9d6e; padding:0 6px; border-radius:4px; }
+.td-newfields { border:1px dashed #d8e0df; border-radius:8px; padding:14px 14px 2px; margin-bottom:14px; background:#fafdfb; }
+
+/* ===== AI generator (overview step) ===== */
+.td-ai-card { border-top:3px solid #40CC92; }
+.td-ai-card textarea.layui-textarea { min-height:120px; resize:vertical; }
+.td-ai-toolbar { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+.td-ai-filebtn { position:relative; overflow:hidden; }
+.td-ai-filename { font-size:12px; color:#6a7a76; }
+.td-ai-names { display:flex; gap:12px; margin-top:10px; flex-wrap:wrap; }
+.td-ai-field { flex:1; min-width:200px; }
+.td-ai-field label { display:block; font-size:12px; color:#555; margin-bottom:4px; }
+.td-ai-gen { background:linear-gradient(135deg,#54d6a1,#40CC92); border:none; color:#fff; font-weight:600; margin-left:auto; }
+.td-ai-gen:hover { filter:brightness(1.05); }
+.td-ai-gen.is-loading { opacity:.6; pointer-events:none; }
+#tdAiDetect { margin-left:auto; }
+#tdAiDetect + #tdAiGen { margin-left:8px; }
+.td-ai-modes { display:flex; gap:6px; margin:8px 0; flex-wrap:wrap; }
+.td-ai-mode { border:1px solid #d7dbe3; background:#fff; color:#5a6270; border-radius:6px; padding:5px 12px; font-size:13px; line-height:1.2; cursor:pointer; }
+.td-ai-mode:hover { border-color:#40CC92; }
+.td-ai-mode.is-active { background:#40CC92; border-color:#40CC92; color:#fff; }
+.td-ai-pane { margin:8px 0; }
+.td-ai-imgprev { margin-top:8px; flex-basis:100%; }
+.td-ai-imgprev img { max-width:240px; max-height:150px; border:1px solid #e5e8ee; border-radius:6px; display:block; }
+.td-ai-pastezone { border:1px dashed #cfd5df; border-radius:8px; padding:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; transition:border-color .15s, background .15s; }
+.td-ai-pastezone:focus, .td-ai-pastezone.is-hover { outline:none; border-color:#40CC92; background:#f6fbf8; }
+.td-ai-paste-hint { font-size:12px; color:#8a94a3; }
+.td-ai-detected { margin-top:12px; padding:12px 14px; border:1px solid #e5e8ee; border-radius:8px; background:#fafbfc; }
+.td-ai-swatches { display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:8px; margin:8px 0 4px; }
+.td-ai-sw { display:flex; align-items:center; gap:6px; }
+.td-ai-sw-key { font:12px/1 ui-monospace,Menlo,Consolas,monospace; color:#6b7280; width:78px; flex:none; }
+.td-ai-sw-color { width:30px; height:28px; padding:0; border:1px solid #d7dbe3; border-radius:4px; background:none; cursor:pointer; flex:none; }
+.td-ai-sw-hex { width:86px; height:28px; padding:0 6px; font:12px/28px ui-monospace,Menlo,Consolas,monospace; }
+.td-ai-detected-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.td-ai-detected-row label { font-size:13px; color:#5a6270; }
+.td-ai-detected select.td-ai-det-select { display:inline-block !important; height:32px; border:1px solid #d7dbe3; border-radius:6px; padding:0 8px; background:#fff; max-width:260px; color:#333; }
+.td-ai-detected-row input#tdAiDetSize { width:80px; height:32px; }
+.td-ai-notes { margin-top:10px; font-size:12px; color:#6b7280; }
+.td-ai-notes .td-ai-chip2 { display:inline-block; margin:2px 4px 2px 0; }
+.td-ai-status { margin-top:12px; padding:10px 12px; border-radius:8px; background:#f1fbf6; color:#1f9d6e; font-size:13px; display:flex; align-items:center; gap:8px; }
+.td-ai-status.is-error { background:#fdeceb; color:#d9534f; }
+.td-ai-spin { width:14px; height:14px; border:2px solid #cdeede; border-top-color:#40CC92; border-radius:50%; display:inline-block; animation:tdspin .7s linear infinite; flex:0 0 auto; }
+@keyframes tdspin { to { transform:rotate(360deg); } }
+.td-ai-result { margin-top:14px; }
+.td-ai-applied { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center; }
+.td-ai-chip2 { background:#e7f8ef; color:#1f8f66; border:1px solid #bfe9d8; border-radius:6px; padding:4px 10px; font-size:12px; }
+.td-cov-list { list-style:none; margin:0; padding:0; border:1px solid #eef0ef; border-radius:8px; overflow:hidden; }
+.td-cov-list li { display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-bottom:1px solid #f4f6f5; font-size:13px; }
+.td-cov-list li:last-child { border-bottom:none; }
+.td-cov-badge { flex:0 0 auto; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+.td-cov-badge.ok { background:#e6f7ec; color:#2a9e54; }
+.td-cov-badge.partial { background:#fff5e6; color:#c47d1a; }
+.td-cov-badge.skip { background:#f0f1f3; color:#9098a3; }
+.td-cov-req { flex:1; min-width:0; }
+.td-cov-req b { display:block; color:#333; }
+.td-cov-req span { color:#999; font-size:12px; }
+.td-ai-actions { margin-top:12px; display:flex; gap:8px; }
+</style>
+
+<div class="page-container p10" id="td-app">
+    <div class="layui-card" style="margin-bottom:15px;">
+        <div class="layui-card-header">{$title}</div>
+        <div class="layui-card-body" style="color:#999;font-size:13px;">
+            {:lang('admin/themedesign/intro')}
+        </div>
+    </div>
+
+    <div class="td-wrap">
+        <!-- left step nav -->
+        <div class="td-nav" id="tdNav">
+            <div class="td-nav-item active" data-step="0"><span class="td-no">1</span> {:lang('admin/themedesign/step_overview')}</div>
+            <div class="td-nav-item" data-step="1"><span class="td-no">2</span> {:lang('admin/themedesign/step_appearance')}</div>
+            <div class="td-nav-item" data-step="2"><span class="td-no">3</span> {:lang('admin/themedesign/step_navbar')}</div>
+            <div class="td-nav-item" data-step="3"><span class="td-no">4</span> {:lang('admin/themedesign/step_footer')}</div>
+            <div class="td-nav-item" data-step="4"><span class="td-no">5</span> {:lang('admin/themedesign/step_homepage')}</div>
+            <div class="td-nav-item" data-step="5"><span class="td-no">6</span> {:lang('admin/themedesign/step_publish')}</div>
+        </div>
+
+        <!-- right content -->
+        <div class="td-main td-content">
+            <form class="layui-form" lay-filter="tdForm">
+
+            <!-- STEP 1: Overview -->
+            <div class="td-step-panel active" data-step="0">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/overview')}</h3>
+
+                    <div class="td-field">
+                        <div class="td-field-label">{:lang('admin/themedesign/select_theme')}</div>
+                        <div class="td-theme-grid">
+                            {volist name="themes" id="th"}
+                            <div class="td-theme-card{if condition="$th.selected"} active{/if}" data-theme="{$th.dir}">
+                                <i class="layui-icon td-theme-ico">&#xe620;</i>
+                                <div class="td-theme-meta">
+                                    <div class="td-theme-name">{$th.label}<span class="td-theme-dir">{$th.dir}/</span></div>
+                                    <div class="td-theme-tags">{if condition="$th.active"}<span class="td-tag green">{:lang('admin/themedesign/theme_active')}</span>{/if}{empty name="th.designable"}<span class="td-tag muted">{:lang('admin/themedesign/theme_basic')}</span>{/empty}</div>
+                                </div>
+                                <i class="layui-icon td-theme-check">&#xe605;</i>
+                            </div>
+                            {/volist}
+                        </div>
+                        <div class="td-tip">{:lang('admin/themedesign/theme_select_tip')}</div>
+                    </div>
+
+                    <div class="td-field">
+                        <div class="td-field-label">{:lang('admin/themedesign/pub_status')}</div>
+                        {if condition="$has_published"}
+                        <span class="td-badge-pub yes">{:lang('admin/themedesign/published')}</span>
+                        {else /}
+                        <span class="td-badge-pub no">{:lang('admin/themedesign/no_published')}</span>
+                        {/if}
+                    </div>
+                    <blockquote class="layui-elem-quote td-tip" style="margin-top:14px;">
+                        {:lang('admin/themedesign/flow_title')}<br>
+                        1. <b>{:lang('admin/themedesign/step_appearance')}</b> — {:lang('admin/themedesign/flow_appearance')}<br>
+                        2. <b>{:lang('admin/themedesign/step_navbar')}</b> — {:lang('admin/themedesign/flow_navbar')}<br>
+                        3. <b>{:lang('admin/themedesign/step_footer')}</b> — {:lang('admin/themedesign/flow_footer')}<br>
+                        4. <b>{:lang('admin/themedesign/step_homepage')}</b> — {:lang('admin/themedesign/flow_homepage')}<br>
+                        5. <b>{:lang('admin/themedesign/step_publish')}</b> — {:lang('admin/themedesign/flow_publish')}<br>
+                        {:lang('admin/themedesign/flow_note')}
+                    </blockquote>
+                </div>
+
+                <div class="td-card td-ai-card">
+                    <h3>{:lang('admin/themedesign/ai_generate')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/ai_generate_tip')}</div>
+
+                    <div class="td-ai-modes" id="tdAiModes">
+                        <button type="button" class="td-ai-mode is-active" data-mode="text">{:lang('admin/themedesign/ai_mode_text')}</button>
+                        <button type="button" class="td-ai-mode" data-mode="image">{:lang('admin/themedesign/ai_mode_image')}</button>
+                        <button type="button" class="td-ai-mode" data-mode="url">{:lang('admin/themedesign/ai_mode_url')}</button>
+                    </div>
+
+                    <textarea id="tdAiSpec" class="layui-textarea" placeholder="{:lang('admin/themedesign/ai_spec_ph')}"></textarea>
+
+                    <div class="td-ai-pane" data-pane="image" style="display:none;">
+                        <div id="tdAiPasteZone" class="td-ai-pastezone" tabindex="0">
+                            <label class="layui-btn layui-btn-sm layui-btn-primary td-ai-filebtn">
+                                <i class="layui-icon">&#xe67c;</i> {:lang('admin/themedesign/ai_upload_screenshot')}
+                                <input type="file" id="tdAiImage" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
+                            </label>
+                            <span class="td-ai-paste-hint">{:lang('admin/themedesign/ai_paste_hint')}</span>
+                            <span id="tdAiImageName" class="td-ai-filename"></span>
+                            <div id="tdAiImagePrev" class="td-ai-imgprev" style="display:none;"><img src="" alt=""></div>
+                        </div>
+                    </div>
+
+                    <div class="td-ai-pane" data-pane="url" style="display:none;">
+                        <input type="text" id="tdAiUrl" class="layui-input" placeholder="{:lang('admin/themedesign/ai_url_ph')}">
+                    </div>
+
+                    <div class="td-ai-names">
+                        <div class="td-ai-field">
+                            <label>{:lang('admin/themedesign/new_name')}</label>
+                            <input type="text" id="tdAiName" class="layui-input" placeholder="{:lang('admin/themedesign/new_name_ph')}">
+                        </div>
+                        <div class="td-ai-field">
+                            <label>{:lang('admin/themedesign/new_dir')}</label>
+                            <input type="text" id="tdAiDir" class="layui-input" placeholder="{:lang('admin/themedesign/new_dir_ph')}">
+                        </div>
+                    </div>
+                    <div class="td-tip" style="margin-top:4px;">{:lang('admin/themedesign/new_dir_help')}</div>
+                    <div class="td-ai-toolbar">
+                        <label class="layui-btn layui-btn-sm layui-btn-primary td-ai-filebtn td-ai-mdfile">
+                            <i class="layui-icon">&#xe67c;</i> {:lang('admin/themedesign/ai_upload_file')}
+                            <input type="file" id="tdAiFile" accept=".md,.markdown,.txt,text/plain,text/markdown" style="display:none;">
+                        </label>
+                        <span id="tdAiFileName" class="td-ai-filename"></span>
+                        <button type="button" class="layui-btn layui-btn-sm td-ai-gen" id="tdAiDetect" style="display:none;"><i class="layui-icon">&#xe615;</i> {:lang('admin/themedesign/ai_detect_btn')}</button>
+                        <button type="button" class="layui-btn layui-btn-sm td-ai-gen" id="tdAiGen"><i class="layui-icon">&#xe63d;</i> {:lang('admin/themedesign/ai_generate_btn')}</button>
+                    </div>
+                    <div id="tdAiStatus" class="td-ai-status" style="display:none;"></div>
+                    <div id="tdAiDetected" class="td-ai-detected" style="display:none;"></div>
+                    <div id="tdAiResult" class="td-ai-result" style="display:none;"></div>
+                </div>
+
+                <div class="td-footer-bar">
+                    <span></span>
+                    <button type="button" class="layui-btn td-next" data-go="1">{:lang('admin/themedesign/next')} <i class="layui-icon">&#xe65b;</i></button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Appearance -->
+            <div class="td-step-panel" data-step="1">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/color_scheme')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/color_scheme_tip')}</div>
+                    <div class="td-scheme-grid" id="schemeGrid">
+                        {volist name="schemes" id="sc"}
+                        <div class="td-scheme-card" data-key="{$sc.key}"
+                             data-accent="{$sc.colors.accent}"
+                             data-accent_ink="{$sc.colors.accent_ink}"
+                             data-bg="{$sc.colors.bg}"
+                             data-surface="{$sc.colors.surface}"
+                             data-surface_2="{$sc.colors.surface_2}"
+                             data-text="{$sc.colors.text}"
+                             data-text_muted="{$sc.colors.text_muted}"
+                             data-border="{$sc.colors.border}">
+                            <div class="td-scheme-name">{$sc.name}</div>
+                            <div class="td-scheme-bar">
+                                <span style="background:{$sc.colors.accent}"></span>
+                                <span style="background:{$sc.colors.surface}"></span>
+                                <span style="background:{$sc.colors.surface_2}"></span>
+                                <span style="background:{$sc.colors.text}"></span>
+                                <span style="background:{$sc.colors.border}"></span>
+                            </div>
+                        </div>
+                        {/volist}
+                    </div>
+
+                    <h3 style="margin-top:10px;">{:lang('admin/themedesign/custom_colors')}</h3>
+                    <div class="td-color-grid">
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_accent')}</label><input type="color" id="cp_accent" class="td-cp" data-color="accent"><input class="layui-input td-color-hex" data-color="accent" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_accent_ink')}</label><input type="color" id="cp_accent_ink" class="td-cp" data-color="accent_ink"><input class="layui-input td-color-hex" data-color="accent_ink" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_bg')}</label><input type="color" id="cp_bg" class="td-cp" data-color="bg"><input class="layui-input td-color-hex" data-color="bg" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_surface')}</label><input type="color" id="cp_surface" class="td-cp" data-color="surface"><input class="layui-input td-color-hex" data-color="surface" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_surface_2')}</label><input type="color" id="cp_surface_2" class="td-cp" data-color="surface_2"><input class="layui-input td-color-hex" data-color="surface_2" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_text')}</label><input type="color" id="cp_text" class="td-cp" data-color="text"><input class="layui-input td-color-hex" data-color="text" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_text_muted')}</label><input type="color" id="cp_text_muted" class="td-cp" data-color="text_muted"><input class="layui-input td-color-hex" data-color="text_muted" autocomplete="off"></div>
+                        <div class="td-color-item"><label>{:lang('admin/themedesign/color_border')}</label><input type="color" id="cp_border" class="td-cp" data-color="border"><input class="layui-input td-color-hex" data-color="border" autocomplete="off"></div>
+                    </div>
+                </div>
+
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/typography')}</h3>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/themedesign/font')}</label>
+                        <div class="layui-input-inline" style="width:320px;">
+                            <select id="fontFamily" lay-filter="fontFamily">
+                                {volist name="fonts" id="ft"}
+                                <option value="{$ft.value}">{$ft.label}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/themedesign/font_size')}</label>
+                        <div class="layui-input-inline" style="width:300px;padding-top:9px;">
+                            <input type="range" id="fontSizeSlider" class="td-range" min="12" max="22" step="1" value="16">
+                        </div>
+                        <div class="layui-form-mid layui-word-aux"><span id="fontSizeVal">16</span> {:lang('admin/themedesign/font_size_unit')}</div>
+                    </div>
+                </div>
+
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/assets')}</h3>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/themedesign/logo')}</label>
+                        <div class="layui-input-block">
+                            <div class="td-img-uploader">
+                                <img class="td-img-preview" id="logoPreview" alt="{:lang('admin/themedesign/logo')}" style="display:none">
+                                <div class="td-img-ctrls">
+                                    <div class="td-img-ctrls-row">
+                                        <button type="button" class="layui-btn layui-btn-sm" id="logoUpload"><i class="layui-icon">&#xe67c;</i> {:lang('admin/themedesign/upload')}</button>
+                                        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="logoClear">{:lang('admin/themedesign/clear')}</button>
+                                        <input type="text" class="layui-input" id="logoPath" placeholder="{:lang('admin/themedesign/image_path_ph')}" style="width:280px;">
+                                    </div>
+                                    <div class="td-img-airow">
+                                        <input type="text" class="layui-input td-img-aimsg" id="logoAiMsg" placeholder="{:lang('admin/themedesign/img_ai_msg_ph')}">
+                                        <button type="button" class="layui-btn layui-btn-sm td-img-aigen" id="logoAiGen"><i class="layui-icon">&#xe63d;</i> {:lang('admin/themedesign/img_ai_gen')}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/themedesign/footer_copyright')}</label>
+                        <div class="layui-input-inline" style="width:420px;">
+                            <input type="text" class="layui-input" id="footerCopyright" placeholder="{$footer_copyright_ph}">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/themedesign/default_avatar')}</label>
+                        <div class="layui-input-block">
+                            <div class="td-img-uploader">
+                                <img class="td-img-preview avatar" id="avatarPreview" alt="{:lang('admin/themedesign/default_avatar')}" style="display:none">
+                                <div class="td-img-ctrls">
+                                    <div class="td-img-ctrls-row">
+                                        <button type="button" class="layui-btn layui-btn-sm" id="avatarUpload"><i class="layui-icon">&#xe67c;</i> {:lang('admin/themedesign/upload')}</button>
+                                        <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="avatarClear">{:lang('admin/themedesign/clear')}</button>
+                                        <input type="text" class="layui-input" id="avatarPath" placeholder="{:lang('admin/themedesign/image_path_ph')}" style="width:280px;">
+                                    </div>
+                                    <div class="td-img-airow">
+                                        <input type="text" class="layui-input td-img-aimsg" id="avatarAiMsg" placeholder="{:lang('admin/themedesign/img_ai_msg_ph')}">
+                                        <button type="button" class="layui-btn layui-btn-sm td-img-aigen" id="avatarAiGen"><i class="layui-icon">&#xe63d;</i> {:lang('admin/themedesign/img_ai_gen')}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="td-card td-livecard">
+                    <h3>{:lang('admin/themedesign/live_preview')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/preview_save_hint')}</div>
+                    <div class="td-live-toolbar">
+                        <button type="button" class="layui-btn layui-btn-sm td-live-refresh" data-step="attributes"><i class="layui-icon">&#xe669;</i> {:lang('admin/themedesign/refresh_preview')}</button>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm layui-btn-primary td-live-open" target="_blank">{:lang('admin/themedesign/open_new_window')}</a>
+                        <span class="td-view-toggle">
+                            <button type="button" class="td-view-btn active" data-view="desktop"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6 14h4M8 11.5V14"/></svg> {:lang('admin/themedesign/view_desktop')}</button>
+                            <button type="button" class="td-view-btn" data-view="mobile"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.7h2"/></svg> {:lang('admin/themedesign/view_mobile')}</button>
+                        </span>
+                    </div>
+                    <iframe class="td-live-frame" src="about:blank"></iframe>
+                </div>
+
+                <div class="td-footer-bar">
+                    <button type="button" class="layui-btn layui-btn-primary td-prev" data-go="0"><i class="layui-icon">&#xe65c;</i> {:lang('admin/themedesign/prev')}</button>
+                    <span>
+                        <button type="button" class="layui-btn layui-btn-normal td-save" data-step="attributes">{:lang('admin/themedesign/save')}</button>
+                        <button type="button" class="layui-btn td-next" data-go="2">{:lang('admin/themedesign/next')} <i class="layui-icon">&#xe65b;</i></button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- STEP 3: Navbar -->
+            <div class="td-step-panel" data-step="2">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/navbar_cats')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/navbar_tip')}</div>
+                    <div class="td-tree-tools">
+                        <a href="javascript:;" class="td-tree-act" id="navCheckAll">{:lang('admin/themedesign/check_all')}</a>
+                        <a href="javascript:;" class="td-tree-act" id="navCheckTops">{:lang('admin/themedesign/check_tops')}</a>
+                        <a href="javascript:;" class="td-tree-act" id="navCheckNone">{:lang('admin/themedesign/check_none')}</a>
+                    </div>
+                    <div class="td-catpick" id="navPick">
+                        {volist name="type_tree_full" id="p"}
+                        <div class="td-pick-group">
+                            <input type="checkbox" lay-skin="primary" lay-filter="navType" name="td_nav_type" value="{$p.id}" data-pid="0" title="{$p.name}">
+                            {notempty name="p.children"}
+                            <div class="td-pick-children">
+                                {volist name="p.children" id="c"}
+                                <input type="checkbox" lay-skin="primary" lay-filter="navType" name="td_nav_type" value="{$c.id}" data-pid="{$p.id}" title="{$c.name}">
+                                {/volist}
+                            </div>
+                            {/notempty}
+                        </div>
+                        {/volist}
+                    </div>
+                    {empty name="type_tree_full"}
+                    <div class="td-tip" style="color:#d9534f;">{:lang('admin/themedesign/navbar_empty')}</div>
+                    {/empty}
+                    <div class="td-order-wrap">
+                        <div class="td-order-label">{:lang('admin/themedesign/selected_order')}</div>
+                        <div class="td-order" id="navOrder"></div>
+                    </div>
+                </div>
+                <div class="td-card td-livecard">
+                    <h3>{:lang('admin/themedesign/live_preview')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/preview_save_hint')}</div>
+                    <div class="td-live-toolbar">
+                        <button type="button" class="layui-btn layui-btn-sm td-live-refresh" data-step="navbar"><i class="layui-icon">&#xe669;</i> {:lang('admin/themedesign/refresh_preview')}</button>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm layui-btn-primary td-live-open" target="_blank">{:lang('admin/themedesign/open_new_window')}</a>
+                        <span class="td-view-toggle">
+                            <button type="button" class="td-view-btn active" data-view="desktop"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6 14h4M8 11.5V14"/></svg> {:lang('admin/themedesign/view_desktop')}</button>
+                            <button type="button" class="td-view-btn" data-view="mobile"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.7h2"/></svg> {:lang('admin/themedesign/view_mobile')}</button>
+                        </span>
+                    </div>
+                    <iframe class="td-live-frame" src="about:blank"></iframe>
+                </div>
+                <div class="td-footer-bar">
+                    <button type="button" class="layui-btn layui-btn-primary td-prev" data-go="1"><i class="layui-icon">&#xe65c;</i> {:lang('admin/themedesign/prev')}</button>
+                    <span>
+                        <button type="button" class="layui-btn layui-btn-normal td-save" data-step="navbar">{:lang('admin/themedesign/save')}</button>
+                        <button type="button" class="layui-btn td-next" data-go="3">{:lang('admin/themedesign/next')} <i class="layui-icon">&#xe65b;</i></button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- STEP 4: Footer -->
+            <div class="td-step-panel" data-step="3">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/footer_cats')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/footer_cats_tip')}</div>
+                    <div class="td-tree-tools">
+                        <a href="javascript:;" class="td-tree-act" id="ftCheckAll">{:lang('admin/themedesign/check_all')}</a>
+                        <a href="javascript:;" class="td-tree-act" id="ftCheckTops">{:lang('admin/themedesign/check_tops')}</a>
+                        <a href="javascript:;" class="td-tree-act" id="ftCheckNone">{:lang('admin/themedesign/check_none')}</a>
+                    </div>
+                    <div class="td-catpick" id="footerPick">
+                        {volist name="type_tree_full" id="p"}
+                        <div class="td-pick-group">
+                            <input type="checkbox" lay-skin="primary" lay-filter="ftType" name="td_ft_type" value="{$p.id}" data-pid="0" title="{$p.name}">
+                            {notempty name="p.children"}
+                            <div class="td-pick-children">
+                                {volist name="p.children" id="c"}
+                                <input type="checkbox" lay-skin="primary" lay-filter="ftType" name="td_ft_type" value="{$c.id}" data-pid="{$p.id}" title="{$c.name}">
+                                {/volist}
+                            </div>
+                            {/notempty}
+                        </div>
+                        {/volist}
+                    </div>
+                    <div class="td-order-wrap">
+                        <div class="td-order-label">{:lang('admin/themedesign/selected_order')}</div>
+                        <div class="td-order" id="footerOrder"></div>
+                    </div>
+                </div>
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/footer_links')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/footer_tip')}</div>
+                    <div id="footerLinks"></div>
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="addFooterLink"><i class="layui-icon">&#xe654;</i> {:lang('admin/themedesign/add_link')}</button>
+                </div>
+                <div class="td-card td-livecard">
+                    <h3>{:lang('admin/themedesign/live_preview')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/preview_save_hint')}</div>
+                    <div class="td-live-toolbar">
+                        <button type="button" class="layui-btn layui-btn-sm td-live-refresh" data-step="footer"><i class="layui-icon">&#xe669;</i> {:lang('admin/themedesign/refresh_preview')}</button>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm layui-btn-primary td-live-open" target="_blank">{:lang('admin/themedesign/open_new_window')}</a>
+                        <span class="td-view-toggle">
+                            <button type="button" class="td-view-btn active" data-view="desktop"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6 14h4M8 11.5V14"/></svg> {:lang('admin/themedesign/view_desktop')}</button>
+                            <button type="button" class="td-view-btn" data-view="mobile"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.7h2"/></svg> {:lang('admin/themedesign/view_mobile')}</button>
+                        </span>
+                    </div>
+                    <iframe class="td-live-frame" src="about:blank"></iframe>
+                </div>
+                <div class="td-footer-bar">
+                    <button type="button" class="layui-btn layui-btn-primary td-prev" data-go="2"><i class="layui-icon">&#xe65c;</i> {:lang('admin/themedesign/prev')}</button>
+                    <span>
+                        <button type="button" class="layui-btn layui-btn-normal td-save" data-step="footer">{:lang('admin/themedesign/save')}</button>
+                        <button type="button" class="layui-btn td-next" data-go="4">{:lang('admin/themedesign/next')} <i class="layui-icon">&#xe65b;</i></button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- STEP 5: Homepage -->
+            <div class="td-step-panel" data-step="4">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/homepage_sections')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/homepage_tip')}</div>
+                    <ul class="td-section-list" id="sectionList"></ul>
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="addBlock"><i class="layui-icon">&#xe654;</i> {:lang('admin/themedesign/add_block')}</button>
+                </div>
+                <div class="td-card td-livecard">
+                    <h3>{:lang('admin/themedesign/live_preview')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/preview_save_hint')}</div>
+                    <div class="td-live-toolbar">
+                        <button type="button" class="layui-btn layui-btn-sm td-live-refresh" data-step="homepage"><i class="layui-icon">&#xe669;</i> {:lang('admin/themedesign/refresh_preview')}</button>
+                        <a href="javascript:;" class="layui-btn layui-btn-sm layui-btn-primary td-live-open" target="_blank">{:lang('admin/themedesign/open_new_window')}</a>
+                        <span class="td-view-toggle">
+                            <button type="button" class="td-view-btn active" data-view="desktop"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6 14h4M8 11.5V14"/></svg> {:lang('admin/themedesign/view_desktop')}</button>
+                            <button type="button" class="td-view-btn" data-view="mobile"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.7h2"/></svg> {:lang('admin/themedesign/view_mobile')}</button>
+                        </span>
+                    </div>
+                    <iframe class="td-live-frame" src="about:blank"></iframe>
+                </div>
+                <div class="td-footer-bar">
+                    <button type="button" class="layui-btn layui-btn-primary td-prev" data-go="3"><i class="layui-icon">&#xe65c;</i> {:lang('admin/themedesign/prev')}</button>
+                    <span>
+                        <button type="button" class="layui-btn layui-btn-normal td-save" data-step="homepage">{:lang('admin/themedesign/save')}</button>
+                        <button type="button" class="layui-btn td-next" data-go="5">{:lang('admin/themedesign/next')} <i class="layui-icon">&#xe65b;</i></button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- STEP 6: Preview & Publish -->
+            <div class="td-step-panel" data-step="5">
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/preview')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/preview_tip')}</div>
+                    <div class="td-live-toolbar" style="margin-bottom:10px;">
+                        <button type="button" class="layui-btn layui-btn-normal" id="btnRefreshPreview"><i class="layui-icon">&#xe669;</i> {:lang('admin/themedesign/refresh_preview')}</button>
+                        <a href="javascript:;" id="openPreviewNew" class="layui-btn layui-btn-primary" target="_blank">{:lang('admin/themedesign/open_new_window')}</a>
+                        <span class="td-view-toggle">
+                            <button type="button" class="td-view-btn active" data-view="desktop"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M6 14h4M8 11.5V14"/></svg> {:lang('admin/themedesign/view_desktop')}</button>
+                            <button type="button" class="td-view-btn" data-view="mobile"><svg class="td-view-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.7h2"/></svg> {:lang('admin/themedesign/view_mobile')}</button>
+                        </span>
+                    </div>
+                    <iframe class="td-preview" id="previewFrame" src="about:blank"></iframe>
+                </div>
+
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/publish')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/publish_tip')}</div>
+                    <div class="td-pubmode">
+                        <label class="td-pubopt active">
+                            <input type="radio" name="pub_mode" value="update" checked>
+                            <span class="td-pubopt-body"><b>{:lang('admin/themedesign/pub_update')}</b><em>{:lang('admin/themedesign/pub_update_tip')} — <code>{$cur_theme}</code></em></span>
+                        </label>
+                        <label class="td-pubopt">
+                            <input type="radio" name="pub_mode" value="new">
+                            <span class="td-pubopt-body"><b>{:lang('admin/themedesign/pub_new')}</b><em>{:lang('admin/themedesign/pub_new_tip')}</em></span>
+                        </label>
+                    </div>
+                    <div id="newThemeFields" class="td-newfields" style="display:none;">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">{:lang('admin/themedesign/new_name')}</label>
+                            <div class="layui-input-inline" style="width:300px;"><input type="text" id="newThemeName" class="layui-input" placeholder="{:lang('admin/themedesign/new_name_ph')}"></div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">{:lang('admin/themedesign/new_dir')}</label>
+                            <div class="layui-input-inline" style="width:300px;"><input type="text" id="newThemeDir" class="layui-input" placeholder="{:lang('admin/themedesign/new_dir_ph')}"></div>
+                            <div class="layui-form-mid layui-word-aux">{:lang('admin/themedesign/new_dir_help')}</div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">{:lang('admin/themedesign/new_intro')}</label>
+                            <div class="layui-input-inline" style="width:420px;"><input type="text" id="newThemeIntro" class="layui-input" placeholder="{:lang('admin/themedesign/new_intro_ph')}"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="layui-btn layui-btn-danger" id="btnPublish"><i class="layui-icon">&#xe605;</i> {:lang('admin/themedesign/publish_draft')}</button>
+                </div>
+
+                <div class="td-card">
+                    <h3>{:lang('admin/themedesign/history')}</h3>
+                    <div class="td-tip">{:lang('admin/themedesign/history_tip')}</div>
+                    <ul class="td-history-list" id="historyList"><li><span class="td-h-time" style="color:#999;">{:lang('admin/themedesign/loading')}</span></li></ul>
+                </div>
+
+                <div class="td-footer-bar">
+                    <button type="button" class="layui-btn layui-btn-primary td-prev" data-go="4"><i class="layui-icon">&#xe65c;</i> {:lang('admin/themedesign/prev')}</button>
+                    <span></span>
+                </div>
+            </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+// ====== injected server state ======
+var CFG = {:json_encode($cfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_DEFAULTS = {:json_encode($defaults, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_SCHEMES  = {:json_encode($schemes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_SECTIONS = {:json_encode($section_catalog, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_CATS = {:json_encode($cats_flat, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_URLS = {
+    design:    "{:url('theme_design/design')}",
+    load:      "{:url('theme_design/load')}",
+    saveStep:  "{:url('theme_design/save_step')}",
+    preview:   "{:url('theme_design/preview')}",
+    publish:   "{:url('theme_design/publish')}",
+    history:   "{:url('theme_design/history')}",
+    rollback:  "{:url('theme_design/rollback')}",
+    upload:    "{:url('theme_design/upload')}",
+    generate:  "{:url('theme_design/generate')}",
+    detect:    "{:url('theme_design/detect')}",
+    generateApply: "{:url('theme_design/generate_apply')}",
+    genImage:  "{:url('theme_design/gen_image')}"
+};
+var TD_COLOR_KEYS = ['accent','accent_ink','bg','surface','surface_2','text','text_muted','border'];
+var TD_FONTS = {:json_encode($fonts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+var TD_THEME = "{$cur_theme}";
+var TD_TOKEN = "{$Request.token}";
+var TD_PREVIEW_URL = "{$preview_url}";
+var TD_DEFAULT_AVATAR = "{$default_avatar_url}";
+var TD_THEME_LOGO = "{$theme_logo_url}";
+// ====== i18n strings for JS ======
+var LANG = {
+    uploading:        "{:lang('admin/themedesign/uploading')}",
+    upload_ok:        "{:lang('admin/themedesign/upload_ok')}",
+    upload_err:       "{:lang('admin/themedesign/upload_err')}",
+    saved:            "{:lang('admin/themedesign/saved')}",
+    save_err:         "{:lang('admin/themedesign/save_err')}",
+    save_err_net:     "{:lang('admin/themedesign/save_err_net')}",
+    preview_err:      "{:lang('admin/themedesign/preview_err')}",
+    confirm_publish:  "{:lang('admin/themedesign/confirm_publish')}",
+    confirm_publish_title: "{:lang('admin/themedesign/confirm_publish_title')}",
+    publish_ok:       "{:lang('admin/themedesign/publish_ok')}",
+    publish_err:      "{:lang('admin/themedesign/publish_err')}",
+    history_err:      "{:lang('admin/themedesign/history_err')}",
+    history_empty:    "{:lang('admin/themedesign/history_empty')}",
+    rollback:         "{:lang('admin/themedesign/rollback')}",
+    confirm_rollback: "{:lang('admin/themedesign/confirm_rollback')}",
+    confirm_rollback_title: "{:lang('admin/themedesign/confirm_rollback_title')}",
+    rollback_ok:      "{:lang('admin/themedesign/rollback_ok')}",
+    rollback_err:     "{:lang('admin/themedesign/rollback_err')}",
+    rollback_reload:  "{:lang('admin/themedesign/rollback_reload')}",
+    link_text_ph:     "{:lang('admin/themedesign/link_text_ph')}",
+    link_url_ph:      "{:lang('admin/themedesign/link_url_ph')}",
+    section_switch:   "{:lang('admin/themedesign/section_switch')}",
+    need_name:        "{:lang('admin/themedesign/new_name_required')}",
+    bad_dir:          "{:lang('admin/themedesign/new_dir_invalid')}",
+    confirm_publish_new: "{:lang('admin/themedesign/confirm_publish_new')}",
+    drag_hint:        "{:lang('admin/themedesign/drag_hint')}",
+    items_count:      "{:lang('admin/themedesign/items_count')}",
+    items_default:    "{:lang('admin/themedesign/items_default')}",
+    display_method:   "{:lang('admin/themedesign/display_method')}",
+    layout_default:   "{:lang('admin/themedesign/layout_default')}",
+    layout_slider:    "{:lang('admin/themedesign/layout_slider')}",
+    layout_grid:      "{:lang('admin/themedesign/layout_grid')}",
+    layout_list:      "{:lang('admin/themedesign/layout_list')}",
+    selected_order:   "{:lang('admin/themedesign/selected_order')}",
+    none_selected:    "{:lang('admin/themedesign/none_selected')}",
+    remove:           "{:lang('admin/themedesign/remove')}",
+    add_block:        "{:lang('admin/themedesign/add_block')}",
+    content_type:     "{:lang('admin/themedesign/content_type')}",
+    category:         "{:lang('admin/themedesign/category')}",
+    block_title:      "{:lang('admin/themedesign/block_title')}",
+    cat_all:          "{:lang('admin/themedesign/cat_all')}",
+    ct_vod:           "{:lang('admin/themedesign/ct_vod')}",
+    ct_art:           "{:lang('admin/themedesign/ct_art')}",
+    ct_manga:         "{:lang('admin/themedesign/ct_manga')}",
+    custom_block:     "{:lang('admin/themedesign/custom_block')}",
+    view_desktop:     "{:lang('admin/themedesign/view_desktop')}",
+    view_mobile:      "{:lang('admin/themedesign/view_mobile')}",
+    ct_rank:          "{:lang('admin/themedesign/ct_rank')}",
+    sort_by:          "{:lang('admin/themedesign/sort_by')}",
+    sort_hits:        "{:lang('admin/themedesign/sort_hits')}",
+    sort_time:        "{:lang('admin/themedesign/sort_time')}",
+    sort_score:       "{:lang('admin/themedesign/sort_score')}",
+    period:           "{:lang('admin/themedesign/period')}",
+    period_day:       "{:lang('admin/themedesign/period_day')}",
+    period_week:      "{:lang('admin/themedesign/period_week')}",
+    period_month:     "{:lang('admin/themedesign/period_month')}",
+    period_all:       "{:lang('admin/themedesign/period_all')}",
+    ai_generating:    "{:lang('admin/themedesign/ai_generating')}",
+    ai_gen_done:      "{:lang('admin/themedesign/ai_gen_done')}",
+    ai_gen_failed:    "{:lang('admin/themedesign/ai_gen_failed')}",
+    ai_coverage:      "{:lang('admin/themedesign/ai_coverage')}",
+    ai_applied:       "{:lang('admin/themedesign/ai_applied')}",
+    ai_regenerate:    "{:lang('admin/themedesign/ai_regenerate')}",
+    ai_reload_review: "{:lang('admin/themedesign/ai_reload_review')}",
+    ai_empty_spec:    "{:lang('admin/themedesign/ai_empty_spec')}",
+    st_implemented:   "{:lang('admin/themedesign/st_implemented')}",
+    st_partial:       "{:lang('admin/themedesign/st_partial')}",
+    st_skipped:       "{:lang('admin/themedesign/st_skipped')}",
+    ai_f_colors:      "{:lang('admin/themedesign/custom_colors')}",
+    ai_f_font:        "{:lang('admin/themedesign/font')}",
+    ai_f_size:        "{:lang('admin/themedesign/font_size')}",
+    ai_f_sections:    "{:lang('admin/themedesign/homepage_sections')}",
+    ai_f_nav:         "{:lang('admin/themedesign/navbar_cats')}",
+    new_created:      "{:lang('admin/themedesign/new_created')}",
+    ai_preview:       "{:lang('admin/themedesign/preview')}",
+    ai_open_designer: "{:lang('admin/themedesign/ai_open_designer')}",
+    ai_detect_btn:        "{:lang('admin/themedesign/ai_detect_btn')}",
+    ai_detecting:         "{:lang('admin/themedesign/ai_detecting')}",
+    ai_detected_title:    "{:lang('admin/themedesign/ai_detected_title')}",
+    ai_detect_source_image: "{:lang('admin/themedesign/ai_detect_source_image')}",
+    ai_detect_source_url: "{:lang('admin/themedesign/ai_detect_source_url')}",
+    ai_detect_apply:      "{:lang('admin/themedesign/ai_detect_apply')}",
+    ai_detect_empty:      "{:lang('admin/themedesign/ai_detect_empty')}",
+    ai_detect_bad_image:  "{:lang('admin/themedesign/ai_detect_bad_image')}",
+    ai_detect_failed:     "{:lang('admin/themedesign/ai_detect_failed')}",
+    ai_detect_notes:      "{:lang('admin/themedesign/ai_detect_notes')}",
+    img_ai_generating:    "{:lang('admin/themedesign/img_ai_generating')}",
+    img_ai_done:          "{:lang('admin/themedesign/img_ai_done')}",
+    img_ai_failed:        "{:lang('admin/themedesign/img_ai_failed')}"
+};
+</script>
+<script type="text/javascript">
+// ===== AI generator (overview step): prompt/file -> generate -> status -> coverage -> regenerate =====
+layui.use(['jquery', 'layer'], function () {
+    var $ = layui.jquery, layer = layui.layer;
+    var aiFileText = '';
+    var L = window.LANG || {};
+    function t(k, d) { return (L[k] != null && L[k] !== '') ? L[k] : d; }
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    $('#tdAiFile').on('change', function () {
+        var f = this.files && this.files[0];
+        if (!f) { aiFileText = ''; $('#tdAiFileName').text(''); return; }
+        $('#tdAiFileName').text(f.name);
+        var r = new FileReader();
+        r.onload = function (e) { aiFileText = String(e.target.result || '').slice(0, 12000); };
+        r.readAsText(f);
+    });
+
+    function setStatus(msg, err) {
+        var $s = $('#tdAiStatus');
+        if (!msg) { $s.hide().empty().removeClass('is-error'); return; }
+        $s.removeClass('is-error');
+        if (err) { $s.addClass('is-error'); }
+        $s.empty();
+        if (!err) { $s.append('<span class="td-ai-spin"></span>'); }
+        $s.append(document.createTextNode(msg)).show();
+    }
+
+    function renderResult(data) {
+        var ap = data.applied || {};
+        var chips = [];
+        if (ap.colors) { chips.push(t('ai_f_colors', 'Colors') + ': ' + ap.colors + '/8'); }
+        if (ap.font) { chips.push(t('ai_f_font', 'Font') + ' ✓'); }
+        if (ap.font_size) { chips.push(t('ai_f_size', 'Font size') + ': ' + ap.font_size + 'px'); }
+        if (ap.sections) { chips.push(t('ai_f_sections', 'Sections') + ': ' + ap.sections); }
+        if (ap.nav) { chips.push(t('ai_f_nav', 'Nav') + ': ' + ap.nav); }
+
+        var h = '';
+        if (data.new_theme) {
+            h += '<div class="td-ai-applied"><b>' + esc(t('new_created', 'New theme created')) + '：</b><span class="td-ai-chip2">template/' + esc(data.new_theme) + '/</span></div>';
+        }
+        h += '<div class="td-ai-applied"><b>' + esc(t('ai_applied', 'Applied to draft')) + '：</b>';
+        chips.forEach(function (c) { h += '<span class="td-ai-chip2">' + esc(c) + '</span>'; });
+        h += '</div>';
+
+        var cov = data.coverage || [];
+        if (cov.length) {
+            h += '<div class="td-order-label">' + esc(t('ai_coverage', 'Requirements coverage')) + '</div>';
+            h += '<ul class="td-cov-list">';
+            cov.forEach(function (c) {
+                var st = c.status;
+                var cls = st === 'implemented' ? 'ok' : (st === 'skipped' ? 'skip' : 'partial');
+                var lbl = st === 'implemented' ? t('st_implemented', 'Implemented')
+                    : (st === 'skipped' ? t('st_skipped', 'Not applied') : t('st_partial', 'Partial'));
+                h += '<li><span class="td-cov-badge ' + cls + '">' + esc(lbl) + '</span>'
+                    + '<span class="td-cov-req"><b>' + esc(c.requirement) + '</b>'
+                    + (c.note ? '<span>' + esc(c.note) + '</span>' : '') + '</span></li>';
+            });
+            h += '</ul>';
+        }
+        h += '<div class="td-ai-actions">';
+        if (data.preview) { h += '<a class="layui-btn layui-btn-sm layui-btn-primary" href="' + esc(data.preview) + '" target="_blank">' + esc(t('ai_preview', 'Preview')) + '</a>'; }
+        if (data.design_url) { h += '<a class="layui-btn layui-btn-sm" href="' + esc(data.design_url) + '">' + esc(t('ai_open_designer', 'Open in designer')) + '</a>'; }
+        h += '<button type="button" class="layui-btn layui-btn-sm" id="tdAiRegen">' + esc(t('ai_regenerate', 'Regenerate')) + '</button>';
+        h += '</div>';
+        $('#tdAiResult').html(h).show();
+        if (data.new_theme) { $('#tdAiDir').val(data.new_theme); }
+    }
+
+    function runGenerate() {
+        var spec = String($('#tdAiSpec').val() || '').trim();
+        if (aiFileText) { spec = (spec ? spec + '\n\n' : '') + aiFileText; }
+        if (!spec) { layer.msg(t('ai_empty_spec', 'Please enter a description or attach a file')); return; }
+        $('#tdAiResult').hide().empty();
+        $('#tdAiGen').addClass('is-loading');
+        setStatus(t('ai_generating', 'Generating with AI, please wait...'), false);
+        $.post(TD_URLS.generate, { theme: TD_THEME, spec: spec, new_name: String($('#tdAiName').val() || ''), new_dir: String($('#tdAiDir').val() || ''), __token__: TD_TOKEN }, function (res) {
+            $('#tdAiGen').removeClass('is-loading');
+            if (res && res.code === 1) {
+                setStatus('');
+                renderResult(res);
+                layer.msg(res.msg || t('ai_gen_done', 'Draft generated.'));
+            } else {
+                setStatus((res && res.msg) ? res.msg : t('ai_gen_failed', 'Generation failed'), true);
+            }
+        }, 'json').fail(function () {
+            $('#tdAiGen').removeClass('is-loading');
+            setStatus(t('ai_gen_failed', 'Generation failed'), true);
+        });
+    }
+
+    $('#tdAiGen').on('click', runGenerate);
+    $('#tdAiResult').on('click', '#tdAiRegen', runGenerate);
+
+    // ===== Detect from screenshot / URL -> review elements -> create theme =====
+    var aiMode = 'text', aiImageData = '', aiImageType = '';
+
+    function setMode(mode) {
+        aiMode = mode;
+        $('#tdAiModes .td-ai-mode').removeClass('is-active')
+            .filter('[data-mode="' + mode + '"]').addClass('is-active');
+        $('.td-ai-pane').hide().filter('[data-pane="' + mode + '"]').show();
+        if (mode === 'text') {
+            $('#tdAiGen').show(); $('#tdAiDetect').hide(); $('.td-ai-mdfile').show();
+        } else {
+            $('#tdAiGen').hide(); $('#tdAiDetect').show(); $('.td-ai-mdfile').hide();
+        }
+        $('#tdAiDetected').hide().empty();
+        $('#tdAiResult').hide().empty();
+        setStatus('');
+    }
+    $('#tdAiModes').on('click', '.td-ai-mode', function () { setMode(String($(this).data('mode'))); });
+
+    // screenshot -> downscale (max 1280px, white matte) -> base64 for a vision call.
+    // Accepts a File (upload) OR a Blob (clipboard paste / drag-drop).
+    function processImageFile(f) {
+        aiImageData = ''; aiImageType = '';
+        $('#tdAiImageName').text(''); $('#tdAiImagePrev').hide().find('img').attr('src', '');
+        if (!f) { return; }
+        if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { layer.msg(t('ai_detect_bad_image', 'Invalid or unsupported image')); return; }
+        $('#tdAiImageName').text(f.name || 'clipboard.png');
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var img = new Image();
+            img.onload = function () {
+                var maxE = 1280, w = img.width || 1, h = img.height || 1;
+                var scale = Math.min(1, maxE / Math.max(w, h));
+                var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+                var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+                var ctx = cv.getContext('2d');
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch); // opaque matte for transparent PNGs
+                ctx.drawImage(img, 0, 0, cw, ch);
+                var dataUrl;
+                try { dataUrl = cv.toDataURL('image/jpeg', 0.85); aiImageType = 'image/jpeg'; }
+                catch (err) { dataUrl = String(e.target.result || ''); aiImageType = f.type; }
+                aiImageData = dataUrl.replace(/^data:[^,]+,/, '');
+                $('#tdAiImagePrev').show().find('img').attr('src', dataUrl);
+            };
+            img.onerror = function () { layer.msg(t('ai_detect_bad_image', 'Invalid or unsupported image')); };
+            img.src = String(e.target.result || '');
+        };
+        reader.onerror = function () { layer.msg(t('ai_detect_bad_image', 'Invalid or unsupported image')); };
+        reader.readAsDataURL(f);
+    }
+    $('#tdAiImage').on('change', function () { processImageFile(this.files && this.files[0]); });
+
+    // pull the first image out of a clipboard/drag DataTransfer
+    function imageFromTransfer(dt) {
+        if (!dt) { return null; }
+        if (dt.items) {
+            for (var i = 0; i < dt.items.length; i++) {
+                if (dt.items[i].kind === 'file' && /^image\//.test(dt.items[i].type || '')) { return dt.items[i].getAsFile(); }
+            }
+        }
+        if (dt.files) {
+            for (var j = 0; j < dt.files.length; j++) {
+                if (/^image\//.test(dt.files[j].type || '')) { return dt.files[j]; }
+            }
+        }
+        return null;
+    }
+
+    // paste a screenshot from the clipboard (Ctrl+V) — only while in screenshot mode
+    $(document).on('paste', function (ev) {
+        if (aiMode !== 'image') { return; }
+        var cd = (ev.originalEvent && ev.originalEvent.clipboardData) ? ev.originalEvent.clipboardData : (window.clipboardData || null);
+        var img = imageFromTransfer(cd);
+        if (img) { ev.preventDefault(); processImageFile(img); }
+    });
+
+    // drag & drop an image onto the paste zone
+    var $pz = $('#tdAiPasteZone');
+    $pz.on('dragover dragenter', function (ev) { ev.preventDefault(); ev.stopPropagation(); $pz.addClass('is-hover'); })
+       .on('dragleave dragend drop', function () { $pz.removeClass('is-hover'); })
+       .on('drop', function (ev) {
+           ev.preventDefault(); ev.stopPropagation();
+           var img = imageFromTransfer(ev.originalEvent && ev.originalEvent.dataTransfer);
+           if (img) { processImageFile(img); }
+       });
+
+    function runDetect() {
+        var spec = String($('#tdAiSpec').val() || '').trim();
+        var payload = { mode: aiMode, spec: spec, __token__: TD_TOKEN };
+        if (aiMode === 'image') {
+            if (!aiImageData) { layer.msg(t('ai_detect_empty', 'Please provide a screenshot or a website URL')); return; }
+            payload.image_data = aiImageData; payload.image_type = aiImageType;
+        } else if (aiMode === 'url') {
+            var url = String($('#tdAiUrl').val() || '').trim();
+            if (!url) { layer.msg(t('ai_detect_empty', 'Please provide a screenshot or a website URL')); return; }
+            payload.url = url;
+        } else { return; }
+        $('#tdAiDetected').hide().empty(); $('#tdAiResult').hide().empty();
+        $('#tdAiDetect').addClass('is-loading');
+        setStatus(t('ai_detecting', 'Analyzing design with AI, please wait...'), false);
+        $.post(TD_URLS.detect, payload, function (res) {
+            $('#tdAiDetect').removeClass('is-loading');
+            if (res && res.code === 1 && res.detected) { setStatus(''); renderDetected(res.detected, res.mode); }
+            else { setStatus((res && res.msg) ? res.msg : t('ai_detect_failed', 'Detection failed'), true); }
+        }, 'json').fail(function () {
+            $('#tdAiDetect').removeClass('is-loading');
+            setStatus(t('ai_detect_failed', 'Detection failed'), true);
+        });
+    }
+    $('#tdAiDetect').on('click', runDetect);
+
+    function fontOptionsHtml(sel) {
+        var h = '';
+        (window.TD_FONTS || []).forEach(function (f) {
+            h += '<option value="' + esc(f.value) + '"' + (f.value === sel ? ' selected' : '') + '>' + esc(f.label) + '</option>';
+        });
+        return h;
+    }
+
+    function renderDetected(d, mode) {
+        d = d || {}; var colors = d.colors || {};
+        var srcLbl = mode === 'image' ? t('ai_detect_source_image', 'Detected from screenshot')
+            : (mode === 'url' ? t('ai_detect_source_url', 'Detected from website') : '');
+        var h = '<div class="td-order-label">' + esc(t('ai_detected_title', 'Detected theme elements (review & edit)'))
+            + (srcLbl ? ' — ' + esc(srcLbl) : '') + '</div>';
+        h += '<div class="td-ai-swatches">';
+        (window.TD_COLOR_KEYS || []).forEach(function (k) {
+            var v = colors[k] || '#000000';
+            h += '<div class="td-ai-sw"><span class="td-ai-sw-key">' + esc(k) + '</span>'
+                + '<input type="color" class="td-ai-sw-color" data-k="' + esc(k) + '" value="' + esc(v) + '">'
+                + '<input type="text" class="layui-input td-ai-sw-hex" data-k="' + esc(k) + '" value="' + esc(v) + '"></div>';
+        });
+        h += '</div>';
+        h += '<div class="td-ai-detected-row">';
+        h += '<label>' + esc(t('ai_f_font', 'Font')) + '</label>'
+            + '<select id="tdAiDetFont" class="td-ai-det-select">' + fontOptionsHtml(d.font_family || '') + '</select>';
+        h += '<label>' + esc(t('ai_f_size', 'Font size')) + '</label>'
+            + '<input type="number" id="tdAiDetSize" class="layui-input" min="12" max="22" value="' + (parseInt(d.font_size, 10) || 16) + '">';
+        h += '</div>';
+        if (d.notes && d.notes.length) {
+            h += '<div class="td-ai-notes"><b>' + esc(t('ai_detect_notes', 'Detected')) + '：</b>';
+            d.notes.forEach(function (n) { h += '<span class="td-ai-chip2">' + esc(n) + '</span>'; });
+            h += '</div>';
+        }
+        h += '<div class="td-ai-actions"><button type="button" class="layui-btn layui-btn-sm td-ai-gen" id="tdAiApply">'
+            + '<i class="layui-icon">&#xe63d;</i> ' + esc(t('ai_detect_apply', 'Create theme with these')) + '</button></div>';
+        $('#tdAiDetected').html(h).show();
+        if (d.theme_name && !String($('#tdAiName').val() || '').trim()) { $('#tdAiName').val(d.theme_name); }
+    }
+
+    // keep the color picker and the hex text field in sync
+    $('#tdAiDetected').on('input', '.td-ai-sw-color', function () {
+        var k = $(this).data('k');
+        $('#tdAiDetected .td-ai-sw-hex[data-k="' + k + '"]').val($(this).val());
+    });
+    $('#tdAiDetected').on('change', '.td-ai-sw-hex', function () {
+        var k = $(this).data('k'), v = String($(this).val() || '').trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) { $('#tdAiDetected .td-ai-sw-color[data-k="' + k + '"]').val(v); }
+    });
+
+    $('#tdAiDetected').on('click', '#tdAiApply', function () {
+        var colors = {};
+        (window.TD_COLOR_KEYS || []).forEach(function (k) {
+            var v = String($('#tdAiDetected .td-ai-sw-hex[data-k="' + k + '"]').val() || '').trim();
+            if (!/^#[0-9a-fA-F]{3,8}$/.test(v)) { v = String($('#tdAiDetected .td-ai-sw-color[data-k="' + k + '"]').val() || ''); }
+            colors[k] = v;
+        });
+        var payload = {
+            theme: TD_THEME,
+            colors: JSON.stringify(colors),
+            font_family: String($('#tdAiDetFont').val() || ''),
+            font_size: String($('#tdAiDetSize').val() || '16'),
+            new_name: String($('#tdAiName').val() || ''),
+            new_dir: String($('#tdAiDir').val() || ''),
+            __token__: TD_TOKEN
+        };
+        $('#tdAiApply').addClass('is-loading');
+        setStatus(t('ai_generating', 'Generating with AI, please wait...'), false);
+        $.post(TD_URLS.generateApply, payload, function (res) {
+            $('#tdAiApply').removeClass('is-loading');
+            if (res && res.code === 1) { setStatus(''); renderResult(res); layer.msg(res.msg || t('ai_gen_done', 'Draft generated.')); }
+            else { setStatus((res && res.msg) ? res.msg : t('ai_gen_failed', 'Generation failed'), true); }
+        }, 'json').fail(function () {
+            $('#tdAiApply').removeClass('is-loading');
+            setStatus(t('ai_gen_failed', 'Generation failed'), true);
+        });
+    });
+
+    setMode('text');
+});
+</script>
+<script type="text/javascript">
+layui.use(['form','layer','upload','element'], function () {
+    var $ = layui.jquery, form = layui.form, layer = layui.layer,
+        upload = layui.upload, element = layui.element;
+    // NOTE: layui 2.2.5 (the build loaded here) has no `colorpicker`/`slider`
+    // modules, so we use native <input type="color"> / <input type="range">.
+
+    // ---- normalize CFG shape (defensive) ----
+    CFG = CFG || {};
+    CFG.theme = CFG.theme || 'prism';
+    CFG.attributes = CFG.attributes || {};
+    CFG.attributes.colors = CFG.attributes.colors || {};
+    CFG.navbar = CFG.navbar || {};
+    CFG.navbar.type_ids = CFG.navbar.type_ids || [];
+    CFG.footer = CFG.footer || {};
+    CFG.footer.links = CFG.footer.links || [];
+    CFG.footer.type_ids = CFG.footer.type_ids || [];
+    CFG.homepage = CFG.homepage || {};
+    CFG.homepage.sections = CFG.homepage.sections || [];
+
+    /* =========================================================
+       Step navigation
+    ========================================================= */
+    var totalSteps = 6;
+    var curStep = 0;
+    function gotoStep(n) {
+        if (n < 0 || n >= totalSteps) return;
+        curStep = n;
+        $('.td-nav-item').removeClass('active').each(function () {
+            var s = parseInt($(this).data('step'), 10);
+            if (s < n) { $(this).addClass('done'); } else { $(this).removeClass('done'); }
+        });
+        $('.td-nav-item[data-step="' + n + '"]').addClass('active');
+        $('.td-step-panel').removeClass('active');
+        $('.td-step-panel[data-step="' + n + '"]').addClass('active');
+        if (n === 5) {
+            loadHistory();
+            // auto-load the step-6 preview iframe (no click needed)
+            var s6 = previewSrc();
+            $('#previewFrame').attr('src', s6);
+            $('#openPreviewNew').attr('href', s6);
+        }
+        lazyLoadPreview(n);
+        $('html,body').scrollTop(0);
+    }
+    $('#tdNav').on('click', '.td-nav-item', function () {
+        gotoStep(parseInt($(this).data('step'), 10));
+    });
+    $(document).on('click', '.td-next', function () { gotoStep(parseInt($(this).data('go'), 10)); });
+    $(document).on('click', '.td-prev', function () { gotoStep(parseInt($(this).data('go'), 10)); });
+
+    /* =========================================================
+       Live preview — real front site in an iframe (steps 2-5)
+       Each step's "Refresh" saves that step to draft, then reloads
+       the iframe with ?td_preview=1 so the draft CSS/JSON is applied.
+    ========================================================= */
+    var previewSeq = 0;
+    function previewSrc() {
+        previewSeq++;
+        // timestamp + counter => always-unique URL (maccms full-page-caches by URL)
+        return TD_PREVIEW_URL + (TD_PREVIEW_URL.indexOf('?') >= 0 ? '&' : '?') + '_=' + (Date.now() + '' + previewSeq);
+    }
+    function loadPreviewInto($card) {
+        if (!$card || !$card.length) return;
+        var src = previewSrc();
+        $card.find('.td-live-frame').attr('src', src);
+        $card.find('.td-live-open').attr('href', src);
+    }
+    // AUTO preview: on any change, debounce-save the step to DRAFT (live site
+    // untouched until Publish) then reload the active step's iframe — no click needed.
+    var uiReady = false, autoTimer = null;
+    function autoPreview(step) {
+        if (!uiReady) return;            // ignore programmatic changes during init
+        if (autoTimer) clearTimeout(autoTimer);
+        autoTimer = setTimeout(function () {
+            saveStep(step, function (ok) {
+                if (ok !== false) { loadPreviewInto($('.td-step-panel.active .td-livecard')); }
+            }, true); // quiet save
+        }, 650);
+    }
+    // first time a step with a preview becomes active, load it (shows last saved draft)
+    function lazyLoadPreview(n) {
+        var $card = $('.td-step-panel[data-step="' + n + '"] .td-livecard');
+        if (!$card.length) return;
+        var cur = $card.find('.td-live-frame').attr('src');
+        if (!cur || cur === 'about:blank') { loadPreviewInto($card); }
+    }
+    // Desktop / Mobile preview toggle (per preview card)
+    $(document).on('click', '.td-view-btn', function () {
+        var $card = $(this).closest('.td-card');
+        $card.toggleClass('td-mobile', $(this).data('view') === 'mobile');
+        $card.find('.td-view-btn').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    // Refresh button: save this step to draft, then reload its iframe
+    $(document).on('click', '.td-live-refresh', function () {
+        var step = $(this).data('step');
+        var $card = $(this).closest('.td-livecard');
+        saveStep(step, function (ok) {
+            if (ok !== false) { loadPreviewInto($card); }
+        }, true);
+    });
+
+    /* =========================================================
+       STEP 1 — Theme selection (overview)
+       Switching reloads the wizard for the chosen theme's draft.
+    ========================================================= */
+    $('#td-app').on('click', '.td-theme-card', function () {
+        var t = $(this).data('theme');
+        if (!t || $(this).hasClass('active')) return;
+        var u = TD_URLS.design;
+        u += (u.indexOf('?') >= 0 ? '&' : '?') + 'theme=' + encodeURIComponent(t);
+        location.href = u;
+    });
+
+    /* =========================================================
+       STEP 2 — Appearance
+    ========================================================= */
+    var a = CFG.attributes;
+
+    // any appearance/homepage change auto-saves to draft + reloads the real-site preview.
+    // (kept as the old render* names so all existing call sites just work.)
+    function renderAppearancePreview() { autoPreview('attributes'); }
+
+    // native <input type="color"> only accepts #rrggbb; keep a safe value for it
+    function hex6(v) {
+        v = String(v == null ? '' : v).trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+        if (/^#[0-9a-fA-F]{3}$/.test(v)) { return '#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]; }
+        return '#000000';
+    }
+    // write one color key into both the swatch + the hex text field
+    function applyColor(k, v) {
+        a.colors[k] = v;
+        $('.td-color-hex[data-color="' + k + '"]').val(v);
+        $('.td-cp[data-color="' + k + '"]').val(hex6(v));
+    }
+    function setColorInputs(colors) {
+        TD_COLOR_KEYS.forEach(function (k) {
+            var v = colors[k] || (TD_DEFAULTS.attributes && TD_DEFAULTS.attributes.colors ? TD_DEFAULTS.attributes.colors[k] : '') || '#000000';
+            applyColor(k, v);
+        });
+    }
+    // native swatch picked -> sync hex text + mark custom
+    $(document).on('input change', '.td-cp', function () {
+        var k = $(this).data('color'), v = $(this).val();
+        applyColor(k, v);
+        markSchemeActive('custom');
+        renderAppearancePreview();
+    });
+    // manual hex typing -> sync swatch + mark custom
+    $(document).on('change', '.td-color-hex', function () {
+        var k = $(this).data('color'), v = $(this).val().trim();
+        if (!v) return;
+        applyColor(k, v);
+        markSchemeActive('custom');
+        renderAppearancePreview();
+    });
+
+    function markSchemeActive(key) {
+        $('#schemeGrid .td-scheme-card').removeClass('active');
+        if (key && key !== 'custom') {
+            $('#schemeGrid .td-scheme-card[data-key="' + key + '"]').addClass('active');
+        }
+        a.color_scheme = key;
+    }
+
+    // clicking a preset fills all 8 colors
+    $('#schemeGrid').on('click', '.td-scheme-card', function () {
+        var $c = $(this), key = $c.data('key');
+        TD_COLOR_KEYS.forEach(function (k) {
+            applyColor(k, String($c.data(k) || ''));
+        });
+        markSchemeActive(key);
+        renderAppearancePreview();
+    });
+
+    // font family select
+    if (a.font_family) { $('#fontFamily').val(a.font_family); }
+    form.on('select(fontFamily)', function (data) { a.font_family = data.value; renderAppearancePreview(); });
+
+    // font size 12-22 (native range input)
+    var initSize = parseInt(a.font_size, 10) || 16;
+    if (initSize < 12) initSize = 12; if (initSize > 22) initSize = 22;
+    a.font_size = initSize;
+    $('#fontSizeVal').text(initSize);
+    $('#fontSizeSlider').val(initSize).on('input change', function () {
+        var val = parseInt(this.value, 10) || 16;
+        a.font_size = val;
+        $('#fontSizeVal').text(val);
+        renderAppearancePreview();
+    });
+
+    // logo / avatar text inputs <-> CFG + preview
+    function rootedSrc(p) {
+        if (!p) return '';
+        // Already absolute — full URL, data URI, or a root-relative site path (starts with "/",
+        // e.g. "/yu/maccms10/upload/...") — use as-is. Only truly relative paths get ROOT_PATH
+        // prepended, otherwise the install subdir gets doubled ("/yu/maccms10/yu/maccms10/...").
+        if (p.indexOf('://') >= 0 || p.indexOf('data:') === 0 || p.charAt(0) === '/') return p;
+        return ROOT_PATH + '/' + p;
+    }
+    function showImg($el, src) {
+        if (src) { $el.attr('src', src).show(); }
+        else { $el.removeAttr('src').hide(); }
+    }
+    function setLogo(p) {
+        a.logo = p || '';
+        $('#logoPath').val(a.logo);
+        // empty = use the selected theme's own built-in logo (shown as a hint)
+        showImg($('#logoPreview'), a.logo ? rootedSrc(a.logo) : TD_THEME_LOGO);
+        renderAppearancePreview();
+    }
+    function setAvatar(p) {
+        a.default_avatar = p || '';
+        $('#avatarPath').val(a.default_avatar);
+        // empty = use the theme's built-in default avatar (so the circle isn't blank)
+        showImg($('#avatarPreview'), a.default_avatar ? rootedSrc(a.default_avatar) : TD_DEFAULT_AVATAR);
+        autoPreview('attributes');
+    }
+    $('#logoPath').on('change', function () { setLogo($(this).val().trim()); });
+    $('#avatarPath').on('change', function () { setAvatar($(this).val().trim()); });
+    $('#logoClear').on('click', function () { setLogo(''); });
+    $('#avatarClear').on('click', function () { setAvatar(''); });
+    $('#footerCopyright').on('change', function () { a.footer_copyright = $(this).val(); autoPreview('attributes'); });
+
+    // upload (contract: returns {code:1, file:"<path>"})
+    function bindUpload(elemId, cb) {
+        upload.render({
+            elem: '#' + elemId, url: TD_URLS.upload, method: 'post', field: 'file', data: { theme: TD_THEME },
+            before: function () { layer.msg(LANG.uploading, { time: 30000 }); },
+            done: function (res) {
+                layer.closeAll('loading'); layer.closeAll('dialog'); layer.closeAll();
+                if (res && res.code == 1 && res.file) { cb(res.file); layer.msg(LANG.upload_ok, { icon: 1 }); }
+                else { layer.msg((res && res.msg) ? res.msg : LANG.upload_err, { icon: 2 }); }
+            },
+            error: function () { layer.closeAll(); layer.msg(LANG.upload_err, { icon: 2 }); }
+        });
+    }
+    bindUpload('logoUpload', setLogo);
+    bindUpload('avatarUpload', setAvatar);
+
+    // AI-generate logo / avatar with an optional extra prompt (same {code,file} contract as upload)
+    function bindImgAi(kind, msgId, btnId, cb) {
+        $('#' + btnId).on('click', function () {
+            var $btn = $(this);
+            if ($btn.hasClass('is-loading')) { return; }
+            var msg = String($('#' + msgId).val() || '').trim();
+            $btn.addClass('is-loading');
+            var li = layer.msg(LANG.img_ai_generating || 'Generating image with AI…', { icon: 16, time: 0, shade: 0.05 });
+            $.post(TD_URLS.genImage, { theme: TD_THEME, kind: kind, message: msg, __token__: TD_TOKEN }, function (res) {
+                layer.close(li); $btn.removeClass('is-loading');
+                if (res && res.code === 1 && res.file) {
+                    cb(res.file);
+                    layer.msg(res.msg || LANG.img_ai_done || 'Image generated', { icon: 1 });
+                } else {
+                    layer.msg((res && res.msg) ? res.msg : (LANG.img_ai_failed || 'Image generation failed'), { icon: 2 });
+                }
+            }, 'json').fail(function () {
+                layer.close(li); $btn.removeClass('is-loading');
+                layer.msg(LANG.img_ai_failed || 'Image generation failed', { icon: 2 });
+            });
+        });
+    }
+    bindImgAi('logo', 'logoAiMsg', 'logoAiGen', setLogo);
+    bindImgAi('avatar', 'avatarAiMsg', 'avatarAiGen', setAvatar);
+
+    // init appearance widgets from CFG
+    setColorInputs(a.colors);
+    markSchemeActive(a.color_scheme || 'custom');
+    setLogo(a.logo || '');
+    setAvatar(a.default_avatar || '');
+    $('#footerCopyright').val(a.footer_copyright || '');
+    renderAppearancePreview();
+
+    /* =========================================================
+       Category selector (maccms-style layui checkboxes) with a
+       drag-sortable "selected order" chip list. Used by navbar + footer.
+    ========================================================= */
+    function setupCatSelector(o) {
+        var $pick = $(o.pick), $order = $(o.order), nameSel = 'input[name="' + o.name + '"]';
+        var labels = {};
+        $pick.find(nameSel).each(function () { labels[String($(this).val())] = $(this).attr('title') || String($(this).val()); });
+
+        function chip(id) {
+            return '<span class="td-chip" data-id="' + id + '" draggable="true">' +
+                '<i class="td-chip-grip">&#8942;</i><span class="td-chip-t">' + escAttr(labels[String(id)] || id) + '</span>' +
+                '<i class="td-chip-x" title="' + escAttr(LANG.remove) + '">&times;</i></span>';
+        }
+        function render(ids) {
+            ids = ids.filter(function (id) { return labels[String(id)] !== undefined; });
+            $order.html(ids.length ? ids.map(chip).join('') : '<span class="td-order-empty">' + escAttr(LANG.none_selected) + '</span>');
+        }
+        function order() { var a = []; $order.find('.td-chip').each(function () { a.push(parseInt($(this).data('id'), 10)); }); return a; }
+        function sync() {
+            var checked = {};
+            $pick.find(nameSel + ':checked').each(function () { checked[String($(this).val())] = 1; });
+            var kept = order().filter(function (id) { return checked[String(id)]; });
+            var have = {}; kept.forEach(function (id) { have[String(id)] = 1; });
+            $pick.find(nameSel + ':checked').each(function () {
+                var id = parseInt($(this).val(), 10);
+                if (!have[String(id)]) { kept.push(id); have[String(id)] = 1; }
+            });
+            render(kept);
+        }
+        // init: tick saved ids, render chips in saved order
+        var saved = (o.getIds() || []).map(Number), sset = {};
+        saved.forEach(function (id) { sset[String(id)] = 1; });
+        $pick.find(nameSel).each(function () { if (sset[String($(this).val())]) { $(this).prop('checked', true); } });
+        form.render('checkbox');
+        render(saved);
+        // layui checkbox toggle (lay-skin checkboxes don't fire native change)
+        form.on('checkbox(' + o.filter + ')', function () { sync(); o.change(); });
+        // chip remove -> untick + drop chip
+        $order.on('click', '.td-chip-x', function (e) {
+            e.stopPropagation();
+            var id = $(this).closest('.td-chip').data('id');
+            $pick.find(nameSel + '[value="' + id + '"]').prop('checked', false);
+            form.render('checkbox');
+            $(this).closest('.td-chip').remove();
+            if (!$order.find('.td-chip').length) { render([]); }
+            o.change();
+        });
+        // chip drag reorder
+        var dc = null;
+        $order.on('dragstart', '.td-chip', function () { dc = this; $(this).addClass('td-chip-drag'); });
+        $order.on('dragend', '.td-chip', function () { $(this).removeClass('td-chip-drag'); dc = null; o.change(); });
+        $order.on('dragover', '.td-chip', function (e) {
+            e.preventDefault();
+            if (!dc || dc === this) return;
+            var r = this.getBoundingClientRect();
+            (e.originalEvent.clientX - r.left) > r.width / 2 ? $(this).after(dc) : $(this).before(dc);
+        });
+        // expose helpers for the tool buttons
+        return {
+            order: order, sync: sync,
+            checkAll: function () { $pick.find(nameSel).prop('checked', true); form.render('checkbox'); sync(); o.change(); },
+            checkNone: function () { $pick.find(nameSel).prop('checked', false); form.render('checkbox'); sync(); o.change(); },
+            checkTops: function () { $pick.find(nameSel).each(function () { $(this).prop('checked', String($(this).data('pid')) === '0'); }); form.render('checkbox'); sync(); o.change(); }
+        };
+    }
+
+    /* ===== STEP 3 — Navbar ===== */
+    var navSel = setupCatSelector({
+        pick: '#navPick', order: '#navOrder', name: 'td_nav_type', filter: 'navType',
+        getIds: function () { return CFG.navbar.type_ids; },
+        change: function () { autoPreview('navbar'); }
+    });
+    function collectNavbar() { var ids = navSel.order(); CFG.navbar.type_ids = ids; return { type_ids: ids }; }
+    $('#navCheckAll').on('click', navSel.checkAll);
+    $('#navCheckNone').on('click', navSel.checkNone);
+    $('#navCheckTops').on('click', navSel.checkTops);
+
+    /* =========================================================
+       STEP 4 — Footer links
+    ========================================================= */
+    function footerRowHtml(text, url) {
+        return '<div class="td-link-row">' +
+            '<input type="text" class="layui-input td-link-text" placeholder="' + escAttr(LANG.link_text_ph) + '" value="' + escAttr(text) + '">' +
+            '<input type="text" class="layui-input td-link-url" placeholder="' + escAttr(LANG.link_url_ph) + '" value="' + escAttr(url) + '">' +
+            '<button type="button" class="layui-btn layui-btn-sm layui-btn-danger td-link-del"><i class="layui-icon">&#xe640;</i></button>' +
+            '</div>';
+    }
+    function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    (function initFooter() {
+        var html = '';
+        (CFG.footer.links || []).forEach(function (l) { html += footerRowHtml(l.text, l.url); });
+        $('#footerLinks').html(html);
+    })();
+    $('#addFooterLink').on('click', function () { $('#footerLinks').append(footerRowHtml('', '')); });
+    $('#footerLinks').on('click', '.td-link-del', function () { $(this).closest('.td-link-row').remove(); autoPreview('footer'); });
+    $('#footerLinks').on('input change', '.td-link-text, .td-link-url', function () { autoPreview('footer'); });
+    // footer category selector (maccms-style checkboxes + drag-order chips)
+    var ftSel = setupCatSelector({
+        pick: '#footerPick', order: '#footerOrder', name: 'td_ft_type', filter: 'ftType',
+        getIds: function () {
+            var ids = CFG.footer.type_ids || [];
+            if (ids.length) { return ids; }
+            // not configured -> mirror the footer's default (all top-level categories)
+            var tops = [];
+            $('#footerPick input[name="td_ft_type"][data-pid="0"]').each(function () { tops.push(parseInt($(this).val(), 10)); });
+            return tops;
+        },
+        change: function () { autoPreview('footer'); }
+    });
+    $('#ftCheckAll').on('click', ftSel.checkAll);
+    $('#ftCheckNone').on('click', ftSel.checkNone);
+    $('#ftCheckTops').on('click', ftSel.checkTops);
+    function collectFooter() {
+        var type_ids = ftSel.order();
+        var links = [];
+        $('#footerLinks .td-link-row').each(function () {
+            var t = $(this).find('.td-link-text').val().trim();
+            var u = $(this).find('.td-link-url').val().trim();
+            if (t || u) { links.push({ text: t, url: u }); }
+        });
+        CFG.footer.type_ids = type_ids;
+        CFG.footer.links = links;
+        return { type_ids: type_ids, links: links };
+    }
+
+    /* =========================================================
+       STEP 5 — Homepage sections
+    ========================================================= */
+    function sectionLabel(key) {
+        for (var i = 0; i < TD_SECTIONS.length; i++) { if (TD_SECTIONS[i].key === key) return TD_SECTIONS[i].label; }
+        return key;
+    }
+    // predefined sections whose category/count/method are editable (wired in the front components)
+    var LAYOUT_SECTIONS = { vod_hot: 1, vod_latest: 1, art_list: 1, manga_list: 1 };
+    var LAYOUT_OPTS = ['slider', 'grid', 'list'];
+    var CONTENT_TYPES = ['vod', 'art', 'manga', 'rank'];
+    var SORT_OPTS = ['hits', 'time', 'score'];
+    var PERIOD_OPTS = ['day', 'week', 'month', 'all'];
+    function layoutLabel(o) { return o === 'slider' ? LANG.layout_slider : o === 'grid' ? LANG.layout_grid : (o === 'list' ? LANG.layout_list : o); }
+    function ctypeLabel(t) { return t === 'art' ? LANG.ct_art : t === 'manga' ? LANG.ct_manga : (t === 'rank' ? LANG.ct_rank : LANG.ct_vod); }
+    function sortLabel(o) { return o === 'time' ? LANG.sort_time : o === 'score' ? LANG.sort_score : LANG.sort_hits; }
+    function periodLabel(o) { return o === 'day' ? LANG.period_day : o === 'month' ? LANG.period_month : (o === 'all' ? LANG.period_all : LANG.period_week); }
+    // editable "kind": null = not editable, 'hero' (sort), 'list' (layout), 'rank' (period)
+    function sectionKind(s) {
+        if (s.custom) { return s.content_type === 'rank' ? 'rank' : 'list'; }
+        if (s.key === 'hero') { return 'hero'; }
+        if (LAYOUT_SECTIONS[s.key]) { return 'list'; }
+        return null;
+    }
+    function catName(id) {
+        for (var i = 0; i < TD_CATS.length; i++) { if (String(TD_CATS[i].id) === String(id)) { return TD_CATS[i].name.replace(/^[\s　├]+/, ''); } }
+        return id;
+    }
+    // content mid for a section (so the category list only shows matching-type categories):
+    // vod / rank -> 1, art -> 2, manga -> 12.
+    function sectionMid(s) {
+        if (s.custom) { return s.content_type === 'art' ? 2 : (s.content_type === 'manga' ? 12 : 1); }
+        if (s.key === 'art_list') { return 2; }
+        if (s.key === 'manga_list') { return 12; }
+        return 1; // hero / vod_hot / vod_latest
+    }
+    function catOptions(sel, mid) {
+        var h = '<option value="">' + escAttr(LANG.cat_all) + '</option>';
+        TD_CATS.forEach(function (c) {
+            if (mid && c.mid && c.mid !== mid) { return; } // only categories of the block's content type
+            h += '<option value="' + c.id + '"' + (String(sel) === String(c.id) ? ' selected' : '') + '>' + escAttr(c.name) + '</option>';
+        });
+        return h;
+    }
+    function metaText(s) {
+        var parts = [];
+        if (s.type_id) { parts.push(catName(s.type_id)); }
+        if (s.num) { parts.push(s.num); }
+        if (s.layout) { parts.push(layoutLabel(s.layout)); }
+        if (s.by) { parts.push(sortLabel(s.by)); }
+        if (s.period) { parts.push(periodLabel(s.period)); }
+        return parts.join(' · ');
+    }
+    function blockLabel(s) { return s.custom ? (s.title || LANG.custom_block) : sectionLabel(s.key); }
+    function buildSectionModel() {
+        var saved = CFG.homepage.sections || [];
+        var seen = {};
+        var model = [];
+        saved.forEach(function (s) {
+            if (!s || !s.key || seen[s.key]) return;
+            seen[s.key] = true;
+            model.push({ key: s.key, enabled: !!s.enabled, num: s.num || null, layout: s.layout || null,
+                type_id: s.type_id || null, by: s.by || null, period: s.period || null,
+                custom: !!s.custom, content_type: s.content_type || 'vod', title: s.title || '' });
+        });
+        TD_SECTIONS.forEach(function (c) {
+            if (!seen[c.key]) { seen[c.key] = true; model.push({ key: c.key, enabled: true, num: null, layout: null, type_id: null, custom: false }); }
+        });
+        return model;
+    }
+    function propsPanel(s) {
+        var kind = sectionKind(s);
+        var h = '<div class="td-sec-props" style="display:none;">';
+        if (s.custom) {
+            h += '<label class="td-sec-pf"><span>' + escAttr(LANG.block_title) + '</span><input type="text" class="layui-input td-sec-title" value="' + escAttr(s.title || '') + '" placeholder="' + escAttr(LANG.custom_block) + '"></label>';
+            h += '<label class="td-sec-pf"><span>' + escAttr(LANG.content_type) + '</span><select class="td-sec-ctype" lay-ignore>' +
+                CONTENT_TYPES.map(function (t) { return '<option value="' + t + '"' + (s.content_type === t ? ' selected' : '') + '>' + escAttr(ctypeLabel(t)) + '</option>'; }).join('') + '</select></label>';
+        }
+        h += '<label class="td-sec-pf"><span>' + escAttr(LANG.category) + '</span><select class="td-sec-cat" lay-ignore>' + catOptions(s.type_id, sectionMid(s)) + '</select></label>';
+        h += '<label class="td-sec-pf"><span>' + escAttr(LANG.items_count) + '</span><input type="number" class="layui-input td-sec-num" min="1" max="30" value="' + escAttr(s.num || '') + '" placeholder="' + escAttr(LANG.items_default) + '"></label>';
+        if (kind === 'hero') {
+            h += '<label class="td-sec-pf"><span>' + escAttr(LANG.sort_by) + '</span><select class="td-sec-by" lay-ignore>' +
+                SORT_OPTS.map(function (o) { return '<option value="' + o + '"' + (s.by === o ? ' selected' : '') + '>' + escAttr(sortLabel(o)) + '</option>'; }).join('') + '</select></label>';
+        } else if (kind === 'rank') {
+            h += '<label class="td-sec-pf"><span>' + escAttr(LANG.period) + '</span><select class="td-sec-period" lay-ignore>' +
+                PERIOD_OPTS.map(function (o) { return '<option value="' + o + '"' + (s.period === o ? ' selected' : '') + '>' + escAttr(periodLabel(o)) + '</option>'; }).join('') + '</select></label>';
+        } else {
+            h += '<label class="td-sec-pf"><span>' + escAttr(LANG.display_method) + '</span><select class="td-sec-layout" lay-ignore><option value="">' + escAttr(LANG.layout_default) + '</option>' +
+                LAYOUT_OPTS.map(function (o) { return '<option value="' + o + '"' + (s.layout === o ? ' selected' : '') + '>' + escAttr(layoutLabel(o)) + '</option>'; }).join('') + '</select></label>';
+        }
+        return h + '</div>';
+    }
+    function sectionLi(s) {
+        var hp = sectionKind(s) !== null;
+        var keyTag = s.custom ? '' : ' <span class="td-sec-key">(' + escAttr(s.key) + ')</span>';
+        return '<li class="td-sec-item' + (s.custom ? ' td-sec-custom' : '') + '" data-key="' + escAttr(s.key) + '" draggable="true">' +
+            '<div class="td-sec-row">' +
+              '<span class="td-sec-drag" title="' + escAttr(LANG.drag_hint) + '">&#8942;&#8942;</span>' +
+              '<span class="td-sec-label' + (hp ? ' has-props' : '') + '"><span class="td-sec-name">' + escAttr(blockLabel(s)) + '</span>' + keyTag +
+                (hp ? ' <i class="layui-icon td-sec-gear">&#xe620;</i>' : '') + '</span>' +
+              '<span class="td-sec-meta">' + escAttr(hp ? metaText(s) : '') + '</span>' +
+              (s.custom ? '<i class="layui-icon td-sec-del" title="' + escAttr(LANG.remove) + '">&#xe640;</i>' : '') +
+              '<input type="checkbox" lay-skin="switch" lay-filter="tdSecSwitch" lay-text="' + escAttr(LANG.section_switch) + '" class="td-sec-switch" ' + (s.enabled ? 'checked' : '') + '>' +
+            '</div>' + (hp ? propsPanel(s) : '') + '</li>';
+    }
+    function renderSections() {
+        $('#sectionList').html(buildSectionModel().map(sectionLi).join(''));
+        form.render('checkbox');
+        renderHomePreview();
+    }
+    function renderHomePreview() { autoPreview('homepage'); }
+    renderSections();
+
+    // unique counter for custom blocks
+    var customSeq = 0;
+    (CFG.homepage.sections || []).forEach(function (s) {
+        var m = s && s.key ? String(s.key).match(/^custom_(\d+)$/) : null;
+        if (m) { customSeq = Math.max(customSeq, parseInt(m[1], 10)); }
+    });
+    // add a custom block
+    $('#addBlock').on('click', function () {
+        customSeq++;
+        var s = { key: 'custom_' + customSeq, enabled: true, custom: true, content_type: 'vod', type_id: null, num: null, layout: 'grid', title: '' };
+        $('#sectionList').append(sectionLi(s));
+        form.render('checkbox');
+        $('#sectionList li[data-key="custom_' + customSeq + '"] .td-sec-props').show();
+        autoPreview('homepage');
+    });
+    // remove a custom block
+    $('#sectionList').on('click', '.td-sec-del', function () { $(this).closest('li').remove(); autoPreview('homepage'); });
+    // expand/collapse a block's property panel
+    $('#sectionList').on('click', '.td-sec-label.has-props', function () { $(this).closest('li').find('.td-sec-props').slideToggle(120); });
+    // edit any property -> update label/meta + preview
+    $('#sectionList').on('change input', '.td-sec-num, .td-sec-layout, .td-sec-cat, .td-sec-ctype, .td-sec-title, .td-sec-by, .td-sec-period', function () {
+        var $li = $(this).closest('li');
+        if ($(this).hasClass('td-sec-title')) { $li.find('.td-sec-name').text($(this).val() || LANG.custom_block); }
+        // content_type change on a custom block -> swap the kind-specific field (layout<->period)
+        if ($(this).hasClass('td-sec-ctype')) {
+            var s2 = { custom: true, content_type: $(this).val(),
+                title: $li.find('.td-sec-title').val(), type_id: $li.find('.td-sec-cat').val(),
+                num: $li.find('.td-sec-num').val(), layout: $li.find('.td-sec-layout').val(),
+                by: $li.find('.td-sec-by').val(), period: $li.find('.td-sec-period').val() };
+            $li.find('.td-sec-props').replaceWith(propsPanel(s2));
+            $li.find('.td-sec-props').show();
+        }
+        $li.find('.td-sec-meta').text(metaText({ type_id: $li.find('.td-sec-cat').val(), num: $li.find('.td-sec-num').val(),
+            layout: $li.find('.td-sec-layout').val(), by: $li.find('.td-sec-by').val(), period: $li.find('.td-sec-period').val() }));
+        autoPreview('homepage');
+    });
+    // switch on/off
+    form.on('switch(tdSecSwitch)', function () { renderHomePreview(); });
+
+    // drag-and-drop reorder (HTML5)
+    var dragEl = null;
+    $('#sectionList').on('dragstart', 'li', function (e) {
+        dragEl = this;
+        $(this).addClass('td-dragging');
+        try { e.originalEvent.dataTransfer.effectAllowed = 'move'; e.originalEvent.dataTransfer.setData('text/plain', ''); } catch (_) {}
+    });
+    $('#sectionList').on('dragend', 'li', function () {
+        $('#sectionList li').removeClass('td-dragging td-drop-before td-drop-after');
+        dragEl = null;
+        autoPreview('homepage');
+    });
+    $('#sectionList').on('dragover', 'li', function (e) {
+        e.preventDefault();
+        if (!dragEl || dragEl === this) return;
+        var rect = this.getBoundingClientRect();
+        var after = (e.originalEvent.clientY - rect.top) > rect.height / 2;
+        $('#sectionList li').removeClass('td-drop-before td-drop-after');
+        $(this).addClass(after ? 'td-drop-after' : 'td-drop-before');
+    });
+    $('#sectionList').on('drop', 'li', function (e) {
+        e.preventDefault();
+        if (!dragEl || dragEl === this) return;
+        var rect = this.getBoundingClientRect();
+        var after = (e.originalEvent.clientY - rect.top) > rect.height / 2;
+        if (after) { $(dragEl).insertAfter(this); } else { $(dragEl).insertBefore(this); }
+        $('#sectionList li').removeClass('td-drop-before td-drop-after');
+    });
+
+    function collectHomepage() {
+        var sections = [];
+        $('#sectionList li').each(function () {
+            var $li = $(this);
+            var custom = $li.hasClass('td-sec-custom');
+            var item = { key: String($li.data('key')), enabled: $li.find('.td-sec-switch').prop('checked') };
+            var $cat = $li.find('.td-sec-cat'), $num = $li.find('.td-sec-num'), $lay = $li.find('.td-sec-layout');
+            if ($cat.length) { var c = parseInt($cat.val(), 10); if (c > 0) { item.type_id = c; } }
+            if ($num.length) { var n = parseInt($num.val(), 10); if (n > 0) { item.num = n; } }
+            if ($lay.length) { var l = $lay.val(); if (l) { item.layout = l; } }
+            var $by = $li.find('.td-sec-by'); if ($by.length) { var b = $by.val(); if (b) { item.by = b; } }
+            var $per = $li.find('.td-sec-period'); if ($per.length) { var p = $per.val(); if (p) { item.period = p; } }
+            if (custom) {
+                item.custom = true;
+                item.content_type = $li.find('.td-sec-ctype').val() || 'vod';
+                item.title = $li.find('.td-sec-title').val().trim();
+            }
+            sections.push(item);
+        });
+        CFG.homepage.sections = sections;
+        return { sections: sections };
+    }
+
+    /* =========================================================
+       SAVE a step slice
+    ========================================================= */
+    function collectStep(step) {
+        if (step === 'attributes') { return a; }
+        if (step === 'navbar') { return collectNavbar(); }
+        if (step === 'footer') { return collectFooter(); }
+        if (step === 'homepage') { return collectHomepage(); }
+        return {};
+    }
+    function saveStep(step, done, quiet) {
+        var data = collectStep(step);
+        var load = layer.load(1);
+        $.post(TD_URLS.saveStep, { theme: TD_THEME, step: step, data: JSON.stringify(data) }, function (res) {
+            layer.close(load);
+            if (res && res.code == 1) {
+                if (!quiet) { layer.msg(res.msg || LANG.saved, { icon: 1 }); }
+                if (typeof done === 'function') done(true);
+            } else {
+                layer.msg((res && res.msg) ? res.msg : LANG.save_err, { icon: 2 });
+                if (typeof done === 'function') done(false);
+            }
+        }, 'json').fail(function () {
+            layer.close(load); layer.msg(LANG.save_err_net, { icon: 2 });
+            if (typeof done === 'function') done(false);
+        });
+    }
+    $(document).on('click', '.td-save', function () { saveStep($(this).data('step')); });
+
+    /* =========================================================
+       STEP 6 — Preview / Publish / History
+    ========================================================= */
+    $('#btnRefreshPreview').on('click', function () {
+        var load = layer.load(1);
+        $.get(TD_URLS.preview, { theme: TD_THEME }, function (res) {
+            layer.close(load);
+            if (res && res.code == 1 && res.url) {
+                $('#previewFrame').attr('src', res.url);
+                $('#openPreviewNew').attr('href', res.url);
+            } else {
+                layer.msg((res && res.msg) ? res.msg : LANG.preview_err, { icon: 2 });
+            }
+        }, 'json').fail(function () { layer.close(load); layer.msg(LANG.preview_err, { icon: 2 }); });
+    });
+
+    // publish-mode: toggle the "new theme" fields + active styling
+    $(document).on('change', 'input[name="pub_mode"]', function () {
+        var mode = $('input[name="pub_mode"]:checked').val();
+        $('#newThemeFields').toggle(mode === 'new');
+        $('.td-pubopt').removeClass('active');
+        $(this).closest('.td-pubopt').addClass('active');
+    });
+
+    $('#btnPublish').on('click', function () {
+        var mode = $('input[name="pub_mode"]:checked').val() || 'update';
+        var post = { theme: TD_THEME, mode: mode };
+        var confirmMsg = LANG.confirm_publish;
+        if (mode === 'new') {
+            post.new_name = $('#newThemeName').val().trim();
+            post.new_dir = $('#newThemeDir').val().trim().toLowerCase();
+            post.new_intro = $('#newThemeIntro').val().trim();
+            if (!post.new_name) { layer.msg(LANG.need_name, { icon: 2 }); return; }
+            if (!/^[a-z][a-z0-9_-]{1,31}$/.test(post.new_dir)) { layer.msg(LANG.bad_dir, { icon: 2 }); return; }
+            confirmMsg = LANG.confirm_publish_new;
+        }
+        layer.confirm(confirmMsg, { icon: 3, title: LANG.confirm_publish_title }, function (idx) {
+            layer.close(idx);
+            var load = layer.load(1);
+            $.post(TD_URLS.publish, post, function (res) {
+                layer.close(load);
+                layer.msg((res && res.msg) ? res.msg : (res && res.code == 1 ? LANG.publish_ok : LANG.publish_err), { icon: res && res.code == 1 ? 1 : 2 });
+                if (res && res.code == 1) {
+                    loadHistory();
+                    if (mode === 'new' && res.new_theme) {
+                        // switch the wizard to the newly created theme
+                        setTimeout(function () {
+                            var u = TD_URLS.design + (TD_URLS.design.indexOf('?') >= 0 ? '&' : '?') + 'theme=' + encodeURIComponent(res.new_theme);
+                            location.href = u;
+                        }, 1200);
+                    }
+                }
+            }, 'json').fail(function () { layer.close(load); layer.msg(LANG.publish_err, { icon: 2 }); });
+        });
+    });
+
+    function loadHistory() {
+        $.get(TD_URLS.history, { theme: TD_THEME }, function (res) {
+            if (!res || res.code != 1) { $('#historyList').html('<li><span class="td-h-time" style="color:#d9534f;">' + escAttr(LANG.history_err) + '</span></li>'); return; }
+            var list = res.list || [];
+            if (!list.length) { $('#historyList').html('<li><span class="td-h-time" style="color:#999;">' + escAttr(LANG.history_empty) + '</span></li>'); return; }
+            var html = '';
+            list.forEach(function (h) {
+                html += '<li>' +
+                    '<span class="td-h-time">' + escAttr(h.time) + '</span>' +
+                    '<button type="button" class="layui-btn layui-btn-xs layui-btn-primary td-rollback" data-ts="' + escAttr(h.ts) + '">' + escAttr(LANG.rollback) + '</button>' +
+                    '</li>';
+            });
+            $('#historyList').html(html);
+        }, 'json').fail(function () {
+            $('#historyList').html('<li><span class="td-h-time" style="color:#d9534f;">' + escAttr(LANG.history_err) + '</span></li>');
+        });
+    }
+    $('#historyList').on('click', '.td-rollback', function () {
+        var ts = $(this).data('ts');
+        layer.confirm(LANG.confirm_rollback, { icon: 3, title: LANG.confirm_rollback_title }, function (idx) {
+            layer.close(idx);
+            var load = layer.load(1);
+            $.post(TD_URLS.rollback, { theme: TD_THEME, ts: ts }, function (res) {
+                layer.close(load);
+                layer.msg((res && res.msg) ? res.msg : (res && res.code == 1 ? LANG.rollback_ok : LANG.rollback_err), { icon: res && res.code == 1 ? 1 : 2 });
+                if (res && res.code == 1) {
+                    layer.msg(LANG.rollback_reload, { icon: 1, time: 1200 });
+                    setTimeout(function () { location.reload(); }, 1200);
+                }
+            }, 'json').fail(function () { layer.close(load); layer.msg(LANG.rollback_err, { icon: 2 }); });
+        });
+    });
+
+    // render any layui form widgets present
+    form.render();
+
+    // init done — from here, user changes trigger auto-preview
+    uiReady = true;
+});
+</script>
+</body>
+</html>

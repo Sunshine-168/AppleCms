@@ -1,0 +1,728 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<link rel="stylesheet" href="__STATIC__/css/update.css">
+<link rel="stylesheet" href="__STATIC__/css/admin_index_shell.css?{$MAC_VERSION}">
+<div id="adminShell" class="admin-shell admin-shell--light">
+    <!-- 移动端顶栏 -->
+    <header class="admin-mobile-header">
+        <button type="button" class="admin-mobile-menu" id="mobileMenuBtn" title="{:lang('admin/index/index/menu_switch')}" aria-label="{:lang('admin/index/index/menu_switch')}" aria-expanded="false">
+            <i class="layui-icon layui-icon-spread-left"></i>
+        </button>
+        <div class="admin-mobile-brand">
+            <img src="__STATIC__/images/logo@2x.png" alt="" width="24" height="24" decoding="async" />
+            <span class="admin-mobile-brand__text">{:lang('admin/index/index/name')}</span>
+        </div>
+        <div class="admin-mobile-actions">
+            <a href="javascript:;" class="admin-mobile-action admin-mobile-action--update" id="update-notification-mobile" style="display: none;" onclick="showUpdateDialog()" title="有新版本可用" aria-label="有新版本可用">
+                <i class="layui-icon layui-icon-refresh-1"></i>
+            </a>
+            <a href="__ROOT__/" class="admin-mobile-action" target="_blank" title="{:lang('admin/index/index/menu_index')}" aria-label="{:lang('admin/index/index/menu_index')}">
+                <i class="layui-icon layui-icon-home"></i>
+            </a>
+            <a href="{:url('index/clear')}" class="admin-mobile-action j-ajax" refresh="yes" title="{:lang('admin/index/index/menu_cache_clear')}" aria-label="{:lang('admin/index/index/menu_cache_clear')}">
+                <i class="layui-icon layui-icon-delete"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- 桌面端顶栏 -->
+    <header class="admin-header admin-header--desktop">
+        <div class="admin-header__logo">
+            <img src="__STATIC__/images/logo@2x.png" alt="" />
+            <span class="admin-header__brand">{:lang('admin/index/index/name')}</span>
+        </div>
+        <div class="admin-header__center">
+            <nav class="admin-header__nav" id="mainNav" aria-label="主模块">
+                {volist name="menus" id="v" key="k"}
+                <a href="javascript:;" class="main-nav-item{eq name="k" value="1"} is-active{/eq}" data-i="{$k}">{$v['name']}</a>
+                {/volist}
+            </nav>
+        </div>
+        <div class="admin-header__tools">
+            <a href="javascript:;" class="admin-chip admin-chip--update" id="update-notification" style="display: none;" onclick="showUpdateDialog()" title="有新版本可用">
+                <i class="layui-icon layui-icon-refresh-2"></i>
+                <span>更新</span>
+            </a>
+            <div class="layui-form language-select-wrap language-select-wrap--plain" id="languageSelectWrap">
+                <label for="languageSelect" class="layui-hide">{:lang('install/select_lang')}</label>
+                <select id="languageSelect" name="app[lang]" lay-filter="lang">
+                    {volist name="langs" id="vo"}
+                    <option value="{$vo}" {if condition="$config['app']['lang'] eq $vo"} selected {/if}>{$vo}</option>
+                    {/volist}
+                </select>
+            </div>
+            <div class="admin-dropdown" data-dropdown>
+                <button type="button" class="admin-tool-btn admin-dropdown__trigger" title="{:lang('opt')}">
+                    <svg class="admin-tool-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><g fill="currentColor"><rect x="2" y="9" width="3" height="3" rx="1.5"/><rect x="8" y="9" width="3" height="3" rx="1.5"/><rect x="14" y="9" width="3" height="3" rx="1.5"/></g></svg>
+                </button>
+                <div class="admin-dropdown__menu">
+                    <a href="{:url('index/clear')}" class="j-ajax" refresh="yes">{:lang('admin/index/index/menu_cache_clear')}</a>
+                    <a href="javascript:void(0);" id="lockScreen">{:lang('admin/index/index/menu_lock')}</a>
+                    <a href="{:url('index/logout')}">{:lang('admin/index/index/menu_logout')}</a>
+                </div>
+            </div>
+            <a href="__ROOT__/" class="admin-tool-btn" target="_blank" title="{:lang('admin/index/index/menu_index')}">
+                <svg class="admin-tool-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><g stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"><path d="M10 1.3L17.8 6.5V16.7H2.2V6.5z"/><path d="M7 16.7v-5a3 3 0 016 0v5" stroke-linecap="round"/></g></svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- PC：侧栏分界线悬浮收缩钮 -->
+    <button type="button" class="admin-rail-toggle admin-rail-toggle--float" id="railToggle" title="{:lang('admin/index/index/menu_switch')}" aria-label="{:lang('admin/index/index/menu_switch')}" aria-expanded="true">
+        <i class="layui-icon layui-icon-shrink-right"></i>
+    </button>
+
+    <!-- 左侧二级菜单 -->
+    <aside class="admin-side" id="switchNav">
+        <div class="admin-side__mobile-head">
+            <span class="admin-side__mobile-title">菜单</span>
+            <button type="button" class="admin-side__mobile-close" id="mobileNavClose" aria-label="{:lang('close')}">
+                <span class="tab-close__glyph" aria-hidden="true">×</span>
+            </button>
+        </div>
+        <nav class="admin-side__mobile-modules" id="mobileMainNav" aria-label="主模块">
+            {volist name="menus" id="v" key="k"}
+            <a href="javascript:;" class="mobile-module-item{eq name="k" value="1"} is-active{/eq}" data-i="{$k}">{$v['name']}</a>
+            {/volist}
+        </nav>
+        <nav id="navBar" class="admin-side__nav" aria-label="子菜单">
+            {volist name="menus" id="v" key="k"}
+            <ul class="side-panel" data-panel="{$k}"{neq name="k" value="1"} hidden{/neq}>
+                {volist name="v['sub']" id="vv" key="kk"}
+                {if condition="($vv['url'] !=='###')"}
+                <li class="side-panel__item">
+                    <a class="admin-nav-item" data-id="{$key}{$kk}" href="{$vv['url']}" title="{$vv['name']}">
+                        <span class="admin-nav-item__glyph" aria-hidden="true"></span>
+                        <i class="{$vv['icon']}"></i>
+                        <span class="admin-nav-item__label">{$vv['name']}</span>
+                    </a>
+                </li>
+                {/if}
+                {/volist}
+            </ul>
+            {/volist}
+        </nav>
+    </aside>
+
+    <div class="site-mobile-shade"></div>
+
+    <!-- 主内容区 -->
+    <main class="admin-body" id="switchBody">
+        <div class="admin-workspace" id="top_tabs_box">
+            <div class="admin-workspace__head">
+                <div class="admin-tabs__strip">
+                    <button type="button" class="admin-tabs__edge" id="tabScrollPrev" title="向左滚动" aria-label="向左滚动标签">
+                        <i class="layui-icon layui-icon-zuozuo"></i>
+                    </button>
+                    <div class="admin-tabs__viewport" id="tabViewport">
+                        <ul class="admin-tabs__bar" id="B_history" role="tablist">
+                            <li lay-id="111" class="is-active is-pinned" role="tab" aria-selected="true">
+                                <span class="admin-tabs__label">{:lang('admin/index/index/menu_welcome')}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <button type="button" class="admin-tabs__edge" id="tabScrollNext" title="向右滚动" aria-label="向右滚动标签">
+                        <i class="layui-icon layui-icon-youyou"></i>
+                    </button>
+                </div>
+                <div class="admin-tabs__toolbar">
+                    <button type="button" class="admin-tabs__tool" id="J_refresh" title="刷新当前页" aria-label="刷新当前页">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                    </button>
+                    <div class="admin-dropdown admin-tabs__more" data-dropdown>
+                        <button type="button" class="admin-tabs__tool admin-dropdown__trigger" title="{:lang('admin/index/index/menu_opt')}" aria-label="{:lang('admin/index/index/menu_opt')}">
+                            <i class="layui-icon layui-icon-more"></i>
+                        </button>
+                        <div class="admin-dropdown__menu admin-tabs__more-menu">
+                            <a href="javascript:;" class="closePageOther">{:lang('admin/index/index/menu_close_other')}</a>
+                            <a href="javascript:;" class="closePageAll">{:lang('admin/index/index/menu_close_all')}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-tab-ctx" id="tabContextMenu" hidden>
+                <button type="button" class="admin-tab-ctx__item" data-action="refresh">刷新</button>
+                <button type="button" class="admin-tab-ctx__item" data-action="close">{:lang('close')}</button>
+                <button type="button" class="admin-tab-ctx__item" data-action="closeOther">{:lang('admin/index/index/menu_close_other')}</button>
+                <button type="button" class="admin-tab-ctx__item" data-action="closeAll">{:lang('admin/index/index/menu_close_all')}</button>
+            </div>
+            <div class="admin-workspace__body admin-tabs__content">
+                <div class="admin-tabs__pane is-active" data-tab-id="111">
+                    <iframe lay-id="111" src="{:url('index/welcome')}" class="hs-iframe" scrolling="yes"></iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="admin-footer">
+        {:lang('maccms_copyright')}
+    </footer>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<!--请在下方写此页面业务相关的脚本-->
+<script>
+    var RAIL_COLLAPSED_KEY = 'adminRailCollapsed';
+    var railCollapsedSaved = localStorage.getItem(RAIL_COLLAPSED_KEY);
+    window.localStorage.clear();
+    if (railCollapsedSaved === '1') {
+        localStorage.setItem(RAIL_COLLAPSED_KEY, '1');
+    }
+    var LAYUI_OFFSET = 60;
+
+    function initNavItemGlyphs() {
+        $('.admin-nav-item').each(function () {
+            var $link = $(this);
+            var $glyph = $link.find('.admin-nav-item__glyph');
+            if (!$glyph.length) return;
+            var label = $.trim($link.find('.admin-nav-item__label').text());
+            var match = label.match(/[\u4e00-\u9fa5A-Za-z0-9]/);
+            var glyph = match ? match[0] : (label.charAt(0) || '·');
+            $glyph.text(glyph);
+        });
+    }
+
+    $(function () {
+        initNavItemGlyphs();
+    });
+
+    (function () {
+        var $shell = $('#adminShell');
+        var $toggle = $('#railToggle');
+        if (!$shell.length || !$toggle.length) return;
+
+        function syncRailToggle(collapsed) {
+            var $icon = $toggle.find('.layui-icon');
+            $icon.removeClass('layui-icon-shrink-right layui-icon-spread-left')
+                .addClass(collapsed ? 'layui-icon-spread-left' : 'layui-icon-shrink-right');
+            $toggle.attr('aria-expanded', collapsed ? 'false' : 'true');
+        }
+
+        if (localStorage.getItem(RAIL_COLLAPSED_KEY) === '1') {
+            $shell.addClass('admin-shell--rail-collapsed');
+            syncRailToggle(true);
+        }
+
+        $toggle.on('click', function () {
+            var collapsed = $shell.toggleClass('admin-shell--rail-collapsed').hasClass('admin-shell--rail-collapsed');
+            localStorage.setItem(RAIL_COLLAPSED_KEY, collapsed ? '1' : '0');
+            syncRailToggle(collapsed);
+        });
+    })();
+</script>
+<script>
+    var MAC_VERSION='{$version.code}',PHP_VERSION='{php}echo PHP_VERSION{/php}',THINK_VERSION='{php}echo THINK_VERSION{/php}';MAC_LANG='{$mac_lang}';
+</script>
+<script type="text/javascript">
+    window.ADMIN_LANG_META = {
+        'zh-cn': { label: '简体中文', flag: '🇨🇳' },
+        'zh-tw': { label: '繁體中文', flag: '🇨🇳' },
+        'en-us': { label: 'English', flag: '🇺🇸' },
+        'ja-jp': { label: '日本語', flag: '🇯🇵' },
+        'ko-kr': { label: '한국어', flag: '🇰🇷' },
+        'fr-fr': { label: 'Français', flag: '🇫🇷' },
+        'de-de': { label: 'Deutsch', flag: '🇩🇪' },
+        'es-es': { label: 'Español', flag: '🇪🇸' },
+        'pt-pt': { label: 'Português', flag: '🇵🇹' }
+    };
+
+    function adminLangMeta(code) {
+        if (!code) return { label: '', flag: '🌐' };
+        if (window.ADMIN_LANG_META[code]) return window.ADMIN_LANG_META[code];
+        return {
+            label: code.split('-').map(function (p) { return p.toUpperCase(); }).join(' · '),
+            flag: '🌐'
+        };
+    }
+
+    function fixLanguageSelectEdge($layuiSelect) {
+        var $edge = $layuiSelect.find('.layui-edge');
+        if (!$edge.length) return;
+        $edge.removeClass('maccms-icon macCms-a-zu1679').addClass('layui-icon layui-icon-xiangxia');
+    }
+
+    function adminLangOptionHtml(code) {
+        var meta = adminLangMeta(code);
+        return '<span class="lang-option"><span class="lang-option__flag" aria-hidden="true">' + meta.flag + '</span><span class="lang-option__text">' + meta.label + '</span></span>';
+    }
+
+    function decorateLanguageSelect() {
+        var $wrap = $('#languageSelectWrap');
+        var $layuiSelect = $wrap.find('.layui-form-select');
+        if (!$layuiSelect.length) return;
+
+        fixLanguageSelectEdge($layuiSelect);
+        $layuiSelect.find('dd.layui-select-tips').remove();
+
+        $layuiSelect.find('dd[lay-value]').each(function () {
+            var val = $(this).attr('lay-value');
+            if (!val) return;
+            $(this).html(adminLangOptionHtml(val));
+        });
+
+        var current = $('#languageSelect').val();
+        var meta = adminLangMeta(current);
+        var $input = $layuiSelect.find('.layui-input');
+        $input.html('<span class="lang-trigger"><span class="lang-trigger__flag" aria-hidden="true">' + meta.flag + '</span><span class="lang-trigger__text">' + meta.label + '</span></span>');
+    }
+
+    (function () {
+        $('#languageSelect option').each(function () {
+            var v = $(this).attr('value');
+            if (v) $(this).text(adminLangMeta(v).label);
+        });
+    })();
+    var layer;
+    layui.use(['layer', 'form'], function () {
+        layer = layui.layer;
+        var $ = layui.jquery, form = layui.form;
+        var TAB_CLOSE_LABEL = "{:addslashes(lang('close'))}";
+
+        /* ── 顶栏 / 移动端一级菜单切换 ── */
+        function switchMainModule(i, $trigger) {
+            if ($trigger && $trigger.length) {
+                $trigger.addClass('is-active').siblings().removeClass('is-active');
+            }
+            $('#mainNav .main-nav-item[data-i="' + i + '"]').addClass('is-active').siblings().removeClass('is-active');
+            $('#mobileMainNav .mobile-module-item[data-i="' + i + '"]').addClass('is-active').siblings().removeClass('is-active');
+            $('.side-panel').attr('hidden', true).filter('[data-panel="' + i + '"]').removeAttr('hidden');
+        }
+
+        $('#mainNav .main-nav-item').on('click', function () {
+            switchMainModule($(this).data('i'), $(this));
+        });
+
+        $('#mobileMainNav .mobile-module-item').on('click', function () {
+            switchMainModule($(this).data('i'), $(this));
+        });
+
+        /* ── 下拉菜单 ── */
+        $(document).on('click', '[data-dropdown] .admin-dropdown__trigger', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $drop = $(this).closest('[data-dropdown]');
+            $('[data-dropdown]').not($drop).removeClass('is-open');
+            $drop.toggleClass('is-open');
+        });
+        $(document).on('click', function () {
+            $('[data-dropdown]').removeClass('is-open');
+        });
+
+        /* ── 语言切换（Layui 自定义下拉 + 国旗） ── */
+        form.render('select', '.language-select-wrap--plain');
+        decorateLanguageSelect();
+        $('#languageSelectWrap').on('click', '.layui-form-select .layui-input, .layui-form-select .layui-edge', function () {
+            window.setTimeout(decorateLanguageSelect, 0);
+        });
+        form.on('select(lang)', function (data) {
+            if (!data.value) return;
+            $.ajax({
+                url: "{:url('system/configlang')}",
+                type: 'post',
+                dataType: 'json',
+                data: { lang: data.value },
+                error: function () {
+                    layer.msg('configedit error', { time: 1800 });
+                },
+                success: function (r) {
+                    layer.msg(r.msg, { time: 1800 });
+                },
+                complete: function () {
+                    location.reload();
+                }
+            });
+        });
+
+        /* ── 标签页管理（Ant Design 风格 · 不依赖 layui element） ── */
+        var WELCOME_TAB_ID = '111';
+        var $tabViewport = $('#tabViewport');
+        var $tabCtxMenu = $('#tabContextMenu');
+        var ctxTabId = null;
+
+        function scrollTabIntoView($li) {
+            var vp = $tabViewport[0];
+            if (!vp || !$li || !$li.length) return;
+            var li = $li[0];
+            var vpRect = vp.getBoundingClientRect();
+            var liRect = li.getBoundingClientRect();
+            if (liRect.left < vpRect.left) {
+                vp.scrollLeft -= (vpRect.left - liRect.left + 12);
+            } else if (liRect.right > vpRect.right) {
+                vp.scrollLeft += (liRect.right - vpRect.right + 12);
+            }
+        }
+
+        function updateTabScrollEdges() {
+            var vp = $tabViewport[0];
+            if (!vp) return;
+            var max = vp.scrollWidth - vp.clientWidth;
+            $('#tabScrollPrev').prop('disabled', vp.scrollLeft <= 1);
+            $('#tabScrollNext').prop('disabled', max <= 1 || vp.scrollLeft >= max - 1);
+        }
+
+        function hideTabContextMenu() {
+            if (!$tabCtxMenu.hasClass('is-open')) return;
+            $tabCtxMenu.attr('hidden', true).removeClass('is-open');
+            ctxTabId = null;
+        }
+
+        function bindIframeTabCtxDismiss($iframe) {
+            if (!$iframe || !$iframe.length) return;
+            $iframe.off('load.tabCtxDismiss').on('load.tabCtxDismiss', function () {
+                try {
+                    var doc = this.contentDocument || this.contentWindow.document;
+                    $(doc).off('mousedown.tabCtxDismiss').on('mousedown.tabCtxDismiss', function () {
+                        hideTabContextMenu();
+                    });
+                } catch (err) {}
+            });
+            if ($iframe[0].contentDocument) {
+                $iframe.triggerHandler('load.tabCtxDismiss');
+            }
+        }
+
+        function syncTabContextMenuState(id) {
+            var isPinned = id === WELCOME_TAB_ID;
+            $tabCtxMenu.find('[data-action="close"]').prop('disabled', isPinned);
+        }
+
+        function refreshTab(id) {
+            var iframe = $('iframe[lay-id="' + id + '"]')[0];
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.location.reload(true);
+            }
+        }
+
+        function closeOtherTabs(keepId) {
+            if ($('#B_history li').length <= 1) {
+                layer.msg("{:lang('admin/index/index/menu_close_empty')}");
+                return;
+            }
+            $('#B_history li').each(function () {
+                var dataId = $(this).attr('lay-id');
+                if (dataId && dataId !== WELCOME_TAB_ID && dataId !== keepId) {
+                    MacTab.del(dataId);
+                    $('.admin-nav-item[data-id="' + dataId + '"]').closest('.side-panel__item').removeClass('is-active');
+                }
+            });
+            MacTab.change(keepId);
+            syncSideFromTabId(keepId);
+        }
+
+        function closeAllTabs() {
+            if ($('#B_history li').length <= 1) {
+                layer.msg("{:lang('admin/index/index/menu_close_empty')}");
+                return;
+            }
+            $('#B_history li').each(function () {
+                var dataId = $(this).attr('lay-id');
+                if (dataId && dataId !== WELCOME_TAB_ID) {
+                    MacTab.del(dataId);
+                }
+            });
+            $('.side-panel__item').removeClass('is-active');
+        }
+
+        var MacTab = {
+            change: function (id) {
+                var $li = $('#B_history li[lay-id="' + id + '"]');
+                $li.addClass('is-active').attr('aria-selected', 'true').siblings().removeClass('is-active').attr('aria-selected', 'false');
+                $('.admin-tabs__pane[data-tab-id="' + id + '"]').addClass('is-active').siblings().removeClass('is-active');
+                scrollTabIntoView($li);
+                updateTabScrollEdges();
+            },
+            add: function (title, url, id) {
+                var safeTitle = $.trim(title);
+                var $bar = $('#B_history');
+                var closeBtn = id !== WELCOME_TAB_ID
+                    ? '<button type="button" class="tab-close" title="' + TAB_CLOSE_LABEL + '" aria-label="' + TAB_CLOSE_LABEL + '"><span class="tab-close__glyph" aria-hidden="true">×</span></button>'
+                    : '';
+                $bar.append(
+                    '<li lay-id="' + id + '" role="tab" aria-selected="false">' +
+                    '<span class="admin-tabs__label">' + safeTitle + '</span>' + closeBtn + '</li>'
+                );
+                $('.admin-workspace__body, .admin-tabs__content').first().append(
+                    '<div class="admin-tabs__pane" data-tab-id="' + id + '">' +
+                    '<iframe lay-id="' + id + '" src="' + url + '" class="x-iframe" scrolling="yes"></iframe></div>'
+                );
+                bindIframeTabCtxDismiss($('iframe[lay-id="' + id + '"]'));
+                this.change(id);
+            },
+            del: function (id) {
+                if (id === WELCOME_TAB_ID) return;
+                var $tab = $('#B_history li[lay-id="' + id + '"]');
+                var wasActive = $tab.hasClass('is-active');
+                $tab.remove();
+                $('.admin-tabs__pane[data-tab-id="' + id + '"]').remove();
+                $('iframe[lay-id="' + id + '"]').remove();
+                if (wasActive) {
+                    var $first = $('#B_history li').first();
+                    if ($first.length) {
+                        this.change($first.attr('lay-id'));
+                    }
+                }
+                updateTabScrollEdges();
+            }
+        };
+
+        function setSideActive($link) {
+            $link.closest('.side-panel__item').addClass('is-active').siblings().removeClass('is-active');
+        }
+
+        function syncSideFromTabId(id) {
+            if (!id || id === WELCOME_TAB_ID) {
+                $('.side-panel__item').removeClass('is-active');
+                return;
+            }
+            var $nav = $('.admin-nav-item[data-id="' + id + '"]');
+            if (!$nav.length) return;
+            setSideActive($nav);
+            var panelId = $nav.closest('.side-panel').data('panel');
+            if (panelId) {
+                switchMainModule(panelId);
+            }
+        }
+
+        /* 主内容区由 grid + flex 撑满，无需手动算高度 */
+
+        $('.admin-nav-item').on('click', function (event) {
+            var that = $(this);
+            var id = that.attr('data-id');
+            if ($('iframe[lay-id="' + id + '"]')[0]) {
+                MacTab.change(id);
+                setSideActive(that);
+                event.stopPropagation();
+                $('iframe[lay-id="' + id + '"]')[0].contentWindow.location.reload(true);
+                return false;
+            }
+            if ($('iframe').length >= 10) {
+                layer.msg("{:lang('admin/index/index/menu_max')}");
+                return false;
+            }
+            MacTab.add($.trim(that.find('.admin-nav-item__label').text() || that.text()), that.attr('href'), id);
+            setSideActive(that);
+            event.stopPropagation();
+            setMobileNavOpen(false);
+            return false;
+        });
+
+        $('#B_history').on('click', 'li', function (e) {
+            if ($(e.target).closest('.tab-close').length) return;
+            var id = $(this).attr('lay-id');
+            MacTab.change(id);
+            syncSideFromTabId(id);
+        });
+
+        $(document).on('click', '.tab-close', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var id = $(this).closest('li').attr('lay-id');
+            MacTab.del(id);
+            $('.admin-nav-item[data-id="' + id + '"]').closest('.side-panel__item').removeClass('is-active');
+        });
+
+        $('#B_history').on('mousedown', 'li', function (e) {
+            if (e.which !== 2) return;
+            e.preventDefault();
+            var id = $(this).attr('lay-id');
+            if (id === WELCOME_TAB_ID) return;
+            MacTab.del(id);
+            $('.admin-nav-item[data-id="' + id + '"]').closest('.side-panel__item').removeClass('is-active');
+        });
+
+        $('#B_history').on('contextmenu', 'li', function (e) {
+            e.preventDefault();
+            ctxTabId = $(this).attr('lay-id');
+            syncTabContextMenuState(ctxTabId);
+            $tabCtxMenu.css({ left: e.clientX + 'px', top: e.clientY + 'px' }).removeAttr('hidden').addClass('is-open');
+        });
+
+        $tabCtxMenu.on('click', '.admin-tab-ctx__item', function () {
+            if ($(this).prop('disabled')) return;
+            var action = $(this).data('action');
+            var id = ctxTabId || $('#B_history .is-active').attr('lay-id');
+            hideTabContextMenu();
+            if (action === 'refresh') {
+                refreshTab(id);
+            } else if (action === 'close' && id !== WELCOME_TAB_ID) {
+                MacTab.del(id);
+                $('.admin-nav-item[data-id="' + id + '"]').closest('.side-panel__item').removeClass('is-active');
+            } else if (action === 'closeOther') {
+                closeOtherTabs(id);
+            } else if (action === 'closeAll') {
+                closeAllTabs();
+            }
+        });
+
+        $('iframe').each(function () {
+            bindIframeTabCtxDismiss($(this));
+        });
+
+        $(document).on('mousedown', function (e) {
+            if (!$tabCtxMenu.hasClass('is-open')) return;
+            if ($(e.target).closest('#tabContextMenu').length) return;
+            hideTabContextMenu();
+        });
+
+        $(window).on('blur', function () {
+            hideTabContextMenu();
+        });
+
+        $('#tabViewport, .admin-tabs__bar').on('scroll', hideTabContextMenu);
+
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape') hideTabContextMenu();
+        });
+
+        $('#tabScrollPrev').on('click', function () {
+            var vp = $tabViewport[0];
+            if (vp) vp.scrollLeft -= Math.max(160, vp.clientWidth * 0.6);
+            updateTabScrollEdges();
+        });
+
+        $('#tabScrollNext').on('click', function () {
+            var vp = $tabViewport[0];
+            if (vp) vp.scrollLeft += Math.max(160, vp.clientWidth * 0.6);
+            updateTabScrollEdges();
+        });
+
+        $tabViewport.on('scroll', updateTabScrollEdges);
+        $(window).on('resize', updateTabScrollEdges);
+
+        $('#J_refresh').on('click', function (e) {
+            e.preventDefault();
+            var index = layer.load();
+            refreshTab($('#B_history .is-active').attr('lay-id'));
+            layer.close(index);
+        });
+
+        $('.closePageAll').on('click', function () {
+            closeAllTabs();
+        });
+
+        $('.closePageOther').on('click', function () {
+            closeOtherTabs($('#B_history .is-active').attr('lay-id'));
+        });
+
+        updateTabScrollEdges();
+
+        /* ── 移动端侧栏抽屉 ── */
+        function setMobileNavOpen(open) {
+            $('body').toggleClass('site-mobile', open);
+            var $menuBtn = $('#mobileMenuBtn');
+            $menuBtn.attr('aria-expanded', open ? 'true' : 'false');
+            $menuBtn.find('.layui-icon')
+                .removeClass('layui-icon-spread-left layui-icon-shrink-right')
+                .addClass(open ? 'layui-icon-shrink-right' : 'layui-icon-spread-left');
+        }
+
+        $('#mobileMenuBtn').on('click', function () {
+            setMobileNavOpen(!$('body').hasClass('site-mobile'));
+        });
+        $('#mobileNavClose').on('click', function () {
+            setMobileNavOpen(false);
+        });
+        $('.site-mobile-shade').on('click', function () {
+            setMobileNavOpen(false);
+        });
+
+        /* ── 版本更新检测 ── */
+        if (typeof MAC_VERSION !== 'undefined' && typeof PHP_VERSION !== 'undefined' && typeof THINK_VERSION !== 'undefined') {
+            $.ajax({
+                url: 'https://update.maccms.la/v10/?c=check&v=' + MAC_VERSION + '&p=' + PHP_VERSION + '&tp=' + THINK_VERSION + '&t=' + Math.random(),
+                type: 'GET',
+                dataType: 'text',
+                success: function (response) {
+                    var updateContentMatch = response.match(/var update_content\s*=\s*\[(.*?)\]\.join\('<br>'\);/s);
+                    if (updateContentMatch) {
+                        try { eval(updateContentMatch[0]); } catch (e) { console.error('update content eval failed', e); }
+                    }
+                    var newVMatch = response.match(/var new_v = '(.*?)';/);
+                    var newV = newVMatch ? newVMatch[1] : '';
+                    if (newV > MAC_VERSION) {
+                        window.updateInfo = { newV: newV, update_content: update_content, package: 'maccms10_update' };
+                        $('#update-notification, #update-notification-mobile').show();
+                    }
+                }
+            });
+        }
+    });
+    $(function () {
+        setInterval("checkCache()", 30 * 1000);
+    });
+
+    //检查缓存并保持登录状态
+    function checkCache() {
+        $.ajax({
+            url: "{:url('checkcache')}",
+            cache: false,
+            success: function (r) {
+                if (r == 'haved') {
+                    layer.msg('{:lang("admin/index/cache_data")}', { time: 3000 });
+                }
+            }
+        });
+    }
+
+    // 显示更新对话框的函数
+    function showUpdateDialog() {
+        if (!window.updateInfo) {
+            layer.msg('没有可用的更新信息', { time: 2000 });
+            return;
+        }
+
+        var newV = window.updateInfo.newV;
+        var update_content = window.updateInfo.update_content;
+        var package = window.updateInfo.package;
+
+        // js 判断是否移动端
+        var area = ['460px', '638px']
+        var agent = navigator.userAgent.toLowerCase();
+        var isMobile = /android|iphone|ipod|ipad|ios/.test(agent)
+        if (isMobile) {
+            area = ['95%', '638px']
+        }
+
+        layer.open({
+            type: 1,
+            area, // 宽高
+            title: false, // 不显示标题栏
+            closeBtn: 0,
+            btn: ['关闭'],
+            btnAlign: 'c',
+            shadeClose: true, // 点击遮罩关闭层
+            skin: 'skin_updae_from', // 加上边框
+            content: `
+                <div class="updae_from">
+                    <img class="update_bg" src="__STATIC__/images/upgrade_pop_rocket_bg@2x.png" alt="" srcset="">
+                    <div class="update_content">
+                    <div class="update_title">
+                        <p>更新提示</p>
+                        <p>${newV}>>></p>
+                    </div>
+                    <a class="group_link" target="_blank" href="https://t.me/maccms_channel">Telegram群   https://t.me/maccms_channel</a>
+                    <a class="group_link" target="_blank"
+                        href="https://github.com/magicblack">Github源码   https://github.com/magicblack</a>
+                    <div class="flex-col flex my-[20px] gap-1">
+                        <a class="j-iframe text-[#53D19C]" title="点击进入升级"
+                        data-href="${ADMIN_PATH}/admin/update/step1.html?file=${package}">
+                        【点击进入在线升级】
+                        </a>
+                        <a href="https://github.com/magicblack/maccms_down/raw/master/maccms10_update.zip">
+                        【下载离线升级包线路1】
+                        </a>
+                        <a href="https://cdn.jsdelivr.net/gh/magicblack/maccms_down@master/maccms10_update.zip">
+                        【下载离线升级包线路2】
+                        </a>
+                    </div>
+                    <div class="update_list">
+                        ${update_content}
+                    </div>
+                </div>
+            `
+        });
+    }
+</script>
+
+</body>
+
+</html>

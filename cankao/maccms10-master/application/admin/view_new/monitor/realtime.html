@@ -1,0 +1,245 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<link rel="stylesheet" href="/static_new/css/uplot.min.css">
+<div class="page-container p10">
+
+    <style>
+        /* 数据列用等宽数字：KPI 每 5 秒刷新一次，
+           比例数字会让 "9" 和 "1" 宽度不同，数值一跳一跳地抖，读数很累 */
+        .mon-kpi { font-variant-numeric: tabular-nums; font-size:26px; font-weight:600; color:#222; }
+        .mon-kpi-unit { font-size:14px; font-weight:400; color:#666; margin-left:2px; }
+        /* 尊重系统的「减弱动态效果」设置 */
+        @media (prefers-reduced-motion: reduce) {
+            .mon-kpi { transition: none !important; }
+        }
+    </style>
+
+    <div class="my-toolbar-box mb-2">
+        <div class="flex gap-5" style="align-items:center;flex-wrap:wrap;">
+            <!-- 状态不能只靠颜色：色觉障碍用户看不出绿点和红点的区别，
+                 所以圆点旁边永远跟着一段文字状态 -->
+            <span id="liveState" role="status" aria-live="polite"
+                  style="display:inline-flex;align-items:center;gap:6px;">
+                <span id="liveDot" aria-hidden="true"
+                      style="width:10px;height:10px;border-radius:50%;background:#5FB878;display:inline-block;"></span>
+                <span id="liveStateText" style="color:#222;font-weight:500;">{:lang('admin/monitor/live_running')}</span>
+            </span>
+
+            <!-- 实时刷新必须可暂停：站长要复制一个数值、要截图、
+                 或者只是想盯住某一刻的读数，不能被 5 秒一次的刷新抢走 -->
+            <button class="layui-btn layui-btn-sm layui-btn-primary" id="pauseBtn"
+                    aria-pressed="false">{:lang('admin/monitor/pause')}</button>
+
+            <span style="color:#666;" id="liveTs"></span>
+            <span style="color:#666;">{:lang('admin/monitor/live_hint')}</span>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space10" aria-live="polite" aria-atomic="false">
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    {:lang('admin/monitor/kpi_online')}
+                    <span class="layui-badge layui-bg-gray" id="onlineEst" style="display:none;">
+                        {:lang('admin/monitor/estimated')}
+                    </span>
+                </div>
+                <div class="layui-card-body">
+                    <div class="mon-kpi" id="kpiOnline">--</div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_pv5m')}</div>
+                <div class="layui-card-body"><div class="mon-kpi" id="kpiPv5m">--</div></div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_qps')}</div>
+                <div class="layui-card-body">
+                    <div class="mon-kpi" id="kpiQps">--</div>
+                    <div id="sparkReq" style="height:40px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_p95')}</div>
+                <div class="layui-card-body"><div class="mon-kpi" id="kpiP95">--</div></div>
+            </div>
+        </div>
+
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_err_rate')}</div>
+                <div class="layui-card-body"><div class="mon-kpi" id="kpiErr">--</div></div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_cpu')}</div>
+                <div class="layui-card-body">
+                    <div class="mon-kpi" id="kpiCpu">--</div>
+                    <div id="sparkCpu" style="height:40px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_load1')}</div>
+                <div class="layui-card-body">
+                    <div class="mon-kpi" id="kpiLoad">--</div>
+                    <div id="sparkLoad" style="height:40px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/kpi_mem')}</div>
+                <div class="layui-card-body">
+                    <div class="mon-kpi" id="kpiMem">--</div>
+                    <div id="sparkMem" style="height:40px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static_new/js/uplot.min.js"></script>
+<script src="/static_new/js/monitor-charts.js"></script>
+<script>
+    var MONITOR_SERIES_URL = "{:url('series')}";
+    var MONITOR_LIVE_URL = "{:url('live')}";
+    var MONITOR_I18N = {
+        no_data: "{:lang('admin/monitor/chart_no_data')}",
+        load_failed: "{:lang('admin/monitor/chart_load_failed')}",
+        running: "{:lang('admin/monitor/live_running')}",
+        paused: "{:lang('admin/monitor/live_paused')}",
+        offline: "{:lang('admin/monitor/live_offline')}",
+        pause: "{:lang('admin/monitor/pause')}",
+        resume: "{:lang('admin/monitor/resume')}"
+    };
+
+    var P = MonitorCharts.palette;
+    var sparks = {
+        req:  MonitorCharts.sparkline('#sparkReq',  P[0]),
+        cpu:  MonitorCharts.sparkline('#sparkCpu',  P[1]),
+        load: MonitorCharts.sparkline('#sparkLoad', P[2]),
+        mem:  MonitorCharts.sparkline('#sparkMem',  P[3])
+    };
+
+    function txt(id, v) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = (v === null || v === undefined) ? '--' : v; }
+    }
+
+    /**
+     * 状态永远由「颜色 + 文字」共同表达。
+     * 只用一个绿点/红点的话，色觉障碍用户根本看不出区别。
+     */
+    function setState(kind) {
+        var dot = document.getElementById('liveDot');
+        var text = document.getElementById('liveStateText');
+        var map = {
+            running: ['#5FB878', MONITOR_I18N.running],
+            paused:  ['#FFB800', MONITOR_I18N.paused],
+            offline: ['#FF5722', MONITOR_I18N.offline]
+        };
+        var v = map[kind] || map.running;
+        if (dot)  { dot.style.background = v[0]; }
+        if (text) { text.textContent = v[1]; }
+    }
+
+    function tick() {
+        if (paused) { return; }
+
+        fetch(MONITOR_LIVE_URL, {credentials: 'same-origin'})
+            .then(function (r) {
+                if (!r.ok) { throw new Error('HTTP ' + r.status); }
+                return r.json();
+            })
+            .then(function (res) {
+                if (res.code !== 1) { throw new Error(res.msg || MONITOR_I18N.load_failed); }
+                var d = res.data;
+
+                txt('kpiOnline', d.online);
+                txt('kpiPv5m', d.pv5m);
+                txt('kpiQps', d.qps);
+                txt('kpiP95', d.p95_ms === null ? '--' : (d.p95_clamped ? '≥' : '') + d.p95_ms + ' ms');
+                txt('kpiErr', d.err_rate + ' %');
+                txt('kpiCpu', d.cpu_pct + ' %');
+                txt('kpiLoad', d.load1);
+                txt('kpiMem', d.mem_pct + ' %');
+
+                // 埋点未部署时在线人数是从请求数估算的，必须标出来，
+                // 不能让站长误以为那是真实的独立访客数
+                var est = document.getElementById('onlineEst');
+                if (est) { est.style.display = d.online_est ? '' : 'none'; }
+
+                var t = new Date(d.ts * 1000);
+                txt('liveTs', t.toLocaleTimeString());
+
+                setState(d.heartbeat.alive ? 'running' : 'offline');
+
+                if (d.spark) {
+                    if (sparks.req)  { sparks.req.setData(d.spark.req); }
+                    if (sparks.cpu)  { sparks.cpu.setData(d.spark.cpu); }
+                    if (sparks.load) { sparks.load.setData(d.spark.load); }
+                    if (sparks.mem)  { sparks.mem.setData(d.spark.mem); }
+                }
+            })
+            .catch(function () {
+                // 轮询失败必须说出来。原本这里是空的 catch ——
+                // 网络断了、后台挂了，站长只会看到数字凝固在那里，
+                // 还以为「一切正常，只是没有变化」。这是最危险的误导。
+                setState('offline');
+            });
+    }
+
+    // ★ 实时刷新必须可暂停 ★
+    // 站长要复制一个数值、要截图、或者只是想盯住某一刻的读数 ——
+    // 不能被 5 秒一次的刷新一直抢走。
+    var paused = false;
+    var timer = null;
+
+    // 尊重系统的「减弱动态效果」设置：开了这个设置的用户对频繁变动的内容
+    // 会感到不适，此时默认不自动刷新，改由用户手动开启。
+    var reduceMotion = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function start() {
+        if (timer) { clearInterval(timer); }
+        timer = setInterval(tick, 5000);
+    }
+    function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    var pauseBtn = document.getElementById('pauseBtn');
+    function applyPaused() {
+        pauseBtn.textContent = paused ? MONITOR_I18N.resume : MONITOR_I18N.pause;
+        pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+        if (paused) { stop(); setState('paused'); }
+        else { start(); tick(); }
+    }
+    pauseBtn.addEventListener('click', function () {
+        paused = !paused;
+        applyPaused();
+    });
+
+    // 页面切到后台标签页时停止轮询：没人在看，不必每 5 秒打一次服务器
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { stop(); }
+        else if (!paused) { start(); tick(); }
+    });
+
+    tick();
+    if (reduceMotion) {
+        paused = true;
+        applyPaused();
+    } else {
+        start();
+    }
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

@@ -1,0 +1,54 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<link rel="stylesheet" href="__STATIC__/swagger/swagger-ui.css?{$MAC_VERSION}">
+<style>
+    .apidoc-bar { background:#fff; border-radius:8px; padding:12px 16px; margin:10px 10px 0; box-shadow:0 1px 4px rgba(0,0,0,.08); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .apidoc-bar h2 { font-size:16px; color:#333; margin:0; }
+    .apidoc-bar .desc { font-size:12px; color:#888; flex:1; min-width:200px; }
+    .apidoc-bar .api-base { font-size:12px; color:#1E9FFF; word-break:break-all; }
+    #swagger-ui { margin:10px; background:#fff; border-radius:8px; overflow:hidden; }
+    /* 兼容后台容器，避免 swagger 默认 body 样式影响布局 */
+    #swagger-ui .swagger-ui .topbar { display:none; }
+    #swagger-ui .swagger-ui .info { margin:20px 0; }
+</style>
+
+<div class="apidoc-bar">
+    <h2>{:lang('admin/apidoc/title')}</h2>
+    <span class="desc">{:lang('admin/apidoc/page_desc')}</span>
+    <span class="api-base">{:lang('admin/apidoc/api_base')}: {$api_base}</span>
+    <a href="{:url('api_doc/openapi')}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/apidoc/download_json')}</a>
+</div>
+
+<div id="swagger-ui"></div>
+
+<script src="__STATIC__/swagger/swagger-ui-bundle.js?{$MAC_VERSION}"></script>
+<script src="__STATIC__/swagger/swagger-ui-standalone-preset.js?{$MAC_VERSION}"></script>
+<script>
+window.addEventListener('load', function () {
+    var specUrl = "{:url('api_doc/openapi')}";
+    window.macSwaggerUI = SwaggerUIBundle({
+        url: specUrl,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        docExpansion: 'none',
+        defaultModelsExpandDepth: 0,
+        filter: true,
+        tryItOutEnabled: true,
+        presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+        ],
+        plugins: [
+            SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: 'BaseLayout',
+        // 在线调试时携带后台同源 Cookie，便于调试需登录接口
+        requestInterceptor: function (req) {
+            req.credentials = 'same-origin';
+            return req;
+        }
+    });
+});
+</script>
+
+{include file="../../../application/admin/view_new/public/foot" /}

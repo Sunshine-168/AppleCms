@@ -1,0 +1,5 @@
+keys/catalog_private.pem
+keys/*.pem
+dist/
+packages/
+catalog.source.json

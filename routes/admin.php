@@ -16,6 +16,9 @@ use App\Http\Controllers\Admin\System\SysShortcut;
 use App\Http\Controllers\Admin\System\SysUser;
 use App\Http\Controllers\Admin\System\SysPerm;
 use App\Http\Controllers\Admin\Video\Video;
+use App\Http\Controllers\Admin\Video\Collect;
+use App\Http\Controllers\Admin\Video\SiteModule;
+use App\Http\Controllers\Admin\Video\SiteSetting;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminOperateLog;
@@ -87,6 +90,7 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/info', [Video::class, 'getVideoInfo'])->name('admin.video.info');// 获取视频详情
     Route::post('/video/save', [Video::class, 'saveVideo'])->name('admin.video.save');// 保存视频
     Route::post('/video/delete', [Video::class, 'deleteVideo'])->name('admin.video.delete');// 删除视频
+    Route::post('/video/batch', [Video::class, 'batchVideo'])->name('admin.video.batch');
     Route::get('/video/types/options', [Video::class, 'getTypeOptions'])->name('admin.video.types.options');// 视频类型下拉选项
     Route::get('/video/collect/options', [Video::class, 'getCollectSourceOptions'])->name('admin.video.collect.options');// 视频采集源下拉选项
     
@@ -101,6 +105,9 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/collects/list', [Video::class, 'getCollectSourceLists'])->name('admin.video.collects.list');// 获取视频采集源列表
     Route::post('/video/collects/save', [Video::class, 'saveCollectSource'])->name('admin.video.collects.save');// 保存视频采集源
     Route::post('/video/collects/delete', [Video::class, 'deleteCollectSource'])->name('admin.video.collects.delete');// 删除视频采集源
+    Route::get('/video/collects/classes', [Collect::class, 'classes'])->name('admin.video.collects.classes');
+    Route::post('/video/collects/bind', [Collect::class, 'bind'])->name('admin.video.collects.bind');
+    Route::post('/video/collects/run', [Collect::class, 'run'])->name('admin.video.collects.run');
 
     // 视频标签管理
     Route::get('/video/tags', [Video::class, 'showTags'])->name('admin.video.tags');// 显示视频标签管理页
@@ -124,6 +131,17 @@ Route::middleware([AdminOperateLog::class, AdminAuth::class, AdminPermission::cl
     Route::get('/video/episodes/list', [Video::class, 'getEpisodeLists'])->name('admin.video.episodes.list');// 获取视频集列表
     Route::post('/video/episodes/save', [Video::class, 'saveEpisode'])->name('admin.video.episodes.save');// 保存视频集
     Route::post('/video/episodes/delete', [Video::class, 'deleteEpisode'])->name('admin.video.episodes.delete');// 删除视频集
+
+    Route::get('/video/settings', [SiteSetting::class, 'index']);
+    Route::post('/video/settings', [SiteSetting::class, 'save']);
+    Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
+    Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
+    Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');
+
+    Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
+    Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
+    Route::post('/video/{module}/save', [SiteModule::class, 'save'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
+    Route::post('/video/{module}/delete', [SiteModule::class, 'delete'])->whereIn('module', ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards']);
     
     // 附件管理
     Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页

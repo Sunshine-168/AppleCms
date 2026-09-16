@@ -13,6 +13,7 @@ use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTypeModel;
 use App\Support\Utils\Result;
+use App\Support\VideoMeta;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -57,7 +58,7 @@ class VideoService
         $title = trim((string)($params['title'] ?? ''));
         if ($title !== '')
         {
-            $where['title'] = ['=' => $title];
+            $where['title'] = ['like' => '%'.$title.'%'];
         }
 
         $typeId = $params['type_id'] ?? null;
@@ -228,16 +229,24 @@ class VideoService
             'lang' => (string)($data['lang'] ?? ''),
             'year' => (string)($data['year'] ?? ''),
             'director' => (string)($data['director'] ?? ''),
+            'remarks' => (string)($data['remarks'] ?? ''),
             'description' => (string)($data['description'] ?? ''),
             'status' => (int)($data['status'] ?? 1),
+            'lock' => (int)($data['lock'] ?? 0),
+            'points' => (int)($data['points'] ?? 0),
             'is_recommend' => (int)($data['is_recommend'] ?? 0),
             'is_hot' => (int)($data['is_hot'] ?? 0),
             'score' => (float)($data['score'] ?? 0),
             'collect_id' => (string)($data['collect_id'] ?? ''),
             'collect_source_id' => ($data['collect_source_id'] ?? '') === '' ? null : (int)$data['collect_source_id'],
             'sort' => (int)($data['sort'] ?? 0),
+            'letter' => VideoMeta::letter($title),
             'updated_at' => $now,
         ];
+        if (!empty($payload['type_id'])) {
+            $type = $this->videoTypeModel->findById((int) $payload['type_id']);
+            $payload['type_pid'] = (int) ($type['parent_id'] ?? 0);
+        }
 
         $tagsText = (string)($data['tags_text'] ?? '');
         $actorsText = (string)($data['actors_text'] ?? '');
@@ -543,6 +552,9 @@ class VideoService
         $now = time();
         $candidate = [
             'name' => $name,
+            'api_url' => (string)($data['api_url'] ?? ''),
+            'api_type' => (string)($data['api_type'] ?? 'auto'),
+            'param' => (string)($data['param'] ?? ''),
             'status' => (int)($data['status'] ?? 1),
             'sort' => (int)($data['sort'] ?? 0),
             'updated_at' => $now,
@@ -1108,5 +1120,45 @@ class VideoService
         {
             $this->videoActorRelModel->inserts($rows);
         }
+    }
+
+    /**
+     * 批量改状态 / 推荐 / 锁定 / 分类 / 删除
+     */
+    public function batchVideos(mixed $ids, string $action, mixed $value = null): array
+    {
+        $ids = VideoMeta::ids($ids);
+        if ($ids === []) {
+            return Result::fail('请选择数据');
+        }
+
+        $now = time();
+        if ($action === 'delete') {
+            foreach ($ids as $id) {
+                $this->deleteVideo($id);
+            }
+            return Result::success(['count' => count($ids)]);
+        }
+
+        $payload = ['updated_at' => $now];
+        match ($action) {
+            'status' => $payload['status'] = (int) $value,
+            'recommend' => $payload['is_recommend'] = (int) $value,
+            'hot' => $payload['is_hot'] = (int) $value,
+            'lock' => $payload['lock'] = (int) $value,
+            'type' => $payload['type_id'] = (int) $value,
+            default => null,
+        };
+        if (count($payload) === 1) {
+            return Result::fail('不支持的批量操作');
+        }
+        if ($action === 'type') {
+            $type = $this->videoTypeModel->findById((int) $value);
+            $payload['type_pid'] = (int) ($type['parent_id'] ?? 0);
+        }
+
+        $ok = $this->videoModel->updateByCondition([['id', 'in', $ids]], $payload);
+
+        return $ok ? Result::success(['count' => count($ids)]) : Result::fail();
     }
 }

@@ -1,0 +1,249 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+    <div class="layui-card">
+        <div class="layui-card-header">{:lang('admin/monitor/title_rule')}</div>
+        <div class="layui-card-body">
+            <form class="layui-form" id="ruleForm">
+                <input type="hidden" name="rule_id" value="{$info.rule_id}">
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_rule_name')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="rule_name" class="layui-input" value="{$info.rule_name}" required>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_source')}</label>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_source" lay-filter="source">
+                            <option value="metric" {if condition="$info['rule_source'] neq 'analytics'"}selected{/if}>{:lang('admin/monitor/src_metric')}</option>
+                            <option value="analytics" {if condition="$info['rule_source'] eq 'analytics'"}selected{/if}>{:lang('admin/monitor/src_analytics')}</option>
+                        </select>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_source_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_metric')}</label>
+                    <div class="layui-input-inline" style="width:360px;">
+                        <input type="text" name="rule_metric" class="layui-input" value="{$info.rule_metric}"
+                               placeholder="sys.cpu.pct / http.5xx / http.lat" required>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux" id="metricHintMetric">{:lang('admin/monitor/f_metric_hint')}</div>
+                    <div class="layui-form-mid layui-word-aux" id="metricHintAnalytics" style="display:none;">
+                        {foreach name="analytics_metrics" item="am"}<code>{$am}</code>&nbsp;{/foreach}
+                    </div>
+                </div>
+
+                <div class="layui-form-item analytics-only" style="display:none;">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_detect_mode')}</label>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_detect_mode" lay-filter="detectMode">
+                            <option value="zscore" {if condition="$info['rule_detect_mode'] eq 'zscore'"}selected{/if}>{:lang('admin/monitor/dm_zscore')}</option>
+                            <option value="zerodrop" {if condition="$info['rule_detect_mode'] eq 'zerodrop'"}selected{/if}>{:lang('admin/monitor/dm_zerodrop')}</option>
+                            <option value="yoy" {if condition="$info['rule_detect_mode'] eq 'yoy'"}selected{/if}>{:lang('admin/monitor/dm_yoy')}</option>
+                            <option value="mom" {if condition="$info['rule_detect_mode'] eq 'mom'"}selected{/if}>{:lang('admin/monitor/dm_mom')}</option>
+                        </select>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_detect_mode_hint')}</div>
+                </div>
+
+                <div class="layui-form-item analytics-only" style="display:none;">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_detect_param')}</label>
+                    <div class="layui-input-inline" style="width:420px;">
+                        <input type="text" name="rule_detect_param" class="layui-input" value="{$info.rule_detect_param}"
+                               placeholder='{"k":3,"baseline_days":14,"min_sample":7,"min_abs":50}'>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_detect_param_hint')}</div>
+                </div>
+
+                <div class="layui-form-item" id="ratioRow" style="display:none;">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_deviation')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" step="0.01" min="0" name="rule_threshold_analytics" class="layui-input"
+                               value="{$info.rule_threshold}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_deviation_hint')}</div>
+                </div>
+
+                <div class="layui-form-item" id="opRow" style="display:none;">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_direction')}</label>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_op_analytics">
+                            <option value="lt" {if condition="$info['rule_op'] eq 'lt'"}selected{/if}>{:lang('admin/monitor/dir_drop')}</option>
+                            <option value="gt" {if condition="$info['rule_op'] eq 'gt'"}selected{/if}>{:lang('admin/monitor/dir_spike')}</option>
+                        </select>
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_direction_hint')}</div>
+                </div>
+
+                <div class="layui-form-item metric-only">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_condition')}</label>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_agg" lay-filter="agg">
+                            {foreach name="agg_list" item="a"}
+                            <option value="{$a}" {if condition="$info['rule_agg'] eq $a"}selected{/if}>{$a}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_op">
+                            {foreach name="op_list" item="o"}
+                            <option value="{$o}" {if condition="$info['rule_op'] eq $o"}selected{/if}>{$o}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="layui-input-inline w150">
+                        <input type="number" step="0.0001" name="rule_threshold" class="layui-input" value="{$info.rule_threshold}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux" id="p95Hint" style="display:none;color:#FF5722;">
+                        {:lang('admin/monitor/f_p95_hint')}
+                    </div>
+                </div>
+
+                <div class="layui-form-item metric-only">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_window')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="rule_window_min" class="layui-input" min="1" max="1440" value="{$info.rule_window_min}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_window_hint')}</div>
+                </div>
+
+                <div class="layui-form-item metric-only">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_for_min')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="rule_for_min" class="layui-input" min="0" max="1440" value="{$info.rule_for_min}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_for_min_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_severity')}</label>
+                    <div class="layui-input-inline w150">
+                        <select name="rule_severity">
+                            <option value="1" {if condition="$info['rule_severity'] eq 1"}selected{/if}>{:lang('admin/monitor/sev_info')}</option>
+                            <option value="2" {if condition="$info['rule_severity'] eq 2"}selected{/if}>{:lang('admin/monitor/sev_warning')}</option>
+                            <option value="3" {if condition="$info['rule_severity'] eq 3"}selected{/if}>{:lang('admin/monitor/sev_critical')}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_silence')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="rule_silence_min" class="layui-input" min="0" max="1440" value="{$info.rule_silence_min}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_silence_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_recover')}</label>
+                    <div class="layui-input-inline w150">
+                        <input type="number" name="rule_recover_min" class="layui-input" min="0" max="1440" value="{$info.rule_recover_min}">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">{:lang('admin/monitor/f_recover_hint')}</div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('admin/monitor/f_channels')}</label>
+                    <div class="layui-input-block">
+                        {volist name="channels" id="ch"}
+                        <input type="checkbox" name="ch_{$ch}" title="{$ch}" value="{$ch}" class="ch-box"
+                               {if condition="strpos(',' . $info['rule_channels'] . ',', ',' . $ch . ',') !== false"}checked{/if}>
+                        {/volist}
+                        <input type="hidden" name="rule_channels" id="channelsField" value="{$info.rule_channels}">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{:lang('status')}</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="rule_status" value="1" title="{:lang('open')}" {if condition="$info['rule_status'] eq 1"}checked{/if}>
+                        <input type="radio" name="rule_status" value="0" title="{:lang('close')}" {if condition="$info['rule_status'] neq 1"}checked{/if}>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="button" class="layui-btn" id="saveBtn">{:lang('btn_save')}</button>
+                        <a class="layui-btn layui-btn-primary" href="{:url('rule')}">{:lang('return')}</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var SAVE_URL = "{:url('rule_save')}";
+    var LIST_URL = "{:url('rule')}";
+
+    layui.use(['form'], function () {
+        var form = layui.form;
+        form.render();
+
+        function togglePctHint() {
+            var agg = document.querySelector('select[name=rule_agg]').value;
+            document.getElementById('p95Hint').style.display = (agg === 'p95') ? '' : 'none';
+        }
+        form.on('select(agg)', togglePctHint);
+        togglePctHint();
+
+        // 数据源切换：
+        //  - metric   规则按「聚合(窗口) 比较 阈值」判定，需要聚合方式/窗口/持续时长
+        //  - analytics 规则由 AnalyticsAnomaly 用统计方法判定，这些字段没有意义。
+        //    尤其是「持续时长」：analytics 规则每小时才评估一次，
+        //    留着这个字段只会误导站长以为它有用。
+        function toggleSource() {
+            var isAnalytics = document.querySelector('select[name=rule_source]').value === 'analytics';
+            document.querySelectorAll('.metric-only').forEach(function (el) {
+                el.style.display = isAnalytics ? 'none' : '';
+            });
+            document.querySelectorAll('.analytics-only').forEach(function (el) {
+                el.style.display = isAnalytics ? '' : 'none';
+            });
+            document.getElementById('metricHintMetric').style.display = isAnalytics ? 'none' : '';
+            document.getElementById('metricHintAnalytics').style.display = isAnalytics ? '' : 'none';
+            document.getElementById('opRow').style.display = isAnalytics ? '' : 'none';
+            toggleDetectMode();
+        }
+
+        // 偏差阈值只有同比/环比用得上。
+        // zscore 的灵敏度来自 detect_param 里的 k，zerodrop 压根不需要阈值 ——
+        // 把这个字段一直摆在那里只会让站长以为自己调的数字生效了，其实没有。
+        function toggleDetectMode() {
+            var isAnalytics = document.querySelector('select[name=rule_source]').value === 'analytics';
+            var mode = document.querySelector('select[name=rule_detect_mode]').value;
+            var needRatio = isAnalytics && (mode === 'yoy' || mode === 'mom');
+            document.getElementById('ratioRow').style.display = needRatio ? '' : 'none';
+        }
+        form.on('select(source)', toggleSource);
+        form.on('select(detectMode)', toggleDetectMode);
+        toggleSource();
+
+        document.getElementById('saveBtn').addEventListener('click', function () {
+            var chosen = [];
+            document.querySelectorAll('.ch-box').forEach(function (b) {
+                if (b.checked) { chosen.push(b.value); }
+            });
+            document.getElementById('channelsField').value = chosen.join(',');
+
+            var fd = new FormData(document.getElementById('ruleForm'));
+            if (document.querySelector('select[name=rule_source]').value === 'analytics') {
+                fd.set('rule_op', document.querySelector('select[name=rule_op_analytics]').value);
+                var mode = document.querySelector('select[name=rule_detect_mode]').value;
+                if (mode === 'yoy' || mode === 'mom') {
+                    fd.set('rule_threshold', document.querySelector('input[name=rule_threshold_analytics]').value);
+                }
+            }
+            fetch(SAVE_URL, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    layer.msg(res.msg);
+                    if (res.code === 1) { setTimeout(function () { location.href = LIST_URL; }, 600); }
+                });
+        });
+    });
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

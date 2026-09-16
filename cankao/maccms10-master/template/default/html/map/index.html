@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{include file="public/include"}
+	<link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/map-index.css" />
+</head>
+
+<body>
+  {include file="public/head"}
+  <div class="member-wrap last-bg">
+  <div class="container ">
+        {include file="ads/ads_all"}
+        <div class="row">
+	        <div class="pannel clearfix" >
+                <div class="pannel_head clearfix show-mobile">
+                    <a class="text_muted pull_right" href="{:mac_url_type($obj,['id'=>'1'],'show')}"><i class="iconfont shaixuan_i">&#xe61d;</i>&nbsp;<span data-lang="str_shaixuan">筛选</span></a>
+					<h2 class="title"><span data-lang="string_zuixin">最新</span></h2>
+	            </div>
+                
+                <div class="pannel_head clearfix show-pc">
+                    <h2 class="title" >
+                        <span data-lang="string_zuijingx">最近更新</span> 
+                        <span class="pan_right">
+                            <span data-lang="string_zuijin">最近</span>
+                            <em class="mac_total"></em> <span data-lang="string_gengxinshu">个更新</span>
+                        </span>
+                    </h2>
+                    
+                </div>
+							
+                <div class="vodlist_smt clearfix">
+					<ul>
+						{maccms:vod num="120" paging='yes' type="all" order="desc" by="time"}
+                           {include file="widget/vod_box_sm"}
+						{/maccms:vod}
+					</ul>
+                </div>				
+					
+			</div>
+        </div>
+        
+        {include file="public/friendLink"}
+    </div>
+    
+</div>
+	{include file="public/foot"}
+</body>
+<script type="text/javascript">
+    $('.mac_total').html('{$__PAGING__.record_total}');
+</script>
+</html>

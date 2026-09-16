@@ -1,21 +1,16 @@
 <?php
 namespace App\Models\System;
-use app\common\logic\traits\QueryCacheTrait;
-use app\common\logic\traits\QueryTrait;
-use think\Model;
 
-/**
- * 系统日志
- */
+use App\Models\Concerns\QueryCacheTrait;
+use App\Models\Concerns\QueryTrait;
+use Illuminate\Database\Eloquent\Model;
+
 class SysLogModel extends Model
 {
-    // 设置当前模型对应的完整数据表名称
-    protected $name = 'sys_log';
+    protected $table = 'sys_log';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
+    protected $guarded = [];
 
-
-    // 主键
-    protected $pk    = 'id';
-
-    use QueryTrait,QueryCacheTrait;
-
+    use QueryTrait, QueryCacheTrait;
 }

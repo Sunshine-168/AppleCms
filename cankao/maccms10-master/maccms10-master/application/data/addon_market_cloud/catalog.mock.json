@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "mock-demo-1",
+      "name": "adminloginbg",
+      "title": "[Mock] 后台登录背景",
+      "version": "1.0.0",
+      "intro": "本地 mock 目录项，仅用于云市场列表联调；禁止云安装。",
+      "author": "mock",
+      "image": "",
+      "price": "0.00",
+      "status": "approved",
+      "cms_compat": {
+        "min": "2025.1000.0",
+        "max": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+<form class="layui-form m10" method="post" action="{$url}">
+    <input type="hidden" name="col" value="{$col}">
+    <input type="hidden" name="ids" value="{$ids}">
+
+    <div class="layui-input-inline w150">
+        <select name="val" id="vod_status_val" lay-filter="vod_status_val">
+            <option value="">{:lang('select_opt')}</option>
+            <option value="0">{:lang('reviewed_not')}</option>
+            <option value="1">{:lang('reviewed')}</option>
+            <option value="2">{:lang('reviewed_reject')}</option>
+            <option value="3">{:lang('reviewed_draft')}</option>
+            <option value="4">{:lang('reviewed_scheduled')}</option>
+        </select>
+    </div>
+    <div class="layui-input-block mgt10" id="vod_audit_remark_row" style="display:none;">
+        <textarea name="remark" lay-verify="vod_reject_remark" class="layui-textarea" placeholder="{:lang('admin/vod_audit/remark_placeholder')}"></textarea>
+    </div>
+    <div class="layui-input-block mgt10" id="vod_publish_time_row" style="display:none;">
+        <input type="text" name="publish_time" id="vod_status_publish_time" lay-verify="vod_publish_time" class="layui-input" placeholder="{:lang('admin/vod_publish/time_placeholder')}">
+    </div>
+    <div class="layui-input-inline mgt10">
+        <button type="submit" class="layui-btn" lay-submit="" refresh="{$refresh}" lay-filter="formSubmit">{:lang('btn_save')}</button>
+    </div>
+</form>
+<script type="text/javascript">
+    layui.use(['form', 'laydate'], function () {
+        var form = layui.form;
+        layui.laydate.render({
+            elem: '#vod_status_publish_time',
+            type: 'datetime',
+            trigger: 'click'
+        });
+        form.verify({
+            vod_reject_remark: function (value) {
+                var status = document.getElementById('vod_status_val').value;
+                if (status === '2' && !value.trim()) {
+                    return '{:lang("admin/vod_audit/remark_required")}';
+                }
+            },
+            vod_publish_time: function (value) {
+                var status = document.getElementById('vod_status_val').value;
+                if (status === '4' && !value.trim()) {
+                    return '{:lang("admin/vod_publish/time_required")}';
+                }
+            }
+        });
+        function toggleStatusRows(status) {
+            document.getElementById('vod_audit_remark_row').style.display = (status === '2') ? '' : 'none';
+            document.getElementById('vod_publish_time_row').style.display = (status === '4') ? '' : 'none';
+        }
+        toggleStatusRows(document.getElementById('vod_status_val').value);
+        form.on('select(vod_status_val)', function (data) {
+            toggleStatusRows(data.value);
+        });
+    });
+</script>

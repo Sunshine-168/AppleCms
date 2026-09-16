@@ -85,9 +85,16 @@ return Application::configure(basePath: dirname(__DIR__))
         } catch (\Throwable $e) {
             Syslog::exception('system', $e, 'sys_schedule scheduler');
         }
+
+        $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        // 自定义中间件
+        $middleware->prependToGroup('web', \App\Http\Middleware\CheckInstalled::class);
+        $middleware->alias([
+            'member.auth' => \App\Http\Middleware\MemberAuth::class,
+            'vod.html' => \App\Http\Middleware\VideoHtmlCache::class,
+        ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {

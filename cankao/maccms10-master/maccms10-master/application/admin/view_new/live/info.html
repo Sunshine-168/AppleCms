@@ -1,0 +1,239 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<div class="page-container p10">
+    <form class="layui-form layui-form-pane" method="post" action="">
+        <input id="live_id" name="live_id" type="hidden" value="{$info.live_id}">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/cate')}：</label>
+            <div class="layui-input-inline">
+                <select name="cate_id">
+                    <option value="0">{:lang('admin/live/no_cate')}</option>
+                    {volist name="cate_list" id="cate"}
+                    <option value="{$cate.cate_id}" {if condition="$info['cate_id'] eq $cate['cate_id']"}selected{/if}>{$cate.cate_name}</option>
+                    {/volist}
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/channel_pic')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.live_pic}" placeholder="{:lang('admin/live/channel_pic_tip')}" id="live_pic" name="live_pic">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/play_from')}：</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" value="{$info.live_play_from|default='hls'}" placeholder="hls / flv / rtmp" id="live_play_from" name="live_play_from">
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">{:lang('admin/live/play_url')}：</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" rows="5" placeholder="{:lang('admin/live/play_url_tip')}" id="live_url" name="live_url">{$info.live_url}</textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('sort')}：</label>
+            <div class="layui-input-inline w100">
+                <input type="text" class="layui-input" value="{$info.live_sort|default='0'}" placeholder="" id="live_sort" name="live_sort">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/level')}：</label>
+            <div class="layui-input-inline w100">
+                <input type="text" class="layui-input" value="{$info.live_level|default='0'}" placeholder="" id="live_level" name="live_level">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('status')}：</label>
+            <div class="layui-input-inline">
+                <select name="live_status">
+                    <option value="1" {if condition="$info['live_status'] eq 1"}selected{/if}>{:lang('enable')}</option>
+                    <option value="0" {if condition="$info['live_status'] eq 0"}selected{/if}>{:lang('disable')}</option>
+                </select>
+            </div>
+        </div>
+
+        <blockquote class="layui-elem-quote layui-quote-nm">
+            {:lang('admin/live/content_lang_tip')}
+        </blockquote>
+
+        {if condition="$content_lang_multi"}
+        <div class="layui-tab" lay-filter="content_lang_tab">
+            <ul class="layui-tab-title">
+                {volist name="content_lang_enabled" id="lc"}
+                <li {if condition="$lc eq $content_lang_default"}class="layui-this"{/if}>{$lc}</li>
+                {/volist}
+            </ul>
+            <div class="layui-tab-content">
+                {volist name="content_lang_enabled" id="lc"}
+                <div class="layui-tab-item {if condition="$lc eq $content_lang_default"}layui-show{/if}">
+                    {if condition="$lc neq $content_lang_default"}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{$lc}</label>
+                        <div class="layui-input-inline">
+                            {if condition="!empty($content_lang_data[$lc]['live_name'])"}
+                            <span class="layui-badge layui-bg-green">{:lang('admin/vod/content_lang_translated')}</span>
+                            {else/}
+                            <span class="layui-badge layui-bg-gray">{:lang('admin/vod/content_lang_untranslated')}</span>
+                            {/if}
+                        </div>
+                    </div>
+                    {/if}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/live/channel_name')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                lay-verify="{if condition="$lc eq $content_lang_default"}live_name{/if}"
+                                id="{if condition="$lc eq $content_lang_default"}live_name{else/}cl_{$lc}_live_name{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}live_name{else/}content_lang[{$lc}][live_name]{/if}"
+                                placeholder="{if condition="$lc eq $content_lang_default"}{:lang('admin/live/channel_name_tip')}{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.live_name}{else/}{$content_lang_data[$lc]['live_name']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="live_name" data-src="[name=&quot;live_name&quot;]">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/live/channel_sub')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                id="{if condition="$lc eq $content_lang_default"}live_sub{else/}cl_{$lc}_live_sub{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}live_sub{else/}content_lang[{$lc}][live_sub]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.live_sub}{else/}{$content_lang_data[$lc]['live_sub']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="live_sub" data-src="[name=&quot;live_sub&quot;]">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    {if condition="$lc eq $content_lang_default"}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/live/channel_en')}：</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" id="live_en" name="live_en" value="{$info.live_en}">
+                        </div>
+                    </div>
+                    {/if}
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">{:lang('admin/live/blurb')}：</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input"
+                                id="{if condition="$lc eq $content_lang_default"}live_blurb{else/}cl_{$lc}_live_blurb{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}live_blurb{else/}content_lang[{$lc}][live_blurb]{/if}"
+                                value="{if condition="$lc eq $content_lang_default"}{$info.live_blurb}{else/}{$content_lang_data[$lc]['live_blurb']|default=''}{/if}">
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="live_blurb" data-src="[name=&quot;live_blurb&quot;]">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">{:lang('admin/live/content')}：</label>
+                        <div class="layui-input-block">
+                            <textarea class="layui-textarea" rows="4"
+                                id="{if condition="$lc eq $content_lang_default"}live_content{else/}cl_{$lc}_live_content{/if}"
+                                name="{if condition="$lc eq $content_lang_default"}live_content{else/}content_lang[{$lc}][live_content]{/if}">{if condition="$lc eq $content_lang_default"}{$info.live_content}{else/}{$content_lang_data[$lc]['live_content']|default=''}{/if}</textarea>
+                            {if condition="$lc neq $content_lang_default and $content_translate_available"}
+                            <button type="button" class="layui-btn layui-btn-xs cl-translate-btn" data-lang="{$lc}" data-field="live_content" data-src="[name=&quot;live_content&quot;]">{:lang('admin/vod/content_lang_translate_btn')}</button>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+                {/volist}
+            </div>
+        </div>
+        {else /}
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/channel_name')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.live_name}" lay-verify="live_name" placeholder="{:lang('admin/live/channel_name_tip')}" id="live_name" name="live_name">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/channel_sub')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.live_sub}" placeholder="" id="live_sub" name="live_sub">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/channel_en')}：</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" value="{$info.live_en}" placeholder="" id="live_en" name="live_en">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/live/blurb')}：</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" value="{$info.live_blurb}" placeholder="" id="live_blurb" name="live_blurb">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">{:lang('admin/live/content')}：</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" rows="4" placeholder="" id="live_content" name="live_content">{$info.live_content}</textarea>
+            </div>
+        </div>
+        {/if}
+
+        <div class="layui-form-item center">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="formSubmit" data-child="true">{:lang('btn_save')}</button>
+                <button class="layui-btn layui-btn-primary" type="reset">{:lang('btn_reset')}</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+
+<script type="text/javascript">
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form, layer = layui.layer, $ = layui.jquery;
+        form.verify({
+            live_name: function (value) {
+                if (value == "") {
+                    return "{:lang('name_empty')}";
+                }
+            }
+        });
+
+        // 内容级多语言：单字段自动翻译（保存随主表单一起提交，不单独 ajax 保存）
+        $('.cl-translate-btn').on('click', function () {
+            var $btn = $(this);
+            var lang = $btn.data('lang');
+            var field = $btn.data('field');
+            var srcSel = $btn.data('src');
+            var srcText = $(srcSel).val();
+            if (!srcText) {
+                layer.msg("{:lang('name_empty')}");
+                return;
+            }
+            $btn.prop('disabled', true);
+            $.post("{:url('live/contentLangTranslate')}", {
+                text: srcText,
+                from: "{$content_lang_default|default='zh-cn'}",
+                to: lang,
+                __token__: "{:mac_admin_csrf_token()}"
+            }, function (r) {
+                $btn.prop('disabled', false);
+                if (r && r.code == 1) {
+                    $('#cl_' + lang + '_' + field).val(r.data);
+                } else {
+                    layer.msg((r && r.msg) ? r.msg : "{:lang('admin/vod/content_lang_translate_err')}");
+                }
+            }, 'json').fail(function () {
+                $btn.prop('disabled', false);
+                layer.msg("{:lang('admin/vod/content_lang_translate_err')}");
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

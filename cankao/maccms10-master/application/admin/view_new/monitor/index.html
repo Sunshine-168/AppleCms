@@ -1,0 +1,217 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<link rel="stylesheet" href="/static_new/css/uplot.min.css">
+<div class="page-container p10">
+
+    {if condition="$heartbeat['alive'] neq 1"}
+    <div class="layui-panel mb-2" role="alert"
+         style="border-left:4px solid #FF5722;background:#fff2f0;padding:12px 15px;">
+        <div style="color:#c62d10;font-weight:bold;margin-bottom:6px;">
+            {:lang('admin/monitor/cron_dead_title')}
+        </div>
+        <div style="color:#666;margin-bottom:8px;">
+            {if condition="$heartbeat['last'] eq 0"}
+                {:lang('admin/monitor/cron_never_ran')}
+            {else /}
+                {:lang('admin/monitor/cron_last_seen')}: {$heartbeat.age}s
+            {/if}
+            &nbsp;{:lang('admin/monitor/cron_dead_hint')}
+        </div>
+        <div class="layui-input-inline" style="width:100%;max-width:760px;">
+            <input type="text" class="layui-input" id="cronCmd" readonly
+                   value="* * * * * curl -fsS -m 50 &quot;{$cron_url}&quot; >/dev/null 2>&amp;1">
+        </div>
+        <button class="layui-btn layui-btn-sm" id="copyCron">{:lang('admin/monitor/copy_crontab')}</button>
+    </div>
+    {/if}
+
+    <div class="my-toolbar-box mb-2">
+        <div class="flex gap-5 overflow-x-auto">
+            <button class="layui-btn layui-btn-primary mon-range" data-range="1h">1h</button>
+            <button class="layui-btn layui-btn-primary mon-range" data-range="6h">6h</button>
+            <button class="layui-btn layui-btn-primary mon-range" data-range="24h">24h</button>
+            <button class="layui-btn layui-btn-primary mon-range" data-range="72h">72h</button>
+            <button class="layui-btn layui-btn-primary mon-range" data-range="7d">7d</button>
+            <button class="layui-btn layui-btn-primary mon-range" data-range="30d">30d</button>
+            <span class="layui-badge layui-bg-gray" id="granBadge" style="align-self:center;"></span>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_cpu_load')}</div>
+                <div class="layui-card-body"><div id="chartCpu"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_memory')}</div>
+                <div class="layui-card-body"><div id="chartMem"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_qps_latency')}</div>
+                <div class="layui-card-body"><div id="chartHttp"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_status_codes')}</div>
+                <div class="layui-card-body"><div id="chartCode"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6" id="cardDisk">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_disk')}</div>
+                <div class="layui-card-body"><div id="chartDisk"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6" id="cardDb">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_mysql')}</div>
+                <div class="layui-card-body"><div id="chartDb"></div></div>
+            </div>
+        </div>
+        <div class="layui-col-md6" id="cardFpm">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/chart_fpm')}</div>
+                <div class="layui-card-body"><div id="chartFpm"></div></div>
+            </div>
+        </div>
+
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">{:lang('admin/monitor/capabilities')}</div>
+                <div class="layui-card-body">
+                    <table class="layui-table" lay-size="sm">
+                        <tbody>
+                        {volist name="skipped" id="reason" key="k"}
+                        <tr>
+                            <td style="width:180px;color:#FF5722;">✗ {$key}</td>
+                            <td style="color:#666;">{$reason}</td>
+                        </tr>
+                        {/volist}
+                        {if condition="empty($skipped)"}
+                        <tr><td style="color:#5FB878;">✓ {:lang('admin/monitor/all_metrics_ok')}</td></tr>
+                        {/if}
+                        </tbody>
+                    </table>
+                    <div style="color:#666;font-size:12px;margin-top:6px;">
+                        {:lang('admin/monitor/capabilities_hint')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static_new/js/uplot.min.js"></script>
+<script src="/static_new/js/monitor-charts.js"></script>
+<script>
+    var MONITOR_SERIES_URL = "{:url('series')}";
+    var SKIPPED = {:json_encode($skipped, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+    var MONITOR_I18N = {
+        no_data: "{:lang('admin/monitor/chart_no_data')}",
+        load_failed: "{:lang('admin/monitor/chart_load_failed')}"
+    };
+
+    var L = {
+        cpu: "{:lang('admin/monitor/m_cpu')}",
+        load1: "Load1", load5: "Load5", load15: "Load15",
+        mem: "{:lang('admin/monitor/m_mem')}",
+        swap: "{:lang('admin/monitor/m_swap')}",
+        disk: "{:lang('admin/monitor/m_disk')}",
+        req: "{:lang('admin/monitor/m_req')}",
+        slow: "{:lang('admin/monitor/m_slow')}",
+        conn: "{:lang('admin/monitor/m_db_conn')}",
+        running: "{:lang('admin/monitor/m_db_running')}",
+        slowq: "{:lang('admin/monitor/m_db_slowq')}",
+        active: "{:lang('admin/monitor/m_fpm_active')}",
+        queue: "{:lang('admin/monitor/m_fpm_queue')}"
+    };
+
+    // 拿不到的指标整块隐藏，不画一条恒为 0 的假曲线
+    function hideIfSkipped(cardId, prefix) {
+        for (var k in SKIPPED) {
+            if (k.indexOf(prefix) === 0) {
+                var el = document.getElementById(cardId);
+                if (el) { el.style.display = 'none'; }
+                return true;
+            }
+        }
+        return false;
+    }
+    var noDb  = hideIfSkipped('cardDb', 'db');
+    var noFpm = hideIfSkipped('cardFpm', 'php.fpm');
+    var noDisk = hideIfSkipped('cardDisk', 'sys.disk');
+
+    var GROUPS = [
+        {el: '#chartCpu',  keys: ['sys.cpu.pct', 'sys.load1', 'sys.load5', 'sys.load15'],
+         labels: [L.cpu, L.load1, L.load5, L.load15], unit: ''},
+        {el: '#chartMem',  keys: ['sys.mem.used_pct', 'sys.swap.used_pct'],
+         labels: [L.mem, L.swap], unit: '%'},
+        {el: '#chartHttp', keys: ['http.req', 'http.slow'],
+         labels: [L.req, L.slow], unit: ''},
+        {el: '#chartCode', keys: ['http.2xx', 'http.3xx', 'http.4xx', 'http.5xx'],
+         labels: ['2xx', '3xx', '4xx', '5xx'], unit: '', stacked: true},
+        {el: '#chartDisk', keys: ['sys.disk.used_pct|/'],
+         labels: [L.disk], unit: '%', skip: noDisk},
+        {el: '#chartDb',   keys: ['db.threads_connected', 'db.threads_running', 'db.slow_queries'],
+         labels: [L.conn, L.running, L.slowq], unit: '', skip: noDb},
+        {el: '#chartFpm',  keys: ['php.fpm.active', 'php.fpm.queue'],
+         labels: [L.active, L.queue], unit: '', skip: noFpm}
+    ];
+
+    var instances = [];
+    GROUPS.forEach(function (g) {
+        if (g.skip) { instances.push(null); return; }
+        instances.push(MonitorCharts.create(g.el, {
+            labels: g.labels, unit: g.unit, stacked: g.stacked, height: 220
+        }));
+    });
+
+    var currentRange = '6h';
+
+    function refresh() {
+        GROUPS.forEach(function (g, i) {
+            if (!instances[i]) { return; }
+            MonitorCharts.load(g.keys, currentRange, function (data, err) {
+                // 加载失败必须说出来，不能留一个空坐标框 ——
+                // 站长会以为是页面坏了，而不是「这段时间没采到数据」
+                if (err || !data) {
+                    instances[i].showError(err || MONITOR_I18N.load_failed);
+                    return;
+                }
+                instances[i].setData(data.data);
+                document.getElementById('granBadge').textContent = data.granularity;
+            });
+        });
+    }
+
+    document.querySelectorAll('.mon-range').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.mon-range').forEach(function (b) {
+                b.classList.add('layui-btn-primary');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.remove('layui-btn-primary');
+            btn.setAttribute('aria-pressed', 'true');
+            currentRange = btn.getAttribute('data-range');
+            refresh();
+        });
+    });
+
+    var copyBtn = document.getElementById('copyCron');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var el = document.getElementById('cronCmd');
+            el.select();
+            document.execCommand('copy');
+            layer.msg("{:lang('admin/monitor/copied')}");
+        });
+    }
+
+    refresh();
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

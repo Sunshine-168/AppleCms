@@ -1,0 +1,73 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+    <form class="layui-form layui-form-pane" method="post" action="">
+        <input type="hidden" name="rule_id" value="{$info.rule_id}">
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/vod_audit/rule_name')}</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" name="rule_name" value="{$info.rule_name|htmlspecialchars}" lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/vod_audit/rule_type')}</label>
+            <div class="layui-input-block">
+                <select name="rule_type" lay-filter="rule_type">
+                    <option value="title_keyword" {if condition="$info.rule_type eq 'title_keyword'"}selected{/if}>{:lang('admin/vod_audit/type_title_keyword')}</option>
+                    <option value="pic_empty" {if condition="$info.rule_type eq 'pic_empty'"}selected{/if}>{:lang('admin/vod_audit/type_pic_empty')}</option>
+                    <option value="pic_invalid" {if condition="$info.rule_type eq 'pic_invalid'"}selected{/if}>{:lang('admin/vod_audit/type_pic_invalid')}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" id="row_pattern">
+            <label class="layui-form-label">{:lang('admin/vod_audit/rule_pattern')}</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" name="rule_pattern" placeholder="{:lang('admin/vod_audit/rule_pattern_tip')}">{$info.rule_pattern|htmlspecialchars}</textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/vod_audit/rule_action')}</label>
+            <div class="layui-input-block">
+                <select name="rule_action">
+                    <option value="0" {if condition="$info.rule_action eq 0"}selected{/if}>{:lang('admin/vod_audit/action_pending')}</option>
+                    <option value="1" {if condition="$info.rule_action eq 1"}selected{/if}>{:lang('admin/vod_audit/action_approve')}</option>
+                    <option value="2" {if condition="$info.rule_action eq 2"}selected{/if}>{:lang('admin/vod_audit/action_reject')}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/vod_audit/rule_remark')}</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" name="rule_remark" value="{$info.rule_remark|htmlspecialchars}" placeholder="{:lang('admin/vod_audit/rule_remark_tip')}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('sort')}</label>
+            <div class="layui-input-inline w120">
+                <input type="number" class="layui-input" name="rule_sort" value="{$info.rule_sort}">
+            </div>
+            <label class="layui-form-label">{:lang('status')}</label>
+            <div class="layui-input-inline w120">
+                <select name="rule_status">
+                    <option value="1" {if condition="$info.rule_status eq 1"}selected{/if}>{:lang('open')}</option>
+                    <option value="0" {if condition="$info.rule_status eq 0"}selected{/if}>{:lang('close')}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item center">
+            <button class="layui-btn" lay-submit lay-filter="formSubmit">{:lang('btn_save')}</button>
+        </div>
+    </form>
+</div>
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['form'], function () {
+        var form = layui.form;
+        function togglePattern(type) {
+            document.getElementById('row_pattern').style.display = (type === 'title_keyword') ? '' : 'none';
+        }
+        togglePattern(document.querySelector('[name=rule_type]').value);
+        form.on('select(rule_type)', function (data) {
+            togglePattern(data.value);
+        });
+    });
+</script>

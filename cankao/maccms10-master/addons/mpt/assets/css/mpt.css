@@ -1,0 +1,79 @@
+/* AI短视频（MPT）任务台样式 —— 插件页独立渲染，不依赖后台主题 */
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 0;
+    background: #f4f5f7;
+    color: #333;
+    font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.mpt-wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+.mpt-h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+
+.mpt-alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; }
+.mpt-alert-warn { background: #fff7e6; border: 1px solid #ffd591; color: #ad6800; }
+
+.mpt-stats {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+    background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+}
+.mpt-stats b { font-weight: 600; }
+.mpt-mode { color: #999; font-size: 12px; }
+.c-ok { color: #52c41a; }
+.c-err { color: #f5222d; }
+.c-run { color: #1890ff; }
+
+.mpt-card { background: #fff; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.mpt-card-hd {
+    padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+    font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+}
+.mpt-card-bd { padding: 16px; }
+
+.mpt-row { display: flex; gap: 8px; }
+.mpt-input, .mpt-textarea {
+    width: 100%; padding: 7px 10px; border: 1px solid #d9d9d9; border-radius: 4px;
+    font-size: 14px; font-family: inherit; color: #333; background: #fff;
+}
+.mpt-textarea { resize: vertical; }
+.mpt-label { display: block; margin: 12px 0 4px; color: #666; font-size: 13px; }
+.mpt-hint { color: #999; font-size: 12px; margin: 8px 0; }
+.mpt-picked { margin-bottom: 8px; color: #666; }
+
+.mpt-btn {
+    display: inline-block; padding: 7px 14px; border: 1px solid #d9d9d9; border-radius: 4px;
+    background: #fff; color: #333; cursor: pointer; font-size: 13px; line-height: 1.4;
+    text-decoration: none; white-space: nowrap;
+}
+.mpt-btn:hover { border-color: #40a9ff; color: #40a9ff; }
+.mpt-btn[disabled] { opacity: .5; cursor: not-allowed; }
+.mpt-btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
+.mpt-btn-primary:hover { background: #40a9ff; color: #fff; }
+.mpt-btn-danger:hover { border-color: #f5222d; color: #f5222d; }
+.mpt-btn-ghost { margin-left: auto; }
+.mpt-btn-xs { padding: 2px 8px; font-size: 12px; }
+
+.mpt-vodlist { margin-top: 10px; }
+.mpt-voditem {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px dashed #f0f0f0;
+}
+.mpt-preview { margin-top: 16px; border-top: 1px solid #f0f0f0; padding-top: 12px; }
+
+.mpt-table { width: 100%; border-collapse: collapse; }
+.mpt-table th, .mpt-table td {
+    padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0f0f0;
+    font-size: 13px; vertical-align: top;
+}
+.mpt-table th { color: #888; font-weight: 500; }
+.mpt-err { color: #f5222d; font-size: 12px; margin-top: 2px; word-break: break-all; }
+.mpt-poll-note { color: #999; font-size: 12px; font-weight: 400; }
+
+.mpt-pager{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mpt-pager-gap{flex:1}
+.mpt-pager .mpt-btn[disabled]{opacity:.45;cursor:default}
+.mpt-toast {
+    position: fixed; left: 50%; top: 24px; transform: translateX(-50%);
+    background: rgba(0, 0, 0, .8); color: #fff; padding: 8px 16px;
+    border-radius: 4px; font-size: 13px; z-index: 9999; max-width: 80%;
+}

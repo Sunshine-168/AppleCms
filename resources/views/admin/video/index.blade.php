@@ -59,6 +59,11 @@
     <div class="layui-card-body">
       <div class="layui-btn-container" style="margin-bottom:10px;">
         <button class="layui-btn layui-btn-sm" id="video-add-btn">新增视频</button>
+        <button class="layui-btn layui-btn-sm" id="video-batch-on">批量上架</button>
+        <button class="layui-btn layui-btn-sm layui-btn-warm" id="video-batch-off">批量下架</button>
+        <button class="layui-btn layui-btn-sm layui-btn-normal" id="video-batch-rec">批量推荐</button>
+        <button class="layui-btn layui-btn-sm" id="video-batch-lock">批量锁定</button>
+        <button class="layui-btn layui-btn-sm layui-btn-danger" id="video-batch-del">批量删除</button>
         <button class="layui-btn layui-btn-sm layui-btn-primary" id="video-refresh-btn">刷新</button>
       </div>
       <table id="video-table" lay-filter="video-table"></table>
@@ -121,6 +126,29 @@
         <label class="layui-form-label">导演</label>
         <div class="layui-input-block">
           <input type="text" name="director" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+          <input type="text" name="remarks" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <div class="layui-inline">
+          <label class="layui-form-label">点播积分</label>
+          <div class="layui-input-inline">
+            <input type="number" name="points" autocomplete="off" class="layui-input" value="0">
+          </div>
+        </div>
+        <div class="layui-inline">
+          <label class="layui-form-label">锁定</label>
+          <div class="layui-input-inline">
+            <select name="lock">
+              <option value="0">否</option>
+              <option value="1">是</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="layui-form-item">
@@ -350,6 +378,7 @@ layui.use(['layer','form','table','upload'], function(){
       };
     },
     cols:[[
+      {type:'checkbox', width:48},
       {field:'id', width:80, title:'ID', sort:true},
       {field:'title', title:'标题', minWidth:200},
       {field:'type_name', width:140, title:'分类'},
@@ -392,6 +421,8 @@ layui.use(['layer','form','table','upload'], function(){
         $form.find('input[name=area]').val(row.area || '');
         $form.find('input[name=lang]').val(row.lang || '');
         $form.find('input[name=director]').val(row.director || '');
+        $form.find('input[name=remarks]').val(row.remarks || '');
+        $form.find('input[name=points]').val(row.points == null ? 0 : row.points);
         $form.find('input[name=score]').val(row.score == null ? 0 : row.score);
         $form.find('input[name=sort]').val(row.sort == null ? 0 : row.sort);
         $form.find('textarea[name=description]').val(row.description || '');
@@ -402,6 +433,7 @@ layui.use(['layer','form','table','upload'], function(){
         $form.find('select[name=status]').val(String(row.status == null ? 1 : row.status));
         $form.find('select[name=is_recommend]').val(String(row.is_recommend == null ? 0 : row.is_recommend));
         $form.find('select[name=is_hot]').val(String(row.is_hot == null ? 0 : row.is_hot));
+        $form.find('select[name=lock]').val(String(row.lock == null ? 0 : row.lock));
 
         loadTypeOptions(function(options){
           renderTypeSelect($layer.find('#video-form-type'), options, row.type_id);
@@ -508,6 +540,30 @@ layui.use(['layer','form','table','upload'], function(){
 
   $('#video-refresh-btn').on('click', function(){ table.reload('video-table'); });
   $('#video-add-btn').on('click', function(){ openVideoDialog('add'); });
+
+  function selectedIds(){
+    return (table.checkStatus('video-table').data || []).map(function(r){ return r.id; });
+  }
+  function batch(action, value, confirmText){
+    var ids = selectedIds();
+    if (!ids.length) { layer.msg('请选择数据', {icon:2}); return; }
+    var run = function(){
+      apiPost('/admin/video/batch', {ids: ids.join(','), action: action, value: value}, function(){
+        table.reload('video-table');
+        layer.msg('操作成功', {icon:1});
+      });
+    };
+    if (confirmText) {
+      layer.confirm(confirmText, function(i){ layer.close(i); run(); });
+      return;
+    }
+    run();
+  }
+  $('#video-batch-on').on('click', function(){ batch('status', 1); });
+  $('#video-batch-off').on('click', function(){ batch('status', 0); });
+  $('#video-batch-rec').on('click', function(){ batch('recommend', 1); });
+  $('#video-batch-lock').on('click', function(){ batch('lock', 1); });
+  $('#video-batch-del').on('click', function(){ batch('delete', '', '确认删除选中视频？'); });
 
   table.on('tool(video-table)', function(obj){
     var row = obj.data || {};

@@ -1,0 +1,302 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <div class="layui-tab layui-tab-brief" lay-filter="tabs">
+        <ul class="layui-tab-title">
+            <li class="layui-this btn-local" data-mode="local" data-href="{:url('downloaded')}">{:lang('local_app')}</li>
+            <li class="btn-cloud" data-mode="cloud" data-href="{:url('cloudCatalog')}">{:lang('admin/addon/cloud_tab')}</li>
+            <li><a href="{:url('add')}">{:lang('local_setup')}</a></li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+
+    <div class="my-toolbar-box" >
+        <div class=" mb10">
+        <form class="layui-form " method="post" id="addonSearchForm" onsubmit="return false;">
+            <div class="layui-input-inline w300">
+                <input type="text" autocomplete="off" placeholder="{:lang('wd')}" class="layui-input" id="addon_wd" name="wd" value="">
+            </div>
+            <button type="button" class="layui-btn mgl-20" id="btn_addon_search">{:lang('btn_search')}</button>
+            <button type="button" class="layui-btn layui-btn-normal" id="btn_cloud_refresh" style="display:none;">{:lang('admin/addon/cloud_refresh')}</button>
+        </form>
+        </div>
+        <div id="cloud_disabled_tip" class="layui-elem-quote layui-quote-nm" style="display:none;">
+            {:lang('admin/addon/cloud_disabled_hint')}
+        </div>
+        <div id="legacy_catalog_tip" class="layui-elem-quote layui-quote-nm">
+            {:lang('admin/addon/legacy_catalog_hint')}
+        </div>
+    </div>
+
+    <form class="layui-form p10 " method="post" id="pageListForm">
+        <div class="layui-row layui-col-space15" id="addon_list">
+
+        </div>
+        <div id="pages" class="center"></div>
+    </form>
+
+    {if !empty($addon_audit)}
+    <div class="layui-elem-quote layui-quote-nm" style="margin-top:10px;">
+        <strong>{:lang('admin/addon/cloud_audit_title')}</strong>
+        <ul style="margin:8px 0 0 0;padding-left:18px;">
+            {volist name="addon_audit" id="au"}
+            <li>
+                {:date('Y-m-d H:i', $au.time)} ·
+                {$au.addon|default=''|mac_filter_xss} ·
+                {$au.result|mac_filter_xss}
+                {if !empty($au.msg)} — {$au.msg|mac_filter_xss}{/if}
+            </li>
+            {/volist}
+        </ul>
+    </div>
+    {/if}
+</div>
+            </div>
+        </div>
+    </div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<input type="hidden" id="addon_csrf" value="{$Request.token}" />
+<input type="hidden" id="addon_cloud_enabled" value="{$addon_cloud_enabled|default='0'}" />
+
+<script type="text/javascript">
+    var url = '';
+    var listMode = 'local';
+    var cloudMock = 0;
+    function addonToken() {
+        return $('#addon_csrf').val() || '';
+    }
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+    function safeImgUrl(s) {
+        var u = String(s == null ? '' : s).trim();
+        if (u === '') {
+            return '';
+        }
+        // http(s) 或单斜杠站内路径；拒绝协议相对 //evil
+        if (/^https?:\/\//i.test(u) || /^\/[^\/]/.test(u) || u === '/') {
+            return escHtml(u);
+        }
+        return '';
+    }
+    layui.use(['form','laypage', 'layer','upload','element'], function() {
+        var form = layui.form
+                , layer = layui.layer
+                ,element = layui.element;
+
+        element.on('tab(tabs)', function(data){
+            var li = $(this);
+            if (li.hasClass('btn-local') || li.hasClass('btn-cloud')) {
+                listMode = li.attr('data-mode') || 'local';
+                url = li.attr('data-href');
+                if (listMode === 'cloud') {
+                    $('#btn_cloud_refresh').show();
+                    $('#legacy_catalog_tip').hide();
+                    if ($('#addon_cloud_enabled').val() !== '1') {
+                        $('#cloud_disabled_tip').show();
+                        $('#addon_list').html('');
+                        return;
+                    }
+                    $('#cloud_disabled_tip').hide();
+                } else {
+                    $('#btn_cloud_refresh').hide();
+                    $('#cloud_disabled_tip').hide();
+                    $('#legacy_catalog_tip').show();
+                }
+                load_list();
+            }
+        });
+
+        $('#btn_addon_search').on('click', function() {
+            load_list();
+        });
+
+        $('#btn_cloud_refresh').on('click', function() {
+            $.ajax({
+                type: 'post',
+                dataType: 'json',
+                url: "{:url('addon/cloudRefresh')}",
+                data: {__token__: addonToken()},
+                success: function(r) {
+                    if (r.data && r.data.__token__) {
+                        $('#addon_csrf').val(r.data.__token__);
+                    }
+                    layer.msg(r.msg);
+                    if (r.code == 1) {
+                        load_list();
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-disable,.btn-enable', function() {
+            $.ajax({
+                type: 'post',
+                dataType:'json',
+                url: "{:url('addon/state')}",
+                data:{name:$(this).attr('data-name'),action:$(this).attr('data-action'),force:0,__token__:addonToken()},
+                success:function($r){
+                    if($r.data && $r.data.__token__){
+                        $('#addon_csrf').val($r.data.__token__);
+                    }
+                    if($r.code ==1){
+                        load_list();
+                    }
+                    layer.msg($r.msg);
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-uninstall', function() {
+            var name = $(this).attr('data-name');
+            layer.confirm("{:lang('admin/addon/uninstall_confirm')}", function(index){
+                layer.close(index);
+                $.ajax({
+                    type: 'post',
+                    dataType:'json',
+                    url: "{:url('addon/uninstall')}",
+                    data:{name:name,force:0,__token__:addonToken()},
+                    success:function($r){
+                        if($r.data && $r.data.__token__){
+                            $('#addon_csrf').val($r.data.__token__);
+                        }
+                        if($r.code ==1){
+                            load_list();
+                        }
+                        layer.msg($r.msg);
+                    }
+                });
+            });
+        });
+
+        $(document).on('click', '.btn-cloud-install', function() {
+            if (cloudMock === 1) {
+                layer.msg("{:lang('admin/addon/cloud_mock_no_install')}");
+                return;
+            }
+            var id = $(this).attr('data-id');
+            var compat = $(this).attr('data-compat');
+            if (compat === '0') {
+                layer.msg("{:lang('admin/addon/cloud_compat_block')}");
+                return;
+            }
+            layer.confirm("{:lang('admin/addon/cloud_install_confirm')}", function(index){
+                layer.close(index);
+                $.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    url: "{:url('addon/cloudInstall')}",
+                    data: {id: id, __token__: addonToken()},
+                    success: function(r) {
+                        if (r.data && r.data.__token__) {
+                            $('#addon_csrf').val(r.data.__token__);
+                        }
+                        layer.msg(r.msg);
+                        if (r.code == 1) {
+                            load_list();
+                        }
+                    }
+                });
+            });
+        });
+
+        $('.btn-local').click();
+    });
+
+    function load_list(){
+        var h='';
+        $('#addon_list').html('');
+        if (listMode === 'cloud' && $('#addon_cloud_enabled').val() !== '1') {
+            return;
+        }
+        layer.msg("{:lang('wait_submit')}",{time:500000});
+        var wd = $('#addon_wd').val() || '';
+        var reqUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'search=' + encodeURIComponent(wd);
+
+        $.ajax({
+            type: 'get',
+            dataType:'json',
+            url: reqUrl,
+            success:function($r){
+                cloudMock = ($r && String($r.mock) === '1') ? 1 : 0;
+                $('#addon_list').html('');
+                if (cloudMock && listMode === 'cloud') {
+                    $('#addon_list').append('<div class="layui-col-md12"><blockquote class="layui-elem-quote">{:lang('admin/addon/cloud_mock_hint')}</blockquote></div>');
+                }
+                if (!$r.rows || !$r.rows.length) {
+                    $('#addon_list').append('<div class="layui-col-md12">{:lang('admin/addon/cloud_empty')}</div>');
+                    return;
+                }
+                $.each($r.rows,function(i,row){
+                    if (listMode === 'cloud') {
+                        h = renderCloudCard(row);
+                    } else {
+                        h = renderLocalCard(row);
+                    }
+                    $('#addon_list').append(h);
+                });
+            },
+            complete:function(){
+                layer.closeAll();
+            }
+        });
+    }
+
+    function renderLocalCard(row) {
+        var name = String(row.name || '').replace(/[^a-z0-9_]/gi,'');
+        var h ='<div class="layui-col-md3"><div class="addon"> <a href="javascript:;"> <img src="'+safeImgUrl(row.image||'')+'" class="add-logo"> </a> <div class="addon-caption"> <h4>'+escHtml(row.title||row.name)+'</h4>';
+        h+=' <p>{:lang('author')}: '+escHtml(row.author||'')+'</p> <p>{:lang('intro')}: '+escHtml(row.intro||'')+'</p> <p>{:lang('ver')}: '+escHtml(row.version||'')+'</p>';
+        if (row.createtime) {
+            h+=' <p>{:lang('update_time')}: '+ getDataTime(row.createtime)+'</p>';
+        }
+        h+='<div class="operate"><span class="btn-group">';
+        h+='<a href="javascript:;" class="layui-btn layui-btn-normal layui-btn-sm j-iframe" data-name="'+name+'" data-href="{:url('config')}?name='+encodeURIComponent(name)+'" ><i class="layui-icon">&#xe614;</i>{:lang('config')}</a>';
+        if(String(row.state)==='1'){
+            h+='<a href="javascript:;" class="layui-btn layui-btn-primary layui-btn-sm btn-disable" data-name="'+name+'" data-action="disable"><i class="layui-icon">&#x1006;</i>{:lang('disable')}</a>';
+        } else {
+            h+='<a href="javascript:;" class="layui-btn  layui-btn-sm btn-enable" data-name="'+name+'" data-action="enable"><i class="layui-icon">&#xe605;</i>{:lang('enable')}</a>';
+            h+='<a href="javascript:;" class="layui-btn layui-btn-danger layui-btn-sm btn-uninstall" data-name="'+name+'"><i class="layui-icon">&#x1006;</i>{:lang('uninstall')}</a>';
+        }
+        h+='</span></div></div></div></div>';
+        return h;
+    }
+
+    function renderCloudCard(row) {
+        var id = String(row.id || '').replace(/[^a-z0-9._-]/gi,'');
+        var name = String(row.name || '').replace(/[^a-z0-9_]/gi,'');
+        var compat = String(row.compat_ok) === '1' ? '1' : '0';
+        var badge = '';
+        if (row.local_cmp === 'update') {
+            badge = ' <span class="layui-badge">{:lang('admin/addon/cloud_badge_update')}</span>';
+        } else if (String(row.install) === '1') {
+            badge = ' <span class="layui-badge layui-bg-green">{:lang('admin/addon/cloud_badge_installed')}</span>';
+        }
+        if (compat === '0') {
+            badge += ' <span class="layui-badge layui-bg-orange">{:lang('admin/addon/cloud_badge_incompat')}</span>';
+        }
+        var h ='<div class="layui-col-md3"><div class="addon"> <a href="javascript:;"> <img src="'+safeImgUrl(row.image||'')+'" class="add-logo"> </a> <div class="addon-caption"> <h4>'+escHtml(row.title||row.name)+badge+'</h4>';
+        h+=' <p>'+escHtml(row.price||'0.00')+'</p>';
+        h+=' <p>{:lang('author')}: '+escHtml(row.author||'')+'</p> <p>{:lang('intro')}: '+escHtml(row.intro||'')+'</p> <p>{:lang('ver')}: '+escHtml(row.version||'')+'</p>';
+        if (row.local_version) {
+            h+=' <p>{:lang('admin/addon/cloud_local_ver')}: '+escHtml(row.local_version)+'</p>';
+        }
+        h+='<div class="operate"><span class="btn-group">';
+        if (String(row.install) === '1') {
+            h+='<a href="javascript:;" class="layui-btn layui-btn-normal layui-btn-sm j-iframe" data-href="{:url('config')}?name='+encodeURIComponent(name)+'"><i class="layui-icon">&#xe614;</i>{:lang('config')}</a>';
+            if (row.local_cmp === 'update' && cloudMock !== 1) {
+                h+='<a href="javascript:;" class="layui-btn layui-btn-sm btn-cloud-install" data-id="'+id+'" data-compat="'+compat+'"><i class="layui-icon">&#xe669;</i>{:lang('admin/addon/cloud_btn_upgrade')}</a>';
+            }
+        } else if (cloudMock !== 1) {
+            h+='<a href="javascript:;" class="layui-btn layui-btn-sm btn-cloud-install" data-id="'+id+'" data-compat="'+compat+'"><i class="layui-icon">&#xe601;</i>{:lang('install')}</a>';
+        }
+        h+='</span></div></div></div></div>';
+        return h;
+    }
+</script>
+</body>
+</html>

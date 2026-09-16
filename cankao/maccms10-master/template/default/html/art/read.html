@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {include file="public/include"}
+    {include file="public/include_site_card_assets" /}
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link rel="stylesheet" href="{$maccms.path}template/default/asset/css/head.css">
+    <link rel="stylesheet" href="{$maccms.path}template/default/asset/css/art-read.css">
+</head>
+{php}
+$curPage = intval($param['page']) > 0 ? intval($param['page']) : 1;
+$pageList = isset($obj['art_page_list']) && is_array($obj['art_page_list']) ? $obj['art_page_list'] : [];
+$pageTotal = count($pageList);
+if($pageTotal < 1){
+    $pageTotal = 1;
+}
+if($curPage > $pageTotal){
+    $curPage = $pageTotal;
+}
+$prevPage = $curPage > 1 ? $curPage - 1 : 1;
+$nextPage = ($pageTotal > 0 && $curPage < $pageTotal) ? $curPage + 1 : $curPage;
+$hasPrev = $curPage > 1;
+$hasNext = $pageTotal > 0 && $curPage < $pageTotal;
+$curPageInfo = isset($pageList[$curPage]) ? $pageList[$curPage] : [];
+$curChapterTitle = !empty($curPageInfo['title']) ? $curPageInfo['title'] : '第'.$curPage.'章';
+{/php}
+<body class="page-art-read">
+    {include file="public/th" /}
+<div id="novel_read_page">
+    {include file="ads/ads_banner1"}
+    {include file="ads/ads_icon1" ads_icon1_marquee="0"}
+    <header class="novel-reader-top">
+        <a class="back-btn" href="{:mac_url_art_detail($obj)}" data-title="art_read_back_detail" title="返回详情" id="artBackBtn">
+            <i class="iconfont">&#xe625;</i>
+        </a>
+        <div class="title-wrap">
+            <div class="book-title">{$obj.art_name}</div>
+            <div class="chapter-title">{$curChapterTitle} · {$curPage}/{$pageTotal}</div>
+        </div>
+        <div class="actions">
+            {if condition="$GLOBALS['config']['user']['status'] eq 1"}
+            <a class="icon-btn mac_ulog" href="javascript:;" data-type="2" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-title="art_add_fav" title="加入收藏">
+                <i class="mac_fav_star" aria-hidden="true">☆</i>
+            </a>
+            {/if}
+            <span class="icon-btn js-novel-catalog-toggle" id="novelCatalogTogglePc" data-title="art_read_toc" title="目录">
+                <i class="iconfont">&#xe640;</i>
+            </span>
+        </div>
+    </header>
+
+    <aside class="novel-catalog" id="novelCatalog" aria-hidden="true">
+        <div class="novel-catalog-mask" data-close="1"></div>
+        <div class="novel-catalog-panel" role="dialog" aria-modal="true" aria-label="目录">
+            <div class="novel-catalog-header">
+                <div class="novel-catalog-title">
+                    <div class="t1" data-lang="art_read_toc">目录</div>
+                    <div class="t2"><span data-lang="art_read_chapter_total">共</span> {$pageTotal} <span data-lang="art_read_chapter_unit">章</span></div>
+                </div>
+                <button type="button" class="novel-catalog-close" data-close="1" data-title="string_close" aria-label="关闭">×</button>
+            </div>
+            <div class="novel-catalog-progress" id="novelCatalogProgress" style="display:none;">
+                <div class="p-left">
+                    <span data-lang="art_read_read_to">已读到：</span><span class="p-chapter" id="novelProgressText"></span>
+                </div>
+                <a class="p-continue" id="novelContinueBtn" href="javascript:;"><span data-lang="art_read_continue">继续</span></a>
+            </div>
+            <div class="novel-catalog-list" id="novelCatalogList">
+                {php} for($i=1;$i<=$pageTotal;$i++){ $pi = isset($pageList[$i]) ? $pageList[$i] : []; $pt = !empty($pi['title']) ? $pi['title'] : ('第'.$i.'章'); {/php}
+                <a class="novel-catalog-item {if condition="$i eq $curPage"}active{/if}" data-page="{$i}" href="{:mac_url('art/read',['id'=>$obj.art_id,'page'=>$i])}">
+                    <span class="c-no">{$i}</span>
+                    <span class="c-title">{$pt}</span>
+                    {if condition="$i eq $curPage"}<span class="c-now" data-lang="art_read_reading">正在读</span>{/if}
+                </a>
+                {php} } {/php}
+            </div>
+        </div>
+    </aside>
+
+    <main class="novel-reader-body">
+        <div class="novel-reader-inner">
+            <div class="novel-meta-line">
+                <span>{$obj.art_from|default='网络'}</span>
+                <span><span data-lang="read">阅读</span> {$obj.art_hits|default='0'}</span>
+                <span>{$obj.art_time|date='Y-m-d',###}</span>
+            </div>
+            <article class="novel-content" id="novelContent">
+                {if condition="$popedom.code eq 1"}
+                <div>
+                    {$curPageInfo.content|mac_url_content_img}
+                </div>
+                {else /}
+                <div class="novel-popedom-gate">
+                    {include file="widget/popedom_upgrade_gate"}
+                </div>
+                {/if}
+            </article>
+        </div>
+    </main>
+
+    <nav class="novel-reader-bar">
+        <a class="bar-item" href="{:mac_url_art_detail($obj)}" data-back-detail="1">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-detail.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_detail">详情</span>
+        </a>
+
+        {if condition="$hasPrev"}
+        <a class="bar-item" href="{:mac_url('art/read',['id'=>$obj.art_id,'page'=>$prevPage])}">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-prev.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_prev_chapter">上一章</span>
+        </a>
+        {else/}
+        <span class="bar-item disabled">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-prev.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_prev_chapter">上一章</span>
+        </span>
+        {/if}
+
+        {if condition="$hasNext"}
+        <a class="bar-item" href="{:mac_url('art/read',['id'=>$obj.art_id,'page'=>$nextPage])}">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-next.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_next_chapter">下一章</span>
+        </a>
+        {else/}
+        <span class="bar-item disabled">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-next.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_next_chapter">下一章</span>
+        </span>
+        {/if}
+
+        <span class="bar-item" id="novelSettingsBarBtn" data-title="art_read_settings" title="阅读设置">
+            <img class="novel-bar-img" src="{$maccms.path_tpl}images/art-read/icon-font.png" width="24" height="24" alt="" decoding="async" aria-hidden="true">
+            <span data-lang="art_read_font">字体</span>
+        </span>
+    </nav>
+
+    <section class="novel-settings-sheet" id="novelSettingsSheet">
+        <div class="novel-settings-row">
+            <span class="novel-settings-label" data-lang="art_read_font_size">字号</span>
+            <div class="novel-font-controls">
+                <button type="button" class="novel-font-btn" id="fontDecrease">A-</button>
+                <span class="novel-font-size-value" id="fontSizeValue">17px</span>
+                <button type="button" class="novel-font-btn" id="fontIncrease">A+</button>
+            </div>
+        </div>
+    </section>
+
+    <span class="mac_hits hits hide" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-type="hits"></span>
+    <span class="mac_hits hits_day hide" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-type="hits_day"></span>
+    <span class="mac_hits hits_week hide" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-type="hits_week"></span>
+    <span class="mac_hits hits_month hide" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-type="hits_month"></span>
+    <span class="hl_history hide" data-name="{$obj.art_name}" data-link="{:mac_url('art/read',['id'=>$obj.art_id,'page'=>$curPage])}" data-pic="{$obj.art_pic|mac_url_img}" data-part="{$curChapterTitle}"></span>
+</div>
+
+{include file="widget/recharge_modal" /}
+{include file="public/foot"}
+<script>
+    (function(){
+        function saveGuestPlayHistory(item){
+            try{
+                var key='guest_play_history';
+                var list=JSON.parse(window.localStorage.getItem(key)||'[]');
+                if(!Array.isArray(list)){list=[];}
+                list=list.filter(function(v){ return v && v.link && v.link!==item.link; });
+                list.unshift(item);
+                if(list.length>60){ list=list.slice(0,60); }
+                window.localStorage.setItem(key, JSON.stringify(list));
+            }catch(ex){}
+        }
+        saveGuestPlayHistory({
+            mid: 2,
+            name: "{$obj.art_name|default=''}",
+            link: "{:mac_url('art/read',['id'=>$obj.art_id,'page'=>$curPage])}",
+            pic: "{$obj.art_pic|mac_url_img}",
+            part: "{$curChapterTitle|default=''}"
+        });
+
+        var artId = parseInt('{$obj.art_id}', 10) || 0;
+        var STORAGE_KEY_FONT = 'novel_reader_font_size';
+        var STORAGE_KEY_PROGRESS = 'novel_reader_progress_art_' + String(artId);
+
+        var minFont = 15;
+        var maxFont = 24;
+        var defaultFont = 17;
+
+        var $content = $('#novelContent');
+        var $fontVal = $('#fontSizeValue');
+        var $settingsSheet = $('#novelSettingsSheet');
+        var $catalog = $('#novelCatalog');
+        var $catalogProgress = $('#novelCatalogProgress');
+        var $progressText = $('#novelProgressText');
+        var $continueBtn = $('#novelContinueBtn');
+        var $catalogList = $('#novelCatalogList');
+
+        var curPage = parseInt('{$curPage}', 10) || 1;
+        var curChapterTitle = '{$curChapterTitle}';
+        var pageTotal = parseInt('{$pageTotal}', 10) || 1;
+        /* guest | member；身份未确认前不读写任一进度 */
+        var identityMode = '';
+        var memberReadPages = [];
+
+        function applyFontSize(size){
+            size = Math.max(minFont, Math.min(maxFont, size));
+            $content.css('font-size', size + 'px');
+            $fontVal.text(size + 'px');
+            try{ window.localStorage.setItem(STORAGE_KEY_FONT, String(size)); }catch(e){}
+            return size;
+        }
+
+        function openCatalog(){
+            $catalog.addClass('open').attr('aria-hidden','false');
+        }
+        function closeCatalog(){
+            $catalog.removeClass('open').attr('aria-hidden','true');
+        }
+
+        function normalizeReadPages(list){
+            var out = [];
+            var seen = {};
+            if(!Array.isArray(list)){ return out; }
+            for(var i = 0; i < list.length; i++){
+                var n = parseInt(list[i], 10);
+                if(isNaN(n) || n < 1){ continue; }
+                if(seen[n]){ continue; }
+                seen[n] = 1;
+                out.push(n);
+            }
+            out.sort(function(a, b){ return a - b; });
+            return out;
+        }
+
+        function mergeReadPages(a, b){
+            return normalizeReadPages([].concat(a || [], b || []));
+        }
+
+        function langText(key, fallback){
+            try{
+                if(typeof MAC !== 'undefined' && typeof MAC.GetLang === 'function'){
+                    var v = MAC.GetLang(key);
+                    if(v != null && String(v) !== '' && String(v) !== 'undefined'){
+                        return String(v);
+                    }
+                }
+            }catch(e){}
+            return fallback;
+        }
+
+        /* 无自定义标题时：第N章 / Ch.N chapters（走语言包） */
+        function defaultChapterTitle(page){
+            var n = parseInt(page, 10) || 0;
+            return langText('art_read_chapter_ordinal', '第') + n + langText('art_read_chapter_unit', '章');
+        }
+
+        function isMemberLoggedIn(){
+            try{
+                if(typeof MAC !== 'undefined' && MAC.User){
+                    if(Number(MAC.User.IsLogin) === 1){ return true; }
+                    if(typeof MAC.User.getAuthMe === 'function'){
+                        var me = MAC.User.getAuthMe();
+                        if(me && Number(me.is_login) === 1){ return true; }
+                    }
+                }
+            }catch(e){}
+            return false;
+        }
+
+        /* MAC.User.Init 在 $(ready) 且常异步 fetchAuthMe；未 emit 前 __authMe 为 undefined */
+        function isAuthReady(){
+            return typeof window.__authMe !== 'undefined';
+        }
+
+        function hasUserIdCookie(){
+            try{
+                if(typeof MAC !== 'undefined' && MAC.Cookie && typeof MAC.Cookie.Get === 'function'){
+                    var cid = MAC.Cookie.Get('user_id');
+                    return cid != null && String(cid).trim() !== '';
+                }
+            }catch(e){}
+            return false;
+        }
+
+        function apiUserUrl(path){
+            var base = (window.maccms && maccms.path) ? String(maccms.path).replace(/\/+$/, '') : '';
+            return (base ? base + '/' : '/') + 'api.php/user/' + String(path || '').replace(/^\/+/, '');
+        }
+
+        function readProgress(){
+            try{
+                var raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
+                if(!raw){ return null; }
+                var data = JSON.parse(raw);
+                if(!data || typeof data !== 'object'){ return null; }
+                var p = parseInt(data.page, 10);
+                if(isNaN(p) || p < 1){ return null; }
+                data.page = Math.min(pageTotal, p);
+                var pages = normalizeReadPages(data.readPages);
+                /* 旧数据只有 page：只把该章加入集合，禁止展开为 1..page */
+                if(!pages.length && data.page){
+                    pages = [data.page];
+                }
+                data.readPages = pages;
+                return data;
+            }catch(e){
+                return null;
+            }
+        }
+
+        function saveProgress(page, title){
+            try{
+                var oldPages = [];
+                try{
+                    var raw = window.localStorage.getItem(STORAGE_KEY_PROGRESS);
+                    if(raw){
+                        var old = JSON.parse(raw);
+                        if(old && Array.isArray(old.readPages)){
+                            oldPages = old.readPages;
+                        }else if(old && old.page){
+                            oldPages = [parseInt(old.page, 10)];
+                        }
+                    }
+                }catch(ex){}
+                var data = {
+                    page: page,
+                    title: title || defaultChapterTitle(page),
+                    readPages: mergeReadPages(oldPages, [page]),
+                    ts: Date.now()
+                };
+                window.localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(data));
+            }catch(e){}
+        }
+
+        function applyProgressUI(progress){
+            if(!progress){ return; }
+
+            var readPages = normalizeReadPages(progress.readPages);
+            var lastPage = parseInt(progress.page, 10) || 0;
+            var chapterMark = lastPage ? defaultChapterTitle(lastPage) : '';
+            var lastTitle = progress.title || chapterMark;
+
+            $catalogList.find('.novel-catalog-item').each(function(){
+                var p = parseInt($(this).attr('data-page'), 10);
+                if(!isNaN(p) && readPages.indexOf(p) !== -1){
+                    $(this).addClass('read');
+                }else{
+                    $(this).removeClass('read');
+                }
+            });
+
+            if(lastPage && lastPage !== curPage){
+                /* 有独立标题时附带章节序号；标题已是默认「第N章」则不再重复括号 */
+                $progressText.text(lastTitle && lastTitle !== chapterMark ? (lastTitle + '（' + chapterMark + '）') : chapterMark);
+                $catalogProgress.show();
+                var url = "{:mac_url('art/read',['id'=>$obj.art_id,'page'=>'PAGEX'])}";
+                $continueBtn.attr('href', url.replace('PAGEX', String(lastPage)));
+            }else{
+                $catalogProgress.hide();
+            }
+        }
+
+        function loadMemberReadChapters(){
+            memberReadPages = normalizeReadPages([curPage]);
+            applyProgressUI({
+                page: curPage,
+                title: curChapterTitle,
+                readPages: memberReadPages
+            });
+            var url = apiUserUrl('get_read_chapters') + '?mid=2&rid=' + encodeURIComponent(String(artId)) + '&sid=1';
+            var req;
+            if(window.fetch){
+                req = fetch(url, { credentials: 'same-origin' }).then(function(r){ return r.json(); });
+            }else{
+                req = $.ajax({ url: url, dataType: 'json', xhrFields: { withCredentials: true } });
+            }
+            req.then(function(res){
+                if(identityMode !== 'member'){ return; }
+                if(!(res && Number(res.code) === 1 && res.info)){ return; }
+                var serverPages = normalizeReadPages(res.info.read_chapters);
+                memberReadPages = mergeReadPages(serverPages, [curPage]);
+                /* 当前章优先：ajax_ulog 写入与 get_read_chapters 并发时，
+                   last_chapter 可能仍是上一章；本页「继续阅读」以 curPage 为准。 */
+                applyProgressUI({
+                    page: curPage,
+                    title: curChapterTitle,
+                    readPages: memberReadPages
+                });
+            }, function(){});
+        }
+
+        function bootstrapProgress(){
+            if(identityMode){ return; }
+            memberReadPages = [];
+            if(isMemberLoggedIn()){
+                identityMode = 'member';
+                loadMemberReadChapters();
+                return;
+            }
+            /* 身份未确认：禁止读写访客 localStorage，避免会员误入访客通道 */
+            if(!isAuthReady()){ return; }
+            identityMode = 'guest';
+            saveProgress(curPage, curChapterTitle);
+            applyProgressUI(readProgress());
+        }
+
+        function waitForIdentityThenBootstrap(){
+            if(isMemberLoggedIn() || isAuthReady()){
+                bootstrapProgress();
+                return;
+            }
+            var settled = false;
+            function finish(){
+                if(settled){ return; }
+                settled = true;
+                try{ document.removeEventListener('mac:auth-me-ready', onAuthReady); }catch(e){}
+                if(identityMode){ return; }
+                if(isMemberLoggedIn()){
+                    bootstrapProgress();
+                    return;
+                }
+                if(isAuthReady()){
+                    bootstrapProgress();
+                    return;
+                }
+                /* 超时仍未 ready：有 user_id cookie 则走会员（只读 API，不写访客 key），否则访客 */
+                if(hasUserIdCookie()){
+                    identityMode = 'member';
+                    loadMemberReadChapters();
+                }else{
+                    identityMode = 'guest';
+                    saveProgress(curPage, curChapterTitle);
+                    applyProgressUI(readProgress());
+                }
+            }
+            function onAuthReady(){ finish(); }
+            try{ document.addEventListener('mac:auth-me-ready', onAuthReady); }catch(e){}
+            setTimeout(finish, 3000);
+        }
+
+        var savedFont = parseInt(window.localStorage ? window.localStorage.getItem(STORAGE_KEY_FONT) : defaultFont, 10);
+        if(isNaN(savedFont)){ savedFont = defaultFont; }
+        var currentFont = applyFontSize(savedFont);
+
+        $('#fontIncrease').on('click', function(){ currentFont = applyFontSize(currentFont + 1); });
+        $('#fontDecrease').on('click', function(){ currentFont = applyFontSize(currentFont - 1); });
+
+        $('#novelSettingsBarBtn').on('click', function(){
+            $settingsSheet.toggleClass('show');
+        });
+        $(document).on('click', function(e){
+            if(!$(e.target).closest('#novelSettingsSheet, #novelSettingsBarBtn').length){
+                $settingsSheet.removeClass('show');
+            }
+        });
+
+        $(document).on('click', '.js-novel-catalog-toggle', function(){ openCatalog(); });
+        $('#novelCatalog').on('click', '[data-close="1"]', function(){ closeCatalog(); });
+        $(document).on('keydown', function(e){ if(e && e.key === 'Escape'){ closeCatalog(); } });
+
+        waitForIdentityThenBootstrap();
+
+        $('#artBackBtn, #artBackBtnPc, [data-back-detail="1"]').on('click', function(e){
+            e.preventDefault();
+            try{
+                var detailLen = parseInt(sessionStorage.getItem('art_detail_history_length'), 10);
+                if(!isNaN(detailLen) && detailLen > 0){
+                    var steps = history.length - detailLen;
+                    if(steps > 0){
+                        history.go(-steps);
+                        return;
+                    }
+                }
+            }catch(ex){}
+            location.replace($(this).attr('href'));
+        });
+    })();
+</script>
+<div class="mac_ulog_set hide" data-mid="{$maccms.mid}" data-id="{$obj.art_id}" data-sid="1" data-nid="{$curPage}" data-type="4"></div>
+{include file="public/site_card_modal" /}
+</body>
+</html>

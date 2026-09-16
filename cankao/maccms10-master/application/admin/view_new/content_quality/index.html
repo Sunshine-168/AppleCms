@@ -1,0 +1,174 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<div class="page-container p10">
+    <input type="hidden" name="__token__" value="{$Request.token}" />
+
+    <div class="my-toolbar-box" style="margin-bottom:15px;">
+        <form class="layui-form" method="get" action="{:url('content_quality/index')}">
+            <div class="layui-inline">
+                <select name="mid">
+                    <option value="0" {if condition="$mid eq 0"}selected{/if}>{:lang('all')}</option>
+                    <option value="1" {if condition="$mid eq 1"}selected{/if}>{:lang('menu/vod')}</option>
+                    <option value="2" {if condition="$mid eq 2"}selected{/if}>{:lang('menu/art')}</option>
+                </select>
+            </div>
+            <div class="layui-inline">
+                <select name="order">
+                    <option value="desc" {if condition="$order eq 'desc'"}selected{/if}>{:lang('admin/content_quality/sort_desc')}</option>
+                    <option value="asc" {if condition="$order eq 'asc'"}selected{/if}>{:lang('admin/content_quality/sort_asc')}</option>
+                </select>
+            </div>
+            <div class="layui-inline">
+                <input type="text" name="min_score" value="{$min_score}" placeholder="{:lang('admin/content_quality/filter_min_score')}" class="layui-input" style="width:100px;">
+            </div>
+            <div class="layui-inline">
+                <input type="text" name="max_score" value="{$max_score}" placeholder="{:lang('admin/content_quality/filter_max_score')}" class="layui-input" style="width:100px;">
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit="" lay-filter="searchSubmit">{:lang('btn_search')}</button>
+            </div>
+        </form>
+    </div>
+
+    <table class="layui-table">
+        <thead>
+        <tr>
+            <th>{:lang('admin/content_quality/col_name')}</th>
+            <th>{:lang('type')}</th>
+            <th>{:lang('admin/content_quality/col_score_total')}</th>
+            <th>{:lang('admin/content_quality/col_score_behavior')}</th>
+            <th>{:lang('admin/content_quality/col_score_interact')}</th>
+            <th>{:lang('admin/content_quality/col_score_complete')}</th>
+            <th>{:lang('admin/content_quality/col_score_fresh')}</th>
+            <th>{:lang('admin/content_quality/col_cold_start')}</th>
+            <th>{:lang('admin/content_quality/col_calc_date')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="vo"}
+        <tr>
+            <td>{$name_map[$vo['mid'].'_'.$vo['content_id']]|default='--'}</td>
+            <td>{$vo.type_id}</td>
+            <td>{$vo.score_total}</td>
+            <td>{$vo.score_behavior}</td>
+            <td>{$vo.score_interact}</td>
+            <td>{$vo.score_complete}</td>
+            <td>{$vo.score_fresh}</td>
+            <td>{if condition="$vo['is_cold_start'] eq 1"}{:lang('admin/content_quality/cold_start_yes')}{else /}{:lang('admin/content_quality/cold_start_no')}{/if}</td>
+            <td>{$vo.calc_date}</td>
+            <td>
+                {if condition="$vo['mid'] eq 1"}
+                <a href="{:url('vod/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {else /}
+                <a href="{:url('art/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+    <div id="pager"></div>
+
+    <h3 style="margin-top:25px;">{:lang('admin/content_quality/to_clean')}</h3>
+    <table class="layui-table">
+        <thead>
+        <tr>
+            <th>{:lang('admin/content_quality/col_name')}</th>
+            <th>{:lang('type')}</th>
+            <th>{:lang('admin/content_quality/col_score_total')}</th>
+            <th>{:lang('admin/content_quality/col_calc_date')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="clean_list" id="vo"}
+        <tr>
+            <td>{$name_map[$vo['mid'].'_'.$vo['content_id']]|default='--'}</td>
+            <td>{$vo.type_id}</td>
+            <td>{$vo.score_total}</td>
+            <td>{$vo.calc_date}</td>
+            <td>
+                {if condition="$vo['mid'] eq 1"}
+                <a href="{:url('vod/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {else /}
+                <a href="{:url('art/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+    <h3 style="margin-top:25px;">{:lang('admin/content_quality/recommend')}</h3>
+    <table class="layui-table">
+        <thead>
+        <tr>
+            <th>{:lang('admin/content_quality/col_name')}</th>
+            <th>{:lang('type')}</th>
+            <th>{:lang('admin/content_quality/col_score_total')}</th>
+            <th>{:lang('admin/content_quality/col_calc_date')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="recommend_list" id="vo"}
+        <tr>
+            <td>{$name_map[$vo['mid'].'_'.$vo['content_id']]|default='--'}</td>
+            <td>{$vo.type_id}</td>
+            <td>{$vo.score_total}</td>
+            <td>{$vo.calc_date}</td>
+            <td>
+                <button class="layui-btn layui-btn-sm j-mark-recommend" data-mid="{$vo.mid}" data-id="{$vo.content_id}">{:lang('admin/content_quality/mark_recommend')}</button>
+                {if condition="$vo['mid'] eq 1"}
+                <a href="{:url('vod/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {else /}
+                <a href="{:url('art/info',['id'=>$vo['content_id']])}" target="_blank" class="layui-btn layui-btn-sm layui-btn-primary">{:lang('admin/content_quality/edit_link')}</a>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+layui.use(['layer', 'laypage', 'form'], function () {
+    var layer = layui.layer;
+    var laypage = layui.laypage;
+    var $ = layui.jquery;
+    var token = $('input[name="__token__"]').val() || '';
+
+    laypage.render({
+        elem: 'pager',
+        count: {$total},
+        limit: {$limit},
+        curr: {$page},
+        jump: function (obj, first) {
+            if (!first) {
+                location.href = "{:url('content_quality/index')}?mid={$mid}&order={$order}&min_score={$min_score}&max_score={$max_score}&page=" + obj.curr;
+            }
+        }
+    });
+
+    $('.j-mark-recommend').on('click', function () {
+        var btn = $(this);
+        $.ajax({
+            url: "{:url('content_quality/markRecommend')}",
+            type: 'post',
+            dataType: 'json',
+            data: {
+                __token__: token,
+                mid: btn.data('mid'),
+                content_id: btn.data('id')
+            },
+            success: function (res) {
+                layer.msg(res.msg, {time: 2000});
+            },
+            error: function () { layer.msg("{:lang('admin/common/sys_err')}", {time: 2000}); }
+        });
+    });
+});
+</script>

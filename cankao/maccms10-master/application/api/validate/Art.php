@@ -1,0 +1,62 @@
+<?php
+
+namespace app\api\validate;
+
+use think\Validate;
+
+class Art extends Validate
+{
+    protected $rule = [
+        'art_id'     => 'require|number|between:0,' . PHP_INT_MAX,
+        'page'       => 'number|between:1,' . PHP_INT_MAX,
+        'type_id'    => 'number|between:0,' . PHP_INT_MAX,
+        'offset'     => 'number|between:0,' . PHP_INT_MAX,
+        'limit'      => 'number|between:1,500',
+        'orderby'  => 'in:id,time,time_add,score,hits,hits_day,hits_week,hits_month,up,down,level',
+        'letter'  => 'max:1',
+        'status'  => 'number|between:1,10',
+        'name'  => 'max:100',
+        'sub'  => 'max:100',
+        'blurb'  => 'max:100',
+        'title'  => 'max:50',
+        'content'  => 'max:100',
+        'class'  => 'max:50',
+        'tag'  => 'max:50',
+        'level'  => 'max:50',
+        'time_start'  => 'number|between:1,' . PHP_INT_MAX,
+        'time_end'  => 'number|between:1,' . PHP_INT_MAX,
+    ];
+
+    protected $message = [
+        
+    ];
+
+    protected $scene = [
+        'get_list' => [
+            'type_id',
+            'offset',
+            'limit',
+            'tag',
+            'orderby',
+            'letter',
+            'status',
+            'name',
+            'sub',
+            'blurb',
+            'title',
+            'content',
+            'class',
+            'level',
+            'time_start',
+            'time_end',
+        ],
+        'get_detail' => [
+            'art_id',
+        ],
+        'get_read_page' => [
+            'art_id',
+        ],
+        'get_hot' => [],
+        'get_latest' => [],
+    ];
+}

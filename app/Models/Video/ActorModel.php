@@ -2,9 +2,10 @@
 
 namespace App\Models\Video;
 
-use App\Traits\QueryCacheTrait;
-use App\Traits\QueryTrait;
+use App\Models\Concerns\QueryCacheTrait;
+use App\Models\Concerns\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ActorModel extends Model
 {
@@ -14,5 +15,16 @@ class ActorModel extends Model
     protected $guarded = [];
 
     use QueryTrait, QueryCacheTrait;
-}
 
+    protected $appends = ['url'];
+
+    public function videos(): BelongsToMany
+    {
+        return $this->belongsToMany(VideoModel::class, 'video_actor_rel', 'actor_id', 'video_id');
+    }
+
+    public function getUrlAttribute(): string
+    {
+        return vod_url('actor', ['id' => $this->id]);
+    }
+}

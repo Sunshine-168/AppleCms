@@ -13,8 +13,6 @@ use App\Support\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
-use Zhuzhichao\IpLocationZh\Ip;
-use function App\Services\System\session;
 
 
 /**
@@ -257,7 +255,7 @@ class SysUserService
         session()->forget('captcha');
 
         $ip         = Request::ip();
-        $ipAddress  = join(',', array_filter(Ip::find($ip)));
+        $ipAddress  = \App\Support\Utils\IpAddress::region((string) $ip);
 
         DB::beginTransaction();
 
