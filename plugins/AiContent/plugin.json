@@ -1,0 +1,46 @@
+{
+    "id": "ai_content",
+    "name": "AI 写内容",
+    "name_en": "AI content",
+    "description": "预留模型密钥。没有写简介、改标题或批量生成。",
+    "description_en": "Stores model keys. No synopsis or title generation yet.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "stub",
+    "group": "ai",
+    "admin": {
+        "extra_pages": {
+            "ai": {
+                "title": "AI 写内容",
+                "hint": "只存密钥，没有接通模型，也不会改影片简介。",
+                "fields": [
+                    {
+                        "name": "ai_provider",
+                        "label": "服务商",
+                        "type": "text",
+                        "placeholder": "openai / 通义 / 文心"
+                    },
+                    {
+                        "name": "ai_key",
+                        "label": "API Key",
+                        "type": "text"
+                    },
+                    {
+                        "name": "ai_model",
+                        "label": "模型",
+                        "type": "text",
+                        "placeholder": "如 gpt-4.1-mini"
+                    }
+                ]
+            }
+        },
+        "catalog": {
+            "more.complete": [
+                {
+                    "url": "/admin/video/config/ai",
+                    "label": "item.config_ai"
+                }
+            ]
+        }
+    }
+}

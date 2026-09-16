@@ -11,7 +11,7 @@
     }
 @endphp
 @if($ok)
-<a href="{{ $url }}" data-frame="1" @class(['active' => $active])>
+<a href="{{ $url }}" @class(['active' => $active])>
     <i class="fas fa-{{ $icon }}" aria-hidden="true"></i>
     <span>{{ $label }}</span>
 </a>

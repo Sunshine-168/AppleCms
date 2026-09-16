@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '站点设置')
+@section('title', admin_t('page.settings'))
 
 @section('plain')
 <div class="card card-panel">
@@ -33,14 +33,6 @@
             <input type="text" name="shenma_push_token" value="{{ $site['shenma_push_token'] ?? '' }}">
             <label>必应 Key</label>
             <input type="text" name="bing_push_token" value="{{ $site['bing_push_token'] ?? '' }}">
-            <label>微信商户号</label>
-            <input type="text" name="pay_wechat_mchid" value="{{ $site['pay_wechat_mchid'] ?? '' }}" placeholder="配置后可对账；到账请在订单里改已付">
-            <label>微信密钥</label>
-            <input type="text" name="pay_wechat_key" value="{{ $site['pay_wechat_key'] ?? '' }}">
-            <label>支付宝 AppId</label>
-            <input type="text" name="pay_alipay_appid" value="{{ $site['pay_alipay_appid'] ?? '' }}">
-            <label>支付宝密钥</label>
-            <input type="text" name="pay_alipay_key" value="{{ $site['pay_alipay_key'] ?? '' }}">
             <label>ICP 备案</label>
             <input type="text" name="icp" value="{{ $site['icp'] ?? '' }}">
             <label>关闭站点</label>
@@ -112,16 +104,6 @@
                 <option value="0" @selected(($site['gbook_audit'] ?? '0')==='0')>直接显示</option>
                 <option value="1" @selected(($site['gbook_audit'] ?? '0')==='1')>审核后显示</option>
             </select>
-            <label>弹幕</label>
-            <select name="danmaku_enabled">
-                <option value="1" @selected(($site['danmaku_enabled'] ?? '1')==='1')>开启</option>
-                <option value="0" @selected(($site['danmaku_enabled'] ?? '1')==='0')>关闭</option>
-            </select>
-            <label>弹幕需登录</label>
-            <select name="danmaku_login">
-                <option value="0" @selected(($site['danmaku_login'] ?? '0')==='0')>否</option>
-                <option value="1" @selected(($site['danmaku_login'] ?? '0')==='1')>是</option>
-            </select>
             <label>试看秒数</label>
             <input type="number" name="trysee_seconds" value="{{ $site['trysee_seconds'] ?? 0 }}">
             <label>播放缓冲</label>
@@ -175,12 +157,12 @@
             <a class="btn btn-muted btn-sm" href="/admin/video/config/theme">主题</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/config/player">播放器</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/config/user">会员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/pay">支付</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/config/email">邮件</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/sms">短信</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/weixin">微信</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/connect">三方登录</a>
+            @foreach(app(\App\Plugins\PluginHost::class)->settingsLinks() as $link)
+                <a class="btn btn-muted btn-sm" href="{{ $link['url'] }}">{{ admin_t($link['label']) }}</a>
+            @endforeach
             <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">后台 IP</a>
+            <a class="btn btn-muted btn-sm" href="/admin/plugins">{{ admin_t('nav.plugins') }}</a>
             <a class="btn btn-muted btn-sm" href="/admin/more">全部功能</a>
         </div>
     </div>

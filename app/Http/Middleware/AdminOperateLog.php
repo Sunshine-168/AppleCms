@@ -64,7 +64,7 @@ class AdminOperateLog
         }
 
         // 登录请求不记录
-        if ($request->is('admin/login') || $request->is('api/admin/login')) 
+        if ($request->is('admin/login') || $request->is('api/admin/login') || $request->is('admin/ui-locale'))
         {
             return false;
         }

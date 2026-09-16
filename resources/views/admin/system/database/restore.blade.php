@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '数据库恢复')
+@section('title', admin_t('page.db_restore'))
 
 @section('header_actions')
     <a class="btn btn-muted btn-sm" href="/admin/system/database/backup">去备份</a>

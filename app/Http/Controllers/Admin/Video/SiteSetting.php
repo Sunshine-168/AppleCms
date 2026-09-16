@@ -74,6 +74,7 @@ class SiteSetting extends Controller
         return view('admin.video.config_form', [
             'site' => $this->settings->site(),
             'title' => $extra[$page]['title'],
+            'hint' => $extra[$page]['hint'] ?? '',
             'fields' => $extra[$page]['fields'],
         ]);
     }

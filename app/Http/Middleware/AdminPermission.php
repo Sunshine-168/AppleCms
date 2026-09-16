@@ -79,6 +79,7 @@ class AdminPermission
             'admin/login',
             'admin/captcha',
             'admin/logout',
+            'admin/ui-locale',
         ]);
     }
 

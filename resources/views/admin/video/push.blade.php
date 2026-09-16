@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '搜索推送')
+@section('title', admin_t('page.push'))
 
 @section('content')
     <p class="hint">Token 在站点设置中填写。增量 sitemap：<a href="/sitemap.xml?inc=1" target="_blank">/sitemap.xml?inc=1</a>（最近 48 小时）。</p>

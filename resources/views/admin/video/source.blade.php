@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '线路管理')
+@section('title', admin_t('page.sources'))
 
 @section('header_actions')
     <a class="btn btn-muted btn-sm" href="/admin/video">返回影片</a>

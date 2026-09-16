@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '播放器参数')
+@section('title', admin_t('page.config_player'))
 
 @section('content')
     <form id="site-form">

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '系统日志')
+@section('title', admin_t('page.system_logs'))
 
 @section('plain')
 <div class="card card-panel">

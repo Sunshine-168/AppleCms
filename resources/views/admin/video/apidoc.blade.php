@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '开放接口说明')
+@section('title', admin_t('page.apidoc'))
 
 @section('content')
     <p class="hint">资源输出兼容苹果 CMS <code>provide/vod</code>。密钥在「开放 API」里配置，非空时请求需带 <code>key</code>。</p>

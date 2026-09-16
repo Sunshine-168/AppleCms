@@ -226,7 +226,10 @@
             });
             html += '</tr></thead><tbody>';
             if (!parsed.list.length) {
-                html += '<tr><td colspan="' + cols.length + '"><div class="list-empty"><p>暂无数据</p></div></td></tr>';
+                var empty = typeof opts.emptyHtml === 'function'
+                    ? opts.emptyHtml(parsed, state.where)
+                    : (opts.emptyHtml || '<div class="list-empty"><p>暂无数据</p></div>');
+                html += '<tr><td colspan="' + cols.length + '">' + empty + '</td></tr>';
             } else {
                 parsed.list.forEach(function (row, idx) {
                     html += '<tr data-idx="' + idx + '">';
@@ -244,18 +247,29 @@
             html += '</tbody></table></div><div class="js-pager"></div>';
             wrap.innerHTML = html;
             wrap._rows = parsed.list;
-            pager(wrap.querySelector('.js-pager'), parsed, function (p) {
-                state.page = p;
-                load();
-            });
+            var pagerEl = wrap.querySelector('.js-pager');
+            if (opts.pager !== false && parsed.total > 0) {
+                pager(pagerEl, parsed, function (p) {
+                    state.page = p;
+                    load();
+                });
+            }
             var all = wrap.querySelector('.js-check-all');
+            function fireCheck() {
+                if (opts.onCheck) opts.onCheck(wrap._table.selectedIds(), wrap._rows || []);
+            }
             if (all) {
                 all.addEventListener('change', function () {
                     Array.prototype.forEach.call(wrap.querySelectorAll('.js-check'), function (cb) {
                         cb.checked = all.checked;
                     });
+                    fireCheck();
                 });
             }
+            Array.prototype.forEach.call(wrap.querySelectorAll('.js-check'), function (cb) {
+                cb.addEventListener('change', fireCheck);
+            });
+            fireCheck();
             if (opts.onDraw) opts.onDraw(wrap, parsed.list);
         }
 
@@ -279,6 +293,12 @@
                 return Array.prototype.map.call(wrap.querySelectorAll('.js-check:checked'), function (cb) {
                     return cb.value;
                 });
+            },
+            clearSelection: function () {
+                Array.prototype.forEach.call(wrap.querySelectorAll('.js-check, .js-check-all'), function (cb) {
+                    cb.checked = false;
+                });
+                if (opts.onCheck) opts.onCheck([], wrap._rows || []);
             },
             rows: function () { return wrap._rows || []; }
         };

@@ -1,0 +1,32 @@
+{
+    "id": "connect",
+    "name": "第三方登录",
+    "name_en": "OAuth login",
+    "description": "保存 QQ / 微信 / 微博密钥。没有 OAuth 跳转和账号绑定。",
+    "description_en": "Stores QQ, WeChat and Weibo keys. No OAuth redirect.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "config",
+    "group": "connect",
+    "admin": {
+        "extra_pages": {
+            "connect": {
+                "title": "第三方登录",
+                "hint": "只存配置，前台没有 QQ / 微信登录按钮。",
+                "fields": [
+                    {"name": "oauth_qq", "label": "QQ AppId/Key", "type": "text"},
+                    {"name": "oauth_wechat", "label": "微信 AppId/Secret", "type": "text"},
+                    {"name": "oauth_weibo", "label": "微博 AppKey/Secret", "type": "text"}
+                ]
+            }
+        },
+        "catalog": {
+            "more.security": [
+                {"url": "/admin/video/config/connect", "label": "item.config_connect"}
+            ]
+        },
+        "settings_links": [
+            {"url": "/admin/video/config/connect", "label": "item.config_connect"}
+        ]
+    }
+}

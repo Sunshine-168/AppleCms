@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '开放API')
+@section('title', admin_t('page.config_api'))
 
 @section('content')
     <form id="site-form">

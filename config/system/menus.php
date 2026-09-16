@@ -22,6 +22,7 @@ return [
                 'name' => '影视管理',
                 'sub' => [
                     ['name' => '站点设置', 'url' => '/admin/video/settings'],
+                    ['name' => '本地插件', 'url' => '/admin/plugins'],
                     ['name' => '影视列表', 'url' => '/admin/video'],
                     ['name' => '无地址', 'url' => '/admin/video?empty_url=1'],
                     ['name' => '无封面', 'url' => '/admin/video?empty_pic=1'],

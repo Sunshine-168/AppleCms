@@ -1,12 +1,12 @@
 :root {
-    --bg: #eef2f7;
+    --bg: #f4faf8;
     --panel: #fff;
     --text: #1d2129;
     --muted: #4e5969;
     --muted2: #86909c;
     --line: #e5e6eb;
-    --primary: #3d8bfd;
-    --primary-hover: #2f74d8;
+    --primary: #40cc92;
+    --primary-hover: #32b981;
     --ok: #2e7d32;
     --bad: #c62828;
     --radius: 12px;
@@ -16,15 +16,15 @@
 html, body { margin: 0; min-height: 100%; }
 body {
     font-family: var(--font);
-    background: radial-gradient(1200px 400px at 10% -10%, #d6e6ff 0%, transparent 50%), var(--bg);
+    background: radial-gradient(1200px 400px at 10% -10%, #d8f3e8 0%, transparent 50%), var(--bg);
     color: var(--text);
     font-size: 14px;
 }
 .wrap { max-width: 920px; margin: 0 auto; padding: 40px 20px 56px; }
 .brand { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-weight: 700; font-size: 16px; }
 .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); color: #fff; display: grid; place-items: center; }
-.card { display: grid; grid-template-columns: 220px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(28, 46, 74, .06); overflow: hidden; min-height: 480px; }
-.rail { background: #f7f9fc; border-right: 1px solid var(--line); padding: 24px 18px; }
+.card { display: grid; grid-template-columns: 220px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(31, 158, 110, .08); overflow: hidden; min-height: 480px; }
+.rail { background: #f2faf6; border-right: 1px solid var(--line); padding: 24px 18px; }
 .rail h1 { margin: 0 0 6px; font-size: 18px; }
 .rail .lead { margin: 0 0 22px; color: var(--muted); line-height: 1.5; font-size: 13px; }
 .steps { list-style: none; margin: 0; padding: 0; }
@@ -47,7 +47,7 @@ label { display: block; margin: 14px 0 6px; font-size: 13px; }
 input[type=text], input[type=email], input[type=password] { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 8px; }
 .choice label { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
-.choice label.is-on { border-color: var(--primary); background: #f4f8ff; }
+.choice label.is-on { border-color: var(--primary); background: #f2faf6; }
 .choice strong { display: block; margin-bottom: 4px; }
 .choice span { color: var(--muted); font-size: 12px; }
 .checkline { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 8px; }

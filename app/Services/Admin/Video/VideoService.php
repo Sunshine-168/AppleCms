@@ -108,6 +108,37 @@ class VideoService
             $limit = 10;
         }
 
+        $relIds = null;
+        $actorId = (int) ($params['actor_id'] ?? 0);
+        if ($actorId > 0) {
+            $relIds = VideoActorRelModel::query()
+                ->where('actor_id', $actorId)
+                ->pluck('video_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            if ($relIds === []) {
+                return Result::success(['total' => 0, 'data' => []]);
+            }
+        }
+        $tagId = (int) ($params['tag_id'] ?? 0);
+        if ($tagId > 0) {
+            $tagVideoIds = VideoTagRelModel::query()
+                ->where('tag_id', $tagId)
+                ->pluck('video_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            if ($tagVideoIds === []) {
+                return Result::success(['total' => 0, 'data' => []]);
+            }
+            $relIds = $relIds === null ? $tagVideoIds : array_values(array_intersect($relIds, $tagVideoIds));
+            if ($relIds === []) {
+                return Result::success(['total' => 0, 'data' => []]);
+            }
+        }
+        if ($relIds !== null) {
+            $where[] = ['id', 'in', $relIds];
+        }
+
         $weekday = trim((string) ($params['weekday'] ?? ''));
         if ($weekday !== '' && Schema::hasColumn('videos', 'weekday')) {
             $where[] = ['weekday', '=', $weekday];
@@ -198,6 +229,9 @@ class VideoService
                     }
                 });
             }
+            if ($relIds !== null) {
+                $q->whereIn('id', $relIds);
+            }
             if ($repeat) {
                 $dup = VideoModel::query()->select('title')->groupBy('title')->havingRaw('COUNT(*) > 1')->pluck('title');
                 $q->whereIn('title', $dup);
@@ -235,12 +269,22 @@ class VideoService
         }
 
         $statMap = [];
+        $playMap = [];
         if (!empty($videoIds))
         {
             $stats = $this->videoStatModel->selectByCondition([['video_id', 'in', $videoIds]], ['video_id', 'hits']);
             foreach ($stats as $s)
             {
                 $statMap[(int)$s['video_id']] = $s;
+            }
+            try {
+                if (Schema::hasTable('video_episodes')) {
+                    $playIds = VideoEpisodeModel::query()->whereIn('video_id', $videoIds)->distinct()->pluck('video_id');
+                    foreach ($playIds as $pid) {
+                        $playMap[(int) $pid] = true;
+                    }
+                }
+            } catch (\Throwable) {
             }
         }
 
@@ -255,12 +299,50 @@ class VideoService
             $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
             $item['created_at_text'] = $createdTs > 0 ? date('Y-m-d H:i:s', $createdTs) : '';
             $item['updated_at_text'] = $updatedTs > 0 ? date('Y-m-d H:i:s', $updatedTs) : '';
+            $item['has_cover'] = trim((string) ($item['cover'] ?? '')) !== '';
+            $item['has_play'] = isset($playMap[(int) $item['id']]);
         }
         unset($item);
         }
 
         return Result::success($data);
     }
+
+    /** @return array<string, int> */
+    public function queueCounts(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'empty_url' => 0, 'empty_pic' => 0, 'repeat' => 0];
+        try {
+            if (! Schema::hasTable('videos')) {
+                return $zero;
+            }
+            $repeat = 0;
+            try {
+                $repeat = (int) VideoModel::query()
+                    ->select('title')
+                    ->groupBy('title')
+                    ->havingRaw('COUNT(*) > 1')
+                    ->get()
+                    ->count();
+            } catch (\Throwable) {
+            }
+
+            return [
+                'all' => (int) VideoModel::query()->count(),
+                'pending' => (int) VideoModel::query()->where('status', 0)->count(),
+                'empty_url' => Schema::hasTable('video_episodes')
+                    ? (int) VideoModel::query()->whereDoesntHave('episodes')->count()
+                    : 0,
+                'empty_pic' => (int) VideoModel::query()->where(function ($q) {
+                    $q->whereNull('cover')->orWhere('cover', '');
+                })->count(),
+                'repeat' => $repeat,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
     /**
      * 获取视频详情
      */
@@ -542,57 +624,99 @@ class VideoService
      */
     public function getVideoTypeLists(array $params): array
     {
-        $limit = (int)($params['limit'] ?? 10);
-        if ($limit < 1) {
-            $limit = 10;
+        $name = trim((string) ($params['name'] ?? ''));
+        $all = $this->videoTypeModel->selectByCondition([], '*', ['sort' => 'desc', 'id' => 'asc']);
+
+        $videoCounts = [];
+        try {
+            if (Schema::hasTable('videos')) {
+                $countRows = VideoModel::query()
+                    ->selectRaw('type_id, COUNT(*) as c')
+                    ->groupBy('type_id')
+                    ->get();
+                foreach ($countRows as $row) {
+                    $videoCounts[(int) $row->type_id] = (int) $row->c;
+                }
+            }
+        } catch (\Throwable) {
         }
 
-        $where = [];
-        $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '')
-        {
-            $where['name'] = ['like' => "%{$name}%"];
+        $byParent = [];
+        $byId = [];
+        foreach ($all as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            $byId[$id] = $row;
+            $byParent[(int) ($row['parent_id'] ?? 0)][] = $row;
         }
 
-        if (array_key_exists('parent_id', $params) && $params['parent_id'] !== '' && $params['parent_id'] !== null)
-        {
-            $where['parent_id'] = (int)$params['parent_id'];
+        $flat = [];
+        $this->walkTypeTree($byParent, 0, 0, $flat, 5);
+        $seen = [];
+        foreach ($flat as $row) {
+            $seen[(int) $row['id']] = true;
         }
-
-        $data = $this->videoTypeModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
-        $rows = $data['data'] ?? [];
-
-        $parentIds = [];
-        foreach ($rows as $r)
-        {
-            $pid = (int)($r['parent_id'] ?? 0);
-            if ($pid > 0) {
-                $parentIds[] = $pid;
+        foreach ($all as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if (! isset($seen[$id])) {
+                $row['depth'] = 0;
+                $flat[] = $row;
+                $seen[$id] = true;
             }
         }
-        $parentIds = array_values(array_unique($parentIds));
 
-        $parentMap = [];
-        if (!empty($parentIds))
-        {
-            $parents = $this->videoTypeModel->selectByCondition([['id', 'in', $parentIds]], ['id', 'name']);
-            foreach ($parents as $p)
-            {
-                $parentMap[(int)$p['id']] = (string)($p['name'] ?? '');
+        if ($name !== '') {
+            $keep = [];
+            foreach ($flat as $row) {
+                if (mb_stripos((string) ($row['name'] ?? ''), $name) === false) {
+                    continue;
+                }
+                $id = (int) $row['id'];
+                $keep[$id] = true;
+                $pid = (int) ($row['parent_id'] ?? 0);
+                $guard = 0;
+                while ($pid > 0 && $guard++ < 8 && isset($byId[$pid])) {
+                    $keep[$pid] = true;
+                    $pid = (int) ($byId[$pid]['parent_id'] ?? 0);
+                }
             }
+            $flat = array_values(array_filter(
+                $flat,
+                static fn (array $row): bool => isset($keep[(int) $row['id']])
+            ));
         }
 
-        foreach ($rows as &$item)
-        {
-            $pid = (int)($item['parent_id'] ?? 0);
-            $item['parent_name'] = $pid > 0 ? (string)($parentMap[$pid] ?? '') : '顶级';
-            $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
-            $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
+        foreach ($flat as &$item) {
+            $id = (int) ($item['id'] ?? 0);
+            $pid = (int) ($item['parent_id'] ?? 0);
+            $item['parent_name'] = $pid > 0 ? (string) ($byId[$pid]['name'] ?? '') : '顶级';
+            $item['video_count'] = $videoCounts[$id] ?? 0;
+            $item['child_count'] = count($byParent[$id] ?? []);
+            $item['depth'] = (int) ($item['depth'] ?? 0);
         }
         unset($item);
 
-        $data['data'] = $rows;
-        return Result::success($data);
+        return Result::success([
+            'total' => count($flat),
+            'data' => $flat,
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => max(count($flat), 1),
+        ]);
+    }
+
+    /**
+     * @param array<int, list<array<string, mixed>>> $byParent
+     * @param list<array<string, mixed>> $out
+     */
+    private function walkTypeTree(array $byParent, int $parentId, int $depth, array &$out, int $maxDepth): void
+    {
+        foreach ($byParent[$parentId] ?? [] as $row) {
+            $row['depth'] = $depth;
+            $out[] = $row;
+            if ($depth < $maxDepth) {
+                $this->walkTypeTree($byParent, (int) ($row['id'] ?? 0), $depth + 1, $out, $maxDepth);
+            }
+        }
     }
     /**
      * 保存视频类型
@@ -605,13 +729,28 @@ class VideoService
             return Result::fail('分类名称不能为空');
         }
 
+        $parentId = (int) ($data['parent_id'] ?? 0);
+        if ($id !== null && $id > 0) {
+            if ($parentId === $id) {
+                return Result::fail('不能把自己设为上级');
+            }
+            $node = VideoTypeModel::query()->find($id);
+            if ($node && in_array($parentId, $node->descendantIds(), true)) {
+                return Result::fail('不能挂到自己的下级下面');
+            }
+        }
+
         $now = time();
         $candidate = [
             'name' => $name,
-            'parent_id' => (int)($data['parent_id'] ?? 0),
+            'slug' => trim((string) ($data['slug'] ?? '')),
+            'parent_id' => $parentId,
             'mid' => (int) ($data['mid'] ?? 1),
-            'sort' => (int)($data['sort'] ?? 0),
-            'status' => (int)($data['status'] ?? 1),
+            'sort' => (int) ($data['sort'] ?? 0),
+            'status' => (int) ($data['status'] ?? 1),
+            'seo_title' => trim((string) ($data['seo_title'] ?? '')),
+            'seo_keywords' => trim((string) ($data['seo_keywords'] ?? '')),
+            'seo_description' => trim((string) ($data['seo_description'] ?? '')),
             'updated_at' => $now,
         ];
         if ($id === null || $id < 1)
@@ -661,38 +800,111 @@ class VideoService
         $ok = $this->videoTypeModel->deleteById($id);
         return $ok ? Result::success() : Result::fail();
     }
+
+    /**
+     * @param list<int|string> $ids
+     */
+    public function batchVideoTypes(array $ids, string $action, mixed $value = ''): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return Result::fail('请先勾选分类');
+        }
+        $ok = 0;
+        $fail = 0;
+        $last = '';
+        foreach ($ids as $id) {
+            $row = $this->videoTypeModel->findById($id);
+            if (empty($row)) {
+                $fail++;
+                continue;
+            }
+            $res = match ($action) {
+                'status' => $this->saveVideoType(array_merge($row, ['status' => (int) $value]), $id),
+                'parent' => $this->saveVideoType(array_merge($row, ['parent_id' => (int) $value]), $id),
+                'delete' => $this->deleteVideoType($id),
+                default => Result::fail('不支持的操作'),
+            };
+            if (($res['code'] ?? 1) === 0) {
+                $ok++;
+            } else {
+                $fail++;
+                $last = (string) ($res['msg'] ?? '');
+            }
+        }
+        if ($ok === 0) {
+            return Result::fail($last !== '' ? $last : '操作失败');
+        }
+
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理。'.$last) : '操作成功');
+    }
+
     /**
      * 获取采集源列表
      */
     public function getCollectSourceLists(array $params): array
     {
-        $limit = (int)($params['limit'] ?? 10);
+        $limit = (int) ($params['limit'] ?? 100);
         if ($limit < 1) {
-            $limit = 10;
+            $limit = 100;
         }
 
         $where = [];
-        $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '')
-        {
-            $where['name'] = ['like' => "%{$name}%"];
+        $name = trim((string) ($params['name'] ?? ''));
+        if ($name !== '') {
+            $where['name'] = ['like' => '%'.$name.'%'];
         }
-        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null)
-        {
-            $where[] = ['status', '=', (int)$params['status']];
+        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+            $where[] = ['status', '=', (int) $params['status']];
         }
 
         $data = $this->collectSourceModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
         $rows = $data['data'] ?? [];
+        $emptyBind = (string) ($params['empty_bind'] ?? '') === '1';
+        $hasError = (string) ($params['has_error'] ?? '') === '1';
 
-        foreach ($rows as &$item)
-        {
-            $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
-            $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
+        foreach ($rows as &$item) {
+            $bind = json_decode((string) ($item['bind_json'] ?? ''), true);
+            $bind = is_array($bind) ? $bind : [];
+            $bindCount = 0;
+            foreach ($bind as $local) {
+                if ((int) $local > 0) {
+                    $bindCount++;
+                }
+            }
+            $err = trim((string) ($item['last_error'] ?? ''));
+            $lastAt = (int) ($item['last_collect_at'] ?? 0);
+            $url = trim((string) ($item['api_url'] ?? ''));
+            $host = parse_url($url, PHP_URL_HOST);
+            $item['bind_count'] = $bindCount;
+            $item['has_error'] = $err !== '';
+            $item['has_break'] = (int) ($item['last_page'] ?? 0) > 0;
+            $item['last_error'] = $err;
+            $item['last_collect_at_text'] = $lastAt > 0 ? date('Y-m-d H:i', $lastAt) : '';
+            $item['api_host'] = is_string($host) && $host !== '' ? $host : $url;
+            $item['created_at_text'] = ! empty($item['created_at']) ? date('Y-m-d H:i:s', (int) $item['created_at']) : '';
+            $item['updated_at_text'] = ! empty($item['updated_at']) ? date('Y-m-d H:i:s', (int) $item['updated_at']) : '';
         }
         unset($item);
 
+        if ($emptyBind || $hasError) {
+            $rows = array_values(array_filter($rows, static function (array $row) use ($emptyBind, $hasError): bool {
+                if ($emptyBind && (int) ($row['bind_count'] ?? 0) > 0) {
+                    return false;
+                }
+                if ($hasError && empty($row['has_error'])) {
+                    return false;
+                }
+
+                return true;
+            }));
+            $data['total'] = count($rows);
+            $data['last_page'] = 1;
+            $data['current_page'] = 1;
+        }
+
         $data['data'] = $rows;
+
         return Result::success($data);
     }
     /**
@@ -705,11 +917,15 @@ class VideoService
         {
             return Result::fail('采集源名称不能为空');
         }
+        $apiUrl = trim((string) ($data['api_url'] ?? ''));
+        if ($apiUrl === '') {
+            return Result::fail('请填写接口地址');
+        }
 
         $now = time();
         $candidate = [
             'name' => $name,
-            'api_url' => (string)($data['api_url'] ?? ''),
+            'api_url' => $apiUrl,
             'api_type' => (string)($data['api_type'] ?? 'auto'),
             'param' => (string)($data['param'] ?? ''),
             'status' => (int)($data['status'] ?? 1),
@@ -761,49 +977,88 @@ class VideoService
      */
     public function getVideoTagLists(array $params): array
     {
-        $limit = (int)($params['limit'] ?? 10);
-        if ($limit < 1) {
-            $limit = 10;
+        $limit = max(1, (int) ($params['limit'] ?? 20));
+        try {
+            if (! Schema::hasTable('video_tags')) {
+                return Result::fail('请先执行数据库迁移');
+            }
+        } catch (\Throwable) {
+            return Result::fail('请先执行数据库迁移');
         }
 
-        $where = [];
-        $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '')
-        {
-            $where['name'] = ['like' => "%{$name}%"];
+        $q = VideoTagModel::query();
+        $name = trim((string) ($params['name'] ?? ''));
+        if ($name !== '') {
+            $q->where('name', 'like', '%'.$name.'%');
         }
-
-        $data = $this->videoTagModel->paginates($where, '*', $limit, ['id' => 'desc']);
-        $rows = $data['data'] ?? [];
-
-        foreach ($rows as &$item)
-        {
-            $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
-            $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
+        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+            $q->where('status', (int) $params['status']);
         }
-        unset($item);
+        if ((string) ($params['unused'] ?? '') === '1') {
+            $q->whereDoesntHave('videos');
+        }
+        $page = $q->orderByDesc('sort')->orderByDesc('id')->paginate($limit);
+        $rows = collect($page->items())->map(function ($row) {
+            $arr = $row->toArray();
+            $arr['created_at_text'] = ! empty($arr['created_at']) ? date('Y-m-d H:i:s', (int) $arr['created_at']) : '';
 
-        $data['data'] = $rows;
-        return Result::success($data);
+            return $arr;
+        })->all();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $counts = [];
+        if ($ids !== [] && Schema::hasTable('video_tag_rel')) {
+            $countRows = VideoTagRelModel::query()
+                ->selectRaw('tag_id, COUNT(*) as c')
+                ->whereIn('tag_id', $ids)
+                ->groupBy('tag_id')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(int) $row->tag_id] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $row['video_count'] = $counts[(int) ($row['id'] ?? 0)] ?? 0;
+        }
+        unset($row);
+
+        return Result::success([
+            'total' => $page->total(),
+            'data' => $rows,
+        ]);
     }
     /**
      * 保存视频标签
      */
     public function saveVideoTag(array $data, ?int $id = null): array
     {
-        $name = trim((string)($data['name'] ?? ''));
-        if ($name === '')
-        {
+        $name = trim((string) ($data['name'] ?? ''));
+        if (($id === null || $id < 1) && $name === '') {
             return Result::fail('标签名称不能为空');
         }
 
         $now = time();
         $candidate = [
-            'name' => $name,
-            'sort' => (int)($data['sort'] ?? 0),
-            'status' => (int)($data['status'] ?? 1),
             'updated_at' => $now,
         ];
+        if ($name !== '') {
+            $candidate['name'] = $name;
+        }
+        if (array_key_exists('slug', $data)) {
+            $candidate['slug'] = trim((string) $data['slug']);
+        }
+        if (array_key_exists('sort', $data)) {
+            $candidate['sort'] = (int) $data['sort'];
+        }
+        if (array_key_exists('status', $data)) {
+            $candidate['status'] = (int) $data['status'];
+        }
         if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
@@ -840,55 +1095,153 @@ class VideoService
         $ok = $this->videoTagModel->deleteById($id);
         return $ok ? Result::success() : Result::fail();
     }
+
+    /**
+     * @param list<int|string> $ids
+     */
+    public function batchTags(array $ids, string $action, mixed $value = ''): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return Result::fail('请先勾选标签');
+        }
+        $ok = 0;
+        $fail = 0;
+        foreach ($ids as $id) {
+            $res = match ($action) {
+                'status' => $this->saveVideoTag(['status' => (int) $value], $id),
+                'delete' => $this->deleteVideoTag($id),
+                default => Result::fail('不支持的操作'),
+            };
+            if (($res['code'] ?? 1) === 0) {
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        if ($ok === 0) {
+            return Result::fail('操作失败');
+        }
+
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理') : '操作成功');
+    }
     /**
      * 获取视频演员列表
      */
     public function getActorLists(array $params): array
     {
-        $limit = (int)($params['limit'] ?? 10);
-        if ($limit < 1) {
-            $limit = 10;
+        $limit = max(1, (int) ($params['limit'] ?? 20));
+        try {
+            if (! Schema::hasTable('actors')) {
+                return Result::fail('请先执行数据库迁移');
+            }
+        } catch (\Throwable) {
+            return Result::fail('请先执行数据库迁移');
         }
 
-        $where = [];
-        $name = trim((string)($params['name'] ?? ''));
-        if ($name !== '')
-        {
-            $where['name'] = ['like' => "%{$name}%"];
+        $q = ActorModel::query();
+        $name = trim((string) ($params['name'] ?? ''));
+        if ($name !== '') {
+            $q->where('name', 'like', '%'.$name.'%');
         }
-
-        $data = $this->actorModel->paginates($where, '*', $limit, ['id' => 'desc']);
-        $rows = $data['data'] ?? [];
-
-        foreach ($rows as &$item)
-        {
-            $item['created_at_text'] = !empty($item['created_at']) ? date('Y-m-d H:i:s', (int)$item['created_at']) : '';
-            $item['updated_at_text'] = !empty($item['updated_at']) ? date('Y-m-d H:i:s', (int)$item['updated_at']) : '';
+        if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+            $q->where('status', (int) $params['status']);
         }
-        unset($item);
+        if ((string) ($params['empty_pic'] ?? '') === '1') {
+            $q->where(function ($inner) {
+                $inner->whereNull('avatar')->orWhere('avatar', '');
+            });
+        }
+        if ((string) ($params['repeat'] ?? '') === '1') {
+            $dups = ActorModel::query()->select('name')->groupBy('name')->havingRaw('COUNT(*) > 1')->pluck('name');
+            $q->whereIn('name', $dups);
+        }
+        $page = $q->orderByDesc('sort')->orderByDesc('id')->paginate($limit);
+        $rows = collect($page->items())->map(function ($row) {
+            $arr = $row->toArray();
+            $arr['created_at_text'] = ! empty($arr['created_at']) ? date('Y-m-d H:i:s', (int) $arr['created_at']) : '';
+            $arr['has_avatar'] = trim((string) ($arr['avatar'] ?? '')) !== '';
 
-        $data['data'] = $rows;
-        return Result::success($data);
+            return $arr;
+        })->all();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $counts = [];
+        if ($ids !== [] && Schema::hasTable('video_actor_rel')) {
+            $countRows = VideoActorRelModel::query()
+                ->selectRaw('actor_id, COUNT(*) as c')
+                ->whereIn('actor_id', $ids)
+                ->groupBy('actor_id')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(int) $row->actor_id] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $row['video_count'] = $counts[(int) ($row['id'] ?? 0)] ?? 0;
+        }
+        unset($row);
+
+        return Result::success([
+            'total' => $page->total(),
+            'data' => $rows,
+        ]);
     }
     /**
      * 保存视频演员
      */
     public function saveActor(array $data, ?int $id = null): array
     {
-        $name = trim((string)($data['name'] ?? ''));
-        if ($name === '')
-        {
+        $name = trim((string) ($data['name'] ?? ''));
+        if (($id === null || $id < 1) && $name === '') {
             return Result::fail('演员名称不能为空');
         }
 
         $now = time();
         $candidate = [
-            'name' => $name,
-            'avatar' => (string)($data['avatar'] ?? ''),
-            'sort' => (int)($data['sort'] ?? 0),
-            'status' => (int)($data['status'] ?? 1),
+            'slug' => trim((string) ($data['slug'] ?? '')),
+            'avatar' => (string) ($data['avatar'] ?? ''),
+            'sex' => trim((string) ($data['sex'] ?? '')),
+            'area' => trim((string) ($data['area'] ?? '')),
+            'birthday' => trim((string) ($data['birthday'] ?? '')),
+            'content' => (string) ($data['content'] ?? ''),
+            'sort' => (int) ($data['sort'] ?? 0),
+            'status' => (int) ($data['status'] ?? 1),
             'updated_at' => $now,
         ];
+        if ($name !== '') {
+            $candidate['name'] = $name;
+        }
+        if (! array_key_exists('status', $data)) {
+            unset($candidate['status']);
+        }
+        if (! array_key_exists('sort', $data)) {
+            unset($candidate['sort']);
+        }
+        if (! array_key_exists('slug', $data)) {
+            unset($candidate['slug']);
+        }
+        if (! array_key_exists('avatar', $data)) {
+            unset($candidate['avatar']);
+        }
+        if (! array_key_exists('sex', $data)) {
+            unset($candidate['sex']);
+        }
+        if (! array_key_exists('area', $data)) {
+            unset($candidate['area']);
+        }
+        if (! array_key_exists('birthday', $data)) {
+            unset($candidate['birthday']);
+        }
+        if (! array_key_exists('content', $data)) {
+            unset($candidate['content']);
+        }
         if ($id === null || $id < 1)
         {
             $candidate['created_at'] = $now;
@@ -924,6 +1277,36 @@ class VideoService
 
         $ok = $this->actorModel->deleteById($id);
         return $ok ? Result::success() : Result::fail();
+    }
+
+    /**
+     * @param list<int|string> $ids
+     */
+    public function batchActors(array $ids, string $action, mixed $value = ''): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return Result::fail('请先勾选演员');
+        }
+        $ok = 0;
+        $fail = 0;
+        foreach ($ids as $id) {
+            $res = match ($action) {
+                'status' => $this->saveActor(['status' => (int) $value], $id),
+                'delete' => $this->deleteActor($id),
+                default => Result::fail('不支持的操作'),
+            };
+            if (($res['code'] ?? 1) === 0) {
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        if ($ok === 0) {
+            return Result::fail('操作失败');
+        }
+
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理') : '操作成功');
     }
     /**
      * 获取视频采集源列表

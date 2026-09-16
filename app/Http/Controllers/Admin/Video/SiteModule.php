@@ -15,11 +15,30 @@ class SiteModule extends Controller
 
     public function index(string $module): View
     {
-        $cfg = $this->modules->config($module);
+        $cfg = $this->cfg($module);
+        if ($module === 'comments') {
+            return view('admin.video.comments', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->commentQueues(),
+            ]);
+        }
+        if ($module === 'topics') {
+            return view('admin.video.topics', [
+                'title' => $cfg['title'],
+            ]);
+        }
+        if ($module === 'arts') {
+            return view('admin.video.arts', [
+                'title' => $cfg['title'],
+                'types' => $this->modules->artTypeOptions(),
+                'queues' => $this->modules->artQueues(),
+            ]);
+        }
 
         return view('admin.video.module', [
             'module' => $module,
             'title' => $cfg['title'],
+            'hint' => $cfg['hint'] ?? '',
             'fields' => $cfg['fields'],
             'cols' => $cfg['cols'],
             'search' => $cfg['search'],
@@ -28,6 +47,7 @@ class SiteModule extends Controller
 
     public function list(Request $request, string $module): JsonResponse
     {
+        $this->cfg($module);
         $data = $this->modules->lists($module, $request->all());
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -35,6 +55,7 @@ class SiteModule extends Controller
 
     public function save(Request $request, string $module): JsonResponse
     {
+        $this->cfg($module);
         $id = (int) $request->input('id', 0);
         $data = $this->modules->save($module, $request->all(), $id > 0 ? $id : null);
 
@@ -43,9 +64,27 @@ class SiteModule extends Controller
 
     public function delete(Request $request, string $module): JsonResponse
     {
+        $this->cfg($module);
         $data = $this->modules->delete($module, (int) $request->input('id', 0));
 
         return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function batch(Request $request, string $module): JsonResponse
+    {
+        $this->cfg($module);
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = $this->modules->batch(
+            $module,
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     public function topicVideos(int $id): JsonResponse
@@ -85,5 +124,15 @@ class SiteModule extends Controller
         $data = $this->modules->runCollectTask((int) $request->input('id', 0));
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    /** @return array<string, mixed> */
+    private function cfg(string $module): array
+    {
+        try {
+            return $this->modules->config($module);
+        } catch (\InvalidArgumentException) {
+            abort(404);
+        }
     }
 }

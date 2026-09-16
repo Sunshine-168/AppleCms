@@ -1,0 +1,70 @@
+{
+    "id": "coupon",
+    "name": "优惠券",
+    "name_en": "Coupons",
+    "description": "后台可发券，会员兑换只能加积分，不能抵扣下单。",
+    "description_en": "Admin can issue codes. Redeem adds points only, not checkout discount.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "stub",
+    "group": "pay",
+    "admin": {
+        "modules": {
+            "coupons": {
+                "title": "优惠券",
+                "hint": "兑换只加积分，不能在订单里抵扣。",
+                "model": "App\\Models\\Video\\VideoCoupon",
+                "search": "code",
+                "fields": [
+                    {
+                        "name": "code",
+                        "label": "券码",
+                        "type": "text"
+                    },
+                    {
+                        "name": "points",
+                        "label": "积分",
+                        "type": "number"
+                    },
+                    {
+                        "name": "min_points",
+                        "label": "门槛积分",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expire_at",
+                        "label": "过期时间戳",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "未用",
+                            "0": "作废"
+                        }
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "code",
+                    "points",
+                    "min_points",
+                    "expire_at",
+                    "used_by",
+                    "status"
+                ]
+            }
+        },
+        "sidebar_fold": {
+            "users": [
+                {
+                    "url": "/admin/video/coupons",
+                    "icon": "ticket-alt",
+                    "label": "nav.coupons"
+                }
+            ]
+        }
+    }
+}

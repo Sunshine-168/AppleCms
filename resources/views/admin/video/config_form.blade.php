@@ -2,6 +2,9 @@
 @section('title', $title)
 
 @section('content')
+    @if(! empty($hint))
+        <p class="hint">{{ $hint }}</p>
+    @endif
     <form id="site-form">
         @foreach($fields as $field)
             <label>{{ $field['label'] }}</label>

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '挂马扫描')
+@section('title', admin_t('page.safety'))
 
 @section('content')
     <p class="hint">扫描 <code>app/</code> 与 <code>public/</code> 下 PHP 文件中的危险函数调用，只报告文件与行号。</p>

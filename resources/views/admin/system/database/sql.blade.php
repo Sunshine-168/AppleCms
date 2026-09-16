@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '执行 SQL')
+@section('title', admin_t('page.db_sql'))
 
 @section('plain')
 <div class="card card-panel">

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '模板编辑')
+@section('title', admin_t('page.templates'))
 
 @section('plain')
 <div class="split-side">

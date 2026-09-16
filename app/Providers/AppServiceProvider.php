@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Plugins\PluginHost;
 use App\Plugins\PluginManager;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -10,7 +11,11 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        foreach ((new PluginManager)->providers() as $provider) {
+        $this->app->singleton(PluginHost::class);
+        $this->app->singleton(PluginManager::class);
+        $manager = $this->app->make(PluginManager::class);
+        $manager->hydrate($this->app->make(PluginHost::class));
+        foreach ($manager->providers() as $provider) {
             $this->app->register($provider);
         }
     }

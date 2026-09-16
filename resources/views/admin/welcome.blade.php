@@ -1,136 +1,174 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="utf-8">
-    <title>{{ conf('name') }} - 仪表盘</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ @filemtime(public_path('css/admin.css')) ?: '1' }}">
-</head>
-<body class="iframe-body">
-<div class="dash-iframe">
-    <div class="dash-hero solo">
-        <div class="stat-grid dash">
-            <a class="stat-card" href="/admin/video">
-                <div>
-                    <div class="label">视频总数</div>
-                    <div class="value" id="stat-vod-total">--</div>
-                    <div class="hint">累计</div>
-                </div>
-                <div class="icon blue"><i class="fas fa-video"></i></div>
-            </a>
-            <a class="stat-card" href="/admin/video">
-                <div>
-                    <div class="label">今日新增</div>
-                    <div class="value" id="stat-vod-today">--</div>
-                    <div class="hint">今日</div>
-                </div>
-                <div class="icon green"><i class="fas fa-plus"></i></div>
-            </a>
-            <a class="stat-card" href="/admin/video/comments">
-                <div>
-                    <div class="label">评论总数</div>
-                    <div class="value" id="stat-article-total">--</div>
-                    <div class="hint">累计</div>
-                </div>
-                <div class="icon orange"><i class="fas fa-comments"></i></div>
-            </a>
-            <a class="stat-card" href="/admin/video/members">
-                <div>
-                    <div class="label">用户总数</div>
-                    <div class="value" id="stat-user-total">--</div>
-                    <div class="hint">累计</div>
-                </div>
-                <div class="icon purple"><i class="fas fa-users"></i></div>
-            </a>
-            <a class="stat-card" href="/admin/video/visits">
-                <div>
-                    <div class="label">今日访问</div>
-                    <div class="value" id="stat-visit-today">--</div>
-                    <div class="hint">今日</div>
-                </div>
-                <div class="icon red"><i class="fas fa-chart-line"></i></div>
-            </a>
-            <a class="stat-card" href="/admin/video/ulogs">
-                <div>
-                    <div class="label">今日播放</div>
-                    <div class="value" id="stat-play-today">--</div>
-                    <div class="hint">今日</div>
-                </div>
-                <div class="icon cyan"><i class="fas fa-play"></i></div>
-            </a>
+@extends('admin.layouts.inner')
+@section('title', admin_t('nav.dashboard'))
+
+@section('plain')
+    <div class="dash-hero">
+        <div class="stat-grid dash dash-kpis">
+            @foreach($kpis as $card)
+                <a class="stat-card" href="{{ $card['href'] }}">
+                    <div>
+                        <div class="label">{{ $card['label'] }}</div>
+                        <div class="value">{{ $card['value'] }}</div>
+                        @if(! empty($card['delta']))
+                            <div class="delta {{ $card['delta']['dir'] }}">{{ $card['delta']['text'] }}</div>
+                        @elseif(! empty($card['hint']))
+                            <div class="hint">{{ $card['hint'] }}</div>
+                        @endif
+                    </div>
+                    <div class="icon {{ $card['color'] }}"><i class="fas {{ $card['icon'] }}"></i></div>
+                </a>
+            @endforeach
         </div>
+        <a class="card card-panel dash-spark" href="{{ route('admin.stats.index') }}">
+            <div class="card-header"><span>{{ admin_t('dash.spark') }}</span></div>
+            <div class="card-body">
+                @if(($spark['pv'] ?? '') !== '')
+                    <svg class="spark" viewBox="0 0 {{ $spark['width'] }} {{ $spark['height'] }}" preserveAspectRatio="none">
+                        <polyline points="{{ $spark['pv'] }}" fill="none" stroke="#40cc92" stroke-width="2"/>
+                        <polyline points="{{ $spark['uv'] }}" fill="none" stroke="#28a745" stroke-width="2"/>
+                    </svg>
+                    <p class="muted spark-legend"><span class="dot blue"></span> {{ admin_t('dash.spark_legend') }}</p>
+                @else
+                    <p class="muted" style="margin:0">{{ admin_t('dash.spark_empty') }}</p>
+                @endif
+            </div>
+        </a>
     </div>
 
-    <div class="card card-panel" id="dash-todos">
-        <div class="card-header">
-            <span>待处理</span>
-            <span class="muted" id="stat-updated">加载中…</span>
+    <div class="dash-work">
+        <div class="card card-panel" id="dash-todos">
+            <div class="card-header">
+                <span>{{ admin_t('dash.todos') }}</span>
+                @if($todoTotal > 0)
+                    <span class="badge badge-warn">{{ $todoTotal }}</span>
+                @endif
+            </div>
+            @forelse($todos as $todo)
+                <div class="todo-row">
+                    <span class="badge badge-warn">{{ $todo['count'] }}</span>
+                    <div class="grow">
+                        <div>{{ $todo['title'] }}</div>
+                        <div class="muted">{{ $todo['hint'] }}</div>
+                    </div>
+                    <a class="btn btn-sm" href="{{ $todo['url'] }}">{{ admin_t('dash.handle') }}</a>
+                </div>
+            @empty
+                <div class="card-body">
+                    <p class="muted" style="margin:0">{{ admin_t('dash.todos_empty') }}</p>
+                </div>
+            @endforelse
         </div>
-        <div class="todo-actions" id="todo-list">
-            <span class="muted">加载中…</span>
+
+        <div class="dash-side">
+            <div class="card card-panel">
+                <div class="card-header"><span>{{ admin_t('dash.activity') }}</span></div>
+                @forelse($activity as $row)
+                    <div class="todo-row">
+                        <span class="badge">{{ $row['kind_label'] }}</span>
+                        <div class="grow">
+                            @if($row['url'])
+                                <a href="{{ $row['url'] }}">{{ $row['title'] }}</a>
+                            @else
+                                {{ $row['title'] }}
+                            @endif
+                            <div class="muted">{{ $row['time'] }}</div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="card-body">
+                        <p class="muted" style="margin:0">{{ admin_t('dash.activity_empty') }}</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="card card-panel">
+                <div class="card-header"><span>{{ admin_t('dash.alerts') }}</span></div>
+                @forelse($alerts as $alert)
+                    <div class="todo-row">
+                        <span class="badge {{ $alert['level'] === 'warn' ? 'badge-warn' : 'badge-off' }}">{{ $alert['level'] === 'warn' ? admin_t('dash.warn') : admin_t('dash.info') }}</span>
+                        <div class="grow">
+                            @if($alert['url'])
+                                <a href="{{ $alert['url'] }}">{{ $alert['title'] }}</a>
+                            @else
+                                {{ $alert['title'] }}
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="card-body">
+                        <p class="muted" style="margin:0">{{ admin_t('dash.alerts_empty') }}</p>
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
 
     <div class="card card-panel">
-        <div class="card-header"><span>接下来做什么</span></div>
+        <div class="card-header"><span>{{ admin_t('dash.next') }}</span></div>
         <div class="card-body">
             <div class="dash-actions">
-                <a class="btn" href="/admin/video"><i class="fas fa-video"></i> 影片</a>
-                <a class="btn btn-muted" href="/admin/video/collects"><i class="fas fa-cloud-download-alt"></i> 采集</a>
-                <a class="btn btn-muted" href="/admin/video/comments"><i class="fas fa-comments"></i> 评论</a>
-                <a class="btn btn-muted" href="/admin/video/members"><i class="fas fa-users"></i> 会员</a>
-                <a class="btn btn-muted" href="/admin/video/settings"><i class="fas fa-cog"></i> 站点设置</a>
-                <a class="btn btn-muted" href="/admin/more"><i class="fas fa-th-large"></i> 全部功能</a>
+                @foreach($quickNav as $item)
+                    <a class="btn {{ $item['primary'] ? 'btn-primary' : 'btn-muted' }}" href="{{ $item['url'] }}">
+                        <i class="{{ $item['icon'] }}"></i> {{ $item['title'] }}
+                    </a>
+                @endforeach
             </div>
         </div>
     </div>
-</div>
-<script>
-(function () {
-    function text(val) {
-        return (val === null || val === undefined || val === '') ? '--' : String(val);
-    }
-    function setUpdated() {
-        var d = new Date();
-        function pad(n) { return (n < 10 ? '0' : '') + n; }
-        document.getElementById('stat-updated').textContent =
-            '更新于 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
-            ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-    }
-    function renderTodos(data) {
-        var items = [
-            {n: data.comment_pending, label: '待审评论', href: '/admin/video/comments'},
-            {n: data.report_open, label: '未处理报错', href: '/admin/video/reports'},
-            {n: data.playfail_open, label: '播放失败', href: '/admin/video/playfails'},
-            {n: data.gbook_pending, label: '待审留言', href: '/admin/video/guestbooks'},
-            {n: data.collect_fail, label: '今日采集失败', href: '/admin/video/collect_logs'}
-        ];
-        document.getElementById('todo-list').innerHTML = items.map(function (it) {
-            var n = parseInt(it.n, 10) || 0;
-            return '<a class="todo-chip" href="' + it.href + '">' + it.label +
-                ' <span class="badge ' + (n > 0 ? 'badge-warn' : '') + '">' + n + '</span></a>';
-        }).join('');
-    }
-    fetch('/admin/welcome/stats', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-        .then(function (res) { return res.json(); })
-        .then(function (res) {
-            var data = res && res.data ? res.data : {};
-            document.getElementById('stat-vod-total').textContent = text(data.vod_total);
-            document.getElementById('stat-vod-today').textContent = text(data.vod_today);
-            document.getElementById('stat-article-total').textContent = text(data.comment_total ?? data.article_total);
-            document.getElementById('stat-user-total').textContent = text(data.user_total);
-            document.getElementById('stat-visit-today').textContent = text(data.visit_today);
-            document.getElementById('stat-play-today').textContent = text(data.play_today);
-            renderTodos(data);
-            setUpdated();
-        })
-        .catch(function () {
-            document.getElementById('stat-updated').textContent = '统计加载失败';
-            document.getElementById('todo-list').innerHTML = '<span class="muted">暂时读不到待办。</span>';
-        });
-})();
-</script>
-</body>
-</html>
+
+    <details class="dash-health" @if($health['attention']) open @endif>
+        <summary>
+            <span>{{ admin_t('dash.health') }}</span>
+            <span class="muted" style="font-weight:400">
+                {{ admin_t('dash.library_n', ['n' => $health['vod_total']]) }}
+                · {{ $health['closed'] ? admin_t('dash.closed') : admin_t('dash.open') }}
+                · {{ admin_t('dash.cache') }} {{ $health['cache'] ? admin_t('dash.on') : admin_t('dash.off') }}
+                @if($health['last_collect'])
+                    · {{ admin_t('dash.last_collect') }} {{ $health['last_collect'] }}
+                @endif
+            </span>
+            @if($health['attention'])
+                <span class="badge badge-warn">{{ admin_t('dash.need_look') }}</span>
+            @else
+                <span class="badge badge-ok">{{ admin_t('dash.normal') }}</span>
+            @endif
+        </summary>
+        <table class="data info" style="border:0">
+            <tr>
+                <th>{{ admin_t('dash.theme') }}</th>
+                <td>{{ $health['theme'] }}</td>
+                <th>{{ admin_t('dash.html_cache') }}</th>
+                <td>
+                    @if($health['cache'])
+                        <span class="badge badge-ok">{{ admin_t('dash.enabled') }}</span>
+                    @else
+                        <span class="badge badge-off">{{ admin_t('dash.disabled') }}</span>
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <th>{{ admin_t('dash.front') }}</th>
+                <td>
+                    @if($health['closed'])
+                        <span class="badge badge-warn">{{ admin_t('dash.front_closed') }}</span>
+                    @else
+                        <span class="badge badge-ok">{{ admin_t('dash.front_ok') }}</span>
+                    @endif
+                </td>
+                <th>{{ admin_t('dash.last_collect') }}</th>
+                <td>
+                    @if($health['last_collect'])
+                        {{ $health['last_collect'] }}
+                        @if($health['last_ok'])
+                            <span class="badge badge-ok">{{ admin_t('dash.ok') }}</span>
+                        @else
+                            <span class="badge badge-warn">{{ admin_t('dash.fail') }}</span>
+                        @endif
+                    @else
+                        <span class="muted">{{ admin_t('dash.no_collect') }}</span>
+                    @endif
+                </td>
+            </tr>
+        </table>
+    </details>
+@endsection

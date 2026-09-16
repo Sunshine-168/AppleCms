@@ -1,0 +1,77 @@
+{
+    "id": "cj_rule",
+    "name": "自定义采集规则",
+    "name_en": "Custom collect rules",
+    "description": "可保存列表/标题规则。执行器没有接上，入库请用接口采集。",
+    "description_en": "Stores list/title rules. The crawler is not wired; use API collect.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "stub",
+    "group": "collect",
+    "admin": {
+        "modules": {
+            "cj": {
+                "title": "自定义规则",
+                "hint": "规则采集占位，请用接口采集入库。",
+                "model": "App\\Models\\Video\\VideoCjRule",
+                "search": "name",
+                "fields": [
+                    {
+                        "name": "name",
+                        "label": "名称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "url",
+                        "label": "列表地址",
+                        "type": "text"
+                    },
+                    {
+                        "name": "list_rule",
+                        "label": "列表规则",
+                        "type": "text"
+                    },
+                    {
+                        "name": "title_rule",
+                        "label": "标题规则",
+                        "type": "text"
+                    },
+                    {
+                        "name": "url_rule",
+                        "label": "地址规则",
+                        "type": "text"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": [
+                            "停用",
+                            "启用"
+                        ]
+                    },
+                    {
+                        "name": "note",
+                        "label": "备注",
+                        "type": "text"
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "name",
+                    "url",
+                    "status",
+                    "note"
+                ]
+            }
+        },
+        "catalog": {
+            "more.collect": [
+                {
+                    "url": "/admin/video/cj",
+                    "label": "item.cj"
+                }
+            ]
+        }
+    }
+}

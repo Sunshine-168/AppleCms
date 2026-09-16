@@ -22,6 +22,8 @@ use App\Http\Controllers\Admin\Video\SiteOps;
 use App\Http\Controllers\Admin\Video\SiteSetting;
 use App\Http\Controllers\Admin\Video\SiteTools;
 use App\Http\Controllers\Admin\Index;
+use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\StatController;
 use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\AdminIpAllow;
 use App\Http\Middleware\AdminOperateLog;
@@ -43,6 +45,16 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/welcome', [Index::class, 'welcome'])->name('admin.welcome');// 欢迎页
     Route::get('/welcome/stats', [Index::class, 'welcomeStats'])->name('admin.welcome.stats');// 欢迎页统计数据
     Route::get('/more', [Index::class, 'more'])->name('admin.more');
+    Route::get('/plugins', [PluginController::class, 'index'])->name('admin.plugins');
+    Route::get('/plugins/{id}', [PluginController::class, 'show'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.show');
+    Route::post('/plugins/{id}/toggle', [PluginController::class, 'toggle'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.toggle');
+    Route::post('/ui-locale', [Index::class, 'switchUi'])->name('admin.ui-locale');
+    Route::get('/stats', [StatController::class, 'index'])->name('admin.stats.index');
+    Route::get('/stats/export', [StatController::class, 'export'])->name('admin.stats.export');
+    Route::get('/stats/spiders', [StatController::class, 'spiders'])->name('admin.stats.spiders');
+    Route::get('/stats/spiders/export', [StatController::class, 'exportSpiders'])->name('admin.stats.spiders.export');
+    Route::get('/stats/logs', [StatController::class, 'logs'])->name('admin.stats.logs');
+    Route::get('/stats/logs/export', [StatController::class, 'exportLogs'])->name('admin.stats.logs.export');
 
     Route::get('/login', [SysUser::class, 'showLogin']); // 显示登录页
     Route::post('/login', [SysUser::class, 'login']);    // 表单提交处理登录
@@ -104,6 +116,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/types/list', [Video::class, 'getTypeLists'])->name('admin.video.types.list');// 获取视频类型列表
     Route::post('/video/types/save', [Video::class, 'saveType'])->name('admin.video.types.save');// 保存视频类型
     Route::post('/video/types/delete', [Video::class, 'deleteType'])->name('admin.video.types.delete');// 删除视频类型
+    Route::post('/video/types/batch', [Video::class, 'batchTypes'])->name('admin.video.types.batch');
 
     // 视频采集源管理
     Route::get('/video/collects', [Video::class, 'showCollectSources'])->name('admin.video.collects');// 显示视频采集源管理页
@@ -121,13 +134,15 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     // 视频标签管理
     Route::get('/video/tags', [Video::class, 'showTags'])->name('admin.video.tags');// 显示视频标签管理页
     Route::get('/video/tags/list', [Video::class, 'getTagLists'])->name('admin.video.tags.list');// 获取视频标签列表
-    Route::post('/video/tags/save', [Video::class, 'saveTag'])->name('admin.video.tags.save');// 保存视频标签
-    Route::post('/video/tags/delete', [Video::class, 'deleteTag'])->name('admin.video.tags.delete');// 删除视频标签
+    Route::post('/video/tags/save', [Video::class, 'saveTag'])->name('admin.video.tags.save');
+    Route::post('/video/tags/delete', [Video::class, 'deleteTag'])->name('admin.video.tags.delete');
+    Route::post('/video/tags/batch', [Video::class, 'batchTags'])->name('admin.video.tags.batch');
     // 视频演员管理
     Route::get('/video/actors', [Video::class, 'showActors'])->name('admin.video.actors');// 显示视频演员管理页
     Route::get('/video/actors/list', [Video::class, 'getActorLists'])->name('admin.video.actors.list');// 获取视频演员列表
-    Route::post('/video/actors/save', [Video::class, 'saveActor'])->name('admin.video.actors.save');// 保存视频演员     
-    Route::post('/video/actors/delete', [Video::class, 'deleteActor'])->name('admin.video.actors.delete');// 删除视频演员     
+    Route::post('/video/actors/save', [Video::class, 'saveActor'])->name('admin.video.actors.save');
+    Route::post('/video/actors/delete', [Video::class, 'deleteActor'])->name('admin.video.actors.delete');
+    Route::post('/video/actors/batch', [Video::class, 'batchActors'])->name('admin.video.actors.batch'); 
 
     // 视频源管理
     Route::get('/video/sources', [Video::class, 'showSources'])->name('admin.video.sources');// 显示视频源管理页
@@ -161,7 +176,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/templates/save', [SiteOps::class, 'templateSave']);
     Route::post('/video/templates/backup', [SiteOps::class, 'templateBackup']);
     Route::post('/video/templates/rollback', [SiteOps::class, 'templateRollback']);
-    Route::get('/video/visits', [SiteOps::class, 'visits']);
+    Route::get('/video/visits', fn () => redirect()->route('admin.stats.index'));
     Route::get('/video/push', [SiteOps::class, 'push']);
     Route::post('/video/push/run', [SiteOps::class, 'pushRun']);
     Route::get('/video/make', [SiteOps::class, 'make']);
@@ -176,10 +191,11 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/batch-replace-url', [SiteOps::class, 'batchReplaceUrl']);
     Route::post('/video/collect-due', [SiteOps::class, 'collectDue']);
 
-    Route::get('/video/{module}', [SiteModule::class, 'index'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
-    Route::get('/video/{module}/list', [SiteModule::class, 'list'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
-    Route::post('/video/{module}/save', [SiteModule::class, 'save'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
-    Route::post('/video/{module}/delete', [SiteModule::class, 'delete'])->whereIn('module', \App\Services\Admin\Video\SiteModuleService::names());
+    Route::get('/video/{module}', [SiteModule::class, 'index'])->where('module', '[a-z][a-z0-9_]*');
+    Route::get('/video/{module}/list', [SiteModule::class, 'list'])->where('module', '[a-z][a-z0-9_]*');
+    Route::post('/video/{module}/save', [SiteModule::class, 'save'])->where('module', '[a-z][a-z0-9_]*');
+    Route::post('/video/{module}/delete', [SiteModule::class, 'delete'])->where('module', '[a-z][a-z0-9_]*');
+    Route::post('/video/{module}/batch', [SiteModule::class, 'batch'])->where('module', '[a-z][a-z0-9_]*');
     
     // 附件管理
     Route::get('/system/attachments', [SysFile::class, 'index']);// 显示附件管理页

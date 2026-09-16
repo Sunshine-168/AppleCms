@@ -2,10 +2,14 @@
 
 namespace App\Services\Admin\Video;
 
+use App\Models\Video\VideoArt;
 use App\Models\Video\VideoCard;
+use App\Models\Video\VideoComment;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoSlide;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTopicRelModel;
+use App\Models\Video\VideoTypeModel;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
@@ -17,9 +21,15 @@ class SiteModuleService
     /** @return array<string, mixed> */
     public function config(string $module): array
     {
+        $fromPlugin = app(\App\Plugins\PluginHost::class)->findModule($module);
+        if ($fromPlugin !== null) {
+            return $fromPlugin;
+        }
+
         return match ($module) {
             'topics' => [
                 'title' => '专题管理',
+                'hint' => '专题是片单。先建「贺岁档」「冷门佳片」这类栏目，再点绑片把影片挂进去。',
                 'model' => \App\Models\Video\VideoTopicModel::class,
                 'search' => 'name',
                 'fields' => [
@@ -29,7 +39,7 @@ class SiteModuleService
                     ['name' => 'blurb', 'label' => '简介', 'type' => 'text'],
                     ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '上架', '0' => '下架']],
                 ],
                 'cols' => ['id', 'name', 'slug', 'status', 'sort'],
             ],
@@ -59,29 +69,16 @@ class SiteModuleService
                 ],
                 'cols' => ['id', 'name', 'url', 'status', 'sort'],
             ],
-            'danmaku' => [
-                'title' => '弹幕管理',
-                'model' => \Plugins\Danmaku\Models\Danmaku::class,
-                'search' => 'text',
-                'fields' => [
-                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
-                    ['name' => 'episode_id', 'label' => '分集ID', 'type' => 'number'],
-                    ['name' => 'text', 'label' => '内容', 'type' => 'textarea'],
-                    ['name' => 'color', 'label' => '颜色', 'type' => 'text'],
-                    ['name' => 'time', 'label' => '秒', 'type' => 'text'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
-                ],
-                'cols' => ['id', 'video_id', 'episode_id', 'text', 'time', 'ip', 'status'],
-            ],
             'comments' => [
                 'title' => '评论管理',
+                'hint' => '前台发来的评论在这里审。打开站点设置里的「评论审核」后，新评论会先进入待审。',
                 'model' => \App\Models\Video\VideoComment::class,
                 'search' => 'content',
                 'fields' => [
                     ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
                     ['name' => 'author_name', 'label' => '昵称', 'type' => 'text'],
                     ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '待审 / 隐藏']],
                 ],
                 'cols' => ['id', 'video_id', 'author_name', 'content', 'comment_report', 'status'],
             ],
@@ -334,15 +331,16 @@ class SiteModuleService
             ],
             'arts' => [
                 'title' => '文章管理',
+                'hint' => '文章是资讯，不是影片。栏目在分类里把模型选成「文章」。这里按 LaraCMS 内容列表来写稿、发布。',
                 'model' => \App\Models\Video\VideoArt::class,
                 'search' => 'title',
                 'fields' => [
-                    ['name' => 'type_id', 'label' => '分类ID', 'type' => 'number'],
+                    ['name' => 'type_id', 'label' => '栏目', 'type' => 'number'],
                     ['name' => 'title', 'label' => '标题', 'type' => 'text'],
                     ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
-                    ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
+                    ['name' => 'content', 'label' => '正文', 'type' => 'textarea'],
                     ['name' => 'hits', 'label' => '点击', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '发布', '0' => '草稿']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '已发布', '0' => '草稿']],
                 ],
                 'cols' => ['id', 'type_id', 'title', 'hits', 'status'],
             ],
@@ -370,21 +368,6 @@ class SiteModuleService
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
                 ],
                 'cols' => ['id', 'name', 'api_url', 'status', 'sort'],
-            ],
-            'cj' => [
-                'title' => '自定义规则',
-                'model' => \App\Models\Video\VideoCjRule::class,
-                'search' => 'name',
-                'fields' => [
-                    ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'url', 'label' => '列表地址', 'type' => 'text'],
-                    ['name' => 'list_rule', 'label' => '列表规则', 'type' => 'text'],
-                    ['name' => 'title_rule', 'label' => '标题规则', 'type' => 'text'],
-                    ['name' => 'url_rule', 'label' => '地址规则', 'type' => 'text'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '停用', '1' => '启用']],
-                    ['name' => 'note', 'label' => '备注', 'type' => 'text'],
-                ],
-                'cols' => ['id', 'name', 'url', 'status', 'note'],
             ],
             'ulogs' => [
                 'title' => '访问日志',
@@ -493,30 +476,18 @@ class SiteModuleService
             ],
             'slides' => [
                 'title' => '幻灯片',
+                'hint' => '幻灯是首页轮播、播放页贴片。先选位置，再上传横图和跳转链接。主题用位置调用，例如 @@vodSlide([\'slot\' => \'home\'])。',
                 'model' => \App\Models\Video\VideoSlide::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
                     ['name' => 'pic', 'label' => '图片', 'type' => 'text'],
                     ['name' => 'url', 'label' => '链接', 'type' => 'text'],
-                    ['name' => 'slot', 'label' => '位置 home/play', 'type' => 'text'],
+                    ['name' => 'slot', 'label' => '位置', 'type' => 'select', 'options' => ['home' => '首页', 'play' => '播放页']],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
                 ],
                 'cols' => ['id', 'name', 'slot', 'url', 'status', 'sort'],
-            ],
-            'coupons' => [
-                'title' => '优惠券',
-                'model' => \App\Models\Video\VideoCoupon::class,
-                'search' => 'code',
-                'fields' => [
-                    ['name' => 'code', 'label' => '券码', 'type' => 'text'],
-                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'min_points', 'label' => '门槛积分', 'type' => 'number'],
-                    ['name' => 'expire_at', 'label' => '过期时间戳', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '未用', '0' => '作废']],
-                ],
-                'cols' => ['id', 'code', 'points', 'min_points', 'expire_at', 'used_by', 'status'],
             ],
             'notifies' => [
                 'title' => '会员通知',
@@ -529,53 +500,6 @@ class SiteModuleService
                     ['name' => 'is_read', 'label' => '已读', 'type' => 'select', 'options' => ['0' => '未读', '1' => '已读']],
                 ],
                 'cols' => ['id', 'member_id', 'title', 'is_read', 'created_at'],
-            ],
-            'follows' => [
-                'title' => '关注',
-                'model' => \App\Models\Member\MemberFollow::class,
-                'search' => 'target_type',
-                'fields' => [
-                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
-                    ['name' => 'target_id', 'label' => '对象ID', 'type' => 'number'],
-                    ['name' => 'target_type', 'label' => '类型 actor/user', 'type' => 'text'],
-                ],
-                'cols' => ['id', 'member_id', 'target_type', 'target_id', 'created_at'],
-            ],
-            'dynamics' => [
-                'title' => '动态',
-                'model' => \App\Models\Member\MemberDynamic::class,
-                'search' => 'content',
-                'fields' => [
-                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
-                    ['name' => 'type', 'label' => '类型', 'type' => 'text'],
-                    ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
-                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
-                ],
-                'cols' => ['id', 'member_id', 'type', 'content', 'video_id', 'created_at'],
-            ],
-            'shares' => [
-                'title' => '分享记录',
-                'model' => \App\Models\Member\MemberShare::class,
-                'search' => 'channel',
-                'fields' => [
-                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
-                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
-                    ['name' => 'channel', 'label' => '渠道', 'type' => 'text'],
-                    ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
-                ],
-                'cols' => ['id', 'member_id', 'video_id', 'channel', 'ip', 'created_at'],
-            ],
-            'signs' => [
-                'title' => '签到里程碑',
-                'model' => \App\Models\Member\MemberSign::class,
-                'search' => 'day_key',
-                'fields' => [
-                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
-                    ['name' => 'days', 'label' => '连续天数', 'type' => 'number'],
-                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'day_key', 'label' => '日期Ymd', 'type' => 'text'],
-                ],
-                'cols' => ['id', 'member_id', 'days', 'points', 'day_key', 'created_at'],
             ],
             'collect_temps' => [
                 'title' => '采集临时表',
@@ -598,7 +522,7 @@ class SiteModuleService
 
     public static function names(): array
     {
-        return ['topics', 'players', 'links', 'danmaku', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'cj', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs', 'searchwords', 'slides', 'coupons', 'notifies', 'follows', 'dynamics', 'shares', 'signs', 'collect_temps'];
+        return ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs', 'searchwords', 'slides', 'notifies', 'collect_temps'];
     }
 
     public function lists(string $module, array $params): array
@@ -620,15 +544,63 @@ class SiteModuleService
         }
         $kw = trim((string) ($params[$cfg['search']] ?? $params['q'] ?? ''));
         if ($kw !== '') {
-            $q->where($cfg['search'], 'like', '%'.$kw.'%');
+            if ($module === 'comments') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('content', 'like', '%'.$kw.'%')
+                        ->orWhere('author_name', 'like', '%'.$kw.'%');
+                });
+            } elseif ($module === 'arts') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('content', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } else {
+                $q->where($cfg['search'], 'like', '%'.$kw.'%');
+            }
         }
-        $page = $q->orderByDesc('id')->paginate($limit);
+        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ($module === 'comments' && (string) ($params['report'] ?? '') === '1' && Schema::hasColumn('video_comments', 'comment_report')) {
+                $q->where('comment_report', '>', 0);
+            }
+            if ($module === 'arts' && array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null) {
+                $q->where('type_id', (int) $params['type_id']);
+            }
+            if ($module === 'slides' && trim((string) ($params['slot'] ?? '')) !== '') {
+                $q->where('slot', trim((string) $params['slot']));
+            }
+        }
+        if ($module === 'topics' || $module === 'slides') {
+            $q->orderByDesc('sort')->orderByDesc('id');
+        } elseif ($module === 'arts') {
+            $q->orderByDesc('updated_at')->orderByDesc('id');
+        } else {
+            $q->orderByDesc('id');
+        }
+        $page = $q->paginate($limit);
         $rows = collect($page->items())->map(function ($row) {
             $arr = $row->toArray();
             unset($arr['password'], $arr['remember_token']);
 
             return $arr;
         })->all();
+        if ($module === 'comments') {
+            $rows = $this->decorateComments($rows);
+        }
+        if ($module === 'topics') {
+            $rows = $this->decorateTopics($rows);
+        }
+        if ($module === 'arts') {
+            $rows = $this->decorateArts($rows);
+        }
+        if ($module === 'slides') {
+            $rows = $this->decorateSlides($rows);
+        }
 
         return Result::success([
             'total' => $page->total(),
@@ -662,6 +634,9 @@ class SiteModuleService
         }
         if ($module === 'pms' && $id === null) {
             $payload['created_at'] = $payload['created_at'] ?? time();
+        }
+        if ($module === 'arts' && $id === null && trim((string) ($payload['title'] ?? '')) === '') {
+            return Result::fail('请填写标题');
         }
         $now = time();
         $oldStatus = null;
@@ -741,9 +716,200 @@ class SiteModuleService
         if (! $row) {
             return Result::fail('数据不存在');
         }
+        if ($module === 'topics' && Schema::hasTable('video_topic_rel')) {
+            VideoTopicRelModel::query()->where('topic_id', $id)->delete();
+        }
         $row->delete();
 
         return Result::success();
+    }
+
+    /** @return array<string, int> */
+    public function commentQueues(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'pass' => 0, 'report' => 0];
+        try {
+            if (! Schema::hasTable('video_comments')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoComment::query()->count(),
+                'pending' => (int) VideoComment::query()->where('status', 0)->count(),
+                'pass' => (int) VideoComment::query()->where('status', 1)->count(),
+                'report' => Schema::hasColumn('video_comments', 'comment_report')
+                    ? (int) VideoComment::query()->where('comment_report', '>', 0)->count()
+                    : 0,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /**
+     * @param list<int|string> $ids
+     */
+    public function batch(string $module, array $ids, string $action, mixed $value = ''): array
+    {
+        if (! in_array($module, ['comments', 'topics', 'arts'], true)) {
+            return Result::fail('不支持的操作');
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return Result::fail(match ($module) {
+                'topics' => '请先勾选专题',
+                'arts' => '请先勾选文章',
+                default => '请先勾选评论',
+            });
+        }
+        $ok = 0;
+        $fail = 0;
+        foreach ($ids as $id) {
+            $res = match ($action) {
+                'status' => $this->save($module, ['status' => (int) $value], $id),
+                'type' => $this->save($module, ['type_id' => (int) $value], $id),
+                'delete' => $this->delete($module, $id),
+                default => Result::fail('不支持的操作'),
+            };
+            if (($res['code'] ?? 1) === 0) {
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        if ($ok === 0) {
+            return Result::fail('操作失败');
+        }
+
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 条，'.$fail.' 条未处理') : '操作成功');
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateComments(array $rows): array
+    {
+        $videoIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== []) {
+            $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['comment_report'] = (int) ($row['comment_report'] ?? 0);
+            $row['comment_up'] = (int) ($row['comment_up'] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateArts(array $rows): array
+    {
+        $typeIds = [];
+        foreach ($rows as $row) {
+            $tid = (int) ($row['type_id'] ?? 0);
+            if ($tid > 0) {
+                $typeIds[] = $tid;
+            }
+        }
+        $names = [];
+        if ($typeIds !== [] && Schema::hasTable('video_types')) {
+            $names = VideoTypeModel::query()->whereIn('id', array_values(array_unique($typeIds)))->pluck('name', 'id')->all();
+        }
+        foreach ($rows as &$row) {
+            $tid = (int) ($row['type_id'] ?? 0);
+            $ts = (int) ($row['updated_at'] ?? ($row['created_at'] ?? 0));
+            $row['type_name'] = (string) ($names[$tid] ?? '');
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['updated_at_unix'] = $ts;
+            $row['has_cover'] = trim((string) ($row['cover'] ?? '')) !== '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return list<array{id:int,name:string,parent_id:int}> */
+    public function artTypeOptions(): array
+    {
+        try {
+            if (! Schema::hasTable('video_types')) {
+                return [];
+            }
+            $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
+            if (Schema::hasColumn('video_types', 'mid')) {
+                $q->where('mid', 2);
+            }
+
+            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
+                return [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'parent_id' => (int) ($row->parent_id ?? 0),
+                ];
+            })->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @return array<string, int> */
+    public function artQueues(): array
+    {
+        $zero = ['all' => 0, 'published' => 0, 'draft' => 0];
+        try {
+            if (! Schema::hasTable('video_arts')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoArt::query()->count(),
+                'published' => (int) VideoArt::query()->where('status', 1)->count(),
+                'draft' => (int) VideoArt::query()->where('status', 0)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateTopics(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $counts = [];
+        if ($ids !== [] && Schema::hasTable('video_topic_rel')) {
+            $countRows = VideoTopicRelModel::query()
+                ->selectRaw('topic_id, COUNT(*) as c')
+                ->whereIn('topic_id', $ids)
+                ->groupBy('topic_id')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(int) $row->topic_id] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $id = (int) ($row['id'] ?? 0);
+            $row['video_count'] = $counts[$id] ?? 0;
+            $row['has_cover'] = trim((string) ($row['cover'] ?? '')) !== '';
+        }
+        unset($row);
+
+        return $rows;
     }
 
     public function topicVideos(int $topicId): array
@@ -753,10 +919,25 @@ class SiteModuleService
             return Result::fail('专题不存在');
         }
         $ids = VideoTopicRelModel::query()->where('topic_id', $topicId)->orderByDesc('sort')->pluck('video_id')->all();
+        $videos = [];
+        if ($ids !== []) {
+            $map = VideoModel::query()->whereIn('id', $ids)->get(['id', 'title', 'cover'])->keyBy('id');
+            foreach ($ids as $vid) {
+                $row = $map->get((int) $vid);
+                if ($row) {
+                    $videos[] = [
+                        'id' => (int) $row->id,
+                        'title' => (string) $row->title,
+                        'cover' => (string) ($row->cover ?? ''),
+                    ];
+                }
+            }
+        }
 
         return Result::success([
             'topic' => $topic->only(['id', 'name']),
             'video_ids' => implode(',', $ids),
+            'videos' => $videos,
         ]);
     }
 

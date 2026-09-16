@@ -1,0 +1,56 @@
+{
+    "id": "sms",
+    "name": "短信网关",
+    "name_en": "SMS gateway",
+    "description": "保存阿里云 / 腾讯云 AccessKey。没有真实发送，也没有验证码通道。",
+    "description_en": "Stores Aliyun/Tencent keys. Sending and OTP are not wired.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "config",
+    "group": "connect",
+    "admin": {
+        "extra_pages": {
+            "sms": {
+                "title": "短信网关",
+                "hint": "只存配置，没有接通发送。验证码登录仍不可用。",
+                "fields": [
+                    {
+                        "name": "sms_provider",
+                        "label": "服务商",
+                        "type": "text",
+                        "placeholder": "aliyun / tencent"
+                    },
+                    {
+                        "name": "sms_key",
+                        "label": "AccessKey",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sms_secret",
+                        "label": "密钥",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sms_sign",
+                        "label": "签名",
+                        "type": "text"
+                    }
+                ]
+            }
+        },
+        "catalog": {
+            "more.security": [
+                {
+                    "url": "/admin/video/config/sms",
+                    "label": "item.config_sms"
+                }
+            ]
+        },
+        "settings_links": [
+            {
+                "url": "/admin/video/config/sms",
+                "label": "item.config_sms"
+            }
+        ]
+    }
+}

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '字段管理')
+@section('title', admin_t('page.dict'))
 
 @section('plain')
 <div class="card card-panel">

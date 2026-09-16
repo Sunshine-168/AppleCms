@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '批量替换')
+@section('title', admin_t('page.db_replace'))
 
 @section('content')
     <label>选择表</label>

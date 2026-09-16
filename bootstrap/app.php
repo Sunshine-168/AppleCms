@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('stats:prune')->dailyAt('03:20')->timezone(config('app.timezone', 'Asia/Shanghai'));
         $schedule->command('video:collect-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
         $schedule->command('video:publish-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
 
@@ -107,9 +108,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->appendToGroup('web', \App\Http\Middleware\SiteClosed::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VisitStat::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\RecordVisit::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoAccessLog::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\SearchWordLog::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\VideoHtmlCache::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetAdminUiLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {

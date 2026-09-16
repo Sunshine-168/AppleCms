@@ -1,0 +1,50 @@
+{
+    "id": "weixin",
+    "name": "微信公众号",
+    "name_en": "WeChat official account",
+    "description": "保存 AppId / Secret / Token。没有回调、菜单和消息回复。",
+    "description_en": "Stores AppId, Secret and Token. No callback or reply bot.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "config",
+    "group": "connect",
+    "admin": {
+        "extra_pages": {
+            "weixin": {
+                "title": "微信公众号",
+                "hint": "只存配置，没有服务器回调和自动回复。",
+                "fields": [
+                    {
+                        "name": "weixin_appid",
+                        "label": "AppId",
+                        "type": "text"
+                    },
+                    {
+                        "name": "weixin_secret",
+                        "label": "AppSecret",
+                        "type": "text"
+                    },
+                    {
+                        "name": "weixin_token",
+                        "label": "Token",
+                        "type": "text"
+                    }
+                ]
+            }
+        },
+        "catalog": {
+            "more.security": [
+                {
+                    "url": "/admin/video/config/weixin",
+                    "label": "item.config_weixin"
+                }
+            ]
+        },
+        "settings_links": [
+            {
+                "url": "/admin/video/config/weixin",
+                "label": "item.config_weixin"
+            }
+        ]
+    }
+}

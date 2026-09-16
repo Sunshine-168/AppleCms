@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '写出静态 HTML 到 public/html')
+@section('title', admin_t('page.make'))
 
 @section('content')
     <p class="hint">会请求前台页面并把结果写成文件：首页、分类、详情。可配合 Web 服务器把 html 目录当静态根。</p>

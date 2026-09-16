@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Plugins\PluginHost;
+
 class AdminNav
 {
     /**
@@ -9,76 +11,125 @@ class AdminNav
      */
     public static function groups(): array
     {
-        return [
+        $groups = [
             [
-                'header' => '工作台',
+                'header' => 'nav.overview',
                 'items' => [
-                    ['url' => '/admin/welcome', 'icon' => 'tachometer-alt', 'label' => '仪表盘'],
+                    ['url' => '/admin/welcome', 'icon' => 'tachometer-alt', 'label' => 'nav.dashboard'],
+                    ['url' => '/admin/stats', 'icon' => 'chart-line', 'label' => 'nav.stats'],
                 ],
             ],
             [
-                'header' => '内容',
+                'header' => 'nav.content',
                 'items' => [
-                    ['url' => '/admin/video', 'icon' => 'video', 'label' => '影片'],
-                    ['url' => '/admin/video/types', 'icon' => 'sitemap', 'label' => '分类'],
-                    ['url' => '/admin/video/collects', 'icon' => 'cloud-download-alt', 'label' => '采集'],
-                    ['url' => '/admin/video/comments', 'icon' => 'comments', 'label' => '评论'],
+                    ['url' => '/admin/video', 'icon' => 'video', 'label' => 'nav.videos'],
+                    ['url' => '/admin/video/types', 'icon' => 'sitemap', 'label' => 'nav.types'],
+                    ['url' => '/admin/video/collects', 'icon' => 'cloud-download-alt', 'label' => 'nav.collects'],
+                    ['url' => '/admin/video/comments', 'icon' => 'comments', 'label' => 'nav.comments'],
                 ],
                 'fold' => [
-                    'label' => '更多',
+                    'label' => 'nav.more',
                     'items' => [
-                        ['url' => '/admin/video/topics', 'icon' => 'layer-group', 'label' => '专题'],
-                        ['url' => '/admin/video/actors', 'icon' => 'user-friends', 'label' => '演员'],
-                        ['url' => '/admin/video/tags', 'icon' => 'tags', 'label' => '标签'],
-                        ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => '文章'],
-                        ['url' => '/admin/video/danmaku', 'icon' => 'comment-dots', 'label' => '弹幕'],
-                        ['url' => '/admin/video/slides', 'icon' => 'images', 'label' => '幻灯片'],
-                        ['url' => '/admin/video/tools/recycle', 'icon' => 'trash-alt', 'label' => '回收站'],
+                        ['url' => '/admin/video/topics', 'icon' => 'layer-group', 'label' => 'nav.topics'],
+                        ['url' => '/admin/video/actors', 'icon' => 'user-friends', 'label' => 'nav.actors'],
+                        ['url' => '/admin/video/tags', 'icon' => 'tags', 'label' => 'nav.tags'],
+                        ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => 'nav.arts'],
+                        ['url' => '/admin/video/slides', 'icon' => 'images', 'label' => 'nav.slides'],
+                        ['url' => '/admin/video/tools/recycle', 'icon' => 'trash-alt', 'label' => 'nav.recycle'],
                     ],
                 ],
             ],
             [
-                'header' => '用户',
+                'header' => 'nav.users',
                 'items' => [
-                    ['url' => '/admin/video/members', 'icon' => 'users', 'label' => '会员'],
-                    ['url' => '/admin/video/orders', 'icon' => 'file-invoice', 'label' => '订单'],
+                    ['url' => '/admin/video/members', 'icon' => 'users', 'label' => 'nav.members'],
+                    ['url' => '/admin/video/orders', 'icon' => 'file-invoice', 'label' => 'nav.orders'],
                 ],
                 'fold' => [
-                    'label' => '更多',
+                    'label' => 'nav.more',
                     'items' => [
-                        ['url' => '/admin/video/groups', 'icon' => 'user-tag', 'label' => '会员组'],
-                        ['url' => '/admin/video/cards', 'icon' => 'credit-card', 'label' => '积分卡密'],
-                        ['url' => '/admin/video/coupons', 'icon' => 'ticket-alt', 'label' => '优惠券'],
-                        ['url' => '/admin/video/plogs', 'icon' => 'coins', 'label' => '积分流水'],
+                        ['url' => '/admin/video/groups', 'icon' => 'user-tag', 'label' => 'nav.groups'],
+                        ['url' => '/admin/video/cards', 'icon' => 'credit-card', 'label' => 'nav.cards'],
+                        ['url' => '/admin/video/plogs', 'icon' => 'coins', 'label' => 'nav.plogs'],
                     ],
                 ],
             ],
             [
-                'header' => '站点',
+                'header' => 'nav.site',
                 'items' => [
-                    ['url' => '/admin/video/settings', 'icon' => 'cog', 'label' => '站点设置'],
-                    ['url' => '/admin/video/templates', 'icon' => 'palette', 'label' => '模板'],
-                    ['url' => '/admin/video/ads', 'icon' => 'bullhorn', 'label' => '广告'],
+                    ['url' => '/admin/video/settings', 'icon' => 'cog', 'label' => 'nav.settings'],
+                    ['url' => '/admin/video/templates', 'icon' => 'palette', 'label' => 'nav.templates'],
+                    ['url' => '/admin/video/ads', 'icon' => 'bullhorn', 'label' => 'nav.ads'],
                 ],
                 'fold' => [
-                    'label' => '更多',
+                    'label' => 'nav.more',
                     'items' => [
-                        ['url' => '/admin/video/links', 'icon' => 'link', 'label' => '友情链接'],
-                        ['url' => '/admin/video/players', 'icon' => 'play-circle', 'label' => '播放器'],
-                        ['url' => '/admin/video/make', 'icon' => 'bolt', 'label' => '静态生成'],
+                        ['url' => '/admin/video/links', 'icon' => 'link', 'label' => 'nav.links'],
+                        ['url' => '/admin/video/players', 'icon' => 'play-circle', 'label' => 'nav.players'],
+                        ['url' => '/admin/video/make', 'icon' => 'bolt', 'label' => 'nav.make'],
                     ],
                 ],
             ],
             [
-                'header' => '系统',
+                'header' => 'nav.system',
                 'items' => [
-                    ['url' => '/admin/user', 'icon' => 'user-cog', 'label' => '管理员'],
-                    ['url' => '/admin/system/roles', 'icon' => 'user-shield', 'label' => '角色'],
-                    ['url' => '/admin/system/monitor/login-logs', 'icon' => 'history', 'label' => '日志'],
-                    ['url' => '/admin/more', 'icon' => 'th-large', 'label' => '全部功能', 'force' => true],
+                    ['url' => '/admin/user', 'icon' => 'user-cog', 'label' => 'nav.admins'],
+                    ['url' => '/admin/system/roles', 'icon' => 'user-shield', 'label' => 'nav.roles'],
+                    ['url' => '/admin/plugins', 'icon' => 'puzzle-piece', 'label' => 'nav.plugins'],
+                    ['url' => '/admin/system/monitor/login-logs', 'icon' => 'history', 'label' => 'nav.logs'],
+                    ['url' => '/admin/more', 'icon' => 'th-large', 'label' => 'nav.catalog', 'force' => true],
                 ],
             ],
         ];
+        $host = self::host();
+        $map = [
+            'nav.content' => 'content',
+            'nav.users' => 'users',
+            'nav.site' => 'site',
+            'nav.system' => 'system',
+        ];
+        foreach ($groups as &$group) {
+            $key = $map[$group['header']] ?? '';
+            if ($key === '' || empty($group['fold'])) {
+                continue;
+            }
+            $group['fold']['items'] = array_merge($group['fold']['items'], $host->sidebarFoldItems($key));
+        }
+        unset($group);
+
+        return $groups;
+    }
+
+    public static function activeUrl(?string $path = null): string
+    {
+        $path = $path ?? ('/'.ltrim((string) request()->path(), '/'));
+        $best = '';
+        foreach (self::groups() as $group) {
+            $items = array_merge($group['items'] ?? [], $group['fold']['items'] ?? []);
+            foreach ($items as $item) {
+                $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+                if ($href === '') {
+                    continue;
+                }
+                $hit = $path === $href || str_starts_with($path, $href.'/');
+                if ($hit && strlen($href) > strlen($best)) {
+                    $best = $href;
+                }
+            }
+        }
+
+        return $best;
+    }
+
+    public static function foldOpen(array $group, string $activeUrl): bool
+    {
+        foreach ($group['fold']['items'] ?? [] as $item) {
+            if ((string) ($item['url'] ?? '') === $activeUrl) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -86,116 +137,124 @@ class AdminNav
      */
     public static function catalog(): array
     {
-        return [
+        $blocks = [
             [
-                'title' => '采集与入库',
-                'hint' => '资源站、日志、审核',
+                'title' => 'more.collect',
+                'hint' => 'more.collect_hint',
                 'items' => [
-                    ['url' => '/admin/video/collect_logs', 'label' => '采集日志'],
-                    ['url' => '/admin/video/collect_tasks', 'label' => '定时采集'],
-                    ['url' => '/admin/video/unions', 'label' => '推荐资源'],
-                    ['url' => '/admin/video/cj', 'label' => '自定义规则'],
-                    ['url' => '/admin/video/audits', 'label' => '入库审核'],
-                    ['url' => '/admin/video/tools/hub', 'label' => '采集目录'],
-                    ['url' => '/admin/video/collect_temps', 'label' => '采集临时表'],
-                    ['url' => '/admin/video/config/collect', 'label' => '内容接入'],
-                    ['url' => '/admin/video/config/interface', 'label' => '入库接口'],
+                    ['url' => '/admin/video/collect_logs', 'label' => 'item.collect_logs'],
+                    ['url' => '/admin/video/collect_tasks', 'label' => 'item.collect_tasks'],
+                    ['url' => '/admin/video/unions', 'label' => 'item.unions'],
+                    ['url' => '/admin/video/audits', 'label' => 'item.audits'],
+                    ['url' => '/admin/video/tools/hub', 'label' => 'item.collect_hub'],
+                    ['url' => '/admin/video/collect_temps', 'label' => 'item.collect_temps'],
+                    ['url' => '/admin/video/config/collect', 'label' => 'item.config_collect'],
+                    ['url' => '/admin/video/config/interface', 'label' => 'item.config_interface'],
                 ],
             ],
             [
-                'title' => '内容补全',
-                'hint' => '缺资料请先到影片列表用顶部筛选',
+                'title' => 'more.complete',
+                'hint' => 'more.complete_hint',
                 'items' => [
-                    ['url' => '/admin/video/roles', 'label' => '角色库'],
-                    ['url' => '/admin/video/plots', 'label' => '分集剧情'],
-                    ['url' => '/admin/video/websites', 'label' => '网址导航'],
-                    ['url' => '/admin/video/classes', 'label' => '扩展分类'],
-                    ['url' => '/admin/video/synonyms', 'label' => '同义词'],
-                    ['url' => '/admin/video/searchwords', 'label' => '搜索词'],
-                    ['url' => '/admin/video/wizard', 'label' => '标签向导'],
-                    ['url' => '/admin/video/downloaders', 'label' => '下载器'],
-                    ['url' => '/admin/video/servers', 'label' => '服务器组'],
-                    ['url' => '/admin/video/tools/quality', 'label' => '内容质量'],
-                    ['url' => '/admin/video/tools/images', 'label' => '远程图片'],
-                    ['url' => '/admin/video/tools/players', 'label' => '批量播放器'],
+                    ['url' => '/admin/video/roles', 'label' => 'item.roles'],
+                    ['url' => '/admin/video/plots', 'label' => 'item.plots'],
+                    ['url' => '/admin/video/websites', 'label' => 'item.websites'],
+                    ['url' => '/admin/video/classes', 'label' => 'item.classes'],
+                    ['url' => '/admin/video/synonyms', 'label' => 'item.synonyms'],
+                    ['url' => '/admin/video/searchwords', 'label' => 'item.searchwords'],
+                    ['url' => '/admin/video/wizard', 'label' => 'item.wizard'],
+                    ['url' => '/admin/video/downloaders', 'label' => 'item.downloaders'],
+                    ['url' => '/admin/video/servers', 'label' => 'item.servers'],
+                    ['url' => '/admin/video/tools/quality', 'label' => 'item.quality'],
+                    ['url' => '/admin/video/tools/images', 'label' => 'item.images'],
+                    ['url' => '/admin/video/tools/players', 'label' => 'item.batch_players'],
                 ],
             ],
             [
-                'title' => '互动与客服',
+                'title' => 'more.interact',
                 'items' => [
-                    ['url' => '/admin/video/reports', 'label' => '报错'],
-                    ['url' => '/admin/video/guestbooks', 'label' => '留言'],
-                    ['url' => '/admin/video/playfails', 'label' => '播放失败'],
-                    ['url' => '/admin/video/pms', 'label' => '站内信'],
-                    ['url' => '/admin/video/notifies', 'label' => '会员通知'],
+                    ['url' => '/admin/video/reports', 'label' => 'item.reports'],
+                    ['url' => '/admin/video/guestbooks', 'label' => 'item.guestbooks'],
+                    ['url' => '/admin/video/playfails', 'label' => 'item.playfails'],
+                    ['url' => '/admin/video/pms', 'label' => 'item.pms'],
+                    ['url' => '/admin/video/notifies', 'label' => 'item.notifies'],
                 ],
             ],
             [
-                'title' => '会员运营',
+                'title' => 'more.member',
                 'items' => [
-                    ['url' => '/admin/video/withdraws', 'label' => '提现'],
-                    ['url' => '/admin/video/invites', 'label' => '邀请码'],
-                    ['url' => '/admin/video/favorites', 'label' => '收藏'],
-                    ['url' => '/admin/video/follows', 'label' => '关注'],
-                    ['url' => '/admin/video/dynamics', 'label' => '动态'],
-                    ['url' => '/admin/video/shares', 'label' => '分享'],
-                    ['url' => '/admin/video/signs', 'label' => '签到'],
-                    ['url' => '/admin/video/config/user', 'label' => '会员参数'],
-                    ['url' => '/admin/video/config/pay', 'label' => '支付参数'],
+                    ['url' => '/admin/video/withdraws', 'label' => 'item.withdraws'],
+                    ['url' => '/admin/video/invites', 'label' => 'item.invites'],
+                    ['url' => '/admin/video/favorites', 'label' => 'item.favorites'],
+                    ['url' => '/admin/video/config/user', 'label' => 'item.config_user'],
                 ],
             ],
             [
-                'title' => '站点参数',
+                'title' => 'more.site',
                 'items' => [
-                    ['url' => '/admin/video/config/seo', 'label' => 'SEO 标题'],
-                    ['url' => '/admin/video/config/theme', 'label' => '主题参数'],
-                    ['url' => '/admin/video/config/player', 'label' => '播放器参数'],
-                    ['url' => '/admin/video/config/url', 'label' => 'URL 规则'],
-                    ['url' => '/admin/video/rewrite', 'label' => '伪静态规则'],
-                    ['url' => '/admin/video/config/upload', 'label' => '上传限制'],
-                    ['url' => '/admin/video/config/comment', 'label' => '评论留言'],
-                    ['url' => '/admin/video/config/email', 'label' => '邮件设置'],
-                    ['url' => '/admin/video/config/watermark', 'label' => '图片水印'],
-                    ['url' => '/admin/video/config/analytics', 'label' => '统计代码'],
-                    ['url' => '/admin/video/domains', 'label' => '绑定域名'],
-                    ['url' => '/admin/video/push', 'label' => '搜索推送'],
-                    ['url' => '/admin/video/visits', 'label' => '访问统计'],
-                    ['url' => '/admin/video/ulogs', 'label' => '访问日志'],
+                    ['url' => '/admin/video/config/seo', 'label' => 'item.config_seo'],
+                    ['url' => '/admin/video/config/theme', 'label' => 'item.config_theme'],
+                    ['url' => '/admin/video/config/player', 'label' => 'item.config_player'],
+                    ['url' => '/admin/video/config/url', 'label' => 'item.config_url'],
+                    ['url' => '/admin/video/rewrite', 'label' => 'item.rewrite'],
+                    ['url' => '/admin/video/config/upload', 'label' => 'item.config_upload'],
+                    ['url' => '/admin/video/config/comment', 'label' => 'item.config_comment'],
+                    ['url' => '/admin/video/config/email', 'label' => 'item.config_email'],
+                    ['url' => '/admin/video/config/watermark', 'label' => 'item.config_watermark'],
+                    ['url' => '/admin/video/config/analytics', 'label' => 'item.config_analytics'],
+                    ['url' => '/admin/video/domains', 'label' => 'item.domains'],
+                    ['url' => '/admin/video/push', 'label' => 'item.push'],
+                    ['url' => '/admin/stats', 'label' => 'item.stats'],
+                    ['url' => '/admin/video/ulogs', 'label' => 'item.ulogs'],
                 ],
             ],
             [
-                'title' => '接入与安全',
+                'title' => 'more.security',
                 'items' => [
-                    ['url' => '/admin/video/config/api', 'label' => '开放 API'],
-                    ['url' => '/admin/video/apidoc', 'label' => 'API 文档'],
-                    ['url' => '/admin/video/config/weixin', 'label' => '微信公众号'],
-                    ['url' => '/admin/video/config/sms', 'label' => '短信网关'],
-                    ['url' => '/admin/video/config/connect', 'label' => '第三方登录'],
-                    ['url' => '/admin/video/config/ip', 'label' => '后台 IP 白名单'],
-                    ['url' => '/admin/video/safety', 'label' => '挂马扫描'],
-                    ['url' => '/admin/video/accesslogs', 'label' => '访问风控'],
-                    ['url' => '/admin/video/botlogs', 'label' => '爬虫日志'],
+                    ['url' => '/admin/video/config/api', 'label' => 'item.config_api'],
+                    ['url' => '/admin/video/apidoc', 'label' => 'item.apidoc'],
+                    ['url' => '/admin/video/config/ip', 'label' => 'item.config_ip'],
+                    ['url' => '/admin/video/safety', 'label' => 'item.safety'],
+                    ['url' => '/admin/video/accesslogs', 'label' => 'item.accesslogs'],
+                    ['url' => '/admin/video/botlogs', 'label' => 'item.botlogs'],
                 ],
             ],
             [
-                'title' => '系统维护',
+                'title' => 'more.system',
                 'items' => [
-                    ['url' => '/admin/system/menus', 'label' => '菜单'],
-                    ['url' => '/admin/system/dicts', 'label' => '字典'],
-                    ['url' => '/admin/system/attachments', 'label' => '附件'],
-                    ['url' => '/admin/video/tools/annex', 'label' => '附件清理'],
-                    ['url' => '/admin/system/tools/cache', 'label' => '缓存'],
-                    ['url' => '/admin/system/tools/schedule', 'label' => '定时任务'],
-                    ['url' => '/admin/system/monitor/operate-logs', 'label' => '操作日志'],
-                    ['url' => '/admin/system/monitor/system-logs', 'label' => '系统日志'],
-                    ['url' => '/admin/system/database/backup', 'label' => '数据库备份'],
-                    ['url' => '/admin/system/database/restore', 'label' => '数据库恢复'],
-                    ['url' => '/admin/system/database/dict', 'label' => '数据库字典'],
-                    ['url' => '/admin/system/database/sql', 'label' => 'SQL 执行'],
-                    ['url' => '/admin/system/database/replace', 'label' => '数据批量替换'],
-                    ['url' => '/admin/system/shortcut', 'label' => '系统快捷'],
+                    ['url' => '/admin/plugins', 'label' => 'item.plugins'],
+                    ['url' => '/admin/system/menus', 'label' => 'item.menus'],
+                    ['url' => '/admin/system/dicts', 'label' => 'item.dicts'],
+                    ['url' => '/admin/system/attachments', 'label' => 'item.attachments'],
+                    ['url' => '/admin/video/tools/annex', 'label' => 'item.annex'],
+                    ['url' => '/admin/system/tools/cache', 'label' => 'item.cache'],
+                    ['url' => '/admin/system/tools/schedule', 'label' => 'item.schedule'],
+                    ['url' => '/admin/system/monitor/operate-logs', 'label' => 'item.operate_logs'],
+                    ['url' => '/admin/system/monitor/system-logs', 'label' => 'item.system_logs'],
+                    ['url' => '/admin/system/database/backup', 'label' => 'item.db_backup'],
+                    ['url' => '/admin/system/database/restore', 'label' => 'item.db_restore'],
+                    ['url' => '/admin/system/database/dict', 'label' => 'item.db_dict'],
+                    ['url' => '/admin/system/database/sql', 'label' => 'item.db_sql'],
+                    ['url' => '/admin/system/database/replace', 'label' => 'item.db_replace'],
+                    ['url' => '/admin/system/shortcut', 'label' => 'item.shortcut'],
                 ],
             ],
         ];
+        $host = self::host();
+        foreach ($blocks as &$block) {
+            $block['items'] = array_merge($block['items'], $host->catalogItems($block['title']));
+        }
+        unset($block);
+
+        return $blocks;
+    }
+
+    private static function host(): PluginHost
+    {
+        try {
+            return app(PluginHost::class);
+        } catch (\Throwable) {
+            return new PluginHost();
+        }
     }
 }

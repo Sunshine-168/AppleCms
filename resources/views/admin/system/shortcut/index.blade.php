@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '系统快捷')
+@section('title', admin_t('page.shortcut'))
 
 @section('header_actions')
     <span class="muted" id="shortcut-updated"></span>

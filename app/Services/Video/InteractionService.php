@@ -323,6 +323,10 @@ class InteractionService
         }
         $card = \App\Models\Video\VideoCard::query()->where('code', $code)->first();
         if (! $card) {
+            if (! app(\App\Plugins\PluginManager::class)->isEnabled('coupon')) {
+                return Result::fail('卡密不存在');
+            }
+
             return $this->redeemCoupon($member, $code);
         }
         if ((int) $card->status !== 1 || (int) $card->used_by > 0) {

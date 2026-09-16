@@ -27,7 +27,9 @@ class Video extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.video.index');
+        return view('admin.video.index', [
+            'queues' => $this->videoService->queueCounts(),
+        ]);
     }
 
     /**
@@ -54,6 +56,8 @@ class Video extends Controller
             'no_actor' => $request->input('no_actor', ''),
             'weekday' => (string) $request->input('weekday', ''),
             'trash' => $request->input('trash', ''),
+            'actor_id' => $request->input('actor_id', ''),
+            'tag_id' => $request->input('tag_id', ''),
             'limit' => (int)$request->input('limit', 10),
         ];
 
@@ -301,10 +305,15 @@ class Video extends Controller
         }
 
         $payload = [
-            'name'      => (string)$request->input('name', ''),
-            'parent_id' => (int)$request->input('parent_id', 0),
-            'sort'      => (int)$request->input('sort', 0),
-            'status'    => (int)$request->input('status', 1),
+            'name' => (string) $request->input('name', ''),
+            'slug' => (string) $request->input('slug', ''),
+            'parent_id' => (int) $request->input('parent_id', 0),
+            'mid' => (int) $request->input('mid', 1),
+            'sort' => (int) $request->input('sort', 0),
+            'status' => (int) $request->input('status', 1),
+            'seo_title' => (string) $request->input('seo_title', ''),
+            'seo_keywords' => (string) $request->input('seo_keywords', ''),
+            'seo_description' => (string) $request->input('seo_description', ''),
         ];
 
         $data = $this->videoService->saveVideoType($payload, $id);
@@ -319,6 +328,21 @@ class Video extends Controller
         $id = (int)$request->input('id', 0);
         $data = $this->videoService->deleteVideoType($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function batchTypes(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = $this->videoService->batchVideoTypes(
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     /**
@@ -337,7 +361,9 @@ class Video extends Controller
         $params = [
             'name' => (string)$request->input('name', ''),
             'status' => $request->input('status', ''),
-            'limit' => (int)$request->input('limit', 10),
+            'empty_bind' => $request->input('empty_bind', ''),
+            'has_error' => $request->input('has_error', ''),
+            'limit' => (int) $request->input('limit', 100),
         ];
         $data = $this->videoService->getCollectSourceLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -390,8 +416,10 @@ class Video extends Controller
     public function getTagLists(Request $request): JsonResponse
     {
         $params = [
-            'name' => (string)$request->input('name', ''),
-            'limit' => (int)$request->input('limit', 10),
+            'name' => (string) $request->input('name', ''),
+            'status' => $request->input('status', ''),
+            'unused' => $request->input('unused', ''),
+            'limit' => (int) $request->input('limit', 20),
         ];
         $data = $this->videoService->getVideoTagLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -408,9 +436,10 @@ class Video extends Controller
         }
 
         $payload = [
-            'name' => (string)$request->input('name', ''),
-            'sort' => (int)$request->input('sort', 0),
-            'status' => (int)$request->input('status', 1),
+            'name' => (string) $request->input('name', ''),
+            'slug' => (string) $request->input('slug', ''),
+            'sort' => (int) $request->input('sort', 0),
+            'status' => (int) $request->input('status', 1),
         ];
 
         $data = $this->videoService->saveVideoTag($payload, $id);
@@ -427,6 +456,21 @@ class Video extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    public function batchTags(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = $this->videoService->batchTags(
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
     /**
      * 显示视频演员
      */
@@ -441,8 +485,11 @@ class Video extends Controller
     public function getActorLists(Request $request): JsonResponse
     {
         $params = [
-            'name' => (string)$request->input('name', ''),
-            'limit' => (int)$request->input('limit', 10),
+            'name' => (string) $request->input('name', ''),
+            'status' => $request->input('status', ''),
+            'empty_pic' => $request->input('empty_pic', ''),
+            'repeat' => $request->input('repeat', ''),
+            'limit' => (int) $request->input('limit', 20),
         ];
         $data = $this->videoService->getActorLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -460,7 +507,12 @@ class Video extends Controller
 
         $payload = [
             'name' => (string)$request->input('name', ''),
+            'slug' => (string)$request->input('slug', ''),
             'avatar' => (string)$request->input('avatar', ''),
+            'sex' => (string)$request->input('sex', ''),
+            'area' => (string)$request->input('area', ''),
+            'birthday' => (string)$request->input('birthday', ''),
+            'content' => (string)$request->input('content', ''),
             'sort' => (int)$request->input('sort', 0),
             'status' => (int)$request->input('status', 1),
         ];
@@ -477,5 +529,20 @@ class Video extends Controller
         $id = (int)$request->input('id', 0);
         $data = $this->videoService->deleteActor($id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function batchActors(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = $this->videoService->batchActors(
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 }

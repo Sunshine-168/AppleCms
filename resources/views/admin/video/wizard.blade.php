@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '标签向导')
+@section('title', admin_t('page.wizard'))
 
 @section('content')
 <p class="hint">Blade 标签片段（对齐 LaraCMS，不是苹果 {maccms:vod}）。只能改主题目录下的 blade。保存前会备份。</p>

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '邮件设置')
+@section('title', admin_t('page.config_email'))
 
 @section('content')
     <form id="site-form">

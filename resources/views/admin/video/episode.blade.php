@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '剧集管理')
+@section('title', admin_t('page.episodes'))
 
 @section('header_actions')
     <a class="btn btn-muted btn-sm" href="javascript:history.back()">返回线路</a>

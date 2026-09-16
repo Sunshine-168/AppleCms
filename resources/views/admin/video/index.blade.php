@@ -1,11 +1,32 @@
 @extends('admin.layouts.inner')
-@section('title', '视频管理')
+@section('title', admin_t('page.videos'))
+
+@php
+    $queues = $queues ?? ['all' => 0, 'pending' => 0, 'empty_url' => 0, 'empty_pic' => 0, 'repeat' => 0];
+    $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+@endphp
 
 @section('plain')
-<div class="card card-panel">
+<div class="card card-panel video-index">
+    <div class="card-header">
+        <span>影片列表</span>
+        <div>
+            <button type="button" class="btn btn-sm" id="video-add-btn">新增影片</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tools/recycle">回收站</a>
+        </div>
+    </div>
     <div class="card-body">
         <form class="filter-bar" id="video-search" onsubmit="return false;">
-            <input type="text" name="title" placeholder="标题">
+            <input type="hidden" name="empty_url">
+            <input type="hidden" name="empty_pic">
+            <input type="hidden" name="empty_content">
+            <input type="hidden" name="no_actor">
+            <input type="hidden" name="repeat">
+            <input type="hidden" name="need_points">
+            <input type="hidden" name="has_plot">
+            <input type="hidden" name="actor_id">
+            <input type="hidden" name="tag_id">
+            <input type="text" name="title" placeholder="搜标题" autocomplete="off">
             <select name="type_id" id="video-search-type"><option value="">分类</option></select>
             <select name="status">
                 <option value="">状态</option>
@@ -15,72 +36,69 @@
                 <option value="3">未通过</option>
                 <option value="4">定时</option>
             </select>
-            <select name="is_recommend">
-                <option value="">推荐</option>
-                <option value="1">是</option>
-                <option value="0">否</option>
-            </select>
-            <select name="is_hot">
-                <option value="">热门</option>
-                <option value="1">是</option>
-                <option value="0">否</option>
-            </select>
-            <select name="lock">
-                <option value="">锁定</option>
-                <option value="1">已锁</option>
-                <option value="0">未锁</option>
-            </select>
-            <input type="text" name="year" placeholder="年份">
-            <input type="text" name="area" placeholder="地区">
-            <input type="text" name="weekday" placeholder="周期">
-            <input type="number" name="points_min" placeholder="积分≥">
-            <select name="empty_url"><option value="">播放地址</option><option value="1">无地址</option></select>
-            <select name="repeat"><option value="">重名</option><option value="1">仅重名</option></select>
-            <select name="need_points"><option value="">积分片</option><option value="1">需积分</option></select>
-            <select name="has_plot"><option value="">剧情</option><option value="1">有分集剧情</option></select>
-            <select name="empty_pic"><option value="">封面</option><option value="1">无封面</option></select>
-            <select name="empty_content"><option value="">简介</option><option value="1">无简介</option></select>
-            <select name="no_actor"><option value="">演员</option><option value="1">无演员</option></select>
             <button type="button" class="btn btn-sm" id="video-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="video-reset-btn">重置</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-more-toggle">更多筛选</button>
+            <div class="filter-more" id="video-filter-more">
+                <select name="is_recommend">
+                    <option value="">推荐</option>
+                    <option value="1">是</option>
+                    <option value="0">否</option>
+                </select>
+                <select name="is_hot">
+                    <option value="">热门</option>
+                    <option value="1">是</option>
+                    <option value="0">否</option>
+                </select>
+                <select name="lock">
+                    <option value="">锁定</option>
+                    <option value="1">已锁</option>
+                    <option value="0">未锁</option>
+                </select>
+                <input type="text" name="year" placeholder="年份">
+                <input type="text" name="area" placeholder="地区">
+                <input type="text" name="weekday" placeholder="周期">
+                <input type="number" name="points_min" placeholder="积分≥">
+            </div>
         </form>
-    </div>
-</div>
-<div class="card card-panel">
-    <div class="card-header">
-        <span>影片列表</span>
-        <div>
-            <button type="button" class="btn btn-sm" id="video-add-btn">新增视频</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-refresh-btn">刷新</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tools/recycle">回收站</a>
+
+        <div class="queue-chips" id="video-queues">
+            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">下架@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_url" data-value="1">无地址@if($q('empty_url') > 0)<em>{{ $q('empty_url') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_pic" data-value="1">无封面@if($q('empty_pic') > 0)<em>{{ $q('empty_pic') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="repeat" data-value="1">重名@if($q('repeat') > 0)<em>{{ $q('repeat') }}</em>@endif</button>
         </div>
-    </div>
-    <div class="card-body">
-        <div class="toolbar">
-            <button type="button" class="btn btn-sm" id="video-batch-on">批量上架</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-batch-off">批量下架</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-batch-rec">批量推荐</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-batch-lock">批量锁定</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-batch-type">改分类</button>
+        <details class="queue-more">
+            <summary>补资料与工具</summary>
+            <div class="queue-chips">
+                <button type="button" class="chip" data-queue="empty_content" data-value="1">无简介</button>
+                <button type="button" class="chip" data-queue="no_actor" data-value="1">无演员</button>
+                <button type="button" class="chip" data-queue="status" data-value="2">草稿</button>
+                <button type="button" class="chip" data-queue="status" data-value="3">未通过</button>
+                <button type="button" class="chip" data-queue="status" data-value="4">定时</button>
+                <button type="button" class="chip" data-queue="need_points" data-value="1">需积分</button>
+                <button type="button" class="chip" data-queue="has_plot" data-value="1">有分集剧情</button>
+                <a class="chip" href="/admin/video/tools/images">远程图片</a>
+                <a class="chip" href="/admin/video/tools/quality">内容质量</a>
+            </div>
+        </details>
+
+        <div class="batch-bar" id="video-batch" hidden>
+            <strong id="video-batch-count">已选 0 部</strong>
+            <button type="button" class="btn btn-sm" id="video-batch-on">上架</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-off">下架</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-rec">推荐</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-lock">锁定</button>
+            <select id="video-batch-type" class="batch-select"><option value="">改到分类</option></select>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-type-go">改分类</button>
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-points">改积分</button>
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-merge">合并重复</button>
-            <button type="button" class="btn btn-muted btn-sm" id="video-batch-replace-url">批量换播放地址</button>
-            <button type="button" class="btn btn-danger btn-sm" id="video-batch-del">批量删除</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-replace-url">换播放地址</button>
+            <button type="button" class="btn btn-danger btn-sm" id="video-batch-del">删除</button>
+            <button type="button" class="btn btn-muted btn-sm" id="video-batch-clear">取消选择</button>
         </div>
-        <div class="toolbar">
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_url=1">无地址</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_pic=1">无封面</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_content=1">无简介</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?no_actor=1">无演员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?status=0">待审</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?status=2">草稿</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?status=3">未通过</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?status=4">定时</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?repeat=1">重名</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?has_plot=1">有分集剧情</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tools/images">远程图片</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tools/quality">内容质量</a>
-        </div>
+
         <div id="video-table"></div>
     </div>
 </div>
@@ -157,6 +175,12 @@
 <script>
 (function () {
     var U = AdminUi;
+    var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'repeat', 'need_points', 'has_plot'];
+    var form = document.getElementById('video-search');
+    var moreBox = document.getElementById('video-filter-more');
+    var batchBar = document.getElementById('video-batch');
+    var batchCount = document.getElementById('video-batch-count');
+
     function unixToDatetimeLocal(ts) {
         ts = parseInt(ts, 10) || 0;
         if (!ts) return '';
@@ -165,6 +189,7 @@
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
     function fillSelect(sel, options, selected, emptyLabel, disabledSuffix) {
+        if (!sel) return;
         var html = '<option value="">' + U.escape(emptyLabel) + '</option>';
         (options || []).forEach(function (o) {
             var name = o.name || '';
@@ -178,56 +203,142 @@
     function loadTypes(cb) {
         if (typeOptions) { cb(typeOptions); return; }
         U.get('/admin/video/types/options').then(function (res) {
-            if (res && res.code === 0) typeOptions = res.data || [];
-            else typeOptions = [];
+            typeOptions = (res && res.code === 0) ? (res.data || []) : [];
             cb(typeOptions);
         });
     }
     function loadCollects(cb) {
         if (collectOptions) { cb(collectOptions); return; }
         U.get('/admin/video/collect/options').then(function (res) {
-            if (res && res.code === 0) collectOptions = res.data || [];
-            else collectOptions = [];
+            collectOptions = (res && res.code === 0) ? (res.data || []) : [];
             cb(collectOptions);
         });
     }
-    loadTypes(function (opts) { fillSelect(document.getElementById('video-search-type'), opts, '', '分类'); });
+    loadTypes(function (opts) {
+        fillSelect(document.getElementById('video-search-type'), opts, '', '分类');
+        fillSelect(document.getElementById('video-batch-type'), opts, '', '改到分类');
+        var qsType = new URLSearchParams(location.search).get('type_id');
+        if (qsType) document.getElementById('video-search-type').value = qsType;
+    });
 
     var qs = new URLSearchParams(location.search);
-    var form = document.getElementById('video-search');
-    ['empty_url','repeat','need_points','has_plot','empty_pic','empty_content','no_actor','weekday','status','trash'].forEach(function (k) {
+    ['title','type_id','status','is_recommend','is_hot','lock','year','area','weekday','points_min','actor_id','tag_id'].concat(QUEUE_KEYS).forEach(function (k) {
         var v = qs.get(k);
         if (v && form[k]) form[k].value = v;
     });
-    var where = U.formData(form);
-    Object.keys(where).forEach(function (k) { if (where[k] === '') delete where[k]; });
+    if (['is_recommend','is_hot','lock','year','area','weekday','points_min'].some(function (k) { return qs.get(k); })) {
+        moreBox.classList.add('is-open');
+        document.getElementById('video-more-toggle').classList.add('is-on');
+    }
+    if (['empty_content','no_actor','need_points','has_plot'].some(function (k) { return qs.get(k); })
+        || ['2','3','4'].indexOf(qs.get('status') || '') >= 0) {
+        document.querySelector('.queue-more').open = true;
+    }
+
+    function cleanWhere(data) {
+        var out = {};
+        Object.keys(data).forEach(function (k) { if (data[k] !== '') out[k] = data[k]; });
+        return out;
+    }
+    function syncUrl(where) {
+        var qs = new URLSearchParams();
+        Object.keys(where).forEach(function (k) { qs.set(k, where[k]); });
+        var s = qs.toString();
+        history.replaceState(null, '', s ? (location.pathname + '?' + s) : location.pathname);
+    }
+    function markChips() {
+        var status = form.status.value;
+        var active = '';
+        QUEUE_KEYS.forEach(function (k) {
+            if (form[k] && form[k].value === '1') active = k;
+        });
+        U.qa('#video-queues .chip, .queue-more .chip[data-queue]').forEach(function (chip) {
+            var key = chip.getAttribute('data-queue') || '';
+            var val = chip.getAttribute('data-value') || '';
+            var on = false;
+            if (key === '' && !active && status === '') on = true;
+            else if (key === 'status' && !active && status === val) on = true;
+            else if (key && key !== 'status' && active === key) on = true;
+            chip.classList.toggle('active', on);
+        });
+    }
+    function applyQueue(key, value) {
+        QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; });
+        if (key === 'status') {
+            form.status.value = value || '';
+        } else {
+            if (key === '') form.status.value = '';
+            if (key && form[key]) form[key].value = value || '1';
+        }
+        runSearch();
+    }
+    function runSearch() {
+        var where = cleanWhere(U.formData(form));
+        table.reload(where);
+        syncUrl(where);
+        markChips();
+    }
+    function isFiltered(where) {
+        return Object.keys(where || {}).some(function (k) { return where[k] !== ''; });
+    }
 
     function statusHtml(d) {
         var map = {1: ['status-ok', '上架'], 2: ['status-warn', '草稿'], 3: ['status-off', '未通过'], 4: ['status-info', '定时'], 0: ['status-off', '下架']};
         var s = map[String(d.status)] || map[0];
         return '<span class="status ' + s[0] + '">' + s[1] + '</span>';
     }
+    function titleHtml(d) {
+        var cover = String(d.cover || '').trim();
+        var thumb = cover
+            ? '<img class="vod-thumb" src="' + U.escape(cover) + '" alt="">'
+            : '<span class="vod-thumb is-empty">无图</span>';
+        var badges = [];
+        if (!cover) badges.push('<span class="badge badge-warn">无封面</span>');
+        if (!d.has_play) badges.push('<span class="badge badge-tool">无地址</span>');
+        if (String(d.is_recommend) === '1') badges.push('<span class="badge badge-ok">荐</span>');
+        if (String(d.is_hot) === '1') badges.push('<span class="badge badge-search">热</span>');
+        if (String(d.lock) === '1') badges.push('<span class="badge badge-off">锁</span>');
+        var meta = U.escape(d.type_name || '未分类');
+        if (d.year) meta += ' · ' + U.escape(d.year);
+        if (d.hits) meta += ' · ' + U.escape(d.hits) + ' 次';
+        return '<div class="vod-cell">' + thumb + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.title || '') + '</a>'
+            + '<div class="muted">' + meta + '</div>'
+            + (badges.length ? '<div class="vod-badges">' + badges.join('') + '</div>' : '')
+            + '</div></div>';
+    }
+
     var table = U.table({
         el: '#video-table',
         url: '/admin/video/list',
-        where: where,
+        where: cleanWhere(U.formData(form)),
+        emptyHtml: function (_parsed, where) {
+            if (isFiltered(where)) {
+                return '<div class="list-empty"><p>没有符合条件的影片</p><p class="muted">换个关键词，或清掉待办筛选。</p><p><button type="button" class="btn btn-muted btn-sm" id="video-empty-reset">清除筛选</button></p></div>';
+            }
+            return '<div class="list-empty"><p>片库还是空的</p><p class="muted">先接一个采集源，或手动加一部片子。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collects">去采集</a> <button type="button" class="btn btn-muted btn-sm" id="video-empty-add">新增影片</button></p></div>';
+        },
+        onDraw: function () {
+            var add = document.getElementById('video-empty-add');
+            var reset = document.getElementById('video-empty-reset');
+            if (add) add.addEventListener('click', function () { openVideoDialog('add'); });
+            if (reset) reset.addEventListener('click', function () { form.reset(); QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; }); runSearch(); });
+        },
+        onCheck: function (ids) {
+            batchBar.hidden = ids.length === 0;
+            batchCount.textContent = '已选 ' + ids.length + ' 部';
+        },
         cols: [
             {check: true, width: 36},
-            {key: 'id', title: 'ID', width: 70},
-            {key: 'title', title: '标题'},
-            {key: 'type_name', title: '分类', width: 120},
-            {key: 'score', title: '评分', width: 70},
-            {key: 'points', title: '积分', width: 70},
-            {key: 'year', title: '年份', width: 70},
+            {title: '影片', html: titleHtml},
             {title: '状态', width: 80, html: statusHtml},
-            {title: '推荐', width: 70, html: function (d) { return String(d.is_recommend) === '1' ? U.status(true, '是') : U.status(false, '否'); }},
-            {title: '热门', width: 70, html: function (d) { return String(d.is_hot) === '1' ? '<span class="status status-warn">是</span>' : U.status(false, '否'); }},
-            {key: 'updated_at_text', title: '更新时间', width: 160},
+            {key: 'points', title: '积分', width: 70},
+            {key: 'updated_at_text', title: '更新', width: 160},
             {title: '操作', cls: 'actions', html: function () {
                 return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-src">线路</a><a href="#" class="btn-link js-ep">剧集</a><a href="#" class="btn-link js-del">删除</a>';
             }}
         ]
     });
+    markChips();
 
     function bindImage(formEl, field) {
         var input = formEl.querySelector('input[name=' + field + ']');
@@ -259,7 +370,7 @@
     function openVideoDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑视频' : '新增视频',
+            title: mode === 'edit' ? '编辑影片' : '新增影片',
             wide: true,
             content: document.getElementById('video-dialog-tpl').innerHTML,
             onOpen: function (body) {
@@ -309,7 +420,7 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请选择数据', 'err'); return; }
+        if (!ids.length) { U.toast('请先勾选影片', 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
             if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
@@ -318,17 +429,36 @@
         });
     }
 
-    U.on('#video-search-btn', 'click', function () { table.reload(U.formData(form)); });
-    U.on('#video-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
-    U.on('#video-refresh-btn', 'click', function () { table.refresh(); });
+    U.on('#video-search-btn', 'click', runSearch);
+    U.on('#video-reset-btn', 'click', function () {
+        setTimeout(function () {
+            QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; });
+            runSearch();
+        }, 0);
+    });
+    U.on('#video-more-toggle', 'click', function () {
+        moreBox.classList.toggle('is-open');
+        this.classList.toggle('is-on', moreBox.classList.contains('is-open'));
+    });
     U.on('#video-add-btn', 'click', function () { openVideoDialog('add'); });
+    document.getElementById('video-queues').addEventListener('click', function (e) {
+        var chip = e.target.closest('[data-queue]');
+        if (!chip || chip.tagName === 'A') return;
+        applyQueue(chip.getAttribute('data-queue') || '', chip.getAttribute('data-value') || '');
+    });
+    document.querySelector('.queue-more').addEventListener('click', function (e) {
+        var chip = e.target.closest('button[data-queue]');
+        if (!chip) return;
+        applyQueue(chip.getAttribute('data-queue') || '', chip.getAttribute('data-value') || '');
+    });
+
     U.on('#video-batch-on', 'click', function () { batch('status', 1); });
     U.on('#video-batch-off', 'click', function () { batch('status', 0); });
     U.on('#video-batch-rec', 'click', function () { batch('recommend', 1); });
     U.on('#video-batch-lock', 'click', function () { batch('lock', 1); });
-    U.on('#video-batch-type', 'click', function () {
-        var val = U.prompt('目标分类ID');
-        if (val == null || val === '') return;
+    U.on('#video-batch-type-go', 'click', function () {
+        var val = document.getElementById('video-batch-type').value;
+        if (!val) { U.toast('请选择目标分类', 'err'); return; }
         batch('type', val);
     });
     U.on('#video-batch-points', 'click', function () {
@@ -345,7 +475,7 @@
     });
     U.on('#video-batch-replace-url', 'click', function () {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请选择数据', 'err'); return; }
+        if (!ids.length) { U.toast('请先勾选影片', 'err'); return; }
         var val = U.prompt('替换播放地址 from|to');
         if (val == null) return;
         U.post('/admin/video/batch-replace-url', {value: val, ids: ids}).then(function (res) {
@@ -354,7 +484,9 @@
             U.toast('操作成功', 'ok');
         });
     });
-    U.on('#video-batch-del', 'click', function () { batch('delete', '', '确认删除选中视频？将进入回收站。'); });
+    U.on('#video-batch-del', 'click', function () { batch('delete', '', '确认删除选中影片？将进入回收站。'); });
+    U.on('#video-batch-clear', 'click', function () { table.clearSelection(); });
+
     U.on('#video-table', 'click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;
@@ -369,7 +501,7 @@
             });
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确定删除该视频吗？将进入回收站。')) return;
+            if (!U.confirm('确定删除该影片吗？将进入回收站。')) return;
             U.post('/admin/video/delete', {id: row.id}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
                 table.refresh();

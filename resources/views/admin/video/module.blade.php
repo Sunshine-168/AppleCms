@@ -2,6 +2,9 @@
 @section('title', $title)
 
 @section('content')
+    @if(! empty($hint))
+        <p class="hint">{{ $hint }}</p>
+    @endif
     <div class="toolbar">
         <button type="button" class="btn btn-sm" id="mod-add">新增</button>
         <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">刷新</button>

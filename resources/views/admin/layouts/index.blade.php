@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="{{ \App\Support\AdminUi::htmlLang() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ conf('name') ?: '苹果v12' }} - 后台</title>
+    <title>{{ conf('name') ?: '苹果v12' }} - @yield('title', admin_t('brand'))</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdn.staticfile.net/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ @filemtime(public_path('css/admin.css')) ?: '1' }}">
+    @stack('styles')
 </head>
-<body class="admin-iframe-shell">
+<body>
 @php
     $adminName = (string) (session('admin_username') ?: '管理员');
     $brand = (string) (conf('name') ?: '苹果v12');
     $brandMark = function_exists('mb_substr') ? mb_substr($brand, 0, 1) : substr($brand, 0, 1);
+    if (! isset($menus) || ! is_array($menus)) {
+        try {
+            $menus = app(\App\Services\Admin\System\SysPermService::class)->getAdminMenus((int) session('admin_uid', 0));
+        } catch (\Throwable) {
+            $menus = [];
+        }
+    }
     $menuUrl = static function (array $menu): string {
         if (! empty($menu['route']) && \Illuminate\Support\Facades\Route::has($menu['route'])) {
             return (string) route($menu['route'], [], false);
@@ -39,6 +47,7 @@
         'allowed' => $flatten($menus ?? []),
         'shown' => [],
     ];
+    $activeUrl = \App\Support\AdminNav::activeUrl();
 @endphp
 <div class="shell">
     <div class="side-backdrop" id="sideBackdrop"></div>
@@ -49,26 +58,27 @@
         </div>
         <nav class="side-nav">
             @foreach(\App\Support\AdminNav::groups() as $group)
-                <div class="nav-header">{{ $group['header'] }}</div>
+                <div class="nav-header">{{ admin_t($group['header']) }}</div>
                 @foreach($group['items'] as $item)
                     @include('admin.partials.side-link', [
                         'url' => $item['url'],
                         'icon' => $item['icon'],
-                        'label' => $item['label'],
-                        'active' => ($item['url'] ?? '') === '/admin/welcome',
+                        'label' => admin_t($item['label']),
+                        'active' => ($item['url'] ?? '') === $activeUrl,
                         'force' => (bool) ($item['force'] ?? false),
                     ])
                 @endforeach
                 @if(! empty($group['fold']['items']))
-                    <details class="nav-fold">
-                        <summary>{{ $group['fold']['label'] ?? '更多' }}</summary>
+                    @php $foldOpen = \App\Support\AdminNav::foldOpen($group, $activeUrl); @endphp
+                    <details class="nav-fold{{ $foldOpen ? ' is-open' : '' }}" @if($foldOpen) open @endif>
+                        <summary>{{ admin_t($group['fold']['label'] ?? 'nav.more') }}</summary>
                         <div class="side-sub">
                             @foreach($group['fold']['items'] as $item)
                                 @include('admin.partials.side-link', [
                                     'url' => $item['url'],
                                     'icon' => $item['icon'],
-                                    'label' => $item['label'],
-                                    'active' => false,
+                                    'label' => admin_t($item['label']),
+                                    'active' => ($item['url'] ?? '') === $activeUrl,
                                     'force' => (bool) ($item['force'] ?? false),
                                 ])
                             @endforeach
@@ -81,7 +91,7 @@
             <span class="side-foot-avatar">{{ function_exists('mb_substr') ? mb_substr($adminName, 0, 1) : substr($adminName, 0, 1) }}</span>
             <span class="side-foot-meta">
                 <strong>{{ $adminName }}</strong>
-                <em>后台</em>
+                <em>{{ admin_t('nav.admin') }}</em>
             </span>
         </div>
     </aside>
@@ -89,30 +99,54 @@
     <div class="main-wrap">
         <header class="topbar">
             <div class="topbar-left">
-                <button type="button" class="btn btn-muted btn-sm topbar-menu" id="toggleSide" title="菜单"><i class="fas fa-bars"></i></button>
-                <h1 class="topbar-title" id="topbarTitle">仪表盘</h1>
+                <button type="button" class="btn btn-muted btn-sm topbar-menu" id="toggleSide" title="{{ admin_t('top.menu') }}"><i class="fas fa-bars"></i></button>
+                <h1 class="topbar-title">@yield('title', admin_t('brand'))</h1>
             </div>
             <div class="topbar-right">
-                <button type="button" class="btn btn-muted btn-sm" id="refreshFrame" title="刷新"><i class="fas fa-sync-alt"></i></button>
-                <a class="btn btn-sm topbar-front" href="{{ url('/') }}" target="_blank" rel="noopener">前台</a>
+                <form method="post" action="{{ route('admin.ui-locale') }}" class="ui-switch">
+                    @csrf
+                    @foreach(\App\Support\AdminUi::options() as $code => $uiLabel)
+                        <button type="submit" name="ui_locale" value="{{ $code }}" class="{{ \App\Support\AdminUi::current() === $code ? 'is-on' : '' }}">{{ $uiLabel }}</button>
+                    @endforeach
+                </form>
+                <a class="btn btn-muted btn-sm topbar-front" href="{{ url('/') }}" target="_blank" rel="noopener">{{ admin_t('top.front') }}</a>
                 <details class="account-menu">
                     <summary class="user-chip">
                         <span class="avatar">{{ function_exists('mb_substr') ? mb_substr($adminName, 0, 1) : substr($adminName, 0, 1) }}</span>
                         <span class="user-chip-name">{{ $adminName }}</span>
                     </summary>
                     <div class="account-menu-panel">
-                        <p class="muted">管理员</p>
-                        <a class="account-menu-link" href="/admin/set/user/password" data-frame="1">修改密码</a>
+                        <p class="muted">{{ admin_t('top.admin') }}</p>
+                        <a class="account-menu-link" href="/admin/set/user/password">{{ admin_t('top.password') }}</a>
                         <form method="post" action="/admin/logout" id="logoutForm">
                             @csrf
-                            <button class="btn btn-muted btn-sm" type="submit">退出</button>
+                            <button class="btn btn-muted btn-sm" type="submit">{{ admin_t('top.logout') }}</button>
                         </form>
                     </div>
                 </details>
             </div>
         </header>
-        <main class="content work-area">
-            <iframe id="workFrame" class="work-frame" src="/admin/welcome" title="后台内容"></iframe>
+        <main class="content">
+            @if(session('status'))
+                <div class="flash">{{ session('status') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="flash error">{{ session('error') }}</div>
+            @endif
+            @hasSection('plain')
+                @yield('plain')
+            @else
+                <div class="card card-panel">
+                    <div class="card-header">
+                        <span>@yield('title')</span>
+                        <div>@yield('header_actions')</div>
+                    </div>
+                    <div class="card-body">
+                        @yield('content')
+                    </div>
+                </div>
+                @yield('after')
+            @endif
         </main>
     </div>
 </div>
@@ -120,8 +154,6 @@
 (function () {
     var side = document.getElementById('adminSide');
     var backdrop = document.getElementById('sideBackdrop');
-    var frame = document.getElementById('workFrame');
-    var titleEl = document.getElementById('topbarTitle');
 
     function setOpen(open) {
         side && side.classList.toggle('open', open);
@@ -129,68 +161,13 @@
         document.body.classList.toggle('side-open', open);
     }
 
-    function setActive(url) {
-        var path = String(url || '').split('#')[0];
-        var best = null;
-        var bestLen = -1;
-        document.querySelectorAll('.side-nav a[data-frame]').forEach(function (a) {
-            var href = a.getAttribute('href') || '';
-            a.classList.remove('active');
-            var hit = href === path || (href.indexOf('?') === -1 && (path === href || path.indexOf(href + '/') === 0 || path.indexOf(href + '?') === 0));
-            if (hit && href.length > bestLen) {
-                best = a;
-                bestLen = href.length;
-            }
-        });
-        if (best) {
-            best.classList.add('active');
-            var fold = best.closest('details.nav-fold');
-            if (fold) fold.open = true;
-            var label = best.querySelector('span');
-            if (label && titleEl) titleEl.textContent = label.textContent.trim();
-        }
-    }
-
-    function openPage(url, name) {
-        if (!url) return;
-        frame.src = url;
-        if (name && titleEl) titleEl.textContent = name;
-        setActive(url);
-        setOpen(false);
-    }
-
     document.getElementById('toggleSide') && document.getElementById('toggleSide').addEventListener('click', function () {
         setOpen(!(side && side.classList.contains('open')));
     });
     backdrop && backdrop.addEventListener('click', function () { setOpen(false); });
-
-    document.getElementById('refreshFrame') && document.getElementById('refreshFrame').addEventListener('click', function () {
-        try { frame.contentWindow.location.reload(); } catch (e) { frame.src = frame.src; }
+    side && side.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { setOpen(false); });
     });
-
-    document.querySelectorAll('a[data-frame]').forEach(function (a) {
-        a.addEventListener('click', function (ev) {
-            ev.preventDefault();
-            var name = (a.querySelector('span') && a.querySelector('span').textContent) || a.textContent;
-            openPage(a.getAttribute('href'), name.trim());
-        });
-    });
-
-    frame.addEventListener('load', function () {
-        try {
-            var loc = frame.contentWindow.location;
-            setActive(loc.pathname + loc.search);
-            var doc = frame.contentDocument;
-            if (doc && doc.head && !doc.getElementById('cms-inner-skin')) {
-                var link = doc.createElement('link');
-                link.id = 'cms-inner-skin';
-                link.rel = 'stylesheet';
-                link.href = '{{ asset('css/admin-inner.css') }}?v={{ @filemtime(public_path('css/admin-inner.css')) ?: 1 }}';
-                doc.head.appendChild(link);
-            }
-        } catch (e) {}
-    });
-
     document.getElementById('logoutForm') && document.getElementById('logoutForm').addEventListener('submit', function (ev) {
         ev.preventDefault();
         fetch('/admin/logout', {
@@ -207,5 +184,7 @@
     });
 })();
 </script>
+<script src="{{ asset('js/admin-ui.js') }}?v={{ @filemtime(public_path('js/admin-ui.js')) ?: '1' }}"></script>
+@stack('scripts')
 </body>
 </html>

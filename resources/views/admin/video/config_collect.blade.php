@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '内容接入')
+@section('title', admin_t('page.config_collect'))
 
 @section('content')
     <form id="site-form">

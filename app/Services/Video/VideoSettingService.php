@@ -90,6 +90,9 @@ class VideoSettingService
             'member_invite' => '0',
             'upload_ext' => 'jpg,png,gif,webp,mp4',
             'upload_max_mb' => '8',
+            'ai_provider' => '',
+            'ai_key' => '',
+            'ai_model' => '',
         ];
         if (! $this->ready()) {
             return $defaults;
@@ -132,8 +135,19 @@ class VideoSettingService
             'collect_to_temp', 'admin_ip_allow', 'weixin_appid', 'weixin_secret', 'weixin_token',
             'sms_provider', 'sms_key', 'sms_secret', 'sms_sign', 'oauth_qq', 'oauth_wechat', 'oauth_weibo',
             'theme_primary', 'theme_logo', 'watermark_text', 'analytics_code', 'seo_title_play',
-            'member_invite', 'upload_ext', 'upload_max_mb',
+            'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model',
         ];
+        try {
+            foreach (app(\App\Plugins\PluginHost::class)->extraPages() as $page) {
+                foreach ($page['fields'] ?? [] as $field) {
+                    if (! empty($field['name'])) {
+                        $keys[] = (string) $field['name'];
+                    }
+                }
+            }
+        } catch (\Throwable) {
+        }
+        $keys = array_values(array_unique($keys));
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;
@@ -202,7 +216,7 @@ class VideoSettingService
     {
         $all = $this->all();
 
-        return [
+        return array_merge($all, [
             'title' => (string) ($all['site_title'] ?? config('app.name')),
             'keyword' => (string) ($all['site_keyword'] ?? ''),
             'description' => (string) ($all['site_description'] ?? ''),
@@ -279,38 +293,13 @@ class VideoSettingService
             'app_key' => (string) ($all['app_key'] ?? ''),
             'danmaku_enabled' => (string) ($all['danmaku_enabled'] ?? '1'),
             'danmaku_login' => (string) ($all['danmaku_login'] ?? '0'),
-        ];
+        ]);
     }
 
     /** @return array<string, array{title:string,fields:list<array<string,mixed>>}> */
     public function extraPages(): array
     {
-        return [
-            'weixin' => [
-                'title' => '微信公众号',
-                'fields' => [
-                    ['name' => 'weixin_appid', 'label' => 'AppId', 'type' => 'text'],
-                    ['name' => 'weixin_secret', 'label' => 'AppSecret', 'type' => 'text'],
-                    ['name' => 'weixin_token', 'label' => 'Token', 'type' => 'text'],
-                ],
-            ],
-            'sms' => [
-                'title' => '短信网关',
-                'fields' => [
-                    ['name' => 'sms_provider', 'label' => '服务商', 'type' => 'text', 'placeholder' => 'aliyun / tencent'],
-                    ['name' => 'sms_key', 'label' => 'AccessKey', 'type' => 'text'],
-                    ['name' => 'sms_secret', 'label' => '密钥', 'type' => 'text'],
-                    ['name' => 'sms_sign', 'label' => '签名', 'type' => 'text'],
-                ],
-            ],
-            'connect' => [
-                'title' => '第三方登录',
-                'fields' => [
-                    ['name' => 'oauth_qq', 'label' => 'QQ AppId/Key', 'type' => 'text'],
-                    ['name' => 'oauth_wechat', 'label' => '微信 AppId/Secret', 'type' => 'text'],
-                    ['name' => 'oauth_weibo', 'label' => '微博 AppKey/Secret', 'type' => 'text'],
-                ],
-            ],
+        $core = [
             'ip' => [
                 'title' => '后台 IP 白名单',
                 'fields' => [
@@ -368,15 +357,6 @@ class VideoSettingService
                     ['name' => 'banned_words', 'label' => '屏蔽词', 'type' => 'textarea'],
                 ],
             ],
-            'pay' => [
-                'title' => '支付参数',
-                'fields' => [
-                    ['name' => 'pay_wechat_mchid', 'label' => '微信商户号', 'type' => 'text'],
-                    ['name' => 'pay_wechat_key', 'label' => '微信密钥', 'type' => 'text'],
-                    ['name' => 'pay_alipay_appid', 'label' => '支付宝 AppId', 'type' => 'text'],
-                    ['name' => 'pay_alipay_key', 'label' => '支付宝密钥', 'type' => 'text'],
-                ],
-            ],
             'url' => [
                 'title' => 'URL 规则',
                 'fields' => [
@@ -392,6 +372,11 @@ class VideoSettingService
                 ],
             ],
         ];
+        try {
+            return array_merge($core, app(\App\Plugins\PluginHost::class)->extraPages());
+        } catch (\Throwable) {
+            return $core;
+        }
     }
 
     private function ready(): bool

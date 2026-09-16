@@ -1,0 +1,55 @@
+{
+    "id": "pay",
+    "name": "在线支付",
+    "name_en": "Online pay",
+    "description": "保存微信商户号和支付宝 AppId。没有支付回调，订单需在后台改成已付。",
+    "description_en": "Stores WeChat and Alipay credentials. No pay callback; mark orders paid by hand.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "config",
+    "group": "pay",
+    "admin": {
+        "extra_pages": {
+            "pay": {
+                "title": "支付参数",
+                "hint": "配置后可对账；到账请在「订单」里改已付。没有微信 / 支付宝回调。",
+                "fields": [
+                    {
+                        "name": "pay_wechat_mchid",
+                        "label": "微信商户号",
+                        "type": "text"
+                    },
+                    {
+                        "name": "pay_wechat_key",
+                        "label": "微信密钥",
+                        "type": "text"
+                    },
+                    {
+                        "name": "pay_alipay_appid",
+                        "label": "支付宝 AppId",
+                        "type": "text"
+                    },
+                    {
+                        "name": "pay_alipay_key",
+                        "label": "支付宝密钥",
+                        "type": "text"
+                    }
+                ]
+            }
+        },
+        "catalog": {
+            "more.member": [
+                {
+                    "url": "/admin/video/config/pay",
+                    "label": "item.config_pay"
+                }
+            ]
+        },
+        "settings_links": [
+            {
+                "url": "/admin/video/config/pay",
+                "label": "item.config_pay"
+            }
+        ]
+    }
+}

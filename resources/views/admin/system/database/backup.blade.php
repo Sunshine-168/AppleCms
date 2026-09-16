@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '数据库备份')
+@section('title', admin_t('page.db_backup'))
 
 @section('header_actions')
     <button type="button" class="btn btn-sm" id="dbbackup-run">立即备份</button>

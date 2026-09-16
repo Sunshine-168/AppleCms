@@ -3,6 +3,8 @@
     --mac-green: #40cc92;
     --mac-green-hover: #32b981;
     --mac-green-deep: #1f9e6e;
+    --primary: var(--mac-green);
+    --primary-hover: var(--mac-green-hover);
     --mac-text: #1f2937;
     --mac-muted: #4b5563;
     --mac-line: #e5e7eb;
@@ -57,6 +59,33 @@ body.mac-login {
     color: #6b7280;
     max-width: 420px;
     line-height: 1.6;
+}
+
+.mac-login-pitch {
+    margin: 18px 0 0 auto;
+    padding: 0;
+    max-width: 420px;
+    list-style: none;
+    text-align: left;
+}
+.mac-login-pitch li {
+    position: relative;
+    margin: 0 0 10px;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #4b5563;
+}
+.mac-login-pitch li:last-child { margin-bottom: 0; }
+.mac-login-pitch li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .55em;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mac-green);
 }
 
 .mac-login-card {
@@ -176,6 +205,12 @@ body.mac-login {
     font-size: 12px;
     color: #c4c4c4;
 }
+.ui-switch-login {
+    margin: 14px 0 0;
+    text-align: center;
+}
+.ui-switch-login a { margin: 0 6px; color: #9ca3af; font-size: 13px; text-decoration: none; }
+.ui-switch-login a.is-on { color: var(--mac-green); font-weight: 600; }
 
 .mac-declare strong {
     display: block;
@@ -193,27 +228,44 @@ body.mac-login {
 
 @media (max-width: 980px) {
     body.mac-login {
-        background-size: min(720px, 140%) auto;
-        background-position: center -40px;
+        background-image: none;
+        background-color: #f4faf8;
     }
     .mac-login-stage {
         width: 100%;
         flex-direction: column;
         justify-content: flex-start;
-        padding: 48px 20px 32px;
-        gap: 28px;
+        padding: 20px 16px 28px;
+        gap: 22px;
     }
-    .mac-login-hero {
-        padding: 0;
-        text-align: center;
-    }
-    .mac-login-hello { font-size: 32px; }
-    .mac-login-hello-sub { margin-left: auto; margin-right: auto; }
     .mac-login-card {
+        order: -1;
         width: 100%;
         max-width: 460px;
-        padding: 28px 22px 22px;
+        margin: 0 auto;
+        padding: 24px 18px 18px;
     }
+    .mac-login-hero {
+        order: 1;
+        padding: 4px 4px 12px;
+        text-align: center;
+    }
+    .mac-login-hello { font-size: 22px; }
+    .mac-login-hello-sub {
+        margin: 8px auto 0;
+        font-size: 14px;
+        max-width: 22em;
+    }
+    .mac-login-pitch {
+        margin: 14px auto 0;
+        max-width: 22em;
+    }
+}
+
+@media (max-width: 420px) {
+    .mac-login-card h1 { margin-bottom: 20px; font-size: 18px; }
+    .mac-field { margin-bottom: 16px; }
+    .mac-captcha-q { flex-basis: 108px; font-size: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

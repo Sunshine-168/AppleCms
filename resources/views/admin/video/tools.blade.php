@@ -1,8 +1,15 @@
 @php
-    $titles = ['images'=>'远程图片 / 坏图','quality'=>'内容质量','players'=>'批量更换播放器','annex'=>'附件同步清理','recycle'=>'回收站','hub'=>'采集资源目录'];
+    $titles = [
+        'images' => admin_t('page.tool_images'),
+        'quality' => admin_t('page.tool_quality'),
+        'players' => admin_t('page.tool_players'),
+        'annex' => admin_t('page.tool_annex'),
+        'recycle' => admin_t('page.tool_recycle'),
+        'hub' => admin_t('page.tool_hub'),
+    ];
 @endphp
 @extends('admin.layouts.inner')
-@section('title', $titles[$tool] ?? '工具')
+@section('title', $titles[$tool] ?? admin_t('page.tools'))
 
 @section('content')
     @if($tool === 'images')

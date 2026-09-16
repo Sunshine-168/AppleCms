@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '缓存管理')
+@section('title', admin_t('page.cache'))
 
 @section('plain')
 <div class="card card-panel">
