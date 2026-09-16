@@ -27,23 +27,7 @@ class CollectAuditService
         $rules = VideoAuditRule::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get();
         foreach ($rules as $rule) {
             $text = $hay[(string) $rule->scope] ?? $title;
-            $matched = false;
-            foreach ($this->words((string) $rule->words) as $word) {
-                if ($word === '') {
-                    continue;
-                }
-                if ((int) ($rule->is_regex ?? 0) === 1) {
-                    $ok = @preg_match('/'.$word.'/iu', $text);
-                    if ($ok === 1) {
-                        $matched = true;
-                        break;
-                    }
-                } elseif (mb_stripos($text, $word) !== false) {
-                    $matched = true;
-                    break;
-                }
-            }
-            if (! $matched) {
+            if (! $this->matchText($text, (string) $rule->words, (int) ($rule->is_regex ?? 0) === 1)) {
                 continue;
             }
             $action = (string) $rule->action;
@@ -68,6 +52,31 @@ class CollectAuditService
         }
 
         return $text;
+    }
+
+    public function matchText(string $text, string $words, bool $isRegex): bool
+    {
+        foreach ($this->words($words) as $word) {
+            if ($word === '') {
+                continue;
+            }
+            if ($isRegex) {
+                $ok = @preg_match('/'.$word.'/iu', $text);
+                if ($ok === 1) {
+                    return true;
+                }
+            } elseif (mb_stripos($text, $word) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return list<string> */
+    public function splitWords(string $raw): array
+    {
+        return $this->words($raw);
     }
 
     /** @return list<string> */

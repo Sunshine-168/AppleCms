@@ -96,6 +96,38 @@ class SiteModule extends Controller
                 'queues' => $this->modules->unionQueues(),
             ]);
         }
+        if ($module === 'collect_logs') {
+            $sourceId = (int) request()->query('collect_source_id', 0);
+            $ok = (string) request()->query('ok', '');
+            if ($ok !== '0' && $ok !== '1') {
+                $ok = '';
+            }
+
+            return view('admin.video.collect_logs', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->collectLogQueues(),
+                'sourceId' => $sourceId,
+                'sourceName' => $sourceId > 0 ? $this->modules->collectSourceName($sourceId) : '',
+                'okPrefill' => $ok,
+                'todayPrefill' => (string) request()->query('today', '') === '1' ? '1' : '',
+            ]);
+        }
+        if ($module === 'collect_tasks') {
+            $sourceId = (int) request()->query('collect_source_id', 0);
+
+            return view('admin.video.collect_tasks', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->collectTaskQueues(),
+                'sourceId' => $sourceId,
+                'sourceName' => $sourceId > 0 ? $this->modules->collectSourceName($sourceId) : '',
+            ]);
+        }
+        if ($module === 'audits') {
+            return view('admin.video.audits', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->auditQueues(),
+            ]);
+        }
 
         return view('admin.video.module', [
             'module' => $module,
@@ -214,6 +246,80 @@ class SiteModule extends Controller
             'union' => $union,
             'isEdit' => true,
         ]);
+    }
+
+    public function createCollectTask(Request $request): View
+    {
+        $sourceId = (int) $request->query('collect_source_id', 0);
+
+        return view('admin.video.collect_task_form', [
+            'task' => [
+                'status' => 1,
+                'pages' => 1,
+                'hours' => 24,
+                'cron_expression' => '0 * * * *',
+                'collect_source_id' => $sourceId,
+            ],
+            'isEdit' => false,
+            'sources' => $this->modules->collectSourceOptions(),
+            'cronPresets' => $this->modules->collectCronPresets(),
+            'hourPresets' => $this->modules->collectHourPresets(),
+        ]);
+    }
+
+    public function editCollectTask(int $id): View
+    {
+        $task = $this->modules->getCollectTask($id);
+        if ($task === null) {
+            abort(404);
+        }
+
+        return view('admin.video.collect_task_form', [
+            'task' => $task,
+            'isEdit' => true,
+            'sources' => $this->modules->collectSourceOptions(),
+            'cronPresets' => $this->modules->collectCronPresets(),
+            'hourPresets' => $this->modules->collectHourPresets(),
+        ]);
+    }
+
+    public function createAuditRule(): View
+    {
+        return view('admin.video.audit_form', [
+            'rule' => [
+                'status' => 1,
+                'scope' => 'title',
+                'action' => 'skip',
+                'is_regex' => 0,
+                'sort' => 0,
+                'words' => '',
+            ],
+            'isEdit' => false,
+            'scopes' => $this->modules->auditScopeOptions(),
+            'actions' => $this->modules->auditActionOptions(),
+        ]);
+    }
+
+    public function editAuditRule(int $id): View
+    {
+        $rule = $this->modules->getAuditRule($id);
+        if ($rule === null) {
+            abort(404);
+        }
+
+        return view('admin.video.audit_form', [
+            'rule' => $rule,
+            'isEdit' => true,
+            'scopes' => $this->modules->auditScopeOptions(),
+            'actions' => $this->modules->auditActionOptions(),
+        ]);
+    }
+
+    public function tryAuditRule(Request $request): JsonResponse
+    {
+        $data = $this->modules->tryAuditRule($request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     public function adoptUnion(Request $request): JsonResponse

@@ -138,7 +138,7 @@ class VideoDashboardService
             ['kind' => 'report', 'title' => admin_t('dash.todo_report'), 'hint' => admin_t('dash.todo_report_hint'), 'count' => $counts['report_open'], 'url' => '/admin/video/reports'],
             ['kind' => 'playfail', 'title' => admin_t('dash.todo_playfail'), 'hint' => admin_t('dash.todo_playfail_hint'), 'count' => $counts['playfail_open'], 'url' => '/admin/video/playfails'],
             ['kind' => 'gbook', 'title' => admin_t('dash.todo_gbook'), 'hint' => admin_t('dash.todo_gbook_hint'), 'count' => $counts['gbook_pending'], 'url' => '/admin/video/guestbooks'],
-            ['kind' => 'collect', 'title' => admin_t('dash.todo_collect'), 'hint' => admin_t('dash.todo_collect_hint'), 'count' => $counts['collect_fail'], 'url' => '/admin/video/collect_logs'],
+            ['kind' => 'collect', 'title' => admin_t('dash.todo_collect'), 'hint' => admin_t('dash.todo_collect_hint'), 'count' => $counts['collect_fail'], 'url' => '/admin/video/collect_logs?ok=0'],
         ];
 
         return array_values(array_filter($items, fn ($row) => $row['count'] > 0));
@@ -195,7 +195,7 @@ class VideoDashboardService
             $alerts[] = ['level' => 'warn', 'title' => admin_t('dash.alert_empty'), 'url' => '/admin/video/collects'];
         }
         if ($counts['collect_fail'] > 0) {
-            $alerts[] = ['level' => 'warn', 'title' => admin_t('dash.alert_collect_fail', ['n' => $counts['collect_fail']]), 'url' => '/admin/video/collect_logs'];
+            $alerts[] = ['level' => 'warn', 'title' => admin_t('dash.alert_collect_fail', ['n' => $counts['collect_fail']]), 'url' => '/admin/video/collect_logs?ok=0'];
         }
         if ($counts['playfail_open'] > 0) {
             $alerts[] = ['level' => 'warn', 'title' => admin_t('dash.alert_playfail', ['n' => $counts['playfail_open']]), 'url' => '/admin/video/playfails'];

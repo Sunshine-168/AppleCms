@@ -39,9 +39,13 @@ class SiteOps extends Controller
 
     public function templateRead(Request $request): JsonResponse
     {
-        $data = $this->ops->readThemeFile((string) $request->input('path', ''));
+        try {
+            $data = $this->ops->readThemeFile((string) $request->input('path', ''));
 
-        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+            return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+        } catch (\Throwable $e) {
+            return Ajax::fail($e->getMessage() !== '' ? $e->getMessage() : '读取失败');
+        }
     }
 
     public function templateSave(Request $request): JsonResponse

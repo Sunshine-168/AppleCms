@@ -122,7 +122,7 @@ return [
         'collect_logs' => 'Success and failure by feed',
         'collect_tasks' => 'Run collect on a schedule',
         'unions' => 'Bookmark AppleCMS APIs; copy into collect sources when ready',
-        'audits' => 'Temp-table titles waiting to go live',
+        'audits' => 'Block or rewrite words during collect',
         'collect_hub' => 'Today’s ingest by feed',
         'collect_temps' => 'Not yet moved into the library',
         'config_collect' => 'Area maps and random hits; also under Settings → More',

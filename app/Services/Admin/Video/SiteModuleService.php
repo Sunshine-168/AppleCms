@@ -19,6 +19,9 @@ use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTopicRelModel;
 use App\Models\Video\VideoTypeModel;
+use App\Models\Video\VideoAuditRule;
+use App\Models\Video\VideoCollectLog;
+use App\Models\Video\VideoCollectTask;
 use App\Models\Video\VideoUnion;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
@@ -174,29 +177,31 @@ class SiteModuleService
             ],
             'audits' => [
                 'title' => '入库审核规则',
-                'model' => \App\Models\Video\VideoAuditRule::class,
+                'hint' => '采集时扫标题、简介、演员。命中后可跳过、先下架，或把词抠掉再入库。',
+                'model' => VideoAuditRule::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
                     ['name' => 'scope', 'label' => '范围', 'type' => 'select', 'options' => ['title' => '标题', 'content' => '简介', 'actor' => '演员']],
-                    ['name' => 'words', 'label' => '关键词/正则(逗号或换行)', 'type' => 'textarea'],
+                    ['name' => 'words', 'label' => '关键词', 'type' => 'textarea'],
                     ['name' => 'is_regex', 'label' => '正则', 'type' => 'select', 'options' => ['0' => '普通匹配', '1' => '正则']],
-                    ['name' => 'action', 'label' => '动作', 'type' => 'select', 'options' => ['skip' => '跳过入库', 'review' => '入库待审', 'replace' => '替换后入库']],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'action', 'label' => '动作', 'type' => 'select', 'options' => ['skip' => '跳过不入库', 'review' => '入库并下架', 'replace' => '抠词后再入库']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                 ],
                 'cols' => ['id', 'name', 'scope', 'action', 'status'],
             ],
             'collect_tasks' => [
                 'title' => '定时采集',
-                'model' => \App\Models\Video\VideoCollectTask::class,
+                'hint' => '到点自动采。服务器要跑 Laravel 调度，也可以在列表里立刻检查一遍。',
+                'model' => VideoCollectTask::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'collect_source_id', 'label' => '采集源ID', 'type' => 'number'],
-                    ['name' => 'cron_expression', 'label' => 'Cron', 'type' => 'text'],
+                    ['name' => 'collect_source_id', 'label' => '采集源', 'type' => 'number'],
+                    ['name' => 'cron_expression', 'label' => '周期', 'type' => 'text'],
                     ['name' => 'pages', 'label' => '页数', 'type' => 'number'],
-                    ['name' => 'hours', 'label' => '最近小时', 'type' => 'number'],
+                    ['name' => 'hours', 'label' => '范围', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'name', 'collect_source_id', 'cron_expression', 'pages', 'hours', 'status', 'last_run_at', 'last_msg'],
@@ -290,7 +295,8 @@ class SiteModuleService
             ],
             'collect_logs' => [
                 'title' => '采集日志',
-                'model' => \App\Models\Video\VideoCollectLog::class,
+                'hint' => '每次采集当天、本周、全部都会记一行。失败看说明；删记录不影响片库。',
+                'model' => VideoCollectLog::class,
                 'search' => 'msg',
                 'fields' => [
                     ['name' => 'collect_source_id', 'label' => '采集源ID', 'type' => 'number'],
@@ -681,6 +687,52 @@ class SiteModuleService
                         $inner->orWhere('id', (int) $kw);
                     }
                 });
+            } elseif ($module === 'collect_logs') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('msg', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('collect_source_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('collect_sources')) {
+                        $sourceIds = CollectSourceModel::query()
+                            ->where('name', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($sourceIds !== []) {
+                            $inner->orWhereIn('collect_source_id', $sourceIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'collect_tasks') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('cron_expression', 'like', '%'.$kw.'%')
+                        ->orWhere('last_msg', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('collect_source_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('collect_sources')) {
+                        $sourceIds = CollectSourceModel::query()
+                            ->where('name', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($sourceIds !== []) {
+                            $inner->orWhereIn('collect_source_id', $sourceIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'audits') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('words', 'like', '%'.$kw.'%')
+                        ->orWhere('scope', 'like', '%'.$kw.'%')
+                        ->orWhere('action', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
             } else {
                 $q->where($cfg['search'], 'like', '%'.$kw.'%');
             }
@@ -788,7 +840,49 @@ class SiteModuleService
                 }
             }
         }
-        if ($module === 'topics' || $module === 'slides' || $module === 'groups' || $module === 'ads' || $module === 'links' || $module === 'players' || $module === 'unions') {
+        if ($module === 'collect_logs') {
+            if (array_key_exists('ok', $params) && $params['ok'] !== '' && $params['ok'] !== null) {
+                $q->where('ok', (int) $params['ok']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            if (array_key_exists('collect_source_id', $params) && $params['collect_source_id'] !== '' && $params['collect_source_id'] !== null) {
+                $q->where('collect_source_id', (int) $params['collect_source_id']);
+            }
+        }
+        if ($module === 'collect_tasks') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['never'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->where('last_run_at', 0)->orWhereNull('last_run_at');
+                });
+            }
+            if ((string) ($params['failed'] ?? '') === '1') {
+                $q->where('last_run_at', '>', 0)->where(function ($inner) {
+                    $inner->where('last_msg', '')->orWhere('last_msg', 'not like', '入库%');
+                });
+            }
+            if (array_key_exists('collect_source_id', $params) && $params['collect_source_id'] !== '' && $params['collect_source_id'] !== null) {
+                $q->where('collect_source_id', (int) $params['collect_source_id']);
+            }
+        }
+        if ($module === 'audits') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            $action = trim((string) ($params['action'] ?? ''));
+            if (in_array($action, ['skip', 'review', 'replace'], true)) {
+                $q->where('action', $action);
+            }
+            $scope = trim((string) ($params['scope'] ?? ''));
+            if (in_array($scope, ['title', 'content', 'actor'], true)) {
+                $q->where('scope', $scope);
+            }
+        }
+        if ($module === 'topics' || $module === 'slides' || $module === 'groups' || $module === 'ads' || $module === 'links' || $module === 'players' || $module === 'unions' || $module === 'audits') {
             $q->orderByDesc('sort')->orderByDesc('id');
         } elseif ($module === 'arts') {
             $q->orderByDesc('updated_at')->orderByDesc('id');
@@ -841,6 +935,15 @@ class SiteModuleService
         if ($module === 'unions') {
             $rows = $this->decorateUnions($rows);
         }
+        if ($module === 'collect_logs') {
+            $rows = $this->decorateCollectLogs($rows);
+        }
+        if ($module === 'collect_tasks') {
+            $rows = $this->decorateCollectTasks($rows);
+        }
+        if ($module === 'audits') {
+            $rows = $this->decorateAudits($rows);
+        }
 
         return Result::success([
             'total' => $page->total(),
@@ -850,6 +953,9 @@ class SiteModuleService
 
     public function save(string $module, array $data, ?int $id = null): array
     {
+        if ($module === 'collect_logs') {
+            return Result::fail('采集日志由采集任务写入，不能手工改。');
+        }
         $cfg = $this->config($module);
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
@@ -1111,6 +1217,85 @@ class SiteModuleService
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
             }
         }
+        if ($module === 'collect_tasks') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            $sourceId = (int) ($payload['collect_source_id'] ?? 0);
+            $cron = trim((string) ($payload['cron_expression'] ?? ''));
+            if ($sourceId < 1) {
+                return Result::fail('请选择采集源');
+            }
+            if (! Schema::hasTable('collect_sources') || ! CollectSourceModel::query()->where('id', $sourceId)->exists()) {
+                return Result::fail('采集源不存在，先到采集源里加一个');
+            }
+            if ($cron === '') {
+                $cron = '0 * * * *';
+            }
+            try {
+                new \Cron\CronExpression($cron);
+            } catch (\Throwable) {
+                return Result::fail('周期表达式不对');
+            }
+            if ($name === '') {
+                $name = (string) (CollectSourceModel::query()->where('id', $sourceId)->value('name') ?? '');
+                $name = $name !== '' ? ($name.' 定时') : '定时采集';
+            }
+            $payload['name'] = $name;
+            $payload['collect_source_id'] = $sourceId;
+            $payload['cron_expression'] = $cron;
+            $payload['pages'] = min(50, max(1, (int) ($payload['pages'] ?? 1)));
+            $payload['hours'] = min(8760, max(0, (int) ($payload['hours'] ?? 24)));
+            $payload['status'] = (int) ($payload['status'] ?? 1) === 1 ? 1 : 0;
+        }
+        if ($module === 'audits') {
+            $audit = app(\App\Services\Collect\CollectAuditService::class);
+            if (array_key_exists('name', $payload)) {
+                $name = trim((string) $payload['name']);
+                if ($name !== '') {
+                    $payload['name'] = mb_substr($name, 0, 80);
+                } else {
+                    unset($payload['name']);
+                }
+            }
+            if ($id === null || array_key_exists('words', $payload)) {
+                $parts = $audit->splitWords((string) ($payload['words'] ?? ''));
+                if ($parts === []) {
+                    return Result::fail('请填写关键词，一行一个或用逗号分开');
+                }
+                $isRegex = (int) ($payload['is_regex'] ?? 0) === 1;
+                if ($isRegex) {
+                    foreach ($parts as $word) {
+                        if (@preg_match('/'.$word.'/iu', '') === false) {
+                            return Result::fail('正则写得不对：'.$word);
+                        }
+                    }
+                }
+                $payload['words'] = implode("\n", $parts);
+                if (! isset($payload['name']) || trim((string) $payload['name']) === '') {
+                    $payload['name'] = mb_substr($parts[0], 0, 80);
+                }
+            }
+            if ($id === null || array_key_exists('scope', $payload)) {
+                $scope = trim((string) ($payload['scope'] ?? 'title'));
+                $payload['scope'] = in_array($scope, ['title', 'content', 'actor'], true) ? $scope : 'title';
+            }
+            if ($id === null || array_key_exists('action', $payload)) {
+                $action = trim((string) ($payload['action'] ?? 'skip'));
+                $payload['action'] = in_array($action, ['skip', 'review', 'replace'], true) ? $action : 'skip';
+            }
+            if ($id === null || array_key_exists('status', $payload)) {
+                $payload['status'] = (int) ($payload['status'] ?? 1) === 1 ? 1 : 0;
+            }
+            if ($id === null || array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) ($payload['sort'] ?? 0));
+            }
+            if ($this->hasColumn($probe, 'is_regex')) {
+                if ($id === null || array_key_exists('is_regex', $payload)) {
+                    $payload['is_regex'] = (int) ($payload['is_regex'] ?? 0) === 1 ? 1 : 0;
+                }
+            } else {
+                unset($payload['is_regex']);
+            }
+        }
         if ($module === 'players') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
@@ -1298,7 +1483,7 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'audits'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -1315,6 +1500,9 @@ class SiteModuleService
                 'ads' => '请先勾选广告',
                 'links' => '请先勾选友链',
                 'players' => '请先勾选播放器',
+                'collect_logs' => '请先勾选日志',
+                'collect_tasks' => '请先勾选任务',
+                'audits' => '请先勾选规则',
                 default => '请先勾选评论',
             });
         }
@@ -1651,6 +1839,406 @@ class SiteModuleService
             $row['member_email'] = $member ? (string) $member->email : '';
             $row['type_label'] = $types[$type] ?? ($type !== '' ? $type : '系统');
             $row['dir'] = $delta < 0 ? 'out' : 'in';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function collectLogQueues(): array
+    {
+        $zero = ['all' => 0, 'ok' => 0, 'fail' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_collect_logs')) {
+                return $zero;
+            }
+            $today = strtotime('today');
+
+            return [
+                'all' => (int) VideoCollectLog::query()->count(),
+                'ok' => (int) VideoCollectLog::query()->where('ok', 1)->count(),
+                'fail' => (int) VideoCollectLog::query()->where('ok', 0)->count(),
+                'today' => (int) VideoCollectLog::query()->where('created_at', '>=', $today)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    public function collectSourceName(int $id): string
+    {
+        if ($id < 1) {
+            return '';
+        }
+        try {
+            if (! Schema::hasTable('collect_sources')) {
+                return '';
+            }
+
+            return (string) (CollectSourceModel::query()->where('id', $id)->value('name') ?? '');
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateCollectLogs(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            if ($sid > 0) {
+                $ids[] = $sid;
+            }
+        }
+        $sources = [];
+        if ($ids !== [] && Schema::hasTable('collect_sources')) {
+            $sources = CollectSourceModel::query()
+                ->whereIn('id', array_values(array_unique($ids)))
+                ->get(['id', 'name'])
+                ->keyBy('id')
+                ->all();
+        }
+        foreach ($rows as &$row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            $ok = (int) ($row['ok'] ?? 1) === 1;
+            $created = (int) ($row['created_n'] ?? 0);
+            $updated = (int) ($row['updated_n'] ?? 0);
+            $skipped = (int) ($row['skipped_n'] ?? 0);
+            $page = (int) ($row['page'] ?? 0);
+            $source = $sources[$sid] ?? null;
+            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未知采集源');
+            $row['ok'] = $ok ? 1 : 0;
+            $row['ok_label'] = $ok ? '成功' : '失败';
+            $row['created_n'] = $created;
+            $row['updated_n'] = $updated;
+            $row['skipped_n'] = $skipped;
+            $parts = [];
+            if ($created > 0) {
+                $parts[] = '新建 '.$created;
+            }
+            if ($updated > 0) {
+                $parts[] = '更新 '.$updated;
+            }
+            if ($skipped > 0) {
+                $parts[] = '跳过 '.$skipped;
+            }
+            $row['stat_text'] = $parts !== [] ? implode(' · ', $parts) : '无入库';
+            $row['page_text'] = $page > 0 ? ('第 '.$page.' 页') : '';
+            $row['msg'] = trim((string) ($row['msg'] ?? ''));
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, string> */
+    public function collectCronPresets(): array
+    {
+        return [
+            '0 * * * *' => '每小时',
+            '0 */3 * * *' => '每 3 小时',
+            '0 */6 * * *' => '每 6 小时',
+            '0 2 * * *' => '每天凌晨 2 点',
+            '0 6 * * *' => '每天早上 6 点',
+        ];
+    }
+
+    /** @return array<int, string> */
+    public function collectHourPresets(): array
+    {
+        return [
+            24 => '当天更新',
+            168 => '近 7 天',
+            0 => '全库',
+        ];
+    }
+
+    /** @return list<array{id:int,name:string,status:int}> */
+    public function collectSourceOptions(): array
+    {
+        try {
+            if (! Schema::hasTable('collect_sources')) {
+                return [];
+            }
+
+            return CollectSourceModel::query()
+                ->orderByDesc('status')
+                ->orderByDesc('sort')
+                ->orderBy('id')
+                ->get(['id', 'name', 'status'])
+                ->map(fn ($row) => [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'status' => (int) $row->status,
+                ])
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getCollectTask(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        try {
+            if (! Schema::hasTable('video_collect_tasks')) {
+                return null;
+            }
+            $row = VideoCollectTask::query()->find($id);
+            if (! $row) {
+                return null;
+            }
+            $decorated = $this->decorateCollectTasks([$row->toArray()]);
+
+            return $decorated[0] ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function collectTaskQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'never' => 0, 'fail' => 0];
+        try {
+            if (! Schema::hasTable('video_collect_tasks')) {
+                return $zero;
+            }
+            $all = (int) VideoCollectTask::query()->count();
+            $on = (int) VideoCollectTask::query()->where('status', 1)->count();
+            $never = (int) VideoCollectTask::query()->where(function ($q) {
+                $q->where('last_run_at', 0)->orWhereNull('last_run_at');
+            })->count();
+            $fail = (int) VideoCollectTask::query()
+                ->where('last_run_at', '>', 0)
+                ->where(function ($q) {
+                    $q->where('last_msg', '')->orWhere('last_msg', 'not like', '入库%');
+                })
+                ->count();
+
+            return [
+                'all' => $all,
+                'on' => $on,
+                'off' => $all - $on,
+                'never' => $never,
+                'fail' => $fail,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateCollectTasks(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            if ($sid > 0) {
+                $ids[] = $sid;
+            }
+        }
+        $sources = [];
+        if ($ids !== [] && Schema::hasTable('collect_sources')) {
+            $sources = CollectSourceModel::query()
+                ->whereIn('id', array_values(array_unique($ids)))
+                ->get(['id', 'name', 'status'])
+                ->keyBy('id')
+                ->all();
+        }
+        $cronLabels = $this->collectCronPresets();
+        $hourLabels = $this->collectHourPresets();
+        foreach ($rows as &$row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            $cron = trim((string) ($row['cron_expression'] ?? ''));
+            $hours = (int) ($row['hours'] ?? 0);
+            $pages = max(1, (int) ($row['pages'] ?? 1));
+            $status = (int) ($row['status'] ?? 0) === 1 ? 1 : 0;
+            $lastRun = (int) ($row['last_run_at'] ?? 0);
+            $msg = trim((string) ($row['last_msg'] ?? ''));
+            $source = $sources[$sid] ?? null;
+            $ok = $lastRun > 0 && str_starts_with($msg, '入库');
+            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未选采集源');
+            $row['source_missing'] = $sid > 0 && $source === null ? 1 : 0;
+            $row['source_off'] = $source && (int) $source->status !== 1 ? 1 : 0;
+            $row['cron_label'] = $cronLabels[$cron] ?? ($cron !== '' ? ('自定义 '.$cron) : '未设周期');
+            $row['hours_label'] = $hourLabels[$hours] ?? ('最近 '.$hours.' 小时');
+            $row['pages'] = $pages;
+            $row['status'] = $status;
+            $row['status_label'] = $status === 1 ? '启用' : '停用';
+            $row['last_ok'] = $ok ? 1 : 0;
+            $row['last_msg'] = $msg;
+            $row['never'] = $lastRun < 1 ? 1 : 0;
+            $row['next_run_text'] = $this->collectTaskNextText($cron, $status);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    private function collectTaskNextText(string $cron, int $status): string
+    {
+        if ($status !== 1) {
+            return '已停用';
+        }
+        $cron = trim($cron);
+        if ($cron === '') {
+            return '未设周期';
+        }
+        try {
+            $next = (new \Cron\CronExpression($cron))->getNextRunDate();
+            $ts = $next->getTimestamp();
+            $now = time();
+            if ($ts <= $now) {
+                return '即将执行';
+            }
+            $diff = $ts - $now;
+            if ($diff < 3600) {
+                return '约 '.max(1, (int) ceil($diff / 60)).' 分钟后';
+            }
+            if (date('Y-m-d', $ts) === date('Y-m-d')) {
+                return '今天 '.date('H:i', $ts);
+            }
+            if (date('Y-m-d', $ts) === date('Y-m-d', strtotime('tomorrow'))) {
+                return '明天 '.date('H:i', $ts);
+            }
+
+            return date('m-d H:i', $ts);
+        } catch (\Throwable) {
+            return '周期无效';
+        }
+    }
+
+    /** @return array<string, string> */
+    public function auditScopeOptions(): array
+    {
+        return ['title' => '标题', 'content' => '简介', 'actor' => '演员'];
+    }
+
+    /** @return array<string, string> */
+    public function auditActionOptions(): array
+    {
+        return [
+            'skip' => '跳过不入库',
+            'review' => '入库并下架',
+            'replace' => '抠词后再入库',
+        ];
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getAuditRule(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        try {
+            if (! Schema::hasTable('video_audit_rules')) {
+                return null;
+            }
+            $row = VideoAuditRule::query()->find($id);
+            if (! $row) {
+                return null;
+            }
+            $decorated = $this->decorateAudits([$row->toArray()]);
+
+            return $decorated[0] ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function auditQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'skip' => 0, 'review' => 0, 'replace' => 0];
+        try {
+            if (! Schema::hasTable('video_audit_rules')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoAuditRule::query()->count(),
+                'on' => (int) VideoAuditRule::query()->where('status', 1)->count(),
+                'off' => (int) VideoAuditRule::query()->where('status', 0)->count(),
+                'skip' => (int) VideoAuditRule::query()->where('action', 'skip')->count(),
+                'review' => (int) VideoAuditRule::query()->where('action', 'review')->count(),
+                'replace' => (int) VideoAuditRule::query()->where('action', 'replace')->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param  array<string, mixed>  $data */
+    public function tryAuditRule(array $data): array
+    {
+        $sample = trim((string) ($data['sample'] ?? $data['title'] ?? ''));
+        if ($sample === '') {
+            return Result::fail('请填一句片名或台词试试');
+        }
+        $scope = trim((string) ($data['scope'] ?? 'title'));
+        if (! in_array($scope, ['title', 'content', 'actor'], true)) {
+            $scope = 'title';
+        }
+        $action = trim((string) ($data['action'] ?? 'skip'));
+        if (! in_array($action, ['skip', 'review', 'replace'], true)) {
+            $action = 'skip';
+        }
+        $words = (string) ($data['words'] ?? '');
+        $isRegex = (int) ($data['is_regex'] ?? 0) === 1;
+        $audit = app(\App\Services\Collect\CollectAuditService::class);
+        if ($audit->splitWords($words) === []) {
+            return Result::fail('请先填写关键词');
+        }
+        if ($isRegex) {
+            foreach ($audit->splitWords($words) as $word) {
+                if (@preg_match('/'.$word.'/iu', '') === false) {
+                    return Result::fail('正则写得不对：'.$word);
+                }
+            }
+        }
+        $hit = $audit->matchText($sample, $words, $isRegex);
+        $labels = $this->auditActionOptions();
+        if (! $hit) {
+            return Result::success(['hit' => 0], '没有命中，会正常入库');
+        }
+
+        return Result::success([
+            'hit' => 1,
+            'action' => $action,
+            'scope' => $scope,
+        ], '命中了，将'.$labels[$action]);
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateAudits(array $rows): array
+    {
+        $scopes = $this->auditScopeOptions();
+        $actions = $this->auditActionOptions();
+        $audit = app(\App\Services\Collect\CollectAuditService::class);
+        foreach ($rows as &$row) {
+            $scope = trim((string) ($row['scope'] ?? 'title'));
+            $action = trim((string) ($row['action'] ?? 'skip'));
+            $status = (int) ($row['status'] ?? 0) === 1 ? 1 : 0;
+            $words = $audit->splitWords((string) ($row['words'] ?? ''));
+            $preview = array_slice($words, 0, 6);
+            $row['scope'] = $scope;
+            $row['action'] = $action;
+            $row['status'] = $status;
+            $row['scope_label'] = $scopes[$scope] ?? $scope;
+            $row['action_label'] = $actions[$action] ?? $action;
+            $row['status_label'] = $status === 1 ? '启用' : '停用';
+            $row['is_regex'] = (int) ($row['is_regex'] ?? 0) === 1 ? 1 : 0;
+            $row['word_n'] = count($words);
+            $row['words_preview'] = implode('、', $preview);
+            if (count($words) > 6) {
+                $row['words_preview'] .= ' 等'.$row['word_n'].'个';
+            }
         }
         unset($row);
 
@@ -2430,7 +3018,7 @@ class SiteModuleService
 
     public function runCollectTask(int $id): array
     {
-        $task = \App\Models\Video\VideoCollectTask::query()->find($id);
+        $task = VideoCollectTask::query()->find($id);
         if (! $task) {
             return Result::fail('任务不存在');
         }

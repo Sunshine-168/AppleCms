@@ -122,7 +122,7 @@ return [
         'collect_logs' => '失败和成功记录，按资源站查',
         'collect_tasks' => '到点自动采，不用一直守着',
         'unions' => '别人给的苹果接口，点接入才进采集源',
-        'audits' => '先入临时表的片子，过了才上架',
+        'audits' => '采集时拦标题、简介、演员里的词',
         'collect_hub' => '按站看今天采了多少',
         'collect_temps' => '还没转入正库的片子',
         'config_collect' => '地区词库、人气随机；站点设置「更多」也有',

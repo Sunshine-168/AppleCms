@@ -199,13 +199,22 @@
         U.get('/admin/video/templates/read', {path: path}).then(function (res) {
             a.classList.remove('is-loading');
             if (seq !== loadSeq) return;
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '读取失败', 'err'); return; }
+            if (!res || res.code !== 0) {
+                U.toast((res && (res.msg || res.message)) || '读取失败', 'err');
+                return;
+            }
             var raw = (res.data && res.data.content) || '';
             eol = sniffEol(raw);
             current = path;
             saved = normalize(raw);
-            setContent(saved);
-            showEditor(true);
+            try {
+                setContent(saved);
+                showEditor(true);
+            } catch (err) {
+                editor.hidden = false;
+                editor.value = saved;
+                U.toast('高亮没加上，已用文本框打开', 'err');
+            }
             markActive(path);
             setMeta((res.data && res.data.label) || label, path, res.data && res.data.backup_at);
             var url = new URL(window.location.href);

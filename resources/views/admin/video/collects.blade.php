@@ -9,6 +9,7 @@
             <button type="button" class="btn btn-sm" id="collect-source-add-btn">新增采集源</button>
             <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">定时采集</a>
         </div>
     </div>
     <div class="card-body">
@@ -148,8 +149,11 @@
                 return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
             }},
             {title: '采集', cls: 'actions collect-ops', html: collectHtml},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-bind">绑定</a><a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: '操作', cls: 'actions', html: function (d) {
+                return '<a href="#" class="btn-link js-bind">绑定</a>'
+                    + '<a class="btn-link js-logs" href="/admin/video/collect_logs?collect_source_id=' + encodeURIComponent(d.id || '') + '">日志</a>'
+                    + '<a class="btn-link js-task" href="/admin/video/collect_tasks/create?collect_source_id=' + encodeURIComponent(d.id || '') + '">定时</a>'
+                    + '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
             }}
         ]
     });
@@ -268,6 +272,7 @@
     U.on('#collect-source-table', 'click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;
+        if (a.classList.contains('js-logs') || a.classList.contains('js-task')) return;
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;

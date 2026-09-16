@@ -28,6 +28,7 @@ class LoginLogIndexPageTest extends TestCase
         $this->assertStringContainsString('今天', $html);
         $this->assertStringContainsString('近7天', $html);
         $this->assertStringContainsString('我的', $html);
+        $this->assertMatchesRegularExpression('/id="login-log-ip-chip"[^>]*\bhidden\b/', $html);
         $this->assertStringContainsString('/admin/user', $html);
         $this->assertStringNotContainsString('sysuserlog-refresh-btn', $html);
         $this->assertStringNotContainsString('>刷新<', $html);

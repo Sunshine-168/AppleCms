@@ -172,6 +172,11 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/cards/generate', [SiteModule::class, 'generateCards']);
     Route::post('/video/invites/generate', [SiteModule::class, 'generateInvites']);
     Route::post('/video/collect_tasks/run', [SiteModule::class, 'runCollectTask']);
+    Route::get('/video/collect_tasks/create', [SiteModule::class, 'createCollectTask']);
+    Route::get('/video/collect_tasks/{id}/edit', [SiteModule::class, 'editCollectTask'])->whereNumber('id');
+    Route::get('/video/audits/create', [SiteModule::class, 'createAuditRule']);
+    Route::get('/video/audits/{id}/edit', [SiteModule::class, 'editAuditRule'])->whereNumber('id');
+    Route::post('/video/audits/try', [SiteModule::class, 'tryAuditRule']);
     Route::post('/video/players/ensure', [SiteModule::class, 'ensurePlayers']);
     Route::get('/video/unions/create', [SiteModule::class, 'createUnion']);
     Route::get('/video/unions/{id}/edit', [SiteModule::class, 'editUnion'])->whereNumber('id');

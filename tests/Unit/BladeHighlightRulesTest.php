@@ -43,8 +43,33 @@ class BladeHighlightRulesTest extends TestCase
         $this->assertContains('includeIf', $blade);
         $this->assertContains('forelse', $blade);
         $this->assertContains('json', $blade);
+        $this->assertContains('php', $blade);
+        $this->assertContains('guest', $blade);
+        $this->assertContains('extends', $blade);
+        $this->assertContains('section', $blade);
+        $this->assertContains('for', $blade);
+        $this->assertContains('foreach', $blade);
         $this->assertStringContainsString('vodDirRe', $js);
-        $this->assertStringContainsString("stream.peek() === '@'", $js);
+        $this->assertStringContainsString('cutRe', $js);
+        $this->assertStringContainsString('htmlMode.token', $js);
+        $this->assertStringNotContainsString('overlayMode', $js);
+    }
+
+    public function test_requested_directives_match_the_highlighter_regex(): void
+    {
+        $js = (string) file_get_contents(base_path('plugins/CodeEditor/assets/blade.js'));
+        $this->assertSame(1, preg_match("/var BLADE_WORDS = '([^']+)'/", $js, $m));
+        $re = '/^@(?:'.$m[1].')\b/';
+        foreach ([
+            '@php', '@endphp', '@if', '@endif', '@else', '@elseif',
+            '@for', '@endfor', '@foreach', '@endforeach',
+            '@guest', '@endguest', '@auth', '@endauth',
+            '@extends', '@section', '@endsection', '@csrf', '@json',
+        ] as $dir) {
+            $this->assertSame(1, preg_match($re, $dir), $dir);
+        }
+        $this->assertSame(1, preg_match('/^@(?:end)?vod[A-Za-z]*\b/', '@vodSource'));
+        $this->assertSame(1, preg_match('/^@(?:end)?vod[A-Za-z]*\b/', '@endvodSource'));
     }
 
     public function test_css_at_rules_are_not_treated_as_blade(): void
