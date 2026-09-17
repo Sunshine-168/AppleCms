@@ -203,9 +203,85 @@ class SiteOpsService
         return $ran;
     }
 
+    /**
+     * @return array{
+     *     site: array<string, mixed>,
+     *     engines: list<array{id:string,label:string,token_key:string,hint:string,token:string,ready:bool}>,
+     *     video_count: int,
+     *     recent_count: int,
+     *     site_url: string,
+     *     host: string,
+     *     local: bool,
+     *     samples: list<string>,
+     *     sitemap_url: string,
+     *     sitemap_inc_url: string,
+     *     robots_url: string,
+     *     rss_url: string
+     * }
+     */
+    public function pushPage(): array
+    {
+        $site = [];
+        try {
+            $site = $this->settings->site();
+        } catch (\Throwable) {
+            $site = [];
+        }
+        $count = 0;
+        $recent = 0;
+        $samples = [];
+        try {
+            if (Schema::hasTable('videos')) {
+                $count = (int) VideoModel::query()->published()->count();
+                $recent = (int) VideoModel::query()->published()->where('updated_at', '>=', time() - 86400 * 2)->count();
+                $samples = VideoModel::query()->published()->orderByDesc('id')->limit(5)->get()
+                    ->map(fn (VideoModel $v) => $this->absolutePushUrl($v))
+                    ->filter()
+                    ->values()
+                    ->all();
+            }
+        } catch (\Throwable) {
+            $count = 0;
+            $recent = 0;
+            $samples = [];
+        }
+        $siteUrl = rtrim((string) config('app.url'), '/');
+        $host = strtolower((string) (parse_url($siteUrl, PHP_URL_HOST) ?: ''));
+        $engines = [
+            ['id' => 'baidu', 'label' => '百度', 'token_key' => 'baidu_push_token', 'hint' => '站长平台 → 普通收录'],
+            ['id' => 'shenma', 'label' => '神马', 'token_key' => 'shenma_push_token', 'hint' => '神马站长 → 数据推送'],
+            ['id' => 'bing', 'label' => '必应', 'token_key' => 'bing_push_token', 'hint' => 'Bing Webmaster API Key'],
+        ];
+        foreach ($engines as &$row) {
+            $row['token'] = trim((string) ($site[$row['token_key']] ?? ''));
+            $row['ready'] = $row['token'] !== '';
+        }
+        unset($row);
+
+        return [
+            'site' => $site,
+            'engines' => $engines,
+            'video_count' => $count,
+            'recent_count' => $recent,
+            'site_url' => $siteUrl,
+            'host' => $host,
+            'local' => $this->isLocalPushHost($host),
+            'samples' => $samples,
+            'sitemap_url' => url('/sitemap.xml'),
+            'sitemap_inc_url' => url('/sitemap.xml?inc=1'),
+            'robots_url' => url('/robots.txt'),
+            'rss_url' => url('/rss.xml'),
+        ];
+    }
+
     public function seoPush(string $engine = 'baidu', int $limit = 50): array
     {
-        $engine = $engine === '' ? 'baidu' : $engine;
+        $engine = in_array($engine, ['baidu', 'shenma', 'bing'], true) ? $engine : 'baidu';
+        $label = match ($engine) {
+            'shenma' => '神马',
+            'bing' => '必应',
+            default => '百度',
+        };
         $tokenKey = match ($engine) {
             'shenma' => 'shenma_push_token',
             'bing' => 'bing_push_token',
@@ -213,38 +289,121 @@ class SiteOpsService
         };
         $token = trim((string) $this->settings->get($tokenKey, ''));
         if ($token === '') {
-            return Result::fail('请先填写 '.$engine.' 推送 token');
+            return Result::fail('还没填'.$label.'的 Token，填了才能推');
+        }
+        $limit = max(1, min(100, $limit));
+        $urls = [];
+        try {
+            if (Schema::hasTable('videos')) {
+                $urls = VideoModel::query()->published()->orderByDesc('id')->limit($limit)->get()
+                    ->map(fn (VideoModel $v) => $this->absolutePushUrl($v))
+                    ->filter()
+                    ->values()
+                    ->all();
+            }
+        } catch (\Throwable) {
+            $urls = [];
+        }
+        if ($urls === []) {
+            return Result::fail('没有已发布的影片可推');
         }
         $site = rtrim((string) config('app.url'), '/');
-        $urls = VideoModel::query()->published()->orderByDesc('id')->limit(max(1, min(200, $limit)))->get()
-            ->map(fn (VideoModel $v) => $site.$v->url)
-            ->all();
-        if ($urls === []) {
-            return Result::fail('没有可推送的影片');
-        }
+        $host = (string) (parse_url($site, PHP_URL_HOST) ?: '');
         try {
-            $host = parse_url($site, PHP_URL_HOST) ?: '';
             $endpoint = match ($engine) {
-                'shenma' => 'https://data.zhanzhang.sm.cn/push?site='.urlencode((string) $host).'&user_name=&resource_name=daily&token='.urlencode($token),
+                'shenma' => 'https://data.zhanzhang.sm.cn/push?site='.urlencode($host).'&user_name=&resource_name=daily&token='.urlencode($token),
                 'bing' => 'https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch?apikey='.urlencode($token),
-                default => 'http://data.zz.baidu.com/urls?site='.urlencode((string) $host).'&token='.urlencode($token),
+                default => 'http://data.zz.baidu.com/urls?site='.urlencode($host).'&token='.urlencode($token),
             };
             if ($engine === 'bing') {
-                $res = Http::timeout(20)->post($endpoint, ['siteUrl' => $site, 'urlList' => $urls]);
+                $res = Http::timeout(20)->asJson()->post($endpoint, ['siteUrl' => $site, 'urlList' => $urls]);
             } else {
                 $res = Http::timeout(20)
                     ->withBody(implode("\n", $urls), 'text/plain')
                     ->post($endpoint);
             }
         } catch (ConnectionException $e) {
-            return Result::fail($e->getMessage());
+            return Result::fail($label.'连不上：'.($e->getMessage() ?: '网络错误'));
+        }
+
+        return $this->readPushResponse($engine, $label, $urls, $res);
+    }
+
+    protected function absolutePushUrl(VideoModel $video): string
+    {
+        $loc = trim((string) $video->url);
+        if ($loc === '') {
+            return '';
+        }
+        if (str_starts_with($loc, 'http://') || str_starts_with($loc, 'https://')) {
+            return $loc;
+        }
+        $site = rtrim((string) config('app.url'), '/');
+
+        return $site.(str_starts_with($loc, '/') ? $loc : '/'.$loc);
+    }
+
+    protected function isLocalPushHost(string $host): bool
+    {
+        $host = strtolower($host);
+        if ($host === '' || in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            return true;
+        }
+
+        return str_ends_with($host, '.local') || str_ends_with($host, '.test');
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  \Illuminate\Http\Client\Response  $res
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    protected function readPushResponse(string $engine, string $label, array $urls, $res): array
+    {
+        $json = $res->json();
+        $body = trim((string) $res->body());
+        $err = '';
+        if (is_array($json)) {
+            if (isset($json['ErrorCode']) && (string) $json['ErrorCode'] !== '' && (string) $json['ErrorCode'] !== '0') {
+                $err = (string) ($json['Message'] ?? $json['ErrorCode']);
+            } elseif (array_key_exists('error', $json) && $json['error'] !== '' && $json['error'] !== 0 && $json['error'] !== '0' && $json['error'] !== null) {
+                $err = (string) ($json['message'] ?? $json['msg'] ?? $json['error']);
+            }
+        }
+        if ($err === '' && ! $res->successful()) {
+            $err = is_array($json)
+                ? (string) ($json['message'] ?? $json['Message'] ?? $json['msg'] ?? '')
+                : '';
+            if ($err === '') {
+                $plain = trim(preg_replace('/\s+/', ' ', strip_tags($body)) ?? '');
+                $err = $plain !== '' ? mb_substr($plain, 0, 180) : ('HTTP '.$res->status());
+            }
+        }
+        if ($err !== '') {
+            return Result::fail($label.'没收下：'.$err);
+        }
+
+        $n = count($urls);
+        $remain = null;
+        if (is_array($json)) {
+            if (isset($json['success']) && is_numeric($json['success'])) {
+                $n = (int) $json['success'];
+            }
+            if (array_key_exists('remain', $json) && $json['remain'] !== '' && $json['remain'] !== null) {
+                $remain = $json['remain'];
+            }
+        }
+        $msg = $label.'收下了 '.$n.' 条';
+        if ($remain !== null) {
+            $msg .= '，额度还剩 '.$remain;
         }
 
         return Result::success([
-            'count' => count($urls),
+            'count' => $n,
             'engine' => $engine,
-            'response' => $res->json() ?: $res->body(),
-        ], $engine.' 已提交 '.count($urls).' 条');
+            'remain' => $remain,
+            'urls' => $urls,
+        ], $msg);
     }
 
     public function baiduPush(int $limit = 50): array
@@ -399,45 +558,67 @@ class SiteOpsService
         $item->save();
     }
 
-    /** @return array{nginx:string,apache:string,mode:string,suffix:string} */
+    /** @return array<string, mixed> */
     public function rewriteRules(): array
     {
-        $mode = (string) $this->settings->get('rewrite_mode', config('video.rewrite.mode', 'laravel'));
-        $suffix = (string) $this->settings->get('rewrite_suffix', config('video.rewrite.suffix', '.html'));
+        $mode = 'laravel';
+        $suffix = '.html';
+        try {
+            $mode = (string) $this->settings->get('rewrite_mode', config('video.rewrite.mode', 'laravel'));
+            $suffix = (string) $this->settings->get('rewrite_suffix', config('video.rewrite.suffix', '.html'));
+        } catch (\Throwable) {
+            $mode = (string) config('video.rewrite.mode', 'laravel');
+            $suffix = (string) config('video.rewrite.suffix', '.html');
+        }
+        if ($mode !== 'mac') {
+            $mode = 'laravel';
+        }
+        $mac = $mode === 'mac';
+        $suffix = $suffix === '' ? '.html' : $suffix;
+
         $nginx = <<<'NGINX'
+# 网站根目录指到项目的 public 目录
 location / {
     try_files $uri $uri/ /index.php?$query_string;
 }
 location ~ \.php$ {
-    fastcgi_pass unix:/run/php/php-fpm.sock;
-    fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
     include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+    fastcgi_pass 127.0.0.1:9000;
+    # Linux 套接字示例：fastcgi_pass unix:/run/php/php-fpm.sock;
 }
 NGINX;
-        if ($mode === 'mac') {
-            $nginx .= <<<NGINX
 
-# MacCMS style: /index.php/vod/detail/id/123{$suffix}
-location /index.php/ {
-    try_files \$uri /index.php?\$query_string;
-}
-NGINX;
-        }
         $apache = <<<'APACHE'
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^index\.php$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.php [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
 </IfModule>
 APACHE;
 
         return [
+            'mode' => $mode,
+            'mode_label' => $mac ? '苹果风格' : '本站路由',
+            'mode_sample' => $mac ? '/index.php/vod/detail/id/123'.$suffix : '/vod/123',
+            'suffix' => $suffix,
+            'mac' => $mac,
+            'examples' => $mac ? [
+                ['label' => '首页', 'path' => '/'],
+                ['label' => '分类', 'path' => '/index.php/vod/type/id/1'.$suffix],
+                ['label' => '详情', 'path' => '/index.php/vod/detail/id/1'.$suffix],
+                ['label' => '播放', 'path' => '/index.php/vod/play/id/1/sid/1/nid/1'.$suffix],
+                ['label' => '搜索', 'path' => '/index.php/vod/search'.$suffix],
+            ] : [
+                ['label' => '首页', 'path' => '/'],
+                ['label' => '分类', 'path' => '/type/1'],
+                ['label' => '详情', 'path' => '/vod/1'],
+                ['label' => '播放', 'path' => '/play/1/1/1'],
+                ['label' => '搜索', 'path' => '/search'],
+            ],
             'nginx' => $nginx,
             'apache' => $apache,
-            'mode' => $mode,
-            'suffix' => $suffix,
         ];
     }
 

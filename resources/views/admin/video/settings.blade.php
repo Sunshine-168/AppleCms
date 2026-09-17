@@ -121,7 +121,7 @@
                 </select>
                 <label for="rewrite_suffix">后缀</label>
                 <input id="rewrite_suffix" type="text" name="rewrite_suffix" value="{{ $s['rewrite_suffix'] ?? '.html' }}">
-                <p class="muted field-hint">苹果风格才会用到后缀。本站路由一般是 <code>/vod/123</code>。</p>
+                <p class="muted field-hint">苹果风格才会用到后缀。本站路由一般是 <code>/vod/123</code>。服务器要抄的 Nginx / Apache 在「<a href="/admin/video/rewrite">伪静态</a>」。</p>
 
                 <h3>页面缓存</h3>
                 <p class="muted field-hint">全页缓存和磁盘静态页请到 <a href="/admin/video/make">静态生成</a> 里开关、预热和写出文件。</p>
@@ -209,20 +209,12 @@
 
                 <details class="settings-details">
                     <summary>入库与资源接口</summary>
-                    <label for="provide_key">资源接口密钥</label>
-                    <input id="provide_key" type="text" name="provide_key" value="{{ $s['provide_key'] ?? '' }}" placeholder="非空时 /api.php/provide/vod 需带 key">
-                    <p class="muted field-hint">别人来拉本站片子时用。站外推片密钥在「<a href="/admin/video/config/interface">入库接口</a>」。</p>
+                    <p class="muted field-hint">别人来拉本站片子在「<a href="/admin/video/config/api">开放 API</a>」。别人 POST 片子进来在「<a href="/admin/video/config/interface">入库接口</a>」。你去拉别人在「<a href="/admin/video/collects">采集源</a>」。</p>
                 </details>
 
                 <details class="settings-details">
                     <summary>搜索引擎推送</summary>
-                    <label for="baidu_push_token">百度 Token</label>
-                    <input id="baidu_push_token" type="text" name="baidu_push_token" value="{{ $s['baidu_push_token'] ?? '' }}">
-                    <label for="shenma_push_token">神马 Token</label>
-                    <input id="shenma_push_token" type="text" name="shenma_push_token" value="{{ $s['shenma_push_token'] ?? '' }}">
-                    <label for="bing_push_token">必应 Key</label>
-                    <input id="bing_push_token" type="text" name="bing_push_token" value="{{ $s['bing_push_token'] ?? '' }}">
-                    <p class="muted field-hint">在「<a href="/admin/video/push">推送</a>」里用。没有账号就留空。</p>
+                    <p class="muted field-hint">百度 / 神马 / 必应的 Token 和推送在「<a href="/admin/video/push">搜索推送</a>」里。sitemap 也在那页复制。</p>
                 </details>
 
                 <details class="settings-details">

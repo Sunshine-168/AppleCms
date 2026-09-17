@@ -47,7 +47,16 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('内容接入', $html);
         $this->assertStringContainsString('/admin/video/config/ip', $html);
         $this->assertStringContainsString('后台 IP 白名单', $html);
+        $this->assertStringContainsString('/admin/video/rewrite', $html);
+        $this->assertStringContainsString('伪静态', $html);
+        $this->assertStringContainsString('/admin/video/config/api', $html);
+        $this->assertStringContainsString('开放 API', $html);
+        $this->assertStringContainsString('/admin/video/push', $html);
+        $this->assertStringContainsString('搜索推送', $html);
         $this->assertStringNotContainsString('name="admin_ip_allow"', $html);
+        $this->assertStringNotContainsString('name="provide_key"', $html);
+        $this->assertStringNotContainsString('name="baidu_push_token"', $html);
+        $this->assertStringNotContainsString('非空时 /api.php/provide/vod', $html);
         $this->assertStringNotContainsString('上传与后台 IP', $html);
     }
 }

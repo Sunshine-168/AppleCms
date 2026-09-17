@@ -85,12 +85,24 @@ class SiteOps extends Controller
 
     public function push(): View
     {
-        return view('admin.video.push');
+        return view('admin.video.push', $this->ops->pushPage());
     }
 
     public function pushRun(Request $request): JsonResponse
     {
-        $data = $this->ops->seoPush((string) $request->input('engine', 'baidu'), (int) $request->input('limit', 50));
+        $engine = (string) $request->input('engine', 'baidu');
+        $data = $this->ops->seoPush($engine, (int) $request->input('limit', 50));
+        $label = match ($engine) {
+            'shenma' => '神马',
+            'bing' => '必应',
+            default => '百度',
+        };
+        $n = (int) (($data['data']['count'] ?? 0));
+        $data = AdminOpLog::ifOk($data, 'push', '向'.$label.'推了 '.$n.' 条', [
+            'module' => '搜索推送',
+            'target_type' => 'seo_push',
+            'payload' => ['engine' => $engine, 'limit' => (int) $request->input('limit', 50)],
+        ]);
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

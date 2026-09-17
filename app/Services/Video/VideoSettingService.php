@@ -182,13 +182,21 @@ class VideoSettingService
         $this->applyRuntime();
 
         $tab = trim((string) ($data['tab'] ?? ''));
-        $summary = match ($tab) {
-            'look' => '改了站点外观设置',
-            'interact' => '改了站点互动设置',
-            'more' => '改了站点更多设置',
-            default => array_key_exists('admin_ip_allow', $data) && $tab === ''
-                ? (((string) ($data['admin_ip_allow'] ?? '')) === '' ? '关闭了后台 IP 白名单' : '改了后台 IP 白名单')
-                : '改了站点设置',
+        $summary = match (true) {
+            $tab === 'look' => '改了站点外观设置',
+            $tab === 'interact' => '改了站点互动设置',
+            $tab === 'more' => '改了站点更多设置',
+            array_key_exists('admin_ip_allow', $data) && $tab === '' => ((string) ($data['admin_ip_allow'] ?? '')) === ''
+                ? '关闭了后台 IP 白名单'
+                : '改了后台 IP 白名单',
+            array_key_exists('provide_key', $data) && $tab === '' => trim((string) ($data['provide_key'] ?? '')) === ''
+                ? '关掉了开放 API 密钥'
+                : '改了开放 API 密钥',
+            array_key_exists('inbound_key', $data) && $tab === '' => trim((string) ($data['inbound_key'] ?? '')) === ''
+                ? '清掉了入库接口密钥'
+                : '改了入库接口密钥',
+            array_key_exists('baidu_push_token', $data) && $tab === '' => '改了搜索推送 Token',
+            default => '改了站点设置',
         };
 
         return AdminOpLog::ifOk(Result::success([], '已保存'), 'save', $summary, [
@@ -410,7 +418,7 @@ class VideoSettingService
             'url' => [
                 'title' => 'URL 规则',
                 'fields' => [
-                    ['name' => 'rewrite_mode', 'label' => '伪静态', 'type' => 'select', 'options' => ['laravel' => 'Laravel /vod/123', 'mac' => '苹果 index.php/vod']],
+                    ['name' => 'rewrite_mode', 'label' => '链接怎么写', 'type' => 'select', 'options' => ['laravel' => '本站路由 /vod/123', 'mac' => '苹果风格 /index.php/vod/detail/id/123.html']],
                     ['name' => 'rewrite_suffix', 'label' => '后缀', 'type' => 'text'],
                 ],
             ],
@@ -458,6 +466,40 @@ class VideoSettingService
             'rules' => $rules,
             'current_ok' => AdminIpAllowlist::allows($ip, $rules),
             'recent' => $this->recentAdminIps($ip, $rules),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     site: array<string, mixed>,
+     *     has_key: bool,
+     *     app_key_set: bool,
+     *     video_count: int,
+     *     provide_url: string,
+     *     provide_alt: string,
+     *     app_url: string
+     * }
+     */
+    public function apiPage(): array
+    {
+        $site = $this->site();
+        $count = 0;
+        try {
+            if (Schema::hasTable('videos')) {
+                $count = (int) \App\Models\Video\VideoModel::query()->published()->count();
+            }
+        } catch (\Throwable) {
+            $count = 0;
+        }
+
+        return [
+            'site' => $site,
+            'has_key' => trim((string) ($site['provide_key'] ?? '')) !== '',
+            'app_key_set' => trim((string) ($site['app_key'] ?? '')) !== '',
+            'video_count' => $count,
+            'provide_url' => url('/api.php/provide/vod'),
+            'provide_alt' => url('/api/provide/vod'),
+            'app_url' => url('/api.php/app/vod'),
         ];
     }
 
