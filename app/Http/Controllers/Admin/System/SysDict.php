@@ -27,7 +27,7 @@ class SysDict extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.dict.index');
+        return view('admin.system.dict.index', $this->systemDictService->pageBoard());
     }
 
     /**
@@ -36,11 +36,17 @@ class SysDict extends Controller
     public function getSysLists(Request $request): JsonResponse
     {
         $dictType = (string) $request->input('dict_type', '');
-        $dictKey  = (string) $request->input('dict_key', '');
-        $label    = (string) $request->input('label', '');
-        $limit    = (int) $request->input('limit', 10);
+        $q        = (string) $request->input('q', '');
+        if ($q === '') {
+            $q = (string) $request->input('dict_key', '');
+        }
+        if ($q === '') {
+            $q = (string) $request->input('label', '');
+        }
+        $status = (string) $request->input('status', '');
+        $limit  = (int) $request->input('limit', 20);
 
-        $data = $this->systemDictService->getSysLists($dictType, $dictKey, $label, $limit);
+        $data = $this->systemDictService->getSysLists($dictType, $q, $status, $limit);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 

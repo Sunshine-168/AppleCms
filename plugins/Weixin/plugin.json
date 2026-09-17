@@ -2,51 +2,32 @@
     "id": "weixin",
     "name": "微信公众号",
     "name_en": "WeChat official account",
-    "description": "保存 AppId / Secret / Token。没有回调、菜单和消息回复。",
-    "description_en": "Stores AppId, Secret and Token. No callback or reply bot.",
-    "version": "1.0.0",
+    "description": "服务器 URL 验签，关注回复欢迎语，文本按片名搜片。没配 Token 会拒绝。",
+    "description_en": "Echostr handshake, subscribe welcome, text search. Empty token is rejected.",
+    "version": "1.1.0",
     "enabled": false,
-    "capability": "config",
+    "capability": "ready",
     "group": "connect",
+    "provider": "Plugins\\Weixin\\WeixinServiceProvider",
     "admin": {
         "extra_pages": {
             "weixin": {
                 "title": "微信公众号",
-                "hint": "只存配置，没有服务器回调和自动回复。",
+                "hint": "公众号后台把服务器 URL 填成 /weixin，Token 与这里一致。GET 做验签，POST 收消息。没配 Token 不会通过微信接入。",
                 "fields": [
-                    {
-                        "name": "weixin_appid",
-                        "label": "AppId",
-                        "type": "text"
-                    },
-                    {
-                        "name": "weixin_secret",
-                        "label": "AppSecret",
-                        "type": "text"
-                    },
-                    {
-                        "name": "weixin_token",
-                        "label": "Token",
-                        "type": "text"
-                    }
+                    {"name": "weixin_appid", "label": "AppId", "type": "text"},
+                    {"name": "weixin_secret", "label": "AppSecret", "type": "text"},
+                    {"name": "weixin_token", "label": "Token", "type": "text"}
                 ]
             }
         },
         "catalog": {
             "more.security": [
-                {
-                    "url": "/admin/video/config/weixin",
-                    "label": "item.config_weixin",
-                    "hint": "hint.config_weixin",
-                    "tag": "plugin"
-                }
+                {"url": "/admin/video/config/weixin", "label": "item.config_weixin", "hint": "hint.config_weixin", "tag": "plugin"}
             ]
         },
         "settings_links": [
-            {
-                "url": "/admin/video/config/weixin",
-                "label": "item.config_weixin"
-            }
+            {"url": "/admin/video/config/weixin", "label": "item.config_weixin"}
         ]
     }
 }

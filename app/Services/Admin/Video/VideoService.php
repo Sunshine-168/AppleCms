@@ -1421,6 +1421,15 @@ class VideoService
             'sort' => (int)($data['sort'] ?? 0),
             'updated_at' => $now,
         ];
+        if (array_key_exists('player', $data) && Schema::hasColumn('video_sources', 'player')) {
+            $payload['player'] = trim((string) $data['player']);
+        }
+        if (array_key_exists('downer', $data) && Schema::hasColumn('video_sources', 'downer')) {
+            $payload['downer'] = trim((string) $data['downer']);
+        }
+        if (array_key_exists('server_id', $data) && Schema::hasColumn('video_sources', 'server_id')) {
+            $payload['server_id'] = max(0, (int) $data['server_id']);
+        }
 
         if ($id !== null && $id > 0)
         {

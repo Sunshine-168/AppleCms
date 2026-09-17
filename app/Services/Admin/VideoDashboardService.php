@@ -2,7 +2,7 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Member\MemberHistory;
+use App\Models\Member\Member;
 use App\Models\Stat\StatHit;
 use App\Models\Video\VideoCollectLog;
 use App\Models\Video\VideoComment;
@@ -10,6 +10,7 @@ use App\Models\Video\VideoGuestbook;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoPlayFail;
 use App\Models\Video\VideoReport;
+use App\Models\Video\VideoUlog;
 use App\Services\Stats\StatService;
 use App\Services\Video\VideoSettingService;
 use App\Support\Utils\ServerStats;
@@ -31,9 +32,11 @@ class VideoDashboardService
         $today = $overview['today'];
         $yesterday = $overview['yesterday'];
         $todoTotal = $counts['comment_pending'] + $counts['report_open'] + $counts['playfail_open'] + $counts['gbook_pending'] + $counts['collect_fail'];
+        $plays = $this->playStats();
 
         return [
-            'kpis' => $this->kpis($counts, $today, $yesterday, $todoTotal),
+            'kpis' => $this->kpis($today, $yesterday, $counts, $plays, $todoTotal),
+            'reg' => $this->memberReg7(),
             'spark' => $overview['spark'],
             'todos' => $this->todos($counts),
             'todoTotal' => $todoTotal,
@@ -53,12 +56,12 @@ class VideoDashboardService
         return [
             'vod_total' => $this->safe('videos', fn () => VideoModel::query()->count()),
             'vod_today' => $this->safe('videos', fn () => VideoModel::query()->where('created_at', '>=', $today)->count()),
+            'vod_yesterday' => $this->safe('videos', fn () => VideoModel::query()->whereBetween('created_at', [$today - 86400, $today - 1])->count()),
             'comment_pending' => $this->safe('video_comments', fn () => VideoComment::query()->where('status', 0)->count()),
             'report_open' => $this->safe('video_reports', fn () => VideoReport::query()->where('status', 0)->count()),
             'playfail_open' => $this->safe('video_play_fails', fn () => VideoPlayFail::query()->where('status', 0)->count()),
             'gbook_pending' => $this->safe('video_guestbooks', fn () => VideoGuestbook::query()->where('status', 0)->count()),
             'collect_fail' => $this->safe('video_collect_logs', fn () => VideoCollectLog::query()->where('ok', 0)->where('created_at', '>=', $today)->count()),
-            'play_today' => $this->safe('member_histories', fn () => MemberHistory::query()->where('updated_at', '>=', $today)->count()),
         ];
     }
 
@@ -84,12 +87,31 @@ class VideoDashboardService
     }
 
     /**
+     * @param  array<string, mixed>  $today
+     * @param  array<string, mixed>  $yesterday
      * @param  array<string, int>  $counts
+     * @param  array{today: array{pv:int,uv:int}, yesterday: array{pv:int,uv:int}}  $plays
      * @return list<array<string, mixed>>
      */
-    protected function kpis(array $counts, array $today, array $yesterday, int $todoTotal): array
+    protected function kpis(array $today, array $yesterday, array $counts, array $plays, int $todoTotal): array
     {
+        $playToday = (int) $plays['today']['pv'];
+        $playYesterday = (int) $plays['yesterday']['pv'];
+
         return [
+            [
+                'label' => admin_t('dash.play_today'),
+                'value' => $playToday,
+                'delta' => ($playToday === 0 && $playYesterday === 0)
+                    ? null
+                    : $this->stats->change($playToday, $playYesterday),
+                'hint' => $playToday > 0
+                    ? admin_t('dash.uv', ['n' => (int) $plays['today']['uv']])
+                    : admin_t('dash.play_hint'),
+                'href' => route('admin.stats.logs', ['path' => 'play']),
+                'icon' => 'fa-play',
+                'color' => 'purple',
+            ],
             [
                 'label' => admin_t('dash.visits_today'),
                 'value' => $today['pv'],
@@ -102,10 +124,12 @@ class VideoDashboardService
             [
                 'label' => admin_t('dash.in_today'),
                 'value' => $counts['vod_today'],
-                'delta' => null,
+                'delta' => ($counts['vod_today'] === 0 && $counts['vod_yesterday'] === 0)
+                    ? null
+                    : $this->stats->change($counts['vod_today'], $counts['vod_yesterday']),
                 'hint' => admin_t('dash.library', ['n' => $counts['vod_total']]),
                 'href' => '/admin/video',
-                'icon' => 'fa-plus',
+                'icon' => 'fa-film',
                 'color' => 'green',
             ],
             [
@@ -115,16 +139,7 @@ class VideoDashboardService
                 'hint' => $todoTotal > 0 ? admin_t('dash.pending_hint') : admin_t('dash.pending_none'),
                 'href' => '#dash-todos',
                 'icon' => 'fa-inbox',
-                'color' => $todoTotal > 0 ? 'orange' : 'green',
-            ],
-            [
-                'label' => admin_t('dash.play_today'),
-                'value' => $counts['play_today'],
-                'delta' => null,
-                'hint' => admin_t('dash.play_hint'),
-                'href' => '/admin/video/ulogs',
-                'icon' => 'fa-play',
-                'color' => 'cyan',
+                'color' => $todoTotal > 0 ? 'orange' : 'cyan',
             ],
         ];
     }
@@ -271,6 +286,69 @@ class VideoDashboardService
             'last_collect' => $last,
             'last_ok' => $lastOk,
             'attention' => $closed || ! $lastOk || $counts['vod_total'] === 0,
+        ];
+    }
+
+    /**
+     * @return array{today: array{pv:int,uv:int}, yesterday: array{pv:int,uv:int}}
+     */
+    protected function playStats(): array
+    {
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+        if (Schema::hasTable('stat_hits')) {
+            try {
+                return [
+                    'today' => $this->stats->playPageStats($today, $today),
+                    'yesterday' => $this->stats->playPageStats($yesterday, $yesterday),
+                ];
+            } catch (\Throwable) {
+            }
+        }
+        $start = strtotime('today');
+        $todayN = $this->safe('video_ulogs', fn () => VideoUlog::query()->where('type', 'play')->where('created_at', '>=', $start)->count());
+        $yesterdayN = $this->safe('video_ulogs', fn () => VideoUlog::query()->where('type', 'play')->whereBetween('created_at', [$start - 86400, $start - 1])->count());
+
+        return [
+            'today' => ['pv' => $todayN, 'uv' => $todayN],
+            'yesterday' => ['pv' => $yesterdayN, 'uv' => $yesterdayN],
+        ];
+    }
+
+    /**
+     * @return array{days:list<string>,counts:list<int>,total:int,today:int,max:int}
+     */
+    protected function memberReg7(): array
+    {
+        $days = [];
+        $map = [];
+        $start = strtotime('today') - 6 * 86400;
+        for ($i = 0; $i < 7; $i++) {
+            $ts = $start + $i * 86400;
+            $key = date('Y-m-d', $ts);
+            $days[] = date('m-d', $ts);
+            $map[$key] = 0;
+        }
+        if (Schema::hasTable('members')) {
+            try {
+                foreach (Member::query()->where('created_at', '>=', $start)->get(['created_at']) as $row) {
+                    $key = date('Y-m-d', (int) $row->created_at);
+                    if (isset($map[$key])) {
+                        $map[$key]++;
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
+        $counts = array_values($map);
+        $total = array_sum($counts);
+
+        return [
+            'days' => $days,
+            'counts' => $counts,
+            'total' => $total,
+            'today' => (int) ($counts[6] ?? 0),
+            'max' => max($counts) ?: 1,
         ];
     }
 

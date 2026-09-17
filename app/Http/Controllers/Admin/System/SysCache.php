@@ -12,8 +12,6 @@ use Illuminate\Http\Request;
 
 /**
  * 系统缓存管理
- * Class SysCache
- * @package App\Http\Controllers\Admin\System
  */
 class SysCache extends Controller
 {
@@ -26,16 +24,14 @@ class SysCache extends Controller
 
     /**
      * 显示缓存管理页面
-     * @return View|Factory
      */
     public function showCache(): View|Factory
     {
-        return view('admin.system.tools.cache');
+        return view('admin.system.tools.cache', $this->systemCacheService->pageBoard());
     }
 
     /**
      * 获取缓存信息
-     * @return JsonResponse
      */
     public function getCacheInfo(): JsonResponse
     {
@@ -44,8 +40,17 @@ class SysCache extends Controller
     }
 
     /**
-     * 刷新缓存
-     * @return JsonResponse
+     * 按用途清或打包
+     */
+    public function clearCache(Request $request): JsonResponse
+    {
+        $kind = (string) $request->input('kind', 'data');
+        $res = $this->systemCacheService->clear($kind);
+        return Ajax::message($res['code'], $res['msg'], $res['data']);
+    }
+
+    /**
+     * 刷新缓存（数据缓存）
      */
     public function flushCache(): JsonResponse
     {
@@ -55,14 +60,17 @@ class SysCache extends Controller
 
     /**
      * 执行缓存命令
-     * @param Request $request
-     * @return JsonResponse
      */
     public function runCacheCommand(Request $request): JsonResponse
     {
+        $kind = trim((string) $request->input('kind', ''));
+        if ($kind !== '') {
+            $res = $this->systemCacheService->clear($kind);
+            return Ajax::message($res['code'], $res['msg'], $res['data']);
+        }
+
         $command = (string) $request->input('command', '');
         $res = $this->systemCacheService->runArtisan($command);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }
 }
-

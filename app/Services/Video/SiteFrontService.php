@@ -7,6 +7,7 @@ use App\Models\Video\VideoDomain;
 use App\Models\Video\VideoDownloader;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoServer;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTopicModel;
@@ -142,7 +143,15 @@ class SiteFrontService
             return null;
         }
 
-        return \App\Models\Video\VideoRole::query()->where('status', 1)->find($id);
+        $query = \App\Models\Video\VideoRole::query()->where('status', 1);
+        if (\Illuminate\Support\Facades\Schema::hasTable('actors')) {
+            $query->with('actor');
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('videos')) {
+            $query->with('video');
+        }
+
+        return $query->find($id);
     }
 
     public function findArt(int $id): ?\App\Models\Video\VideoArt
@@ -201,6 +210,28 @@ class SiteFrontService
         }
 
         return [$source, $episode instanceof VideoEpisodeModel ? $episode : null];
+    }
+
+    public function resolvePlayUrl(?VideoSourceModel $source, ?VideoEpisodeModel $episode): string
+    {
+        $url = trim((string) ($episode?->url ?? ''));
+        if ($url === '') {
+            return '';
+        }
+        $serverId = (int) ($source?->server_id ?? 0);
+        if ($serverId < 1 || ! Schema::hasTable('video_servers')) {
+            return $url;
+        }
+        if (preg_match('#^(https?:)?//#i', $url)) {
+            return $url;
+        }
+        $server = VideoServer::query()->where('status', 1)->find($serverId);
+        $prefix = rtrim(trim((string) ($server?->url ?? '')), '/');
+        if ($prefix === '') {
+            return $url;
+        }
+
+        return $prefix.'/'.ltrim($url, '/');
     }
 
     public function bumpHits(VideoModel $video): void

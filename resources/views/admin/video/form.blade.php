@@ -143,6 +143,22 @@
             <h3>简介</h3>
             <label for="video-desc">剧情</label>
             <textarea id="video-desc" name="description" rows="8" placeholder="一两段即可，不要整集台词">{{ $video['description'] ?? '' }}</textarea>
+            @includeIf('ai_content::form_button')
+
+            @if($isEdit)
+                <h3>角色</h3>
+                @php $roleRows = is_array($roles ?? null) ? $roles : []; @endphp
+                @if($roleRows === [])
+                    <p class="muted field-hint">还没有挂角色。去「<a href="/admin/video/roles">角色库</a>」把影片 ID 填成 {{ (int) ($video['id'] ?? 0) }}。</p>
+                @else
+                    <ul class="muted">
+                        @foreach($roleRows as $role)
+                            <li>{{ $role['name'] ?? '' }} @if((int)($role['status'] ?? 1) !== 1)（停用）@endif</li>
+                        @endforeach
+                    </ul>
+                    <p class="muted field-hint"><a href="/admin/video/roles">角色库</a> 里改，前台详情页会列出启用的。</p>
+                @endif
+            @endif
 
             <h3>上架</h3>
             <label for="video-status">状态</label>

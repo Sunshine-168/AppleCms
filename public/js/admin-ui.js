@@ -244,7 +244,9 @@
                 list: list,
                 total: total,
                 page: d.current_page || state.page,
-                last: d.last_page || Math.max(1, Math.ceil(total / per))
+                last: d.last_page || Math.max(1, Math.ceil(total / per)),
+                types: d.types || [],
+                queues: d.queues || {}
             };
         }
 
@@ -304,7 +306,7 @@
                 cb.addEventListener('change', fireCheck);
             });
             fireCheck();
-            if (opts.onDraw) opts.onDraw(wrap, parsed.list);
+            if (opts.onDraw) opts.onDraw(wrap, parsed.list, parsed);
         }
 
         function load() {

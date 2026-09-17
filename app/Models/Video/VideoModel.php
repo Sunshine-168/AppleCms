@@ -54,6 +54,11 @@ class VideoModel extends Model
         return $this->hasMany(VideoEpisodeModel::class, 'video_id')->orderBy('episode_num')->orderBy('id');
     }
 
+    public function roles(): HasMany
+    {
+        return $this->hasMany(VideoRole::class, 'video_id')->orderByDesc('sort')->orderBy('id');
+    }
+
     public function plots(): HasMany
     {
         return $this->hasMany(VideoPlot::class, 'video_id')->orderBy('episode_num')->orderBy('sort');

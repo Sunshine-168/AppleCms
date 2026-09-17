@@ -2,7 +2,9 @@
 
 namespace App\Services\Video;
 
+use App\Models\System\SysUserLogModel;
 use App\Models\Video\VideoOption;
+use App\Support\AdminIpAllowlist;
 use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Cache;
@@ -27,10 +29,12 @@ class VideoSettingService
             'baidu_push_token' => '',
             'shenma_push_token' => '',
             'bing_push_token' => '',
+            'pay_wechat_appid' => '',
             'pay_wechat_mchid' => '',
             'pay_wechat_key' => '',
             'pay_alipay_appid' => '',
             'pay_alipay_key' => '',
+            'pay_alipay_public' => '',
             'storage_disk' => 'local',
             's3_key' => '',
             's3_secret' => '',
@@ -81,6 +85,7 @@ class VideoSettingService
             'sms_key' => '',
             'sms_secret' => '',
             'sms_sign' => '',
+            'sms_tpl_code' => '',
             'oauth_qq' => '',
             'oauth_wechat' => '',
             'oauth_weibo' => '',
@@ -95,6 +100,7 @@ class VideoSettingService
             'ai_provider' => '',
             'ai_key' => '',
             'ai_model' => '',
+            'ai_endpoint' => '',
         ];
         if (! $this->ready()) {
             return $defaults;
@@ -126,7 +132,7 @@ class VideoSettingService
         $keys = [
             'site_title', 'site_keyword', 'site_description', 'html_cache_enabled', 'html_cache_ttl', 'disk_html_enabled',
             'rewrite_mode', 'rewrite_suffix', 'baidu_push_token', 'shenma_push_token', 'bing_push_token',
-            'pay_wechat_mchid', 'pay_wechat_key', 'pay_alipay_appid', 'pay_alipay_key', 'storage_disk',
+            'pay_wechat_appid', 'pay_wechat_mchid', 'pay_wechat_key', 'pay_alipay_appid', 'pay_alipay_key', 'pay_alipay_public', 'storage_disk',
             's3_key', 's3_secret', 's3_region', 's3_bucket', 's3_endpoint', 's3_url',
             'icp', 'site_closed', 'site_close_tip', 'collect_in_status', 'collect_sync_pic', 'collect_hours',
             'inbound_key', 'member_register', 'member_comment_login', 'comment_audit', 'gbook_audit',
@@ -135,9 +141,9 @@ class VideoSettingService
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
             'play_buffer', 'play_encrypt', 'danmaku_enabled', 'danmaku_login', 'collect_areawords', 'collect_langwords',
             'collect_to_temp', 'admin_ip_allow', 'weixin_appid', 'weixin_secret', 'weixin_token',
-            'sms_provider', 'sms_key', 'sms_secret', 'sms_sign', 'oauth_qq', 'oauth_wechat', 'oauth_weibo',
+            'sms_provider', 'sms_key', 'sms_secret', 'sms_sign', 'sms_tpl_code', 'oauth_qq', 'oauth_wechat', 'oauth_weibo',
             'theme_primary', 'theme_logo', 'watermark_text', 'analytics_code', 'seo_title_play',
-            'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model',
+            'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model', 'ai_endpoint',
         ];
         try {
             foreach (app(\App\Support\Plugins\PluginHost::class)->extraPages() as $page) {
@@ -150,7 +156,14 @@ class VideoSettingService
         } catch (\Throwable) {
         }
         $keys = array_values(array_unique($keys));
-        $keepIfBlank = ['smtp_pass', 's3_secret', 'ai_key'];
+        if (array_key_exists('admin_ip_allow', $data)) {
+            $checked = $this->prepareAdminIpAllow((string) $data['admin_ip_allow']);
+            if ((int) ($checked['code'] ?? 1) !== 0) {
+                return $checked;
+            }
+            $data['admin_ip_allow'] = (string) ($checked['data']['value'] ?? '');
+        }
+        $keepIfBlank = ['smtp_pass', 's3_secret', 'ai_key', 'pay_wechat_key', 'pay_alipay_key', 'sms_secret', 'weixin_secret'];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;
@@ -173,7 +186,9 @@ class VideoSettingService
             'look' => '改了站点外观设置',
             'interact' => '改了站点互动设置',
             'more' => '改了站点更多设置',
-            default => '改了站点设置',
+            default => array_key_exists('admin_ip_allow', $data) && $tab === ''
+                ? (((string) ($data['admin_ip_allow'] ?? '')) === '' ? '关闭了后台 IP 白名单' : '改了后台 IP 白名单')
+                : '改了站点设置',
         };
 
         return AdminOpLog::ifOk(Result::success([], '已保存'), 'save', $summary, [
@@ -341,12 +356,6 @@ class VideoSettingService
     public function extraPages(): array
     {
         $core = [
-            'ip' => [
-                'title' => '后台 IP 白名单',
-                'fields' => [
-                    ['name' => 'admin_ip_allow', 'label' => '允许 IP', 'type' => 'textarea', 'placeholder' => '留空不限制。多个用逗号或换行'],
-                ],
-            ],
             'theme' => [
                 'title' => '主题参数',
                 'fields' => [
@@ -411,6 +420,103 @@ class VideoSettingService
         } catch (\Throwable) {
             return $core;
         }
+    }
+
+    /**
+     * @return array{
+     *     site: array<string, mixed>,
+     *     current_ip: string,
+     *     forwarded_ip: string,
+     *     local: bool,
+     *     enabled: bool,
+     *     rules: list<string>,
+     *     current_ok: bool,
+     *     recent: list<string>
+     * }
+     */
+    public function ipPage(): array
+    {
+        $site = $this->site();
+        $raw = (string) ($site['admin_ip_allow'] ?? '');
+        $rules = AdminIpAllowlist::parse($raw);
+        $ip = trim((string) request()->ip());
+        $forwarded = '';
+        $xff = trim((string) request()->header('x-forwarded-for', ''));
+        if ($xff !== '') {
+            $first = trim(explode(',', $xff)[0] ?? '');
+            if (filter_var($first, FILTER_VALIDATE_IP) && $first !== $ip) {
+                $forwarded = $first;
+            }
+        }
+
+        return [
+            'site' => $site,
+            'current_ip' => $ip,
+            'forwarded_ip' => $forwarded,
+            'local' => AdminIpAllowlist::isLocal($ip),
+            'enabled' => $rules !== [],
+            'rules' => $rules,
+            'current_ok' => AdminIpAllowlist::allows($ip, $rules),
+            'recent' => $this->recentAdminIps($ip, $rules),
+        ];
+    }
+
+    /**
+     * @param  list<string>  $rules
+     * @return list<string>
+     */
+    protected function recentAdminIps(string $current, array $rules): array
+    {
+        $out = [];
+        $seen = [strtolower($current) => true];
+        foreach ($rules as $rule) {
+            $seen[strtolower($rule)] = true;
+        }
+        try {
+            if (! Schema::hasTable('sys_user_log')) {
+                return [];
+            }
+            $rows = SysUserLogModel::query()->orderByDesc('id')->limit(40)->get(['login_ip']);
+        } catch (\Throwable) {
+            return [];
+        }
+        foreach ($rows as $row) {
+            $ip = trim((string) ($row->login_ip ?? ''));
+            $key = strtolower($ip);
+            if ($ip === '' || isset($seen[$key]) || ! AdminIpAllowlist::isValid($ip)) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = $ip;
+            if (count($out) >= 8) {
+                break;
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return array{code:int,msg:string,data?:array{value:string}} */
+    protected function prepareAdminIpAllow(string $raw): array
+    {
+        $rules = AdminIpAllowlist::parse($raw);
+        $bad = [];
+        foreach ($rules as $rule) {
+            if (! AdminIpAllowlist::isValid($rule)) {
+                $bad[] = $rule;
+            }
+        }
+        if ($bad !== []) {
+            return Result::fail('名单里有无法识别的项：'.implode('、', array_slice($bad, 0, 5)).'。只接受 IP 或网段，例如 203.0.113.8 或 192.168.1.0/24。留空表示不限制。');
+        }
+        if ($rules !== []) {
+            $ip = trim((string) request()->ip());
+            if (! AdminIpAllowlist::allows($ip, $rules)) {
+                return Result::fail('当前访问 IP '.$ip.' 不在名单里。保存后你会被挡在后台外。请先点「加入当前 IP」再保存。');
+            }
+        }
+
+        return Result::success(['value' => implode("\n", $rules)]);
     }
 
     /** @return array{site: array<string, mixed>, has_key: bool, key_tail: string, empty_n: int, provider_kind: string} */

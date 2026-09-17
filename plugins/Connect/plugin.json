@@ -2,21 +2,22 @@
     "id": "connect",
     "name": "第三方登录",
     "name_en": "OAuth login",
-    "description": "保存 QQ / 微信 / 微博密钥。没有 OAuth 跳转和账号绑定。",
-    "description_en": "Stores QQ, WeChat and Weibo keys. No OAuth redirect.",
-    "version": "1.0.0",
+    "description": "前台 QQ / 微信扫码登录。微博密钥只保存，不接通。没配 AppId 和 Secret 会跳转失败。",
+    "description_en": "QQ and WeChat login. Weibo keys are stored only. Empty credentials fail.",
+    "version": "1.1.0",
     "enabled": false,
-    "capability": "config",
+    "capability": "ready",
     "group": "connect",
+    "provider": "Plugins\\Connect\\ConnectServiceProvider",
     "admin": {
         "extra_pages": {
             "connect": {
                 "title": "第三方登录",
-                "hint": "只存配置，前台没有 QQ / 微信登录按钮。",
+                "hint": "每项写成 AppId,Secret。登录页会出现 QQ / 微信按钮。微博与苹果 CMS 一样不接通登录。回调地址 /connect/qq/callback、/connect/wechat/callback。",
                 "fields": [
-                    {"name": "oauth_qq", "label": "QQ AppId/Key", "type": "text"},
-                    {"name": "oauth_wechat", "label": "微信 AppId/Secret", "type": "text"},
-                    {"name": "oauth_weibo", "label": "微博 AppKey/Secret", "type": "text"}
+                    {"name": "oauth_qq", "label": "QQ AppId,Secret", "type": "text", "placeholder": "101XXXX,secret"},
+                    {"name": "oauth_wechat", "label": "微信开放平台 AppId,Secret", "type": "text", "placeholder": "wxXXXX,secret"},
+                    {"name": "oauth_weibo", "label": "微博（只存，不登录）", "type": "text"}
                 ]
             }
         },

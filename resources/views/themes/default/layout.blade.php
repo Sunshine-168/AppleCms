@@ -33,6 +33,8 @@
             <a href="{{ vod_url('roles') }}">角色</a>
             <a href="{{ vod_url('arts') }}">资讯</a>
             <a href="{{ vod_url('websites') }}">导航</a>
+            @includeIf('manga::nav')
+            @includeIf('mall::nav')
             @vodAd(['slot' => 'header'])
                 {!! $item->content !!}
             @endvodAd

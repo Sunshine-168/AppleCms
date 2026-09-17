@@ -20,7 +20,26 @@
                 <option value="m3u8">m3u8</option>
                 <option value="mp4">mp4</option>
                 <option value="parse">parse</option>
+                <option value="down">下载</option>
             </select>
+            <label>播放器标识</label>
+            <input type="text" name="player" placeholder="要和「播放器」里的标识一致">
+            <label>下载器标识</label>
+            <select name="downer">
+                <option value="">不指定</option>
+                @foreach(($downloaders ?? []) as $d)
+                    <option value="{{ $d['code'] ?? '' }}">{{ $d['name'] ?? '' }} ({{ $d['code'] ?? '' }})</option>
+                @endforeach
+            </select>
+            <p class="muted field-hint">下载页用模板替换 {url}/{id}，不是后台任务队列。</p>
+            <label>服务器组</label>
+            <select name="server_id">
+                <option value="0">不拼接前缀</option>
+                @foreach(($servers ?? []) as $s)
+                    <option value="{{ (int) ($s['id'] ?? 0) }}">{{ $s['name'] ?? '' }}</option>
+                @endforeach
+            </select>
+            <p class="muted field-hint">相对路径会拼上该组的地址前缀，再交给播放器。</p>
             <label>排序</label>
             <input type="number" name="sort" value="0">
         </form>
@@ -41,6 +60,9 @@
             {key: 'id', title: 'ID', width: 70},
             {key: 'name', title: '线路名'},
             {key: 'type', title: '类型', width: 80},
+            {key: 'player', title: '播放器', width: 90},
+            {key: 'downer', title: '下载器', width: 90},
+            {key: 'server_id', title: '服务器', width: 80},
             {key: 'episode_total', title: '剧集数', width: 80},
             {key: 'sort', title: '排序', width: 70},
             {key: 'updated_at_text', title: '更新时间', width: 160},
@@ -75,6 +97,9 @@
                     video_id: videoId,
                     name: row.name || '',
                     type: row.type || 'm3u8',
+                    player: row.player || '',
+                    downer: row.downer || '',
+                    server_id: row.server_id || 0,
                     sort: row.sort == null ? 0 : row.sort
                 });
             },

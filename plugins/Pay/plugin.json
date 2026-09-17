@@ -2,38 +2,25 @@
     "id": "pay",
     "name": "在线支付",
     "name_en": "Online pay",
-    "description": "保存微信商户号和支付宝 AppId。没有支付回调，订单需在后台改成已付。",
-    "description_en": "Stores WeChat and Alipay credentials. No pay callback; mark orders paid by hand.",
-    "version": "1.0.0",
+    "description": "会员中心下单，微信 Native / 支付宝电脑网站支付。回调验签后加积分，没配密钥会失败。",
+    "description_en": "Create orders from the member center. WeChat Native and Alipay page pay credit points after a verified notify. Empty keys fail.",
+    "version": "1.1.0",
     "enabled": true,
-    "capability": "config",
+    "capability": "ready",
     "group": "pay",
+    "provider": "Plugins\\Pay\\PayServiceProvider",
     "admin": {
         "extra_pages": {
             "pay": {
                 "title": "支付参数",
-                "hint": "配置后可对账；到账请在「订单」里改已付。没有微信 / 支付宝回调。",
+                "hint": "配齐后会员中心可以付钱。微信走 Native 扫码，支付宝走电脑网站支付。回调地址见会员中心说明。密钥留空会下单失败，后台仍可补录已付。",
                 "fields": [
-                    {
-                        "name": "pay_wechat_mchid",
-                        "label": "微信商户号",
-                        "type": "text"
-                    },
-                    {
-                        "name": "pay_wechat_key",
-                        "label": "微信密钥",
-                        "type": "text"
-                    },
-                    {
-                        "name": "pay_alipay_appid",
-                        "label": "支付宝 AppId",
-                        "type": "text"
-                    },
-                    {
-                        "name": "pay_alipay_key",
-                        "label": "支付宝密钥",
-                        "type": "text"
-                    }
+                    {"name": "pay_wechat_appid", "label": "微信 AppId", "type": "text"},
+                    {"name": "pay_wechat_mchid", "label": "微信商户号", "type": "text"},
+                    {"name": "pay_wechat_key", "label": "微信 API 密钥", "type": "text"},
+                    {"name": "pay_alipay_appid", "label": "支付宝 AppId", "type": "text"},
+                    {"name": "pay_alipay_key", "label": "支付宝 RSA 私钥", "type": "textarea", "placeholder": "PKCS8，含 BEGIN 或纯 Base64"},
+                    {"name": "pay_alipay_public", "label": "支付宝公钥", "type": "textarea", "placeholder": "验签用，没有则支付宝回调会拒绝"}
                 ]
             }
         },
@@ -48,10 +35,7 @@
             ]
         },
         "settings_links": [
-            {
-                "url": "/admin/video/config/pay",
-                "label": "item.config_pay"
-            }
+            {"url": "/admin/video/config/pay", "label": "item.config_pay"}
         ]
     }
 }

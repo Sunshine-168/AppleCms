@@ -3,6 +3,7 @@
 namespace App\Services\Admin\Video;
 
 use App\Models\Member\Member;
+use App\Models\Member\MemberFavorite;
 use App\Models\Member\MemberGroup;
 use App\Models\Member\MemberInvite;
 use App\Models\Member\MemberOrder;
@@ -165,6 +166,7 @@ class SiteModuleService
             ],
             'downloaders' => [
                 'title' => '下载器',
+                'hint' => '这是下载地址模板，不是任务队列。线路填「下载器」标识后，{url} {id} 会替换成剧集地址。前缀匹配也可。',
                 'model' => \App\Models\Video\VideoDownloader::class,
                 'search' => 'name',
                 'fields' => [
@@ -178,6 +180,7 @@ class SiteModuleService
             ],
             'servers' => [
                 'title' => '服务器组',
+                'hint' => '地址前缀。线路选中一组后，相对路径的播放地址会拼上此前缀，再交给播放器解析。',
                 'model' => \App\Models\Video\VideoServer::class,
                 'search' => 'name',
                 'fields' => [
@@ -353,6 +356,7 @@ class SiteModuleService
             ],
             'roles' => [
                 'title' => '角色库',
+                'hint' => '影视角色，挂到影片和演员。详情页会列出；角色页显示简介、影片和演员。',
                 'model' => \App\Models\Video\VideoRole::class,
                 'search' => 'name',
                 'fields' => [
@@ -486,11 +490,12 @@ class SiteModuleService
             ],
             'favorites' => [
                 'title' => '收藏',
+                'hint' => '会员在影片页点的收藏。后台只查看和删除，不能代收藏。',
                 'model' => \App\Models\Member\MemberFavorite::class,
-                'search' => 'member_id',
+                'search' => 'q',
                 'fields' => [
-                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
-                    ['name' => 'video_id', 'label' => '影片ID', 'type' => 'number'],
+                    ['name' => 'member_id', 'label' => '会员', 'type' => 'number'],
+                    ['name' => 'video_id', 'label' => '影片', 'type' => 'number'],
                 ],
                 'cols' => ['id', 'member_id', 'video_id', 'created_at'],
             ],
@@ -871,6 +876,39 @@ class SiteModuleService
                         }
                     }
                 });
+            } elseif ($module === 'favorites') {
+                $q->where(function ($inner) use ($kw) {
+                    if (ctype_digit($kw)) {
+                        $inner->where('id', (int) $kw)
+                            ->orWhere('member_id', (int) $kw)
+                            ->orWhere('video_id', (int) $kw);
+                    } else {
+                        $inner->whereRaw('1 = 0');
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                    if (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
+                });
             } elseif ($module === 'pms') {
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('title', 'like', '%'.$kw.'%')
@@ -1049,6 +1087,20 @@ class SiteModuleService
             }
             if (array_key_exists('member_id', $params) && $params['member_id'] !== '' && $params['member_id'] !== null) {
                 $q->where('member_id', (int) $params['member_id']);
+            }
+        }
+        if ($module === 'favorites') {
+            if (array_key_exists('member_id', $params) && $params['member_id'] !== '' && $params['member_id'] !== null) {
+                $q->where('member_id', (int) $params['member_id']);
+            }
+            if (array_key_exists('video_id', $params) && $params['video_id'] !== '' && $params['video_id'] !== null) {
+                $q->where('video_id', (int) $params['video_id']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            if ((string) ($params['missing'] ?? '') === '1' && Schema::hasTable('videos')) {
+                $q->whereNotIn('video_id', VideoModel::query()->select('id'));
             }
         }
         if ($module === 'ads') {
@@ -1269,6 +1321,9 @@ class SiteModuleService
         if ($module === 'audits') {
             $rows = $this->decorateAudits($rows);
         }
+        if ($module === 'favorites') {
+            $rows = $this->decorateFavorites($rows);
+        }
 
         return Result::success([
             'total' => $page->total(),
@@ -1289,6 +1344,9 @@ class SiteModuleService
         }
         if ($module === 'playfails' && $id === null) {
             return Result::fail('播放失败由前台播放页上报。后台只处理和下线线路。');
+        }
+        if ($module === 'favorites') {
+            return Result::fail('收藏由会员在影片页点出来。后台只查看和删除。');
         }
         if ($module === 'withdraws' && $id === null) {
             return Result::fail('提现由会员申请。后台只审核打款或拒绝。');
@@ -1872,7 +1930,7 @@ class SiteModuleService
     {
         $status = (int) ($row->status ?? 0);
         if ($module === 'orders' && $status === 1 && $oldStatus !== 1) {
-            $this->changePoints((int) $row->member_id, (int) $row->points, 'order', '订单 '.$row->order_no);
+            app(\App\Services\Video\MemberOrderService::class)->credit((int) $row->id);
         }
         if ($module === 'withdraws' && $status === 1 && $oldStatus !== 1) {
             $this->changePoints((int) $row->member_id, -abs((int) $row->amount), 'withdraw', '提现审核通过');
@@ -2085,7 +2143,7 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -2113,6 +2171,7 @@ class SiteModuleService
                 'playfails' => '请先勾选播放失败',
                 'pms' => '请先勾选站内信',
                 'notifies' => '请先勾选通知',
+                'favorites' => '请先勾选收藏',
                 'audits' => '请先勾选规则',
                 default => '请先勾选评论',
             });
@@ -2493,6 +2552,47 @@ class SiteModuleService
         } catch (\Throwable) {
             return $zero;
         }
+    }
+
+    /** @return array<string, int> */
+    public function favoriteQueues(): array
+    {
+        $zero = ['all' => 0, 'today' => 0, 'missing' => 0];
+        try {
+            if (! Schema::hasTable('member_favorites')) {
+                return $zero;
+            }
+            $missing = 0;
+            if (Schema::hasTable('videos')) {
+                $missing = (int) MemberFavorite::query()->whereNotIn('video_id', VideoModel::query()->select('id'))->count();
+            }
+
+            return [
+                'all' => (int) MemberFavorite::query()->count(),
+                'today' => (int) MemberFavorite::query()->where('created_at', '>=', strtotime('today'))->count(),
+                'missing' => $missing,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array{member_name:string,video_title:string} */
+    public function favoriteFocus(int $memberId, int $videoId): array
+    {
+        $name = '';
+        $title = '';
+        try {
+            if ($memberId > 0 && Schema::hasTable('members')) {
+                $name = trim((string) (Member::query()->where('id', $memberId)->value('name') ?? ''));
+            }
+            if ($videoId > 0 && Schema::hasTable('videos')) {
+                $title = trim((string) (VideoModel::query()->where('id', $videoId)->value('title') ?? ''));
+            }
+        } catch (\Throwable) {
+        }
+
+        return ['member_name' => $name, 'video_title' => $title];
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
@@ -3316,6 +3416,58 @@ class SiteModuleService
             $row['play_url'] = $vid > 0
                 ? '/play/'.$vid.($sid > 0 ? '/'.$sid : '').($eid > 0 ? '/'.$eid : '')
                 : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateFavorites(array $rows): array
+    {
+        $videoIds = [];
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $memberIds[] = $mid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== [] && Schema::hasTable('videos')) {
+            try {
+                $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        $members = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $members = Member::query()
+                    ->whereIn('id', array_values(array_unique($memberIds)))
+                    ->get(['id', 'name', 'email'])
+                    ->keyBy('id')
+                    ->all();
+            } catch (\Throwable) {
+                $members = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $mid = (int) ($row['member_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $member = $members[$mid] ?? null;
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['video_missing'] = $vid > 0 && ! array_key_exists($vid, $titles) ? 1 : 0;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) $member->email : '';
+            $row['member_missing'] = $mid > 0 && ! $member ? 1 : 0;
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
         }
         unset($row);
 

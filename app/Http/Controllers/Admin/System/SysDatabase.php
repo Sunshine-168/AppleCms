@@ -172,31 +172,49 @@ class SysDatabase extends Controller
 
     /**
      * 显示数据批量替换页
-     * @return View|Factory
      */
     public function showDatabaseReplace(): View|Factory
     {
-        return view('admin.system.database.replace');
+        return view('admin.system.database.replace', $this->systemDatabaseReplaceService->pageBoard());
+    }
+
+    /**
+     * 先数会改几条
+     */
+    public function previewDatabaseReplace(Request $request): JsonResponse
+    {
+        [$target, $fields, $from] = $this->replaceInput($request);
+        $data = $this->systemDatabaseReplaceService->preview($target, $fields, $from);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     /**
      * 执行数据批量替换
-     * @param Request $request
-     * @return JsonResponse
      */
     public function runDatabaseReplace(Request $request): JsonResponse
     {
-        $table = (string) $request->input('table', '');
+        [$target, $fields, $from] = $this->replaceInput($request);
+        $to = (string) $request->input('to', '');
+        $data = $this->systemDatabaseReplaceService->run($target, $fields, $from, $to);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    /**
+     * @return array{0: string, 1: list<string>, 2: string}
+     */
+    private function replaceInput(Request $request): array
+    {
+        $target = trim((string) $request->input('target', ''));
+        if ($target === '') {
+            $target = $this->systemDatabaseReplaceService->targetIdFromTable((string) $request->input('table', ''));
+        }
         $fields = $request->input('fields', []);
-        if (!is_array($fields))
-        {
+        if (! is_array($fields)) {
             $fields = [];
         }
-        $from = (string) $request->input('from', '');
-        $to = (string) $request->input('to', '');
-        $where = (string) $request->input('where', '');
 
-        $data = $this->systemDatabaseReplaceService->run($table, $fields, $from, $to, $where);
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        return [$target, $fields, (string) $request->input('from', '')];
     }
 }

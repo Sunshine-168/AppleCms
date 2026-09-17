@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Video\VideoSettingService;
+use App\Support\AdminIpAllowlist;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,20 +17,15 @@ class AdminIpAllow
         } catch (\Throwable) {
             return $next($request);
         }
-        if ($raw === '') {
+        $rules = AdminIpAllowlist::parse($raw);
+        if ($rules === []) {
             return $next($request);
         }
         $ip = (string) $request->ip();
-        foreach (preg_split('/[\s,]+/', $raw) ?: [] as $allow) {
-            $allow = trim((string) $allow);
-            if ($allow === '' || $allow === '*') {
-                continue;
-            }
-            if ($allow === $ip) {
-                return $next($request);
-            }
+        if (AdminIpAllowlist::allows($ip, $rules)) {
+            return $next($request);
         }
 
-        abort(403, '当前 IP 不在后台白名单');
+        abort(403, '当前 IP '.$ip.' 不在后台白名单');
     }
 }

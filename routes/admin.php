@@ -92,8 +92,8 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/system/menus/update', [SysPerm::class, 'updateMenu']);// 更新菜单/权限
     Route::post('/system/menus/delete', [SysPerm::class, 'deleteMenu']);// 删除菜单/权限（级联）
 
-    // 字段管理（系统字典）
-    Route::get('/system/dicts', [SysDict::class, 'index']);// 显示系统字典页
+    // 字典（下拉选项，按分组）
+    Route::get('/system/dicts', [SysDict::class, 'index']);// 字典（下拉选项，按分组）
     Route::get('/system/dicts/list', [SysDict::class, 'getSysLists']);// 获取系统字典列表
     Route::post('/system/dicts/add', [SysDict::class, 'addSysSet']);// 添加系统字典
     Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
@@ -270,8 +270,9 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
         Route::get('/sql', 'showDatabaseSql');// 显示SQL执行页
         Route::post('/sql/run', 'runDatabaseSql');// 执行SQL
 
-        Route::get('/replace', 'showDatabaseReplace');// 显示数据批量替换页
-        Route::post('/replace/run', 'runDatabaseReplace');// 执行数据批量替换
+        Route::get('/replace', 'showDatabaseReplace');// 片库文字批量替换
+        Route::post('/replace/preview', 'previewDatabaseReplace');// 先数会改几条
+        Route::post('/replace/run', 'runDatabaseReplace');// 执行替换
     });
     // 系统工具
     Route::prefix('/system/tools')->controller(SysSchedule::class)->group(function () {
@@ -282,11 +283,12 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
         Route::post('/schedule/status', 'updateScheduleStatus');// 更新定时任务状态
         Route::post('/schedule/run', 'runScheduleOnce');// 立即执行定时任务
     });
-    // 缓存管理
+    // 缓存
     Route::prefix('/system/tools')->controller(SysCache::class)->group(function () {
-        Route::get('/cache', 'showCache');// 显示缓存管理页
-        Route::get('/cache/info', 'getCacheInfo');// 获取缓存信息
-        Route::post('/cache/flush', 'flushCache');// 清空缓存
-        Route::post('/cache/run', 'runCacheCommand');// 执行缓存相关命令
+        Route::get('/cache', 'showCache');// 缓存工作台
+        Route::get('/cache/info', 'getCacheInfo');// 缓存现状
+        Route::post('/cache/clear', 'clearCache');// 按用途清或打包
+        Route::post('/cache/flush', 'flushCache');// 清数据缓存
+        Route::post('/cache/run', 'runCacheCommand');// 兼容旧的命令入口
     });
 });

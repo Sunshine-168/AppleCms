@@ -101,6 +101,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.php/receive/*',
             'api/receive/*',
             'api/admin/login',
+            'pay/notify/*',
+            'weixin',
         ]);
         $middleware->alias([
             'member.auth' => \App\Http\Middleware\MemberAuth::class,

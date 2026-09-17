@@ -283,7 +283,8 @@ class AdminOpLog
         $exact = [
             'admin/video/settings' => '改了站点设置',
             'admin/video/settings/test-mail' => '发了测试邮件',
-            'admin/system/tools/cache/flush' => '清空了缓存',
+            'admin/system/tools/cache/flush' => '清了数据缓存',
+            'admin/system/tools/cache/clear' => '清了缓存',
             'admin/set/user/password' => '修改了自己的密码',
             'admin/video/cards/generate' => '生成了积分卡密',
             'admin/video/invites/generate' => '生成了邀请码',
@@ -573,6 +574,7 @@ class AdminOpLog
             'notifies' => '通知',
             'withdraws' => '提现',
             'invites' => '邀请码',
+            'favorites' => '收藏',
             'audits' => '审核规则',
             'downloaders' => '下载器',
             'servers' => '服务器组',

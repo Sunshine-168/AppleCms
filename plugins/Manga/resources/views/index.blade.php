@@ -1,0 +1,22 @@
+@extends('themes.default.layout')
+@section('content')
+    <h1>漫画</h1>
+    @if($list->isEmpty())
+        <p class="muted">还没有上架的漫画。后台启用「漫画」插件后，在内容折叠菜单里添加。</p>
+    @else
+        <div class="grid">
+            @foreach($list as $row)
+                <a class="card" href="{{ url('/manga/'.$row->id) }}">
+                    @if($row->cover)
+                        <img src="{{ $row->cover }}" alt="{{ $row->title }}">
+                    @endif
+                    <div class="meta">
+                        <h3>{{ $row->title }}</h3>
+                        <div class="muted">{{ $row->remarks ?: $row->author }}</div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+        <div class="pager">{{ $list->links() }}</div>
+    @endif
+@endsection

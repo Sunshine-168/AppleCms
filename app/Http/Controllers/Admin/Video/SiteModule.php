@@ -190,6 +190,20 @@ class SiteModule extends Controller
                 'queues' => $this->modules->auditQueues(),
             ]);
         }
+        if ($module === 'favorites') {
+            $memberId = (int) request()->query('member_id', request()->query('member', 0));
+            $videoId = (int) request()->query('video_id', request()->query('video', 0));
+            $focus = $this->modules->favoriteFocus($memberId, $videoId);
+
+            return view('admin.video.favorites', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->favoriteQueues(),
+                'memberId' => $memberId,
+                'videoId' => $videoId,
+                'memberName' => $focus['member_name'],
+                'videoTitle' => $focus['video_title'],
+            ]);
+        }
 
         return view('admin.video.module', [
             'module' => $module,

@@ -2,46 +2,29 @@
     "id": "ai_content",
     "name": "AI 写内容",
     "name_en": "AI content",
-    "description": "预留模型密钥。没有写简介、改标题或批量生成。",
-    "description_en": "Stores model keys. No synopsis or title generation yet.",
-    "version": "1.0.0",
+    "description": "按影片标题调用 OpenAI 兼容接口写简介。没配密钥会失败，不会假装写好。",
+    "description_en": "Generate a synopsis via an OpenAI-compatible API. Empty keys fail.",
+    "version": "1.1.0",
     "enabled": true,
-    "capability": "stub",
+    "capability": "ready",
     "group": "ai",
+    "provider": "Plugins\\AiContent\\AiContentServiceProvider",
     "admin": {
         "extra_pages": {
             "ai": {
                 "title": "AI 写内容",
-                "hint": "只存密钥，还没有接通模型，也不会改影片简介。",
+                "hint": "填密钥后可在本页试写，或在影片编辑点「用 AI 写简介」。只改文本框，需再保存才会入库。接口失败会把错误原样返回。",
                 "fields": [
-                    {
-                        "name": "ai_provider",
-                        "label": "服务商",
-                        "type": "text",
-                        "placeholder": "openai / 通义 / 文心"
-                    },
-                    {
-                        "name": "ai_key",
-                        "label": "API Key",
-                        "type": "text"
-                    },
-                    {
-                        "name": "ai_model",
-                        "label": "模型",
-                        "type": "text",
-                        "placeholder": "如 gpt-4.1-mini"
-                    }
+                    {"name": "ai_provider", "label": "服务商", "type": "text", "placeholder": "openai / 通义 / 文心"},
+                    {"name": "ai_key", "label": "API Key", "type": "text"},
+                    {"name": "ai_model", "label": "模型", "type": "text", "placeholder": "如 gpt-4.1-mini"},
+                    {"name": "ai_endpoint", "label": "兼容接口", "type": "text", "placeholder": "可空。其他服务商填 /v1/chat/completions 地址"}
                 ]
             }
         },
         "catalog": {
             "more.complete": [
-                {
-                    "url": "/admin/video/config/ai",
-                    "label": "item.config_ai",
-                    "hint": "hint.config_ai",
-                    "tag": "plugin"
-                }
+                {"url": "/admin/video/config/ai", "label": "item.config_ai", "hint": "hint.config_ai", "tag": "plugin"}
             ]
         }
     }

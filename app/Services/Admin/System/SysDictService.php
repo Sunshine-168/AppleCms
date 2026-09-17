@@ -10,37 +10,68 @@ use Illuminate\Support\Facades\Cache;
  */
 class SysDictService
 {
+    public const VALUE_TYPES = [
+        0 => '文本',
+        1 => '整数',
+        2 => '小数',
+        3 => 'JSON',
+        4 => '数组',
+        5 => '枚举',
+        6 => '长文本',
+    ];
+
     public SysDictModel $sysDictModel;
 
     public function __construct()
     {
         $this->sysDictModel = new SysDictModel();
     }
+
+    /**
+     * 字典工作台：分组与数量
+     */
+    public function pageBoard(): array
+    {
+        return [
+            'types' => $this->typeRows(),
+            'queues' => $this->queueCounts(),
+        ];
+    }
+
     /**
      * 获取系统字典列表
      */
-    public function getSysLists(string $dictType, string $dictKey, string $label, int $limit): array
+    public function getSysLists(string $dictType, string $q, string $status, int $limit): array
     {
         if ($limit < 1)
         {
-            $limit = 10;
+            $limit = 20;
         }
 
         $where = [];
+        $dictType = trim($dictType);
+        $q = trim($q);
+        $status = trim($status);
 
-        if ($dictType = trim($dictType))
+        if ($dictType !== '')
         {
             $where[] = ['dict_type', '=', $dictType];
         }
 
-        if ($dictKey = trim($dictKey))
+        if ($status !== '')
         {
-            $where[] = ['dict_key', '=', $dictKey];
+            $where[] = ['status', '=', (int) $status];
         }
 
-        if ($label = trim($label))
+        if ($q !== '')
         {
-            $where[] = ['label', '=', $label];
+            $like = '%' . addcslashes($q, '%_\\') . '%';
+            $where['or'] = [
+                ['dict_type', 'like', $like],
+                ['dict_key', 'like', $like],
+                ['label', 'like', $like],
+                ['remark', 'like', $like],
+            ];
         }
 
         $data = $this->sysDictModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
@@ -53,12 +84,13 @@ class SysDictService
 
         foreach ($rows as &$item)
         {
-            $item['dict_value'] = $this->formatDictValue($item);
-            $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
-            $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
+            $item = $this->decorateRow(is_array($item) ? $item : []);
         }
+        unset($item);
 
         $data['data'] = $rows;
+        $data['types'] = $this->typeRows();
+        $data['queues'] = $this->queueCounts();
 
         return Result::success($data);
     }
@@ -75,12 +107,12 @@ class SysDictService
 
         if ($dictType === '' || $dictKey === '')
         {
-            return Result::fail('类型和KEY不能为空');
+            return Result::fail('请填写分组和标识');
         }
 
         if ($this->sysDictModel->existsBy(['dict_type' => $dictType, 'dict_key' => $dictKey]))
         {
-            return Result::fail('该类型下的KEY已存在');
+            return Result::fail('该分组下的标识已存在');
         }
 
         $time = time();
@@ -127,7 +159,7 @@ class SysDictService
 
         if ($dictType === '' || $dictKey === '')
         {
-            return Result::fail('类型和KEY不能为空');
+            return Result::fail('请填写分组和标识');
         }
 
         $old = $this->sysDictModel->findById($id);
@@ -144,7 +176,7 @@ class SysDictService
 
         if ($exists)
         {
-            return Result::fail('该类型下的KEY已存在');
+            return Result::fail('该分组下的标识已存在');
         }
 
         $update = array_merge(
@@ -278,6 +310,64 @@ class SysDictService
     }
 
     /**
+     * 列表行：显示名、值预览、是否启用
+     */
+    private function decorateRow(array $item): array
+    {
+        $item['dict_value'] = $this->formatDictValue($item);
+        $item['value_preview'] = $this->previewText($item['dict_value']);
+        $valueType = (int) ($item['value_type'] ?? 0);
+        $item['value_type_label'] = self::VALUE_TYPES[$valueType] ?? self::VALUE_TYPES[0];
+        $item['is_on'] = (int) ($item['status'] ?? 0) === 0;
+        $label = trim((string) ($item['label'] ?? ''));
+        $key = (string) ($item['dict_key'] ?? '');
+        $item['title'] = $label !== '' ? $label : ($key !== '' ? $key : '未命名');
+        $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
+        $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
+
+        return $item;
+    }
+
+    /**
+     * 已有分组及条数
+     */
+    private function typeRows(): array
+    {
+        $rows = SysDictModel::query()
+            ->select('dict_type')
+            ->selectRaw('COUNT(*) as cnt')
+            ->groupBy('dict_type')
+            ->orderBy('dict_type')
+            ->get()
+            ->toArray();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $type = trim((string) ($row['dict_type'] ?? ''));
+            if ($type === '') {
+                continue;
+            }
+            $out[] = [
+                'dict_type' => $type,
+                'cnt' => (int) ($row['cnt'] ?? 0),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * 全部 / 已停用
+     */
+    private function queueCounts(): array
+    {
+        return [
+            'all' => (int) SysDictModel::query()->count(),
+            'off' => (int) SysDictModel::query()->where('status', 1)->count(),
+        ];
+    }
+
+    /**
      * 格式化系统字典值
      */
     private function formatDictValue(array $row): string
@@ -287,10 +377,43 @@ class SysDictService
             0 => (string) ($row['value_string'] ?? ''),
             1 => (string) ((int) ($row['value_int'] ?? 0)),
             2 => (string) ((float) ($row['value_float'] ?? 0)),
-            3, 4, 5 => json_encode($row['value_json'] ?? null, JSON_UNESCAPED_UNICODE),
+            3, 4, 5 => $this->jsonPreview($row['value_json'] ?? null),
             6 => (string) ($row['value_text'] ?? ''),
             default => (string) ($row['value_string'] ?? ''),
         };
+    }
+
+    private function jsonPreview(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        if (is_array($value) || is_object($value)) {
+            return (string) json_encode($value, JSON_UNESCAPED_UNICODE);
+        }
+        $raw = (string) $value;
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return (string) json_encode($decoded, JSON_UNESCAPED_UNICODE);
+        }
+
+        return $raw;
+    }
+
+    private function previewText(string $value): string
+    {
+        $value = trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+        if ($value === '') {
+            return '';
+        }
+        if (function_exists('mb_strlen') && mb_strlen($value) > 48) {
+            return mb_substr($value, 0, 48) . '…';
+        }
+        if (strlen($value) > 48) {
+            return substr($value, 0, 48) . '…';
+        }
+
+        return $value;
     }
 
     /**

@@ -37,8 +37,26 @@ class InteractionService
         if (Member::query()->where('email', $email)->exists()) {
             return Result::fail('邮箱已注册');
         }
+        $phone = '';
+        $smsOn = false;
+        try {
+            $smsOn = app(\App\Support\Plugins\PluginManager::class)->isEnabled('sms');
+        } catch (\Throwable) {
+            $smsOn = false;
+        }
+        if ($smsOn) {
+            $sms = app(\Plugins\Sms\Services\SmsService::class);
+            $checked = $sms->verify((string) ($data['phone'] ?? ''), (string) ($data['sms_code'] ?? ''), 'register');
+            if (($checked['code'] ?? 1) !== 0) {
+                return $checked;
+            }
+            $phone = (string) ($checked['data']['phone'] ?? '');
+            if ($phone !== '' && Schema::hasColumn('members', 'phone') && Member::query()->where('phone', $phone)->exists()) {
+                return Result::fail('手机号已注册');
+            }
+        }
         $now = time();
-        $member = Member::query()->create([
+        $payload = [
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
@@ -46,7 +64,11 @@ class InteractionService
             'points' => 0,
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+        if ($phone !== '' && Schema::hasColumn('members', 'phone')) {
+            $payload['phone'] = $phone;
+        }
+        $member = Member::query()->create($payload);
         $this->applyInvite($member, (string) ($data['invite'] ?? ''));
         $this->issueInvite($member);
 

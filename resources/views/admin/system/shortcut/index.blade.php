@@ -1,44 +1,44 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.shortcut'))
 
-@section('header_actions')
-    <span class="muted" id="shortcut-updated"></span>
-    <button type="button" class="btn btn-muted btn-sm" id="shortcut-refresh-btn">刷新</button>
-@endsection
+@php
+    $groups = $groups ?? [];
+    $todoTotal = (int) ($todo_total ?? 0);
+@endphp
 
-@section('content')
-    <p class="hint">常用系统功能入口。</p>
-    <div class="tool-grid" id="shortcut-grid"></div>
-@endsection
+@section('plain')
+<div class="card card-panel shortcut-index">
+    <div class="card-header">
+        <span>常用@if($todoTotal > 0) <em>· {{ $todoTotal }}</em>@endif</span>
+        <a class="btn btn-muted btn-sm" href="/admin/more">全部功能</a>
+    </div>
+    <div class="card-body">
+        <p class="muted recycle-lead">日常会点的入口。完整目录、不常用的工具在「<a href="/admin/more">全部功能</a>」里搜。</p>
 
-@push('scripts')
-<script>
-(function () {
-    var U = AdminUi;
-    function setUpdated() {
-        var d = new Date();
-        var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-        document.getElementById('shortcut-updated').textContent = '更新于 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-    }
-    function render(list) {
-        var grid = document.getElementById('shortcut-grid');
-        grid.innerHTML = '';
-        (list || []).forEach(function (it) {
-            var a = document.createElement('a');
-            a.href = it.url || '#';
-            a.textContent = (it.title || '') + (it.desc ? ' · ' + it.desc : '');
-            grid.appendChild(a);
-        });
-    }
-    function loadList() {
-        U.get('/admin/system/shortcut/list').then(function (res) {
-            var list = res && res.data && res.data.data ? res.data.data : [];
-            render(Array.isArray(list) ? list : []);
-            setUpdated();
-        });
-    }
-    U.on('#shortcut-refresh-btn', 'click', loadList);
-    loadList();
-})();
-</script>
-@endpush
+        @foreach($groups as $group)
+            <section class="shortcut-block">
+                <h2>
+                    <span>{{ $group['title'] }}</span>
+                    @if(! empty($group['hint']))
+                        <span class="muted">{{ $group['hint'] }}</span>
+                    @endif
+                </h2>
+                <div class="more-grid">
+                    @foreach($group['items'] as $item)
+                        @php $count = (int) ($item['count'] ?? 0); @endphp
+                        <a class="more-tile{{ $count > 0 ? ' has-count' : '' }}" href="{{ $item['url'] }}">
+                            <strong>
+                                {{ $item['title'] }}
+                                @if($count > 0)
+                                    <em>{{ $count }}</em>
+                                @endif
+                            </strong>
+                            <span>{{ $item['desc'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endforeach
+    </div>
+</div>
+@endsection

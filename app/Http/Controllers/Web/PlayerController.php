@@ -44,7 +44,7 @@ class PlayerController extends Controller
             }
         }
 
-        $rawUrl = $payError !== '' ? '' : (string) ($episode?->url ?? '');
+        $rawUrl = $payError !== '' ? '' : $this->front->resolvePlayUrl($source, $episode);
         $playUrl = $rawUrl;
         $playerCode = trim((string) ($source?->player ?: $source?->name ?: ''));
         $parser = null;

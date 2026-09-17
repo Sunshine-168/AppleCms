@@ -14,6 +14,16 @@
         @endauth
     </p>
     <div class="desc">@vodSubstr(['name' => $video->description, 'len' => 400])</div>
+    @php $roleList = $roles ?? collect(); @endphp
+    @if($roleList && count($roleList))
+        <h2>角色</h2>
+        <ul>
+            @foreach($roleList as $role)
+                <li><a href="{{ $role->url ?? vod_url('role', ['id' => $role->id]) }}">{{ $role->name }}</a></li>
+            @endforeach
+        </ul>
+        <p><a href="{{ vod_url('roles') }}">全部角色</a></p>
+    @endif
     @php $plotList = $plots ?? $video->plots ?? collect(); @endphp
     @if($plotList && count($plotList))
         <h2>分集剧情</h2>

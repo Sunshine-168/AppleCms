@@ -82,8 +82,21 @@ class VodController extends Controller
         $member = Auth::guard('member')->user();
         $favorited = $member ? $this->interaction->isFavorited((int) $member->id, $video->id) : false;
         $plots = $video->relationLoaded('plots') ? $video->plots : collect();
+        $roles = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_roles')) {
+                $roles = \App\Models\Video\VideoRole::query()
+                    ->where('status', 1)
+                    ->where('video_id', $video->id)
+                    ->orderByDesc('sort')
+                    ->orderByDesc('id')
+                    ->get();
+            }
+        } catch (\Throwable) {
+            $roles = collect();
+        }
 
-        return view($this->front->themeView('vod.detail'), compact('site', 'video', 'favorited', 'plots'));
+        return view($this->front->themeView('vod.detail'), compact('site', 'video', 'favorited', 'plots', 'roles'));
     }
 
     public function play(int|string $id, int|string|null $sid = null, int|string|null $nid = null): View|RedirectResponse

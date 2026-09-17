@@ -27,7 +27,7 @@ class SysShortcut extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.shortcut.index');
+        return view('admin.system.shortcut.index', $this->sysShortcutService->pageBoard());
     }
 
     /**

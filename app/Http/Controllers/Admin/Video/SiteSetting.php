@@ -65,6 +65,9 @@ class SiteSetting extends Controller
         if ($page === 'ai') {
             return view('admin.video.config_ai', $this->settings->aiPage());
         }
+        if ($page === 'ip') {
+            return view('admin.video.config_ip', $this->settings->ipPage());
+        }
         $views = [
             'api' => 'admin.video.config_api',
             'collect' => 'admin.video.config_collect',

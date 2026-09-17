@@ -11,6 +11,7 @@
             <p class="muted">暂无播放地址</p>
         @endif
     </div>
+    @includeIf('chatroom::panel')
     @vodAd(['slot' => 'play'])
         <div class="desc">{!! $item->content !!}</div>
     @endvodAd

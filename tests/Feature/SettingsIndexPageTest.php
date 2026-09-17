@@ -45,5 +45,9 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('密码留空表示不改已保存的值', $html);
         $this->assertStringContainsString('静态生成', $html);
         $this->assertStringContainsString('内容接入', $html);
+        $this->assertStringContainsString('/admin/video/config/ip', $html);
+        $this->assertStringContainsString('后台 IP 白名单', $html);
+        $this->assertStringNotContainsString('name="admin_ip_allow"', $html);
+        $this->assertStringNotContainsString('上传与后台 IP', $html);
     }
 }

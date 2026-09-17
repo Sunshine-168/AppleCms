@@ -43,7 +43,12 @@ class PluginAdminTest extends TestCase
         $this->assertContains('pay', $ids);
         $this->assertContains('coupon', $ids);
         $this->assertContains('code_editor', $ids);
+        $this->assertContains('manga', $ids);
+        $this->assertContains('mall', $ids);
+        $this->assertContains('chatroom', $ids);
         $this->assertFalse($manager->isEnabled('sms'));
+        $this->assertFalse($manager->isEnabled('mall'));
+        $this->assertFalse($manager->isEnabled('chatroom'));
 
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/plugins')
@@ -51,7 +56,11 @@ class PluginAdminTest extends TestCase
             ->assertSee('弹幕')
             ->assertSee('短信网关')
             ->assertSee('代码编辑器')
-            ->assertSee('只存配置')
+            ->assertSee('漫画')
+            ->assertSee('积分商城')
+            ->assertSee('聊天室')
+            ->assertSee('已接通')
+            ->assertSee('后台占位')
             ->assertSee('/admin/plugins/sms', false);
 
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
@@ -72,6 +81,23 @@ class PluginAdminTest extends TestCase
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/coupons')
             ->assertNotFound();
+
+        $mangas = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas');
+        if ($manager->isEnabled('manga')) {
+            $mangas->assertOk();
+        } else {
+            $mangas->assertNotFound();
+            $this->get('/manga')->assertNotFound();
+        }
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mall_goods')
+            ->assertNotFound();
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/chat_messages')
+            ->assertNotFound();
+        $this->get('/mall')->assertNotFound();
+        $this->get('/chatroom/1')->assertNotFound();
 
         $danmaku = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/danmaku');

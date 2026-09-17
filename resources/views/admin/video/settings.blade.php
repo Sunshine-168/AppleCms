@@ -226,13 +226,12 @@
                 </details>
 
                 <details class="settings-details">
-                    <summary>上传与后台 IP</summary>
+                    <summary>上传</summary>
                     <label for="upload_ext">允许的扩展名</label>
                     <input id="upload_ext" type="text" name="upload_ext" value="{{ $s['upload_ext'] ?? '' }}">
                     <label for="upload_max_mb">最大体积（MB）</label>
                     <input id="upload_max_mb" type="number" name="upload_max_mb" min="1" value="{{ $s['upload_max_mb'] ?? 8 }}">
-                    <label for="admin_ip_allow">允许登录后台的 IP</label>
-                    <textarea id="admin_ip_allow" name="admin_ip_allow" rows="3" placeholder="留空不限制。多个用逗号或换行">{{ $s['admin_ip_allow'] ?? '' }}</textarea>
+                    <p class="muted field-hint">后台登录来源限制在「<a href="/admin/video/config/ip">后台 IP 白名单</a>」里改，避免在这里误存把自己锁出去。</p>
                 </details>
 
                 @if($pluginLinks !== [])

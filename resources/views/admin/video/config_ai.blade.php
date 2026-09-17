@@ -23,18 +23,18 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">这里只存服务商和密钥。<strong>现在还没有接通模型</strong>，保存后也不会改影片简介或标题。缺简介请到影片编辑里手写。</p>
+        <p class="muted recycle-lead">配好密钥后可以<strong>请求模型写简介</strong>。试写只显示文本，影片编辑里点「用 AI 写简介」也只填文本框，需要再保存才会入库。没配密钥会失败，不会假装写好。</p>
         <ol class="hub-steps">
             <li class="is-on"><em>1</em><span>填服务商和密钥</span></li>
             <li><em>2</em><span>保存</span></li>
-            <li><em>3</em><span>简介去影片里手写</span></li>
+            <li><em>3</em><span>试写或到影片里生成</span></li>
         </ol>
 
         <div class="ai-stock">
             @if($ready)
                 <span class="badge badge-ok">已存密钥</span>
             @else
-                <span class="badge">还没接通</span>
+                <span class="badge">还没密钥</span>
             @endif
             @if($hasKey && $keyTail !== '')
                 <span class="muted">尾号 {{ $keyTail }}</span>
@@ -62,7 +62,7 @@
                 </button>
                 <button type="button" class="ingest-mode{{ $kind === 'other' ? ' is-on' : '' }}" data-value="other">
                     <strong>其他</strong>
-                    <span>自己写服务商名字，同样只是存下来。</span>
+                    <span>自己写服务商名字，并填写兼容接口。</span>
                 </button>
             </div>
             <div id="ai-provider-custom" @if($kind !== 'other') hidden @endif>
@@ -74,7 +74,7 @@
             @if($hasKey)
                 <p class="muted field-hint"><span class="badge badge-ok">已保存</span> 留空再保存则保持原密钥。填新的会覆盖。</p>
             @else
-                <p class="muted field-hint"><span class="badge">还没密钥</span> 现在填了也不会去请求模型，更不会改片子。</p>
+                <p class="muted field-hint"><span class="badge">还没密钥</span> 没有密钥时生成会直接失败。</p>
             @endif
             <label for="ai_key">API Key</label>
             <input id="ai_key" type="password" name="ai_key" value="" autocomplete="new-password" spellcheck="false" placeholder="{{ $hasKey ? '留空则保留现有密钥' : 'sk-… 只存在本站' }}">
@@ -82,13 +82,19 @@
             <h3>模型</h3>
             <label for="ai_model">模型名</label>
             <input id="ai_model" type="text" name="ai_model" value="{{ $model }}" placeholder="如 gpt-4.1-mini" autocomplete="off" spellcheck="false">
-            <p class="muted field-hint" id="ai-model-hint">以后接通时会用这个名字。现在填了也不调用。</p>
+            <p class="muted field-hint" id="ai-model-hint">请求模型时会带上这个名字。</p>
+
+            <h3>兼容接口</h3>
+            <label for="ai_endpoint">接口地址</label>
+            <input id="ai_endpoint" type="text" name="ai_endpoint" value="{{ $s['ai_endpoint'] ?? '' }}" placeholder="可空。其他服务商填 /v1/chat/completions" autocomplete="off" spellcheck="false">
+            <p class="muted field-hint">OpenAI / 通义 / 文心有默认地址。其他必须填。</p>
 
             <div class="hub-result ai-result">
-                <div class="hub-empty">
-                    <p>还不会写简介。</p>
-                    <p class="muted">没有「生成」「改写」按钮。无简介的片子请去影片列表手写，或先把采集来的简介核对一遍。</p>
-                </div>
+                <label for="ai-try-title">试写标题</label>
+                <input id="ai-try-title" type="text" placeholder="如 影片名" autocomplete="off">
+                <p><button type="button" class="btn btn-muted" id="ai-try-btn">试写一段</button></p>
+                <pre class="out" id="ai-try-out" hidden></pre>
+                <p class="muted">试写不会改影片。无简介列表仍可手写核对。</p>
             </div>
 
             <div class="form-actions settings-save">
@@ -110,10 +116,10 @@
     var customInput = document.getElementById('ai_provider_custom');
     var modelHint = document.getElementById('ai-model-hint');
     var hints = {
-        openai: 'OpenAI 常见写法：gpt-4.1-mini。现在填了也不调用。',
-        '通义': '通义常见写法：qwen-plus。现在填了也不调用。',
-        '文心': '文心常见写法：ernie-4.0-8k。现在填了也不调用。',
-        other: '按服务商文档填写模型名。现在填了也不调用。'
+        openai: 'OpenAI 常见写法：gpt-4.1-mini。',
+        '通义': '通义常见写法：qwen-plus。',
+        '文心': '文心常见写法：ernie-4.0-8k。',
+        other: '按服务商文档填写模型名，并填兼容接口。'
     };
     function currentKind() {
         var v = String((hidden && hidden.value) || '').trim();
@@ -159,6 +165,26 @@
         });
     }
     mark(currentKind() || '');
+    var tryBtn = document.getElementById('ai-try-btn');
+    var tryOut = document.getElementById('ai-try-out');
+    if (tryBtn && typeof AdminUi !== 'undefined') {
+        tryBtn.addEventListener('click', function () {
+            var title = String((document.getElementById('ai-try-title') || {}).value || '').trim();
+            if (!title) { AdminUi.toast('请填写试写标题', 'err'); return; }
+            AdminUi.loading(true);
+            AdminUi.post('/admin/video/ai/generate', {title: title}).then(function (res) {
+                AdminUi.loading(false);
+                if (tryOut) {
+                    tryOut.hidden = false;
+                    tryOut.textContent = (res && res.data && res.data.text) ? res.data.text : ((res && res.msg) || '');
+                }
+                AdminUi.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            }).catch(function () {
+                AdminUi.loading(false);
+                AdminUi.toast('生成失败', 'err');
+            });
+        });
+    }
 })();
 </script>
 @endpush

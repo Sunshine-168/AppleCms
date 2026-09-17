@@ -1,132 +1,163 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.db_replace'))
 
-@section('content')
-    <label>选择表</label>
-    <select id="dbreplace-table"><option value="">请选择表</option></select>
-    <p class="hint">选中表后会加载字段。点击字段加入已选。</p>
-    <label>字段</label>
-    <div class="toolbar" id="dbreplace-fields"></div>
-    <label>已选字段</label>
-    <div id="dbreplace-selected"></div>
-    <label>被替换内容</label>
-    <input type="text" id="dbreplace-from" placeholder="例如：old_text">
-    <label>替换为</label>
-    <input type="text" id="dbreplace-to" placeholder="例如：new_text">
-    <label>替换条件</label>
-    <textarea id="dbreplace-where" placeholder="可选，例如：id > 100 AND status = 1"></textarea>
-    <p class="hint">留空则对整张表执行。</p>
-    <div class="form-actions">
-        <button type="button" class="btn btn-danger" id="dbreplace-run">执行替换</button>
-        <button type="button" class="btn btn-muted" id="dbreplace-reset">重置</button>
+@php
+    $targets = $targets ?? [];
+@endphp
+
+@section('plain')
+<div class="card card-panel replace-index">
+    <div class="card-header">
+        <span>批量替换</span>
+        <div>
+            <a class="btn btn-muted btn-sm" href="/admin/system/database/backup">备份</a>
+            <a class="btn btn-muted btn-sm" href="/admin/system/database/sql">执行 SQL</a>
+        </div>
     </div>
+    <div class="card-body">
+        <p class="muted recycle-lead">把片库里一段文字换成另一段。换域名、改错字。改完不能撤销，先「<a href="/admin/system/database/backup">备份</a>」。管理员、会员这些系统表不在这里。更复杂的条件去「<a href="/admin/system/database/sql">执行 SQL</a>」。</p>
+
+        @if($targets === [])
+            <div class="list-empty">
+                <p>还没有可替换的片库表。</p>
+                <p class="muted">装好影片、文章或分类之后再来。</p>
+            </div>
+        @else
+            <p class="replace-label">改哪一类</p>
+            <div class="queue-chips" id="replace-targets">
+                @foreach($targets as $i => $target)
+                    <button type="button" class="chip{{ $i === 0 ? ' active' : '' }}" data-target="{{ $target['id'] }}">{{ $target['label'] }}</button>
+                @endforeach
+            </div>
+            <p class="muted field-hint" id="replace-target-hint">{{ $targets[0]['hint'] ?? '' }}</p>
+
+            <p class="replace-label">勾要改的项</p>
+            <div class="replace-fields" id="replace-fields"></div>
+
+            <form id="replace-form" autocomplete="off" onsubmit="return false;">
+                <input type="hidden" name="target" id="replace-target" value="{{ $targets[0]['id'] ?? '' }}">
+                <label for="replace-from">找这段</label>
+                <input type="text" id="replace-from" name="from" placeholder="例如旧域名或错别字" maxlength="500">
+                <label for="replace-to">换成</label>
+                <input type="text" id="replace-to" name="to" placeholder="可留空，等于删掉这段字" maxlength="500">
+                <p class="muted field-hint">只改含这段文字的行。新旧一样不会动库。</p>
+            </form>
+
+            <div class="replace-preview" id="replace-preview" hidden>
+                <p id="replace-preview-text"></p>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-muted" id="replace-preview-btn">看看会改几条</button>
+                <button type="button" class="btn btn-danger" id="replace-run-btn" disabled>确认替换</button>
+            </div>
+        @endif
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
-    var columnsCache = {};
-    var selectedFields = [];
-    function renderSelected() {
-        var html = '<table class="data"><thead><tr><th>字段名</th><th></th></tr></thead><tbody>';
-        if (!selectedFields.length) html += '<tr><td colspan="2"><div class="list-empty"><p>尚未选择</p></div></td></tr>';
-        selectedFields.forEach(function (f) {
-            html += '<tr><td>' + U.escape(f) + '</td><td class="actions"><a href="#" class="btn-link js-rm" data-f="' + U.escape(f) + '">移除</a></td></tr>';
+    var TARGETS = @json($targets);
+    var form = document.getElementById('replace-form');
+    if (!form) return;
+    var previewBox = document.getElementById('replace-preview');
+    var previewText = document.getElementById('replace-preview-text');
+    var runBtn = document.getElementById('replace-run-btn');
+    var hint = document.getElementById('replace-target-hint');
+    var stamp = '';
+
+    function currentTarget() {
+        var id = document.getElementById('replace-target').value;
+        for (var i = 0; i < TARGETS.length; i++) if (TARGETS[i].id === id) return TARGETS[i];
+        return TARGETS[0] || null;
+    }
+    function selectedFields() {
+        return U.qa('#replace-fields input:checked').map(function (el) { return el.value; });
+    }
+    function invalidate() {
+        stamp = '';
+        runBtn.disabled = true;
+        if (previewBox) previewBox.hidden = true;
+    }
+    function renderFields() {
+        var t = currentTarget();
+        var wrap = document.getElementById('replace-fields');
+        if (!t || !wrap) return;
+        var html = '';
+        (t.fields || []).forEach(function (f, i) {
+            html += '<label class="inline"><input type="checkbox" name="fields[]" value="' + U.escape(f.key) + '"' + (i < 2 ? ' checked' : '') + '> ' + U.escape(f.label) + '</label>';
         });
-        html += '</tbody></table>';
-        document.getElementById('dbreplace-selected').innerHTML = html;
+        wrap.innerHTML = html;
+        if (hint) hint.textContent = t.hint || '';
+        invalidate();
     }
-    function addField(field) {
-        field = String(field || '').trim();
-        if (!field || selectedFields.indexOf(field) >= 0) return;
-        selectedFields.push(field);
-        renderSelected();
+    function payload() {
+        return {
+            target: document.getElementById('replace-target').value,
+            fields: selectedFields(),
+            from: document.getElementById('replace-from').value,
+            to: document.getElementById('replace-to').value
+        };
     }
-    function renderButtons(tableName) {
-        var rows = columnsCache[tableName] || [];
-        var wrap = document.getElementById('dbreplace-fields');
-        wrap.innerHTML = '';
-        rows.forEach(function (r) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-muted btn-sm';
-            btn.textContent = r.field + (r.comment ? '（' + r.comment + '）' : '');
-            btn.addEventListener('click', function () { addField(r.field); });
-            wrap.appendChild(btn);
-        });
+    function keyOf(p) {
+        return [p.target, (p.fields || []).join(','), p.from, p.to].join('\n');
     }
-    function loadTables() {
-        U.get('/admin/system/database/dict/tables').then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '加载表失败', 'err'); return; }
-            var data = res.data && Array.isArray(res.data.data) ? res.data.data : [];
-            var html = '<option value="">请选择表</option>';
-            data.forEach(function (item) { html += '<option value="' + U.escape(item.name || '') + '">' + U.escape(item.name || '') + '</option>'; });
-            document.getElementById('dbreplace-table').innerHTML = html;
-        });
-    }
-    function loadColumns(tableName) {
-        if (!tableName) {
-            document.getElementById('dbreplace-fields').innerHTML = '';
-            selectedFields = [];
-            renderSelected();
-            return;
-        }
-        if (columnsCache[tableName]) {
-            renderButtons(tableName);
-            selectedFields = [];
-            renderSelected();
-            return;
-        }
+
+    U.on('#replace-targets', 'click', function (e) {
+        var chip = e.target.closest('.chip');
+        if (!chip) return;
+        document.getElementById('replace-target').value = chip.getAttribute('data-target') || '';
+        U.qa('#replace-targets .chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+        renderFields();
+    });
+    U.on('#replace-fields', 'change', invalidate);
+    U.on('#replace-from', 'input', invalidate);
+    U.on('#replace-to', 'input', invalidate);
+
+    U.on('#replace-preview-btn', 'click', function () {
+        var p = payload();
+        if (!p.fields.length) { U.toast('请勾要改的项', 'err'); return; }
+        if (!p.from) { U.toast('请填写要找的文字', 'err'); return; }
         U.loading(true);
-        U.get('/admin/system/database/dict/columns', {table: tableName}).then(function (res) {
+        U.post('/admin/system/database/replace/preview', p).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '加载字段失败', 'err'); return; }
-            columnsCache[tableName] = res.data && Array.isArray(res.data.data) ? res.data.data : [];
-            renderButtons(tableName);
-            selectedFields = [];
-            renderSelected();
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能预览', 'err'); return; }
+            var d = res.data || {};
+            previewText.textContent = d.summary || res.msg || '';
+            previewBox.hidden = false;
+            var n = parseInt(d.matched, 10) || 0;
+            stamp = n > 0 ? keyOf(p) : '';
+            runBtn.disabled = n < 1;
+            U.toast(res.msg || (n ? '约 ' + n + ' 条' : '没有匹配'), n ? 'ok' : 'err');
+        }).catch(function () {
+            U.loading(false);
+            U.toast('没能预览', 'err');
         });
-    }
-    U.on('#dbreplace-table', 'change', function () { loadColumns(this.value); });
-    U.on('#dbreplace-selected', 'click', function (e) {
-        var a = e.target.closest('a.js-rm'); if (!a) return;
-        e.preventDefault();
-        var f = a.getAttribute('data-f');
-        selectedFields = selectedFields.filter(function (x) { return x !== f; });
-        renderSelected();
     });
-    U.on('#dbreplace-reset', 'click', function () {
-        document.getElementById('dbreplace-table').value = '';
-        document.getElementById('dbreplace-fields').innerHTML = '';
-        selectedFields = [];
-        renderSelected();
-        document.getElementById('dbreplace-from').value = '';
-        document.getElementById('dbreplace-to').value = '';
-        document.getElementById('dbreplace-where').value = '';
-    });
-    U.on('#dbreplace-run', 'click', function () {
-        var tableName = document.getElementById('dbreplace-table').value;
-        var from = document.getElementById('dbreplace-from').value;
-        if (!tableName) { U.toast('请选择表', 'err'); return; }
-        if (!selectedFields.length) { U.toast('请选择字段', 'err'); return; }
-        if (from === '') { U.toast('请输入被替换内容', 'err'); return; }
-        if (!U.confirm('确认执行批量替换？该操作会直接修改数据库数据')) return;
+
+    U.on('#replace-run-btn', 'click', function () {
+        var p = payload();
+        if (stamp === '' || stamp !== keyOf(p)) { U.toast('请先看看会改几条', 'err'); return; }
+        if (!U.confirm('将按预览替换，改完不能撤销。确定？')) return;
         U.loading(true);
-        U.post('/admin/system/database/replace/run', {
-            table: tableName,
-            fields: selectedFields,
-            from: from,
-            to: document.getElementById('dbreplace-to').value,
-            where: document.getElementById('dbreplace-where').value
-        }).then(function (res) {
+        U.post('/admin/system/database/replace/run', p).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '替换失败', 'err'); return; }
-            U.toast('替换成功，影响行数：' + ((res.data && res.data.affected) || 0), 'ok');
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能替换', 'err'); return; }
+            U.toast((res && res.msg) || '已替换', 'ok');
+            previewText.textContent = (res.data && res.data.summary) || res.msg || '';
+            previewBox.hidden = false;
+            stamp = '';
+            runBtn.disabled = true;
+        }).catch(function () {
+            U.loading(false);
+            U.toast('没能替换', 'err');
         });
     });
-    renderSelected();
-    loadTables();
+
+    renderFields();
 })();
 </script>
 @endpush

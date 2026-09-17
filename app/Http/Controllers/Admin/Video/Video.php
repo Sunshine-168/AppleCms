@@ -61,16 +61,34 @@ class Video extends Controller
             return array_values(array_filter(array_map('trim', preg_split('/[,，]/u', $raw) ?: [])));
         };
         $ts = (int) ($video['publish_at'] ?? 0);
+        $roles = [];
+        $vid = (int) ($video['id'] ?? 0);
+        if ($vid > 0) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('video_roles')) {
+                    $roles = \App\Models\Video\VideoRole::query()
+                        ->where('video_id', $vid)
+                        ->orderByDesc('sort')
+                        ->orderByDesc('id')
+                        ->limit(20)
+                        ->get(['id', 'name', 'actor_id', 'status'])
+                        ->toArray();
+                }
+            } catch (\Throwable) {
+                $roles = [];
+            }
+        }
 
         return view('admin.video.form', [
             'video' => $video,
-            'isEdit' => (int) ($video['id'] ?? 0) > 0,
+            'isEdit' => $vid > 0,
             'types' => is_array($types) ? $types : [],
             'collects' => is_array($collects) ? $collects : [],
             'areas' => $split((string) ($settings['filter_area'] ?? '')),
             'langs' => $split((string) ($settings['filter_lang'] ?? '')),
             'years' => $split((string) ($settings['filter_year'] ?? '')),
             'publishAt' => $ts > 0 ? date('Y-m-d\TH:i', $ts) : '',
+            'roles' => $roles,
         ]);
     }
 
@@ -214,7 +232,19 @@ class Video extends Controller
     public function showSources(Request $request): View|Factory
     {
         $videoId = (int)$request->input('video_id', 0);
-        return view('admin.video.source', compact('videoId'));
+        $downloaders = [];
+        $servers = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_downloaders')) {
+                $downloaders = \App\Models\Video\VideoDownloader::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get(['id', 'code', 'name'])->toArray();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_servers')) {
+                $servers = \App\Models\Video\VideoServer::query()->where('status', 1)->orderByDesc('sort')->orderBy('id')->get(['id', 'name', 'url'])->toArray();
+            }
+        } catch (\Throwable) {
+        }
+
+        return view('admin.video.source', compact('videoId', 'downloaders', 'servers'));
     }
 
     /**
@@ -242,6 +272,9 @@ class Video extends Controller
             'video_id' => (int)$request->input('video_id', 0),
             'name' => (string)$request->input('name', ''),
             'type' => (string)$request->input('type', 'm3u8'),
+            'player' => (string)$request->input('player', ''),
+            'downer' => (string)$request->input('downer', ''),
+            'server_id' => (int)$request->input('server_id', 0),
             'sort' => (int)$request->input('sort', 0),
         ];
 

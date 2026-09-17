@@ -33,6 +33,25 @@ class StatService
         ];
     }
 
+    /**
+     * 播放页访问：路径 /play/{id}，不含 iframe /player。
+     *
+     * @return array{pv:int,uv:int}
+     */
+    public function playPageStats(string $from, string $to): array
+    {
+        $base = StatHit::query()->betweenDates($from, $to)->human()->where(function ($q) {
+            $q->where('path', '/play')
+                ->orWhere('path', 'like', '/play/%')
+                ->orWhere('path', 'like', '/index.php/vod/play/%');
+        });
+
+        return [
+            'pv' => (clone $base)->count(),
+            'uv' => (clone $base)->distinct('visitor_hash')->count('visitor_hash'),
+        ];
+    }
+
     /** 按日趋势 */
     public function dailyTrend(int $days = 14): Collection
     {

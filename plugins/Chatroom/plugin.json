@@ -1,0 +1,63 @@
+{
+    "id": "chatroom",
+    "name": "聊天室",
+    "name_en": "Chat room",
+    "description": "播放页本片讨论。关掉后入口消失。不是弹幕，也不走弹幕表。",
+    "description_en": "Per-title chat on the play page. Not danmaku and not the danmaku table.",
+    "version": "1.0.0",
+    "enabled": false,
+    "capability": "ready",
+    "group": "play",
+    "provider": "Plugins\\Chatroom\\ChatroomServiceProvider",
+    "admin": {
+        "extra_pages": {
+            "chatroom": {
+                "title": "聊天室",
+                "hint": "关闭后播放页不再出现本片讨论。弹幕插件单独开关。",
+                "fields": [
+                    {
+                        "name": "chatroom_enabled",
+                        "label": "聊天室",
+                        "type": "select",
+                        "options": {"1": "开启", "0": "关闭"}
+                    },
+                    {
+                        "name": "chatroom_login",
+                        "label": "发言需登录",
+                        "type": "select",
+                        "options": {"0": "否", "1": "是"}
+                    }
+                ]
+            }
+        },
+        "modules": {
+            "chat_messages": {
+                "title": "聊天室",
+                "hint": "按影片审发言。隐藏后前台列表不再显示。",
+                "model": "Plugins\\Chatroom\\Models\\ChatMessage",
+                "search": "text",
+                "fields": [
+                    {"name": "video_id", "label": "影片ID", "type": "number"},
+                    {"name": "member_id", "label": "会员ID", "type": "number"},
+                    {"name": "name", "label": "昵称", "type": "text"},
+                    {"name": "text", "label": "内容", "type": "textarea"},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "显示", "0": "隐藏"}}
+                ],
+                "cols": ["id", "video_id", "name", "text", "ip", "status", "created_at"]
+            }
+        },
+        "sidebar_fold": {
+            "content": [
+                {"url": "/admin/video/chat_messages", "icon": "comments", "label": "nav.chatroom"}
+            ]
+        },
+        "catalog": {
+            "more.interact": [
+                {"url": "/admin/video/chat_messages", "label": "item.chatroom", "hint": "hint.chatroom", "tag": "plugin"}
+            ]
+        },
+        "settings_links": [
+            {"url": "/admin/video/config/chatroom", "label": "item.config_chatroom"}
+        ]
+    }
+}
