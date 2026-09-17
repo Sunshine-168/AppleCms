@@ -41,6 +41,31 @@
         return p.toString();
     }
 
+    function pickMsg(json, fallback) {
+        if (json && typeof json === 'object') {
+            if (json.msg) return String(json.msg);
+            if (json.message) return String(json.message);
+            if (json.errors) {
+                var keys = Object.keys(json.errors);
+                if (keys.length) {
+                    var first = json.errors[keys[0]];
+                    return Array.isArray(first) ? String(first[0] || '') : String(first);
+                }
+            }
+        }
+        return fallback || '请求失败';
+    }
+
+    function statusMsg(r) {
+        if (!r) return '请求失败';
+        if (r.status === 419) return '页面已过期，请刷新后再试';
+        if (r.status === 403) return '没有权限做这项操作';
+        if (r.status === 404) return '接口不存在';
+        if (r.status === 429) return '操作太频繁，请稍后再试';
+        if (r.status >= 500) return '服务器出错了，请稍后再试';
+        return '请求失败';
+    }
+
     function request(method, url, data) {
         var opts = {
             method: method,
@@ -64,7 +89,16 @@
             opts.body = qs(payload);
         }
         return fetch(url, opts).then(function (r) {
-            return r.json().catch(function () { return { code: 1, msg: '请求失败' }; });
+            return r.json().then(function (json) {
+                if (!json || typeof json !== 'object') {
+                    return { code: 1, msg: statusMsg(r) };
+                }
+                if (json.code === undefined) json.code = r.ok ? 0 : 1;
+                json.msg = pickMsg(json, statusMsg(r));
+                return json;
+            }).catch(function () {
+                return { code: 1, msg: statusMsg(r) };
+            });
         }).catch(function () {
             return { code: 1, msg: '网络错误' };
         });
@@ -326,6 +360,7 @@
     global.AdminUi = {
         csrf: csrf,
         escape: escape,
+        pickMsg: pickMsg,
         get: function (url, data) { return request('GET', url, data); },
         post: function (url, data) { return request('POST', url, data); },
         toast: toast,

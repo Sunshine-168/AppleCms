@@ -1,7 +1,6 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>会员注册</h1>
-    @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
     <form method="post" action="{{ url('/member/register') }}">
         @csrf
         <p><input name="name" placeholder="昵称" value="{{ old('name') }}" required></p>

@@ -13,7 +13,7 @@
         <span>文章 <em id="art-count"></em></span>
         <div>
             <a class="btn btn-muted btn-sm" href="/admin/video/types">栏目</a>
-            <button type="button" class="btn btn-sm" id="art-add-btn">写文章</button>
+            <a class="btn btn-sm" href="/admin/video/arts/create">写文章</a>
         </div>
     </div>
     <div class="card-body">
@@ -56,39 +56,6 @@
         <div id="art-table"></div>
     </div>
 </div>
-<template id="art-dialog-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>标题</label>
-        <input type="text" name="title" class="entry-title" placeholder="读者看到的标题">
-        <label>栏目</label>
-        <select name="type_id">
-            <option value="0">未分栏</option>
-            @foreach($types as $type)
-                <option value="{{ $type['id'] }}">{{ $type['name'] }}</option>
-            @endforeach
-        </select>
-        <p class="muted field-hint">决定这篇出现在哪个文章栏目。没有栏目时，先去分类里建一个，模型选「文章」。</p>
-        <label>封面</label>
-        <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址">
-            <button type="button" class="btn btn-muted art-cover-upload-btn">上传</button>
-        </div>
-        <img class="img-preview art-cover-preview" alt="">
-        <label>正文</label>
-        <textarea name="content" class="art-content" placeholder="正文"></textarea>
-        <label>状态</label>
-        <select name="status">
-            <option value="1">发布</option>
-            <option value="0">草稿</option>
-        </select>
-        <details class="form-more">
-            <summary>更多</summary>
-            <label>点击</label>
-            <input type="number" name="hits" value="0">
-        </details>
-    </form>
-</template>
 @endsection
 
 @push('scripts')
@@ -151,7 +118,7 @@
         var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">草稿</span>';
         var meta = (d.type_name ? U.escape(d.type_name) : '未分栏') + ' · #' + U.escape(d.id);
         if (parseInt(d.hits, 10) > 0) meta += ' · ' + U.escape(d.hits) + ' 次';
-        return '<div class="vod-cell">' + thumb + '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.title || '无标题') + '</a> ' + badge + '</div>'
+        return '<div class="vod-cell">' + thumb + '<div class="entry-row-title-line"><a class="entry-row-title" href="/admin/video/arts/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.title || '无标题') + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div></div>';
     }
 
@@ -164,15 +131,13 @@
                 return '<div class="list-empty"><p>没有符合条件的内容。</p><p><button type="button" class="btn btn-muted btn-sm" id="art-empty-reset">清除筛选</button></p></div>';
             }
             if (!hasTypes) {
-                return '<div class="list-empty"><p>还没有内容。</p><p class="muted">先去分类里建文章栏目，模型选「文章」，再回来写稿。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/types">去建栏目</a> <button type="button" class="btn btn-primary btn-sm" id="art-empty-add">写文章</button></p></div>';
+                return '<div class="list-empty"><p>还没有内容。</p><p class="muted">先去分类里建文章栏目，模型选「文章」，再回来写稿。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/types">去建栏目</a> <a class="btn btn-primary btn-sm" href="/admin/video/arts/create">写文章</a></p></div>';
             }
-            return '<div class="list-empty"><p>还没有内容。</p><p><button type="button" class="btn btn-primary btn-sm" id="art-empty-add">写文章</button></p></div>';
+            return '<div class="list-empty"><p>还没有内容。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/arts/create">写文章</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
-            var add = document.getElementById('art-empty-add');
             var reset = document.getElementById('art-empty-reset');
-            if (add) add.addEventListener('click', function () { openDialog('add'); });
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },
         onCheck: function (ids) {
@@ -193,72 +158,13 @@
                 } else {
                     html += '<a href="#" class="btn-link js-pub">发布</a>';
                 }
-                html += '<a href="#" class="btn-link js-edit">编辑</a>';
+                html += '<a href="/admin/video/arts/' + encodeURIComponent(d.id) + '/edit" class="btn-link">编辑</a>';
                 html += '<a href="#" class="btn-link js-del">删除</a>';
                 return html;
             }}
         ]
     });
     markChips();
-
-    function bindCover(formEl) {
-        var input = formEl.querySelector('input[name=cover]');
-        var btn = formEl.querySelector('.art-cover-upload-btn');
-        var preview = formEl.querySelector('.art-cover-preview');
-        function sync(url) {
-            url = String(url || '').trim();
-            if (url) { preview.src = url; preview.style.display = 'block'; }
-            else { preview.removeAttribute('src'); preview.style.display = 'none'; }
-        }
-        sync(input.value);
-        input.addEventListener('input', function () { sync(input.value); });
-        btn.addEventListener('click', function () {
-            U.pickFile('image/*').then(function (file) {
-                if (!file) return;
-                U.loading(true);
-                return U.upload(file).then(function (res) {
-                    U.loading(false);
-                    if (res && res.code === 0 && res.data && res.data.url) {
-                        input.value = res.data.url;
-                        sync(res.data.url);
-                        U.toast('上传成功', 'ok');
-                    } else U.toast((res && res.msg) || '上传失败', 'err');
-                });
-            });
-        });
-    }
-
-    function openDialog(mode, row) {
-        row = row || {};
-        U.dialog({
-            title: mode === 'edit' ? '编辑内容' : '写内容',
-            wide: true,
-            content: document.getElementById('art-dialog-tpl').innerHTML,
-            onOpen: function (body) {
-                var formEl = body.querySelector('form');
-                U.fillForm(formEl, {
-                    id: mode === 'edit' ? (row.id || '') : '',
-                    title: row.title || '',
-                    type_id: row.type_id == null ? '0' : String(row.type_id),
-                    cover: row.cover || '',
-                    content: row.content || '',
-                    hits: row.hits == null ? 0 : row.hits,
-                    status: row.status == null ? '1' : String(row.status)
-                });
-                bindCover(formEl);
-            },
-            onSave: function (body) {
-                var data = U.formData(body.querySelector('form'));
-                if (!data.title) { U.toast('请填写标题', 'err'); return false; }
-                if (mode !== 'edit') delete data.id; else data.id = row.id;
-                return U.post('/admin/video/arts/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
-                    table.refresh();
-                });
-            }
-        });
-    }
 
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
@@ -274,7 +180,6 @@
 
     U.on('#art-search-btn', 'click', runSearch);
     U.on('#art-reset-btn', 'click', function () { setTimeout(runSearch, 0); });
-    U.on('#art-add-btn', 'click', function () { openDialog('add'); });
     document.getElementById('art-queues').addEventListener('click', function (e) {
         var chip = e.target.closest('[data-queue]');
         if (!chip) return;
@@ -293,11 +198,11 @@
         var a = e.target.closest('a');
         if (!a) return;
         if (a.target === '_blank') return;
+        if (a.getAttribute('href') && a.getAttribute('href').indexOf('/admin/video/arts/') === 0) return;
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
         e.preventDefault();
-        if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-pub')) {
             if (!U.confirm('确认发布「' + (row.title || '') + '」？')) return;
             U.post('/admin/video/arts/save', {id: row.id, status: 1}).then(function (res) {

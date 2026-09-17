@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ admin_t('auth.login_title') }} - {{ conf('name') ?: '苹果v12' }}</title>
     <link rel="stylesheet" href="{{ asset('css/admin-login.css') }}?v={{ @filemtime(public_path('css/admin-login.css')) ?: '1' }}">
 </head>
@@ -20,7 +21,8 @@
     </div>
     <div class="mac-login-card">
         <h1>{{ admin_t('auth.system') }}</h1>
-        <form id="loginForm" method="post" action="/api/admin/login" data-fail="{{ admin_t('auth.fail') }}" data-network="{{ admin_t('auth.network') }}">
+        <form id="loginForm" method="post" action="/api/admin/login" data-fail="{{ admin_t('auth.fail') }}" data-network="{{ admin_t('auth.network') }}" data-user="{{ admin_t('auth.required_user') }}" data-pass="{{ admin_t('auth.required_pass') }}" data-captcha-empty="{{ admin_t('auth.required_captcha') }}">
+            @csrf
             <div class="mac-field">
                 <label for="username">{{ admin_t('auth.username') }}</label>
                 <div class="mac-control">
@@ -75,6 +77,44 @@
     var err = document.getElementById('loginError');
     var btn = document.getElementById('loginBtn');
 
+    function pickMsg(json, fallback) {
+        if (json && typeof json === 'object') {
+            if (json.msg) return String(json.msg);
+            if (json.message) return String(json.message);
+            if (json.errors) {
+                var keys = Object.keys(json.errors);
+                if (keys.length) {
+                    var first = json.errors[keys[0]];
+                    return Array.isArray(first) ? String(first[0] || '') : String(first);
+                }
+            }
+        }
+        return fallback || '';
+    }
+
+    function toast(text) {
+        var old = document.querySelector('.mac-toast');
+        if (old) old.remove();
+        if (!text) return;
+        var el = document.createElement('div');
+        el.className = 'mac-toast is-err';
+        el.textContent = text;
+        document.body.appendChild(el);
+        setTimeout(function () { el.remove(); }, 2800);
+    }
+
+    function mark(name, on) {
+        var field = form.querySelector('[name="' + name + '"]');
+        var box = field && field.closest('.mac-control');
+        if (box) box.classList.toggle('is-err', !!on);
+    }
+
+    function showError(text) {
+        err.hidden = !text;
+        err.textContent = text || '';
+        if (text) toast(text);
+    }
+
     function refreshCaptcha() {
         fetch('/admin/captcha', {
             credentials: 'same-origin',
@@ -86,16 +126,35 @@
         }).catch(function () {});
     }
 
-    function showError(text) {
-        err.hidden = !text;
-        err.textContent = text || '';
-    }
-
     label.addEventListener('click', refreshCaptcha);
 
     form.addEventListener('submit', function (ev) {
         ev.preventDefault();
+        mark('username', false);
+        mark('password', false);
+        mark('captcha', false);
         showError('');
+        var user = (form.username.value || '').trim();
+        var pass = form.password.value || '';
+        var cap = (form.captcha.value || '').trim();
+        if (!user) {
+            mark('username', true);
+            showError(form.getAttribute('data-user') || '');
+            form.username.focus();
+            return;
+        }
+        if (!pass) {
+            mark('password', true);
+            showError(form.getAttribute('data-pass') || '');
+            form.password.focus();
+            return;
+        }
+        if (!cap) {
+            mark('captcha', true);
+            showError(form.getAttribute('data-captcha-empty') || '');
+            input.focus();
+            return;
+        }
         btn.disabled = true;
         fetch('/api/admin/login', {
             method: 'POST',
@@ -103,15 +162,26 @@
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || '',
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams(new FormData(form))
-        }).then(function (res) { return res.json(); }).then(function (json) {
+        }).then(function (res) {
+            return res.json().then(function (json) {
+                return { res: res, json: json };
+            }).catch(function () {
+                return { res: res, json: null };
+            });
+        }).then(function (pack) {
+            var json = pack.json;
             if (json && Number(json.code) === 0) {
                 location.href = '/admin/welcome';
                 return;
             }
-            showError((json && json.msg) || form.getAttribute('data-fail') || '');
+            var fallback = pack.res && pack.res.status === 419
+                ? '页面已过期，请刷新后再试'
+                : (form.getAttribute('data-fail') || '');
+            showError(pickMsg(json, fallback));
             refreshCaptcha();
             input.focus();
         }).catch(function () {

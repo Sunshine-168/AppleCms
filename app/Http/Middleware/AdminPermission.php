@@ -137,8 +137,9 @@ class AdminPermission
     private function forbidden(Request $request): Response
     {
         if ($request->expectsJson() || $request->ajax()) {
-            return Ajax::message(1003, '无权限', []);
+            return Ajax::message(1003, '没有权限做这项操作', []);
         }
-        return response('无权限', 403);
+
+        return redirect('/admin/welcome')->with('error', '没有权限做这项操作');
     }
 }

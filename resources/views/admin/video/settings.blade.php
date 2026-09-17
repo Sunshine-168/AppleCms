@@ -127,44 +127,7 @@
                 <p class="muted field-hint">全页缓存和磁盘静态页请到 <a href="/admin/video/make">静态生成</a> 里开关、预热和写出文件。</p>
 
                 <h3>采集入库</h3>
-                <input type="hidden" name="collect_in_status" value="0">
-                <label class="inline">
-                    <input type="checkbox" name="collect_in_status" value="1" @checked($on('collect_in_status', '1'))>
-                    采集后直接上架
-                </label>
-                <input type="hidden" name="collect_sync_pic" value="0">
-                <label class="inline">
-                    <input type="checkbox" name="collect_sync_pic" value="1" @checked($on('collect_sync_pic', '1'))>
-                    同步封面地址
-                </label>
-                <input type="hidden" name="collect_pic_local" value="0">
-                <label class="inline">
-                    <input type="checkbox" name="collect_pic_local" value="1" @checked($on('collect_pic_local'))>
-                    把封面下载到本站
-                </label>
-                <input type="hidden" name="collect_to_temp" value="0">
-                <label class="inline">
-                    <input type="checkbox" name="collect_to_temp" value="1" @checked($on('collect_to_temp'))>
-                    先写入临时表再转入
-                </label>
-                <div class="settings-two">
-                    <div>
-                        <label for="collect_hits_min">随机人气下限</label>
-                        <input id="collect_hits_min" type="number" name="collect_hits_min" min="0" value="{{ $s['collect_hits_min'] ?? 0 }}">
-                    </div>
-                    <div>
-                        <label for="collect_hits_max">随机人气上限</label>
-                        <input id="collect_hits_max" type="number" name="collect_hits_max" min="0" value="{{ $s['collect_hits_max'] ?? 0 }}">
-                    </div>
-                </div>
-                <p class="muted field-hint">新建影片时在这个区间随机人气。都填 0 表示不随机。</p>
-                <details class="settings-details">
-                    <summary>地区 / 语言对照</summary>
-                    <label for="collect_areawords">地区词库</label>
-                    <textarea id="collect_areawords" name="collect_areawords" rows="4" placeholder="每行 大陆=中国 或 大陆,中国">{{ $s['collect_areawords'] ?? '' }}</textarea>
-                    <label for="collect_langwords">语言词库</label>
-                    <textarea id="collect_langwords" name="collect_langwords" rows="4" placeholder="每行 from=to 或 from,to">{{ $s['collect_langwords'] ?? '' }}</textarea>
-                </details>
+                <p class="muted field-hint">直接入库还是先待审、封面、人气、地区对照，都在「<a href="/admin/video/config/collect">内容接入</a>」里改。</p>
 
                 <h3>播放</h3>
                 <label for="play_buffer">开始缓冲（秒）</label>
@@ -246,11 +209,9 @@
 
                 <details class="settings-details">
                     <summary>入库与资源接口</summary>
-                    <label for="inbound_key">站外入库密钥</label>
-                    <input id="inbound_key" type="text" name="inbound_key" value="{{ $s['inbound_key'] ?? '' }}" placeholder="POST /api.php/receive/vod">
                     <label for="provide_key">资源接口密钥</label>
                     <input id="provide_key" type="text" name="provide_key" value="{{ $s['provide_key'] ?? '' }}" placeholder="非空时 /api.php/provide/vod 需带 key">
-                    <p class="muted field-hint">给别的站来拉片或推片用。留空则不校验。</p>
+                    <p class="muted field-hint">别人来拉本站片子时用。站外推片密钥在「<a href="/admin/video/config/interface">入库接口</a>」。</p>
                 </details>
 
                 <details class="settings-details">

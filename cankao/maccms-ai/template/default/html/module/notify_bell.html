@@ -1,0 +1,29 @@
+<li class="top_ico mac-notify-bell"
+	data-mac-notify-bell
+	hidden
+	data-url-notify="{:rtrim($maccms.path,'/').'/index.php/user/notify.html'}"
+	data-url-login="{:rtrim($maccms.path,'/').'/index.php/user/login.html'}">
+	<a href="javascript:;"
+		class="mac-notify-bell__btn top_link"
+		role="button"
+		aria-expanded="false"
+		aria-haspopup="true"
+		data-title="notify_title"
+		title="消息中心">
+		<span class="head-nav-icon-theme head-nav-icon-theme--lightbg" aria-hidden="true">
+			<img class="head-nav-icon" src="{$maccms.path_tpl}images/head-nav/消息通知.png?v=2026071411" width="52" height="52" alt="" decoding="async">
+		</span>
+		<span class="head-nav-icon-theme head-nav-icon-theme--darkbg" aria-hidden="true">
+			<img class="head-nav-icon" src="{$maccms.path_tpl}images/head-nav/消息通知-黑色使用.png?v=2026071411" width="52" height="52" alt="" decoding="async">
+		</span>
+		<span class="mac-notify-bell__badge" hidden></span>
+	</a>
+	<div class="mac-notify-bell__dropdown" hidden>
+		<div class="mac-notify-bell__head">
+			<span data-lang="notify_title">消息中心</span>
+			<a class="mac-notify-bell__all" href="{:rtrim($maccms.path,'/').'/index.php/user/notify.html'}" data-lang="notify_view_all">查看全部</a>
+		</div>
+		<div class="mac-notify-bell__list"></div>
+		<div class="mac-notify-bell__empty" hidden data-lang="notify_empty">暂无消息</div>
+	</div>
+</li>

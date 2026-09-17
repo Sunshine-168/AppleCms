@@ -3,14 +3,11 @@
 namespace App\Http\Controllers\Admin\Video;
 
 use App\Http\Controllers\Controller;
-use App\Models\Video\VideoPlayerModel;
-use App\Models\Video\VideoUnion;
 use App\Services\Admin\Video\VideoService;
 use App\Services\Video\SiteToolsService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class SiteTools extends Controller
@@ -23,13 +20,16 @@ class SiteTools extends Controller
         if (! in_array($tool, $ok, true)) {
             abort(404);
         }
-        $players = [];
-        $unions = [];
-        if ($tool === 'players' && Schema::hasTable('video_players')) {
-            $players = VideoPlayerModel::query()->orderByDesc('sort')->orderBy('id')->get();
+        if ($tool === 'hub') {
+            $hub = $this->tools->hubPage();
+
+            return view('admin.video.hub', $hub);
         }
-        if ($tool === 'hub' && Schema::hasTable('video_unions')) {
-            $unions = VideoUnion::query()->orderByDesc('sort')->orderBy('id')->get();
+        if ($tool === 'images') {
+            return view('admin.video.images', $this->tools->imagesPage());
+        }
+        if ($tool === 'players') {
+            return view('admin.video.batch_players', $this->tools->playersPage());
         }
         if ($tool === 'recycle') {
             $types = [];
@@ -46,7 +46,7 @@ class SiteTools extends Controller
             ]);
         }
 
-        return view('admin.video.tools', compact('tool', 'players', 'unions'));
+        return view('admin.video.tools', compact('tool'));
     }
 
     public function run(Request $request, string $tool): JsonResponse
@@ -81,7 +81,14 @@ class SiteTools extends Controller
 
     public function promoteTemp(Request $request): JsonResponse
     {
-        $data = $this->tools->promoteTemp((int) $request->input('id', 0));
+        $raw = $request->input('ids', $request->input('id', []));
+        if (is_string($raw)) {
+            $raw = explode(',', $raw);
+        }
+        if (! is_array($raw)) {
+            $raw = [$raw];
+        }
+        $data = $this->tools->promoteTemps($raw);
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

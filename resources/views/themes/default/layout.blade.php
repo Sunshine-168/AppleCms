@@ -51,6 +51,15 @@
     </div>
 </header>
 <main class="wrap page">
+    @if(session('status'))
+        <div class="flash is-ok" role="status">{{ session('status') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="flash is-err" role="alert">{{ session('error') }}</div>
+    @endif
+    @if(isset($errors) && $errors->any())
+        <div class="flash is-err" role="alert">{{ $errors->first() }}</div>
+    @endif
     @yield('content')
 </main>
 <footer class="site">
@@ -67,5 +76,23 @@
 @if(!empty($site['analytics_code']))
 {!! $site['analytics_code'] !!}
 @endif
+<script>
+window.vodToast = function (text, type) {
+    var old = document.querySelector('.vod-toast');
+    if (old) old.remove();
+    if (!text) return;
+    var el = document.createElement('div');
+    el.className = 'vod-toast' + (type === 'ok' ? ' is-ok' : ' is-err');
+    el.textContent = text;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 2800);
+};
+window.vodResult = function (res, fallback) {
+    var msg = (res && (res.msg || res.message)) || fallback || '失败';
+    var ok = !!(res && Number(res.code) === 0);
+    window.vodToast(msg, ok ? 'ok' : 'err');
+    return ok;
+};
+</script>
 </body>
 </html>

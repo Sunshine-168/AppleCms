@@ -12,7 +12,7 @@
         "extra_pages": {
             "ai": {
                 "title": "AI 写内容",
-                "hint": "只存密钥，没有接通模型，也不会改影片简介。",
+                "hint": "只存密钥，还没有接通模型，也不会改影片简介。",
                 "fields": [
                     {
                         "name": "ai_provider",

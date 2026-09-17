@@ -177,6 +177,8 @@
                     : '<a href="#" class="btn-link js-on">启用</a>';
                 html += '<a href="#" class="btn-link js-edit">编辑</a>';
                 html += '<a href="/admin/video/plogs?member_id=' + encodeURIComponent(d.id) + '">流水</a>';
+                html += '<a class="btn-link" href="/admin/video/pms?to=' + encodeURIComponent(d.id) + '">写信</a>';
+                html += '<a class="btn-link" href="/admin/video/notifies?member=' + encodeURIComponent(d.id) + '">通知</a>';
                 html += '<a href="#" class="btn-link js-del">删除</a>';
                 return html;
             }}
@@ -261,7 +263,7 @@
     U.on('#member-table', 'click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;
-        if (a.getAttribute('href') && a.getAttribute('href').indexOf('/admin/video/plogs') === 0) return;
+        if (a.getAttribute('href') && (a.getAttribute('href').indexOf('/admin/video/plogs') === 0 || a.getAttribute('href').indexOf('/admin/video/pms') === 0 || a.getAttribute('href').indexOf('/admin/video/notifies') === 0)) return;
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;

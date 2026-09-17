@@ -7,7 +7,7 @@
         @if(!empty($video))
             <p class="muted"><a href="{{ $video->url }}">{{ $video->title }}</a> · 第{{ $plot->episode_num }}集</p>
         @endif
-        <article class="desc">{!! nl2br(e($plot->content)) !!}</article>
+        <article class="desc">{!! nl<img src="/uploads/2026/09/20260917044926_8717.png" alt=""><img src="/uploads/2026/09/20260917044926_8717.png" alt="">br(e($plot->content)) !!}</article>
     @else
         @vodBreadcrumb(['last' => '分集剧情'])
         <h1>分集剧情</h1>

@@ -38,6 +38,30 @@ input, textarea, button { background:#0b0d12; border:1px solid #2a2f3a; color:va
 .eps a.on, .lines a.on { background:var(--accent); }
 footer.site { margin-top:40px; padding:24px 0; border-top:1px solid #222; color:var(--muted); font-size:13px; }
 .page { padding:24px 0 40px; }
+.flash {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.flash.is-ok { background:#14301f; border:1px solid #1f7a46; color:#86efac; }
+.flash.is-err { background:#3f1515; border:1px solid #b91c1c; color:#fecaca; }
+.vod-toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    max-width: min(420px, calc(100% - 24px));
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.vod-toast.is-ok { background:#16a34a; }
 .breadcrumb { color:var(--muted); font-size:13px; margin-bottom:16px; }
 .desc { line-height:1.7; color:#c5c9d0; }
 .pager { margin:24px 0; }

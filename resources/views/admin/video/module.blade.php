@@ -14,9 +14,6 @@
         @if($module === 'collect_tasks')
             <button type="button" class="btn btn-muted btn-sm" id="mod-due">执行到期采集</button>
         @endif
-        @if($module === 'collect_temps')
-            <button type="button" class="btn btn-muted btn-sm" id="mod-promote">转入选中</button>
-        @endif
         <form class="filter-bar" id="mod-search-form" onsubmit="return false;">
             <input type="text" id="mod-q" placeholder="{{ $search }}">
             <button type="button" class="btn btn-sm" id="mod-search">查询</button>
@@ -53,7 +50,6 @@
     var fields = @json($fields);
     var searchField = @json($search);
     var tableCols = [];
-    if (module === 'collect_temps') tableCols.push({check: true, width: 36});
     tableCols.push({key: 'id', title: 'ID', width: 70});
     cols.forEach(function (c) {
         if (c === 'id') return;
@@ -67,7 +63,6 @@
             if (module === 'topics') html += '<a href="#" class="btn-link js-bind">绑片</a>';
             if (module === 'collect_tasks') html += '<a href="#" class="btn-link js-run">执行</a>';
             if (module === 'playfails') html += '<a href="#" class="btn-link js-off">下线线路</a>';
-            if (module === 'collect_temps') html += '<a href="#" class="btn-link js-promote">转入</a>';
             html += '<a href="#" class="btn-link js-del">删除</a>';
             return html;
         }
@@ -125,16 +120,6 @@
             U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
         });
     });
-    U.on('#mod-promote', 'click', function () {
-        var ids = table.selectedIds();
-        if (!ids.length) { U.toast('请先勾选', 'err'); return; }
-        var i = 0;
-        function next() {
-            if (i >= ids.length) { table.refresh(); return; }
-            U.post('/admin/video/collect_temps/promote', {id: ids[i++]}).then(next);
-        }
-        next();
-    });
     U.on('#mod-table', 'click', function (e) {
         var a = e.target.closest('a');
         if (!a) return;
@@ -155,12 +140,6 @@
         }
         if (a.classList.contains('js-run')) {
             U.post('/admin/video/collect_tasks/run', {id: row.id}).then(function (r) {
-                table.refresh();
-                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
-            });
-        }
-        if (a.classList.contains('js-promote')) {
-            U.post('/admin/video/collect_temps/promote', {id: row.id}).then(function (r) {
                 table.refresh();
                 U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
             });

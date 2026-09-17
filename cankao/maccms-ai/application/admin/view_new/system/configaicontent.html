@@ -1,0 +1,97 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<div class="page-container p10">
+    <form class="layui-form layui-form-pane" action="">
+        <input type="hidden" name="__token__" value="{$Request.token}" />
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/configaicontent')}：</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="ai_content[enabled]" value="1" lay-skin="switch" {if condition="$config['ai_content']['enabled'] eq '1'"}checked{/if}>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_inherit_search')}：</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="ai_content[use_ai_search_credentials]" value="1" lay-skin="switch" {if condition="$config['ai_content']['use_ai_search_credentials'] eq '1'"}checked{/if}>
+                <div style="float: none;" class="layui-form-mid layui-word-aux">{:lang('admin/system/ai_inherit_search_tip')}</div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_provider')}：</label>
+            <div class="layui-input-block">
+                <select name="ai_content[provider]">
+                    <option value="openai" {if condition="$config['ai_content']['provider'] eq 'openai'"}selected{/if}>OpenAI</option>
+                    <option value="claude" {if condition="$config['ai_content']['provider'] eq 'claude'"}selected{/if}>Claude</option>
+                    <option value="gemini" {if condition="$config['ai_content']['provider'] eq 'gemini'"}selected{/if}>Gemini</option>
+                    <option value="deepseek" {if condition="$config['ai_content']['provider'] eq 'deepseek'"}selected{/if}>DeepSeek</option>
+                    <option value="qwen" {if condition="$config['ai_content']['provider'] eq 'qwen'"}selected{/if}>Qwen</option>
+                    <option value="glm" {if condition="$config['ai_content']['provider'] eq 'glm'"}selected{/if}>GLM</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_model')}：</label>
+            <div class="layui-input-block">
+                <input type="text" name="ai_content[model]" value="{$config.ai_content.model}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_api_base')}：</label>
+            <div class="layui-input-block">
+                <input type="text" name="ai_content[api_base]" value="{$config.ai_content.api_base}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_api_key')}：</label>
+            <div class="layui-input-block">
+                <!-- 绝不回填真实 key 到 HTML。留空 = 保留旧值，由 System::configaicontent() 处理。 -->
+                <input type="password" name="ai_content[api_key]" value="" autocomplete="new-password"
+                       placeholder="{:lang('admin/system/ai_key_placeholder')}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_timeout')}：</label>
+            <div class="layui-input-block">
+                <input type="number" name="ai_content[timeout]" value="{$config.ai_content.timeout}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_max_tokens')}：</label>
+            <div class="layui-input-block">
+                <input type="number" name="ai_content[max_tokens]" value="{$config.ai_content.max_tokens}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/system/ai_batch_size')}：</label>
+            <div class="layui-input-block">
+                <input type="number" name="ai_content[batch_size]" value="{$config.ai_content.batch_size}" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('admin/aiannotation/auto_adopt_empty')}：</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="ai_content[auto_adopt_empty]" value="1" lay-skin="switch" {if condition="$config['ai_content']['auto_adopt_empty'] eq '1'"}checked{/if}>
+                <div style="float: none;" class="layui-form-mid layui-word-aux">{:lang('admin/aiannotation/auto_adopt_empty_tip')}</div>
+            </div>
+        </div>
+
+        <div class="layui-form-item center">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="formSubmit">{:lang('btn_save')}</button>
+                <button class="layui-btn layui-btn-warm" type="reset">{:lang('btn_reset')}</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}

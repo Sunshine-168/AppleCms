@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="color-scheme" content="light dark" />
+<title>{:lang('index/ai_chat_nav_brand')}</title>
+<link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/iconfont-alicdn.css?v=202604217" />
+<link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/foot.css?v=202604217" />
+<link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/black.css" id="macThemeDarkSheet" disabled />
+<link rel="stylesheet" type="text/css" href="{$maccms.path_tpl}/asset/css/ai-chat.css?v=202604218" />
+<script type="text/javascript" src="{$maccms.path}template/default/asset/js/jquery.js"></script>
+<script type="text/javascript" src="{$maccms.path}template/default/asset/js/jquery.cookie.js"></script>
+{include file="public/jsvar" /}
+{include file="widget/themes" /}
+</head>
+
+<body class="ai-chat-page">
+{include file="public/th" /}
+<header class="ai-nav" role="banner">
+  <div class="ai-nav__brand">
+    <img class="ai-nav__logo-icon" src="{$maccms.path_tpl}images/ai-chat/ask-ai-icon.gif" width="30" height="30" alt="" decoding="async" />
+    <span class="ai-nav__brand-text">{:lang('index/ai_chat_nav_brand')}</span>
+    <a class="ai-nav__all" href="{:mac_url('vod/search')}">{:lang('index/ai_chat_nav_all')}</a>
+  </div>
+  <button type="button" class="ai-nav__cancel" id="cancelBtn">{:lang('index/ai_chat_nav_cancel')}</button>
+</header>
+
+<main class="content-wrap" id="contentWrap" role="main">
+  <div class="empty-state" id="emptyState">{:lang('index/ai_chat_prompt_empty')}</div>
+</main>
+
+<footer class="input-wrap" role="contentinfo">
+  <div class="input-shell">
+    <input type="text" id="msgInput" placeholder="{:lang('index/ai_chat_input_placeholder')}" autocomplete="off" enterkeyhint="send" />
+    <div class="icons">
+      <button type="button" class="icon-btn icon-btn--send" id="sendBtn" aria-label="{:lang('index/ai_chat_send')}" title="{:lang('index/ai_chat_send')}">
+        <img class="icon-btn__img icon-btn__img--send-default" src="{$maccms.path_tpl}images/ai-chat/send@2x.png" width="22" height="22" alt="" decoding="async" />
+        <img class="icon-btn__img icon-btn__img--send-busy" src="{$maccms.path_tpl}images/ai-chat/pause@2x.png" width="28" height="28" alt="" decoding="async" />
+      </button>
+    </div>
+  </div>
+</footer>
+
+<div class="foot clearfix ai-chat-fab-anchor" aria-hidden="false">
+  <div class="container foot-wrap">
+    {include file="widget/extra_fab_tools" /}
+  </div>
+</div>
+
+<script>
+window.__AI_CHAT_BOOT__ = {php}
+$__ai_chat_boot = array(
+  'apiUrl' => (string) url('ajax/ai_chat'),
+  'token' => (string) request()->token(),
+  'i18n' => array(
+    'loading' => lang('index/ai_chat_loading'),
+    'done' => lang('index/ai_chat_done'),
+    'intro' => lang('index/ai_chat_intro'),
+    'matchResults' => lang('index/ai_chat_match_results'),
+    'onsiteMatches' => lang('index/ai_chat_onsite_matches'),
+    'relatedLinks' => lang('index/ai_chat_related_links'),
+    'siteLinks' => lang('index/ai_chat_site_links'),
+    'externalLinks' => lang('index/ai_chat_external_links'),
+    'enrichedTitle' => lang('index/ai_chat_enriched_title'),
+    'searchFail' => lang('index/ai_chat_search_fail'),
+    'noAnswer' => lang('index/ai_chat_no_answer'),
+    'contentRecommend' => lang('index/ai_chat_tag_default'),
+    'invalidResponse' => lang('index/ai_chat_invalid_response'),
+    'cancelled' => lang('index/ai_chat_cancelled'),
+    'stop' => lang('index/ai_chat_stop'),
+    'send' => lang('index/ai_chat_send'),
+  ),
+);
+echo json_encode($__ai_chat_boot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS);
+{/php};
+</script>
+<script type="text/javascript" src="{$maccms.path}template/default/asset/js/foot-hlstem.js?v=202604217"></script>
+<script type="text/javascript">
+jQuery(function () {
+  if (typeof window.macSyncThemeUi === 'function') {
+    window.macSyncThemeUi();
+  }
+});
+</script>
+<script src="{$maccms.path_tpl}/asset/js/ai-chat.js?v=202607101"></script>
+</body>
+</html>

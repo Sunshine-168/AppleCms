@@ -9,6 +9,7 @@
             <button type="button" class="btn btn-sm" id="collect-source-add-btn">新增采集源</button>
             <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">定时采集</a>
         </div>
     </div>
@@ -135,7 +136,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的采集源</p><p><button type="button" class="btn btn-muted btn-sm" id="collect-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有采集源</p><p class="muted">填苹果 CMS 兼容接口即可入库。也可先从推荐资源里挑一个。</p><p><button type="button" class="btn btn-primary btn-sm" id="collect-empty-add">新增采集源</button> <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a></p></div>';
+                return '<div class="list-empty"><p>还没有采集源</p><p class="muted">填苹果 CMS 兼容接口即可入库。不确定能不能用，先去试试接口。</p><p><button type="button" class="btn btn-primary btn-sm" id="collect-empty-add">新增采集源</button> <a class="btn btn-muted btn-sm" href="/admin/video/tools/hub">试试接口</a> <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a></p></div>';
         },
         onDraw: function () {
             var add = document.getElementById('collect-empty-add');
@@ -152,6 +153,7 @@
             {title: '操作', cls: 'actions', html: function (d) {
                 return '<a href="#" class="btn-link js-bind">绑定</a>'
                     + '<a class="btn-link js-logs" href="/admin/video/collect_logs?collect_source_id=' + encodeURIComponent(d.id || '') + '">日志</a>'
+                    + '<a class="btn-link" href="/admin/video/collect_temps?collect_source_id=' + encodeURIComponent(d.id || '') + '">待审</a>'
                     + '<a class="btn-link js-task" href="/admin/video/collect_tasks/create?collect_source_id=' + encodeURIComponent(d.id || '') + '">定时</a>'
                     + '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
             }}

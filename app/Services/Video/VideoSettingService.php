@@ -149,7 +149,7 @@ class VideoSettingService
         } catch (\Throwable) {
         }
         $keys = array_values(array_unique($keys));
-        $keepIfBlank = ['smtp_pass', 's3_secret'];
+        $keepIfBlank = ['smtp_pass', 's3_secret', 'ai_key'];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;
@@ -392,19 +392,57 @@ class VideoSettingService
                     ['name' => 'rewrite_suffix', 'label' => '后缀', 'type' => 'text'],
                 ],
             ],
-            'interface' => [
-                'title' => '入库接口',
-                'fields' => [
-                    ['name' => 'inbound_key', 'label' => '站外入库密钥', 'type' => 'text'],
-                    ['name' => 'collect_to_temp', 'label' => '采集先入临时表', 'type' => 'select', 'options' => ['0' => '直接入库', '1' => '写入临时表']],
-                ],
-            ],
         ];
         try {
             return array_merge($core, app(\App\Plugins\PluginHost::class)->extraPages());
         } catch (\Throwable) {
             return $core;
         }
+    }
+
+    /** @return array{site: array<string, mixed>, has_key: bool, key_tail: string, empty_n: int, provider_kind: string} */
+    public function aiPage(): array
+    {
+        $site = $this->site();
+        $key = trim((string) ($site['ai_key'] ?? ''));
+        $provider = trim((string) ($site['ai_provider'] ?? ''));
+        $empty = 0;
+        try {
+            if (Schema::hasTable('videos')) {
+                $empty = (int) \App\Models\Video\VideoModel::query()->where(function ($q) {
+                    $q->whereNull('description')->orWhere('description', '');
+                })->count();
+            }
+        } catch (\Throwable) {
+            $empty = 0;
+        }
+
+        return [
+            'site' => $site,
+            'has_key' => $key !== '',
+            'key_tail' => $key !== '' ? substr($key, -4) : '',
+            'empty_n' => $empty,
+            'provider_kind' => $this->aiProviderKind($provider),
+        ];
+    }
+
+    public function aiProviderKind(string $provider): string
+    {
+        $p = strtolower(trim($provider));
+        if ($p === '') {
+            return '';
+        }
+        if (in_array($p, ['openai', 'gpt', 'chatgpt', 'azure'], true) || str_contains($p, 'openai')) {
+            return 'openai';
+        }
+        if (in_array($p, ['qwen', 'tongyi', 'dashscope', '通义'], true) || str_contains($provider, '通义')) {
+            return 'qwen';
+        }
+        if (in_array($p, ['ernie', 'wenxin', 'baidu', '文心'], true) || str_contains($provider, '文心')) {
+            return 'ernie';
+        }
+
+        return 'other';
     }
 
     private function ready(): bool

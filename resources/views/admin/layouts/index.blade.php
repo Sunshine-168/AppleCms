@@ -185,6 +185,17 @@
 })();
 </script>
 <script src="{{ asset('js/admin-ui.js') }}?v={{ @filemtime(public_path('js/admin-ui.js')) ?: '1' }}"></script>
+<script>
+(function () {
+    if (!window.AdminUi) return;
+    @if(session('error'))
+    AdminUi.toast(@json(session('error')), 'err');
+    @endif
+    @if(session('status'))
+    AdminUi.toast(@json(session('status')), 'ok');
+    @endif
+})();
+</script>
 @stack('scripts')
 </body>
 </html>

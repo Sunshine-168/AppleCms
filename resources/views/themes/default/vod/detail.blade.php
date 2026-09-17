@@ -2,8 +2,6 @@
 
 @section('content')
     @vodBreadcrumb
-    @if(session('status'))<p>{{ session('status') }}</p>@endif
-    @if(session('error'))<p class="muted">{{ session('error') }}</p>@endif
     <h1>{{ $video->title }}</h1>
     <p class="muted">{{ $video->year }} / {{ $video->area }} / {{ $video->lang }} @if($video->remarks) · {{ $video->remarks }} @endif · 评分 {{ $video->stat->score ?? $video->score }}@if((int)($video->points ?? 0) > 0) · 点播 {{ $video->points }} 积分 @endif</p>
     <p>
@@ -81,9 +79,11 @@
             a.addEventListener('click', function(){
                 fetch(@json(url('/vod/'.$video->id.'/score')), {
                     method:'POST',
-                    headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRF-TOKEN':@json(csrf_token())},
+                    headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},
                     body:'score='+this.dataset.score
-                }).then(r=>r.json()).then(function(res){ alert(res.msg||'ok'); });
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    vodResult(res, '评分失败');
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
             });
         });
         var fav = document.getElementById('fav-btn');
@@ -91,11 +91,14 @@
             fav.addEventListener('click', function(){
                 fetch(@json(url('/vod/'.$video->id.'/favorite')), {
                     method:'POST',
-                    headers:{'X-CSRF-TOKEN':@json(csrf_token())}
-                }).then(r=>r.json()).then(function(res){
-                    alert(res.msg||'ok');
-                    if(res.data && res.data.favorited){ fav.textContent='取消收藏'; } else { fav.textContent='收藏'; }
-                });
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    if (vodResult(res, '收藏失败') && res.data && res.data.favorited) {
+                        fav.textContent='取消收藏';
+                    } else if (res && Number(res.code) === 0) {
+                        fav.textContent='收藏';
+                    }
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
             });
         }
         document.querySelectorAll('.comment-like').forEach(function(a){
@@ -103,21 +106,22 @@
                 var el = this;
                 fetch('/comment/' + this.dataset.id + '/like', {
                     method:'POST',
-                    headers:{'X-CSRF-TOKEN':@json(csrf_token())}
-                }).then(r=>r.json()).then(function(res){
-                    alert(res.msg||'ok');
-                    if(res.code === 0 && res.data && typeof res.data.comment_up !== 'undefined'){
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    if (vodResult(res, '点赞失败') && res.data && typeof res.data.comment_up !== 'undefined') {
                         el.textContent = '赞 ' + res.data.comment_up;
                     }
-                });
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
             });
         });
         document.querySelectorAll('.comment-report').forEach(function(a){
             a.addEventListener('click', function(){
                 fetch('/comment/' + this.dataset.id + '/report', {
                     method:'POST',
-                    headers:{'X-CSRF-TOKEN':@json(csrf_token())}
-                }).then(r=>r.json()).then(function(res){ alert(res.msg||'ok'); });
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    vodResult(res, '举报失败');
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
             });
         });
     </script>

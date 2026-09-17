@@ -18,6 +18,7 @@
         <div>
             <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">定时采集</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a>
         </div>
     </div>

@@ -3,7 +3,6 @@
 @section('content')
     @vodBreadcrumb
     <h1>{{ $video->title }} {{ $episode?->display_name }}</h1>
-    @if(session('error'))<p class="muted">{{ session('error') }}</p>@endif
     @if(($trysee ?? 0) > 0)<p class="muted">试看 {{ (int) $trysee }} 秒，完整播放需积分</p>@endif
     <div class="player">
         @if($episode && $episode->url)
@@ -42,7 +41,7 @@
     document.getElementById('play-fail')?.addEventListener('click', function(){
         fetch(@json(url('/play/fail')), {
             method:'POST',
-            headers:{'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
+            headers:{'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},
             body: JSON.stringify({
                 video_id: {{ (int) $video->id }},
                 source_id: {{ (int) ($source?->id ?? 0) }},
@@ -50,7 +49,9 @@
                 url: location.href,
                 content: '播放失败'
             })
-        }).then(function(r){ return r.json(); }).then(function(res){ alert(res.msg || '已提交'); }).catch(function(){ alert('提交失败'); });
+        }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+            vodResult(res, '提交失败');
+        }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
     });
     var tryseeSeconds = {{ (int) ($trysee ?? 0) }};
     if (tryseeSeconds > 0) {

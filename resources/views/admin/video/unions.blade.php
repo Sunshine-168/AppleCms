@@ -114,7 +114,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的资源站</p><p><button type="button" class="btn btn-muted btn-sm" id="union-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有收藏的资源站</p><p class="muted">把别人给的苹果接口先记在这里。确认能用后再接入采集源。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/unions/create">新增资源</a></p></div>';
+            return '<div class="list-empty"><p>还没有收藏的资源站</p><p class="muted">把别人给的苹果接口先记在这里。也可以先去探测，通了再收藏。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/unions/create">新增资源</a> <a class="btn btn-muted btn-sm" href="/admin/video/tools/hub">试试接口</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';

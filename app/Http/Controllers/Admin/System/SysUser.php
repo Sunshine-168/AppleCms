@@ -176,9 +176,15 @@ class SysUser extends Controller
         $password = (string) $request->input('password', '');
         $vscode   = (string) ($request->input('captcha', '') !== '' ? $request->input('captcha') : $request->input('vscode', ''));
 
-        $data     = $this->systemUserService->login($username, $password, $vscode);
+        try {
+            $data = $this->systemUserService->login($username, $password, $vscode);
+        } catch (\Throwable $e) {
+            $msg = config('app.debug') && trim($e->getMessage()) !== '' ? $e->getMessage() : '登录失败';
 
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+            return Ajax::message(1, $msg);
+        }
+
+        return Ajax::message((int) $data['code'], (string) ($data['msg'] ?? '登录失败'), is_array($data['data'] ?? null) ? $data['data'] : []);
 
     }
 

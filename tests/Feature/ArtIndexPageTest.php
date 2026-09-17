@@ -9,10 +9,7 @@ class ArtIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_art_index_follows_laracms_entry_list(): void
@@ -28,7 +25,10 @@ class ArtIndexPageTest extends TestCase
         $this->assertStringContainsString('草稿', $html);
         $this->assertStringContainsString('art-batch', $html);
         $this->assertStringContainsString('搜索标题、正文或 ID', $html);
+        $this->assertStringContainsString('/admin/video/arts/create', $html);
         $this->assertStringContainsString('发布到前台', $html);
+        $this->assertStringNotContainsString('art-dialog-tpl', $html);
+        $this->assertStringNotContainsString('openDialog', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('placeholder="title"', $html);
     }

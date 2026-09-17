@@ -1,9 +1,6 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>会员登录</h1>
-    @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
-    @if(session('error'))<p class="muted">{{ session('error') }}</p>@endif
-    @if(session('status'))<p>{{ session('status') }}</p>@endif
     <form method="post" action="{{ url('/member/login') }}">
         @csrf
         <p><input class="lay-like" name="email" type="email" placeholder="邮箱" value="{{ old('email') }}" required></p>

@@ -62,15 +62,20 @@ class SiteSetting extends Controller
 
     public function configPage(string $page): View
     {
+        if ($page === 'ai') {
+            return view('admin.video.config_ai', $this->settings->aiPage());
+        }
         $views = [
             'api' => 'admin.video.config_api',
             'collect' => 'admin.video.config_collect',
+            'interface' => 'admin.video.config_interface',
             'player' => 'admin.video.config_player',
             'email' => 'admin.video.config_email',
         ];
         if (isset($views[$page])) {
             return view($views[$page], [
                 'site' => $this->settings->site(),
+                'receiveUrl' => url('/api.php/receive/vod'),
             ]);
         }
         $extra = $this->settings->extraPages();

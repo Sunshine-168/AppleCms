@@ -1,1 +1,0 @@
-<include file="Search:index" />

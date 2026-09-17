@@ -4,11 +4,13 @@ require_once __DIR__.'/../app/Support/helpers.php';
 
 use App\Models\System\SysScheduleModel;
 use App\Services\Admin\System\SysScheduleService;
+use App\Support\ApiError;
 use App\Support\Utils\Syslog;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -98,6 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api.php/receive/*',
             'api/receive/*',
+            'api/admin/login',
         ]);
         $middleware->alias([
             'member.auth' => \App\Http\Middleware\MemberAuth::class,
@@ -117,6 +120,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {
             Syslog::exception('system', $e);
+        });
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if (ApiError::shouldRender($request)) {
+                return ApiError::json($e);
+            }
+
+            return null;
         });
     })
     ->create();

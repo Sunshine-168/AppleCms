@@ -1,0 +1,140 @@
+{include file="../../../application/admin/view_new/public/head" /}
+
+<div class="page-container p10">
+    <input type="hidden" name="__token__" value="{$Request.token}" />
+    <div class="my-toolbar-box" style="margin-bottom:15px;">
+        <div class="mb10">
+            <button class="layui-btn" id="btn-generate">{:lang('admin/aiannotation/generate')}</button>
+        </div>
+        <form class="layui-form" method="get" action="{:url('ai_annotation/index')}">
+            <div class="layui-inline">
+                <select name="mid">
+                    <option value="1" {if condition="$mid eq 1"}selected{/if}>{:lang('menu/vod')}</option>
+                    <option value="2" {if condition="$mid eq 2"}selected{/if}>{:lang('menu/art')}</option>
+                </select>
+            </div>
+            <div class="layui-inline">
+                <select name="status">
+                    <option value="0" {if condition="$status eq 0"}selected{/if}>{:lang('admin/aiannotation/title')}</option>
+                    <option value="1" {if condition="$status eq 1"}selected{/if}>{:lang('admin/aiannotation/adopt_ok')}</option>
+                    <option value="2" {if condition="$status eq 2"}selected{/if}>{:lang('admin/aiannotation/reject')}</option>
+                    <option value="3" {if condition="$status eq 3"}selected{/if}>{:lang('admin/aiannotation/gen_failed')}</option>
+                </select>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit="" lay-filter="searchSubmit">{:lang('btn_search')}</button>
+            </div>
+        </form>
+    </div>
+
+    <table class="layui-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>{:lang('admin/aiannotation/col_current')}</th>
+            <th>{:lang('admin/aiannotation/col_suggest')}</th>
+            <th>{:lang('admin/aiannotation/confidence')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="vo"}
+        <tr>
+            <td>{$vo.content_id}</td>
+            <td>
+                <div><b>{$cur_map[$vo['content_id']]['name']|default=''}</b></div>
+                <div>tag: {$cur_map[$vo['content_id']]['tag']|default=''}</div>
+                <div>blurb: {$cur_map[$vo['content_id']]['blurb']|default=''}</div>
+                <div>type_id: {$cur_map[$vo['content_id']]['type_id']|default=0}</div>
+            </td>
+            <td>
+                {if condition="$vo['status'] eq 3"}
+                    <span style="color:#c00;">{$vo.error_msg}</span>
+                {else /}
+                    <div>tag: {$vo.ai_tags}</div>
+                    <div>blurb: {$vo.ai_summary}</div>
+                    <div>type_id: {$vo.ai_type_id}</div>
+                {/if}
+            </td>
+            <td>{$vo.ai_confidence}</td>
+            <td>
+                {if condition="$vo['status'] eq 0"}
+                <button class="layui-btn layui-btn-sm j-adopt" data-mid="{$mid}" data-id="{$vo.content_id}">{:lang('admin/aiannotation/adopt')}</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger j-reject" data-mid="{$mid}" data-id="{$vo.content_id}">{:lang('admin/aiannotation/reject')}</button>
+                {/if}
+                {if condition="$vo['status'] eq 3"}
+                <button class="layui-btn layui-btn-sm layui-btn-warm j-regen" data-mid="{$mid}" data-id="{$vo.content_id}">{:lang('admin/aiannotation/regenerate')}</button>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+    <div id="pager"></div>
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+layui.use(['layer', 'laypage'], function () {
+    var layer = layui.layer;
+    var laypage = layui.laypage;
+    var $ = layui.jquery;
+    var token = $('input[name="__token__"]').val() || '';
+
+    laypage.render({
+        elem: 'pager',
+        count: {$total},
+        limit: {$limit},
+        curr: {$page},
+        jump: function (obj, first) {
+            if (!first) {
+                location.href = "{:url('ai_annotation/index')}?mid={$mid}&status={$status}&page=" + obj.curr;
+            }
+        }
+    });
+
+    function post(url, data, okMsg) {
+        $.ajax({
+            url: url, type: 'post', dataType: 'json', data: data,
+            success: function (res) {
+                layer.msg(res.msg || okMsg, {time: 1500});
+                if (parseInt(res.code) === 1) {
+                    setTimeout(function () { location.reload(); }, 800);
+                }
+            },
+            error: function () { layer.msg("{:lang('admin/common/sys_err')}", {time: 2000}); }
+        });
+    }
+
+    $('#btn-generate').on('click', function () {
+        layer.msg("{:lang('wait_submit')}", {time: 300000});
+        post("{:url('ai_annotation/generate')}", {__token__: token, mid: {$mid}}, 'ok');
+    });
+
+    $('.j-adopt').on('click', function () {
+        post("{:url('ai_annotation/adopt')}", {
+            __token__: token,
+            mid: $(this).data('mid'),
+            content_id: $(this).data('id')
+        }, 'ok');
+    });
+
+    $('.j-reject').on('click', function () {
+        post("{:url('ai_annotation/reject')}", {
+            __token__: token,
+            mid: $(this).data('mid'),
+            content_id: $(this).data('id')
+        }, 'ok');
+    });
+
+    $('.j-regen').on('click', function () {
+        layer.msg("{:lang('wait_submit')}", {time: 300000});
+        post("{:url('ai_annotation/generate')}", {
+            __token__: token,
+            mid: $(this).data('mid'),
+            'ids[]': $(this).data('id')
+        }, 'ok');
+    });
+});
+</script>

@@ -1,1 +1,0 @@
-cms_player.yun=false;document.write('<video class="embed-responsive-item" id="video" style="background:#000;" controls autoplay playsinline><source src="'+cms_player.url+'">您的浏览器不支持 HTML5 video 标签。</video>');document.getElementById("video").onended=function(){if(cms_player.next_path){location.href=cms_player.next_path;}};

@@ -1,1 +1,0 @@
-document.write("<a class=\"btn btn-block btn-success\" href=\"http://www.feifeicms.org\" target=\"_blank\">运营>广告管理>广告标识（300_15）</a>");

@@ -5,6 +5,7 @@ namespace App\Services\Admin\Video;
 use App\Models\Member\Member;
 use App\Models\Member\MemberGroup;
 use App\Models\Member\MemberOrder;
+use App\Models\Member\MemberPm;
 use App\Models\Member\MemberPointLog;
 use App\Models\Video\CollectSourceModel;
 use App\Models\Video\FriendLink;
@@ -22,7 +23,14 @@ use App\Models\Video\VideoTypeModel;
 use App\Models\Video\VideoAuditRule;
 use App\Models\Video\VideoCollectLog;
 use App\Models\Video\VideoCollectTask;
+use App\Models\Video\VideoCollectTemp;
+use App\Models\Video\VideoSearchWord;
 use App\Models\Video\VideoUnion;
+use App\Models\Video\VideoEpisodeModel;
+use App\Models\Video\VideoGuestbook;
+use App\Models\Video\VideoNotify;
+use App\Models\Video\VideoPlayFail;
+use App\Models\Video\VideoReport;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -100,7 +108,8 @@ class SiteModuleService
                 'cols' => ['id', 'video_id', 'author_name', 'content', 'comment_report', 'status'],
             ],
             'reports' => [
-                'title' => '报错管理',
+                'title' => '报错',
+                'hint' => '会员在详情页报的无法播放。处理完打标；删掉只去记录，不改播放地址。',
                 'model' => \App\Models\Video\VideoReport::class,
                 'search' => 'content',
                 'fields' => [
@@ -164,6 +173,7 @@ class SiteModuleService
             ],
             'playfails' => [
                 'title' => '播放失败',
+                'hint' => '播放页点报错记下的坏链。标已处理不会改地址；下线线路才会关掉这条线。',
                 'model' => \App\Models\Video\VideoPlayFail::class,
                 'search' => 'content',
                 'fields' => [
@@ -224,13 +234,14 @@ class SiteModuleService
             ],
             'guestbooks' => [
                 'title' => '留言',
+                'hint' => '访客在留言板写的。后台回复会出现在那条下面；待审的不会出现在前台。',
                 'model' => \App\Models\Video\VideoGuestbook::class,
                 'search' => 'content',
                 'fields' => [
                     ['name' => 'author_name', 'label' => '昵称', 'type' => 'text'],
                     ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
                     ['name' => 'reply', 'label' => '回复', 'type' => 'textarea'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '待审']],
                 ],
                 'cols' => ['id', 'author_name', 'content', 'reply', 'status'],
             ],
@@ -282,6 +293,7 @@ class SiteModuleService
             ],
             'pms' => [
                 'title' => '站内信',
+                'hint' => '发给指定会员，会员在站内信里看',
                 'model' => \App\Models\Member\MemberPm::class,
                 'search' => 'title',
                 'fields' => [
@@ -490,7 +502,8 @@ class SiteModuleService
                 'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
             ],
             'searchwords' => [
-                'title' => '搜索词统计',
+                'title' => '搜索词',
+                'hint' => '前台搜片会自动记在这里。次数高的就是访客在找什么。',
                 'model' => \App\Models\Video\VideoSearchWord::class,
                 'search' => 'word',
                 'fields' => [
@@ -516,6 +529,7 @@ class SiteModuleService
             ],
             'notifies' => [
                 'title' => '会员通知',
+                'hint' => '全站或指定会员的公告，和站内信不同',
                 'model' => \App\Models\Video\VideoNotify::class,
                 'search' => 'title',
                 'fields' => [
@@ -527,19 +541,16 @@ class SiteModuleService
                 'cols' => ['id', 'member_id', 'title', 'is_read', 'created_at'],
             ],
             'collect_temps' => [
-                'title' => '采集临时表',
+                'title' => '待审入库',
+                'hint' => '采集开了先入临时表时，新片停在这里。确认后再转入片库。',
                 'model' => \App\Models\Video\VideoCollectTemp::class,
                 'search' => 'title',
                 'fields' => [
-                    ['name' => 'collect_source_id', 'label' => '采集源ID', 'type' => 'number'],
-                    ['name' => 'collect_id', 'label' => '远程ID', 'type' => 'text'],
                     ['name' => 'title', 'label' => '标题', 'type' => 'text'],
-                    ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
-                    ['name' => 'type_id', 'label' => '分类ID', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '待转入', '1' => '已转入']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '待转入', '1' => '已入库']],
                     ['name' => 'msg', 'label' => '说明', 'type' => 'text'],
                 ],
-                'cols' => ['id', 'collect_source_id', 'title', 'type_id', 'status', 'msg', 'created_at'],
+                'cols' => ['id', 'title', 'status', 'msg', 'created_at'],
             ],
             default => throw new \InvalidArgumentException('未知模块'),
         };
@@ -573,6 +584,16 @@ class SiteModuleService
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('content', 'like', '%'.$kw.'%')
                         ->orWhere('author_name', 'like', '%'.$kw.'%');
+                });
+            } elseif ($module === 'guestbooks') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('content', 'like', '%'.$kw.'%')
+                        ->orWhere('author_name', 'like', '%'.$kw.'%')
+                        ->orWhere('reply', 'like', '%'.$kw.'%')
+                        ->orWhere('ip', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
                 });
             } elseif ($module === 'arts') {
                 $q->where(function ($inner) use ($kw) {
@@ -723,6 +744,114 @@ class SiteModuleService
                         }
                     }
                 });
+            } elseif ($module === 'collect_temps') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('msg', 'like', '%'.$kw.'%')
+                        ->orWhere('collect_id', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('collect_source_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('collect_sources')) {
+                        $sourceIds = CollectSourceModel::query()
+                            ->where('name', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($sourceIds !== []) {
+                            $inner->orWhereIn('collect_source_id', $sourceIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'reports') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('content', 'like', '%'.$kw.'%')
+                        ->orWhere('ip', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('video_id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'playfails') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('content', 'like', '%'.$kw.'%')
+                        ->orWhere('url', 'like', '%'.$kw.'%')
+                        ->orWhere('ip', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('video_id', (int) $kw)->orWhere('source_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
+                    if (Schema::hasTable('video_sources')) {
+                        $sourceIds = VideoSourceModel::query()
+                            ->where('name', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($sourceIds !== []) {
+                            $inner->orWhereIn('source_id', $sourceIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'pms') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('content', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('to_id', (int) $kw)->orWhere('from_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('to_id', $memberIds)->orWhereIn('from_id', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'notifies') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('content', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
             } elseif ($module === 'audits') {
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('name', 'like', '%'.$kw.'%')
@@ -737,7 +866,7 @@ class SiteModuleService
                 $q->where($cfg['search'], 'like', '%'.$kw.'%');
             }
         }
-        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups') {
+        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups' || $module === 'reports' || $module === 'guestbooks' || $module === 'playfails') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
             }
@@ -762,6 +891,49 @@ class SiteModuleService
             }
             if ($module === 'orders' && trim((string) ($params['channel'] ?? '')) !== '') {
                 $q->where('channel', trim((string) $params['channel']));
+            }
+        }
+        if ($module === 'reports' && (string) ($params['today'] ?? '') === '1') {
+            $q->where('created_at', '>=', strtotime('today'));
+        }
+        if ($module === 'guestbooks') {
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            if ((string) ($params['noreply'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->where('reply', '')->orWhereNull('reply');
+                });
+            }
+        }
+        if ($module === 'playfails') {
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            if ((string) ($params['offline'] ?? '') === '1') {
+                $q->where('status', 0)->where('source_id', '>', 0);
+            }
+        }
+        if ($module === 'pms') {
+            if (array_key_exists('is_read', $params) && $params['is_read'] !== '' && $params['is_read'] !== null) {
+                $q->where('is_read', (int) $params['is_read']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+        }
+        if ($module === 'notifies') {
+            if (array_key_exists('is_read', $params) && $params['is_read'] !== '' && $params['is_read'] !== null) {
+                $q->where('is_read', (int) $params['is_read']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            $audience = trim((string) ($params['audience'] ?? ''));
+            if ($audience === 'all') {
+                $q->where('member_id', 0);
+            } elseif ($audience === 'one') {
+                $q->where('member_id', '>', 0);
             }
         }
         if ($module === 'cards') {
@@ -851,6 +1023,28 @@ class SiteModuleService
                 $q->where('collect_source_id', (int) $params['collect_source_id']);
             }
         }
+        if ($module === 'collect_temps') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['failed'] ?? '') === '1') {
+                $q->where('status', 0)->where('msg', '!=', '')->where('msg', '!=', '待转入');
+            }
+            if (array_key_exists('collect_source_id', $params) && $params['collect_source_id'] !== '' && $params['collect_source_id'] !== null) {
+                $q->where('collect_source_id', (int) $params['collect_source_id']);
+            }
+        }
+        if ($module === 'searchwords') {
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('updated_at', '>=', strtotime('today'));
+            }
+            if ((string) ($params['hot'] ?? '') === '1') {
+                $q->where('hits', '>=', 10);
+            }
+            if ((string) ($params['once'] ?? '') === '1') {
+                $q->where('hits', 1);
+            }
+        }
         if ($module === 'collect_tasks') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
@@ -886,6 +1080,20 @@ class SiteModuleService
             $q->orderByDesc('sort')->orderByDesc('id');
         } elseif ($module === 'arts') {
             $q->orderByDesc('updated_at')->orderByDesc('id');
+        } elseif ($module === 'collect_temps') {
+            $q->orderBy('status')->orderByDesc('id');
+        } elseif ($module === 'reports') {
+            $q->orderBy('status')->orderByDesc('id');
+        } elseif ($module === 'guestbooks') {
+            $q->orderBy('status')->orderByDesc('id');
+        } elseif ($module === 'playfails') {
+            $q->orderBy('status')->orderByDesc('id');
+        } elseif ($module === 'pms') {
+            $q->orderBy('is_read')->orderByDesc('id');
+        } elseif ($module === 'notifies') {
+            $q->orderBy('is_read')->orderByDesc('id');
+        } elseif ($module === 'searchwords') {
+            $q->orderByDesc('hits')->orderByDesc('updated_at')->orderByDesc('id');
         } else {
             $q->orderByDesc('id');
         }
@@ -898,6 +1106,21 @@ class SiteModuleService
         })->all();
         if ($module === 'comments') {
             $rows = $this->decorateComments($rows);
+        }
+        if ($module === 'reports') {
+            $rows = $this->decorateReports($rows);
+        }
+        if ($module === 'guestbooks') {
+            $rows = $this->decorateGuestbooks($rows);
+        }
+        if ($module === 'playfails') {
+            $rows = $this->decoratePlayFails($rows);
+        }
+        if ($module === 'pms') {
+            $rows = $this->decoratePms($rows);
+        }
+        if ($module === 'notifies') {
+            $rows = $this->decorateNotifies($rows);
         }
         if ($module === 'topics') {
             $rows = $this->decorateTopics($rows);
@@ -941,6 +1164,12 @@ class SiteModuleService
         if ($module === 'collect_tasks') {
             $rows = $this->decorateCollectTasks($rows);
         }
+        if ($module === 'collect_temps') {
+            $rows = $this->decorateCollectTemps($rows);
+        }
+        if ($module === 'searchwords') {
+            $rows = $this->decorateSearchWords($rows);
+        }
         if ($module === 'audits') {
             $rows = $this->decorateAudits($rows);
         }
@@ -955,6 +1184,15 @@ class SiteModuleService
     {
         if ($module === 'collect_logs') {
             return Result::fail('采集日志由采集任务写入，不能手工改。');
+        }
+        if ($module === 'collect_temps') {
+            return Result::fail('待审记录由采集写入。要进片库请点转入，不要在这里改字段。');
+        }
+        if ($module === 'guestbooks' && $id === null) {
+            return Result::fail('留言由前台提交。后台只回复和审核。');
+        }
+        if ($module === 'playfails' && $id === null) {
+            return Result::fail('播放失败由前台播放页上报。后台只处理和下线线路。');
         }
         $cfg = $this->config($module);
         /** @var class-string<Model> $class */
@@ -1010,11 +1248,106 @@ class SiteModuleService
         if ($module === 'orders' && $id === null && trim((string) ($payload['order_no'] ?? '')) === '') {
             $payload['order_no'] = 'V'.date('YmdHis').Str::upper(Str::random(4));
         }
-        if ($module === 'pms' && $id === null) {
-            $payload['created_at'] = $payload['created_at'] ?? time();
+        if ($module === 'pms') {
+            if ($id === null) {
+                $toId = (int) ($payload['to_id'] ?? 0);
+                if ($toId < 1) {
+                    return Result::fail('请填写收件会员 ID');
+                }
+                if (Schema::hasTable('members') && ! Member::query()->where('id', $toId)->exists()) {
+                    return Result::fail('会员不存在');
+                }
+                $title = mb_substr(trim((string) ($payload['title'] ?? '')), 0, 120);
+                $content = trim((string) ($payload['content'] ?? ''));
+                if ($title === '') {
+                    return Result::fail('请填写标题');
+                }
+                if ($content === '') {
+                    return Result::fail('请填写内容');
+                }
+                $payload['to_id'] = $toId;
+                $payload['title'] = $title;
+                $payload['content'] = $content;
+                $payload['from_id'] = 0;
+                $payload['is_read'] = 0;
+                $payload['created_at'] = time();
+            } else {
+                $allowed = [];
+                if (array_key_exists('is_read', $payload)) {
+                    $allowed['is_read'] = (int) $payload['is_read'] === 1 ? 1 : 0;
+                }
+                $payload = $allowed;
+            }
         }
-        if ($module === 'arts' && $id === null && trim((string) ($payload['title'] ?? '')) === '') {
-            return Result::fail('请填写标题');
+        if ($module === 'notifies') {
+            if ($id === null) {
+                $memberId = max(0, (int) ($payload['member_id'] ?? 0));
+                if ($memberId > 0 && Schema::hasTable('members') && ! Member::query()->where('id', $memberId)->exists()) {
+                    return Result::fail('会员不存在');
+                }
+                $title = mb_substr(trim((string) ($payload['title'] ?? '')), 0, 120);
+                $content = trim((string) ($payload['content'] ?? ''));
+                if ($title === '') {
+                    return Result::fail('请填写标题');
+                }
+                if ($content === '') {
+                    return Result::fail('请填写内容');
+                }
+                $payload['member_id'] = $memberId;
+                $payload['title'] = $title;
+                $payload['content'] = $content;
+                $payload['is_read'] = 0;
+                $payload['created_at'] = time();
+            } else {
+                $allowed = [];
+                if (array_key_exists('is_read', $payload)) {
+                    $allowed['is_read'] = (int) $payload['is_read'] === 1 ? 1 : 0;
+                }
+                $payload = $allowed;
+            }
+        }
+        if ($module === 'searchwords') {
+            $word = mb_substr(trim((string) ($payload['word'] ?? '')), 0, 80);
+            if ($word === '') {
+                return Result::fail('请填写关键词');
+            }
+            $dup = VideoSearchWord::query()->where('word', $word);
+            if ($id) {
+                $dup->where('id', '!=', $id);
+            }
+            if ($dup->exists()) {
+                return Result::fail('已经有这个词了');
+            }
+            $payload['word'] = $word;
+            $payload['hits'] = max(0, (int) ($payload['hits'] ?? 1));
+            $payload['updated_at'] = time();
+            if ($id === null) {
+                $payload['created_at'] = time();
+                if (! array_key_exists('hits', $data) || (string) $data['hits'] === '') {
+                    $payload['hits'] = 1;
+                }
+            }
+        }
+        if ($module === 'arts') {
+            if (array_key_exists('title', $payload) || $id === null) {
+                $title = trim((string) ($payload['title'] ?? ''));
+                if ($title === '') {
+                    return Result::fail('请填写标题');
+                }
+                $payload['title'] = $title;
+            }
+            if (array_key_exists('type_id', $payload)) {
+                $payload['type_id'] = max(0, (int) $payload['type_id']);
+            }
+            if (array_key_exists('cover', $payload)) {
+                $payload['cover'] = trim((string) $payload['cover']);
+            }
+            if (array_key_exists('hits', $payload)) {
+                $payload['hits'] = max(0, (int) $payload['hits']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
         }
         if ($module === 'slides') {
             if ($id === null) {
@@ -1478,12 +1811,125 @@ class SiteModuleService
         }
     }
 
+    /** @return array<string, int> */
+    public function reportQueues(): array
+    {
+        $zero = ['all' => 0, 'open' => 0, 'done' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_reports')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoReport::query()->count(),
+                'open' => (int) VideoReport::query()->where('status', 0)->count(),
+                'done' => (int) VideoReport::query()->where('status', 1)->count(),
+                'today' => (int) VideoReport::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function guestbookQueues(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'shown' => 0, 'noreply' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_guestbooks')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoGuestbook::query()->count(),
+                'pending' => (int) VideoGuestbook::query()->where('status', 0)->count(),
+                'shown' => (int) VideoGuestbook::query()->where('status', 1)->count(),
+                'noreply' => (int) VideoGuestbook::query()->where(function ($inner) {
+                    $inner->where('reply', '')->orWhereNull('reply');
+                })->count(),
+                'today' => (int) VideoGuestbook::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    public function guestbookAuditEnabled(): bool
+    {
+        try {
+            return (string) app(\App\Services\Video\VideoSettingService::class)->get('gbook_audit', '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function playFailQueues(): array
+    {
+        $zero = ['all' => 0, 'open' => 0, 'done' => 0, 'offline' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_play_fails')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoPlayFail::query()->count(),
+                'open' => (int) VideoPlayFail::query()->where('status', 0)->count(),
+                'done' => (int) VideoPlayFail::query()->where('status', 1)->count(),
+                'offline' => (int) VideoPlayFail::query()->where('status', 0)->where('source_id', '>', 0)->count(),
+                'today' => (int) VideoPlayFail::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function pmQueues(): array
+    {
+        $zero = ['all' => 0, 'unread' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('member_pms')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) MemberPm::query()->count(),
+                'unread' => (int) MemberPm::query()->where('is_read', 0)->count(),
+                'today' => (int) MemberPm::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function notifyQueues(): array
+    {
+        $zero = ['all' => 0, 'all_members' => 0, 'one' => 0, 'unread' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_notifies')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoNotify::query()->count(),
+                'all_members' => (int) VideoNotify::query()->where('member_id', 0)->count(),
+                'one' => (int) VideoNotify::query()->where('member_id', '>', 0)->count(),
+                'unread' => (int) VideoNotify::query()->where('is_read', 0)->count(),
+                'today' => (int) VideoNotify::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
     /**
      * @param list<int|string> $ids
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'audits'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -1502,6 +1948,13 @@ class SiteModuleService
                 'players' => '请先勾选播放器',
                 'collect_logs' => '请先勾选日志',
                 'collect_tasks' => '请先勾选任务',
+                'collect_temps' => '请先勾选片子',
+                'searchwords' => '请先勾选搜索词',
+                'reports' => '请先勾选报错',
+                'guestbooks' => '请先勾选留言',
+                'playfails' => '请先勾选播放失败',
+                'pms' => '请先勾选站内信',
+                'notifies' => '请先勾选通知',
                 'audits' => '请先勾选规则',
                 default => '请先勾选评论',
             });
@@ -1516,6 +1969,12 @@ class SiteModuleService
                 'group' => $this->save($module, ['group_id' => (int) $value], $id),
                 'engine' => $this->save($module, ['engine' => (string) $value], $id),
                 'points' => $this->adjustMemberPoints($id, (int) $value),
+                'offline' => $module === 'playfails'
+                    ? app(\App\Services\Video\SiteOpsService::class)->disablePlayFailSource($id)
+                    : Result::fail('不支持的操作'),
+                'read' => ($module === 'pms' || $module === 'notifies')
+                    ? $this->save($module, ['is_read' => 1], $id)
+                    : Result::fail('不支持的操作'),
                 'delete' => $this->delete($module, $id),
                 default => Result::fail('不支持的操作'),
             };
@@ -1933,6 +2392,131 @@ class SiteModuleService
         return $rows;
     }
 
+    /** @return array<string, int> */
+    public function collectTempQueues(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'failed' => 0, 'done' => 0];
+        try {
+            if (! Schema::hasTable('video_collect_temps')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoCollectTemp::query()->count(),
+                'pending' => (int) VideoCollectTemp::query()->where('status', 0)->count(),
+                'failed' => (int) VideoCollectTemp::query()
+                    ->where('status', 0)
+                    ->where('msg', '!=', '')
+                    ->where('msg', '!=', '待转入')
+                    ->count(),
+                'done' => (int) VideoCollectTemp::query()->where('status', 1)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    public function collectToTempEnabled(): bool
+    {
+        try {
+            return (string) app(\App\Services\Video\VideoSettingService::class)->get('collect_to_temp', '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function searchWordQueues(): array
+    {
+        $zero = ['all' => 0, 'hot' => 0, 'once' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('video_search_words')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) VideoSearchWord::query()->count(),
+                'hot' => (int) VideoSearchWord::query()->where('hits', '>=', 10)->count(),
+                'once' => (int) VideoSearchWord::query()->where('hits', 1)->count(),
+                'today' => (int) VideoSearchWord::query()->where('updated_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateSearchWords(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $word = trim((string) ($row['word'] ?? ''));
+            $hits = max(0, (int) ($row['hits'] ?? 0));
+            $row['word'] = $word;
+            $row['hits'] = $hits;
+            $row['hot'] = $hits >= 10 ? 1 : 0;
+            $row['search_url'] = '/search?wd='.rawurlencode($word);
+            $row['updated_at_unix'] = (int) ($row['updated_at'] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateCollectTemps(array $rows): array
+    {
+        $sourceIds = [];
+        $typeIds = [];
+        foreach ($rows as $row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            $tid = (int) ($row['type_id'] ?? 0);
+            if ($sid > 0) {
+                $sourceIds[] = $sid;
+            }
+            if ($tid > 0) {
+                $typeIds[] = $tid;
+            }
+        }
+        $sources = [];
+        if ($sourceIds !== [] && Schema::hasTable('collect_sources')) {
+            $sources = CollectSourceModel::query()
+                ->whereIn('id', array_values(array_unique($sourceIds)))
+                ->get(['id', 'name'])
+                ->keyBy('id')
+                ->all();
+        }
+        $types = [];
+        if ($typeIds !== [] && Schema::hasTable('video_types')) {
+            $types = VideoTypeModel::query()
+                ->whereIn('id', array_values(array_unique($typeIds)))
+                ->get(['id', 'name'])
+                ->keyBy('id')
+                ->all();
+        }
+        foreach ($rows as &$row) {
+            $sid = (int) ($row['collect_source_id'] ?? 0);
+            $tid = (int) ($row['type_id'] ?? 0);
+            $status = (int) ($row['status'] ?? 0) === 1 ? 1 : 0;
+            $msg = trim((string) ($row['msg'] ?? ''));
+            $failed = $status === 0 && $msg !== '' && $msg !== '待转入';
+            $source = $sources[$sid] ?? null;
+            $type = $types[$tid] ?? null;
+            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未知采集源');
+            $row['type_name'] = $type ? (string) $type->name : '';
+            $row['status'] = $status;
+            $row['status_label'] = $status === 1 ? '已入库' : ($failed ? '转入失败' : '待转入');
+            $row['failed'] = $failed ? 1 : 0;
+            $row['msg'] = $msg;
+            $row['cover'] = trim((string) ($row['cover'] ?? ''));
+            $row['has_cover'] = $row['cover'] !== '';
+            $row['created_at_unix'] = (int) ($row['created_at'] ?? 0);
+            unset($row['payload']);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
     /** @return array<string, string> */
     public function collectCronPresets(): array
     {
@@ -2266,6 +2850,226 @@ class SiteModuleService
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['comment_report'] = (int) ($row['comment_report'] ?? 0);
             $row['comment_up'] = (int) ($row['comment_up'] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateReports(array $rows): array
+    {
+        $videoIds = [];
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $memberIds[] = $mid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== [] && Schema::hasTable('videos')) {
+            try {
+                $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        $names = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $names = Member::query()->whereIn('id', array_values(array_unique($memberIds)))->pluck('name', 'id')->all();
+            } catch (\Throwable) {
+                $names = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $mid = (int) ($row['member_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['member_name'] = (string) ($names[$mid] ?? '');
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['open'] = (int) ($row['status'] ?? 0) === 0 ? 1 : 0;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateGuestbooks(array $rows): array
+    {
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $memberIds[] = $mid;
+            }
+        }
+        $names = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $names = Member::query()->whereIn('id', array_values(array_unique($memberIds)))->pluck('name', 'id')->all();
+            } catch (\Throwable) {
+                $names = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $reply = trim((string) ($row['reply'] ?? ''));
+            $row['member_name'] = (string) ($names[$mid] ?? '');
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['has_reply'] = $reply !== '' ? 1 : 0;
+            $row['pending'] = (int) ($row['status'] ?? 0) === 0 ? 1 : 0;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decoratePlayFails(array $rows): array
+    {
+        $videoIds = [];
+        $sourceIds = [];
+        $episodeIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+            $sid = (int) ($row['source_id'] ?? 0);
+            if ($sid > 0) {
+                $sourceIds[] = $sid;
+            }
+            $eid = (int) ($row['episode_id'] ?? 0);
+            if ($eid > 0) {
+                $episodeIds[] = $eid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== [] && Schema::hasTable('videos')) {
+            try {
+                $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        $sources = [];
+        if ($sourceIds !== [] && Schema::hasTable('video_sources')) {
+            try {
+                foreach (VideoSourceModel::query()->whereIn('id', array_values(array_unique($sourceIds)))->get(['id', 'name', 'status', 'player']) as $source) {
+                    $sources[(int) $source->id] = $source;
+                }
+            } catch (\Throwable) {
+                $sources = [];
+            }
+        }
+        $episodes = [];
+        if ($episodeIds !== [] && Schema::hasTable('video_episodes')) {
+            try {
+                foreach (VideoEpisodeModel::query()->whereIn('id', array_values(array_unique($episodeIds)))->get() as $episode) {
+                    $episodes[(int) $episode->id] = $episode;
+                }
+            } catch (\Throwable) {
+                $episodes = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $sid = (int) ($row['source_id'] ?? 0);
+            $eid = (int) ($row['episode_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $source = $sources[$sid] ?? null;
+            $episode = $episodes[$eid] ?? null;
+            $sourceStatus = $source ? (int) $source->status : -1;
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['source_name'] = $source ? (string) $source->name : '';
+            $row['source_player'] = $source ? (string) $source->player : '';
+            $row['source_status'] = $sourceStatus;
+            $row['episode_label'] = $episode ? (string) $episode->display_name : ($eid > 0 ? ('集 #'.$eid) : '');
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['open'] = (int) ($row['status'] ?? 0) === 0 ? 1 : 0;
+            $row['can_offline'] = $sid > 0 && $sourceStatus !== 0 ? 1 : 0;
+            $row['play_url'] = $vid > 0
+                ? '/play/'.$vid.($sid > 0 ? '/'.$sid : '').($eid > 0 ? '/'.$eid : '')
+                : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decoratePms(array $rows): array
+    {
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $from = (int) ($row['from_id'] ?? 0);
+            $to = (int) ($row['to_id'] ?? 0);
+            if ($from > 0) {
+                $memberIds[] = $from;
+            }
+            if ($to > 0) {
+                $memberIds[] = $to;
+            }
+        }
+        $names = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $names = Member::query()->whereIn('id', array_values(array_unique($memberIds)))->pluck('name', 'id')->all();
+            } catch (\Throwable) {
+                $names = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $from = (int) ($row['from_id'] ?? 0);
+            $to = (int) ($row['to_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['from_name'] = $from > 0 ? (string) ($names[$from] ?? ('会员 #'.$from)) : '系统';
+            $row['to_name'] = $to > 0 ? (string) ($names[$to] ?? ('会员 #'.$to)) : '';
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['unread'] = (int) ($row['is_read'] ?? 0) === 0 ? 1 : 0;
+            $row['content_preview'] = mb_substr(trim((string) ($row['content'] ?? '')), 0, 80);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateNotifies(array $rows): array
+    {
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $memberIds[] = $mid;
+            }
+        }
+        $names = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $names = Member::query()->whereIn('id', array_values(array_unique($memberIds)))->pluck('name', 'id')->all();
+            } catch (\Throwable) {
+                $names = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $memberName = $mid > 0 ? (string) ($names[$mid] ?? ('会员 #'.$mid)) : '';
+            $row['member_name'] = $memberName;
+            $row['audience_label'] = $mid > 0 ? $memberName : '全站';
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['unread'] = (int) ($row['is_read'] ?? 0) === 0 ? 1 : 0;
+            $row['content_preview'] = mb_substr(trim((string) ($row['content'] ?? '')), 0, 80);
         }
         unset($row);
 
@@ -2661,6 +3465,27 @@ class SiteModuleService
     }
 
     /** @return array<string, mixed>|null */
+    public function getArt(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        try {
+            if (! Schema::hasTable('video_arts')) {
+                return null;
+            }
+            $row = VideoArt::query()->find($id);
+            if (! $row) {
+                return null;
+            }
+            $decorated = $this->decorateArts([$row->toArray()]);
+
+            return $decorated[0] ?? null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     public function getUnion(int $id): ?array
     {
         if ($id < 1) {

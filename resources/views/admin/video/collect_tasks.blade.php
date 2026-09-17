@@ -18,6 +18,7 @@
             <button type="button" class="btn btn-muted btn-sm" id="ctask-due-btn">跑到期任务</button>
             <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
         </div>
     </div>
     <div class="card-body">

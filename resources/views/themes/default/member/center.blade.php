@@ -1,8 +1,6 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>{{ $member->name }} 的会员中心</h1>
-    @if(session('status'))<p>{{ session('status') }}</p>@endif
-    @if($errors->any())<p class="muted">{{ $errors->first() }}</p>@endif
     <p class="muted">积分：{{ $member->points }}</p>
     @if(isset($invites) && $invites->isNotEmpty())
         <p>邀请码：

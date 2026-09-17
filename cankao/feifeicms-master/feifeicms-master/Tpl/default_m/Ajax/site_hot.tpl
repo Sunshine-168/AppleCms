@@ -1,1 +1,0 @@
-{:ff_site_hot('ajax')}

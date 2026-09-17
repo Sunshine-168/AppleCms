@@ -2,6 +2,7 @@
 
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,7 @@ Route::middleware([
     AdminOperateLog::class,
 ])->withoutMiddleware([
     VerifyCsrfToken::class,
+    PreventRequestForgery::class,
 ])->post('api/admin/login', [SysUser::class, 'login']);
 
 Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class, AdminPermission::class])->prefix('admin')->group(function () {
@@ -180,6 +182,8 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/players/ensure', [SiteModule::class, 'ensurePlayers']);
     Route::get('/video/unions/create', [SiteModule::class, 'createUnion']);
     Route::get('/video/unions/{id}/edit', [SiteModule::class, 'editUnion'])->whereNumber('id');
+    Route::get('/video/arts/create', [SiteModule::class, 'createArt'])->name('admin.video.arts.create');
+    Route::get('/video/arts/{id}/edit', [SiteModule::class, 'editArt'])->whereNumber('id')->name('admin.video.arts.edit');
     Route::post('/video/unions/adopt', [SiteModule::class, 'adoptUnion']);
     Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
     Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');

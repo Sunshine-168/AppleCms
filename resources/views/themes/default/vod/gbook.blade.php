@@ -2,8 +2,6 @@
 @section('content')
     @vodBreadcrumb(['last' => '留言本'])
     <h1>留言本</h1>
-    @if(session('status'))<p>{{ session('status') }}</p>@endif
-    @if(session('error'))<p class="muted">{{ session('error') }}</p>@endif
     <form method="post" action="{{ url('/gbook') }}">
         @csrf
         <p><input name="author_name" placeholder="昵称" value="{{ auth('member')->user()->name ?? '' }}"></p>

@@ -467,6 +467,11 @@ class SysUserService
     {
         $time    = time();
         $ip      = Request::ip();
+        $username = trim($username);
+        $password = trim($password);
+        if ($username === '' || $password === '') {
+            return Result::fail('请填写账号和密码');
+        }
         $lockKey = 'admin.login.lock.'.md5((string) $ip);
         if (Cache::has($lockKey)) {
             return Result::fail('登录失败次数过多，请 15 分钟后再试');
@@ -499,6 +504,9 @@ class SysUserService
             }
 
             return Result::fail('账号或者密码错误');
+        }
+        if ((int) ($user['status'] ?? 1) !== 1) {
+            return Result::fail('账号已停用');
         }
         Cache::forget('admin.login.fail.'.md5((string) $ip));
 

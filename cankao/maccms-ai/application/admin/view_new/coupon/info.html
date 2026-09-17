@@ -1,0 +1,128 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <blockquote class="layui-elem-quote">{:lang('admin/coupon/info_desc')}</blockquote>
+
+    <form class="layui-form" method="post" action="{:url('save')}">
+        <input type="hidden" name="coupon_id" value="{$info.coupon_id|default=''}">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/name')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="coupon_name" class="layui-input" value="{$info.coupon_name|default=''|mac_filter_xss}" placeholder="{:lang('coupon/name_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/type')}</label>
+            <div class="layui-input-block">
+                <select name="coupon_type">
+                    <option value="amount" {if condition="isset($info['coupon_type']) and $info['coupon_type'] eq 'amount'"}selected {/if}>{:lang('coupon/type_amount')}</option>
+                    <option value="discount" {if condition="isset($info['coupon_type']) and $info['coupon_type'] eq 'discount'"}selected {/if}>{:lang('coupon/type_discount')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/value')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="coupon_value" class="layui-input" value="{$info.coupon_value|default='0.00'}" placeholder="{:lang('coupon/value_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/min_price')}</label>
+            <div class="layui-input-block">
+                <input type="text" name="coupon_min_price" class="layui-input" value="{$info.coupon_min_price|default='0.00'}" placeholder="{:lang('coupon/min_price_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/scene')}</label>
+            <div class="layui-input-block">
+                <select name="coupon_scene">
+                    <option value="all" {if condition="isset($info['coupon_scene']) and $info['coupon_scene'] eq 'all'"}selected {/if}>{:lang('coupon/scene_all')}</option>
+                    <option value="recharge" {if condition="isset($info['coupon_scene']) and $info['coupon_scene'] eq 'recharge'"}selected {/if}>{:lang('coupon/scene_recharge')}</option>
+                    <option value="vip" {if condition="isset($info['coupon_scene']) and $info['coupon_scene'] eq 'vip'"}selected {/if}>{:lang('coupon/scene_vip')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/total')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="coupon_total" class="layui-input" value="{$info.coupon_total|default='10'}" min="1" placeholder="{:lang('coupon/total_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/per_user')}</label>
+            <div class="layui-input-block">
+                <input type="number" name="coupon_per_user" min="1" max="1" readonly class="layui-input" value="1" placeholder="{:lang('coupon/per_user_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/target_groups')}</label>
+            <div class="layui-input-block">
+                {volist name="group_list" id="vo"}
+                <input type="checkbox" name="coupon_target_groups[]" value="{$vo.group_id}" title="{$vo.group_name}" lay-skin="primary" {if condition="in_array($vo['group_id'], $info['coupon_target_groups'])"}checked{/if}>
+                {/volist}
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/target_longs')}</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="coupon_target_longs[]" value="day" title="{:lang('coupon/long_day')}" lay-skin="primary" {if condition="in_array('day', $info['coupon_target_longs'])"}checked{/if}>
+                <input type="checkbox" name="coupon_target_longs[]" value="week" title="{:lang('coupon/long_week')}" lay-skin="primary" {if condition="in_array('week', $info['coupon_target_longs'])"}checked{/if}>
+                <input type="checkbox" name="coupon_target_longs[]" value="month" title="{:lang('coupon/long_month')}" lay-skin="primary" {if condition="in_array('month', $info['coupon_target_longs'])"}checked{/if}>
+                <input type="checkbox" name="coupon_target_longs[]" value="year" title="{:lang('coupon/long_year')}" lay-skin="primary" {if condition="in_array('year', $info['coupon_target_longs'])"}checked{/if}>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/start_time')}</label>
+            <div class="layui-input-block">
+                <input type="datetime-local" name="coupon_start_time_input" class="layui-input" value="{$info.coupon_start_time_input|default=''}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('coupon/end_time')}</label>
+            <div class="layui-input-block">
+                <input type="datetime-local" name="coupon_end_time_input" class="layui-input" value="{$info.coupon_end_time_input|default=''}" placeholder="{:lang('coupon/end_time_placeholder')}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">{:lang('status')}</label>
+            <div class="layui-input-block">
+                <select name="coupon_status">
+                    <option value="1" {if condition="!isset($info['coupon_status']) or $info['coupon_status'] eq 1"}selected {/if}>{:lang('enable')}</option>
+                    <option value="0" {if condition="isset($info['coupon_status']) and $info['coupon_status'] eq 0"}selected {/if}>{:lang('disable')}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="formSubmit">{:lang('save')}</button>
+                <a href="{:url('index')}" class="layui-btn layui-btn-primary">{:lang('btn_back')}</a>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+{include file="../../../application/admin/view_new/public/foot" /}
+<script type="text/javascript">
+    layui.use(['form'], function(){
+        var form = layui.form;
+        form.on('submit(formSubmit)', function(data){
+            return true;
+        });
+    });
+</script>
+</body>
+</html>

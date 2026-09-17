@@ -122,6 +122,56 @@ class SiteModule extends Controller
                 'sourceName' => $sourceId > 0 ? $this->modules->collectSourceName($sourceId) : '',
             ]);
         }
+        if ($module === 'collect_temps') {
+            $sourceId = (int) request()->query('collect_source_id', 0);
+
+            return view('admin.video.collect_temps', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->collectTempQueues(),
+                'toTemp' => $this->modules->collectToTempEnabled(),
+                'sourceId' => $sourceId,
+                'sourceName' => $sourceId > 0 ? $this->modules->collectSourceName($sourceId) : '',
+            ]);
+        }
+        if ($module === 'searchwords') {
+            return view('admin.video.searchwords', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->searchWordQueues(),
+            ]);
+        }
+        if ($module === 'reports') {
+            return view('admin.video.reports', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->reportQueues(),
+            ]);
+        }
+        if ($module === 'guestbooks') {
+            return view('admin.video.guestbooks', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->guestbookQueues(),
+                'audit' => $this->modules->guestbookAuditEnabled(),
+            ]);
+        }
+        if ($module === 'playfails') {
+            return view('admin.video.playfails', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->playFailQueues(),
+            ]);
+        }
+        if ($module === 'pms') {
+            return view('admin.video.pms', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->pmQueues(),
+                'toId' => (int) request()->query('to', 0),
+            ]);
+        }
+        if ($module === 'notifies') {
+            return view('admin.video.notifies', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->notifyQueues(),
+                'memberId' => (int) request()->query('member', 0),
+            ]);
+        }
         if ($module === 'audits') {
             return view('admin.video.audits', [
                 'title' => $cfg['title'],
@@ -225,6 +275,36 @@ class SiteModule extends Controller
         $data = $this->modules->ensurePlayers();
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function createArt(): View
+    {
+        return view('admin.video.art_form', [
+            'art' => [
+                'status' => 1,
+                'hits' => 0,
+                'type_id' => (int) request()->query('type_id', 0),
+                'title' => '',
+                'cover' => '',
+                'content' => '',
+            ],
+            'isEdit' => false,
+            'types' => $this->modules->artTypeOptions(),
+        ]);
+    }
+
+    public function editArt(int $id): View
+    {
+        $art = $this->modules->getArt($id);
+        if ($art === null) {
+            abort(404);
+        }
+
+        return view('admin.video.art_form', [
+            'art' => $art,
+            'isEdit' => true,
+            'types' => $this->modules->artTypeOptions(),
+        ]);
     }
 
     public function createUnion(): View

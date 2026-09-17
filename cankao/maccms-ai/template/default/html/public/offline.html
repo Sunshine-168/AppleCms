@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title data-lang="pwa_offline_title">当前无法连接网络</title>
+	<link rel="stylesheet" type="text/css" href="{$maccms.path}template/default/asset/css/public-offline.css?v=202604162" />
+</head>
+<body>
+	<div class="mac-offline-shell">
+		<img class="mac-offline-shell__icon" src="{$maccms.path_tpl}asset/img/pwa/icon-192.png" width="72" height="72" alt="" />
+		<h1 class="mac-offline-shell__title" data-lang="pwa_offline_title">当前无法连接网络</h1>
+		<p class="mac-offline-shell__desc" data-lang="pwa_offline_desc">请检查网络设置后重试，或先返回首页。</p>
+		<div class="mac-offline-shell__actions">
+			<a class="mac-offline-shell__btn" href="{$maccms.path}" data-lang="pwa_offline_home">返回首页</a>
+			<a class="mac-offline-shell__btn mac-offline-shell__btn--ghost" href="" data-lang="pwa_offline_reload">重新加载</a>
+		</div>
+	</div>
+</body>
+</html>

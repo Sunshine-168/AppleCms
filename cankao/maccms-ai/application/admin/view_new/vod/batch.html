@@ -1,0 +1,398 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    <form id="batch-filter-form" class="layui-form" method="post" action="">
+
+        <div class="my-toolbar-box">
+
+            <div class="space-y-2">
+
+                <div class="layui-input-inline w150">
+                    <select name="type">
+                        <option value="">{:lang('select_type')}</option>
+                        {volist name="type_tree" id="vo"}
+                        {if condition="$vo.type_mid eq 1"}
+                        <option value="{$vo.type_id}" {if condition="$param['type'] eq $vo.type_id"}selected {/if}>{$vo.type_name}</option>
+                        {volist name="vo.child" id="ch"}
+                        <option value="{$ch.type_id}" {if condition="$param['type'] eq $ch.type_id"}selected {/if}>&nbsp;&nbsp;&nbsp;&nbsp;├&nbsp;{$ch.type_name}</option>
+                        {/volist}
+                        {/if}
+                        {/volist}
+                    </select>
+                </div>
+                <div class="layui-input-inline w150">
+                    <select name="status">
+                        <option value="">{:lang('select_status')}</option>
+                        <option value="0" {if condition="$param['status'] eq '0'"}selected {/if}>{:lang('reviewed_not')}</option>
+                        <option value="1" {if condition="$param['status'] eq '1'"}selected {/if}>{:lang('reviewed')}</option>
+                        <option value="2" {if condition="$param['status'] eq '2'"}selected {/if}>{:lang('reviewed_reject')}</option>
+                        <option value="3" {if condition="$param['status'] eq '3'"}selected {/if}>{:lang('reviewed_draft')}</option>
+                        <option value="4" {if condition="$param['status'] eq '4'"}selected {/if}>{:lang('reviewed_scheduled')}</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline w150">
+                    <select name="level">
+                        <option value="">{:lang('select_level')}</option>
+                        <option value="9" {if condition="$param['level'] eq '9'"}selected {/if}>{:lang('level')}9-{:lang('slide')}</option>
+                        <option value="1" {if condition="$param['level'] eq '1'"}selected {/if}>{:lang('level')}1</option>
+                        <option value="2" {if condition="$param['level'] eq '2'"}selected {/if}>{:lang('level')}2</option>
+                        <option value="3" {if condition="$param['level'] eq '3'"}selected {/if}>{:lang('level')}3</option>
+                        <option value="4" {if condition="$param['level'] eq '4'"}selected {/if}>{:lang('level')}4</option>
+                        <option value="5" {if condition="$param['level'] eq '5'"}selected {/if}>{:lang('level')}5</option>
+                        <option value="6" {if condition="$param['level'] eq '6'"}selected {/if}>{:lang('level')}6</option>
+                        <option value="7" {if condition="$param['level'] eq '7'"}selected {/if}>{:lang('level')}7</option>
+                        <option value="8" {if condition="$param['level'] eq '8'"}selected {/if}>{:lang('level')}8</option>
+
+                    </select>
+                </div>
+                <div class="layui-input-inline w150">
+                    <select name="lock">
+                        <option value="">{:lang('select_lock')}</option>
+                        <option value="0" {if condition="$param['lock'] eq '0'"}selected {/if}>{:lang('unlock')}</option>
+                        <option value="1" {if condition="$param['lock'] eq '1'"}selected {/if}>{:lang('lock')}</option>
+                    </select>
+                </div>
+
+
+                <div class="layui-input-inline w150">
+                    <select name="weekday">
+                        <option value="">{:lang('admin/vod/select_weekday')}</option>
+                        {volist name=":explode(',',$GLOBALS['config']['app']['vod_extend_weekday'])" id="vo2" key="key2"}
+                        <option value="{$vo2}" {if condition="$param['weekday'] eq $vo2"}selected {/if}>{$vo2}</option>
+                        {/volist}
+                    </select>
+                </div>
+
+                <div class="layui-input-inline w150">
+                    <select name="area">
+                        <option value="">{:lang('admin/vod/select_area')}</option>
+                        {volist name=":explode(',',$GLOBALS['config']['app']['vod_extend_area'])" id="vo2" key="key2"}
+                        <option value="{$vo2}" {if condition="$param['area'] eq $vo2"}selected {/if}>{$vo2}</option>
+                        {/volist}
+                    </select>
+                </div>
+
+                <div class="layui-input-inline w150">
+                    <select name="lang">
+                        <option value="">{:lang('admin/vod/select_lang')}</option>
+                        {volist name=":explode(',',$GLOBALS['config']['app']['vod_extend_lang'])" id="vo2" key="key2"}
+                        <option value="{$vo2}" {if condition="$param['lang'] eq $vo2"}selected {/if}>{$vo2}</option>
+                        {/volist}
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="space-y-2">
+
+                <div class="layui-input-inline w150">
+                    <select name="player">
+                        <option value="">{:lang('admin/vod/select_player')}</option>
+                        <option value="no">{:lang('admin/vod/player_empty')}</option>
+                        {volist name="player_list" id="vo"}
+                        <option value="{$vo.from}">{$vo.show}</option>
+                        {/volist}
+                    </select>
+                </div>
+
+                <div class="layui-input-inline w150">
+                    <select name="downer">
+                        <option value="">{:lang('admin/vod/select_downer')}</option>
+                        <option value="no" >{:lang('admin/vod/downer_empty')}</option>
+                        {volist name="downer_list" id="vo"}
+                        <option value="{$vo.from}">{$vo.show}</option>
+                        {/volist}
+                    </select>
+                </div>
+
+                <div class="layui-input-inline w150">
+                    <select name="pic">
+                        <option value="">{:lang('select_pic')}</option>
+                        <option value="1" {if condition="$param['pic'] eq '1'"}selected{/if}>{:lang('pic_empty')}</option>
+                        <option value="2" {if condition="$param['pic'] eq '2'"}selected{/if}>{:lang('pic_remote')}</option>
+                        <option value="3" {if condition="$param['pic'] eq '3'"}selected{/if}>{:lang('pic_sync_err')}</option>
+                    </select>
+                </div>
+
+                <div class="layui-input-inline w150">
+                    <select name="isend">
+                        <option value="">{:lang('admin/vod/select_isend')}</option>
+                        <option value="0" {if condition="$param['isend'] eq '0'"}selected {/if}>{:lang('admin/vod/no_end')}</option>
+                        <option value="1" {if condition="$param['isend'] eq '1'"}selected {/if}>{:lang('admin/vod/is_end')}</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline w150">
+                    <select name="copyright">
+                        <option value="">{:lang('admin/vod/select_copyright')}</option>
+                        <option value="0" {if condition="$param['copyright'] eq '0'"}selected {/if}>{:lang('close')}</option>
+                        <option value="1" {if condition="$param['copyright'] eq '1'"}selected {/if}>{:lang('open')}</option>
+                    </select>
+                </div>
+
+                <div class="layui-input-inline">
+                    <input type="text" autocomplete="off" placeholder="{:lang('wd')}" class="layui-input" name="wd" value="{$param['wd']|mac_filter_xss}">
+                </div>
+
+            </div>
+
+        </div>
+
+        <fieldset class="layui-elem-field">
+            <legend>{:lang('del_multi')}</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label"><input type="radio" lay-ignore value="1" name="ck_del">{:lang('admin/batch/del_recycle')}</label>
+                        <label class="layui-form-label"><input type="radio" lay-ignore value="4" name="ck_del">{:lang('admin/batch/del_purge')}</label>
+                        <label class="layui-form-label"><input type="radio" lay-ignore value="2" name="ck_del">{:lang('admin/vod/del_player')}</label>
+                        <label class="layui-form-label"><input type="radio" lay-ignore value="3" name="ck_del">{:lang('admin/vod/del_downer')}</label>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <button type="button" class="layui-btn btn_del_multi">{:lang('del_multi')}</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="layui-elem-field">
+        <legend>{:lang('multi_set')}</legend>
+        <div class="layui-field-box">
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_level" title="{:lang('level')}">{:lang('level')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <select name="val_level">
+                            <option value="">{:lang('select_level')}</option>
+                            <option value="9" >{:lang('level')}9-{:lang('slide')}</option>
+                            <option value="1" >{:lang('level')}1</option>
+                            <option value="2" >{:lang('level')}2</option>
+                            <option value="3" >{:lang('level')}3</option>
+                            <option value="4" >{:lang('level')}4</option>
+                            <option value="5" >{:lang('level')}5</option>
+                            <option value="6" >{:lang('level')}6</option>
+                            <option value="7" >{:lang('level')}7</option>
+                            <option value="8" >{:lang('level')}8</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_lock">{:lang('lock')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <select name="val_lock">
+                            <option value="">{:lang('select_opt')}</option>
+                            <option value="0" >{:lang('unlock')}</option>
+                            <option value="1" >{:lang('lock')}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_status">{:lang('status')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <select name="val_status" id="batch_val_status" lay-filter="batch_val_status">
+                            <option value="">{:lang('select_status')}</option>
+                            <option value="0" >{:lang('reviewed_not')}</option>
+                            <option value="1" >{:lang('reviewed')}</option>
+                            <option value="2" >{:lang('reviewed_reject')}</option>
+                            <option value="3" >{:lang('reviewed_draft')}</option>
+                            <option value="4" >{:lang('reviewed_scheduled')}</option>
+                        </select>
+                        <input type="text" name="val_audit_remark" class="layui-input mgt10" placeholder="{:lang('admin/vod_audit/remark_placeholder')}">
+                        <input type="text" name="val_publish_time" id="batch_val_publish_time" class="layui-input mgt10" style="display:none;" placeholder="{:lang('admin/vod_publish/time_placeholder')}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_copyright">版权</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <select name="val_copyright">
+                            <option value="">{:lang('admin/vod/select_copyright')}</option>
+                            <option value="0" >{:lang('close')}</option>
+                            <option value="1" >{:lang('open')}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_hits">{:lang('hits')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="val_hits_min" required  placeholder="{:lang('min_val')}" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="val_hits_max" required  placeholder="{:lang('max_val')}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_points">{:lang('points')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="val_points_play" required  placeholder="{:lang('points_play')}" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="val_points_down" required  placeholder="{:lang('points_down')}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量修改分类 -->
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_type">{:lang('type')}</label>
+                    <div class="layui-input-inline" style="width: 150px;">
+                        <select name="val_type">
+                            <option value="">{:lang('select_type')}</option>
+                            {volist name="type_tree" id="vo"}
+                            {if condition="$vo.type_mid eq 1"}
+                            <option value="{$vo.type_id}">{$vo.type_name}</option>
+                            {volist name="vo.child" id="ch"}
+                            <option value="{$ch.type_id}">&nbsp;&nbsp;&nbsp;&nbsp;├&nbsp;{$ch.type_name}</option>
+                            {/volist}
+                            {/if}
+                            {/volist}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量修改标签 -->
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_tag">{:lang('tag')}</label>
+                    <div class="layui-input-inline" style="width: 200px;">
+                        <input type="text" name="val_tag" placeholder="{:lang('admin/vod/tag_placeholder')}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量修改播放源 -->
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_play">{:lang('play_group')}</label>
+                    <div class="layui-input-inline" style="width: 150px;">
+                        <select name="val_play">
+                            <option value="">{:lang('admin/vod/select_player')}</option>
+                            <option value="no">{:lang('admin/vod/player_empty')}</option>
+                            {volist name="player_list" id="vo"}
+                            <option value="{$vo.from}">{$vo.show}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量替换功能 -->
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"><input type="checkbox" lay-ignore value="1" name="ck_replace">{:lang('admin/batch/replace')}</label>
+                    <div class="layui-input-inline" style="width: 150px;">
+                        <select name="replace_field">
+                            <option value="">{:lang('admin/batch/select_field')}</option>
+                            <option value="vod_name">{:lang('admin/batch/field_name')}</option>
+                            <option value="vod_sub">{:lang('admin/batch/field_sub')}</option>
+                            <option value="vod_en">{:lang('admin/batch/field_en')}</option>
+                            <option value="vod_actor">{:lang('admin/batch/field_actor')}</option>
+                            <option value="vod_director">{:lang('admin/batch/field_director')}</option>
+                            <option value="vod_blurb">{:lang('admin/batch/field_blurb')}</option>
+                            <option value="vod_remarks">{:lang('admin/batch/field_remarks')}</option>
+                            <option value="vod_content">{:lang('admin/batch/field_content')}</option>
+                        </select>
+                    </div>
+                    <div class="layui-input-inline" style="width: 200px;">
+                        <input type="text" name="replace_search" placeholder="{:lang('admin/batch/search_text')}" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 200px;">
+                        <input type="text" name="replace_with" placeholder="{:lang('admin/batch/replace_with')}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">{:lang('page_limit')}</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="limit" required  placeholder="" autocomplete="off" value="100" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <button type="submit" class="layui-btn btn_submit">{:lang('start_exec')}</button>
+            </div>
+
+        </div>
+    </fieldset>
+    </form>
+
+    <fieldset class="layui-elem-field">
+        <legend>{:lang('admin/batch/io_title')}</legend>
+        <div class="layui-field-box space-y-2">
+            <p class="text-gray-600 text-sm">{:lang('admin/batch/io_hint_vod')}</p>
+            <div class="layui-input-inline w120">
+                <input type="number" id="io-max" value="5000" min="1" max="10000" class="layui-input" title="{:lang('admin/batch/io_export_max')}">
+            </div>
+            <span class="text-sm text-gray-500">{:lang('admin/batch/io_export_max')}</span>
+            <div class="mt10">
+                <button type="button" class="layui-btn layui-btn-primary" id="btn-io-export-csv">{:lang('admin/batch/io_export_csv')}</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="btn-io-export-xlsx">{:lang('admin/batch/io_export_xlsx')}</button>
+            </div>
+        </div>
+    </fieldset>
+
+    <form class="layui-form mt10" method="post" action="{:url('vod/importData')}" enctype="multipart/form-data">
+        <input type="hidden" name="__token__" value="{$Request.token}" />
+        <fieldset class="layui-elem-field">
+            <legend>{:lang('admin/batch/io_import')}</legend>
+            <div class="layui-field-box">
+                <input type="file" name="file" required accept=".csv,.txt,.xlsx" class="layui-input mb10" style="max-width:360px">
+                <button type="submit" class="layui-btn">{:lang('admin/batch/io_import_btn')}</button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<script type="text/javascript">
+    layui.use(['form', 'laydate'], function () {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#batch_val_publish_time',
+            type: 'datetime',
+            trigger: 'click'
+        });
+        function toggleBatchStatusFields(status) {
+            document.getElementById('batch_val_publish_time').style.display = (status === '4') ? '' : 'none';
+        }
+        toggleBatchStatusFields(document.getElementById('batch_val_status').value);
+        form.on('select(batch_val_status)', function (data) {
+            toggleBatchStatusFields(data.value);
+        });
+    });
+
+    $('.btn_submit, .btn_del_multi').click(function(){
+        $('#batch-filter-form').submit();
+    });
+    $('#btn-io-export-csv').click(function(){
+        var q = $('#batch-filter-form').serialize();
+        var mx = $('#io-max').val() || 5000;
+        location.href = "{:url('vod/exportData')}?" + q + "&format=csv&max=" + encodeURIComponent(mx);
+    });
+    $('#btn-io-export-xlsx').click(function(){
+        var q = $('#batch-filter-form').serialize();
+        var mx = $('#io-max').val() || 5000;
+        location.href = "{:url('vod/exportData')}?" + q + "&format=xlsx&max=" + encodeURIComponent(mx);
+    });
+</script>
+</body>
+</html>

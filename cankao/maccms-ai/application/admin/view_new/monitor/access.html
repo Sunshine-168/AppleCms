@@ -1,0 +1,129 @@
+{include file="../../../application/admin/view_new/public/head" /}
+<div class="page-container p10">
+
+    {if condition="$track_enabled neq '1'"}
+    <div class="layui-panel mb-2" style="border-left:4px solid #FFB800;background:#fffbe6;padding:12px 15px;">
+        <div style="color:#666;">{:lang('admin/monitor/access_disabled_hint')}</div>
+        <a class="layui-btn layui-btn-sm mt-2" href="{:url('setting')}">{:lang('admin/monitor/title_setting')}</a>
+    </div>
+    {/if}
+
+    <div class="my-toolbar-box mb-2">
+        <div class="flex gap-5 overflow-x-auto">
+            <a class="layui-btn {if condition='$hours eq 1'}{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>1,'level'=>$level])}">1h</a>
+            <a class="layui-btn {if condition='$hours eq 24'}{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>24,'level'=>$level])}">24h</a>
+            <a class="layui-btn {if condition='$hours eq 168'}{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>168,'level'=>$level])}">7d</a>
+            <span style="width:16px;"></span>
+            <a class="layui-btn {if condition='$level eq -1'}{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>$hours])}">{:lang('all')}</a>
+            <a class="layui-btn {if condition='$level eq 2'}layui-btn-danger{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>$hours,'level'=>2])}">{:lang('admin/monitor/lv_high')}</a>
+            <a class="layui-btn {if condition='$level eq 1'}layui-btn-warm{else /}layui-btn-primary{/if}" href="{:url('access',['hours'=>$hours,'level'=>1])}">{:lang('admin/monitor/lv_mid')}</a>
+            <span style="align-self:center;color:#666;margin-left:12px;">
+                {:lang('admin/monitor/banned_count')}: <b>{$banned_count}</b>
+            </span>
+        </div>
+        <div style="color:#666;font-size:12px;margin-top:6px;">
+            {:lang('admin/monitor/access_hint')}
+        </div>
+    </div>
+
+    <table class="layui-table" lay-size="sm">
+        <thead>
+        <tr>
+            <th>{:lang('admin/monitor/f_level')}</th>
+            <th>IP</th>
+            <th>{:lang('admin/monitor/c_risk')}</th>
+            <th>{:lang('admin/monitor/c_hits')}</th>
+            <th>4xx</th>
+            <th>5xx</th>
+            <th>{:lang('admin/monitor/c_scan')}</th>
+            <th>{:lang('admin/monitor/c_bad_ua')}</th>
+            <th>{:lang('admin/monitor/c_blocked')}</th>
+            <th>{:lang('admin/monitor/c_last_path')}</th>
+            <th>{:lang('opt')}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="a"}
+        <tr>
+            <td>
+                {if condition="$a['access_level'] eq 2"}<span class="layui-badge">{:lang('admin/monitor/lv_high')}</span>
+                {elseif condition="$a['access_level'] eq 1" /}<span class="layui-badge layui-bg-orange">{:lang('admin/monitor/lv_mid')}</span>
+                {else /}<span class="layui-badge layui-bg-gray">{:lang('admin/monitor/lv_low')}</span>{/if}
+            </td>
+            <td>
+                <code>{$a.access_ip}</code>
+                {if condition="$a['is_banned'] eq 1"}<span class="layui-badge layui-bg-black">{:lang('admin/monitor/banned')}</span>{/if}
+            </td>
+            <td><b>{$a.risk_score}</b></td>
+            <td>{$a.hit_cnt}</td>
+            <td>{$a.err4_cnt}</td>
+            <td>{$a.err5_cnt}</td>
+            <td>{$a.scan_cnt}</td>
+            <td>{$a.bad_ua_cnt}</td>
+            <td>{$a.blocked_cnt}</td>
+            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                title="{$a.last_ua|htmlspecialchars}">
+                <code style="font-size:12px;">{$a.last_path|htmlspecialchars}</code>
+            </td>
+            <td>
+                {if condition="$a['access_ip'] eq '__overflow'"}
+                    <span style="color:#666;font-size:12px;">{:lang('admin/monitor/overflow_hint')}</span>
+                {elseif condition="$a['is_banned'] eq 1" /}
+                    <button class="layui-btn layui-btn-xs layui-btn-primary ip-unban" data-ip="{$a.access_ip}">{:lang('admin/monitor/unban')}</button>
+                {else /}
+                    <button class="layui-btn layui-btn-xs layui-btn-danger ip-ban" data-ip="{$a.access_ip}">{:lang('admin/monitor/ban')}</button>
+                {/if}
+            </td>
+        </tr>
+        {/volist}
+        {if condition="empty($list)"}
+        <tr><td colspan="11" style="text-align:center;color:#666;padding:30px;">{:lang('admin/monitor/access_empty')}</td></tr>
+        {/if}
+        </tbody>
+    </table>
+
+    <div id="pager"></div>
+</div>
+
+<script>
+    var BAN_URL = "{:url('access_ban')}";
+    var UNBAN_URL = "{:url('access_unban')}";
+
+    layui.use(['laypage'], function () {
+        layui.laypage.render({
+            elem: 'pager', count: {$total}, limit: {$limit}, curr: {$page},
+            jump: function (obj, first) {
+                if (!first) {
+                    location.href = "{:url('access',['hours'=>$hours,'level'=>$level])}" +
+                        (location.search.indexOf('?') >= 0 ? '&' : '?') + 'page=' + obj.curr;
+                }
+            }
+        });
+    });
+
+    function post(url, ip, confirmMsg) {
+        layer.confirm(confirmMsg + '<br><code>' + ip + '</code>', function (idx) {
+            layer.close(idx);
+            var fd = new FormData();
+            fd.append('ip', ip);
+            fetch(url, {method: 'POST', body: fd, credentials: 'same-origin'})
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.code === 1) { layer.msg(res.msg, {icon: 1}); setTimeout(function () { location.reload(); }, 600); }
+                    else { layer.alert(res.msg, {icon: 2}); }
+                });
+        });
+    }
+
+    document.querySelectorAll('.ip-ban').forEach(function (b) {
+        b.addEventListener('click', function () {
+            post(BAN_URL, b.getAttribute('data-ip'), "{:lang('admin/monitor/ban_confirm')}");
+        });
+    });
+    document.querySelectorAll('.ip-unban').forEach(function (b) {
+        b.addEventListener('click', function () {
+            post(UNBAN_URL, b.getAttribute('data-ip'), "{:lang('admin/monitor/unban_confirm')}");
+        });
+    });
+</script>
+{include file="../../../application/admin/view_new/public/foot" /}

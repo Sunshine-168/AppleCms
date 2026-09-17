@@ -9,10 +9,7 @@ class SettingsIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_settings_index_is_grouped_tabs_like_laracms(): void
@@ -47,6 +44,6 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('邮件服务器', $html);
         $this->assertStringContainsString('密码留空表示不改已保存的值', $html);
         $this->assertStringContainsString('静态生成', $html);
-        $this->assertStringContainsString('采集后直接上架', $html);
+        $this->assertStringContainsString('内容接入', $html);
     }
 }

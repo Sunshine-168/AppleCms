@@ -181,7 +181,35 @@ body.mac-login {
 }
 .mac-remember input { accent-color: var(--mac-green); }
 
+.mac-control.is-err input {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+.mac-error {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.5;
+}
 .mac-error[hidden] { display: none !important; }
+.mac-toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    max-width: min(420px, calc(100% - 24px));
+    padding: 10px 16px;
+    border-radius: 6px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
 
 .mac-submit {
     width: 100%;
