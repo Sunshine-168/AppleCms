@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
-use App\Plugins\PluginManager;
+use App\Support\Plugins\PluginManager;
 use App\Services\Admin\VideoDashboardService;
 use App\Support\AdminNav;
 use App\Support\AdminUi;

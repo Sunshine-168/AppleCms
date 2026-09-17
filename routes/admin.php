@@ -189,6 +189,8 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/unions/adopt', [SiteModule::class, 'adoptUnion']);
     Route::get('/video/topics/{id}/videos', [SiteModule::class, 'topicVideos'])->whereNumber('id');
     Route::post('/video/topics/{id}/videos', [SiteModule::class, 'saveTopicVideos'])->whereNumber('id');
+    Route::get('/video/topics/{id}/arts', [SiteModule::class, 'topicArts'])->whereNumber('id');
+    Route::post('/video/topics/{id}/arts', [SiteModule::class, 'saveTopicArts'])->whereNumber('id');
 
     Route::get('/video/templates', [SiteOps::class, 'templates']);
     Route::get('/video/templates/read', [SiteOps::class, 'templateRead']);

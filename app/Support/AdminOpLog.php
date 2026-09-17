@@ -354,6 +354,9 @@ class AdminOpLog
         if (preg_match('#^admin/video/topics/(\d+)/videos$#', $path, $m)) {
             return '给专题绑了影片 #'.$m[1];
         }
+        if (preg_match('#^admin/video/topics/(\d+)/arts$#', $path, $m)) {
+            return '给专题绑了文章 #'.$m[1];
+        }
         if (preg_match('#^admin/video/tools/([^/]+)/run$#', $path, $m)) {
             $tool = $m[1];
             $act = (string) ($input['action'] ?? '');

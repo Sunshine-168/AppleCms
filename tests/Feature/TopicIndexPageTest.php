@@ -9,10 +9,7 @@ class TopicIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_topic_index_is_a_playlist_not_a_generic_table(): void
@@ -28,6 +25,9 @@ class TopicIndexPageTest extends TestCase
         $this->assertStringContainsString('topic-batch', $html);
         $this->assertStringContainsString('新增专题', $html);
         $this->assertStringContainsString('搜专题名', $html);
+        $this->assertStringContainsString('js-bind-art', $html);
+        $this->assertStringContainsString('绑文', $html);
+        $this->assertStringContainsString('副标', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('U.prompt', $html);
     }

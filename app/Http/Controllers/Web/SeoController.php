@@ -30,6 +30,15 @@ class SeoController extends Controller
         }
         $xml .= '<url><loc>'.e(vod_url('latest')).'</loc><changefreq>hourly</changefreq></url>';
         $xml .= '<url><loc>'.e(vod_url('topics')).'</loc><changefreq>daily</changefreq></url>';
+        if (\Illuminate\Support\Facades\Schema::hasTable('video_topics')) {
+            $topicQ = \App\Models\Video\VideoTopicModel::query();
+            if (\Illuminate\Support\Facades\Schema::hasColumn('video_topics', 'status')) {
+                $topicQ->where('status', 1);
+            }
+            foreach ($topicQ->orderByDesc('id')->limit(500)->get() as $topic) {
+                $xml .= '<url><loc>'.e($topic->url).'</loc><changefreq>weekly</changefreq></url>';
+            }
+        }
         $xml .= '<url><loc>'.e(vod_url('actors')).'</loc><changefreq>weekly</changefreq></url>';
         $xml .= '<url><loc>'.e(vod_url('arts')).'</loc><changefreq>daily</changefreq></url>';
         foreach ($videos as $video) {

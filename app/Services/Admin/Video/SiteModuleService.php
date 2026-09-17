@@ -19,6 +19,7 @@ use App\Models\Video\VideoModel;
 use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoSlide;
 use App\Models\Video\VideoSourceModel;
+use App\Models\Video\VideoTopicArtRelModel;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTopicRelModel;
 use App\Models\Video\VideoTypeModel;
@@ -46,7 +47,7 @@ class SiteModuleService
     /** @return array<string, mixed> */
     public function config(string $module): array
     {
-        $fromPlugin = app(\App\Plugins\PluginHost::class)->findModule($module);
+        $fromPlugin = app(\App\Support\Plugins\PluginHost::class)->findModule($module);
         if ($fromPlugin !== null) {
             return $fromPlugin;
         }
@@ -54,7 +55,7 @@ class SiteModuleService
         return match ($module) {
             'topics' => [
                 'title' => '专题管理',
-                'hint' => '专题是片单。先建「贺岁档」「冷门佳片」这类栏目，再点绑片把影片挂进去。',
+                'hint' => '专题是片单。先建「贺岁档」「冷门佳片」这类栏目，再点绑片挂影片，需要资讯时点绑文。',
                 'model' => \App\Models\Video\VideoTopicModel::class,
                 'search' => 'name',
                 'fields' => [
@@ -63,6 +64,19 @@ class SiteModuleService
                     ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
                     ['name' => 'blurb', 'label' => '简介', 'type' => 'text'],
                     ['name' => 'content', 'label' => '内容', 'type' => 'textarea'],
+                    ['name' => 'sub', 'label' => '副标', 'type' => 'text'],
+                    ['name' => 'letter', 'label' => '首字母', 'type' => 'text'],
+                    ['name' => 'color', 'label' => '高亮色', 'type' => 'text'],
+                    ['name' => 'level', 'label' => '推荐', 'type' => 'number'],
+                    ['name' => 'remarks', 'label' => '备注', 'type' => 'text'],
+                    ['name' => 'cover_thumb', 'label' => '缩略图', 'type' => 'text'],
+                    ['name' => 'cover_slide', 'label' => '幻灯', 'type' => 'text'],
+                    ['name' => 'tpl', 'label' => '模板', 'type' => 'text'],
+                    ['name' => 'type', 'label' => '扩展分类', 'type' => 'text'],
+                    ['name' => 'tag', 'label' => '标签', 'type' => 'text'],
+                    ['name' => 'seo_title', 'label' => 'SEO标题', 'type' => 'text'],
+                    ['name' => 'seo_key', 'label' => 'SEO关键字', 'type' => 'text'],
+                    ['name' => 'seo_des', 'label' => 'SEO描述', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '上架', '0' => '下架']],
                 ],
@@ -1904,6 +1918,9 @@ class SiteModuleService
         if ($module === 'topics' && Schema::hasTable('video_topic_rel')) {
             VideoTopicRelModel::query()->where('topic_id', $id)->delete();
         }
+        if ($module === 'topics' && Schema::hasTable('video_topic_art_rel')) {
+            VideoTopicArtRelModel::query()->where('topic_id', $id)->delete();
+        }
         if ($module === 'groups' && Schema::hasTable('members') && Schema::hasColumn('members', 'group_id')) {
             Member::query()->where('group_id', $id)->update(['group_id' => 0]);
         }
@@ -3466,9 +3483,21 @@ class SiteModuleService
                 $counts[(int) $row->topic_id] = (int) $row->c;
             }
         }
+        $artCounts = [];
+        if ($ids !== [] && Schema::hasTable('video_topic_art_rel')) {
+            $artRows = VideoTopicArtRelModel::query()
+                ->selectRaw('topic_id, COUNT(*) as c')
+                ->whereIn('topic_id', $ids)
+                ->groupBy('topic_id')
+                ->get();
+            foreach ($artRows as $row) {
+                $artCounts[(int) $row->topic_id] = (int) $row->c;
+            }
+        }
         foreach ($rows as &$row) {
             $id = (int) ($row['id'] ?? 0);
             $row['video_count'] = $counts[$id] ?? 0;
+            $row['art_count'] = $artCounts[$id] ?? 0;
             $row['has_cover'] = trim((string) ($row['cover'] ?? '')) !== '';
         }
         unset($row);
@@ -4089,6 +4118,74 @@ class SiteModuleService
             '给专题《'.trim((string) $topic->name).'》绑了 '.count($list).' 部影片',
             $topicId,
             Result::success([], '已绑定 '.count($list).' 部')
+        );
+    }
+
+    public function topicArts(int $topicId): array
+    {
+        $topic = VideoTopicModel::query()->find($topicId);
+        if (! $topic) {
+            return Result::fail('专题不存在');
+        }
+        if (! Schema::hasTable('video_topic_art_rel') || ! Schema::hasTable('video_arts')) {
+            return Result::success([
+                'topic' => $topic->only(['id', 'name']),
+                'art_ids' => '',
+                'arts' => [],
+            ]);
+        }
+        $ids = VideoTopicArtRelModel::query()->where('topic_id', $topicId)->orderByDesc('sort')->pluck('art_id')->all();
+        $arts = [];
+        if ($ids !== []) {
+            $map = VideoArt::query()->whereIn('id', $ids)->get(['id', 'title', 'cover'])->keyBy('id');
+            foreach ($ids as $aid) {
+                $row = $map->get((int) $aid);
+                if ($row) {
+                    $arts[] = [
+                        'id' => (int) $row->id,
+                        'title' => (string) $row->title,
+                        'cover' => (string) ($row->cover ?? ''),
+                    ];
+                }
+            }
+        }
+
+        return Result::success([
+            'topic' => $topic->only(['id', 'name']),
+            'art_ids' => implode(',', $ids),
+            'arts' => $arts,
+        ]);
+    }
+
+    public function saveTopicArts(int $topicId, string $ids): array
+    {
+        $topic = VideoTopicModel::query()->find($topicId);
+        if (! $topic) {
+            return Result::fail('专题不存在');
+        }
+        if (! Schema::hasTable('video_topic_art_rel') || ! Schema::hasTable('video_arts')) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $list = array_values(array_unique(array_filter(array_map('intval', preg_split('/[,\s]+/', $ids) ?: []))));
+        VideoTopicArtRelModel::query()->where('topic_id', $topicId)->delete();
+        $sort = count($list);
+        foreach ($list as $aid) {
+            if (! VideoArt::query()->where('id', $aid)->exists()) {
+                continue;
+            }
+            VideoTopicArtRelModel::query()->create([
+                'topic_id' => $topicId,
+                'art_id' => $aid,
+                'sort' => $sort--,
+            ]);
+        }
+
+        return $this->loggedModule(
+            'topics',
+            'save',
+            '给专题《'.trim((string) $topic->name).'》绑了 '.count($list).' 篇文章',
+            $topicId,
+            Result::success([], '已绑定 '.count($list).' 篇')
         );
     }
 

@@ -24,7 +24,7 @@ class SiteSetting extends Controller
         return view('admin.video.settings', [
             'site' => $this->settings->site(),
             'tab' => $tab,
-            'pluginLinks' => app(\App\Plugins\PluginHost::class)->settingsLinks(),
+            'pluginLinks' => app(\App\Support\Plugins\PluginHost::class)->settingsLinks(),
         ]);
     }
 

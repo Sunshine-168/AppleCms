@@ -140,7 +140,7 @@ class VideoSettingService
             'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model',
         ];
         try {
-            foreach (app(\App\Plugins\PluginHost::class)->extraPages() as $page) {
+            foreach (app(\App\Support\Plugins\PluginHost::class)->extraPages() as $page) {
                 foreach ($page['fields'] ?? [] as $field) {
                     if (! empty($field['name'])) {
                         $keys[] = (string) $field['name'];
@@ -407,7 +407,7 @@ class VideoSettingService
             ],
         ];
         try {
-            return array_merge($core, app(\App\Plugins\PluginHost::class)->extraPages());
+            return array_merge($core, app(\App\Support\Plugins\PluginHost::class)->extraPages());
         } catch (\Throwable) {
             return $core;
         }

@@ -4,7 +4,7 @@
     var U = AdminUi;
     var uploadUrl = '/admin/plugins/upload';
     var noneText = @json(admin_t('plugin.upload_none'));
-    var maxBytes = {{ \App\Plugins\PluginInstaller::MAX_ZIP_BYTES }};
+    var maxBytes = {{ \App\Support\Plugins\PluginInstaller::MAX_ZIP_BYTES }};
 
     function uninstallUrl(id) {
         return '/admin/plugins/' + encodeURIComponent(id) + '/uninstall';

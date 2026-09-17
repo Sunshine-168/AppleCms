@@ -231,6 +231,39 @@ class SiteFrontService
         $stat->save();
     }
 
+    public function bumpTopicHits(VideoTopicModel $topic): void
+    {
+        try {
+            if (! Schema::hasTable('video_topics')) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+        $dirty = false;
+        foreach (['hits', 'hits_day', 'hits_week', 'hits_month'] as $col) {
+            try {
+                if (! Schema::hasColumn('video_topics', $col)) {
+                    continue;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+            $topic->setAttribute($col, (int) $topic->getAttribute($col) + 1);
+            $dirty = true;
+        }
+        try {
+            if (Schema::hasColumn('video_topics', 'time_hits')) {
+                $topic->setAttribute('time_hits', time());
+                $dirty = true;
+            }
+        } catch (\Throwable) {
+        }
+        if ($dirty) {
+            $topic->save();
+        }
+    }
+
     public function resolveDownUrl(?VideoSourceModel $source, ?VideoEpisodeModel $episode, int $videoId = 0): string
     {
         $url = trim((string) ($episode?->url ?? ''));

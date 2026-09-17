@@ -12,6 +12,7 @@ use App\Models\Video\VideoPlayFail;
 use App\Models\Video\VideoReport;
 use App\Services\Stats\StatService;
 use App\Services\Video\VideoSettingService;
+use App\Support\Utils\ServerStats;
 use Illuminate\Support\Facades\Schema;
 
 class VideoDashboardService
@@ -40,6 +41,7 @@ class VideoDashboardService
             'alerts' => $this->alerts($counts, $today),
             'quickNav' => $this->quickNav($counts, $todoTotal),
             'health' => $this->health($counts),
+            'server' => ServerStats::snapshot(),
         ];
     }
 

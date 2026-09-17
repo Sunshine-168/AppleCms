@@ -198,14 +198,21 @@ class VodController extends Controller
     {
         $site = $this->front->bootSite();
         $this->context->setSeo('专题 - '.$site['title'], $site['keyword'], $site['description']);
-        $topics = \App\Models\Video\VideoTopicModel::query()
-            ->where('status', 1)
-            ->orderByDesc('sort')
-            ->orderByDesc('id')
-            ->paginate(20);
-        $this->context->setPaginator($topics);
+        $aid = 30;
+        $mid = 3;
 
-        return view($this->front->themeView('vod.topics'), compact('site', 'topics'));
+        return view($this->front->themeView('vod.topics'), compact('site', 'aid', 'mid'));
+    }
+
+    public function topicSearch(Request $request): View
+    {
+        $site = $this->front->bootSite();
+        $q = app(\App\Services\Video\SynonymService::class)->expand(trim((string) $request->query('wd', $request->query('q', ''))));
+        $this->context->setSeo(($q !== '' ? $q.' - ' : '').'搜专题 - '.$site['title'], $q, '');
+        $aid = 33;
+        $mid = 3;
+
+        return view($this->front->themeView('vod.topic-search'), compact('site', 'q', 'aid', 'mid'));
     }
 
     public function arts(Request $request, int|string|null $id = null): View
@@ -262,11 +269,42 @@ class VodController extends Controller
         if (! $topic) {
             throw new NotFoundHttpException();
         }
-        $this->context->setSeo($topic->name.' - '.$site['title'], $topic->name, (string) $topic->blurb);
+        $this->front->bumpTopicHits($topic);
+        $seoTitle = trim((string) ($topic->seo_title ?? ''));
+        $seoKey = trim((string) ($topic->seo_key ?? ''));
+        $seoDes = trim((string) ($topic->seo_des ?? ''));
+        $this->context->setSeo(
+            $seoTitle !== '' ? $seoTitle : ($topic->name.' - '.$site['title']),
+            $seoKey !== '' ? $seoKey : (string) $topic->name,
+            $seoDes !== '' ? $seoDes : (string) $topic->blurb
+        );
         $videos = $topic->videos()->published()->with(['type', 'stat'])->paginate((int) config('video.per_page', 24));
         $this->context->setPaginator($videos);
+        $arts = collect();
+        if (
+            method_exists($topic, 'arts')
+            && \Illuminate\Support\Facades\Schema::hasTable('video_topic_art_rel')
+            && \Illuminate\Support\Facades\Schema::hasTable('video_arts')
+        ) {
+            $arts = $topic->arts()->where('video_arts.status', 1)->get();
+        }
+        $obj = $topic;
+        $vod_list = $videos;
+        $art_list = $arts;
+        $mid = 3;
+        $aid = 34;
+        $view = 'vod.topic';
+        $tpl = trim((string) ($topic->tpl ?? ''));
+        if ($tpl !== '' && preg_match('/^[A-Za-z0-9_\-]+$/', $tpl)) {
+            $resolved = $this->front->themeView('vod.'.$tpl);
+            if (view()->exists($resolved)) {
+                $view = 'vod.'.$tpl;
+            }
+        }
 
-        return view($this->front->themeView('vod.topic'), compact('site', 'topic', 'videos'));
+        return view($this->front->themeView($view), compact(
+            'site', 'topic', 'videos', 'arts', 'obj', 'vod_list', 'art_list', 'mid', 'aid'
+        ));
     }
 
     public function websites(Request $request): View

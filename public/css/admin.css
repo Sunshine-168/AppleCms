@@ -504,8 +504,43 @@ a.stat-card:hover { border-color: var(--primary); }
 }
 .dash-health > summary::-webkit-details-marker { display: none; }
 .dash-health[open] > summary { border-bottom: 1px solid var(--line); }
+.dash-sys {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 12px;
+    margin: 0 0 16px;
+}
+.dash-sys .card { margin-bottom: 0; }
+.dash-sys-meters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.dash-sys-meter {
+    flex: 1;
+    min-width: 120px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+}
+.dash-sys-meter .label { font-size: 12px; color: var(--muted); }
+.dash-sys-meter .value { font-size: 15px; font-weight: 600; margin-top: 4px; }
+.dash-disk-bar {
+    height: 10px;
+    background: #eef2f0;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.dash-disk-bar > i {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+}
+.dash-disk-bar.is-warn > i { background: #fd7e14; }
+.dash-disk-bar.is-danger > i { background: var(--danger); }
 @media (max-width: 900px) {
-    .dash-hero, .dash-work { grid-template-columns: 1fr; }
+    .dash-hero, .dash-work, .dash-sys { grid-template-columns: 1fr; }
 }
 .delta { font-size: 12px; }
 .delta.up { color: var(--success); }

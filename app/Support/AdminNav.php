@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Plugins\PluginHost;
+use App\Support\Plugins\PluginHost;
 
 class AdminNav
 {

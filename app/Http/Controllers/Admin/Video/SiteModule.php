@@ -257,6 +257,20 @@ class SiteModule extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    public function topicArts(int $id): JsonResponse
+    {
+        $data = $this->modules->topicArts($id);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function saveTopicArts(Request $request, int $id): JsonResponse
+    {
+        $data = $this->modules->saveTopicArts($id, (string) $request->input('art_ids', ''));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
     public function generateCards(Request $request): JsonResponse
     {
         $data = $this->modules->generateCards((int) $request->input('count', 10), (int) $request->input('points', 100));

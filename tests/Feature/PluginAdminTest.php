@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Plugins\PluginManager;
+use App\Support\Plugins\PluginManager;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -60,7 +60,7 @@ class PluginAdminTest extends TestCase
             ->assertSee('AccessKey')
             ->assertSee('保存参数');
 
-        $hostPages = array_keys(app(\App\Plugins\PluginHost::class)->extraPages());
+        $hostPages = array_keys(app(\App\Support\Plugins\PluginHost::class)->extraPages());
         $extraPages = array_keys(app(\App\Services\Video\VideoSettingService::class)->extraPages());
         $this->assertNotContains('sms', $hostPages, json_encode($hostPages));
         $this->assertNotContains('sms', $extraPages, json_encode($extraPages));

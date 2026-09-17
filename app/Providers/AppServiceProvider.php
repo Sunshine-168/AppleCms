@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Plugins\PluginHost;
-use App\Plugins\PluginManager;
+use App\Support\Plugins\PluginHost;
+use App\Support\Plugins\PluginManager;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 

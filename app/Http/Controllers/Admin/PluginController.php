@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Plugins\PluginInstaller;
-use App\Plugins\PluginManager;
+use App\Support\Plugins\PluginInstaller;
+use App\Support\Plugins\PluginManager;
 use App\Services\Video\VideoSettingService;
 use App\Support\AdminOpLog;
 use App\Support\Utils\Ajax;

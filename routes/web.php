@@ -38,6 +38,7 @@ Route::get('/latest', [VodController::class, 'latest'])->name('vod.latest');
 Route::get('/actors', [VodController::class, 'actors'])->name('vod.actors');
 Route::get('/actor/{id}', [VodController::class, 'actor'])->name('vod.actor')->whereNumber('id');
 Route::get('/topics', [VodController::class, 'topics'])->name('vod.topics');
+Route::get('/topics/search', [VodController::class, 'topicSearch'])->name('vod.topic_search');
 Route::get('/topic/{id}', [VodController::class, 'topic'])->name('vod.topic');
 Route::get('/website', [VodController::class, 'websites'])->name('vod.website');
 Route::get('/website/{id}', [VodController::class, 'website'])->name('vod.website.show')->whereNumber('id');
@@ -76,6 +77,7 @@ Route::prefix('index.php/vod')->group(function () {
     Route::get('show{suffix?}', [VodController::class, 'show'])->where('suffix', '\.html');
     Route::get('tag/id/{slug}', [VodController::class, 'tag']);
     Route::get('actor/id/{id}', [VodController::class, 'actor'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('topic/search{suffix?}', [VodController::class, 'topicSearch'])->where('suffix', '\.html');
     Route::get('topic/id/{id}', [VodController::class, 'topic']);
     Route::get('plot/id/{id}', [VodController::class, 'plot'])->where('id', '[0-9]+(?:\.html)?');
     Route::get('plot{suffix?}', [VodController::class, 'plots'])->where('suffix', '\.html');

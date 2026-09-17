@@ -27,7 +27,7 @@ class SiteOps extends Controller
     {
         $codeEditor = false;
         try {
-            $codeEditor = app(\App\Plugins\PluginManager::class)->isEnabled('code_editor');
+            $codeEditor = app(\App\Support\Plugins\PluginManager::class)->isEnabled('code_editor');
         } catch (\Throwable) {
         }
 

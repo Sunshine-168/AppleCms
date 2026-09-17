@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Plugins;
+namespace App\Support\Plugins;
 
 use App\Support\AdminUi;
 use RuntimeException;

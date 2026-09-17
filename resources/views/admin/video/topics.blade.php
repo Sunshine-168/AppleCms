@@ -23,7 +23,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">上架</button>
             <button type="button" class="chip" data-queue="status" data-value="0">下架</button>
         </div>
-        <p class="muted recycle-lead">专题是片单，比如贺岁档、冷门佳片。先建专题，再点「绑片」把影片挂进去。</p>
+        <p class="muted recycle-lead">专题是片单，比如贺岁档、冷门佳片。先建专题，再点「绑片」挂影片；资讯站还可以「绑文」。</p>
         <div class="batch-bar" id="topic-batch" hidden>
             <strong id="topic-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-sm" id="topic-batch-on">上架</button>
@@ -51,6 +51,47 @@
         <input type="text" name="blurb" placeholder="一句话推荐">
         <label>介绍</label>
         <textarea name="content"></textarea>
+        <details class="topic-more">
+        <summary>展示与检索</summary>
+        <label>副标</label>
+        <input type="text" name="sub" placeholder="副标题">
+        <div class="field-inline">
+            <span>
+                <label>首字母</label>
+                <input type="text" name="letter" maxlength="8" placeholder="空则自动">
+            </span>
+            <span>
+                <label>高亮色</label>
+                <input type="text" name="color" maxlength="16" placeholder="#ff6600">
+            </span>
+        </div>
+        <div class="field-inline">
+            <span>
+                <label>推荐</label>
+                <input type="number" name="level" value="0" min="0">
+            </span>
+            <span>
+                <label>备注</label>
+                <input type="text" name="remarks" placeholder="内部备注">
+            </span>
+        </div>
+        <label>缩略图</label>
+        <input type="text" name="cover_thumb" placeholder="缩略图地址">
+        <label>幻灯</label>
+        <input type="text" name="cover_slide" placeholder="幻灯图地址">
+        <label>模板</label>
+        <input type="text" name="tpl" placeholder="空则用默认详情">
+        <label>扩展分类</label>
+        <input type="text" name="type" placeholder="如 贺岁">
+        <label>标签</label>
+        <input type="text" name="tag" placeholder="逗号分隔">
+        <label>SEO 标题</label>
+        <input type="text" name="seo_title">
+        <label>SEO 关键字</label>
+        <input type="text" name="seo_key">
+        <label>SEO 描述</label>
+        <input type="text" name="seo_des">
+        </details>
         <label>排序</label>
         <input type="number" name="sort" value="0">
         <label>状态</label>
@@ -107,6 +148,8 @@
         if (d.slug) meta += ' · /' + U.escape(d.slug);
         var n = parseInt(d.video_count, 10) || 0;
         meta += n > 0 ? ' · ' + n + ' 部' : ' · 还没绑片';
+        var an = parseInt(d.art_count, 10) || 0;
+        if (an > 0) meta += ' · ' + an + ' 篇';
         if (d.blurb) meta += ' · ' + U.escape(d.blurb);
         return '<div class="vod-cell">' + thumb + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'
             + '<div class="muted">' + meta + '</div></div></div>';
@@ -142,6 +185,7 @@
             {title: '操作', cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/topic/' + encodeURIComponent(d.slug || d.id));
                 return '<a href="#" class="btn-link js-bind">绑片</a>'
+                    + '<a href="#" class="btn-link js-bind-art">绑文</a>'
                     + '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
                     + '<a href="#" class="btn-link js-edit">编辑</a>'
                     + '<a href="#" class="btn-link js-del">删除</a>';
@@ -191,6 +235,19 @@
                     cover: row.cover || '',
                     blurb: row.blurb || '',
                     content: row.content || '',
+                    sub: row.sub || '',
+                    letter: row.letter || '',
+                    color: row.color || '',
+                    level: row.level == null ? 0 : row.level,
+                    remarks: row.remarks || '',
+                    cover_thumb: row.cover_thumb || '',
+                    cover_slide: row.cover_slide || '',
+                    tpl: row.tpl || '',
+                    type: row.type || '',
+                    tag: row.tag || '',
+                    seo_title: row.seo_title || '',
+                    seo_key: row.seo_key || '',
+                    seo_des: row.seo_des || '',
                     sort: row.sort == null ? 0 : row.sort,
                     status: row.status == null ? '1' : String(row.status)
                 });
@@ -287,6 +344,84 @@
         });
     }
 
+    function openBindArt(row) {
+        U.loading(true);
+        U.get('/admin/video/topics/' + row.id + '/arts').then(function (res) {
+            U.loading(false);
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '加载失败', 'err'); return; }
+            var picked = (res.data && res.data.arts) ? res.data.arts.slice() : [];
+            function renderList() {
+                if (!picked.length) return '<p class="muted">还没绑文章。上面搜索标题后点加入。</p>';
+                var html = '<ul class="topic-bind-list">';
+                picked.forEach(function (v, i) {
+                    html += '<li data-id="' + U.escape(v.id) + '"><span>' + U.escape(v.title || ('#' + v.id)) + '</span>'
+                        + '<button type="button" class="btn-link js-remove" data-i="' + i + '">移除</button></li>';
+                });
+                html += '</ul>';
+                return html;
+            }
+            var html = '<p class="hint">搜索文章加入本专题。顺序即列表顺序，越靠前越靠前展示。</p>'
+                + '<div class="field-inline"><input type="text" id="topic-bind-art-q" placeholder="搜文章标题"><button type="button" class="btn btn-sm" id="topic-bind-art-search">搜索</button></div>'
+                + '<div id="topic-bind-art-hits" class="topic-bind-hits"></div>'
+                + '<div id="topic-bind-art-picked">' + renderList() + '</div>';
+            U.dialog({
+                title: '绑文 · ' + (row.name || ''),
+                wide: true,
+                okText: '保存文单',
+                content: html,
+                onOpen: function (body) {
+                    var hits = body.querySelector('#topic-bind-art-hits');
+                    var pickedBox = body.querySelector('#topic-bind-art-picked');
+                    function redraw() { pickedBox.innerHTML = renderList(); }
+                    function addArt(v) {
+                        var id = parseInt(v.id, 10);
+                        if (picked.some(function (x) { return parseInt(x.id, 10) === id; })) {
+                            U.toast('已经在专题里', 'err');
+                            return;
+                        }
+                        picked.push({id: id, title: v.title || ('#' + id), cover: v.cover || ''});
+                        redraw();
+                    }
+                    body.querySelector('#topic-bind-art-search').addEventListener('click', function () {
+                        var q = (body.querySelector('#topic-bind-art-q').value || '').trim();
+                        if (!q) { U.toast('输入标题再搜', 'err'); return; }
+                        U.get('/admin/video/arts/list', {title: q, q: q, limit: 8}).then(function (r) {
+                            var list = (r && r.data && r.data.data) || [];
+                            if (!list.length) { hits.innerHTML = '<p class="muted">没有匹配的文章</p>'; return; }
+                            var out = '';
+                            list.forEach(function (v) {
+                                out += '<button type="button" class="chip js-add" data-id="' + U.escape(v.id) + '" data-title="' + U.escape(v.title || '') + '">' + U.escape(v.title || ('#' + v.id)) + '</button>';
+                            });
+                            hits.innerHTML = out;
+                        });
+                    });
+                    body.querySelector('#topic-bind-art-q').addEventListener('keydown', function (ev) {
+                        if (ev.key === 'Enter') { ev.preventDefault(); body.querySelector('#topic-bind-art-search').click(); }
+                    });
+                    hits.addEventListener('click', function (e) {
+                        var btn = e.target.closest('.js-add');
+                        if (!btn) return;
+                        addArt({id: btn.getAttribute('data-id'), title: btn.getAttribute('data-title')});
+                    });
+                    pickedBox.addEventListener('click', function (e) {
+                        var btn = e.target.closest('.js-remove');
+                        if (!btn) return;
+                        picked.splice(parseInt(btn.getAttribute('data-i'), 10), 1);
+                        redraw();
+                    });
+                },
+                onSave: function () {
+                    var ids = picked.map(function (v) { return v.id; }).join(',');
+                    return U.post('/admin/video/topics/' + row.id + '/arts', {art_ids: ids}).then(function (r) {
+                        if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return false; }
+                        U.toast((r && r.msg) || '文章已保存', 'ok');
+                        table.refresh();
+                    });
+                }
+            });
+        });
+    }
+
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
@@ -321,6 +456,7 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-bind')) openBind(row);
+        if (a.classList.contains('js-bind-art')) openBindArt(row);
         if (a.classList.contains('js-del')) {
             if (!U.confirm('删除专题「' + (row.name || '') + '」？')) return;
             U.post('/admin/video/topics/delete', {id: row.id}).then(function (res) {

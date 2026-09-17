@@ -116,6 +116,97 @@
         </div>
     </div>
 
+    @php
+        $sysHost = (string) ($server['host'] ?? '');
+        $sysPort = (string) ($server['port'] ?? '');
+        $sysAddr = $sysHost;
+        if ($sysPort !== '' && ! in_array($sysPort, ['80', '443'], true) && $sysHost !== '' && ! str_contains($sysHost, ':')) {
+            $sysAddr .= ':'.$sysPort;
+        }
+    @endphp
+    <div class="dash-sys">
+        <div class="card card-panel">
+            <div class="card-header"><span>{{ admin_t('dash.sysinfo') }}</span></div>
+            <div class="card-body">
+                <div class="dash-sys-meters">
+                    <div class="dash-sys-meter">
+                        <div class="label">{{ admin_t('dash.php_mem') }}</div>
+                        <div class="value">{{ $server['php_memory']['used_text'] }}</div>
+                        <div class="muted">{{ $server['php_memory']['limit_text'] }}</div>
+                    </div>
+                    @if($server['ram']['ok'])
+                        <div class="dash-sys-meter">
+                            <div class="label">{{ admin_t('dash.ram') }}</div>
+                            <div class="value">{{ number_format($server['ram']['percent'], 1) }}%</div>
+                            <div class="muted">{{ $server['ram']['used_text'] }} / {{ $server['ram']['total_text'] }}</div>
+                        </div>
+                    @endif
+                    @if($server['load']['ok'])
+                        <div class="dash-sys-meter">
+                            <div class="label">{{ admin_t('dash.load') }}</div>
+                            <div class="value">{{ $server['load']['text'] }}</div>
+                        </div>
+                    @endif
+                </div>
+                <table class="data info" style="border:0">
+                    <tr>
+                        <th>{{ admin_t('dash.php') }}</th>
+                        <td>{{ $server['php'] }}</td>
+                        <th>{{ admin_t('dash.laravel') }}</th>
+                        <td>{{ $server['laravel'] }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ admin_t('dash.app_ver') }}</th>
+                        <td>{{ $server['app_name'] }} {{ $server['app_version'] }}</td>
+                        <th>{{ admin_t('dash.os') }}</th>
+                        <td>{{ $server['os'] }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ admin_t('dash.server') }}</th>
+                        <td>
+                            @if($server['software'] !== '')
+                                {{ $server['software'] }}
+                                <span class="muted">{{ $server['sapi'] }}</span>
+                            @else
+                                {{ $server['sapi'] }}
+                            @endif
+                        </td>
+                        <th>{{ admin_t('dash.host') }}</th>
+                        <td>{{ $sysAddr !== '' ? $sysAddr : admin_t('dash.unavailable') }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ admin_t('dash.upload') }}</th>
+                        <td>{{ $server['upload'] }} · POST {{ $server['post'] }}</td>
+                        <th>{{ admin_t('dash.memory') }}</th>
+                        <td>{{ $server['memory_limit'] }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ admin_t('dash.now') }}</th>
+                        <td>{{ $server['now'] }} <span class="muted">{{ $server['timezone'] }}</span></td>
+                    </tr>
+                </table>
+                <p class="muted field-hint">{{ admin_t('dash.sysinfo_hint') }}</p>
+            </div>
+        </div>
+        <div class="card card-panel">
+            <div class="card-header">
+                <span>{{ admin_t('dash.disk') }}</span>
+                @if($server['disk']['ok'])
+                    <span class="muted">{{ number_format($server['disk']['percent'], 1) }}%</span>
+                @endif
+            </div>
+            <div class="card-body">
+                @if($server['disk']['ok'])
+                    <div class="dash-disk-bar is-{{ $server['disk']['tone'] }}"><i style="width: {{ min(100, $server['disk']['percent']) }}%"></i></div>
+                    <p>{{ admin_t('dash.disk_line', ['used' => $server['disk']['used_text'], 'free' => $server['disk']['free_text'], 'total' => $server['disk']['total_text']]) }}</p>
+                    <p class="muted">{{ $server['disk']['path'] }}</p>
+                @else
+                    <p class="muted">{{ admin_t('dash.disk_fail') }}</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <details class="dash-health" @if($health['attention']) open @endif>
         <summary>
             <span>{{ admin_t('dash.health') }}</span>
