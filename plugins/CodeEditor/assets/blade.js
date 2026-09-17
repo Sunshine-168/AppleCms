@@ -9,17 +9,61 @@
     var vodDirRe = /^@(?:end)?vod[A-Za-z]*\b/;
     var cutRe = new RegExp('\\{\\{--|\\{!!|\\{\\{|@@|@\\{\\{|@(?:end)?vod[A-Za-z]*\\b|@conf\\b|@(?:' + BLADE_WORDS + ')\\b');
 
-    function eatParenArgs(stream) {
-        if (stream.peek() !== '(') return;
-        var depth = 0;
-        while (!stream.eol()) {
-            var ch = stream.next();
-            if (ch === '(') depth += 1;
-            else if (ch === ')') {
-                depth -= 1;
-                if (depth === 0) break;
-            }
+    function exprToken(stream, skipParen) {
+        if (stream.eatSpace()) return null;
+        if (stream.match('//')) {
+            stream.skipToEnd();
+            return 'comment';
         }
+        var q = stream.peek();
+        if (q === "'" || q === '"') {
+            stream.next();
+            var escaped = false;
+            while (!stream.eol()) {
+                var ch = stream.next();
+                if (escaped) {
+                    escaped = false;
+                } else if (ch === '\\') {
+                    escaped = true;
+                } else if (ch === q) {
+                    break;
+                }
+            }
+            return 'string';
+        }
+        if (stream.match(/^\$[A-Za-z_][A-Za-z0-9_]*/)) return 'variable-2';
+        if (stream.match(/^->[A-Za-z_][A-Za-z0-9_]*/)) return 'property';
+        if (stream.match(/^\d+(?:\.\d+)?/)) return 'number';
+        if (stream.match(/^(?:=>|\?\?|\?:|::|\|\||&&|===|!==|==|!=|<=|>=)/)) return 'operator';
+        if (stream.match(/^[+\-*\/%=<>!&|^~?:.]/)) return 'operator';
+        if (stream.match(skipParen ? /^[\[\]{},;]/ : /^[()[\]{},;]/)) return 'punctuation';
+        if (stream.match(/^(?:true|false|null|as|and|or|xor|new|function|return|echo|clone|instanceof|isset|empty)\b/)) {
+            return 'atom';
+        }
+        if (stream.match(/^[A-Za-z_][A-Za-z0-9_]*/)) {
+            return stream.peek() === '(' ? 'builtin' : 'variable';
+        }
+        stream.next();
+        return 'operator';
+    }
+
+    function argsToken(stream, state) {
+        if (stream.eatSpace()) return null;
+        if (stream.peek() === '(') {
+            stream.next();
+            state.argDepth++;
+            return 'punctuation';
+        }
+        if (stream.peek() === ')') {
+            stream.next();
+            state.argDepth--;
+            if (state.argDepth <= 0) {
+                state.kind = null;
+                state.argDepth = 0;
+            }
+            return 'punctuation';
+        }
+        return exprToken(stream, true);
     }
 
     CodeMirror.defineMode('laravel-blade', function (config) {
@@ -39,24 +83,44 @@
                     state.kind = null;
                     return 'tag';
                 }
-                stream.next();
-                return 'string';
+                return exprToken(stream);
             }
             if (state.kind === 'echo') {
                 if (stream.match('}}')) {
                     state.kind = null;
                     return 'tag';
                 }
-                stream.next();
-                return 'string';
+                return exprToken(stream);
             }
             if (state.kind === 'php') {
                 if (stream.match(/^@endphp\b/)) {
                     state.kind = null;
-                    return 'keyword';
+                    return 'def';
                 }
-                stream.next();
-                return 'variable-2';
+                return exprToken(stream);
+            }
+            if (state.kind === 'args') {
+                return argsToken(stream, state);
+            }
+            if (state.kind === 'after-dir') {
+                if (stream.eatSpace()) return null;
+                if (stream.peek() === '(') {
+                    state.kind = 'args';
+                    state.argDepth = 0;
+                    return argsToken(stream, state);
+                }
+                state.kind = null;
+                return bladeToken(stream, state);
+            }
+            if (state.kind === 'after-php') {
+                if (stream.eatSpace()) return null;
+                if (stream.peek() === '(') {
+                    state.kind = 'args';
+                    state.argDepth = 0;
+                    return argsToken(stream, state);
+                }
+                state.kind = 'php';
+                return bladeToken(stream, state);
             }
 
             if (stream.match('{{--')) {
@@ -79,19 +143,18 @@
                 return 'atom';
             }
             if (stream.match(/^@php\b/)) {
-                if (stream.peek() === '(') {
-                    eatParenArgs(stream);
-                    return 'keyword';
-                }
-                state.kind = 'php';
-                return 'keyword';
+                state.kind = 'after-php';
+                return 'def';
+            }
+            if (stream.match(/^@endphp\b/)) {
+                return 'def';
             }
             if (stream.match(vodDirRe) || stream.match(/^@conf\b/)) {
-                eatParenArgs(stream);
+                state.kind = 'after-dir';
                 return 'atom';
             }
             if (stream.match(bladeDirRe)) {
-                eatParenArgs(stream);
+                state.kind = 'after-dir';
                 return 'keyword';
             }
             return null;
@@ -99,17 +162,21 @@
 
         return {
             startState: function () {
-                return { html: CodeMirror.startState(htmlMode), kind: null };
+                return { html: CodeMirror.startState(htmlMode), kind: null, argDepth: 0 };
             },
             copyState: function (state) {
                 return {
                     html: CodeMirror.copyState(htmlMode, state.html),
-                    kind: state.kind
+                    kind: state.kind,
+                    argDepth: state.argDepth
                 };
             },
             token: function (stream, state) {
                 if (state.kind) {
-                    return bladeToken(stream, state);
+                    var inner = bladeToken(stream, state);
+                    if (inner || state.kind) {
+                        return inner;
+                    }
                 }
                 var style = bladeToken(stream, state);
                 if (style || state.kind) {

@@ -8,6 +8,7 @@ use App\Models\System\SysSystemLogModel;
 use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
+use App\Support\AdminOpLog;
 use App\Support\Captcha;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
@@ -207,7 +208,11 @@ class SysUserService
             return Result::fail('没能添加');
         }
 
-        return Result::success([], '已添加，可以登录后台');
+        return AdminOpLog::ifOk(Result::success([], '已添加，可以登录后台'), 'save', '新增了管理员 '.$username, [
+            'module' => '管理员',
+            'target_type' => 'users',
+            'payload' => ['username' => $username],
+        ]);
     }
 
     /**
@@ -269,7 +274,12 @@ class SysUserService
             session(['admin_username' => $username]);
         }
 
-        return Result::success([], '已保存');
+        return AdminOpLog::ifOk(Result::success([], '已保存'), 'save', '保存了管理员 '.$username, [
+            'module' => '管理员',
+            'target_type' => 'users',
+            'target_id' => $id,
+            'payload' => ['username' => $username, 'password_changed' => $password !== ''],
+        ]);
     }
 
     /**
@@ -292,6 +302,7 @@ class SysUserService
         if ($total <= 1) {
             return Result::fail('至少留一位管理员');
         }
+        $gone = (string) (($this->sysUserModel->findById($id)['username'] ?? ''));
 
         $res = $this->sysUserModel->deleteById($id);
         if (! $res) {
@@ -299,7 +310,11 @@ class SysUserService
         }
         $this->forgetUserCache($id);
 
-        return Result::success([], '已删除');
+        return AdminOpLog::ifOk(Result::success([], '已删除'), 'delete', '删除了管理员'.($gone !== '' ? ' '.$gone : ' #'.$id), [
+            'module' => '管理员',
+            'target_type' => 'users',
+            'target_id' => $id,
+        ]);
     }
 
     /**
@@ -351,6 +366,43 @@ class SysUserService
     protected function forgetUserCache(int $id): void
     {
         Cache::forget('admin_user_'.$id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    protected function decorateOperateLog(array $item, string $me): array
+    {
+        $stamp = 0;
+        if (! empty($item['create_time']) && is_numeric($item['create_time'])) {
+            $stamp = (int) $item['create_time'];
+        } elseif (! empty($item['create_at']) && is_numeric($item['create_at'])) {
+            $stamp = (int) $item['create_at'];
+        }
+        $ip = trim((string) ($item['login_ip'] ?? ''));
+        $summary = trim((string) ($item['title'] ?? ''));
+        $module = trim((string) ($item['module'] ?? ''));
+        $item['is_self'] = $me !== '' && (string) ($item['username'] ?? '') === $me;
+        $item['summary'] = $summary !== '' ? $summary : '做了一次操作';
+        $item['module_text'] = $module;
+        $item['time_text'] = $this->loginLogTimeText($stamp);
+        $item['place_text'] = $this->ipPlaceText($ip, (string) ($item['ip_address'] ?? ''));
+        $item['device_text'] = $this->deviceText((string) ($item['user_agent'] ?? ''));
+        $item['create_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : (string) ($item['create_time'] ?? '');
+        $extra = [];
+        $url = trim((string) ($item['url'] ?? ''));
+        if ($url !== '') {
+            $path = parse_url($url, PHP_URL_PATH);
+            $extra[] = is_string($path) && $path !== '' ? $path : $url;
+        }
+        $targetId = (int) ($item['target_id'] ?? 0);
+        if ($targetId > 0) {
+            $extra[] = '编号 '.$targetId;
+        }
+        $item['extra_text'] = implode(' · ', $extra);
+
+        return $item;
     }
 
     /**
@@ -658,78 +710,55 @@ class SysUserService
 
     /**
      * 获取系统用户操作日志列表
-     * 支持按用户名、登录IP、方法、URL、路由、状态、时间范围筛选，返回分页数据
-     * @param array $params
-     * @return array
+     *
+     * @param  array{q?:string,username?:string,login_ip?:string,mine?:bool,start_time?:string,end_time?:string,limit?:int}  $params
      */
     public function getSysOperateLogLists(array $params): array
     {
         $where = [];
-        $limit = (int) ($params['limit'] ?? 10);
-        if ($limit < 1)
-        {
-            $limit = 10;
+        $limit = (int) ($params['limit'] ?? 20);
+        if ($limit < 1) {
+            $limit = 20;
         }
-
-        if (!empty($params['username']))
-        {
-            $where[] = ['username', '=', $params['username']];
+        $q = trim((string) ($params['q'] ?? ''));
+        $username = trim((string) ($params['username'] ?? ''));
+        $ip = trim((string) ($params['login_ip'] ?? ''));
+        if (! empty($params['mine'])) {
+            $me = trim((string) session('admin_username', ''));
+            if ($me !== '') {
+                $where[] = ['username', '=', $me];
+            }
+        } elseif ($username !== '' && $q === '') {
+            $where[] = ['username', 'like', '%'.$username.'%'];
         }
-
-        if (!empty($params['login_ip']))
-        {
-            $where[] = ['login_ip', '=', $params['login_ip']];
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $where['or'] = [
+                ['username', 'like', $like],
+                ['title', 'like', $like],
+                ['module', 'like', $like],
+                ['login_ip', 'like', $like],
+            ];
         }
-
-        if (!empty($params['method']))
-        {
-            $where[] = ['method', '=', strtoupper((string) $params['method'])];
+        if ($ip !== '') {
+            $where[] = ['login_ip', '=', $ip];
         }
-
-        if (!empty($params['url']))
-        {
-            $where[] = ['url', '=', $params['url']];
-        }
-
-        if (!empty($params['route']))
-        {
-            $where[] = ['route', '=', $params['route']];
-        }
-
-        if ($params['status'] !== '' && $params['status'] !== null)
-        {
-            $where[] = ['status', '=', (int) $params['status']];
-        }
-
-        if (!empty($params['start_time']))
-        {
+        if (! empty($params['start_time'])) {
             $where[] = ['create_time', '>=', strtotime((string) $params['start_time'])];
         }
-
-        if (!empty($params['end_time']))
-        {
+        if (! empty($params['end_time'])) {
             $where[] = ['create_time', '<=', strtotime((string) $params['end_time']) + 86400];
         }
 
         $data = $this->sysOperateLogModel->paginates($where, '*', $limit, ['id' => 'desc']);
-
-        foreach ($data['data'] as &$item)
-        {
-            if (empty($item['create_time']) && !empty($item['create_at']))
-            {
-                $item['create_time'] = $item['create_at'];
-                continue;
-            }
-
-            if (!empty($item['create_time']) && is_numeric($item['create_time']))
-            {
-                $timestamp = (int) $item['create_time'];
-                if ($timestamp > 0)
-                {
-                    $item['create_time'] = date('Y-m-d H:i:s', $timestamp);
-                }
-            }
+        if (! isset($data['data']) || ! is_array($data['data'])) {
+            $data = ['total' => 0, 'data' => []];
         }
+        $me = (string) session('admin_username', '');
+        foreach ($data['data'] as &$item) {
+            $item = $this->decorateOperateLog($item, $me);
+        }
+        unset($item);
 
         return Result::success($data);
     }
@@ -895,7 +924,11 @@ class SysUserService
             return Result::fail('修改失败');
         }
 
-        return Result::success([], '修改成功');
+        return AdminOpLog::ifOk(Result::success([], '修改成功'), 'save', '修改了自己的密码', [
+            'module' => '管理员',
+            'target_type' => 'users',
+            'target_id' => $uid,
+        ]);
     }
 
     private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool

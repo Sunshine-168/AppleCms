@@ -189,7 +189,7 @@
         if (!opts.hideOk) foot.appendChild(save);
         box.appendChild(head);
         box.appendChild(body);
-        box.appendChild(foot);
+        if (!opts.hideFoot) box.appendChild(foot);
         mask.appendChild(box);
         document.body.appendChild(mask);
         function close() {

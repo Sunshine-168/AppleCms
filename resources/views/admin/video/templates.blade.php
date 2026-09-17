@@ -22,19 +22,21 @@
     <div class="card card-panel">
         <div class="card-header"><span>{{ $theme['title'] }}</span></div>
         <div class="card-body">
-            <p class="muted recycle-lead">改页面文件。Logo 和主色在「<a href="/admin/video/settings?tab=look">站点设置 → 外观</a>」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
+            <p class="muted recycle-lead">改页面文件。Logo 和主色在「<a href="/admin/video/settings?tab=look">站点设置 → 外观</a>」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
             @if($hasFiles)
                 <input type="search" id="tpl-search" class="tpl-search" placeholder="搜页面，如 首页、播放" autocomplete="off" aria-label="搜索模板">
-                <div class="file-list" id="tpl-files">
+                <div class="file-list" id="tpl-files" data-theme="{{ $theme['slug'] }}">
                     @foreach($groups as $group)
-                        <div class="tpl-group" data-group>
-                            <h3>{{ $group['label'] }}</h3>
-                            @foreach($group['files'] as $f)
-                                <a href="#" class="tpl-file" data-path="{{ $f['path'] }}" data-label="{{ $f['label'] }}">
-                                    {{ $f['label'] }}
-                                    <small>{{ $f['path'] }}</small>
-                                </a>
-                            @endforeach
+                        <div class="tpl-group" data-group="{{ $group['key'] }}" data-fold>
+                            <button type="button" class="tpl-group-toggle" aria-expanded="true" aria-controls="tpl-group-{{ $group['key'] }}">{{ $group['label'] }}</button>
+                            <div class="tpl-group-body" id="tpl-group-{{ $group['key'] }}" role="group">
+                                @foreach($group['files'] as $f)
+                                    <a href="#" class="tpl-file" data-path="{{ $f['path'] }}" data-label="{{ $f['label'] }}">
+                                        {{ $f['label'] }}
+                                        <small>{{ $f['path'] }}</small>
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -67,6 +69,11 @@
                 <p>还没有打开文件。</p>
                 <p class="muted">先点「首页」或「整站头尾」。这是 Blade 模板，不是可视化排版。需要图片时点「插入附件」。</p>
             </div>
+            <div id="tpl-find-bar" class="tpl-find-bar" hidden>
+                <label for="tpl-find-q">查找：</label>
+                <input type="search" id="tpl-find-q" autocomplete="off" spellcheck="false">
+                <span class="muted">可用 /正则/</span>
+            </div>
             <textarea id="tpl-content" class="tpl-editor" hidden spellcheck="false"></textarea>
         </div>
     </div>
@@ -96,6 +103,9 @@
     var backupBtn = document.getElementById('tpl-backup');
     var rollbackBtn = document.getElementById('tpl-rollback');
     var findBtn = document.getElementById('tpl-find');
+    var findBar = document.getElementById('tpl-find-bar');
+    var findInput = document.getElementById('tpl-find-q');
+    var usingCode = false;
     var code = window.TplCodeEditor ? window.TplCodeEditor.mount(editor, {
         onSave: function () { saveFile(true); },
         onShow: function () { sizeEditor(); }
@@ -149,10 +159,10 @@
         var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current || '模板';
         titleEl.title = label;
         titleEl.textContent = label + (dirty() ? ' *' : '');
-        saveBtn.disabled = !current || !dirty();
+        saveBtn.disabled = !current;
         backupBtn.disabled = !current;
         rollbackBtn.disabled = !current || backupAt < 1;
-        findBtn.hidden = !current || !code;
+        findBtn.hidden = !current;
     }
     function setMeta(label, path, bak) {
         backupAt = parseInt(bak, 10) || 0;
@@ -171,9 +181,12 @@
         if (code) {
             editor.hidden = true;
             code.show(on);
+            usingCode = !!on;
         } else {
             editor.hidden = !on;
+            usingCode = false;
         }
+        if (!on) closePlainFind();
     }
     function markDirtyTitle() {
         updateChrome();
@@ -184,6 +197,7 @@
             x.classList.toggle('active', x.getAttribute('data-path') === path);
             x.classList.toggle('is-loading', false);
         });
+        expandGroupForPath(path, true);
     }
     function openFile(a) {
         var path = a.getAttribute('data-path');
@@ -211,7 +225,9 @@
                 setContent(saved);
                 showEditor(true);
             } catch (err) {
+                usingCode = false;
                 editor.hidden = false;
+                if (code) code.show(false);
                 editor.value = saved;
                 U.toast('高亮没加上，已用文本框打开', 'err');
             }
@@ -249,6 +265,19 @@
         if (current) sizeEditor();
     });
     document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && findBar && !findBar.hidden) {
+            closePlainFind();
+            e.preventDefault();
+            if (!editor.hidden) editor.focus();
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+            if (!current || document.querySelector('.ui-mask')) return;
+            if (e.target && e.target.closest && e.target.closest('.CodeMirror')) return;
+            e.preventDefault();
+            openFind();
+            return;
+        }
         if (!(e.ctrlKey || e.metaKey) || (e.key !== 's' && e.key !== 'S')) return;
         e.preventDefault();
         saveFile(true);
@@ -256,6 +285,51 @@
 
     var search = document.getElementById('tpl-search');
     var filterEmpty = document.getElementById('tpl-filter-empty');
+    var filesRoot = document.getElementById('tpl-files');
+    var foldKey = 'laravideo.tpl.fold.' + ((filesRoot && filesRoot.getAttribute('data-theme')) || 'default');
+    function readFoldMap() {
+        try {
+            var raw = localStorage.getItem(foldKey);
+            var data = raw ? JSON.parse(raw) : {};
+            return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+        } catch (e) {
+            return {};
+        }
+    }
+    function writeFoldKey(key, expanded) {
+        if (!key) return;
+        var data = readFoldMap();
+        data[key] = !!expanded;
+        try { localStorage.setItem(foldKey, JSON.stringify(data)); } catch (e) {}
+    }
+    function applyFold(box, expanded, persist) {
+        if (!box) return;
+        var btn = box.querySelector('.tpl-group-toggle');
+        box.classList.toggle('is-folded', !expanded);
+        if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (persist) writeFoldKey(box.getAttribute('data-group'), expanded);
+    }
+    function restoreFolds() {
+        var data = readFoldMap();
+        document.querySelectorAll('[data-group]').forEach(function (box) {
+            applyFold(box, data[box.getAttribute('data-group')] !== false, false);
+        });
+    }
+    function expandGroupForPath(path, persist) {
+        if (!path) return;
+        document.querySelectorAll('.tpl-file').forEach(function (a) {
+            if (a.getAttribute('data-path') !== path) return;
+            applyFold(a.closest('[data-group]'), true, persist);
+        });
+    }
+    document.querySelectorAll('.tpl-group-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var box = btn.closest('[data-group]');
+            if (!box) return;
+            applyFold(box, box.classList.contains('is-folded'), true);
+        });
+    });
+    restoreFolds();
     function filterFiles() {
         if (!search) return;
         var q = (search.value || '').trim().toLowerCase();
@@ -269,8 +343,13 @@
                 if (on) any = true;
             });
             box.hidden = !any;
+            if (any && q) applyFold(box, true, false);
             if (any) hit = true;
         });
+        if (!q) {
+            restoreFolds();
+            expandGroupForPath(current, false);
+        }
         if (filterEmpty) filterEmpty.hidden = !q || hit;
     }
     if (search) {
@@ -285,10 +364,14 @@
 
     function saveFile(quiet) {
         if (!current) {
-            if (!quiet) U.toast('请先选一个页面', 'err');
+            U.toast('请先选一个页面', 'err');
             return;
         }
-        if (!dirty() || saving) return;
+        if (saving) return;
+        if (!dirty()) {
+            U.toast('没有改动，不用保存');
+            return;
+        }
         if (!quiet && !U.confirm('保存会覆盖这个页面，并先做一份备份。确定？')) return;
         saving = true;
         var payload = encode(getContent());
@@ -306,10 +389,85 @@
             saving = false;
         });
     }
+    function closePlainFind() {
+        if (findBar) findBar.hidden = true;
+    }
+    function parseFindQuery(raw) {
+        raw = String(raw || '');
+        if (!raw) return null;
+        var isRE = raw.match(/^\/(.*)\/([a-z]*)$/);
+        if (isRE) {
+            try {
+                return new RegExp(isRE[1], (isRE[2].indexOf('i') === -1 ? '' : 'i') + 'g');
+            } catch (e) {
+                return null;
+            }
+        }
+        var flags = raw === raw.toLowerCase() ? 'gi' : 'g';
+        return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+    }
+    function findInTextarea(rev) {
+        if (!findInput || editor.hidden) return;
+        var re = parseFindQuery(findInput.value);
+        if (!re) return;
+        var text = editor.value || '';
+        if (!text) return;
+        var from = rev ? editor.selectionStart : editor.selectionEnd;
+        var match = null;
+        var m;
+        if (rev) {
+            re.lastIndex = 0;
+            while ((m = re.exec(text))) {
+                if (m.index >= from) break;
+                match = m;
+                if (!m[0].length) re.lastIndex++;
+            }
+            if (!match) {
+                re.lastIndex = 0;
+                while ((m = re.exec(text))) {
+                    match = m;
+                    if (!m[0].length) re.lastIndex++;
+                }
+            }
+        } else {
+            re.lastIndex = from;
+            match = re.exec(text);
+            if (!match && from > 0) {
+                re.lastIndex = 0;
+                match = re.exec(text);
+            }
+        }
+        if (!match || !match[0].length) return;
+        editor.focus();
+        editor.setSelectionRange(match.index, match.index + match[0].length);
+    }
+    function openFind() {
+        if (!current) return;
+        if (usingCode && code && code.find) {
+            closePlainFind();
+            code.find();
+            return;
+        }
+        if (!findBar || !findInput) return;
+        findBar.hidden = false;
+        findInput.focus();
+        findInput.select();
+    }
     U.on('#tpl-save', 'click', function () { saveFile(false); });
-    U.on('#tpl-find', 'click', function () {
-        if (code && code.find) code.find();
-    });
+    U.on('#tpl-find', 'click', function () { openFind(); });
+    if (findInput) {
+        findInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                findInTextarea(e.shiftKey);
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closePlainFind();
+                if (!editor.hidden) editor.focus();
+            }
+        });
+    }
     U.on('#tpl-backup', 'click', function () {
         if (!current) { U.toast('请先选一个页面', 'err'); return; }
         U.post('/admin/video/templates/backup', {path: current}).then(function (res) {
@@ -346,7 +504,15 @@
         return /\.(jpe?g|png|gif|webp|svg|ico)(\?|$)/i.test(url);
     }
     function fileUrl(row) {
-        return String((row && row.url) || '').trim();
+        var url = String((row && row.url) || (row && row.path) || '').trim();
+        if (!url) return '';
+        if (/^(https?:)?\/\//i.test(url) || url.charAt(0) === '/') return url;
+        return '/' + url;
+    }
+    function fileExt(row) {
+        var s = String((row && row.name) || (row && row.url) || '');
+        var m = s.match(/\.([a-z0-9]+)(\?|$)/i);
+        return m ? m[1].toUpperCase() : '文件';
     }
     function snippet(row) {
         var url = fileUrl(row);
@@ -364,7 +530,7 @@
         if (code) {
             code.insert(text);
             markDirtyTitle();
-            U.toast('已插入', 'ok');
+            U.toast('已插入到光标处', 'ok');
             return;
         }
         editor.focus();
@@ -374,7 +540,7 @@
         editor.value = val.slice(0, start) + text + val.slice(end);
         editor.selectionStart = editor.selectionEnd = start + text.length;
         editor.dispatchEvent(new Event('input'));
-        U.toast('已插入', 'ok');
+        U.toast('已插入到光标处', 'ok');
     }
     function copyText(text) {
         if (!text) return Promise.resolve();
@@ -424,15 +590,21 @@
         });
     }
     function openPicker() {
+        var active = document.querySelector('.tpl-file.active');
+        var currentLabel = (active && active.getAttribute('data-label')) || current;
+        var hint = current
+            ? '点缩略图插到光标处。图片写成 img 标签，其它文件只写地址。'
+            : '还没打开页面，点插入只会复制地址。先在左边打开一个模板。';
         U.dialog({
-            title: '插入附件',
+            title: current ? ('插入到「' + currentLabel + '」') : '插入附件',
             wide: true,
             hideOk: true,
-            cancelText: '关闭',
-            content: '<p class="muted">图片会写成 img 标签。没打开页面时只复制地址。也可在<a href="/admin/system/attachments">附件库</a>管理。</p>'
-                + '<div class="tpl-picker-drop" id="tpl-picker-drop">点击或拖入文件（图片 / svg / zip，最大 10MB）'
-                + '<input type="file" id="tpl-picker-input" multiple hidden accept="image/*,.svg,.ico,.css,.zip,.pdf,.webp"></div>'
-                + '<div class="tpl-picker-bar"><input type="search" id="tpl-picker-q" placeholder="搜文件名" autocomplete="off">'
+            hideFoot: true,
+            content: '<p class="muted tpl-picker-lead">' + hint + '</p>'
+                + '<div class="tpl-picker-drop" id="tpl-picker-drop">把 Logo、海报拖到这里，或点击上传（图片，最大 10MB）'
+                + '<input type="file" id="tpl-picker-input" multiple hidden accept="image/*,.svg,.ico,.webp,.css"></div>'
+                + '<div class="tpl-picker-bar"><input type="search" id="tpl-picker-q" placeholder="搜文件名，如 logo、海报" autocomplete="off">'
+                + '<a href="/admin/system/attachments" target="_blank">去附件库</a>'
                 + '<button type="button" class="btn btn-muted btn-sm" id="tpl-picker-reload">刷新</button></div>'
                 + '<div id="tpl-picker-grid" class="tpl-picker-grid"></div>'
                 + '<div id="tpl-picker-pager"></div>',
@@ -446,14 +618,16 @@
                 function load() {
                     U.get('/admin/system/attachments/list', {
                         page: state.page,
-                        limit: 12,
+                        limit: 18,
                         keyword: state.keyword
                     }).then(function (res) {
                         var d = (res && res.data) || {};
                         var list = Array.isArray(d) ? d : (d.data || []);
                         var total = d.total != null ? d.total : list.length;
                         if (!list.length) {
-                            grid.innerHTML = '<div class="list-empty tpl-picker-empty"><p>还没有附件。</p><p class="muted">把海报、图标拖进来，再点插入。</p></div>';
+                            grid.innerHTML = state.keyword
+                                ? '<div class="list-empty tpl-picker-empty"><p>没有叫这个名字的文件。</p><p class="muted">换个词，或把文件拖到上面上传。</p></div>'
+                                : '<div class="list-empty tpl-picker-empty"><p>还没有可用的图。</p><p class="muted">把海报或图标拖到上面，插入时会写进当前模板。</p></div>';
                             pagerEl.innerHTML = '';
                             return;
                         }
@@ -462,20 +636,28 @@
                             var name = U.escape(row.name || url);
                             var thumb = isImage(row)
                                 ? '<div class="tpl-picker-thumb"><img src="' + url + '" alt=""></div>'
-                                : '<div class="tpl-picker-file">文件</div>';
-                            return '<div class="tpl-picker-card" data-id="' + U.escape(row.id) + '">'
+                                : '<div class="tpl-picker-file"><span>' + U.escape(fileExt(row)) + '</span></div>';
+                            return '<div class="tpl-picker-card" data-id="' + U.escape(row.id) + '" title="' + name + '">'
                                 + thumb
-                                + '<span class="entry-row-title" title="' + name + '">' + name + '</span>'
+                                + '<span class="entry-row-title">' + name + '</span>'
                                 + '<p class="muted">' + U.escape(row.size_text || '') + '</p>'
                                 + '<div class="tpl-picker-actions">'
                                 + '<button type="button" class="btn btn-sm js-insert">插入</button>'
-                                + '<button type="button" class="btn btn-muted btn-sm js-copy">复制</button>'
+                                + '<button type="button" class="btn btn-muted btn-sm js-copy">复制地址</button>'
                                 + '</div></div>';
                         }).join('');
                         grid._rows = list;
+                        Array.prototype.forEach.call(grid.querySelectorAll('.tpl-picker-thumb img'), function (img) {
+                            function markBroken() {
+                                var thumb = img.closest('.tpl-picker-thumb');
+                                if (thumb) thumb.classList.add('is-broken');
+                            }
+                            img.addEventListener('error', markBroken);
+                            if (img.complete && !img.naturalWidth) markBroken();
+                        });
                         U.pager(pagerEl, {
                             page: d.current_page || state.page,
-                            last: d.last_page || Math.max(1, Math.ceil(total / 12)),
+                            last: d.last_page || Math.max(1, Math.ceil(total / 18)),
                             total: total
                         }, function (p) {
                             state.page = p;
@@ -504,18 +686,18 @@
                     }, 250);
                 });
                 grid.addEventListener('click', function (e) {
-                    var btn = e.target.closest('button');
-                    if (!btn) return;
                     var card = e.target.closest('.tpl-picker-card');
                     if (!card) return;
                     var row = (grid._rows || []).filter(function (r) {
                         return String(r.id) === String(card.getAttribute('data-id'));
                     })[0];
                     if (!row) return;
-                    if (btn.classList.contains('js-insert')) insertAtCursor(snippet(row));
-                    if (btn.classList.contains('js-copy')) {
+                    if (e.target.closest('.js-copy')) {
+                        e.stopPropagation();
                         copyText(fileUrl(row)).then(function () { U.toast('已复制地址', 'ok'); });
+                        return;
                     }
+                    insertAtCursor(snippet(row));
                 });
                 load();
             }
@@ -528,6 +710,7 @@
 
     var boot = new URLSearchParams(location.search).get('path');
     if (boot) {
+        expandGroupForPath(boot, true);
         document.querySelectorAll('.tpl-file').forEach(function (a) {
             if (a.getAttribute('data-path') === boot) openFile(a);
         });

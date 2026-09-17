@@ -9,10 +9,7 @@ class LoginLogIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_login_log_index_is_a_timeline_not_a_ua_dump(): void
@@ -23,6 +20,8 @@ class LoginLogIndexPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('还没有登录记录', $html);
+        $this->assertStringContainsString('登录日志', $html);
+        $this->assertStringContainsString('/admin/system/monitor/operate-logs', $html);
         $this->assertStringContainsString('搜管理员或 IP', $html);
         $this->assertStringContainsString('点 IP 只看这个地址', $html);
         $this->assertStringContainsString('今天', $html);

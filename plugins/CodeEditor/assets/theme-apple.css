@@ -38,15 +38,15 @@
 .cm-s-apple .cm-string { color: #0d6e8c; }
 .cm-s-apple .cm-comment { color: #86909c; font-style: italic; }
 .cm-s-apple .cm-number { color: #b45309; }
-.cm-s-apple .cm-def { color: #7c3aed; }
+.cm-s-apple .cm-def { color: #7c3aed; font-weight: 700; }
 .cm-s-apple .cm-operator,
 .cm-s-apple .cm-punctuation { color: #4e5969; }
 .cm-s-apple .cm-meta { color: #15803d; font-weight: 700; }
 .cm-s-apple .cm-variable { color: #1d2129; }
-.cm-s-apple .cm-variable-2 { color: #0369a1; }
+.cm-s-apple .cm-variable-2 { color: #0369a1; font-weight: 600; }
 .cm-s-apple .cm-property { color: #0b6e4f; }
 .cm-s-apple .cm-qualifier { color: #c45c26; }
-.cm-s-apple .cm-builtin { color: #1f9e6e; }
+.cm-s-apple .cm-builtin { color: #1f9e6e; font-weight: 600; }
 .cm-s-apple .cm-searching {
     background: #fff3bf;
     border-radius: 2px;
@@ -57,6 +57,14 @@
     color: #1d2129;
     font-size: 13px;
     padding: 8px 12px;
+    left: 0;
+    right: 0;
+}
+.cm-s-apple .CodeMirror-dialog-top {
+    top: 0;
+    bottom: auto;
+    border-top: none;
+    border-bottom: 1px solid #8ee0c4;
 }
 .cm-s-apple .CodeMirror-dialog-bottom {
     border-bottom: none;

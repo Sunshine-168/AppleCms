@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Video;
 use App\Http\Controllers\Controller;
 use App\Services\Admin\Video\VideoService;
 use App\Services\Video\SiteToolsService;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,23 @@ class SiteTools extends Controller
             'hub.probe' => $this->tools->probeHub((string) $request->input('api_url', '')),
             default => ['code' => 1, 'msg' => '未知操作', 'data' => []],
         };
+        if ((int) ($data['code'] ?? 1) === 0 && ! in_array($action, ['list', 'probe', 'scan'], true)) {
+            $summary = match ($tool.'.'.$action) {
+                'recycle.restore' => '从回收站恢复了影片',
+                'recycle.purge' => '彻底删除了回收站影片',
+                'recycle.empty' => '清空了回收站',
+                'images.localize' => '下载了远程封面',
+                'players.replace' => '批量换了播放器',
+                'annex.delete' => '删了没用的附件',
+                default => '',
+            };
+            if ($summary !== '') {
+                AdminOpLog::write($action !== '' ? $action : 'save', $summary, [
+                    'module' => $tool === 'recycle' ? '影片' : '站点',
+                    'target_type' => $tool,
+                ]);
+            }
+        }
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
@@ -89,6 +107,14 @@ class SiteTools extends Controller
             $raw = [$raw];
         }
         $data = $this->tools->promoteTemps($raw);
+        if ((int) ($data['code'] ?? 1) === 0) {
+            $n = is_array($raw) ? count(array_filter($raw)) : 1;
+            AdminOpLog::write('save', '转入了 '.$n.' 条待审采集', [
+                'module' => '待审采集',
+                'target_type' => 'collect_temps',
+                'payload' => ['count' => $n],
+            ]);
+        }
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

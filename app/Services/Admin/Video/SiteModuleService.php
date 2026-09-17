@@ -4,9 +4,11 @@ namespace App\Services\Admin\Video;
 
 use App\Models\Member\Member;
 use App\Models\Member\MemberGroup;
+use App\Models\Member\MemberInvite;
 use App\Models\Member\MemberOrder;
 use App\Models\Member\MemberPm;
 use App\Models\Member\MemberPointLog;
+use App\Models\Member\MemberWithdraw;
 use App\Models\Video\CollectSourceModel;
 use App\Models\Video\FriendLink;
 use App\Models\Video\VideoAd;
@@ -31,6 +33,7 @@ use App\Models\Video\VideoGuestbook;
 use App\Models\Video\VideoNotify;
 use App\Models\Video\VideoPlayFail;
 use App\Models\Video\VideoReport;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -280,6 +283,7 @@ class SiteModuleService
             ],
             'withdraws' => [
                 'title' => '提现',
+                'hint' => '积分兑现金申请，待审后打款或拒绝',
                 'model' => \App\Models\Member\MemberWithdraw::class,
                 'search' => 'account',
                 'fields' => [
@@ -444,14 +448,14 @@ class SiteModuleService
             ],
             'invites' => [
                 'title' => '邀请码',
-                'model' => \App\Models\Member\MemberInvite::class,
+                'hint' => '注册用的码，可批量生成；站点设置可强制填写',
+                'model' => MemberInvite::class,
                 'search' => 'code',
                 'fields' => [
                     ['name' => 'code', 'label' => '邀请码', 'type' => 'text'],
-                    ['name' => 'member_id', 'label' => '所属会员ID', 'type' => 'number'],
-                    ['name' => 'used_by', 'label' => '使用者ID', 'type' => 'number'],
+                    ['name' => 'member_id', 'label' => '邀请人会员ID', 'type' => 'number'],
                     ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '未用', '0' => '已用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '未用', '0' => '作废']],
                 ],
                 'cols' => ['id', 'code', 'member_id', 'used_by', 'points', 'status', 'created_at'],
             ],
@@ -634,6 +638,27 @@ class SiteModuleService
                         }
                     }
                 });
+            } elseif ($module === 'withdraws') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('account', 'like', '%'.$kw.'%')
+                        ->orWhere('remark', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw)->orWhere('amount', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
             } elseif ($module === 'cards') {
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('code', 'like', '%'.$kw.'%');
@@ -651,6 +676,28 @@ class SiteModuleService
                             ->all();
                         if ($memberIds !== []) {
                             $inner->orWhereIn('used_by', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'invites') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('code', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)
+                            ->orWhere('member_id', (int) $kw)
+                            ->orWhere('used_by', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds)->orWhereIn('used_by', $memberIds);
                         }
                     }
                 });
@@ -936,6 +983,18 @@ class SiteModuleService
                 $q->where('member_id', '>', 0);
             }
         }
+        if ($module === 'withdraws') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $probe = new $class;
+                $col = $this->hasColumn($probe, 'created_at') ? 'created_at' : 'updated_at';
+                if ($this->hasColumn($probe, $col)) {
+                    $q->where($col, '>=', strtotime('today'));
+                }
+            }
+        }
         if ($module === 'cards') {
             $queue = trim((string) ($params['queue'] ?? ''));
             if ($queue === 'unused') {
@@ -947,6 +1006,19 @@ class SiteModuleService
             }
             if (array_key_exists('used_by', $params) && $params['used_by'] !== '' && $params['used_by'] !== null) {
                 $q->where('used_by', (int) $params['used_by']);
+            }
+        }
+        if ($module === 'invites') {
+            $queue = trim((string) ($params['queue'] ?? ''));
+            if ($queue === 'unused') {
+                $q->where('status', 1)->where('used_by', 0);
+            } elseif ($queue === 'used') {
+                $q->where('used_by', '>', 0);
+            } elseif ($queue === 'void') {
+                $q->where('status', 0)->where('used_by', 0);
+            }
+            if ((string) ($params['today'] ?? '') === '1' && $this->hasColumn(new $class, 'created_at')) {
+                $q->where('created_at', '>=', strtotime('today'));
             }
         }
         if ($module === 'plogs') {
@@ -1092,6 +1164,10 @@ class SiteModuleService
             $q->orderBy('is_read')->orderByDesc('id');
         } elseif ($module === 'notifies') {
             $q->orderBy('is_read')->orderByDesc('id');
+        } elseif ($module === 'withdraws') {
+            $q->orderBy('status')->orderByDesc('id');
+        } elseif ($module === 'invites') {
+            $q->orderByDesc('status')->orderByDesc('id');
         } elseif ($module === 'searchwords') {
             $q->orderByDesc('hits')->orderByDesc('updated_at')->orderByDesc('id');
         } else {
@@ -1137,11 +1213,17 @@ class SiteModuleService
         if ($module === 'orders') {
             $rows = $this->decorateOrders($rows);
         }
+        if ($module === 'withdraws') {
+            $rows = $this->decorateWithdraws($rows);
+        }
         if ($module === 'groups') {
             $rows = $this->decorateGroups($rows);
         }
         if ($module === 'cards') {
             $rows = $this->decorateCards($rows);
+        }
+        if ($module === 'invites') {
+            $rows = $this->decorateInvites($rows);
         }
         if ($module === 'plogs') {
             $rows = $this->decoratePlogs($rows);
@@ -1193,6 +1275,9 @@ class SiteModuleService
         }
         if ($module === 'playfails' && $id === null) {
             return Result::fail('播放失败由前台播放页上报。后台只处理和下线线路。');
+        }
+        if ($module === 'withdraws' && $id === null) {
+            return Result::fail('提现由会员申请。后台只审核打款或拒绝。');
         }
         $cfg = $this->config($module);
         /** @var class-string<Model> $class */
@@ -1305,6 +1390,20 @@ class SiteModuleService
                 }
                 $payload = $allowed;
             }
+        }
+        if ($module === 'withdraws') {
+            $allowed = [];
+            if (array_key_exists('status', $payload)) {
+                $status = (int) $payload['status'];
+                if (! in_array($status, [0, 1, 2], true)) {
+                    return Result::fail('状态无效');
+                }
+                $allowed['status'] = $status;
+            }
+            if (array_key_exists('remark', $payload)) {
+                $allowed['remark'] = mb_substr(trim((string) $payload['remark']), 0, 255);
+            }
+            $payload = $allowed;
         }
         if ($module === 'searchwords') {
             $word = mb_substr(trim((string) ($payload['word'] ?? '')), 0, 80);
@@ -1436,6 +1535,38 @@ class SiteModuleService
                 }
                 if ($dup->exists()) {
                     return Result::fail('这个卡密已经存在');
+                }
+            }
+        }
+        if ($module === 'invites') {
+            if (array_key_exists('code', $payload)) {
+                $payload['code'] = strtoupper((string) preg_replace('/\s+/', '', trim((string) $payload['code'])));
+            }
+            if (array_key_exists('points', $payload)) {
+                $payload['points'] = max(0, (int) $payload['points']);
+            }
+            if (array_key_exists('member_id', $payload)) {
+                $payload['member_id'] = max(0, (int) $payload['member_id']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null) {
+                $code = trim((string) ($payload['code'] ?? ''));
+                $payload['code'] = $code !== '' ? $code : $this->uniqueInviteCode();
+                $payload['status'] = 1;
+                $payload['used_by'] = 0;
+                $payload['member_id'] = max(0, (int) ($payload['member_id'] ?? 0));
+                $payload['points'] = max(0, (int) ($payload['points'] ?? 0));
+            }
+            $code = trim((string) ($payload['code'] ?? ''));
+            if ($code !== '') {
+                $dup = MemberInvite::query()->where('code', $code);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个邀请码已经存在');
                 }
             }
         }
@@ -1695,6 +1826,9 @@ class SiteModuleService
             if ($module === 'cards' && (int) ($row->used_by ?? 0) > 0) {
                 return Result::fail('已兑换的卡密不能改。');
             }
+            if ($module === 'invites' && (int) ($row->used_by ?? 0) > 0) {
+                return Result::fail('已用的邀请码不能改。');
+            }
             if ($this->hasColumn($row, 'updated_at')) {
                 $payload['updated_at'] = $now;
             }
@@ -1704,7 +1838,7 @@ class SiteModuleService
             }
             $this->afterMoneySave($module, $row, $oldStatus);
 
-            return Result::success(['id' => $id]);
+            return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, true, AdminOpLog::subjectFrom($payload, $row), $id), $id, Result::success(['id' => $id]));
         }
         $model = new $class;
         if ($this->hasColumn($model, 'created_at')) {
@@ -1715,8 +1849,9 @@ class SiteModuleService
         }
         $row = $class::query()->create($payload);
         $this->afterMoneySave($module, $row, null);
+        $newId = (int) $row->id;
 
-        return Result::success(['id' => $row->id]);
+        return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, false, AdminOpLog::subjectFrom($payload, $row), $newId), $newId, Result::success(['id' => $newId]));
     }
 
     private function afterMoneySave(string $module, Model $row, ?int $oldStatus): void
@@ -1775,6 +1910,9 @@ class SiteModuleService
         if ($module === 'cards' && (int) ($row->used_by ?? 0) > 0) {
             return Result::fail('已兑换的卡密不能删，留着对账。');
         }
+        if ($module === 'invites' && (int) ($row->used_by ?? 0) > 0) {
+            return Result::fail('已用的邀请码不能删。');
+        }
         if ($module === 'players') {
             $code = trim((string) ($row->code ?? ''));
             if ($code !== '' && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'player')) {
@@ -1784,9 +1922,10 @@ class SiteModuleService
                 }
             }
         }
+        $subject = AdminOpLog::subjectFrom([], $row);
         $row->delete();
 
-        return Result::success();
+        return $this->loggedModule($module, 'delete', AdminOpLog::moduleDeleteSummary($module, $subject, $id), $id, Result::success());
     }
 
     /** @return array<string, int> */
@@ -1929,7 +2068,7 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'groups', 'cards', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -1940,8 +2079,10 @@ class SiteModuleService
                 'slides' => '请先勾选幻灯片',
                 'members' => '请先勾选会员',
                 'orders' => '请先勾选订单',
+                'withdraws' => '请先勾选提现',
                 'groups' => '请先勾选会员组',
                 'cards' => '请先勾选卡密',
+                'invites' => '请先勾选邀请码',
                 'plogs' => '请先勾选流水',
                 'ads' => '请先勾选广告',
                 'links' => '请先勾选友链',
@@ -1961,34 +2102,45 @@ class SiteModuleService
         }
         $ok = 0;
         $fail = 0;
-        foreach ($ids as $id) {
-            $res = match ($action) {
-                'status' => $this->save($module, ['status' => (int) $value], $id),
-                'type' => $this->save($module, ['type_id' => (int) $value], $id),
-                'slot' => $this->save($module, ['slot' => (string) $value], $id),
-                'group' => $this->save($module, ['group_id' => (int) $value], $id),
-                'engine' => $this->save($module, ['engine' => (string) $value], $id),
-                'points' => $this->adjustMemberPoints($id, (int) $value),
-                'offline' => $module === 'playfails'
-                    ? app(\App\Services\Video\SiteOpsService::class)->disablePlayFailSource($id)
-                    : Result::fail('不支持的操作'),
-                'read' => ($module === 'pms' || $module === 'notifies')
-                    ? $this->save($module, ['is_read' => 1], $id)
-                    : Result::fail('不支持的操作'),
-                'delete' => $this->delete($module, $id),
-                default => Result::fail('不支持的操作'),
-            };
-            if (($res['code'] ?? 1) === 0) {
-                $ok++;
-            } else {
-                $fail++;
+        AdminOpLog::quiet(function () use ($ids, $module, $action, $value, &$ok, &$fail) {
+            foreach ($ids as $id) {
+                $res = match ($action) {
+                    'status' => $this->save($module, ['status' => (int) $value], $id),
+                    'type' => $this->save($module, ['type_id' => (int) $value], $id),
+                    'slot' => $this->save($module, ['slot' => (string) $value], $id),
+                    'group' => $this->save($module, ['group_id' => (int) $value], $id),
+                    'engine' => $this->save($module, ['engine' => (string) $value], $id),
+                    'points' => $this->adjustMemberPoints($id, (int) $value),
+                    'offline' => $module === 'playfails'
+                        ? app(\App\Services\Video\SiteOpsService::class)->disablePlayFailSource($id)
+                        : Result::fail('不支持的操作'),
+                    'read' => ($module === 'pms' || $module === 'notifies')
+                        ? $this->save($module, ['is_read' => 1], $id)
+                        : Result::fail('不支持的操作'),
+                    'delete' => $this->delete($module, $id),
+                    default => Result::fail('不支持的操作'),
+                };
+                if (($res['code'] ?? 1) === 0) {
+                    $ok++;
+                } else {
+                    $fail++;
+                }
             }
-        }
+        });
         if ($ok === 0) {
             return Result::fail('操作失败');
         }
 
-        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 条，'.$fail.' 条未处理') : '操作成功');
+        $msg = $fail > 0 ? ('完成 '.$ok.' 条，'.$fail.' 条未处理') : '操作成功';
+
+        return $this->loggedModule(
+            $module,
+            'batch',
+            AdminOpLog::moduleBatchSummary($module, $action, $value, $ok),
+            0,
+            Result::success(['ok' => $ok, 'fail' => $fail], $msg),
+            ['count' => $ok, 'action' => $action]
+        );
     }
 
     private function adjustMemberPoints(int $id, int $delta): array
@@ -2138,6 +2290,73 @@ class SiteModuleService
     }
 
     /** @return array<string, int> */
+    public function withdrawQueues(): array
+    {
+        $zero = ['all' => 0, 'pending' => 0, 'paid' => 0, 'rejected' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('member_withdraws')) {
+                return $zero;
+            }
+            $timeCol = Schema::hasColumn('member_withdraws', 'created_at') ? 'created_at' : 'updated_at';
+
+            return [
+                'all' => (int) MemberWithdraw::query()->count(),
+                'pending' => (int) MemberWithdraw::query()->where('status', 0)->count(),
+                'paid' => (int) MemberWithdraw::query()->where('status', 1)->count(),
+                'rejected' => (int) MemberWithdraw::query()->where('status', 2)->count(),
+                'today' => (int) MemberWithdraw::query()->where($timeCol, '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateWithdraws(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            if ($mid > 0) {
+                $ids[] = $mid;
+            }
+        }
+        $members = [];
+        if ($ids !== [] && Schema::hasTable('members')) {
+            try {
+                $cols = ['id', 'name', 'email'];
+                if (Schema::hasColumn('members', 'points')) {
+                    $cols[] = 'points';
+                }
+                $members = Member::query()->whereIn('id', array_values(array_unique($ids)))->get($cols)->keyBy('id');
+            } catch (\Throwable) {
+                $members = [];
+            }
+        }
+        $statuses = ['0' => '待审', '1' => '已打款', '2' => '拒绝'];
+        foreach ($rows as &$row) {
+            $mid = (int) ($row['member_id'] ?? 0);
+            $member = $members[$mid] ?? null;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) ($member->email ?? '') : '';
+            $row['member_points'] = ($member && isset($member->points)) ? (int) $member->points : null;
+            $fen = (int) ($row['amount'] ?? 0);
+            $row['amount_yuan'] = number_format($fen / 100, 2, '.', '');
+            $ts = (int) ($row['created_at'] ?? 0);
+            if ($ts <= 0) {
+                $ts = (int) ($row['updated_at'] ?? 0);
+            }
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $st = (int) ($row['status'] ?? 0);
+            $row['status_label'] = $statuses[(string) $st] ?? '待审';
+            $row['pending'] = $st === 0 ? 1 : 0;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
     public function groupQueues(): array
     {
         $zero = ['all' => 0, 'on' => 0, 'off' => 0];
@@ -2232,6 +2451,86 @@ class SiteModuleService
             $member = $members[$usedBy] ?? null;
             $row['member_name'] = $member ? (string) $member->name : '';
             $row['member_email'] = $member ? (string) $member->email : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @return array<string, int> */
+    public function inviteQueues(): array
+    {
+        $zero = ['all' => 0, 'unused' => 0, 'used' => 0, 'void' => 0, 'today' => 0];
+        try {
+            if (! Schema::hasTable('member_invites')) {
+                return $zero;
+            }
+
+            return [
+                'all' => (int) MemberInvite::query()->count(),
+                'unused' => (int) MemberInvite::query()->where('status', 1)->where('used_by', 0)->count(),
+                'used' => (int) MemberInvite::query()->where('used_by', '>', 0)->count(),
+                'void' => (int) MemberInvite::query()->where('status', 0)->where('used_by', 0)->count(),
+                'today' => (int) MemberInvite::query()->where('created_at', '>=', strtotime('today'))->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateInvites(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $owner = (int) ($row['member_id'] ?? 0);
+            $usedBy = (int) ($row['used_by'] ?? 0);
+            if ($owner > 0) {
+                $ids[] = $owner;
+            }
+            if ($usedBy > 0) {
+                $ids[] = $usedBy;
+            }
+        }
+        $members = [];
+        if ($ids !== [] && Schema::hasTable('members')) {
+            try {
+                $members = Member::query()
+                    ->whereIn('id', array_values(array_unique($ids)))
+                    ->get(['id', 'name', 'email'])
+                    ->keyBy('id')
+                    ->all();
+            } catch (\Throwable) {
+                $members = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $ownerId = (int) ($row['member_id'] ?? 0);
+            $usedBy = (int) ($row['used_by'] ?? 0);
+            $status = (int) ($row['status'] ?? 1);
+            if ($usedBy > 0) {
+                $row['state'] = 'used';
+                $row['status_label'] = '已用';
+                $row['used'] = 1;
+            } elseif ($status !== 1) {
+                $row['state'] = 'void';
+                $row['status_label'] = '作废';
+                $row['used'] = 0;
+            } else {
+                $row['state'] = 'unused';
+                $row['status_label'] = '未用';
+                $row['used'] = 0;
+            }
+            $owner = $members[$ownerId] ?? null;
+            $user = $members[$usedBy] ?? null;
+            $row['owner_name'] = $ownerId > 0
+                ? ($owner ? (string) $owner->name : ('会员 #'.$ownerId))
+                : '系统';
+            $row['used_name'] = $usedBy > 0
+                ? ($user ? (string) $user->name : ('会员 #'.$usedBy))
+                : '';
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
         }
         unset($row);
 
@@ -3585,7 +3884,7 @@ class SiteModuleService
             return Result::fail('接入失败');
         }
 
-        return Result::success(['id' => $newId, 'existed' => false], '已接入采集源');
+        return $this->loggedModule('unions', 'adopt', '接入了资源联盟《'.$name.'》', $id, Result::success(['id' => $newId, 'existed' => false], '已接入采集源'));
     }
 
     /** @param list<mixed> $ids */
@@ -3594,22 +3893,24 @@ class SiteModuleService
         $created = 0;
         $existed = 0;
         $fail = 0;
-        foreach ($ids as $id) {
-            $id = (int) $id;
-            if ($id < 1) {
-                continue;
+        AdminOpLog::quiet(function () use ($ids, &$created, &$existed, &$fail) {
+            foreach ($ids as $id) {
+                $id = (int) $id;
+                if ($id < 1) {
+                    continue;
+                }
+                $res = $this->adoptUnion($id);
+                if ((int) ($res['code'] ?? 1) !== 0) {
+                    $fail++;
+                    continue;
+                }
+                if (! empty($res['data']['existed'])) {
+                    $existed++;
+                } else {
+                    $created++;
+                }
             }
-            $res = $this->adoptUnion($id);
-            if ((int) ($res['code'] ?? 1) !== 0) {
-                $fail++;
-                continue;
-            }
-            if (! empty($res['data']['existed'])) {
-                $existed++;
-            } else {
-                $created++;
-            }
-        }
+        });
         if ($created + $existed === 0) {
             return Result::fail($fail > 0 ? '没有接入成功' : '请先勾选');
         }
@@ -3617,8 +3918,12 @@ class SiteModuleService
         if ($existed > 0) {
             $msg .= '，'.$existed.' 个本来就在采集源里';
         }
+        $result = Result::success(['created' => $created, 'existed' => $existed, 'fail' => $fail], $msg);
+        if ($created > 0) {
+            return $this->loggedModule('unions', 'adopt', '接入了 '.$created.' 条资源联盟', 0, $result, ['count' => $created]);
+        }
 
-        return Result::success(['created' => $created, 'existed' => $existed, 'fail' => $fail], $msg);
+        return $result;
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
@@ -3778,7 +4083,13 @@ class SiteModuleService
             ]);
         }
 
-        return Result::success([], '已绑定 '.count($list).' 部');
+        return $this->loggedModule(
+            'topics',
+            'save',
+            '给专题《'.trim((string) $topic->name).'》绑了 '.count($list).' 部影片',
+            $topicId,
+            Result::success([], '已绑定 '.count($list).' 部')
+        );
     }
 
     private function uniqueCardCode(): string
@@ -3786,6 +4097,15 @@ class SiteModuleService
         do {
             $code = strtoupper(Str::random(16));
         } while (VideoCard::query()->where('code', $code)->exists());
+
+        return $code;
+    }
+
+    private function uniqueInviteCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (MemberInvite::query()->where('code', $code)->exists());
 
         return $code;
     }
@@ -3809,12 +4129,19 @@ class SiteModuleService
             $codes[] = $code;
         }
 
-        return Result::success(['codes' => $codes], '已生成 '.$count.' 张');
+        return $this->loggedModule(
+            'cards',
+            'generate',
+            '生成了 '.$count.' 张积分卡密',
+            0,
+            Result::success(['codes' => $codes], '已生成 '.$count.' 张'),
+            ['count' => $count, 'points' => $points]
+        );
     }
 
     public function generateInvites(int $count, int $points, int $memberId = 0): array
     {
-        if (! \Illuminate\Support\Facades\Schema::hasTable('member_invites')) {
+        if (! Schema::hasTable('member_invites')) {
             return Result::fail('邀请码表不存在');
         }
         $count = min(200, max(1, $count));
@@ -3823,11 +4150,8 @@ class SiteModuleService
         $now = time();
         $codes = [];
         for ($i = 0; $i < $count; $i++) {
-            $code = strtoupper(Str::random(8));
-            while (\App\Models\Member\MemberInvite::query()->where('code', $code)->exists()) {
-                $code = strtoupper(Str::random(8));
-            }
-            \App\Models\Member\MemberInvite::query()->create([
+            $code = $this->uniqueInviteCode();
+            MemberInvite::query()->create([
                 'code' => $code,
                 'member_id' => $memberId,
                 'used_by' => 0,
@@ -3838,7 +4162,14 @@ class SiteModuleService
             $codes[] = $code;
         }
 
-        return Result::success(['codes' => $codes], '已生成 '.$count.' 个');
+        return $this->loggedModule(
+            'invites',
+            'generate',
+            '生成了 '.$count.' 个邀请码',
+            $memberId,
+            Result::success(['codes' => $codes], '已生成 '.$count.' 个'),
+            ['count' => $count, 'points' => $points]
+        );
     }
 
     public function runCollectTask(int $id): array
@@ -3856,6 +4187,21 @@ class SiteModuleService
         $task->save();
 
         return $result;
+    }
+
+    /**
+     * @param  array<string, mixed>  $extra
+     * @param  array{code?:int,msg?:string,data?:mixed}  $result
+     * @return array{code?:int,msg?:string,data?:mixed}
+     */
+    private function loggedModule(string $module, string $action, string $summary, int $targetId, array $result, array $extra = []): array
+    {
+        return AdminOpLog::ifOk($result, $action, $summary, [
+            'module' => AdminOpLog::object($module),
+            'target_type' => $module,
+            'target_id' => $targetId,
+            'payload' => $extra,
+        ]);
     }
 
     private function hasColumn(Model $model, string $column): bool

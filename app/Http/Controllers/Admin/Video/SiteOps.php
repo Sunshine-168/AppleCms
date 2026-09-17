@@ -7,6 +7,7 @@ use App\Services\Video\DiskHtmlService;
 use App\Services\Video\HtmlCacheService;
 use App\Services\Video\SiteOpsService;
 use App\Services\Video\VideoSettingService;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,7 +51,15 @@ class SiteOps extends Controller
 
     public function templateSave(Request $request): JsonResponse
     {
-        $data = $this->ops->saveThemeFile((string) $request->input('path', ''), (string) $request->input('content', ''));
+        $path = (string) $request->input('path', '');
+        $data = $this->ops->saveThemeFile($path, (string) $request->input('content', ''));
+        if ((int) ($data['code'] ?? 1) === 0) {
+            AdminOpLog::write('save', '保存了主题模板'.($path !== '' ? ' '.$path : ''), [
+                'module' => '模板',
+                'target_type' => 'templates',
+                'payload' => ['path' => $path],
+            ]);
+        }
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
@@ -124,6 +133,10 @@ class SiteOps extends Controller
             return redirect('/admin/video/make')->with('error', (string) ($saved['msg'] ?? '没能保存'));
         }
         $this->htmlCache->forgetAll('settings');
+        AdminOpLog::write('save', $on ? '开启了全页缓存' : '关闭了全页缓存', [
+            'module' => '缓存',
+            'target_type' => 'cache',
+        ]);
 
         return redirect('/admin/video/make')->with('status', $on ? '已开启全页缓存' : '已关闭全页缓存');
     }
@@ -131,6 +144,10 @@ class SiteOps extends Controller
     public function makeCacheClear(): RedirectResponse
     {
         $this->htmlCache->forgetAll('admin:clear');
+        AdminOpLog::write('flush', '清空了全页缓存', [
+            'module' => '缓存',
+            'target_type' => 'cache',
+        ]);
 
         return redirect('/admin/video/make')->with('status', '已清空。访客下一次打开会重新生成页面。');
     }

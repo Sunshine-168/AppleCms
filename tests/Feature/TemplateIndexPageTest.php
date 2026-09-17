@@ -9,10 +9,7 @@ class TemplateIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_template_index_is_a_page_picker_not_a_raw_file_dump(): void
@@ -28,16 +25,35 @@ class TemplateIndexPageTest extends TestCase
         $this->assertStringContainsString('站点设置 → 外观', $html);
         $this->assertStringContainsString('搜页面', $html);
         $this->assertStringContainsString('tpl-group', $html);
+        $this->assertStringContainsString('data-fold', $html);
+        $this->assertStringContainsString('tpl-group-toggle', $html);
+        $this->assertStringContainsString('aria-expanded="true"', $html);
+        $this->assertStringContainsString('laravideo.tpl.fold.', $html);
         $this->assertStringContainsString('插入附件', $html);
         $this->assertStringContainsString('/admin/system/attachments', $html);
+        $this->assertStringContainsString('hideFoot', $html);
+        $this->assertStringContainsString('还没打开页面，点插入只会复制地址', $html);
+        $this->assertStringContainsString('把 Logo、海报拖到这里', $html);
+        $this->assertStringContainsString('还没有可用的图', $html);
+        $this->assertStringContainsString('没有叫这个名字的文件', $html);
+        $this->assertStringContainsString('复制地址', $html);
+        $this->assertStringContainsString('搜文件名，如 logo、海报', $html);
+        $this->assertStringContainsString('去附件库', $html);
+        $this->assertStringContainsString('tpl-picker-card', $html);
         $this->assertStringContainsString('codemirror.min.js', $html);
         $this->assertStringContainsString('blade.js', $html);
         $this->assertStringContainsString('TplCodeEditor', $html);
         $this->assertStringContainsString('saveFile', $html);
+        $this->assertStringContainsString('没有改动，不用保存', $html);
         $this->assertStringContainsString('绿色是 Blade', $html);
         $this->assertStringContainsString('@vod', $html);
+        $this->assertStringContainsString('紫色是', $html);
+        $this->assertStringContainsString('@php', $html);
         $this->assertStringContainsString('Ctrl+S 直接保存', $html);
         $this->assertStringContainsString('id="tpl-find"', $html);
+        $this->assertStringContainsString('id="tpl-find-bar"', $html);
+        $this->assertStringContainsString('查找：', $html);
+        $this->assertStringContainsString('可用 /正则/', $html);
         $this->assertStringContainsString('tpl-meta-pos', $html);
         $this->assertStringContainsString('没有匹配的页面', $html);
         $this->assertStringContainsString('sniffEol', $html);
@@ -52,14 +68,20 @@ class TemplateIndexPageTest extends TestCase
             ->assertOk()
             ->assertSee('laravel-blade', false)
             ->assertSee('BLADE_WORDS', false)
-            ->assertSee('vod[A-Za-z]*', false);
+            ->assertSee('vod[A-Za-z]*', false)
+            ->assertSee('exprToken', false)
+            ->assertSee('after-dir', false)
+            ->assertSee('after-php', false)
+            ->assertDontSee('eatParenArgs', false);
 
         $this->get('/plugin-assets/code-editor/boot.js')
             ->assertOk()
             ->assertSee('clearHistory', false)
             ->assertSee('查找', false)
             ->assertSee('findPersistent', false)
-            ->assertSee('size: fit', false);
+            ->assertSee('size: fit', false)
+            ->assertSee('bottom: false', false)
+            ->assertDontSee('bottom: true', false);
 
         $this->get('/plugin-assets/code-editor/vendor/codemirror.min.js')
             ->assertOk();

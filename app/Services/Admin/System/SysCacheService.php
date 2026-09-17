@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin\System;
 
+use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -53,7 +54,10 @@ class SysCacheService
 
             Cache::store()->flush();
 
-            return Result::success([], '缓存已清空');
+            return AdminOpLog::ifOk(Result::success([], '缓存已清空'), 'flush', '清空了缓存', [
+                'module' => '缓存',
+                'target_type' => 'cache',
+            ]);
 
         } catch (\Throwable $e) {
 
@@ -101,9 +105,13 @@ class SysCacheService
                 return Result::fail(Artisan::output());
             }
 
-            return Result::success([
+            return AdminOpLog::ifOk(Result::success([
                 'output' => Artisan::output()
-            ], '执行成功');
+            ], '执行成功'), 'run', '执行了缓存命令 '.$command, [
+                'module' => '缓存',
+                'target_type' => 'cache',
+                'payload' => ['command' => $command],
+            ]);
 
         } catch (\Throwable $e) {
 

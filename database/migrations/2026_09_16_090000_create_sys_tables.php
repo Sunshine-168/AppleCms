@@ -163,6 +163,7 @@ return new class extends Migration
                 $table->unsignedInteger('uid')->default(0);
                 $table->string('username', 50)->default('');
                 $table->string('title', 100)->default('');
+                $table->string('action', 50)->default('');
                 $table->string('permission', 100)->default('');
                 $table->string('module', 50)->default('');
                 $table->string('method', 10)->default('');

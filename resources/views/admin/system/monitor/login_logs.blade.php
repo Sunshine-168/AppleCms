@@ -13,7 +13,10 @@
 <div class="card card-panel log-index login-log-index">
     <div class="card-header">
         <span>登录日志 <em id="login-log-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/user">管理员</a>
+        <span>
+            <a class="btn btn-muted btn-sm" href="/admin/system/monitor/operate-logs">操作日志</a>
+            <a class="btn btn-muted btn-sm" href="/admin/user">管理员</a>
+        </span>
     </div>
     <div class="card-body">
         <form class="filter-bar log-find" id="login-log-search" onsubmit="return false;">

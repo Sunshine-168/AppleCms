@@ -3,6 +3,7 @@
 namespace App\Services\Video;
 
 use App\Models\Video\VideoOption;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -167,7 +168,19 @@ class VideoSettingService
         Cache::flush();
         $this->applyRuntime();
 
-        return Result::success([], '已保存');
+        $tab = trim((string) ($data['tab'] ?? ''));
+        $summary = match ($tab) {
+            'look' => '改了站点外观设置',
+            'interact' => '改了站点互动设置',
+            'more' => '改了站点更多设置',
+            default => '改了站点设置',
+        };
+
+        return AdminOpLog::ifOk(Result::success([], '已保存'), 'save', $summary, [
+            'module' => '站点设置',
+            'target_type' => 'settings',
+            'payload' => ['tab' => $tab],
+        ]);
     }
 
     /** 只改列出的项，不清整站缓存（给静态生成工作台用） */

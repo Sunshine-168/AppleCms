@@ -48,8 +48,10 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/welcome/stats', [Index::class, 'welcomeStats'])->name('admin.welcome.stats');// 欢迎页统计数据
     Route::get('/more', [Index::class, 'more'])->name('admin.more');
     Route::get('/plugins', [PluginController::class, 'index'])->name('admin.plugins');
+    Route::post('/plugins/upload', [PluginController::class, 'upload'])->name('admin.plugins.upload');
     Route::get('/plugins/{id}', [PluginController::class, 'show'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.show');
     Route::post('/plugins/{id}/toggle', [PluginController::class, 'toggle'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.toggle');
+    Route::post('/plugins/{id}/uninstall', [PluginController::class, 'uninstall'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.uninstall');
     Route::post('/ui-locale', [Index::class, 'switchUi'])->name('admin.ui-locale');
     Route::get('/stats', [StatController::class, 'index'])->name('admin.stats.index');
     Route::get('/stats/export', [StatController::class, 'export'])->name('admin.stats.export');

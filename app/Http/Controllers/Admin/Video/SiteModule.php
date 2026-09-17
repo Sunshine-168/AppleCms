@@ -172,6 +172,18 @@ class SiteModule extends Controller
                 'memberId' => (int) request()->query('member', 0),
             ]);
         }
+        if ($module === 'withdraws') {
+            return view('admin.video.withdraws', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->withdrawQueues(),
+            ]);
+        }
+        if ($module === 'invites') {
+            return view('admin.video.invites', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->inviteQueues(),
+            ]);
+        }
         if ($module === 'audits') {
             return view('admin.video.audits', [
                 'title' => $cfg['title'],

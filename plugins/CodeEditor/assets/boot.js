@@ -37,7 +37,7 @@
             styleActiveLine: true,
             viewportMargin: 80,
             phrases: PHRASES,
-            search: { bottom: true },
+            search: { bottom: false },
             extraKeys: {
                 'Ctrl-S': function () {
                     if (opts.onSave) opts.onSave();

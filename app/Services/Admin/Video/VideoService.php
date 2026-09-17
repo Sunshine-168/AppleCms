@@ -12,6 +12,7 @@ use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTypeModel;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Exception;
@@ -471,7 +472,7 @@ class VideoService
         $actorsText = (string)($data['actors_text'] ?? '');
 
         try {
-            return DB::transaction(function () use ($id, $payload, $now, $tagsText, $actorsText) {
+            $result = DB::transaction(function () use ($id, $payload, $now, $tagsText, $actorsText) {
                 if ($id)
                 {
                     $exists = $this->videoModel->findById($id);
@@ -522,6 +523,17 @@ class VideoService
         {
             return Result::fail($e->getMessage() ?: '操作失败');
         }
+        if ((int) ($result['code'] ?? 1) === 0) {
+            $vid = (int) ($result['data']['id'] ?? $id ?? 0);
+            AdminOpLog::write('save', ($id ? '保存了' : '新增了').AdminOpLog::named('影片', $title, $vid), [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'target_id' => $vid,
+                'payload' => ['id' => $vid, 'title' => $title],
+            ]);
+        }
+
+        return $result;
     }
     /**
      * 删除视频
@@ -533,16 +545,27 @@ class VideoService
         {
             return Result::fail('数据不存在');
         }
+        $title = (string) ($info['title'] ?? '');
         if (Schema::hasColumn('videos', 'deleted_at')) {
             VideoModel::query()->where('id', $id)->update([
                 'deleted_at' => time(),
                 'updated_at' => time(),
             ]);
 
-            return Result::success([], '已移入回收站');
+            return AdminOpLog::ifOk(Result::success([], '已移入回收站'), 'delete', '删除了'.AdminOpLog::named('影片', $title, $id), [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'target_id' => $id,
+            ]);
         }
 
-        return $this->purgeVideo($id);
+        $purged = $this->purgeVideo($id);
+
+        return AdminOpLog::ifOk($purged, 'delete', '删除了'.AdminOpLog::named('影片', $title, $id), [
+            'module' => '影片',
+            'target_type' => 'videos',
+            'target_id' => $id,
+        ]);
     }
 
     public function restoreVideo(int $id): array
@@ -1709,31 +1732,55 @@ class VideoService
         }
 
         $now = time();
+        $count = count($ids);
         if ($action === 'delete') {
-            foreach ($ids as $id) {
-                $this->deleteVideo($id);
-            }
-            return Result::success(['count' => count($ids)]);
+            AdminOpLog::quiet(function () use ($ids) {
+                foreach ($ids as $id) {
+                    $this->deleteVideo($id);
+                }
+            });
+
+            return AdminOpLog::ifOk(Result::success(['count' => $count]), 'batch', '批量删除了 '.$count.' 部影片', [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'payload' => ['count' => $count, 'action' => 'delete'],
+            ]);
         }
         if ($action === 'restore') {
             foreach ($ids as $id) {
                 $this->restoreVideo($id);
             }
 
-            return Result::success(['count' => count($ids)]);
+            return AdminOpLog::ifOk(Result::success(['count' => $count]), 'batch', '从回收站恢复了 '.$count.' 部影片', [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'payload' => ['count' => $count, 'action' => 'restore'],
+            ]);
         }
         if ($action === 'purge') {
-            foreach ($ids as $id) {
-                $this->purgeVideo($id);
-            }
+            AdminOpLog::quiet(function () use ($ids) {
+                foreach ($ids as $id) {
+                    $this->purgeVideo($id);
+                }
+            });
 
-            return Result::success(['count' => count($ids)]);
+            return AdminOpLog::ifOk(Result::success(['count' => $count]), 'batch', '彻底删除了 '.$count.' 部影片', [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'payload' => ['count' => $count, 'action' => 'purge'],
+            ]);
         }
         if ($action === 'merge') {
             return $this->mergeVideos($ids, (int) $value);
         }
         if ($action === 'replace_url') {
-            return app(\App\Services\Video\SiteOpsService::class)->replacePlayUrl('', '', $ids, (string) $value);
+            $replaced = app(\App\Services\Video\SiteOpsService::class)->replacePlayUrl('', '', $ids, (string) $value);
+
+            return AdminOpLog::ifOk($replaced, 'batch', '批量替换了 '.$count.' 部影片的播放地址', [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'payload' => ['count' => $count, 'action' => 'replace_url'],
+            ]);
         }
 
         $payload = ['updated_at' => $now];
@@ -1756,7 +1803,23 @@ class VideoService
 
         $ok = $this->videoModel->updateByCondition([['id', 'in', $ids]], $payload);
 
-        return $ok ? Result::success(['count' => count($ids)]) : Result::fail();
+        $label = match ($action) {
+            'status' => ((int) $value === 1 ? '批量上架了 ' : '批量下架了 ').$count.' 部影片',
+            'recommend' => ((int) $value === 1 ? '批量推荐了 ' : '批量取消推荐了 ').$count.' 部影片',
+            'hot' => ((int) $value === 1 ? '批量标热了 ' : '批量取消热门了 ').$count.' 部影片',
+            'lock' => ((int) $value === 1 ? '批量锁定了 ' : '批量解锁了 ').$count.' 部影片',
+            'type' => '批量改了 '.$count.' 部影片的分类',
+            'points' => '批量改了 '.$count.' 部影片的积分',
+            default => '批量处理了 '.$count.' 部影片',
+        };
+
+        return $ok
+            ? AdminOpLog::ifOk(Result::success(['count' => $count]), 'batch', $label, [
+                'module' => '影片',
+                'target_type' => 'videos',
+                'payload' => ['count' => $count, 'action' => $action],
+            ])
+            : Result::fail();
     }
 
     public function mergeVideos(array $ids, int $keepId = 0): array
@@ -1773,13 +1836,20 @@ class VideoService
             return Result::fail('保留影片不存在');
         }
         $drop = array_values(array_filter($ids, fn ($id) => $id !== $keepId));
-        foreach ($drop as $id) {
-            $this->videoSourceModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId, 'updated_at' => time()]);
-            $this->videoEpisodeModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId]);
-            $this->deleteVideo($id);
-        }
+        AdminOpLog::quiet(function () use ($drop, $keepId) {
+            foreach ($drop as $id) {
+                $this->videoSourceModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId, 'updated_at' => time()]);
+                $this->videoEpisodeModel->updateByCondition([['video_id', '=', $id]], ['video_id' => $keepId]);
+                $this->deleteVideo($id);
+            }
+        });
 
-        return Result::success(['keep_id' => $keepId, 'merged' => count($drop)], '已合并到 ID '.$keepId);
+        return AdminOpLog::ifOk(
+            Result::success(['keep_id' => $keepId, 'merged' => count($drop)], '已合并到 ID '.$keepId),
+            'batch',
+            '合并了 '.count($drop).' 部影片到《'.(string) ($keep['title'] ?? '').'》',
+            ['module' => '影片', 'target_type' => 'videos', 'target_id' => $keepId]
+        );
     }
 
     public function disableSource(int $sourceId): array
@@ -1789,7 +1859,14 @@ class VideoService
             return Result::fail('线路不存在');
         }
         $ok = $this->videoSourceModel->updateById($sourceId, ['status' => 0, 'updated_at' => time()]);
+        $name = (string) ($row['name'] ?? '');
 
-        return $ok ? Result::success([], '已下线该线路') : Result::fail();
+        return $ok
+            ? AdminOpLog::ifOk(Result::success([], '已下线该线路'), 'save', '下线了线路'.($name !== '' ? '《'.$name.'》' : ' #'.$sourceId), [
+                'module' => '线路',
+                'target_type' => 'sources',
+                'target_id' => $sourceId,
+            ])
+            : Result::fail();
     }
 }

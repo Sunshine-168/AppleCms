@@ -8,6 +8,9 @@
         <div class="plugin-card-actions">
             <a class="btn btn-muted btn-sm" href="{{ route('admin.plugins') }}">{{ admin_t('plugin.back') }}</a>
             @include('admin.plugins._toggle', ['plugin' => $plugin])
+            @if(! empty($plugin['uploaded']))
+                <button type="button" class="btn btn-muted btn-sm js-plugin-uninstall" data-id="{{ $plugin['id'] }}">{{ admin_t('plugin.uninstall') }}</button>
+            @endif
         </div>
     </div>
     <div class="card-body">
@@ -77,4 +80,5 @@
 @endif
 @endsection
 
+@include('admin.plugins._boot')
 @include('admin.partials.site-save')

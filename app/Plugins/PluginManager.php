@@ -7,10 +7,44 @@ use RuntimeException;
 
 class PluginManager
 {
+    public const ID_PATTERN = '/^[a-z][a-z0-9_]{0,62}$/';
+
+    public const SOURCE_UPLOAD = 'upload';
+
     private static bool $autoload = false;
 
     /** @var list<array<string, mixed>>|null */
     private ?array $manifests = null;
+
+    public static function isValidId(string $id): bool
+    {
+        return (bool) preg_match(self::ID_PATTERN, $id);
+    }
+
+    public function root(): string
+    {
+        return base_path('plugins');
+    }
+
+    public function refresh(): void
+    {
+        $this->manifests = null;
+    }
+
+    public function directoryFor(string $id): ?string
+    {
+        foreach ($this->manifests() as $meta) {
+            if ((string) ($meta['id'] ?? '') !== $id) {
+                continue;
+            }
+            $file = $meta['_file'] ?? null;
+            if (is_string($file) && $file !== '') {
+                return dirname($file);
+            }
+        }
+
+        return null;
+    }
 
     public function registerAutoload(): void
     {
@@ -151,6 +185,7 @@ class PluginManager
                 'group' => (string) ($meta['group'] ?? 'other'),
                 'pages' => $this->configPages($meta),
                 'manage' => $this->manageLinks($meta),
+                'uploaded' => ($meta['source'] ?? '') === self::SOURCE_UPLOAD,
             ];
         }
         usort($out, static function (array $a, array $b): int {
@@ -237,7 +272,7 @@ class PluginManager
 
     private function manifestFile(string $id): string
     {
-        if (! preg_match('/^[a-z][a-z0-9_]*$/', $id)) {
+        if (! self::isValidId($id)) {
             throw new RuntimeException('无效插件');
         }
         foreach ($this->manifests() as $meta) {

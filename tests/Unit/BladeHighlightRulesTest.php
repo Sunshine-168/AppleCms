@@ -53,6 +53,10 @@ class BladeHighlightRulesTest extends TestCase
         $this->assertStringContainsString('cutRe', $js);
         $this->assertStringContainsString('htmlMode.token', $js);
         $this->assertStringNotContainsString('overlayMode', $js);
+        $this->assertStringContainsString('exprToken', $js);
+        $this->assertStringContainsString('after-dir', $js);
+        $this->assertStringContainsString("kind === 'args'", $js);
+        $this->assertStringNotContainsString('eatParenArgs', $js);
     }
 
     public function test_requested_directives_match_the_highlighter_regex(): void

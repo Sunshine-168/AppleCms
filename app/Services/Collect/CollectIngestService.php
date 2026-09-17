@@ -10,6 +10,7 @@ use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTypeModel;
 use App\Services\Video\SynonymService;
+use App\Support\AdminOpLog;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Illuminate\Support\Facades\DB;
@@ -106,7 +107,11 @@ class CollectIngestService
         $source->updated_at = time();
         $source->save();
 
-        return Result::success(['bind' => $clean]);
+        return AdminOpLog::ifOk(Result::success(['bind' => $clean]), 'save', '绑定了采集源《'.trim((string) $source->name).'》的分类', [
+            'module' => '采集源',
+            'target_type' => 'collects',
+            'target_id' => $sourceId,
+        ]);
     }
 
     public function ingestRemote(array $item, bool $allowTemp = true): array
@@ -217,13 +222,18 @@ class CollectIngestService
 
         $this->persistCollectState($source, $lastPage, $created, $updated, "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}", true, $skipped);
 
-        return Result::success([
+        return AdminOpLog::ifOk(Result::success([
             'page' => $pageInfo,
             'created' => $created,
             'updated' => $updated,
             'skipped' => $skipped,
             'logs' => array_slice($logs, 0, 80),
-        ], "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}");
+        ], "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}"), 'run', '运行了采集《'.trim((string) $source->name).'》', [
+            'module' => '采集源',
+            'target_type' => 'collects',
+            'target_id' => $sourceId,
+            'payload' => ['created' => $created, 'updated' => $updated, 'skipped' => $skipped],
+        ]);
     }
 
     public function resume(int $sourceId, array $params = []): array

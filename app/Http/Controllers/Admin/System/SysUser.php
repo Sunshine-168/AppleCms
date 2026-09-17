@@ -277,7 +277,14 @@ class SysUser extends Controller
      */
     public function showSystemOperateLogs(): View|Factory
     {
-        return view('admin.system.monitor.operate_logs');
+        $now = now();
+
+        return view('admin.system.monitor.operate_logs', [
+            'today' => $now->toDateString(),
+            'yesterday' => $now->copy()->subDay()->toDateString(),
+            'weekFrom' => $now->copy()->subDays(6)->toDateString(),
+            'monthFrom' => $now->copy()->subDays(29)->toDateString(),
+        ]);
     }
 
     /**
@@ -287,16 +294,16 @@ class SysUser extends Controller
      */
     public function getSystemOperateLogLists(Request $request): JsonResponse
     {
+        $q = (string) $request->input('q', '');
+        $username = (string) $request->input('username', '');
         $params = [
-            'username'      => (string) $request->input('username', ''),
-            'login_ip'      => (string) $request->input('login_ip', ''),
-            'method'        => (string) $request->input('method', ''),
-            'url'           => (string) $request->input('url', ''),
-            'route'         => (string) $request->input('route', ''),
-            'status'        => $request->input('status', ''),
-            'start_time'    => (string) $request->input('start_time', ''),
-            'end_time'      => (string) $request->input('end_time', ''),
-            'limit'         => (int) $request->input('limit', 10),
+            'q' => $q !== '' ? $q : $username,
+            'username' => $username,
+            'login_ip' => (string) ($request->input('login_ip', '') ?: $request->input('ip', '')),
+            'mine' => $request->boolean('mine'),
+            'start_time' => (string) ($request->input('start_time', '') ?: $request->input('from', '')),
+            'end_time' => (string) ($request->input('end_time', '') ?: $request->input('to', '')),
+            'limit' => (int) $request->input('limit', 20),
         ];
 
         $data = $this->systemUserService->getSysOperateLogLists($params);
