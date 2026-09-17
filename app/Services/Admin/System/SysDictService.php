@@ -11,31 +11,144 @@ use Illuminate\Support\Facades\Cache;
 class SysDictService
 {
     public const VALUE_TYPES = [
-        0 => '文本',
-        1 => '整数',
-        2 => '小数',
-        3 => 'JSON',
-        4 => '数组',
+        0 => '字符串',
+        1 => '数字',
+        2 => '浮点',
+        3 => 'JSON对象',
+        4 => 'JSON数组',
         5 => '枚举',
-        6 => '长文本',
+        6 => '富文本',
     ];
 
     public SysDictModel $sysDictModel;
 
-    public function __construct()
-    {
+    public function __construct(
+        protected SysDictCatalog $catalog = new SysDictCatalog()
+    ) {
         $this->sysDictModel = new SysDictModel();
     }
 
     /**
-     * 字典工作台：分组与数量
+     * 字典工作台：目录分类 + 已有条数
      */
     public function pageBoard(): array
     {
+        $groups = $this->groupRows();
+
         return [
-            'types' => $this->typeRows(),
+            'families' => $this->familyRows($groups),
+            'groups' => $groups,
+            'types' => $this->typeRows($groups),
             'queues' => $this->queueCounts(),
+            'ui' => [
+                'title' => '字典',
+                'lead' => '按类型收一组选项。地区、语言、年份启用后会出现在前台筛选。',
+                'compose' => '添加',
+                'add' => '新增字典',
+                'edit' => '编辑字典',
+                'find' => '搜类型、Key 或显示名',
+                'value_types' => self::VALUE_TYPES,
+            ],
         ];
+    }
+
+    /**
+     * 前台筛选 / 后台填片用的选项。字典有启用项时优先。
+     *
+     * @return list<string>
+     */
+    public function filterChoices(string $name): array
+    {
+        $type = $this->catalog->filterTypeMap()[$name] ?? '';
+        if ($type === '') {
+            return [];
+        }
+
+        return $this->choiceValues($type);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function choiceValues(string $dictType): array
+    {
+        $dictType = trim($dictType);
+        if ($dictType === '' || $this->catalog->isAway($dictType)) {
+            return [];
+        }
+        try {
+            $rows = SysDictModel::query()
+                ->where('dict_type', $dictType)
+                ->where('status', 0)
+                ->orderByDesc('sort')
+                ->orderBy('id')
+                ->get()
+                ->toArray();
+        } catch (\Throwable) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $row) {
+            $item = is_array($row) ? $row : [];
+            $val = trim($this->formatDictValue($item));
+            if ($val === '') {
+                $val = trim((string) ($item['dict_key'] ?? ''));
+            }
+            if ($val !== '' && ! in_array($val, $out, true)) {
+                $out[] = $val;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * 把站点设置里的逗号串拆进当前分类。已有标识不动。
+     */
+    public function importFromSettings(string $dictType): array
+    {
+        $dictType = trim($dictType);
+        $meta = $this->catalog->group($dictType);
+        $key = is_array($meta) ? trim((string) ($meta['setting_key'] ?? '')) : '';
+        if ($key === '') {
+            return Result::fail('这组不能从站点设置拆');
+        }
+        if ($this->catalog->isAway($dictType)) {
+            return Result::fail('这组不在字典表');
+        }
+        $raw = '';
+        try {
+            $raw = trim((string) app(\App\Services\Video\VideoSettingService::class)->get($key, ''));
+        } catch (\Throwable) {
+            $raw = '';
+        }
+        $parts = array_values(array_filter(array_map('trim', preg_split('/[,，]/u', $raw) ?: [])));
+        if ($parts === []) {
+            return Result::fail('站点设置里这串是空的');
+        }
+        $added = 0;
+        $skip = 0;
+        $sort = count($parts);
+        foreach ($parts as $part) {
+            if ($this->sysDictModel->existsBy(['dict_type' => $dictType, 'dict_key' => $part])) {
+                $skip++;
+                $sort--;
+                continue;
+            }
+            $res = $this->addSysSet($dictType, $part, 0, $part, null, $part, $sort, 0, '从站点设置拆入');
+            if ((int) ($res['code'] ?? 1) === 0) {
+                $added++;
+            }
+            $sort--;
+        }
+        if ($added < 1) {
+            return Result::fail($skip > 0 ? '这些项已经在字典里' : '没有拆进任何项');
+        }
+
+        return Result::success([
+            'added' => $added,
+            'skip' => $skip,
+        ], '拆进了 '.$added.' 条'.($skip > 0 ? '，'.$skip.' 条已有没动' : ''));
     }
 
     /**
@@ -52,6 +165,20 @@ class SysDictService
         $dictType = trim($dictType);
         $q = trim($q);
         $status = trim($status);
+
+        if ($this->catalog->isAway($dictType)) {
+            $groups = $this->groupRows();
+
+            return Result::success([
+                'data' => [],
+                'total' => 0,
+                'types' => $this->typeRows($groups),
+                'groups' => $groups,
+                'families' => $this->familyRows($groups),
+                'queues' => $this->queueCounts(),
+                'away' => true,
+            ]);
+        }
 
         if ($dictType !== '')
         {
@@ -89,8 +216,12 @@ class SysDictService
         unset($item);
 
         $data['data'] = $rows;
-        $data['types'] = $this->typeRows();
+        $groups = $this->groupRows();
+        $data['types'] = $this->typeRows($groups);
+        $data['groups'] = $groups;
+        $data['families'] = $this->familyRows($groups);
         $data['queues'] = $this->queueCounts();
+        $data['away'] = false;
 
         return Result::success($data);
     }
@@ -107,7 +238,10 @@ class SysDictService
 
         if ($dictType === '' || $dictKey === '')
         {
-            return Result::fail('请填写分组和标识');
+            return Result::fail('请填写分类和标识');
+        }
+        if ($this->catalog->isAway($dictType)) {
+            return Result::fail('这组不在字典表，请去对应后台');
         }
 
         if ($this->sysDictModel->existsBy(['dict_type' => $dictType, 'dict_key' => $dictKey]))
@@ -115,17 +249,23 @@ class SysDictService
             return Result::fail('该分组下的标识已存在');
         }
 
+        $parsed = $this->normalizeRecord($valueType, $dictValue, $enumLimit, $label, $remark, $sort, $status, $dictKey);
+        if ((int) ($parsed['code'] ?? 1) !== 0) {
+            return $parsed;
+        }
+        $norm = is_array($parsed['data'] ?? null) ? $parsed['data'] : [];
+
         $time = time();
         $insert = array_merge(
-            $this->buildValueFields($valueType, $dictValue, $enumLimit),
+            $norm['fields'],
             [
                 'dict_type' => $dictType,
                 'dict_key' => $dictKey,
-                'value_type' => (int) $valueType,
-                'label' => $label,
-                'sort' => (int) $sort,
-                'status' => (int) $status,
-                'remark' => $remark,
+                'value_type' => (int) $norm['value_type'],
+                'label' => $norm['label'],
+                'sort' => $norm['sort'],
+                'status' => $norm['status'],
+                'remark' => $norm['remark'],
                 'create_time' => $time,
                 'update_time' => $time,
             ]
@@ -159,7 +299,10 @@ class SysDictService
 
         if ($dictType === '' || $dictKey === '')
         {
-            return Result::fail('请填写分组和标识');
+            return Result::fail('请填写分类和标识');
+        }
+        if ($this->catalog->isAway($dictType)) {
+            return Result::fail('这组不在字典表，请去对应后台');
         }
 
         $old = $this->sysDictModel->findById($id);
@@ -179,19 +322,27 @@ class SysDictService
             return Result::fail('该分组下的标识已存在');
         }
 
+        $parsed = $this->normalizeRecord($valueType, $dictValue, $enumLimit, $label, $remark, $sort, $status, $dictKey);
+        if ((int) ($parsed['code'] ?? 1) !== 0) {
+            return $parsed;
+        }
+        $norm = is_array($parsed['data'] ?? null) ? $parsed['data'] : [];
         $update = array_merge(
-            $this->buildValueFields($valueType, $dictValue, $enumLimit),
+            $norm['fields'],
             [
                 'dict_type' => $dictType,
                 'dict_key' => $dictKey,
-                'value_type' => (int) $valueType,
-                'label' => $label,
-                'sort' => (int) $sort,
-                'status' => (int) $status,
-                'remark' => $remark,
+                'value_type' => (int) $norm['value_type'],
+                'label' => $norm['label'],
+                'sort' => $norm['sort'],
+                'status' => $norm['status'],
+                'remark' => $norm['remark'],
                 'update_time' => time(),
             ]
         );
+        if ($this->fingerprint(is_array($old) ? $old : []) === $this->fingerprint(array_merge(is_array($old) ? $old : [], $update))) {
+            return Result::fail('没有任何改动');
+        }
 
         $res = $this->sysDictModel->updateById($id, $update);
         if (!$res)
@@ -260,7 +411,38 @@ class SysDictService
     }
 
     /**
+     * 按值类型校验并落到对应字段。对照 A13：0 字符串 1 数字 2 浮点 3 对象 4 数组 5 枚举 6 富文本。
+     *
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function normalizeRecord(int $valueType, mixed $dictValue, mixed $enumLimit, string $label, string $remark, int $sort, int $status, string $dictKey): array
+    {
+        if (! array_key_exists($valueType, self::VALUE_TYPES)) {
+            return Result::fail('值类型不对');
+        }
+        if (function_exists('mb_strlen') ? mb_strlen($remark) > 200 : strlen($remark) > 200) {
+            return Result::fail('备注不能超过 200 字');
+        }
+        $label = $label !== '' ? $label : $dictKey;
+        $built = $this->buildValueFields($valueType, $dictValue, $enumLimit);
+        if ((int) ($built['code'] ?? 1) !== 0) {
+            return $built;
+        }
+
+        return Result::success([
+            'value_type' => $valueType,
+            'label' => $label,
+            'remark' => $remark,
+            'sort' => $sort,
+            'status' => $status === 1 ? 1 : 0,
+            'fields' => is_array($built['data'] ?? null) ? $built['data'] : [],
+        ]);
+    }
+
+    /**
      * 构建系统字典值字段
+     *
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
      */
     private function buildValueFields(int $valueType, mixed $dictValue, mixed $enumLimit): array
     {
@@ -274,17 +456,189 @@ class SysDictService
         ];
 
         return match ((int) $valueType) {
-            0 => array_merge($fields, ['value_string' => (string) $dictValue]),
-            1 => array_merge($fields, ['value_int' => is_numeric($dictValue) ? (int) $dictValue : 0]),
-            2 => array_merge($fields, ['value_float' => is_numeric($dictValue) ? (float) $dictValue : 0]),
-            3, 4 => array_merge($fields, ['value_json' => $this->ensureJsonString($dictValue)]),
-            5 => array_merge($fields, [
-                'value_json' => $this->ensureJsonString($dictValue),
-                'enum_limit' => $this->ensureJsonString($enumLimit),
-            ]),
-            6 => array_merge($fields, ['value_text' => (string) $dictValue]),
-            default => array_merge($fields, ['value_string' => (string) $dictValue]),
+            0 => Result::success(array_merge($fields, ['value_string' => (string) $dictValue])),
+            1 => $this->intFields($fields, $dictValue),
+            2 => $this->floatFields($fields, $dictValue),
+            3 => $this->jsonObjectFields($fields, $dictValue),
+            4 => $this->jsonArrayFields($fields, $dictValue),
+            5 => $this->enumFields($fields, $dictValue, $enumLimit),
+            6 => Result::success(array_merge($fields, ['value_text' => (string) $dictValue])),
+            default => Result::success(array_merge($fields, ['value_string' => (string) $dictValue])),
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function intFields(array $fields, mixed $dictValue): array
+    {
+        $raw = is_string($dictValue) ? trim($dictValue) : $dictValue;
+        if ($raw === '' || $raw === null) {
+            return Result::fail('请填写数字');
+        }
+        if (is_bool($raw) || ! is_numeric($raw) || ! preg_match('/^-?\d+$/', (string) $raw)) {
+            return Result::fail('数字请填整数');
+        }
+
+        return Result::success(array_merge($fields, ['value_int' => (int) $raw]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function floatFields(array $fields, mixed $dictValue): array
+    {
+        $raw = is_string($dictValue) ? trim($dictValue) : $dictValue;
+        if ($raw === '' || $raw === null) {
+            return Result::fail('请填写浮点');
+        }
+        if (is_bool($raw) || ! is_numeric($raw)) {
+            return Result::fail('浮点请填数字，如 3.14');
+        }
+
+        return Result::success(array_merge($fields, ['value_float' => (float) $raw]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function jsonObjectFields(array $fields, mixed $dictValue): array
+    {
+        if ($this->isBlankJson($dictValue)) {
+            return Result::success(array_merge($fields, ['value_json' => '{}']));
+        }
+        $decoded = $this->decodeJsonRaw($dictValue);
+        if ($decoded === '__invalid__') {
+            return Result::fail('JSON对象不合法');
+        }
+        if (is_array($decoded) && ! array_is_list($decoded)) {
+            return Result::success(array_merge($fields, ['value_json' => $this->ensureJsonString($decoded)]));
+        }
+        if (is_object($decoded) && ! $decoded instanceof \JsonSerializable) {
+            return Result::success(array_merge($fields, ['value_json' => $this->ensureJsonString($decoded)]));
+        }
+
+        return Result::fail('JSON对象要写成 {"k":"v"}，不是数组');
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function jsonArrayFields(array $fields, mixed $dictValue): array
+    {
+        if ($this->isBlankJson($dictValue)) {
+            return Result::success(array_merge($fields, ['value_json' => '[]']));
+        }
+        $decoded = $this->decodeJsonRaw($dictValue);
+        if ($decoded === '__invalid__') {
+            return Result::fail('JSON数组不合法');
+        }
+        if (is_array($decoded) && array_is_list($decoded)) {
+            return Result::success(array_merge($fields, ['value_json' => $this->ensureJsonString($decoded)]));
+        }
+
+        return Result::fail('JSON数组要写成 ["a","b"]，不是对象');
+    }
+
+    /**
+     * @param  array<string, mixed>  $fields
+     * @return array{code:int,msg:string,data?:array<string,mixed>}
+     */
+    private function enumFields(array $fields, mixed $dictValue, mixed $enumLimit): array
+    {
+        $limit = $this->decodeJson($enumLimit);
+        if ($limit === '__invalid__') {
+            return Result::fail('枚举限制要写成 ["a","b"]');
+        }
+        if (! is_array($limit) || ! array_is_list($limit)) {
+            return Result::fail('请先写枚举限制，如 ["on","off"]');
+        }
+        $options = [];
+        foreach ($limit as $item) {
+            if (! is_scalar($item) && $item !== null) {
+                return Result::fail('枚举限制只能是字符串或数字');
+            }
+            $options[] = (string) $item;
+        }
+        if ($options === []) {
+            return Result::fail('请先写枚举限制，如 ["on","off"]');
+        }
+        $picked = $this->scalarText($dictValue);
+        if ($picked === '') {
+            return Result::fail('请选择枚举值');
+        }
+        if (! in_array($picked, $options, true)) {
+            return Result::fail('枚举值必须在限制里');
+        }
+
+        return Result::success(array_merge($fields, [
+            'value_json' => $this->ensureJsonString($picked),
+            'enum_limit' => $this->ensureJsonString($options),
+        ]));
+    }
+
+    private function decodeJson(mixed $value): mixed
+    {
+        $raw = $this->decodeJsonRaw($value);
+        if ($raw === '__invalid__' || $raw === null) {
+            return $raw;
+        }
+        if (is_object($raw)) {
+            return json_decode((string) json_encode($raw), true);
+        }
+
+        return $raw;
+    }
+
+    private function decodeJsonRaw(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_array($value) || is_object($value)) {
+            return $value;
+        }
+        if (! is_string($value)) {
+            return is_scalar($value) ? $value : '__invalid__';
+        }
+        $decoded = json_decode(trim($value));
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return '__invalid__';
+        }
+
+        return $decoded;
+    }
+
+    private function isBlankJson(mixed $value): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        return false;
+    }
+
+    private function scalarText(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+        if (is_scalar($value)) {
+            return trim((string) $value);
+        }
+        $decoded = $this->decodeJson($value);
+        if (is_scalar($decoded) || $decoded === null) {
+            return trim((string) $decoded);
+        }
+
+        return '';
     }
 
     /**
@@ -318,38 +672,132 @@ class SysDictService
         $item['value_preview'] = $this->previewText($item['dict_value']);
         $valueType = (int) ($item['value_type'] ?? 0);
         $item['value_type_label'] = self::VALUE_TYPES[$valueType] ?? self::VALUE_TYPES[0];
+        $item['enum_preview'] = $valueType === 5 ? $this->previewText($this->jsonPreview($item['enum_limit'] ?? null)) : '';
         $item['is_on'] = (int) ($item['status'] ?? 0) === 0;
         $label = trim((string) ($item['label'] ?? ''));
         $key = (string) ($item['dict_key'] ?? '');
         $item['title'] = $label !== '' ? $label : ($key !== '' ? $key : '未命名');
-        $item['create_time'] = !empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
-        $item['update_time'] = !empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
+        $item['create_time'] = ! empty($item['create_time']) ? date('Y-m-d H:i:s', (int) $item['create_time']) : '';
+        $item['update_time'] = ! empty($item['update_time']) ? date('Y-m-d H:i:s', (int) $item['update_time']) : '';
+        if ($valueType === 6) {
+            $plain = trim(html_entity_decode(strip_tags((string) ($item['value_text'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $item['value_preview'] = $plain !== '' ? $this->previewText($plain) : '富文本';
+        }
 
         return $item;
     }
 
     /**
-     * 已有分组及条数
+     * 已有分组及条数（含目录里还没写过的分类）
+     *
+     * @param  list<array<string, mixed>>|null  $groups
+     * @return list<array{dict_type:string,cnt:int,label:string}>
      */
-    private function typeRows(): array
+    private function typeRows(?array $groups = null): array
     {
-        $rows = SysDictModel::query()
-            ->select('dict_type')
-            ->selectRaw('COUNT(*) as cnt')
-            ->groupBy('dict_type')
-            ->orderBy('dict_type')
-            ->get()
-            ->toArray();
-
+        $groups = $groups ?? $this->groupRows();
         $out = [];
-        foreach ($rows as $row) {
-            $type = trim((string) ($row['dict_type'] ?? ''));
-            if ($type === '') {
+        foreach ($groups as $row) {
+            if (($row['kind'] ?? '') === 'away') {
                 continue;
             }
             $out[] = [
-                'dict_type' => $type,
+                'dict_type' => (string) ($row['dict_type'] ?? ''),
                 'cnt' => (int) ($row['cnt'] ?? 0),
+                'label' => (string) ($row['label'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function groupRows(): array
+    {
+        $counts = [];
+        try {
+            $rows = SysDictModel::query()
+                ->select('dict_type')
+                ->selectRaw('COUNT(*) as cnt')
+                ->groupBy('dict_type')
+                ->get()
+                ->toArray();
+            foreach ($rows as $row) {
+                $type = trim((string) ($row['dict_type'] ?? ''));
+                if ($type !== '') {
+                    $counts[$type] = (int) ($row['cnt'] ?? 0);
+                }
+            }
+        } catch (\Throwable) {
+            $counts = [];
+        }
+
+        $out = [];
+        foreach ($this->catalog->groups() as $id => $meta) {
+            $out[] = $this->presentGroup($id, $meta, (int) ($counts[$id] ?? 0));
+            unset($counts[$id]);
+        }
+        foreach ($counts as $id => $cnt) {
+            $out[] = $this->presentGroup((string) $id, [
+                'family' => 'other',
+                'label' => (string) $id,
+                'hint' => '自己加的分类。',
+                'url' => '',
+                'kind' => 'options',
+                'setting_key' => '',
+            ], (int) $cnt);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array{family?:string,label?:string,hint?:string,url?:string,kind?:string,setting_key?:string}  $meta
+     * @return array<string, mixed>
+     */
+    private function presentGroup(string $id, array $meta, int $cnt): array
+    {
+        $family = (string) ($meta['family'] ?? 'other');
+        $families = $this->catalog->families();
+        $settingKey = trim((string) ($meta['setting_key'] ?? ''));
+
+        return [
+            'id' => $id,
+            'dict_type' => $id,
+            'label' => (string) ($meta['label'] ?? $id),
+            'family' => $family,
+            'family_label' => (string) ($families[$family] ?? $family),
+            'hint' => (string) ($meta['hint'] ?? ''),
+            'url' => (string) ($meta['url'] ?? ''),
+            'kind' => (string) ($meta['kind'] ?? 'options'),
+            'setting_key' => $settingKey,
+            'can_import' => $settingKey !== '',
+            'cnt' => $cnt,
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $groups
+     * @return list<array{id:string,label:string,n:int}>
+     */
+    private function familyRows(array $groups): array
+    {
+        $n = [];
+        foreach ($groups as $row) {
+            $id = (string) ($row['family'] ?? 'other');
+            $n[$id] = ($n[$id] ?? 0) + 1;
+        }
+        $out = [];
+        foreach ($this->catalog->families() as $id => $label) {
+            if ($id === 'other' && ($n[$id] ?? 0) < 1) {
+                continue;
+            }
+            $out[] = [
+                'id' => $id,
+                'label' => $label,
+                'n' => (int) ($n[$id] ?? 0),
             ];
         }
 
@@ -377,7 +825,8 @@ class SysDictService
             0 => (string) ($row['value_string'] ?? ''),
             1 => (string) ((int) ($row['value_int'] ?? 0)),
             2 => (string) ((float) ($row['value_float'] ?? 0)),
-            3, 4, 5 => $this->jsonPreview($row['value_json'] ?? null),
+            3, 4 => $this->jsonPreview($row['value_json'] ?? null),
+            5 => $this->scalarText($row['value_json'] ?? null),
             6 => (string) ($row['value_text'] ?? ''),
             default => (string) ($row['value_string'] ?? ''),
         };
@@ -414,6 +863,22 @@ class SysDictService
         }
 
         return $value;
+    }
+
+    /** @param  array<string, mixed>  $row */
+    private function fingerprint(array $row): string
+    {
+        return json_encode([
+            't' => (string) ($row['dict_type'] ?? ''),
+            'k' => (string) ($row['dict_key'] ?? ''),
+            'vt' => (int) ($row['value_type'] ?? 0),
+            'v' => $this->formatDictValue($row),
+            'e' => $this->jsonPreview($row['enum_limit'] ?? null),
+            'l' => trim((string) ($row['label'] ?? '')),
+            's' => (int) ($row['sort'] ?? 0),
+            'st' => (int) ($row['status'] ?? 0),
+            'r' => trim((string) ($row['remark'] ?? '')),
+        ], JSON_UNESCAPED_UNICODE);
     }
 
     /**

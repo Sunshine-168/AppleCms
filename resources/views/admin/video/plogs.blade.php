@@ -35,7 +35,7 @@
             <button type="button" class="chip" data-queue="type" data-value="card">卡密@if($q('card') > 0)<em>{{ $q('card') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="type" data-value="admin">后台@if($q('admin') > 0)<em>{{ $q('admin') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">这是对账单，不是可以随便改的表。点播扣分、充值、卡密兑换、后台调积分都会记在这里。删掉一行不会改会员积分。</p>
+        <p class="muted recycle-lead">积分对账单。点播扣分、充值、卡密兑换、后台调积分都会记。删掉一行不会改会员积分。</p>
         <div class="batch-bar" id="plog-batch" hidden>
             <strong id="plog-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-danger btn-sm" id="plog-batch-del">删除记录</button>

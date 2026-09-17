@@ -82,8 +82,8 @@
     U.on('#episode-add-btn', 'click', function () { openEpisodeDialog('add'); });
     U.on('#episode-refresh-btn', 'click', function () { table.refresh(); });
     U.on('#episode-table', 'click', function (e) {
-        var a = e.target.closest('a'); if (!a) return;
-        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        var a = e.target.closest ? e.target.closest('a') : null; if (!a) return;
+        var row = U.rowFromClick(e, table);
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-edit')) openEpisodeDialog('edit', row);

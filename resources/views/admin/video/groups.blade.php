@@ -27,7 +27,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">启用@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">会员组是点播档位。积分门槛、试看秒数、每天免费条数在这里。停用后这组权限关掉，人还在名单里。删掉后会员变成未分组。</p>
+        <p class="muted recycle-lead">会员组是点播档位。积分门槛、试看秒数、每天免费条数在这里。停用后权限关掉，人还在名单里。删掉后会员变成未分组。</p>
         <div class="batch-bar" id="group-batch" hidden>
             <strong id="group-batch-count">已选 0 组</strong>
             <button type="button" class="btn btn-sm" id="group-batch-on">启用</button>

@@ -229,7 +229,8 @@ trait QueryTrait
             $this->parseCondition($query, $where);
             $this->parseOrder($query, $order);
 
-            $data = $query->select($field)->paginate($limit);
+            $page = max(1, (int) request()->input('page', 1));
+            $data = $query->select($field)->paginate($limit, ['*'], 'page', $page);
 
             return $data->toArray();
         } catch (Exception $e) {

@@ -78,9 +78,9 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'zh'),
+    'locale' => env('APP_LOCALE', 'zh_cn'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'zh'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'zh_cn'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'zh_CN'),
 

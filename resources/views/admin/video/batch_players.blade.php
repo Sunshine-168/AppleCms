@@ -19,12 +19,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">线路上的「播放器」字段要对上播放器表里的标识。采集来的片子常常还是资源站的写法。这里整批改标识或下线，<strong>不改播放地址</strong>。</p>
-        <ol class="hub-steps">
-            <li class="is-on"><em>1</em><span>看线路上的标识</span></li>
-            <li><em>2</em><span>换成站内播放器，或下线</span></li>
-            <li><em>3</em><span>到播放器页核对内核</span></li>
-        </ol>
+        <p class="muted recycle-lead">查看线路标识后整批更换或下线，不改播放地址。到播放器页核对播放器。</p>
 
         @if($unknownN > 0)
             <p class="muted play-note">有 {{ $unknownN }} 条线路的标识不在播放器表里，前台可能播不了。换成站内播放器即可。</p>

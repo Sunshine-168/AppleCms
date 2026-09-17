@@ -10,10 +10,13 @@
 <div class="card card-panel shortcut-index">
     <div class="card-header">
         <span>常用@if($todoTotal > 0) <em>· {{ $todoTotal }}</em>@endif</span>
-        <a class="btn btn-muted btn-sm" href="/admin/more">全部功能</a>
+        <div>
+            <a class="btn btn-sm" href="/admin/plugins">{{ admin_t('nav.plugins') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/more">全部功能</a>
+        </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">日常会点的入口。完整目录、不常用的工具在「<a href="/admin/more">全部功能</a>」里搜。</p>
+        <p class="muted recycle-lead">日常会点的入口。漫画、商城走右上角「<a href="/admin/plugins">插件</a>」。不常用的工具在「<a href="/admin/more">全部功能</a>」里搜。</p>
 
         @foreach($groups as $group)
             <section class="shortcut-block">

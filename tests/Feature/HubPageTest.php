@@ -20,7 +20,7 @@ class HubPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('试试资源接口', $html);
-        $this->assertStringContainsString('不会改站内影片', $html);
+        $this->assertStringContainsString('不改片库', $html);
         $this->assertStringContainsString('探测接口', $html);
         $this->assertStringContainsString('接入采集源', $html);
         $this->assertStringContainsString('绑定分类后采集', $html);
@@ -29,6 +29,7 @@ class HubPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/unions', $html);
         $this->assertStringContainsString('/admin/video/collects', $html);
         $this->assertStringContainsString('已收藏的接口', $html);
+        $this->assertStringNotContainsString('hub-steps', $html);
         $this->assertStringNotContainsString('id="out"', $html);
         $this->assertStringNotContainsString('JSON.stringify', $html);
         $this->assertStringNotContainsString('example.com/api.php/provide/vod/', $html);

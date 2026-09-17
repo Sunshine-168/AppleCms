@@ -132,13 +132,17 @@
                 </div>
             </div>
             <p class="muted field-hint">地区、语言、年份会进分类页筛选。词库在「<a href="/admin/video/settings?tab=more">站点设置 → 更多</a>」。</p>
+            <label for="video-class">类型词</label>
+            <input id="video-class" type="text" name="class" value="{{ $video['class'] ?? '' }}" placeholder="逗号分开，如 喜剧,动作">
+            <p class="muted field-hint">分类页「类型」筛选用，不是栏目。栏目选上面的分类。词库在「<a href="/admin/video/classes">扩展分类</a>」。标签是另一回事。</p>
             <label for="video-director">导演</label>
             <input id="video-director" type="text" name="director" value="{{ $video['director'] ?? '' }}">
             <label for="video-actors">主演</label>
             <input id="video-actors" type="text" name="actors_text" value="{{ $video['actors_text'] ?? '' }}" placeholder="逗号分开，如 张三,李四">
             <p class="muted field-hint">保存时会写进演员库，可在演员页继续补资料。</p>
             <label for="video-tags">标签</label>
-            <input id="video-tags" type="text" name="tags_text" value="{{ $video['tags_text'] ?? '' }}" placeholder="逗号分开，如 动作,犯罪">
+            <input id="video-tags" type="text" name="tags_text" value="{{ $video['tags_text'] ?? '' }}" placeholder="逗号分开，如 贺岁,高分">
+            <p class="muted field-hint">聚合词，会进标签库。喜剧/动作这种筛选用类型词，不要写在这里。</p>
 
             <h3>简介</h3>
             <label for="video-desc">剧情</label>
@@ -149,14 +153,27 @@
                 <h3>角色</h3>
                 @php $roleRows = is_array($roles ?? null) ? $roles : []; @endphp
                 @if($roleRows === [])
-                    <p class="muted field-hint">还没有挂角色。去「<a href="/admin/video/roles">角色库</a>」把影片 ID 填成 {{ (int) ($video['id'] ?? 0) }}。</p>
+                    <p class="muted field-hint">还没有挂角色。去「<a href="/admin/video/roles?video_id={{ (int) ($video['id'] ?? 0) }}">角色库</a>」给这部片子加角色名。</p>
                 @else
                     <ul class="muted">
                         @foreach($roleRows as $role)
                             <li>{{ $role['name'] ?? '' }} @if((int)($role['status'] ?? 1) !== 1)（停用）@endif</li>
                         @endforeach
                     </ul>
-                    <p class="muted field-hint"><a href="/admin/video/roles">角色库</a> 里改，前台详情页会列出启用的。</p>
+                    <p class="muted field-hint"><a href="/admin/video/roles?video_id={{ (int) ($video['id'] ?? 0) }}">角色库</a> 里改，前台详情页会列出启用的。</p>
+                @endif
+
+                <h3>分集剧情</h3>
+                @php $plotRows = is_array($plots ?? null) ? $plots : []; @endphp
+                @if($plotRows === [])
+                    <p class="muted field-hint">还没有按集写剧情。去「<a href="/admin/video/plots?video_id={{ (int) ($video['id'] ?? 0) }}">分集剧情</a>」给这部片子写第几集发生了什么。整部简介在上面，不要混在一起。</p>
+                @else
+                    <ul class="muted">
+                        @foreach($plotRows as $plot)
+                            <li>第{{ (int) ($plot['episode_num'] ?? 0) }}集{{ trim((string) ($plot['title'] ?? '')) !== '' ? ' · '.$plot['title'] : '' }}</li>
+                        @endforeach
+                    </ul>
+                    <p class="muted field-hint"><a href="/admin/video/plots?video_id={{ (int) ($video['id'] ?? 0) }}">分集剧情</a> 里改。不会从播放地址自动生成。</p>
                 @endif
             @endif
 

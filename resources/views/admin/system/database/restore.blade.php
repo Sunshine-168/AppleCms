@@ -1,54 +1,188 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.db_restore'))
 
-@section('header_actions')
-    <a class="btn btn-muted btn-sm" href="/admin/system/database/backup">去备份</a>
-    <button type="button" class="btn btn-muted btn-sm" id="dbrestore-refresh">刷新列表</button>
-@endsection
+@php
+    $ui = $ui ?? [];
+    $files = $files ?? [];
+    $usable = [];
+    $blocked = [];
+    foreach ($files as $row) {
+        if (! empty($row['can_restore'])) {
+            $usable[] = $row;
+        } else {
+            $blocked[] = $row;
+        }
+    }
+    $unavailable = trim((string) ($restore_unavailable ?? ''));
+    $canSnapshot = (bool) ($can_snapshot ?? false);
+@endphp
 
-@section('content')
-    <p class="hint">恢复会覆盖当前数据库数据，请谨慎操作。</p>
-    <div id="dbrestore-table"></div>
+@section('plain')
+<div class="card card-panel restore-index db-index" id="restore-index">
+    <div class="card-header">
+        <span>{{ $ui['restore_title'] ?? '' }}</span>
+    </div>
+    <div class="card-body">
+        @include('admin.partials.db-tabs', ['tab' => 'restore'])
+        <p class="muted recycle-lead">{{ $ui['restore_lead'] ?? '' }}盖完前台还是旧的，去「<a href="/admin/system/tools/cache">缓存</a>」清一下。</p>
+        <p class="restore-note">{{ $ui['restore_note'] ?? '' }}</p>
+
+        <section class="cache-block">
+            <div class="cache-block-head">
+                <h3>{{ $ui['restore_now'] ?? '' }}</h3>
+                <span class="badge">{{ $driver_label ?? '' }}</span>
+            </div>
+            <p class="muted cache-block-detail">{{ $dir_text ?? '' }}</p>
+            <p class="muted field-hint">{{ $driver_hint ?? '' }}</p>
+            @if($unavailable !== '')
+                <p class="schedule-idle-hint">{{ $unavailable }}</p>
+            @endif
+        </section>
+
+        <section class="backup-files" id="restore-usable-wrap">
+            <h3>{{ $ui['restore_files'] ?? '' }}</h3>
+            <div id="restore-file-list">
+                @if($usable === [])
+                    <div class="list-empty">
+                        <p>{{ $ui['restore_empty'] ?? '' }}</p>
+                        <p class="muted">{{ $ui['restore_empty_hint'] ?? '' }}</p>
+                        <p><a class="btn btn-sm" href="/admin/system/database/backup">{{ $ui['restore_go'] ?? '' }}</a></p>
+                    </div>
+                @else
+                    @foreach($usable as $row)
+                        <article class="backup-file" data-name="{{ $row['name'] }}" data-can="1">
+                            <div class="backup-file-main">
+                                <strong>{{ $row['name'] }}</strong>
+                                <p class="muted">{{ $row['size_text'] ?? '' }} · {{ $row['time'] ?? '' }} · {{ $row['kind_label'] ?? '' }}</p>
+                            </div>
+                            <div class="backup-file-side">
+                                <a class="btn btn-muted btn-sm" href="/admin/system/database/backup/download?file={{ urlencode($row['name']) }}">{{ $ui['download'] ?? '' }}</a>
+                                <button type="button" class="btn btn-sm js-restore">{{ $ui['restore_run'] ?? '' }}</button>
+                                <button type="button" class="btn btn-muted btn-sm js-del">{{ $ui['delete'] ?? '' }}</button>
+                            </div>
+                        </article>
+                    @endforeach
+                @endif
+            </div>
+        </section>
+
+        <section class="backup-files" id="restore-blocked-wrap" @if($blocked === []) hidden @endif>
+            <h3>{{ $ui['restore_blocked'] ?? '' }}</h3>
+            <div id="restore-blocked-list">
+                @foreach($blocked as $row)
+                    <article class="backup-file is-blocked" data-name="{{ $row['name'] }}" data-can="0">
+                        <div class="backup-file-main">
+                            <strong>{{ $row['name'] }}</strong>
+                            <p class="muted">{{ $row['size_text'] ?? '' }} · {{ $row['time'] ?? '' }} · {{ $row['kind_label'] ?? '' }}</p>
+                            <p class="schedule-err">{{ $row['restore_hint'] ?? ($ui['restore_mismatch'] ?? '') }}</p>
+                        </div>
+                        <div class="backup-file-side">
+                            <a class="btn btn-muted btn-sm" href="/admin/system/database/backup/download?file={{ urlencode($row['name']) }}">{{ $ui['download'] ?? '' }}</a>
+                            <button type="button" class="btn btn-muted btn-sm js-del">{{ $ui['delete'] ?? '' }}</button>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+        <p class="muted" id="restore-flash" hidden></p>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
-    var table = U.table({
-        el: '#dbrestore-table',
-        url: '/admin/system/database/restore/files',
-        cols: [
-            {key: 'name', title: '文件名'},
-            {key: 'size', title: '大小(B)', width: 120},
-            {key: 'time', title: '时间', width: 180},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-restore">恢复</a><a href="#" class="btn-link js-dl">下载</a><a href="#" class="btn-link js-del">删除</a>';
-            }}
-        ]
-    });
-    U.on('#dbrestore-refresh', 'click', function () { table.refresh(); });
-    U.on('#dbrestore-table', 'click', function (e) {
-        var a = e.target.closest('a'); if (!a) return;
-        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
-        if (!row) return;
-        e.preventDefault();
-        if (a.classList.contains('js-dl')) window.open('/admin/system/database/backup/download?file=' + encodeURIComponent(row.name || ''));
-        if (a.classList.contains('js-del') && U.confirm('确认删除该备份文件？')) {
-            U.post('/admin/system/database/backup/delete', {file: row.name || ''}).then(function (res) {
+    var root = document.getElementById('restore-index');
+    if (!root || !U) return;
+    var UI = @json($ui);
+    var canSnapshot = @json($canSnapshot);
+
+    function cardHtml(row, can) {
+        var name = row.name || '';
+        var html = '<article class="backup-file' + (can ? '' : ' is-blocked') + '" data-name="' + U.escape(name) + '" data-can="' + (can ? '1' : '0') + '">';
+        html += '<div class="backup-file-main"><strong>' + U.escape(name) + '</strong>';
+        html += '<p class="muted">' + U.escape((row.size_text || '') + ' · ' + (row.time || '') + ' · ' + (row.kind_label || '')) + '</p>';
+        if (!can) html += '<p class="schedule-err">' + U.escape(row.restore_hint || UI.restore_mismatch || '') + '</p>';
+        html += '</div><div class="backup-file-side">';
+        html += '<a class="btn btn-muted btn-sm" href="/admin/system/database/backup/download?file=' + encodeURIComponent(name) + '">' + U.escape(UI.download || '') + '</a>';
+        if (can) html += '<button type="button" class="btn btn-sm js-restore">' + U.escape(UI.restore_run || '') + '</button>';
+        html += '<button type="button" class="btn btn-muted btn-sm js-del">' + U.escape(UI.delete || '') + '</button></div></article>';
+        return html;
+    }
+
+    function renderFiles(rows) {
+        var box = document.getElementById('restore-file-list');
+        var blockedBox = document.getElementById('restore-blocked-list');
+        var blockedWrap = document.getElementById('restore-blocked-wrap');
+        rows = rows || [];
+        var usable = [];
+        var blocked = [];
+        rows.forEach(function (row) {
+            if (row.can_restore) usable.push(row);
+            else blocked.push(row);
+        });
+        if (box) {
+            if (!usable.length) {
+                box.innerHTML = '<div class="list-empty"><p>' + U.escape(UI.restore_empty || '') + '</p><p class="muted">' + U.escape(UI.restore_empty_hint || '') + '</p><p><a class="btn btn-sm" href="/admin/system/database/backup">' + U.escape(UI.restore_go || '') + '</a></p></div>';
+            } else {
+                box.innerHTML = usable.map(function (row) { return cardHtml(row, true); }).join('');
+            }
+        }
+        if (blockedBox) blockedBox.innerHTML = blocked.map(function (row) { return cardHtml(row, false); }).join('');
+        if (blockedWrap) blockedWrap.hidden = blocked.length === 0;
+    }
+
+    function reloadFiles() {
+        return U.get('/admin/system/database/restore/files').then(function (res) {
+            if (!res || res.code !== 0) return;
+            renderFiles((res.data && res.data.data) || res.data || []);
+        });
+    }
+
+    U.on('#restore-file-list', 'click', onFileClick);
+    U.on('#restore-blocked-list', 'click', onFileClick);
+
+    function onFileClick(e) {
+        var card = e.target.closest('.backup-file');
+        if (!card) return;
+        var name = card.getAttribute('data-name') || '';
+        if (!name) return;
+        if (e.target.closest('.js-del')) {
+            if (!U.confirm(UI.del_confirm || '')) return;
+            U.post('/admin/system/database/backup/delete', {file: name}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '删除失败', 'err'); return; }
-                U.toast('删除成功', 'ok');
-                table.refresh();
+                U.toast(res.msg || '', 'ok');
+                reloadFiles();
             });
+            return;
         }
-        if (a.classList.contains('js-restore') && U.confirm('恢复会覆盖当前数据库数据，确认恢复？')) {
+        if (e.target.closest('.js-restore')) {
+            var warn = canSnapshot ? (UI.restore_confirm_save || '') : (UI.restore_confirm_nosave || '');
+            if (!U.confirm(warn + '\n' + name)) return;
+            var typed = U.prompt(UI.restore_type || '', '');
+            if (typed === null) return;
+            if (String(typed).trim() !== String(UI.restore_word || '盖回')) {
+                U.toast(UI.restore_type_err || '没打对，没有盖', 'err');
+                return;
+            }
             U.loading(true);
-            U.post('/admin/system/database/restore/run', {file: row.name || ''}).then(function (res) {
+            U.post('/admin/system/database/restore/run', {file: name, snapshot: canSnapshot ? 1 : 0}).then(function (res) {
                 U.loading(false);
-                U.toast((res && res.msg) || (res && res.code === 0 ? '恢复成功' : '恢复失败'), res && res.code === 0 ? 'ok' : 'err');
+                var ok = res && res.code === 0;
+                U.toast((res && res.msg) || '', ok ? 'ok' : 'err');
+                var flash = document.getElementById('restore-flash');
+                if (flash) {
+                    flash.hidden = false;
+                    flash.textContent = (res && res.msg) || '';
+                }
+                if (ok) reloadFiles();
+            }).catch(function () {
+                U.loading(false);
+                U.toast('没能恢复', 'err');
             });
         }
-    });
+    }
 })();
 </script>
 @endpush

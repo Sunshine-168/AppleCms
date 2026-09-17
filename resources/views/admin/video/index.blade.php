@@ -21,6 +21,7 @@
             <input type="hidden" name="empty_pic">
             <input type="hidden" name="empty_content">
             <input type="hidden" name="no_actor">
+            <input type="hidden" name="missing_ep">
             <input type="hidden" name="repeat">
             <input type="hidden" name="need_points">
             <input type="hidden" name="has_plot">
@@ -72,8 +73,9 @@
         <details class="queue-more">
             <summary>补资料与工具</summary>
             <div class="queue-chips">
-                <button type="button" class="chip" data-queue="empty_content" data-value="1">无简介</button>
-                <button type="button" class="chip" data-queue="no_actor" data-value="1">无演员</button>
+                <button type="button" class="chip" data-queue="empty_content" data-value="1">无简介@if($q('empty_content') > 0)<em>{{ $q('empty_content') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="no_actor" data-value="1">无演员@if($q('no_actor') > 0)<em>{{ $q('no_actor') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="missing_ep" data-value="1">集数不齐@if($q('missing_ep') > 0)<em>{{ $q('missing_ep') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="status" data-value="2">草稿</button>
                 <button type="button" class="chip" data-queue="status" data-value="3">未通过</button>
                 <button type="button" class="chip" data-queue="status" data-value="4">定时</button>
@@ -108,7 +110,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'repeat', 'need_points', 'has_plot'];
+    var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'missing_ep', 'repeat', 'need_points', 'has_plot'];
     var form = document.getElementById('video-search');
     var moreBox = document.getElementById('video-filter-more');
     var batchBar = document.getElementById('video-batch');
@@ -149,7 +151,7 @@
         moreBox.classList.add('is-open');
         document.getElementById('video-more-toggle').classList.add('is-on');
     }
-    if (['empty_content','no_actor','need_points','has_plot'].some(function (k) { return qs.get(k); })
+    if (['empty_content','no_actor','missing_ep','need_points','has_plot'].some(function (k) { return qs.get(k); })
         || ['2','3','4'].indexOf(qs.get('status') || '') >= 0) {
         document.querySelector('.queue-more').open = true;
     }

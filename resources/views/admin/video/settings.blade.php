@@ -178,7 +178,7 @@
                 <input id="filter_lang" type="text" name="filter_lang" value="{{ $s['filter_lang'] ?? '' }}">
                 <label for="filter_year">年代</label>
                 <input id="filter_year" type="text" name="filter_year" value="{{ $s['filter_year'] ?? '' }}">
-                <p class="muted field-hint">逗号分开。分类页筛选项从这里来。</p>
+                <p class="muted field-hint">逗号分开。字典里「地区 / 语言 / 年份」有启用项时，前台筛选用字典，这里当后备。<a href="/admin/system/dicts">去字典按条维护</a>。</p>
 
                 <h3>统计代码</h3>
                 <textarea id="analytics_code" name="analytics_code" rows="4" placeholder="把统计平台给的代码贴在这里">{{ $s['analytics_code'] ?? '' }}</textarea>

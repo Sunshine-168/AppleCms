@@ -94,4 +94,49 @@ class SpiderDetector
             default => $name,
         };
     }
+
+    public function displayName(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return '爬虫';
+        }
+        $watch = $this->watchLabel($name);
+        if ($watch !== $name) {
+            return $watch;
+        }
+
+        return match ($name) {
+            'YandexBot' => 'Yandex',
+            'Sogou' => '搜狗',
+            '360Spider' => '360',
+            'Bytespider' => '字节',
+            'DuckDuckBot' => 'DuckDuckGo',
+            'OtherBot' => '其他爬虫',
+            'ClaudeBot' => 'Claude',
+            'GPTBot' => 'GPT',
+            default => $name,
+        };
+    }
+
+    /** @return list<string> */
+    public function engineNeedles(string $engine): array
+    {
+        return match ($engine) {
+            'baidu' => $this->bots['Baiduspider'],
+            'google' => $this->bots['Googlebot'],
+            'bing' => $this->bots['Bingbot'],
+            default => [],
+        };
+    }
+
+    /** @return list<string> */
+    public function watchNeedles(): array
+    {
+        return array_values(array_unique(array_merge(
+            $this->engineNeedles('baidu'),
+            $this->engineNeedles('google'),
+            $this->engineNeedles('bing'),
+        )));
+    }
 }

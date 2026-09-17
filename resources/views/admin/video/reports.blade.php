@@ -29,7 +29,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">已处理@if($q('done') > 0)<em>{{ $q('done') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">会员在影片详情页提交的无法播放、地址失效。处理完打标即可；删掉只去掉这条记录，<strong>不会改播放地址</strong>。播放器自动记下的失败在「播放失败」。</p>
+        <p class="muted recycle-lead">会员在详情页提交的无法播放、地址失效。处理完打标即可；删掉只去记录，<strong>不会改播放地址</strong>。播放器记下的失败在「播放失败」。</p>
         <div class="batch-bar" id="report-batch" hidden>
             <strong id="report-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="report-batch-done">标为已处理</button>

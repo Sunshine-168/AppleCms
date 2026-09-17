@@ -1,24 +1,58 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.db_sql'))
 
+@php
+    $ui = $ui ?? [];
+    $examples = $examples ?? [];
+@endphp
+
 @section('plain')
-<div class="card card-panel">
-    <div class="card-header"><span>执行 SQL</span></div>
-    <div class="card-body">
-        <label>SQL</label>
-        <textarea id="dbsql-input" placeholder="请输入一条SQL语句，例如：SELECT * FROM users LIMIT 10"></textarea>
-        <p class="hint">仅支持执行一条 SQL 语句；执行写操作会直接修改数据库。</p>
-        <div class="form-actions">
-            <button type="button" class="btn" id="dbsql-run">执行</button>
-            <button type="button" class="btn btn-muted" id="dbsql-clear">清空</button>
-        </div>
+<div class="card card-panel sql-index db-index" id="sql-index">
+    <div class="card-header">
+        <span>{{ $ui['title'] ?? '' }}</span>
     </div>
-</div>
-<div class="card card-panel">
-    <div class="card-header"><span id="dbsql-msg">等待执行</span></div>
     <div class="card-body">
-        <div id="dbsql-result-table" style="display:none;"></div>
-        <pre id="dbsql-result-text" class="out" style="display:none;"></pre>
+        @include('admin.partials.db-tabs', ['tab' => 'sql'])
+        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}</p>
+        <p class="sql-note">{{ $ui['note'] ?? '' }}</p>
+
+        <section class="cache-block">
+            <div class="cache-block-head">
+                <h3>{{ $ui['now'] ?? '' }}</h3>
+                <span class="badge">{{ $driver_label ?? '' }}</span>
+            </div>
+            <p class="muted field-hint">{{ $driver_hint ?? '' }}</p>
+            @if(empty($can_delete))
+                <p class="muted field-hint">当前不是 1 号管理员，不能跑 DELETE。</p>
+            @endif
+        </section>
+
+        @if($examples !== [])
+            <p class="replace-label">{{ $ui['examples'] ?? '' }}</p>
+            <div class="queue-chips" id="sql-examples">
+                @foreach($examples as $ex)
+                    <button type="button" class="chip js-sql-ex" data-sql="{{ $ex['sql'] }}" data-hint="{{ $ex['hint'] ?? '' }}">{{ $ex['label'] }}</button>
+                @endforeach
+            </div>
+            <p class="muted field-hint" id="sql-ex-hint">{{ $examples[0]['hint'] ?? '' }}</p>
+        @endif
+
+        <label for="sql-input">{{ $ui['stmt'] ?? '' }}</label>
+        <textarea id="sql-input" rows="8" placeholder="{{ $ui['placeholder'] ?? '' }}" spellcheck="false"></textarea>
+        <div class="form-actions">
+            <button type="button" class="btn" id="sql-run">{{ $ui['run'] ?? '' }}</button>
+            <button type="button" class="btn btn-muted" id="sql-clear">{{ $ui['clear'] ?? '' }}</button>
+        </div>
+
+        <section class="sql-result" id="sql-result">
+            <h3 id="sql-msg">{{ $ui['result'] ?? '' }}</h3>
+            <div class="list-empty" id="sql-idle">
+                <p>{{ $ui['idle'] ?? '' }}</p>
+                <p class="muted">{{ $ui['idle_hint'] ?? '' }}</p>
+            </div>
+            <div id="sql-table" hidden></div>
+            <p class="muted" id="sql-text" hidden></p>
+        </section>
     </div>
 </div>
 @endsection
@@ -27,58 +61,120 @@
 <script>
 (function () {
     var U = AdminUi;
-    function setMsg(text) { document.getElementById('dbsql-msg').textContent = text || ''; }
-    function showText(text) {
-        document.getElementById('dbsql-result-table').style.display = 'none';
-        var el = document.getElementById('dbsql-result-text');
-        el.style.display = 'block';
-        el.textContent = text || '';
+    var root = document.getElementById('sql-index');
+    if (!root || !U) return;
+    var UI = @json($ui);
+    var input = document.getElementById('sql-input');
+    var msg = document.getElementById('sql-msg');
+    var idle = document.getElementById('sql-idle');
+    var table = document.getElementById('sql-table');
+    var text = document.getElementById('sql-text');
+    var hint = document.getElementById('sql-ex-hint');
+
+    function setMsg(s) { if (msg) msg.textContent = s || UI.result || ''; }
+    function showIdle() {
+        if (idle) idle.hidden = false;
+        if (table) { table.hidden = true; table.innerHTML = ''; }
+        if (text) { text.hidden = true; text.textContent = ''; }
+        setMsg(UI.result || '');
     }
-    U.on('#dbsql-clear', 'click', function () {
-        document.getElementById('dbsql-input').value = '';
-        setMsg('等待执行');
-        document.getElementById('dbsql-result-table').style.display = 'none';
-        document.getElementById('dbsql-result-text').style.display = 'none';
+    function showText(s) {
+        if (idle) idle.hidden = true;
+        if (table) { table.hidden = true; table.innerHTML = ''; }
+        if (text) { text.hidden = false; text.textContent = s || ''; }
+    }
+    function showTable(columns, rows, emptyText) {
+        if (idle) idle.hidden = true;
+        if (text) { text.hidden = true; text.textContent = ''; }
+        if (!table) return;
+        table.hidden = false;
+        columns = Array.isArray(columns) ? columns : [];
+        rows = Array.isArray(rows) ? rows : [];
+        if (!rows.length) {
+            table.innerHTML = '<p class="muted">' + U.escape(emptyText || UI.empty_rows || '') + '</p>';
+            return;
+        }
+        var html = '<div class="ui-table-wrap"><table class="data"><thead><tr>';
+        columns.forEach(function (c) { html += '<th>' + U.escape(c) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        rows.forEach(function (row) {
+            html += '<tr>';
+            columns.forEach(function (c) { html += '<td>' + U.escape(row[c] == null ? '' : String(row[c])) + '</td>'; });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        table.innerHTML = html;
+    }
+    function firstKeyword(sql) {
+        sql = String(sql || '').replace(/^\s+/, '');
+        while (sql.indexOf('--') === 0 || sql.indexOf('#') === 0 || sql.indexOf('/*') === 0) {
+            if (sql.indexOf('--') === 0 || sql.indexOf('#') === 0) {
+                var nl = sql.indexOf('\n');
+                if (nl < 0) return '';
+                sql = sql.slice(nl + 1).replace(/^\s+/, '');
+                continue;
+            }
+            var end = sql.indexOf('*/');
+            if (end < 0) return '';
+            sql = sql.slice(end + 2).replace(/^\s+/, '');
+        }
+        var m = sql.match(/^([A-Za-z]+)/);
+        return m ? m[1].toLowerCase() : '';
+    }
+    function isWrite(kw) {
+        return kw === 'insert' || kw === 'update' || kw === 'delete' || kw === 'replace';
+    }
+
+    U.on('#sql-examples', 'click', function (e) {
+        var btn = e.target.closest('.js-sql-ex');
+        if (!btn || !input) return;
+        input.value = btn.getAttribute('data-sql') || '';
+        if (hint) hint.textContent = btn.getAttribute('data-hint') || '';
+        input.focus();
     });
-    U.on('#dbsql-run', 'click', function () {
-        var sql = (document.getElementById('dbsql-input').value || '').trim();
-        if (!sql) { U.toast('请输入SQL', 'err'); return; }
+
+    U.on('#sql-clear', 'click', function () {
+        if (input) input.value = '';
+        showIdle();
+    });
+
+    U.on('#sql-run', 'click', function () {
+        var sql = (input && input.value || '').trim();
+        if (!sql) { U.toast(UI.need_sql || '请先写一条 SQL', 'err'); return; }
+        var body = {sql: sql};
+        if (isWrite(firstKeyword(sql))) {
+            if (!U.confirm(UI.confirm_write || '')) return;
+            var typed = U.prompt(UI.type_hint || '', '');
+            if (typed === null) return;
+            if (String(typed).trim() !== String(UI.word || '执行')) {
+                U.toast(UI.type_err || '没打对，没有改库', 'err');
+                return;
+            }
+            body.word = UI.word || '执行';
+        }
         U.loading(true);
-        U.post('/admin/system/database/sql/run', {sql: sql}).then(function (res) {
+        U.post('/admin/system/database/sql/run', body).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) {
-                setMsg('执行失败');
-                showText((res && res.msg) || '执行失败');
+            var ok = res && res.code === 0;
+            U.toast((res && res.msg) || '', ok ? 'ok' : 'err');
+            setMsg((res && res.msg) || '');
+            if (!ok) {
+                showText((res && res.msg) || '');
                 return;
             }
             var data = res.data || {};
             if (data.type === 'query') {
-                var columns = Array.isArray(data.columns) ? data.columns : [];
-                var rows = Array.isArray(data.rows) ? data.rows : [];
-                setMsg('执行成功，返回 ' + (data.count || 0) + ' 行');
-                document.getElementById('dbsql-result-text').style.display = 'none';
-                var wrap = document.getElementById('dbsql-result-table');
-                wrap.style.display = 'block';
-                var html = '<div class="ui-table-wrap"><table class="data"><thead><tr>';
-                (columns.length ? columns : ['_']).forEach(function (c) { html += '<th>' + U.escape(c) + '</th>'; });
-                html += '</tr></thead><tbody>';
-                if (!rows.length) html += '<tr><td colspan="' + (columns.length || 1) + '"><div class="list-empty"><p>暂无数据</p></div></td></tr>';
-                rows.forEach(function (row) {
-                    html += '<tr>';
-                    (columns.length ? columns : ['_']).forEach(function (c) { html += '<td>' + U.escape(row[c] == null ? '' : row[c]) + '</td>'; });
-                    html += '</tr>';
-                });
-                html += '</tbody></table></div>';
-                wrap.innerHTML = html;
+                showTable(data.columns || [], data.rows || [], UI.empty_rows || '');
                 return;
             }
             if (data.type === 'affecting') {
-                setMsg('执行成功，影响行数 ' + (data.affected || 0));
-                showText('影响行数: ' + (data.affected || 0));
+                showText(res.msg || '');
                 return;
             }
-            setMsg('执行成功');
-            showText(JSON.stringify(data, null, 2));
+            showText(res.msg || '');
+        }).catch(function () {
+            U.loading(false);
+            U.toast('没能执行', 'err');
         });
     });
 })();

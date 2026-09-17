@@ -57,6 +57,18 @@ class Index extends Controller
         return back()->with('status', admin_t('locale.msg_admin'))->withCookie($remembered['cookie']);
     }
 
+    public function unlock(Request $request): JsonResponse
+    {
+        $password = (string) $request->input('password', '');
+        $uid = (int) session('admin_uid', 0);
+        if ($uid < 1) {
+            $uid = (int) $request->attributes->get('admin_uid', 0);
+        }
+        $res = app(\App\Services\Admin\System\SysUserService::class)->unlock($uid, $password);
+
+        return Ajax::message((int) $res['code'], (string) ($res['msg'] ?? ''), is_array($res['data'] ?? null) ? $res['data'] : []);
+    }
+
     /**
      * 欢迎页统计数据
      * @return JsonResponse

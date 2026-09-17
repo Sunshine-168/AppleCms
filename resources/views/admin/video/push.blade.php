@@ -35,7 +35,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">把<strong>已发布影片</strong>的地址交给百度 / 神马 / 必应。sitemap 是给蜘蛛自己来抓的，不等于推送成功。没有站长账号就留空，不要点推。</p>
+        <p class="muted recycle-lead">把<strong>已发布影片</strong>的地址交给百度 / 神马 / 必应。sitemap 给蜘蛛自己抓，不等于推送成功。没有站长账号就留空。</p>
 
         <div class="ai-stock">
             @if($readyN > 0)
@@ -88,7 +88,7 @@
         </form>
 
         <h3>主动推一批</h3>
-        <p class="muted field-hint">按最新发布的往外推。一次最多 100 条。接口说失败会把原话报出来，不会假装成功。</p>
+        <p class="muted field-hint">按最新发布的往外推。一次最多 100 条。失败时会把接口原话报出来。</p>
         <div class="field-inline push-limit-row">
             <label for="push-limit">每次条数</label>
             <select id="push-limit">

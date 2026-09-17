@@ -43,7 +43,6 @@ class VideoDashboardService
             'activity' => $this->activity(),
             'alerts' => $this->alerts($counts, $today),
             'quickNav' => $this->quickNav($counts, $todoTotal),
-            'health' => $this->health($counts),
             'server' => ServerStats::snapshot(),
         ];
     }
@@ -259,33 +258,6 @@ class VideoDashboardService
             ['title' => admin_t('dash.collect_update'), 'icon' => 'fas fa-cloud-download-alt', 'url' => '/admin/video/collects', 'primary' => true],
             ['title' => admin_t('dash.see_stats'), 'icon' => 'fas fa-chart-line', 'url' => route('admin.stats.index'), 'primary' => false],
             ['title' => admin_t('dash.site_settings'), 'icon' => 'fas fa-cog', 'url' => '/admin/video/settings', 'primary' => false],
-        ];
-    }
-
-    /** @param  array<string, int>  $counts */
-    protected function health(array $counts): array
-    {
-        $site = $this->settings->all();
-        $closed = (int) ($site['site_closed'] ?? 0) === 1;
-        $cache = (int) ($site['html_cache_enabled'] ?? 0) === 1;
-        $last = null;
-        $lastOk = true;
-        if (Schema::hasTable('video_collect_logs')) {
-            $row = VideoCollectLog::query()->orderByDesc('id')->first();
-            if ($row) {
-                $last = $this->ago((int) $row->created_at);
-                $lastOk = (int) $row->ok === 1;
-            }
-        }
-
-        return [
-            'vod_total' => $counts['vod_total'],
-            'theme' => (string) config('video.theme', 'default'),
-            'cache' => $cache,
-            'closed' => $closed,
-            'last_collect' => $last,
-            'last_ok' => $lastOk,
-            'attention' => $closed || ! $lastOk || $counts['vod_total'] === 0,
         ];
     }
 

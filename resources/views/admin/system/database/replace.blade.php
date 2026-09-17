@@ -6,16 +6,13 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel replace-index">
+<div class="card card-panel replace-index db-index">
     <div class="card-header">
         <span>批量替换</span>
-        <div>
-            <a class="btn btn-muted btn-sm" href="/admin/system/database/backup">备份</a>
-            <a class="btn btn-muted btn-sm" href="/admin/system/database/sql">执行 SQL</a>
-        </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">把片库里一段文字换成另一段。换域名、改错字。改完不能撤销，先「<a href="/admin/system/database/backup">备份</a>」。管理员、会员这些系统表不在这里。更复杂的条件去「<a href="/admin/system/database/sql">执行 SQL</a>」。</p>
+        @include('admin.partials.db-tabs', ['tab' => 'replace'])
+        <p class="muted recycle-lead">把片库里一段文字换成另一段。换域名、改错字。改完不能撤销，先备份。系统表不在这里。复杂条件用 SQL。</p>
 
         @if($targets === [])
             <div class="list-empty">

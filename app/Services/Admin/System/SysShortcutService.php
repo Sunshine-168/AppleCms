@@ -31,6 +31,14 @@ class SysShortcutService
                     ],
                 ],
                 [
+                    'id' => 'plugins',
+                    'title' => '插件',
+                    'hint' => '漫画、商城、聊天室从这里装，不进核心菜单',
+                    'items' => [
+                        ['title' => '插件', 'desc' => '上传 zip，启用后才有前台和后台入口', 'url' => '/admin/plugins'],
+                    ],
+                ],
+                [
                     'id' => 'library',
                     'title' => '片库',
                     'hint' => '片子怎么进来、怎么分类',
@@ -58,9 +66,9 @@ class SysShortcutService
                     'hint' => '改完不生效、备份、谁改过',
                     'items' => [
                         ['title' => '缓存', 'desc' => '改完还不生效时清', 'url' => '/admin/system/tools/cache'],
-                        ['title' => '备份', 'desc' => '导出数据库', 'url' => '/admin/system/database/backup'],
+                        ['title' => '备份', 'desc' => '导出一份库，可每天自动备份', 'url' => '/admin/system/database/backup'],
                         ['title' => 'IP 白名单', 'desc' => '只拦后台登录', 'url' => '/admin/video/config/ip'],
-                        ['title' => '操作日志', 'desc' => '谁改过什么', 'url' => '/admin/system/monitor/operate-logs'],
+                        ['title' => '日志', 'desc' => '登录、改数据和程序报错', 'url' => '/admin/system/monitor/login-logs'],
                         ['title' => '管理员', 'desc' => '能进后台的人', 'url' => '/admin/user'],
                     ],
                 ],

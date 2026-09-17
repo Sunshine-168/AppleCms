@@ -7,22 +7,14 @@
         <span>采集源</span>
         <div>
             <button type="button" class="btn btn-sm" id="collect-source-add-btn">新增采集源</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">定时采集</a>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="collect-source-search" onsubmit="return false;">
             <input type="hidden" name="empty_bind">
             <input type="hidden" name="has_error">
+            <input type="hidden" name="status">
             <input type="text" name="name" placeholder="搜名称或先贴接口" autocomplete="off">
-            <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">禁用</option>
-            </select>
             <button type="button" class="btn btn-sm" id="collect-source-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="collect-source-reset-btn">重置</button>
         </form>
@@ -32,7 +24,7 @@
             <button type="button" class="chip" data-queue="empty_bind" data-value="1">未绑定</button>
             <button type="button" class="chip" data-queue="has_error" data-value="1">有失败</button>
         </div>
-        <p class="muted recycle-lead">苹果 CMS 接口填 <code>api.php/provide/vod/</code>。先绑定分类，再采当天；未绑定的分类会跳过。</p>
+        <p class="muted recycle-lead">苹果 CMS 接口填 <code>api.php/provide/vod/</code>。先绑定分类，再采当天；未绑定的分类会跳过。不确定接口先去「<a href="/admin/video/tools/hub">试试接口</a>」，现成的站从「<a href="/admin/video/unions">推荐资源</a>」接入。</p>
         <div id="collect-source-table"></div>
     </div>
 </div>
@@ -136,7 +128,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的采集源</p><p><button type="button" class="btn btn-muted btn-sm" id="collect-empty-reset">清除筛选</button></p></div>';
             }
-                return '<div class="list-empty"><p>还没有采集源</p><p class="muted">填苹果 CMS 兼容接口即可入库。不确定能不能用，先去试试接口。</p><p><button type="button" class="btn btn-primary btn-sm" id="collect-empty-add">新增采集源</button> <a class="btn btn-muted btn-sm" href="/admin/video/tools/hub">试试接口</a> <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a></p></div>';
+                return '<div class="list-empty"><p>还没有采集源</p><p class="muted">填苹果 CMS 兼容接口即可入库。</p><p><button type="button" class="btn btn-primary btn-sm" id="collect-empty-add">新增采集源</button></p></div>';
         },
         onDraw: function () {
             var add = document.getElementById('collect-empty-add');

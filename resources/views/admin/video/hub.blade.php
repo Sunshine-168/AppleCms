@@ -19,12 +19,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">别人给了苹果 CMS 接口，先在这里看通不通、有哪些分类。通了再收藏，或接入采集源。探测只读接口，不会改站内影片。</p>
-        <ol class="hub-steps">
-            <li class="is-on"><em>1</em><span>探测接口</span></li>
-            <li><em>2</em><span>接入采集源</span></li>
-            <li><em>3</em><span>绑定分类后采集</span></li>
-        </ol>
+        <p class="muted recycle-lead">探测接口，通了再收藏或接入采集源。绑定分类后采集。只读，不改片库。</p>
 
         <form class="hub-probe" id="hub-form" onsubmit="return false;">
             <label for="hub-url">接口地址</label>
@@ -178,7 +173,7 @@
             actions.appendChild(adopt);
             var hint = document.createElement('span');
             hint.className = 'muted';
-            hint.textContent = '接入后还要绑定分类，才会真正采片。';
+            hint.textContent = '接入后还要绑定分类才会采片。';
             actions.appendChild(hint);
         }
         show('ok');

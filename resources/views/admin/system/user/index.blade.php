@@ -22,11 +22,11 @@
 <div class="card card-panel admin-user-index">
     <div class="card-header">
         <span>管理员 <em id="admin-user-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/system/roles">角色</a>
     </div>
     <div class="card-body">
+        @include('admin.partials.access-chain', ['step' => 'admins'])
         <div class="admin-user-compose">
-            <form id="admin-user-compose" autocomplete="off" onsubmit="return false;">
+            <form id="admin-user-compose" autocomplete="off">
                 <label class="admin-user-compose-label" for="admin-user-quick-name">新增管理员</label>
                 <div class="admin-user-compose-row">
                     <input id="admin-user-quick-name" type="text" name="username" placeholder="登录名" aria-label="登录名" required>
@@ -39,27 +39,26 @@
                     </select>
                     <button class="btn" type="submit" id="admin-user-compose-btn">添加</button>
                 </div>
-                <p class="muted field-hint">添加后可以登录后台。菜单权限在「<a href="/admin/system/roles">角色</a>」里勾。1 号是创始人，能做所有事，不能删。</p>
+                @if($roles === [])
+                    <p class="muted field-hint">还没有角色，先去「<a href="/admin/system/roles">角色</a>」加一个。</p>
+                @endif
             </form>
         </div>
 
-        <form class="filter-bar admin-user-find" id="admin-user-search" onsubmit="return false;">
+        <form class="filter-bar admin-user-find" id="admin-user-search">
             <input type="hidden" name="kind">
             <input type="hidden" name="role_id">
             <input type="search" name="q" placeholder="搜登录名或邮箱" autocomplete="off" aria-label="搜索管理员">
-            <button type="button" class="btn btn-sm" id="admin-user-search-btn">搜索</button>
+            <button type="submit" class="btn btn-sm" id="admin-user-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="admin-user-reset-btn">重置</button>
         </form>
         <div class="queue-chips" id="admin-user-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="kind" data-value="founder">创始人@if($q('founder') > 0)<em>{{ $q('founder') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="kind" data-value="staff">其他人@if($q('staff') > 0)<em>{{ $q('staff') }}</em>@endif</button>
             @foreach($roles as $role)
                 <button type="button" class="chip" data-queue="role_id" data-value="{{ $role['id'] }}">{{ $role['name'] }}@if(($role['count'] ?? 0) > 0)<em>{{ $role['count'] }}</em>@endif</button>
             @endforeach
             <button type="button" class="chip" data-queue="kind" data-value="never">从未登录@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">他们登录的是后台，不是网站。点名称改邮箱、角色或密码。不能删自己，创始人不能删。</p>
         <div id="admin-user-table"></div>
     </div>
 </div>
@@ -78,7 +77,7 @@
                 <option value="{{ $role['id'] }}">{{ $role['name'] }}{{ (int) ($role['status'] ?? 1) === 1 ? '' : '（停用）' }}</option>
             @endforeach
         </select>
-        <p class="muted field-hint" id="admin-user-role-hint">没有角色时，未登记的菜单默认仍可进；要收权限先到角色里勾。</p>
+        <p class="muted field-hint" id="admin-user-role-hint">没有角色的人，进不了菜单里登记过的页。要收权限先到角色里勾。</p>
         <label>备注</label>
         <input type="text" name="remark" placeholder="选填，只在后台看到">
         <label>密码</label>
@@ -95,6 +94,8 @@
     var form = document.getElementById('admin-user-search');
     var compose = document.getElementById('admin-user-compose');
     var countEl = document.getElementById('admin-user-count');
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('role_id')) form.role_id.value = qs.get('role_id');
 
     function cleanWhere(data) {
         var out = {};
@@ -155,7 +156,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的管理员。</p><p><button type="button" class="btn btn-muted btn-sm" id="admin-user-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有管理员。</p><p class="muted">在上方填写登录名和密码即可添加。他们登录的是后台，不是网站。</p></div>';
+            return '<div class="list-empty"><p>还没有管理员。</p><p class="muted">在上方填写登录名和密码即可添加。他们登录的是后台，不是网站。不能删自己，创始人不能删。</p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
@@ -210,6 +211,7 @@
         });
     }
 
+    U.on('#admin-user-search', 'submit', function (e) { e.preventDefault(); runSearch(); });
     U.on('#admin-user-search-btn', 'click', runSearch);
     U.on('#admin-user-reset-btn', 'click', function () { setTimeout(function () { form.kind.value = ''; form.role_id.value = ''; runSearch(); }, 0); });
     U.on('#admin-user-queues', 'click', function (e) {

@@ -53,6 +53,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/plugins/{id}/toggle', [PluginController::class, 'toggle'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.toggle');
     Route::post('/plugins/{id}/uninstall', [PluginController::class, 'uninstall'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.uninstall');
     Route::post('/ui-locale', [Index::class, 'switchUi'])->name('admin.ui-locale');
+    Route::post('/unlock', [Index::class, 'unlock'])->name('admin.unlock');
     Route::get('/stats', [StatController::class, 'index'])->name('admin.stats.index');
     Route::get('/stats/export', [StatController::class, 'export'])->name('admin.stats.export');
     Route::get('/stats/spiders', [StatController::class, 'spiders'])->name('admin.stats.spiders');
@@ -91,6 +92,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/system/menus/add', [SysPerm::class, 'addMenu']);// 新增菜单/权限
     Route::post('/system/menus/update', [SysPerm::class, 'updateMenu']);// 更新菜单/权限
     Route::post('/system/menus/delete', [SysPerm::class, 'deleteMenu']);// 删除菜单/权限（级联）
+    Route::post('/system/menus/sync', [SysPerm::class, 'syncMenus']);// 对齐当前工作区
 
     // 字典（下拉选项，按分组）
     Route::get('/system/dicts', [SysDict::class, 'index']);// 字典（下拉选项，按分组）
@@ -98,6 +100,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/system/dicts/add', [SysDict::class, 'addSysSet']);// 添加系统字典
     Route::post('/system/dicts/update', [SysDict::class, 'updateSysSet']);// 更新系统字典
     Route::post('/system/dicts/delete', [SysDict::class, 'deleteSysSet']);// 删除系统字典
+    Route::post('/system/dicts/import', [SysDict::class, 'importFromSettings']);// 从站点设置拆进字典
     Route::post('/system/dicts/state', [SysDict::class, 'updateState']);// 更新系统字典状态
    
     // 快捷菜单管理
@@ -181,6 +184,9 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/audits/create', [SiteModule::class, 'createAuditRule']);
     Route::get('/video/audits/{id}/edit', [SiteModule::class, 'editAuditRule'])->whereNumber('id');
     Route::post('/video/audits/try', [SiteModule::class, 'tryAuditRule']);
+    Route::post('/video/synonyms/try', [SiteModule::class, 'trySynonym']);
+    Route::post('/video/downloaders/try', [SiteModule::class, 'tryDownloader']);
+    Route::post('/video/servers/try', [SiteModule::class, 'tryServer']);
     Route::post('/video/players/ensure', [SiteModule::class, 'ensurePlayers']);
     Route::get('/video/unions/create', [SiteModule::class, 'createUnion']);
     Route::get('/video/unions/{id}/edit', [SiteModule::class, 'editUnion'])->whereNumber('id');
@@ -214,6 +220,8 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/make/map', [SiteOps::class, 'makeMap']);
     Route::post('/video/playfails/offline', [SiteOps::class, 'disableFailSource']);
     Route::get('/video/wizard', [SiteOps::class, 'wizard']);
+    Route::post('/video/wizard/snippet', [SiteOps::class, 'wizardSnippet']);
+    Route::post('/video/wizard/try', [SiteOps::class, 'wizardTry']);
     Route::post('/video/hits-reset', [SiteOps::class, 'hitsReset']);
     Route::get('/video/rewrite', [SiteOps::class, 'rewrite']);
     Route::get('/video/safety', [SiteOps::class, 'safety']);
@@ -252,13 +260,14 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     });
     // 数据库
     Route::prefix('/system/database')->controller(SysDatabase::class)->group(function () {
-        Route::get('/dict', 'showDatabaseDict');// 显示数据库字典页
+        Route::get('/dict', 'showDatabaseDict');// 库表字段说明
         Route::get('/dict/tables', 'getDatabaseTables');// 获取数据库表列表
         Route::get('/dict/columns', 'getDatabaseColumns');// 获取数据库表字段列表
 
         Route::get('/backup', 'showDatabaseBackup');// 显示数据库备份页
         Route::get('/backup/run', 'showDatabaseBackup');// 兼容直接访问执行地址
         Route::post('/backup/run', 'runDatabaseBackup');// 执行数据库备份
+        Route::post('/backup/schedule', 'saveDatabaseBackupSchedule');// 保存备份定时
         Route::get('/backup/files', 'getDatabaseBackupFiles');// 获取备份文件列表
         Route::get('/backup/download', 'downloadDatabaseBackupFile');// 下载备份文件
         Route::post('/backup/delete', 'deleteDatabaseBackupFile');// 删除备份文件

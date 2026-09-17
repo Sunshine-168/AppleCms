@@ -622,50 +622,6 @@ APACHE;
         ];
     }
 
-    public function malwareScan(): array
-    {
-        $needles = [
-            'eval'.'(',
-            'assert'.'(',
-            'base64_decode'.'(',
-            'system'.'(',
-            'passthru'.'(',
-            'shell_exec'.'(',
-        ];
-        $hits = [];
-        foreach ([app_path(), public_path()] as $root) {
-            if (! is_dir($root)) {
-                continue;
-            }
-            $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
-            foreach ($it as $file) {
-                if (! $file->isFile() || strtolower($file->getExtension()) !== 'php') {
-                    continue;
-                }
-                $path = $file->getPathname();
-                $rel = str_replace('\\', '/', substr($path, strlen(base_path()) + 1));
-                $content = @file_get_contents($path);
-                if ($content === false || $content === '') {
-                    continue;
-                }
-                $lines = preg_split("/\r\n|\n|\r/", $content) ?: [];
-                foreach ($lines as $num => $line) {
-                    foreach ($needles as $needle) {
-                        if (str_contains($line, $needle)) {
-                            $hits[] = $rel.':'.($num + 1);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return Result::success([
-            'hits' => $hits,
-            'count' => count($hits),
-        ], $hits === [] ? '未发现可疑调用' : '发现 '.count($hits).' 处');
-    }
-
     public function replacePlayUrl(string $from, string $to, mixed $ids = [], string $value = ''): array
     {
         if ($from === '' && str_contains($value, '|')) {

@@ -1,166 +1,354 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.schedule'))
 
+@php
+    $board = $board ?? [];
+    $ui = $board['ui'] ?? [];
+    $cmds = $board['artisan_cmds'] ?? [];
+    $cronPresets = $board['cron_presets'] ?? [];
+@endphp
+
 @section('plain')
-<div class="card card-panel">
+<div class="card card-panel schedule-index" id="schedule-index">
+    <div class="card-header">
+        <span>{{ $ui['title'] ?? '' }}</span>
+    </div>
     <div class="card-body">
-        <form class="filter-bar" id="schedule-search" onsubmit="return false;">
-            <input type="text" name="name" placeholder="任务名称">
-            <select name="type">
-                <option value="">类型</option>
-                <option value="artisan">artisan</option>
-                <option value="shell">shell</option>
-                <option value="http">http</option>
-            </select>
-            <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">禁用</option>
-            </select>
-            <button type="button" class="btn btn-sm" id="schedule-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="schedule-reset-btn">重置</button>
+        @include('admin.partials.schedule-kind-tabs', ['tab' => 'other'])
+        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}推地址去「<a href="/admin/video/push">搜索推送</a>」。改完还不生效去「<a href="/admin/system/tools/cache">缓存</a>」。</p>
+        @if(($board['collect_note'] ?? '') !== '')
+            <p class="muted">{{ $board['collect_note'] }}</p>
+        @endif
+
+        <section class="schedule-install">
+            <div class="schedule-install-head">
+                <h3>{{ $ui['install'] ?? '' }}</h3>
+            </div>
+            <p class="muted field-hint">{{ $ui['install_hint'] ?? '' }}</p>
+            <div class="schedule-cron-row">
+                <code id="schedule-cron-line">{{ $board['cron_line'] ?? '' }}</code>
+                <button type="button" class="btn btn-muted btn-sm" id="schedule-copy-cron">{{ $ui['copy'] ?? '' }}</button>
+            </div>
+            @if(($board['idle_on'] ?? 0) > 0)
+                <p class="schedule-idle-hint">{{ $board['idle_on'] }} {{ $ui['idle'] ?? '' }}</p>
+            @endif
+        </section>
+
+        <section class="schedule-block">
+            <h3>{{ $ui['builtin'] ?? '' }}</h3>
+            <p class="muted field-hint">{{ $ui['builtin_hint'] ?? '' }}</p>
+            <div class="schedule-builtin-grid">
+                @foreach(($board['builtins'] ?? []) as $row)
+                    <article class="schedule-builtin">
+                        <strong>{{ $row['label'] }}</strong>
+                        <span>{{ $row['when'] }}</span>
+                        <p>{{ $row['hint'] }}</p>
+                        @if(!empty($row['url']))
+                            <a href="{{ $row['url'] }}">{{ $ui['look'] ?? '' }}</a>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+        </section>
+
+        <section class="schedule-block">
+            <div class="schedule-block-head">
+                <div>
+                    <h3>{{ $ui['custom'] ?? '' }}</h3>
+                    <p class="muted field-hint">{{ $ui['custom_hint'] ?? '' }}</p>
+                </div>
+                <button type="button" class="btn btn-muted btn-sm" id="schedule-toggle-form">{{ $ui['add_custom'] ?? '' }}</button>
+            </div>
+            <div class="schedule-presets">
+                @foreach(($board['presets'] ?? []) as $preset)
+                    @if(!empty($preset['added']))
+                        <span class="schedule-preset is-added">{{ $ui['added_prefix'] ?? '' }}{{ $preset['label'] }}</span>
+                    @else
+                        <button type="button" class="btn btn-muted btn-sm schedule-preset" data-preset="{{ $preset['command'] }}" data-params="{{ $preset['params'] ?? '' }}">{{ $ui['add_prefix'] ?? '' }}{{ $preset['label'] }}</button>
+                    @endif
+                @endforeach
+            </div>
+            @if(empty($board['tasks']))
+                <div class="schedule-empty">
+                    <p>{{ $ui['empty'] ?? '' }}</p>
+                    <p class="muted">{{ $ui['empty_hint'] ?? '' }}</p>
+                </div>
+            @else
+                <div class="schedule-task-list">
+                    @foreach($board['tasks'] as $row)
+                        <article class="schedule-task{{ empty($row['on']) ? ' is-off' : '' }}" data-id="{{ $row['id'] }}">
+                            <div class="schedule-task-main">
+                                <strong>{{ $row['name'] }}</strong>
+                                <span class="schedule-task-cmd">{{ $row['command_label'] }}</span>
+                                <p class="muted">{{ $row['cron_label'] }} / {{ $ui['next'] ?? '' }} {{ $row['next_text'] }}</p>
+                                <p class="muted">{{ $row['last_text'] }}</p>
+                                @if(!empty($row['last_error']))
+                                    <p class="schedule-err">{{ $ui['last_fail'] ?? '' }}: {{ $row['last_error'] }}</p>
+                                @endif
+                                @if(!empty($row['legacy_run']))
+                                    <p class="muted">{{ $ui['no_duration'] ?? '' }}</p>
+                                @endif
+                                @if(!empty($row['logs']))
+                                    <details class="schedule-logs">
+                                        <summary>{{ $ui['recent'] ?? '' }}</summary>
+                                        @foreach($row['logs'] as $log)
+                                            <article class="schedule-log{{ empty($log['ok']) ? ' is-fail' : '' }}">
+                                                <strong>{{ $log['status_text'] }}</strong>
+                                                <span>{{ $log['duration_text'] }} · {{ $log['time_text'] }}</span>
+                                                @if(($log['error'] ?? '') !== '')
+                                                    <p class="schedule-err">{{ $log['error'] }}</p>
+                                                @elseif(($log['output'] ?? '') !== '')
+                                                    <p class="muted">{{ $log['output'] }}</p>
+                                                @endif
+                                            </article>
+                                        @endforeach
+                                    </details>
+                                @endif
+                            </div>
+                            <div class="schedule-task-side">
+                                <button type="button" class="schedule-switch js-toggle{{ !empty($row['on']) ? ' is-on' : '' }}" title="{{ !empty($row['on']) ? ($ui['stop'] ?? '') : ($ui['start'] ?? '') }}" aria-label="{{ !empty($row['on']) ? ($ui['stop'] ?? '') : ($ui['start'] ?? '') }}" aria-pressed="{{ !empty($row['on']) ? 'true' : 'false' }}"></button>
+                                <button type="button" class="btn btn-sm js-run">{{ $ui['run'] ?? '' }}</button>
+                                <button type="button" class="btn-link js-edit" data-row="{{ e(json_encode($row, JSON_UNESCAPED_UNICODE)) }}">{{ $ui['edit'] ?? '' }}</button>
+                                <button type="button" class="btn-link js-del">{{ $ui['delete'] ?? '' }}</button>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @endif
+        </section>
+
+        <form class="schedule-form" id="schedule-form" hidden>
+            <h3 id="schedule-form-title">{{ $ui['form_add'] ?? '' }}</h3>
+            <input type="hidden" name="id" value="0">
+            <label>{{ $ui['name'] ?? '' }}<input type="text" name="name" maxlength="80" placeholder="{{ $ui['name_ph'] ?? '' }}"></label>
+            <label>{{ $ui['kind'] ?? '' }}
+                <select name="type" id="schedule-type">
+                    <option value="artisan">{{ $ui['kind_artisan'] ?? '' }}</option>
+                    <option value="http">{{ $ui['kind_http'] ?? '' }}</option>
+                    <option value="shell">{{ $ui['kind_shell'] ?? '' }}</option>
+                </select>
+            </label>
+            <div class="js-type-artisan">
+                <label>{{ $ui['cmd'] ?? '' }}
+                    <select name="artisan_cmd">
+                        @foreach($cmds as $cmd => $label)
+                            <option value="{{ $cmd }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label>{{ $ui['params'] ?? '' }}<input type="text" name="artisan_params" placeholder="{{ $ui['params_ph'] ?? '' }}"></label>
+            </div>
+            <div class="js-type-http" hidden>
+                <label>{{ $ui['url'] ?? '' }}<input type="url" name="http_url" placeholder="https://"></label>
+                <p class="muted field-hint">{{ $ui['http_hint'] ?? '' }}</p>
+            </div>
+            <div class="js-type-shell" hidden>
+                <label>{{ $ui['kind_shell'] ?? '' }}<input type="text" name="shell_command"></label>
+                <p class="muted field-hint">{{ $ui['shell_hint'] ?? '' }}</p>
+            </div>
+            <label>{{ $ui['every'] ?? '' }}
+                <select name="cron" id="schedule-cron">
+                    @foreach($cronPresets as $expr => $label)
+                        <option value="{{ $expr }}" @if($expr === '0 4 * * *') selected @endif>{{ $label }}</option>
+                    @endforeach
+                    <option value="custom">{{ $ui['cron_custom'] ?? '' }}</option>
+                </select>
+            </label>
+            <label id="schedule-cron-custom" hidden>cron<input type="text" name="cron_custom" placeholder="0 4 * * *"></label>
+            <label class="inline"><input type="checkbox" name="status" value="1" checked> {{ $ui['keep_on'] ?? '' }}</label>
+            <div class="schedule-form-actions">
+                <button type="submit" class="btn btn-sm">{{ $ui['save'] ?? '' }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="schedule-form-cancel">{{ $ui['cancel'] ?? '' }}</button>
+            </div>
         </form>
     </div>
 </div>
-<div class="card card-panel">
-    <div class="card-header">
-        <span>任务</span>
-        <div>
-            <button type="button" class="btn btn-sm" id="schedule-add-btn">新增任务</button>
-            <button type="button" class="btn btn-muted btn-sm" id="schedule-refresh-btn">刷新</button>
-        </div>
-    </div>
-    <div class="card-body"><div id="schedule-table"></div></div>
-</div>
-<template id="schedule-dialog-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="任务名称">
-        <label>标识</label>
-        <input type="text" name="code" placeholder="可选">
-        <label>类型</label>
-        <select name="type">
-            <option value="artisan">artisan</option>
-            <option value="shell">shell</option>
-            <option value="http">http</option>
-        </select>
-        <label>执行内容</label>
-        <textarea name="command" placeholder="artisan: cache:clear；shell: php -v；http: https://example.com/ping"></textarea>
-        <label>参数</label>
-        <textarea name="params" placeholder="可选"></textarea>
-        <label>cron</label>
-        <input type="text" name="cron_expression" value="* * * * *">
-        <label>时区</label>
-        <input type="text" name="timezone" value="Asia/Shanghai">
-        <label>状态</label>
-        <select name="status"><option value="1">启用</option><option value="0">禁用</option></select>
-        <label>超时(秒)</label>
-        <input type="number" name="timeout" value="0" placeholder="0不限制">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>备注</label>
-        <textarea name="remark" placeholder="可选"></textarea>
-    </form>
-</template>
 @endsection
 
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
-    var table = U.table({
-        el: '#schedule-table',
-        url: '/admin/system/tools/schedule/list',
-        cols: [
-            {key: 'id', title: 'ID', width: 70},
-            {key: 'name', title: '名称'},
-            {key: 'type', title: '类型', width: 80},
-            {key: 'cron_expression', title: 'cron'},
-            {title: '状态', width: 80, html: function (d) { return d.status == 1 ? U.status(true, '启用') : U.status(false, '禁用'); }},
-            {key: 'last_run_time', title: '上次执行', width: 150},
-            {title: '上次状态', width: 90, html: function (d) {
-                if (d.last_status == 1) return U.status(true, '成功');
-                if (d.last_status == 2) return U.status(false, '失败');
-                return '<span class="status status-off">未知</span>';
-            }},
-            {key: 'remark', title: '备注'},
-            {key: 'sort', title: '排序', width: 70},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-run">立即执行</a>';
-                html += d.status == 1 ? '<a href="#" class="btn-link js-off">禁用</a>' : '<a href="#" class="btn-link js-on">启用</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
-                return html;
-            }}
-        ]
-    });
-    function openForm(data) {
-        data = data || {};
-        U.dialog({
-            title: data.id ? '编辑任务' : '新增任务',
-            wide: true,
-            content: document.getElementById('schedule-dialog-tpl').innerHTML,
-            onOpen: function (body) {
-                U.fillForm(body.querySelector('form'), {
-                    id: data.id || 0,
-                    name: data.name || '',
-                    code: data.code || '',
-                    type: data.type || 'artisan',
-                    command: data.command || '',
-                    params: data.params || '',
-                    cron_expression: data.cron_expression || '* * * * *',
-                    timezone: data.timezone || 'Asia/Shanghai',
-                    status: (data.status == 0) ? '0' : '1',
-                    timeout: data.timeout || 0,
-                    sort: data.sort || 0,
-                    remark: data.remark || ''
-                });
-            },
-            onSave: function (body) {
-                var payload = U.formData(body.querySelector('form'));
-                if (!payload.name) { U.toast('请输入任务名称', 'err'); return false; }
-                if (!payload.command) { U.toast('请输入执行内容', 'err'); return false; }
-                return U.post('/admin/system/tools/schedule/save', payload).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '保存失败', 'err'); return false; }
-                    U.toast('保存成功', 'ok');
-                    table.refresh();
-                });
-            }
-        });
+    var root = document.getElementById('schedule-index');
+    if (!root || !U) return;
+    var form = document.getElementById('schedule-form');
+    var presets = @json($board['presets'] ?? []);
+    var ui = @json($ui);
+    function say(res) { U.toast((res && res.msg) || '', res && res.code === 0 ? 'ok' : 'err'); }
+    function reload() { location.reload(); }
+    function showForm() { form.hidden = false; form.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    function setType(t) {
+        form.querySelector('[name=type]').value = t;
+        form.querySelector('.js-type-artisan').hidden = t !== 'artisan';
+        form.querySelector('.js-type-http').hidden = t !== 'http';
+        form.querySelector('.js-type-shell').hidden = t !== 'shell';
     }
-    U.on('#schedule-search-btn', 'click', function () { table.reload(U.formData('#schedule-search')); });
-    U.on('#schedule-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
-    U.on('#schedule-refresh-btn', 'click', function () { table.refresh(); });
-    U.on('#schedule-add-btn', 'click', function () { openForm({}); });
-    U.on('#schedule-table', 'click', function (e) {
-        var a = e.target.closest('a'); if (!a) return;
-        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
-        if (!row) return;
-        e.preventDefault();
-        if (a.classList.contains('js-edit')) openForm(row);
-        if (a.classList.contains('js-del') && U.confirm('确认删除该任务？')) {
-            U.post('/admin/system/tools/schedule/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '删除失败', 'err'); return; }
-                U.toast('删除成功', 'ok'); table.refresh();
-            });
+    function hideForm() {
+        form.hidden = true;
+        form.reset();
+        form.querySelector('[name=id]').value = '0';
+        document.getElementById('schedule-form-title').textContent = ui.form_add || '';
+        form.querySelector('[name=status]').checked = true;
+        document.getElementById('schedule-cron').value = '0 4 * * *';
+        document.getElementById('schedule-cron-custom').hidden = true;
+        setType('artisan');
+    }
+    document.getElementById('schedule-copy-cron').addEventListener('click', function () {
+        var line = (document.getElementById('schedule-cron-line').textContent || '').trim();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(line).then(function () { U.toast(ui.copied || '', 'ok'); });
+            return;
         }
-        if (a.classList.contains('js-on') || a.classList.contains('js-off')) {
-            U.post('/admin/system/tools/schedule/status', {id: row.id, status: a.classList.contains('js-on') ? 1 : 0}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '更新失败', 'err'); return; }
-                U.toast('更新成功', 'ok'); table.refresh();
-            });
-        }
-        if (a.classList.contains('js-run') && U.confirm('确认立即执行该任务？')) {
+        U.toast(line, 'ok');
+    });
+    document.getElementById('schedule-toggle-form').addEventListener('click', function () { showForm(); });
+    document.getElementById('schedule-form-cancel').addEventListener('click', hideForm);
+    document.getElementById('schedule-type').addEventListener('change', function () { setType(this.value); });
+    document.getElementById('schedule-cron').addEventListener('change', function () {
+        document.getElementById('schedule-cron-custom').hidden = this.value !== 'custom';
+    });
+    root.querySelectorAll('[data-preset]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var cmd = btn.getAttribute('data-preset');
+            var p = presets.find(function (x) { return x.command === cmd; }) || {};
             U.loading(true);
-            U.post('/admin/system/tools/schedule/run', {id: row.id}).then(function (res) {
+            U.post('/admin/system/tools/schedule/save', {
+                name: p.label || cmd,
+                type: p.type || 'artisan',
+                command: cmd,
+                params: btn.getAttribute('data-params') || p.params || '',
+                cron: p.cron || '0 4 * * *',
+                status: 1
+            }).then(function (res) {
                 U.loading(false);
-                table.refresh();
-                if (res && res.data && res.data.output) {
-                    U.dialog({ title: '输出', wide: true, hideOk: true, content: '<pre class="out">' + U.escape(res.data.output) + '</pre>' });
-                }
-                U.toast((res && res.msg) || (res && res.code === 0 ? '执行成功' : '执行失败'), res && res.code === 0 ? 'ok' : 'err');
+                say(res);
+                if (res && res.code === 0) reload();
+            }).catch(function () { U.loading(false); U.toast('没连上', 'err'); });
+        });
+    });
+    root.querySelectorAll('.js-run').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.closest('.schedule-task').getAttribute('data-id');
+            btn.disabled = true;
+            U.loading(true);
+            U.post('/admin/system/tools/schedule/run', { id: id }).then(function (res) {
+                U.loading(false);
+                say(res);
+                if (res && res.code === 0) setTimeout(reload, 400);
+            }).catch(function () { U.loading(false); U.toast('没连上', 'err'); }).finally(function () { btn.disabled = false; });
+        });
+    });
+    root.querySelectorAll('.js-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var card = btn.closest('.schedule-task');
+            var on = !card.classList.contains('is-off');
+            btn.disabled = true;
+            U.post('/admin/system/tools/schedule/status', {
+                id: card.getAttribute('data-id'),
+                status: on ? 0 : 1
+            }).then(function (res) {
+                say(res);
+                if (!res || res.code !== 0) return;
+                card.classList.toggle('is-off', on);
+                btn.classList.toggle('is-on', !on);
+                btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+                btn.title = on ? (ui.start || '') : (ui.stop || '');
+                btn.setAttribute('aria-label', btn.title);
+            }).finally(function () { btn.disabled = false; });
+        });
+    });
+    root.querySelectorAll('.js-del').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!U.confirm(ui.del_confirm || '')) return;
+            U.post('/admin/system/tools/schedule/delete', { id: btn.closest('.schedule-task').getAttribute('data-id') }).then(function (res) {
+                say(res);
+                if (res && res.code === 0) reload();
             });
+        });
+    });
+    root.querySelectorAll('.js-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var row = {};
+            try { row = JSON.parse(btn.getAttribute('data-row') || '{}'); } catch (e) {}
+            hideForm();
+            form.querySelector('[name=id]').value = row.id || 0;
+            form.querySelector('[name=name]').value = row.name || '';
+            form.querySelector('[name=status]').checked = !!row.on;
+            document.getElementById('schedule-form-title').textContent = ui.edit || '';
+            var t = row.type || 'artisan';
+            setType(t);
+            if (t === 'artisan') {
+                var full = (row.command || '') + (row.params_text ? ' ' + row.params_text : '');
+                var sel = form.querySelector('[name=artisan_cmd]');
+                var picked = '';
+                for (var oi = 0; oi < sel.options.length; oi++) {
+                    if (sel.options[oi].value === full || sel.options[oi].value === (row.command || '')) {
+                        picked = sel.options[oi].value;
+                        break;
+                    }
+                }
+                if (picked === full && full.indexOf(' ') > 0) {
+                    sel.value = full;
+                    form.querySelector('[name=artisan_params]').value = '';
+                } else {
+                    sel.value = picked || row.command || 'video:baidu-push';
+                    form.querySelector('[name=artisan_params]').value = row.params_text || '';
+                }
+            } else if (t === 'http') {
+                form.querySelector('[name=http_url]').value = row.command || '';
+            } else {
+                form.querySelector('[name=shell_command]').value = row.command || '';
+            }
+            var cronSel = document.getElementById('schedule-cron');
+            var found = false;
+            for (var i = 0; i < cronSel.options.length; i++) {
+                if (cronSel.options[i].value === row.cron) { cronSel.value = row.cron; found = true; break; }
+            }
+            if (!found) {
+                cronSel.value = 'custom';
+                form.querySelector('[name=cron_custom]').value = row.cron || '';
+                document.getElementById('schedule-cron-custom').hidden = false;
+            } else {
+                document.getElementById('schedule-cron-custom').hidden = true;
+            }
+            showForm();
+        });
+    });
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var t = form.querySelector('[name=type]').value;
+        var cron = document.getElementById('schedule-cron').value;
+        if (cron === 'custom') cron = form.querySelector('[name=cron_custom]').value;
+        var payload = {
+            id: form.querySelector('[name=id]').value,
+            name: form.querySelector('[name=name]').value,
+            type: t,
+            cron: cron,
+            status: form.querySelector('[name=status]').checked ? 1 : 0,
+            command: '',
+            params: ''
+        };
+        if (t === 'artisan') {
+            var raw = form.querySelector('[name=artisan_cmd]').value;
+            var extra = form.querySelector('[name=artisan_params]').value;
+            if (raw.indexOf('plugin:run ') === 0) {
+                payload.command = 'plugin:run';
+                payload.params = (raw.slice(11) + ' ' + extra).trim();
+            } else {
+                payload.command = raw;
+                payload.params = extra;
+            }
+        } else if (t === 'http') {
+            payload.command = form.querySelector('[name=http_url]').value;
+        } else {
+            payload.command = form.querySelector('[name=shell_command]').value;
         }
+        U.loading(true);
+        U.post('/admin/system/tools/schedule/save', payload).then(function (res) {
+            U.loading(false);
+            say(res);
+            if (res && res.code === 0) reload();
+        }).catch(function () { U.loading(false); U.toast('没连上', 'err'); });
     });
 })();
 </script>

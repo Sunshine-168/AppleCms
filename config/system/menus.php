@@ -188,41 +188,17 @@ return [
                 'name' => '数据库管理',
                 'sub' => [
                     [
-                        'name' => '数据库字典',
-                        'url' => '/admin/system/database/dict'
-                    ],
-                    [
-                        'name' => '数据库备份',
+                        'name' => '数据库',
                         'url' => '/admin/system/database/backup'
                     ],
-                    [
-                        'name' => '数据库恢复',
-                        'url' => '/admin/system/database/restore'
-                    ],
-                    [
-                        'name' => 'SQL执行',
-                        'url' => '/admin/system/database/sql'
-                    ],
-                    [
-                        'name' => '数据批量替换',
-                        'url' => '/admin/system/database/replace'
-                    ]
                 ]
             ],
             [
                 'name' => '系统监控',
                 'sub' => [
                     [
-                        'name' => '登录日志',
+                        'name' => '日志',
                         'url' => '/admin/system/monitor/login-logs'
-                    ],
-                    [
-                        'name' => '操作日志',
-                        'url' => '/admin/system/monitor/operate-logs'
-                    ],
-                    [
-                        'name' => '系统日志',
-                        'url' => '/admin/system/monitor/system-logs'
                     ]
                 ]
             ],

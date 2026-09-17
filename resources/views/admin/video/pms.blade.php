@@ -30,7 +30,7 @@
             <button type="button" class="chip" data-queue="is_read" data-value="0">未读@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">发给指定会员，会员登录后在「站内信」里看。打开信箱会全部标已读。要通知所有人，用「会员通知」。</p>
+        <p class="muted recycle-lead">发给指定会员，登录后在「站内信」里看。打开信箱会全部标已读。通知所有人用「会员通知」。</p>
         <div class="batch-bar" id="pm-batch" hidden>
             <strong id="pm-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="pm-batch-read">标为已读</button>

@@ -23,12 +23,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">配好密钥后可以<strong>请求模型写简介</strong>。试写只显示文本，影片编辑里点「用 AI 写简介」也只填文本框，需要再保存才会入库。没配密钥会失败，不会假装写好。</p>
-        <ol class="hub-steps">
-            <li class="is-on"><em>1</em><span>填服务商和密钥</span></li>
-            <li><em>2</em><span>保存</span></li>
-            <li><em>3</em><span>试写或到影片里生成</span></li>
-        </ol>
+        <p class="muted recycle-lead">填写密钥后保存，可请求模型写简介。试写或到影片里生成只填文本框，没配密钥会失败。</p>
 
         <div class="ai-stock">
             @if($ready)

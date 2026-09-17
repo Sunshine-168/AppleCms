@@ -30,7 +30,7 @@
             <button type="button" class="chip" data-queue="queue" data-value="used">已兑@if($q('used') > 0)<em>{{ $q('used') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="queue" data-value="void">作废@if($q('void') > 0)<em>{{ $q('void') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">卡密给线下卖或发给会员。他们在会员中心兑换后加积分，每张只能用一次。作废后不能兑；已兑的不能改也不能删。</p>
+        <p class="muted recycle-lead">卡密给线下卖或发给会员。会员中心兑换后加积分，每张只能用一次。作废后不能兑；已兑的不能改也不能删。</p>
         <div class="batch-bar" id="card-batch" hidden>
             <strong id="card-batch-count">已选 0 张</strong>
             <button type="button" class="btn btn-sm" id="card-batch-copy">复制卡密</button>

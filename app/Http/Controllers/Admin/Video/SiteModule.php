@@ -40,6 +40,31 @@ class SiteModule extends Controller
                 'queues' => $this->modules->slideQueues(),
             ]);
         }
+        if ($module === 'roles') {
+            $videoId = (int) request()->query('video_id', request()->query('video', 0));
+            $actorId = (int) request()->query('actor_id', request()->query('actor', 0));
+            $focus = $this->modules->roleFocus($videoId, $actorId);
+
+            return view('admin.video.roles', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->roleQueues(),
+                'videoId' => $videoId,
+                'actorId' => $actorId,
+                'videoTitle' => $focus['video_title'],
+                'actorName' => $focus['actor_name'],
+            ]);
+        }
+        if ($module === 'plots') {
+            $videoId = (int) request()->query('video_id', request()->query('video', 0));
+            $focus = $this->modules->plotFocus($videoId);
+
+            return view('admin.video.plots', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->plotQueues(),
+                'videoId' => $videoId,
+                'videoTitle' => $focus['video_title'],
+            ]);
+        }
         if ($module === 'members') {
             return view('admin.video.members', [
                 'title' => $cfg['title'],
@@ -84,10 +109,45 @@ class SiteModule extends Controller
                 'queues' => $this->modules->linkQueues(),
             ]);
         }
+        if ($module === 'websites') {
+            $typeId = (int) request()->query('type_id', request()->query('type', 0));
+
+            return view('admin.video.websites', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->websiteQueues(),
+                'types' => $this->modules->websiteTypeOptions(),
+                'typeId' => $typeId,
+            ]);
+        }
+        if ($module === 'classes') {
+            return view('admin.video.classes', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->classQueues(),
+            ]);
+        }
+        if ($module === 'synonyms') {
+            return view('admin.video.synonyms', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->synonymQueues(),
+            ]);
+        }
         if ($module === 'players') {
             return view('admin.video.players', [
                 'title' => $cfg['title'],
                 'queues' => $this->modules->playerQueues(),
+            ]);
+        }
+        if ($module === 'downloaders') {
+            return view('admin.video.downloaders', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->downloaderQueues(),
+            ]);
+        }
+        if ($module === 'servers') {
+            return view('admin.video.servers', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->serverQueues(),
+                'onServers' => $this->modules->enabledServers(),
             ]);
         }
         if ($module === 'unions') {
@@ -202,6 +262,18 @@ class SiteModule extends Controller
                 'videoId' => $videoId,
                 'memberName' => $focus['member_name'],
                 'videoTitle' => $focus['video_title'],
+            ]);
+        }
+        if ($module === 'botlogs') {
+            return view('admin.video.botlogs', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->botlogQueues(),
+            ]);
+        }
+        if ($module === 'accesslogs') {
+            return view('admin.video.accesslogs', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->accesslogQueues(),
             ]);
         }
 
@@ -438,6 +510,27 @@ class SiteModule extends Controller
     public function tryAuditRule(Request $request): JsonResponse
     {
         $data = $this->modules->tryAuditRule($request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function trySynonym(Request $request): JsonResponse
+    {
+        $data = $this->modules->trySynonym($request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function tryDownloader(Request $request): JsonResponse
+    {
+        $data = $this->modules->tryDownloader($request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function tryServer(Request $request): JsonResponse
+    {
+        $data = $this->modules->tryServer($request->all());
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

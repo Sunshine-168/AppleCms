@@ -19,6 +19,9 @@ class PluginHost
     /** @var list<array{url:string,label:string}> */
     private array $settingsLinks = [];
 
+    /** @var list<array<string, mixed>> */
+    private array $scheduleJobs = [];
+
     /** @param array<string, mixed> $config */
     public function module(string $name, array $config): void
     {
@@ -49,6 +52,31 @@ class PluginHost
         $this->settingsLinks[] = $link;
     }
 
+    /** @param array<string, mixed> $job */
+    public function scheduleJob(array $job): void
+    {
+        $plugin = strtolower(trim((string) ($job['plugin'] ?? '')));
+        $id = strtolower(trim((string) ($job['id'] ?? '')));
+        $handler = trim((string) ($job['handler'] ?? ''));
+        if ($plugin === '' || $id === '' || $handler === '') {
+            return;
+        }
+        if (! preg_match('/^[a-z][a-z0-9_]{0,62}$/', $plugin) || ! preg_match('/^[a-z][a-z0-9_]{0,62}$/', $id)) {
+            return;
+        }
+        $this->scheduleJobs[] = [
+            'plugin' => $plugin,
+            'plugin_label' => trim((string) ($job['plugin_label'] ?? $plugin)),
+            'id' => $id,
+            'label' => trim((string) ($job['label'] ?? $id)),
+            'hint' => trim((string) ($job['hint'] ?? '')),
+            'cron' => trim((string) ($job['cron'] ?? '0 4 * * *')) ?: '0 4 * * *',
+            'handler' => $handler,
+            'command' => 'plugin:run',
+            'params' => $plugin.' '.$id,
+        ];
+    }
+
     /** @return array<string, mixed>|null */
     public function findModule(string $name): ?array
     {
@@ -74,6 +102,19 @@ class PluginHost
     }
 
     /** @return list<array<string, mixed>> */
+    public function allSidebarFoldItems(): array
+    {
+        $out = [];
+        foreach ($this->sidebarFold as $items) {
+            foreach ($items as $item) {
+                $out[] = $item;
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return list<array<string, mixed>> */
     public function catalogItems(string $block): array
     {
         return $this->catalog[$block] ?? [];
@@ -83,5 +124,11 @@ class PluginHost
     public function settingsLinks(): array
     {
         return $this->settingsLinks;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function scheduleJobs(): array
+    {
+        return $this->scheduleJobs;
     }
 }

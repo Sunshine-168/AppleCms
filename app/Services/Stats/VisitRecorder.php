@@ -3,6 +3,7 @@
 namespace App\Services\Stats;
 
 use App\Models\Stat\StatHit;
+use App\Support\FrontPageHit;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -12,35 +13,11 @@ class VisitRecorder
 
     public function shouldRecord(Request $request, Response $response): bool
     {
-        if (! in_array($request->method(), ['GET', 'HEAD'], true)) {
+        if (! FrontPageHit::isDocumentGet($request)) {
             return false;
         }
 
-        $path = '/'.ltrim($request->path(), '/');
-        if ($path === '//') {
-            $path = '/';
-        }
-
-        foreach (['/admin', '/install', '/api/', '/api.php', '/css/', '/js/', '/static/', '/storage/', '/livewire/'] as $prefix) {
-            if ($path === rtrim($prefix, '/') || str_starts_with($path, $prefix)) {
-                return false;
-            }
-        }
-        if ($path === '/up') {
-            return false;
-        }
-        if (preg_match('#\.(css|js|map|ico|png|jpe?g|gif|webp|svg|woff2?|ttf|eot|txt|xml|json)$#i', $path)) {
-            if (! str_ends_with(strtolower($path), 'sitemap.xml') && ! str_ends_with(strtolower($path), 'rss.xml')) {
-                return false;
-            }
-        }
-
-        $status = $response->getStatusCode();
-        if ($status >= 500) {
-            return false;
-        }
-
-        return true;
+        return $response->getStatusCode() < 500;
     }
 
     public function record(Request $request, Response $response): void

@@ -14,14 +14,12 @@
     <div class="card-header">
         <span>定时采集 <em id="ctask-count"></em></span>
         <div>
-            <a class="btn btn-sm" href="/admin/video/collect_tasks/create">新增任务</a>
-            <button type="button" class="btn btn-muted btn-sm" id="ctask-due-btn">跑到期任务</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
+            <a class="btn btn-sm" href="/admin/video/collect_tasks/create">新增定时采集</a>
+            <button type="button" class="btn btn-muted btn-sm" id="ctask-due-btn" hidden>跑到期任务</button>
         </div>
     </div>
     <div class="card-body">
+        @include('admin.partials.schedule-kind-tabs', ['tab' => 'collect'])
         <form class="filter-bar" id="ctask-search" onsubmit="return false;">
             <input type="hidden" name="status">
             <input type="hidden" name="never">
@@ -39,7 +37,7 @@
             <button type="button" class="chip" data-queue="failed" data-value="1">上次失败@if($q('fail') > 0)<em>{{ $q('fail') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="source" id="ctask-source-chip" @if($sourceId < 1) hidden @endif>{{ $sourceChip }}</button>
         </div>
-        <p class="muted recycle-lead">到点会自动采。服务器要每分钟跑 <code>php artisan schedule:run</code>，也可以点「跑到期任务」立刻检查一遍。删任务不会改片库。</p>
+        <p class="muted recycle-lead">到点会自动采资源站。没有采集源时先去「<a href="/admin/video/collects">采集源</a>」加接口。备份、推送、插件任务在「备份 / 推送 / 插件」。服务器要每分钟跑 <code>php artisan schedule:run</code>。有任务后可点「跑到期任务」立刻检查。删任务不会改片库。</p>
         <div class="batch-bar" id="ctask-batch" hidden>
             <strong id="ctask-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="ctask-batch-on">启用</button>
@@ -153,12 +151,14 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的定时任务。</p><p><button type="button" class="btn btn-muted btn-sm" id="ctask-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>没有符合条件的定时采集。</p><p><button type="button" class="btn btn-muted btn-sm" id="ctask-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有定时任务。</p><p class="muted">先有采集源，再设到点自动采当天更新。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collect_tasks/create">新增任务</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
+            return '<div class="list-empty"><p>还没有定时采集。</p><p class="muted">先有采集源，再设到点自动采当天更新。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collect_tasks/create">新增定时采集</a></p></div>';
         },
         onDraw: function (wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
+            var dueBtn = document.getElementById('ctask-due-btn');
+            if (dueBtn) dueBtn.hidden = !list.length;
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
                 var d = list[parseInt(tr.getAttribute('data-idx'), 10)];
                 if (!d) return;
@@ -256,7 +256,7 @@
             return;
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这个定时任务？片库不会变。')) return;
+            if (!U.confirm('删除这条定时采集？片库不会变。')) return;
             U.post('/admin/video/collect_tasks/delete', {id: row.id}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
                 table.refresh();

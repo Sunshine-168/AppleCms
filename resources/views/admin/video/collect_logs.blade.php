@@ -15,12 +15,6 @@
 <div class="card card-panel collect-log-index">
     <div class="card-header">
         <span>采集日志 <em id="clog-count"></em></span>
-        <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">定时采集</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_temps">待审入库</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/unions">推荐资源</a>
-        </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="clog-search" onsubmit="return false;">

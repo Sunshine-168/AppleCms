@@ -1,7 +1,7 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>在线充值</h1>
-    <p class="muted">1 元 = 100 积分。没有配密钥会直接失败，不会假装已付。</p>
+    <p class="muted">1 元 = 100 积分。没有配密钥会直接失败，不会记成已付。</p>
     @if($errors->any())
         <p class="muted">{{ $errors->first() }}</p>
     @endif

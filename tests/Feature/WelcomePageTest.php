@@ -46,6 +46,8 @@ class WelcomePageTest extends TestCase
         $this->assertStringNotContainsString('上次登录', $html);
         $this->assertStringNotContainsString('登录 IP', $html);
         $this->assertStringContainsString('近七日注册', $html);
+        $this->assertStringNotContainsString('站点健康', $html);
+        $this->assertStringNotContainsString('dash-health', $html);
     }
 
     public function test_dashboard_board_includes_server_disk(): void
@@ -53,6 +55,7 @@ class WelcomePageTest extends TestCase
         $board = app(VideoDashboardService::class)->board();
 
         $this->assertArrayHasKey('server', $board);
+        $this->assertArrayNotHasKey('health', $board);
         $this->assertIsArray($board['server']['disk'] ?? null);
         $this->assertArrayHasKey('reg', $board);
         $this->assertCount(7, $board['reg']['days']);

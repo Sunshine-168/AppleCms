@@ -21,12 +21,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">采集来的封面常常还挂在资源站。扫描看哪些在外站、哪些打不开；下载后存到本站 <code>/uploads/vod/</code>，资源站挂了图还在。扫描不改片子。</p>
-        <ol class="hub-steps">
-            <li class="is-on"><em>1</em><span>扫描封面</span></li>
-            <li><em>2</em><span>下载到本站</span></li>
-            <li><em>3</em><span>去无封面列表补图</span></li>
-        </ol>
+        <p class="muted recycle-lead">扫描封面、下载到本站 <code>/uploads/vod/</code>。缺图去补无封面。扫描不改影片。</p>
 
         <div class="img-stock" id="img-stock">
             <span>外站封面 <strong id="img-remote-n">{{ $remoteN }}</strong></span>

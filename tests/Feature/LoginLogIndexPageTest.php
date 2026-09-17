@@ -21,14 +21,19 @@ class LoginLogIndexPageTest extends TestCase
 
         $this->assertStringContainsString('还没有登录记录', $html);
         $this->assertStringContainsString('登录日志', $html);
+        $this->assertStringContainsString('log-tabs', $html);
         $this->assertStringContainsString('/admin/system/monitor/operate-logs', $html);
+        $this->assertStringContainsString('/admin/system/monitor/system-logs', $html);
         $this->assertStringContainsString('搜管理员或 IP', $html);
         $this->assertStringContainsString('点 IP 只看这个地址', $html);
+        $this->assertStringContainsString('全部时间', $html);
         $this->assertStringContainsString('今天', $html);
         $this->assertStringContainsString('近7天', $html);
-        $this->assertStringContainsString('我的', $html);
+        $this->assertStringContainsString('只看我', $html);
+        $this->assertStringContainsString('>查询<', $html);
+        $this->assertStringContainsString('>重置<', $html);
         $this->assertMatchesRegularExpression('/id="login-log-ip-chip"[^>]*\bhidden\b/', $html);
-        $this->assertStringContainsString('/admin/user', $html);
+        $this->assertStringNotContainsString('queue-chips', $html);
         $this->assertStringNotContainsString('sysuserlog-refresh-btn', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('UA请求头', $html);

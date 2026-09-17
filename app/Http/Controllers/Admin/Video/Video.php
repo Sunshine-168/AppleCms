@@ -57,11 +57,13 @@ class Video extends Controller
             $settings = app(\App\Services\Video\VideoSettingService::class)->all();
         } catch (\Throwable) {
         }
+        $dict = app(\App\Services\Admin\System\SysDictService::class);
         $split = static function (string $raw): array {
             return array_values(array_filter(array_map('trim', preg_split('/[,，]/u', $raw) ?: [])));
         };
         $ts = (int) ($video['publish_at'] ?? 0);
         $roles = [];
+        $plots = [];
         $vid = (int) ($video['id'] ?? 0);
         if ($vid > 0) {
             try {
@@ -77,6 +79,20 @@ class Video extends Controller
             } catch (\Throwable) {
                 $roles = [];
             }
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('video_plots')) {
+                    $plots = \App\Models\Video\VideoPlot::query()
+                        ->where('video_id', $vid)
+                        ->orderBy('episode_num')
+                        ->orderBy('sort')
+                        ->orderBy('id')
+                        ->limit(20)
+                        ->get(['id', 'episode_num', 'title', 'content'])
+                        ->toArray();
+                }
+            } catch (\Throwable) {
+                $plots = [];
+            }
         }
 
         return view('admin.video.form', [
@@ -84,11 +100,12 @@ class Video extends Controller
             'isEdit' => $vid > 0,
             'types' => is_array($types) ? $types : [],
             'collects' => is_array($collects) ? $collects : [],
-            'areas' => $split((string) ($settings['filter_area'] ?? '')),
-            'langs' => $split((string) ($settings['filter_lang'] ?? '')),
-            'years' => $split((string) ($settings['filter_year'] ?? '')),
+            'areas' => $dict->filterChoices('area') ?: $split((string) ($settings['filter_area'] ?? '')),
+            'langs' => $dict->filterChoices('lang') ?: $split((string) ($settings['filter_lang'] ?? '')),
+            'years' => $dict->filterChoices('year') ?: $split((string) ($settings['filter_year'] ?? '')),
             'publishAt' => $ts > 0 ? date('Y-m-d\TH:i', $ts) : '',
             'roles' => $roles,
+            'plots' => $plots,
         ]);
     }
 
@@ -114,6 +131,7 @@ class Video extends Controller
             'has_plot' => $request->input('has_plot', ''),
             'empty_pic' => $request->input('empty_pic', ''),
             'empty_content' => $request->input('empty_content', ''),
+            'missing_ep' => $request->input('missing_ep', ''),
             'no_actor' => $request->input('no_actor', ''),
             'weekday' => (string) $request->input('weekday', ''),
             'trash' => $request->input('trash', ''),
@@ -155,6 +173,7 @@ class Video extends Controller
             'area' => (string)$request->input('area', ''),
             'lang' => (string)$request->input('lang', ''),
             'year' => (string)$request->input('year', ''),
+            'class' => (string)$request->input('class', ''),
             'director' => (string)$request->input('director', ''),
             'remarks' => (string)$request->input('remarks', ''),
             'description' => (string)$request->input('description', ''),
@@ -662,6 +681,7 @@ class Video extends Controller
     public function getActorLists(Request $request): JsonResponse
     {
         $params = [
+            'id' => $request->input('id', ''),
             'name' => (string) $request->input('name', ''),
             'status' => $request->input('status', ''),
             'empty_pic' => $request->input('empty_pic', ''),

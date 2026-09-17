@@ -12,7 +12,6 @@
         <span>推荐资源 <em id="union-count"></em></span>
         <div>
             <a class="btn btn-sm" href="/admin/video/unions/create">新增资源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
         </div>
     </div>
     <div class="card-body">

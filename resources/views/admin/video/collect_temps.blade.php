@@ -14,11 +14,6 @@
 <div class="card card-panel collect-temp-index">
     <div class="card-header">
         <span>待审入库 <em id="ctemp-count"></em></span>
-        <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collect_logs">采集日志</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/collect">内容接入</a>
-        </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="ctemp-search" onsubmit="return false;">

@@ -80,7 +80,7 @@ class SiteSetting extends Controller
         if (isset($views[$page])) {
             return view($views[$page], [
                 'site' => $this->settings->site(),
-                'receiveUrl' => url('/api.php/receive/vod'),
+                'receiveUrl' => url('/api/receive/vod'),
             ]);
         }
         $extra = $this->settings->extraPages();

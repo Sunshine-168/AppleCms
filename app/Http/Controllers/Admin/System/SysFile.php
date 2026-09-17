@@ -28,7 +28,7 @@ class SysFile extends Controller
      */
     public function index(): View|Factory
     {
-        return view('admin.system.file.index');
+        return view('admin.system.file.index', $this->systemFileService->pageBoard());
     }
 
     /**
@@ -38,7 +38,8 @@ class SysFile extends Controller
     {
         $keyword = (string) $request->input('keyword', '');
         $limit   = (int) $request->input('limit', 10);
-        $data    = $this->systemFileService->getLists($keyword, $limit);
+        $kind    = (string) $request->input('kind', '');
+        $data    = $this->systemFileService->getLists($keyword, $limit, $kind);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 

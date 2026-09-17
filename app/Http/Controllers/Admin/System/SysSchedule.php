@@ -28,7 +28,9 @@ class SysSchedule extends Controller
      */
     public function showSchedule(): View|Factory
     {
-        return view('admin.system.tools.schedule');
+        return view('admin.system.tools.schedule', [
+            'board' => $this->systemScheduleService->pageBoard(),
+        ]);
     }
 
     /**
@@ -60,7 +62,7 @@ class SysSchedule extends Controller
         $type                = (string) $request->input('type', 'artisan');
         $command             = (string) $request->input('command', '');
         $params              = (string) $request->input('params', '');
-        $cronExpression      = (string) $request->input('cron_expression', '* * * * *');
+        $cronExpression      = (string) $request->input('cron', $request->input('cron_expression', '0 4 * * *'));
         $timezone            = (string) $request->input('timezone', 'Asia/Shanghai');
         $status              = (int) $request->input('status', 1);
         $withoutOverlapping  = (int) $request->input('without_overlapping', 1);
@@ -100,7 +102,11 @@ class SysSchedule extends Controller
      */
     public function deleteSchedule(Request $request): JsonResponse
     {
-        $id = (int) $request->input('id', 0);
+        $raw = $request->input('id', $request->input('ids', 0));
+        if (is_array($raw)) {
+            $raw = $raw[0] ?? 0;
+        }
+        $id = (int) $raw;
         $res = $this->systemScheduleService->deleteSchedule($id);
         return Ajax::message($res['code'], $res['msg'], $res['data']);
     }

@@ -21,7 +21,7 @@ class AiConfigPageTest extends TestCase
 
         $this->assertStringContainsString('AI 写内容', $html);
         $this->assertStringContainsString('请求模型写简介', $html);
-        $this->assertStringContainsString('填服务商和密钥', $html);
+        $this->assertStringContainsString('填写密钥', $html);
         $this->assertStringContainsString('试写或到影片里生成', $html);
         $this->assertStringContainsString('试写一段', $html);
         $this->assertStringContainsString('试写不会改影片', $html);

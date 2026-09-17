@@ -166,37 +166,45 @@ class SiteToolsService
 
     public function quality(int $limit = 50): array
     {
-        $emptyUrl = VideoModel::query()->whereDoesntHave('episodes')->count();
-        $emptyPic = VideoModel::query()->where(function ($q) {
-            $q->whereNull('cover')->orWhere('cover', '');
-        })->count();
-        $emptyContent = VideoModel::query()->where(function ($q) {
-            $q->whereNull('description')->orWhere('description', '');
-        })->count();
-        $noActor = VideoModel::query()->whereDoesntHave('actors')->count();
-        $dupTitles = VideoModel::query()->select('title')->groupBy('title')->havingRaw('COUNT(*) > 1')->pluck('title');
-        $repeat = $dupTitles->count() === 0 ? 0 : VideoModel::query()->whereIn('title', $dupTitles)->count();
-        $missingRows = [];
-        if (Schema::hasColumn('videos', 'total') && Schema::hasTable('video_episodes')) {
-            $missingRows = VideoModel::query()
-                ->where('total', '>', 0)
-                ->whereRaw('(select count(*) from video_episodes where video_episodes.video_id = videos.id) < videos.total')
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get(['id', 'title', 'total'])
-                ->map(fn ($row) => ['id' => $row->id, 'title' => $row->title, 'total' => $row->total])
-                ->all();
+        unset($limit);
+        $counts = app(VideoService::class)->qualityCounts();
+        $problems = (int) ($counts['empty_url'] ?? 0)
+            + (int) ($counts['empty_pic'] ?? 0)
+            + (int) ($counts['empty_content'] ?? 0)
+            + (int) ($counts['no_actor'] ?? 0)
+            + (int) ($counts['repeat'] ?? 0)
+            + (int) ($counts['missing_ep'] ?? 0);
+        $all = (int) ($counts['all'] ?? 0);
+        if ($all < 1) {
+            return Result::success($counts, '片库还是空的');
+        }
+        if ($problems < 1) {
+            return Result::success($counts, '这几项都齐了');
         }
 
-        return Result::success([
-            'empty_url' => $emptyUrl,
-            'empty_pic' => $emptyPic,
-            'empty_content' => $emptyContent,
-            'no_actor' => $noActor,
-            'repeat' => $repeat,
-            'missing_ep' => count($missingRows),
-            'missing_ep_rows' => $missingRows,
-        ], '体检完成');
+        return Result::success($counts, '有缺项，点卡片看片子。不会改数据。');
+    }
+
+    public function qualityPage(): array
+    {
+        $counts = app(VideoService::class)->qualityCounts();
+        $order = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'repeat', 'missing_ep'];
+        $focus = '';
+        foreach ($order as $key) {
+            if ((int) ($counts[$key] ?? 0) > 0) {
+                $focus = $key;
+                break;
+            }
+        }
+        if ($focus === '') {
+            $focus = 'empty_url';
+        }
+
+        return [
+            'title' => admin_t('page.tool_quality'),
+            'counts' => $counts,
+            'focus' => $focus,
+        ];
     }
 
     public function playersPage(): array

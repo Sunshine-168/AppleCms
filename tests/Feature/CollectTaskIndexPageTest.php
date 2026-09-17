@@ -9,10 +9,7 @@ class CollectTaskIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_collect_task_index_is_a_schedule_board_not_a_generic_table(): void
@@ -22,7 +19,11 @@ class CollectTaskIndexPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('还没有定时任务', $html);
+        $this->assertStringContainsString('还没有定时采集', $html);
+        $this->assertStringContainsString('新增定时采集', $html);
+        $this->assertStringContainsString('采集片子', $html);
+        $this->assertStringContainsString('备份 / 推送 / 插件', $html);
+        $this->assertStringContainsString('/admin/system/tools/schedule', $html);
         $this->assertStringContainsString('跑到期任务', $html);
         $this->assertStringContainsString('/admin/video/collect_tasks/create', $html);
         $this->assertStringContainsString('搜任务或采集源', $html);
@@ -30,6 +31,10 @@ class CollectTaskIndexPageTest extends TestCase
         $this->assertStringContainsString('从未跑', $html);
         $this->assertStringContainsString('php artisan schedule:run', $html);
         $this->assertStringContainsString('/admin/video/collects', $html);
+        $this->assertStringNotContainsString('href="/admin/video/collect_logs">采集日志', $html);
+        $this->assertStringNotContainsString('href="/admin/video/collect_temps">待审入库', $html);
+        $this->assertStringNotContainsString('btn-muted btn-sm" href="/admin/video/collects"', $html);
+        $this->assertStringNotContainsString('去采集源', $html);
         $this->assertMatchesRegularExpression('/id="ctask-source-chip"[^>]*\bhidden\b/', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('mod-add', $html);
@@ -51,6 +56,12 @@ class CollectTaskIndexPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('请选择采集源', $html);
+        $this->assertStringContainsString('新增定时采集', $html);
+        $this->assertStringContainsString('采集片子', $html);
+        $this->assertStringContainsString('备份 / 推送 / 插件', $html);
+        $this->assertStringContainsString('/admin/system/tools/schedule', $html);
+        $this->assertStringContainsString('数据统计', $html);
+        $this->assertStringNotContainsString('新增定时任务', $html);
         $this->assertStringContainsString('每小时', $html);
         $this->assertStringContainsString('当天更新', $html);
         $this->assertStringContainsString('启用，到期会跑', $html);

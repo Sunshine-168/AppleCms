@@ -9,10 +9,7 @@ class CollectLogIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_collect_log_index_is_a_run_timeline_not_a_generic_table(): void
@@ -28,6 +25,9 @@ class CollectLogIndexPageTest extends TestCase
         $this->assertStringContainsString('clog-batch', $html);
         $this->assertStringContainsString('失败', $html);
         $this->assertStringContainsString('/admin/video/collects', $html);
+        $this->assertStringNotContainsString('href="/admin/video/collect_tasks">定时采集', $html);
+        $this->assertStringNotContainsString('href="/admin/video/collect_temps">待审入库', $html);
+        $this->assertStringNotContainsString('href="/admin/video/unions">推荐资源', $html);
         $this->assertStringContainsString('删掉记录不会改片库', $html);
         $this->assertMatchesRegularExpression('/id="clog-source-chip"[^>]*\bhidden\b/', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);

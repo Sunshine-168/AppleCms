@@ -29,6 +29,8 @@ class ShortcutIndexPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/settings', $html);
         $this->assertStringContainsString('/admin/system/tools/cache', $html);
         $this->assertStringContainsString('/admin/system/database/backup', $html);
+        $this->assertStringContainsString('/admin/plugins', $html);
+        $this->assertStringContainsString('漫画、商城', $html);
         $this->assertStringContainsString('shortcut-index', $html);
         $this->assertStringNotContainsString('shortcut-refresh-btn', $html);
         $this->assertStringNotContainsString('>刷新<', $html);

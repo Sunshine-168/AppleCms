@@ -24,12 +24,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">只拦<strong>后台</strong>，前台游客不受影响。名单为空等于不限制；填了以后，只有这些 IP 能打开 <code>/admin</code>。家里宽带 IP 会变，变了会进不去。</p>
-        <ol class="hub-steps">
-            <li class="{{ $enabled ? '' : 'is-on' }}"><em>1</em><span>看清当前 IP</span></li>
-            <li class="{{ $enabled ? 'is-on' : '' }}"><em>2</em><span>决定开不开限制</span></li>
-            <li><em>3</em><span>保存前确认自己还在名单里</span></li>
-        </ol>
+        <p class="muted recycle-lead">只限制后台登录。名单为空不限制；填了以后只有这些 IP 能打开 <code>/admin</code>。家宽 IP 变了会进不去。</p>
 
         <div class="ai-stock">
             @if($enabled)

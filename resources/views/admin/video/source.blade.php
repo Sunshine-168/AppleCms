@@ -39,7 +39,7 @@
                     <option value="{{ (int) ($s['id'] ?? 0) }}">{{ $s['name'] ?? '' }}</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">相对路径会拼上该组的地址前缀，再交给播放器。</p>
+            <p class="muted field-hint">相对路径会拼上该组的地址前缀。已经是 http 或 // 开头的不会改。停用或前缀空着也原样。</p>
             <label>排序</label>
             <input type="number" name="sort" value="0">
         </form>
@@ -117,8 +117,8 @@
     U.on('#source-add-btn', 'click', function () { openSourceDialog('add'); });
     U.on('#source-refresh-btn', 'click', function () { table.refresh(); });
     U.on('#source-table', 'click', function (e) {
-        var a = e.target.closest('a'); if (!a) return;
-        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        var a = e.target.closest ? e.target.closest('a') : null; if (!a) return;
+        var row = U.rowFromClick(e, table);
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-edit')) openSourceDialog('edit', row);

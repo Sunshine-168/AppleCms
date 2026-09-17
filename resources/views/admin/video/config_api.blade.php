@@ -8,9 +8,8 @@
     $hasKey = (bool) ($has_key ?? ($key !== ''));
     $appKeySet = (bool) ($app_key_set ?? ($appKey !== ''));
     $videoCount = (int) ($video_count ?? 0);
-    $provideUrl = (string) ($provide_url ?? url('/api.php/provide/vod'));
-    $altUrl = (string) ($provide_alt ?? url('/api/provide/vod'));
-    $appUrl = (string) ($app_url ?? url('/api.php/app/vod'));
+    $provideUrl = (string) ($provide_url ?? url('/api/provide/vod'));
+    $appUrl = (string) ($app_url ?? url('/api/app/vod'));
 @endphp
 
 @section('plain')
@@ -24,7 +23,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">给<strong>别人</strong>来拉本站已发布的片子，兼容苹果 CMS <code>provide/vod</code>。你去拉别人用「<a href="/admin/video/collects">采集源</a>」。别人 POST 进来用「<a href="/admin/video/config/interface">入库接口</a>」。</p>
+        <p class="muted recycle-lead">给别人拉本站已发布影片。地址是 Laravel 路由 <code>/api/provide/vod</code>，参数兼容苹果 CMS 采集。去拉别人用「<a href="/admin/video/collects">采集源</a>」。别人 POST 进来用「<a href="/admin/video/config/interface">入库接口</a>」。</p>
 
         <div class="ai-stock">
             @if($hasKey)
@@ -59,15 +58,10 @@
 
             <h3>给对方的地址</h3>
             <p class="muted field-hint">采集源填这一条。有密钥时，复制会把当前输入框里的 <code>key</code> 拼上去。</p>
-            <label for="api_provide_url">主地址</label>
+            <label for="api_provide_url">接口地址</label>
             <div class="field-inline">
                 <input id="api_provide_url" type="text" value="{{ $provideUrl }}" readonly>
                 <button type="button" class="btn btn-muted" id="api-copy-url">复制</button>
-            </div>
-            <label for="api_provide_alt">备用</label>
-            <div class="field-inline">
-                <input id="api_provide_alt" type="text" value="{{ $altUrl }}" readonly>
-                <button type="button" class="btn btn-muted" id="api-copy-alt">复制</button>
             </div>
 
             <h3>对方怎么调</h3>
@@ -121,7 +115,6 @@
 (function () {
     var U = window.AdminUi;
     var provideUrl = @json($provideUrl);
-    var altUrl = @json($altUrl);
     var originalKey = @json($key);
     var originalApp = @json($appKey);
     var keyInput = document.getElementById('provide_key');
@@ -203,9 +196,6 @@
 
     document.getElementById('api-copy-url') && document.getElementById('api-copy-url').addEventListener('click', function () {
         copyText(withKey(provideUrl), currentKey() && currentKey() !== originalKey ? '已复制（密钥还没保存）' : '已复制地址');
-    });
-    document.getElementById('api-copy-alt') && document.getElementById('api-copy-alt').addEventListener('click', function () {
-        copyText(withKey(altUrl), '已复制地址');
     });
     document.querySelectorAll('.js-api-copy-ex').forEach(function (btn) {
         btn.addEventListener('click', function () {

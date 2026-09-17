@@ -34,7 +34,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">已付@if($q('paid') > 0)<em>{{ $q('paid') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="2">已关闭@if($q('closed') > 0)<em>{{ $q('closed') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">确认已付会给会员加积分，每笔只加一次。关掉或删除不会扣回去。微信/支付宝到账要等支付回调；线下到账在这里补录。</p>
+        <p class="muted recycle-lead">确认已付会加积分，每笔只加一次。关掉或删除不会扣回。线上到账等支付回调；线下在这里补录。</p>
         <div class="batch-bar" id="order-batch" hidden>
             <strong id="order-batch-count">已选 0 笔</strong>
             <button type="button" class="btn btn-sm" id="order-batch-pay">确认已付</button>

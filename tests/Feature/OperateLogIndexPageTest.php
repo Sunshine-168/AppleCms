@@ -26,11 +26,16 @@ class OperateLogIndexPageTest extends TestCase
         $this->assertStringContainsString('还没有操作记录', $html);
         $this->assertStringContainsString('搜操作人、内容或模块', $html);
         $this->assertStringContainsString('后台改数据会记一行', $html);
-        $this->assertStringContainsString('登录仍在「登录日志」', $html);
+        $this->assertStringContainsString('log-tabs', $html);
+        $this->assertStringContainsString('全部时间', $html);
         $this->assertStringContainsString('今天', $html);
         $this->assertStringContainsString('近7天', $html);
-        $this->assertStringContainsString('我的', $html);
+        $this->assertStringContainsString('只看我', $html);
+        $this->assertStringNotContainsString('queue-chips', $html);
+        $this->assertStringContainsString('>查询<', $html);
+        $this->assertStringContainsString('>重置<', $html);
         $this->assertStringContainsString('/admin/system/monitor/login-logs', $html);
+        $this->assertStringContainsString('/admin/system/monitor/system-logs', $html);
         $this->assertMatchesRegularExpression('/id="operate-log-ip-chip"[^>]*\bhidden\b/', $html);
         $this->assertStringNotContainsString('>新增<', $html);
         $this->assertStringNotContainsString('>刷新<', $html);

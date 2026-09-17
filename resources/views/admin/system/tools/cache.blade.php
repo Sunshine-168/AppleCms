@@ -21,7 +21,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">改了设置或模板，前台还是旧的，来这里清。访客看到的整页不在这里，在「<a href="/admin/video/make">静态生成</a>」。</p>
+        <p class="muted recycle-lead">改了设置或模板后清缓存。整页静态在「<a href="/admin/video/make">静态生成</a>」。</p>
         <p class="cache-note{{ $htmlOn ? '' : ' is-off' }}" id="cache-html-note">全页缓存开着。整页还是旧的，去静态生成清，点这里清不到。</p>
 
         <div class="cache-block">

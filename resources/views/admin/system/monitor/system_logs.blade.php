@@ -1,32 +1,24 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.system_logs'))
 
+@php
+    $today = $today ?? now()->toDateString();
+    $yesterday = $yesterday ?? now()->subDay()->toDateString();
+    $weekFrom = $weekFrom ?? now()->subDays(6)->toDateString();
+    $monthFrom = $monthFrom ?? now()->subDays(29)->toDateString();
+@endphp
+
 @section('plain')
-<div class="card card-panel">
-    <div class="card-body">
-        <form class="filter-bar" id="system-log-search" onsubmit="return false;">
-            <input type="text" name="level" placeholder="级别 info/error...">
-            <input type="text" name="channel" placeholder="通道">
-            <input type="text" name="module" placeholder="模块">
-            <input type="text" name="username" placeholder="用户名">
-            <input type="text" name="uid" placeholder="UID">
-            <input type="text" name="request_id" placeholder="RequestId">
-            <select name="method">
-                <option value="">请求方法</option>
-                <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
-            </select>
-            <input type="text" name="url" placeholder="URL">
-            <input type="text" name="ip" placeholder="IP">
-            <input type="date" name="start_time">
-            <input type="date" name="end_time">
-            <button type="button" class="btn btn-sm" id="system-log-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="system-log-reset-btn">重置</button>
-            <button type="button" class="btn btn-muted btn-sm" id="system-log-refresh-btn">刷新</button>
-        </form>
+<div class="card card-panel log-index system-log-index">
+    <div class="card-header">
+        <span>报错 <em id="system-log-count"></em></span>
     </div>
-</div>
-<div class="card card-panel">
-    <div class="card-body"><div id="system-log-table"></div></div>
+    <div class="card-body">
+        @include('admin.partials.log-tabs', ['tab' => 'error'])
+        @include('admin.partials.log-filters', ['kind' => 'error'])
+        <p class="muted recycle-lead">程序抛错会记一行。这里改不了报错，也打不开 laravel.log。</p>
+        <div id="system-log-table"></div>
+    </div>
 </div>
 @endsection
 
@@ -34,44 +26,171 @@
 <script>
 (function () {
     var U = AdminUi;
+    var form = document.getElementById('system-log-search');
+    var countEl = document.getElementById('system-log-count');
+    var ipChip = document.getElementById('system-log-ip-chip');
+    var whenSel = document.getElementById('system-log-when');
+    var datesWrap = document.getElementById('system-log-dates');
+    var TODAY = @json($today);
+    var YESTERDAY = @json($yesterday);
+    var WEEK_FROM = @json($weekFrom);
+    var MONTH_FROM = @json($monthFrom);
+    var typing = 0;
+
+    function cleanWhere(data) {
+        var out = {};
+        Object.keys(data || {}).forEach(function (k) { if (data[k] !== '') out[k] = data[k]; });
+        return out;
+    }
+    function queryWhere() {
+        return Object.assign({limit: 20}, cleanWhere(U.formData(form)));
+    }
+    function isFiltered(where) {
+        return Object.keys(where || {}).some(function (k) { return k !== 'limit' && where[k] !== ''; });
+    }
+    function setDates(from, to) {
+        form.start_time.value = from || '';
+        form.end_time.value = to || '';
+    }
+    function syncWhenUi() {
+        var from = form.start_time.value;
+        var to = form.end_time.value;
+        var key = '';
+        if (from === TODAY && to === TODAY) key = 'today';
+        else if (from === YESTERDAY && to === YESTERDAY) key = 'yesterday';
+        else if (from === WEEK_FROM && to === TODAY) key = 'week';
+        else if (from === MONTH_FROM && to === TODAY) key = 'month';
+        else if (from || to) key = 'custom';
+        whenSel.value = key;
+        datesWrap.hidden = key !== 'custom';
+    }
+    function applyWhen() {
+        var key = whenSel.value;
+        if (key === 'custom') {
+            datesWrap.hidden = false;
+            if (!form.start_time.value) form.start_time.value = TODAY;
+            if (!form.end_time.value) form.end_time.value = TODAY;
+            runSearch();
+            return;
+        }
+        datesWrap.hidden = true;
+        setDates('', '');
+        if (key === 'today') setDates(TODAY, TODAY);
+        else if (key === 'yesterday') setDates(YESTERDAY, YESTERDAY);
+        else if (key === 'week') setDates(WEEK_FROM, TODAY);
+        else if (key === 'month') setDates(MONTH_FROM, TODAY);
+        runSearch();
+    }
+    function markExtra() {
+        var ip = form.ip.value;
+        if (ipChip) {
+            ipChip.hidden = ip === '';
+            ipChip.textContent = ip ? 'IP ' + ip : '';
+        }
+    }
+    function runSearch() {
+        table.reload(queryWhere());
+        syncWhenUi();
+        markExtra();
+    }
+    function resetAll() {
+        form.reset();
+        form.ip.value = '';
+        setDates('', '');
+        whenSel.value = '';
+        datesWrap.hidden = true;
+        runSearch();
+    }
+    function rowHtml(d) {
+        var kind = d.kind_text || '报错';
+        var badge = '<span class="badge' + (d.is_error ? ' badge-warn' : '') + '">' + U.escape(kind) + '</span>';
+        var meta = [];
+        if (d.who_text) meta.push(U.escape(d.who_text));
+        if (d.area_text) meta.push(U.escape(d.area_text));
+        if (d.time_text) meta.push(U.escape(d.time_text));
+        if (d.path_text) meta.push(U.escape(d.path_text));
+        if (d.ip) {
+            meta.push('<a href="#" class="log-ip js-ip" data-ip="' + U.escape(d.ip) + '">' + U.escape(d.ip) + '</a>');
+        }
+        if (d.file_text) meta.push(U.escape(d.file_text));
+        var extra = d.extra_text ? '<div class="muted">' + U.escape(d.extra_text) + '</div>' : '';
+        return '<div class="entry-row-title-line">' + badge + ' <span class="entry-row-title">' + U.escape(d.summary || '一次程序报错') + '</span>'
+            + ' <a href="#" class="btn-link js-detail">看详情</a></div>'
+            + '<div class="entry-row-meta">' + meta.join(' · ') + '</div>'
+            + extra;
+    }
+    function showDetail(row) {
+        var blocks = [];
+        blocks.push('<p><b>说了什么</b></p><pre class="out">' + U.escape(row.detail_message || row.summary || '') + '</pre>');
+        if (row.detail_class) blocks.push('<p><b>异常</b></p><pre class="out">' + U.escape(row.detail_class) + '</pre>');
+        if (row.detail_file) blocks.push('<p><b>文件</b></p><pre class="out">' + U.escape(row.detail_file) + '</pre>');
+        if (row.detail_url) blocks.push('<p><b>当时打开</b></p><pre class="out">' + U.escape(row.detail_url) + '</pre>');
+        if (row.detail_trace) blocks.push('<p><b>调用栈</b></p><pre class="out">' + U.escape(row.detail_trace) + '</pre>');
+        U.dialog({
+            title: row.kind_text || '报错详情',
+            wide: true,
+            hideOk: true,
+            content: blocks.join('')
+        });
+    }
+
     var table = U.table({
         el: '#system-log-table',
         url: '/admin/system/monitor/system-logs/list',
+        where: queryWhere(),
+        emptyHtml: function (_parsed, where) {
+            if (isFiltered(where)) {
+                return '<div class="list-empty"><p>没有符合条件的记录。</p><p><button type="button" class="btn btn-muted btn-sm" id="system-log-empty-reset">清除筛选</button></p></div>';
+            }
+            return '<div class="list-empty"><p>还没有程序报错。</p><p class="muted">前台或后台一旦抛错会出现在这里。打开本页不会记。</p></div>';
+        },
+        onDraw: function (_wrap, list) {
+            countEl.textContent = list.length ? '· ' + list.length : '';
+            markExtra();
+            var reset = document.getElementById('system-log-empty-reset');
+            if (reset) reset.addEventListener('click', resetAll);
+        },
         cols: [
-            {key: 'id', title: 'ID', width: 70},
-            {key: 'level', title: '级别', width: 80},
-            {key: 'channel', title: '通道', width: 90},
-            {key: 'module', title: '模块', width: 90},
-            {key: 'username', title: '用户名', width: 110},
-            {key: 'uid', title: 'UID', width: 70},
-            {key: 'request_id', title: 'RequestId', width: 140},
-            {key: 'method', title: '方法', width: 70},
-            {key: 'ip', title: 'IP', width: 110},
-            {key: 'url', title: 'URL'},
-            {key: 'exception_class', title: '异常类'},
-            {title: '文件', html: function (d) { return d.file ? U.escape(d.file + ':' + (d.line || 0)) : ''; }},
-            {key: 'create_time', title: '时间', width: 150},
-            {title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-detail">查看</a>'; }}
+            {title: '报错', html: rowHtml}
         ]
     });
-    U.on('#system-log-search-btn', 'click', function () { table.reload(U.formData('#system-log-search')); });
-    U.on('#system-log-reset-btn', 'click', function () { setTimeout(function () { table.reload({}); }, 0); });
-    U.on('#system-log-refresh-btn', 'click', function () { table.refresh(); });
+    syncWhenUi();
+    markExtra();
+
+    whenSel.addEventListener('change', applyWhen);
+    form.start_time.addEventListener('change', runSearch);
+    form.end_time.addEventListener('change', runSearch);
+    form.level.addEventListener('change', runSearch);
+    form.area.addEventListener('change', runSearch);
+    form.q.addEventListener('input', function () {
+        clearTimeout(typing);
+        typing = setTimeout(runSearch, 400);
+    });
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(typing);
+        runSearch();
+    });
+    U.on('#system-log-reset-btn', 'click', resetAll);
+    U.on('#system-log-ip-chip', 'click', function () {
+        form.ip.value = '';
+        runSearch();
+    });
     U.on('#system-log-table', 'click', function (e) {
-        var a = e.target.closest('a'); if (!a || !a.classList.contains('js-detail')) return;
-        var row = (table.rows() || [])[e.target.closest('tr').getAttribute('data-idx')];
+        var ip = e.target.closest('a.js-ip');
+        if (ip) {
+            e.preventDefault();
+            form.ip.value = ip.getAttribute('data-ip') || '';
+            runSearch();
+            return;
+        }
+        var a = e.target.closest('a.js-detail');
+        if (!a) return;
+        var tr = e.target.closest('tr');
+        var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
         e.preventDefault();
-        U.dialog({
-            title: '系统日志详情',
-            wide: true,
-            hideOk: true,
-            content: '<p><b>Message</b></p><pre class="out">' + U.escape(row.message || '') + '</pre>'
-                + '<p><b>Exception</b></p><pre class="out">' + U.escape(row.exception_message || '') + '</pre>'
-                + '<p><b>Context</b></p><pre class="out">' + U.escape(row.context || '') + '</pre>'
-                + '<p><b>Extra</b></p><pre class="out">' + U.escape(row.extra || '') + '</pre>'
-                + '<p><b>Trace</b></p><pre class="out">' + U.escape(row.trace || '') + '</pre>'
-        });
+        showDetail(row);
     });
 })();
 </script>

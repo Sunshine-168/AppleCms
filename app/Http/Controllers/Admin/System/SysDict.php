@@ -99,6 +99,14 @@ class SysDict extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
+    public function importFromSettings(Request $request): JsonResponse
+    {
+        $dictType = (string) $request->input('dict_type', '');
+        $data = $this->systemDictService->importFromSettings($dictType);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
     /**
      * 更新系统字典状态
      */

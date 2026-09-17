@@ -16,7 +16,7 @@
         <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=more">站点设置</a>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">这页是给服务器抄的规则，不会改库。链接怎么写在「<a href="/admin/video/settings?tab=more">站点设置 → 更多</a>」。本机 <code>php artisan serve</code> 不用配。</p>
+        <p class="muted recycle-lead">给服务器用的伪静态规则，不改库。链接写法在「<a href="/admin/video/settings?tab=more">站点设置 → 更多</a>」。本机 <code>php artisan serve</code> 不用配。</p>
 
         <div class="rewrite-now">
             <div class="rewrite-now-head">

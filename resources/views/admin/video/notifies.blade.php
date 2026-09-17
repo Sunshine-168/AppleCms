@@ -33,7 +33,7 @@
             <button type="button" class="chip" data-queue="is_read" data-value="0">未读@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">会员 ID 为 0（或不填）发给全部会员；填指定 ID 只给那一个人。一对一请用「站内信」——会员登录后在会员中心能看到。这里可标已读；删掉后记录就没了。</p>
+        <p class="muted recycle-lead">会员 ID 为 0（或不填）发给全部会员；填指定 ID 只给那一个人。一对一用「站内信」。这里可标已读；删掉后记录就没了。</p>
         <div class="batch-bar" id="notify-batch" hidden>
             <strong id="notify-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="notify-batch-read">标为已读</button>

@@ -31,7 +31,7 @@
             <button type="button" class="chip" data-queue="status" data-value="2">拒绝@if($q('rejected') > 0)<em>{{ $q('rejected') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">积分兑现金。待审优先。标已打款会按金额分扣一次积分，拒绝不扣；已经打过款的不会再扣。删除只去记录，不退积分。</p>
+        <p class="muted recycle-lead">积分兑现金。待审优先。标已打款按金额扣一次积分，拒绝不扣；已打过款的不会再扣。删除只去记录，不退积分。</p>
         <div class="batch-bar" id="withdraw-batch" hidden>
             <strong id="withdraw-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="withdraw-batch-pay">标为已打款</button>

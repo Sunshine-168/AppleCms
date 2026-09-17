@@ -62,12 +62,12 @@ class FilterTag
         $values = match ($name) {
             'order' => array_keys(config('video.orders', [])),
             'letter' => range('A', 'Z'),
-            'year' => $this->fromSetting('filter_year') ?: $this->distinct('year'),
-            'area' => $this->fromSetting('filter_area') ?: $this->distinct('area'),
-            'lang' => $this->fromSetting('filter_lang') ?: $this->distinct('lang'),
+            'year' => $this->fromDict('year') ?: $this->fromSetting('filter_year') ?: $this->distinct('year'),
+            'area' => $this->fromDict('area') ?: $this->fromSetting('filter_area') ?: $this->distinct('area'),
+            'lang' => $this->fromDict('lang') ?: $this->fromSetting('filter_lang') ?: $this->distinct('lang'),
             'class' => $this->classValues(),
-            'weekday' => ['一', '二', '三', '四', '五', '六', '日'],
-            'serial' => Schema::hasColumn('videos', 'serial') ? $this->distinct('serial') : [],
+            'weekday' => $this->fromDict('weekday') ?: ['一', '二', '三', '四', '五', '六', '日'],
+            'serial' => $this->fromDict('serial') ?: (Schema::hasColumn('videos', 'serial') ? $this->distinct('serial') : []),
             default => [],
         };
 
@@ -99,6 +99,16 @@ class FilterTag
         }
 
         return $choices;
+    }
+
+    /** @return list<string> */
+    private function fromDict(string $name): array
+    {
+        try {
+            return app(\App\Services\Admin\System\SysDictService::class)->filterChoices($name);
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** @return list<string> */

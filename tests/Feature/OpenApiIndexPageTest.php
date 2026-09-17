@@ -29,8 +29,9 @@ class OpenApiIndexPageTest extends TestCase
         $this->assertStringContainsString('别人', $html);
         $this->assertStringContainsString('任何人可拉', $html);
         $this->assertStringContainsString('badge-warn', $html);
-        $this->assertStringContainsString('/api.php/provide/vod', $html);
         $this->assertStringContainsString('/api/provide/vod', $html);
+        $this->assertStringNotContainsString('/api.php/provide/vod', $html);
+        $this->assertStringNotContainsString('备用', $html);
         $this->assertStringContainsString('试拉一把', $html);
         $this->assertStringContainsString('没有改动，不用保存', $html);
         $this->assertStringContainsString('/admin/video/collects', $html);
@@ -52,8 +53,9 @@ class OpenApiIndexPageTest extends TestCase
     {
         $board = app(VideoSettingService::class)->apiPage();
         $this->assertFalse($board['has_key']);
-        $this->assertStringContainsString('/api.php/provide/vod', $board['provide_url'] ?? '');
-        $this->assertStringContainsString('/api/provide/vod', $board['provide_alt'] ?? '');
+        $this->assertStringContainsString('/api/provide/vod', $board['provide_url'] ?? '');
+        $this->assertStringNotContainsString('/api.php/', $board['provide_url'] ?? '');
+        $this->assertArrayNotHasKey('provide_alt', $board);
         $this->assertIsInt($board['video_count'] ?? null);
     }
 

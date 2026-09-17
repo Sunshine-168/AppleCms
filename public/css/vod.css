@@ -65,9 +65,25 @@ footer.site { margin-top:40px; padding:24px 0; border-top:1px solid #222; color:
 .breadcrumb { color:var(--muted); font-size:13px; margin-bottom:16px; }
 .desc { line-height:1.7; color:#c5c9d0; }
 .pager { margin:24px 0; }
-.pager nav { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.pager a, .pager span { background:#223; color:var(--text); padding:6px 10px; border-radius:4px; font-size:13px; }
-.pager a.on { background:var(--accent); }
+.pager .pagination,
+.pager nav { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:0; }
+.pager .pagination > a,
+.pager .pagination > span,
+.pager a, .pager span {
+    background:#223;
+    color:var(--text);
+    padding:0 12px;
+    border:1px solid #334;
+    border-radius:4px;
+    font-size:13px;
+    min-width:32px;
+    height:32px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+    box-sizing:border-box;
+}
 .type-block { margin-top:28px; }
 .type-block h2 { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
 .type-block .more { font-size:13px; font-weight:400; color:var(--muted); }

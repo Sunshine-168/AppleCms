@@ -56,9 +56,12 @@
             <span class="logo">{{ $brandMark }}</span>
             <span>{{ $brand }}</span>
         </div>
+        @include('admin.partials.mod-nav', ['class' => 'mod-nav-side'])
         <nav class="side-nav">
             @foreach(\App\Support\AdminNav::groups() as $group)
-                <div class="nav-header">{{ admin_t($group['header']) }}</div>
+                @if(! empty($group['header']))
+                    <div class="nav-header">{{ admin_t($group['header']) }}</div>
+                @endif
                 @foreach($group['items'] as $item)
                     @include('admin.partials.side-link', [
                         'url' => $item['url'],
@@ -100,27 +103,23 @@
         <header class="topbar">
             <div class="topbar-left">
                 <button type="button" class="btn btn-muted btn-sm topbar-menu" id="toggleSide" title="{{ admin_t('top.menu') }}"><i class="fas fa-bars"></i></button>
+                @include('admin.partials.mod-nav', ['class' => 'mod-nav-top'])
                 <h1 class="topbar-title">@yield('title', admin_t('brand'))</h1>
             </div>
             <div class="topbar-right">
-                <form method="post" action="{{ route('admin.ui-locale') }}" class="ui-switch">
-                    @csrf
-                    @foreach(\App\Support\AdminUi::options() as $code => $uiLabel)
-                        <button type="submit" name="ui_locale" value="{{ $code }}" class="{{ \App\Support\AdminUi::current() === $code ? 'is-on' : '' }}">{{ $uiLabel }}</button>
-                    @endforeach
-                </form>
-                <a class="btn btn-muted btn-sm topbar-front" href="{{ url('/') }}" target="_blank" rel="noopener">{{ admin_t('top.front') }}</a>
+                @include('admin.partials.lang-pick')
+                <a class="topbar-icon topbar-front" href="{{ url('/') }}" target="_blank" rel="noopener" title="{{ admin_t('top.front') }}" aria-label="{{ admin_t('top.front') }}"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                 <details class="account-menu">
-                    <summary class="user-chip">
-                        <span class="avatar">{{ function_exists('mb_substr') ? mb_substr($adminName, 0, 1) : substr($adminName, 0, 1) }}</span>
-                        <span class="user-chip-name">{{ $adminName }}</span>
+                    <summary class="topbar-icon" title="{{ admin_t('top.opt') }}" aria-label="{{ admin_t('top.opt') }}">
+                        <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
                     </summary>
                     <div class="account-menu-panel">
-                        <p class="muted">{{ admin_t('top.admin') }}</p>
-                        <a class="account-menu-link" href="/admin/set/user/password">{{ admin_t('top.password') }}</a>
+                        <a href="/admin/set/user/password">{{ admin_t('top.password') }}</a>
+                        <button type="button" id="quickCacheClear">{{ admin_t('top.cache_clear') }}</button>
+                        <button type="button" id="lockScreen">{{ admin_t('top.lock') }}</button>
                         <form method="post" action="/admin/logout" id="logoutForm">
                             @csrf
-                            <button class="btn btn-muted btn-sm" type="submit">{{ admin_t('top.logout') }}</button>
+                            <button type="submit">{{ admin_t('top.logout') }}</button>
                         </form>
                     </div>
                 </details>
@@ -149,6 +148,17 @@
             @endif
         </main>
     </div>
+</div>
+<div id="lockOverlay" class="lock-overlay" hidden>
+    <form id="unlockForm" class="lock-card" method="post" action="/admin/unlock" autocomplete="off" data-empty="{{ admin_t('top.unlock_empty') }}" data-fail="{{ admin_t('top.unlock_fail') }}" data-expired="{{ admin_t('top.unlock_expired') }}" data-network="{{ admin_t('auth.network') }}">
+        @csrf
+        <p>{{ admin_t('top.lock') }}</p>
+        <input id="unlockPassword" type="password" name="password" autocomplete="off" maxlength="64" placeholder="{{ admin_t('top.unlock_ph') }}">
+        <button type="submit" id="unlockBtn">{{ admin_t('top.unlock_btn') }}</button>
+        <button type="button" class="lock-out" id="unlockLogout">{{ admin_t('top.unlock_out') }}</button>
+        <p class="lock-hint">{{ admin_t('top.unlock_forgot') }}</p>
+        <p class="lock-err" id="unlockErr" hidden></p>
+    </form>
 </div>
 <script>
 (function () {
@@ -194,6 +204,125 @@
     @if(session('status'))
     AdminUi.toast(@json(session('status')), 'ok');
     @endif
+})();
+(function () {
+    var overlay = document.getElementById('lockOverlay');
+    var form = document.getElementById('unlockForm');
+    var err = document.getElementById('unlockErr');
+    var inp = document.getElementById('unlockPassword');
+    var btn = document.getElementById('unlockBtn');
+    function csrfToken() {
+        var m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
+    }
+    function closeMenus() {
+        document.querySelectorAll('details.account-menu, details.lang-pick').forEach(function (d) {
+            d.open = false;
+        });
+    }
+    function showErr(text) {
+        if (!err) return;
+        err.hidden = !text;
+        err.textContent = text || '';
+    }
+    function showLock() {
+        if (!overlay) return;
+        overlay.hidden = false;
+        overlay.removeAttribute('hidden');
+        document.body.classList.add('is-locked');
+        closeMenus();
+        if (inp) {
+            inp.value = '';
+            setTimeout(function () { inp.focus(); }, 0);
+        }
+        showErr('');
+    }
+    function hideLock() {
+        if (!overlay) return;
+        overlay.hidden = true;
+        overlay.setAttribute('hidden', '');
+        document.body.classList.remove('is-locked');
+        if (inp) inp.value = '';
+        showErr('');
+        try {
+            sessionStorage.removeItem('admin_lock_v2');
+            sessionStorage.removeItem('admin_lockscreen');
+        } catch (e) {}
+    }
+    try {
+        if (sessionStorage.getItem('admin_lock_v2') === '1') showLock();
+    } catch (e) {}
+    var lockBtn = document.getElementById('lockScreen');
+    lockBtn && lockBtn.addEventListener('click', function () {
+        try { sessionStorage.setItem('admin_lock_v2', '1'); } catch (e) {}
+        showLock();
+    });
+    var unlockOut = document.getElementById('unlockLogout');
+    unlockOut && unlockOut.addEventListener('click', function () {
+        try {
+            sessionStorage.removeItem('admin_lock_v2');
+            sessionStorage.removeItem('admin_lockscreen');
+        } catch (e) {}
+        var logoutForm = document.getElementById('logoutForm');
+        if (logoutForm && typeof logoutForm.requestSubmit === 'function') logoutForm.requestSubmit();
+        else if (logoutForm) logoutForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        else location.href = '/admin/login';
+    });
+    form && form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var pwd = ((inp && inp.value) || '').trim();
+        if (!pwd) {
+            showErr(form.getAttribute('data-empty') || '');
+            inp && inp.focus();
+            return;
+        }
+        if (btn) btn.disabled = true;
+        showErr('');
+        var body = new URLSearchParams();
+        body.set('_token', csrfToken());
+        body.set('password', pwd);
+        fetch('/admin/unlock', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken(),
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body.toString()
+        }).then(function (r) {
+            return r.json().then(function (json) {
+                return { r: r, json: json };
+            }).catch(function () {
+                return { r: r, json: null };
+            });
+        }).then(function (pack) {
+            var json = pack.json;
+            if (json && Number(json.code) === 0) {
+                hideLock();
+                return;
+            }
+            var msg = '';
+            if (pack.r && pack.r.status === 419) msg = form.getAttribute('data-expired') || '';
+            else if (json && json.msg) msg = String(json.msg);
+            else if (json && Number(json.code) === 1001) msg = String(json.msg || '');
+            showErr(msg || form.getAttribute('data-fail') || '');
+            inp && inp.focus();
+        }).catch(function () {
+            showErr(form.getAttribute('data-network') || form.getAttribute('data-fail') || '');
+        }).finally(function () {
+            if (btn) btn.disabled = false;
+        });
+    });
+    var cacheBtn = document.getElementById('quickCacheClear');
+    cacheBtn && cacheBtn.addEventListener('click', function () {
+        if (!window.AdminUi) return;
+        AdminUi.post('/admin/system/tools/cache/clear', { kind: 'all' }).then(function (res) {
+            AdminUi.toast(res.msg || '', Number(res.code) === 0 ? 'ok' : 'err');
+        });
+    });
 })();
 </script>
 @stack('scripts')

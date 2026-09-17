@@ -15,8 +15,8 @@
             <button type="button" class="btn btn-muted btn-sm" id="mod-due">执行到期采集</button>
         @endif
         <form class="filter-bar" id="mod-search-form" onsubmit="return false;">
-            <input type="text" id="mod-q" placeholder="{{ $search }}">
-            <button type="button" class="btn btn-sm" id="mod-search">查询</button>
+            <input type="search" id="mod-q" name="{{ $search }}" placeholder="{{ $search }}" autocomplete="off">
+            <button type="submit" class="btn btn-sm" id="mod-search">查询</button>
         </form>
     </div>
     <div id="mod-table"></div>

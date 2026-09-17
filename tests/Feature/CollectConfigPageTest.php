@@ -47,8 +47,9 @@ class CollectConfigPageTest extends TestCase
 
         $this->assertStringContainsString('入库接口', $html);
         $this->assertStringContainsString('别的程序', $html);
-        $this->assertStringContainsString('/api.php/receive/vod', $html);
         $this->assertStringContainsString('/api/receive/vod', $html);
+        $this->assertStringNotContainsString('/api.php/receive/vod', $html);
+        $this->assertStringNotContainsString('备用', $html);
         $this->assertStringContainsString('inbound-gen-key', $html);
         $this->assertStringContainsString('vod_name', $html);
         $this->assertStringContainsString('怎么推', $html);

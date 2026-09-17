@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * 数据库字典
+ * 数据库：备份、恢复、SQL、替换、字段说明
  */
 class SysDatabase extends Controller
 {
@@ -32,12 +32,12 @@ class SysDatabase extends Controller
         $this->systemDatabaseReplaceService = new SysDatabaseReplaceService();
     }
     /**
-     * 显示数据库字典页
+     * 显示库表字段页
      * @return View|Factory
      */
-    public function showDatabaseDict(): View|Factory
+    public function showDatabaseDict(Request $request): View|Factory
     {
-        return view('admin.system.database.dict');
+        return view('admin.system.database.dict', $this->systemDatabaseService->pageBoard((string) $request->input('table', '')));
     }
 
     /**
@@ -68,17 +68,34 @@ class SysDatabase extends Controller
      */
     public function showDatabaseBackup(): View|Factory
     {
-        return view('admin.system.database.backup');
+        return view('admin.system.database.backup', $this->systemDatabaseBackupService->pageBoard());
     }
 
     /**
      * 执行数据库备份
-     * @return JsonResponse
      */
-    public function runDatabaseBackup(): JsonResponse
+    public function runDatabaseBackup(Request $request): JsonResponse
     {
-        $data = $this->systemDatabaseBackupService->runBackup();
-        return Ajax::message($data['code'], $data['msg'], $data['data']);
+        $keep = (int) $request->input('keep', -1);
+        if ($keep < 0) {
+            $keep = $this->systemDatabaseBackupService->currentKeep();
+        }
+        $data = $this->systemDatabaseBackupService->runBackup($keep);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    /**
+     * 保存备份定时（写入计划任务）
+     */
+    public function saveDatabaseBackupSchedule(Request $request): JsonResponse
+    {
+        $on = $request->boolean('on');
+        $cron = (string) $request->input('cron', '0 3 * * *');
+        $keep = (int) $request->input('keep', 7);
+        $data = $this->systemDatabaseBackupService->saveBackupSchedule($on, $cron, $keep);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     /**
@@ -124,7 +141,7 @@ class SysDatabase extends Controller
      */
     public function showDatabaseRestore(): View|Factory
     {
-        return view('admin.system.database.restore');
+        return view('admin.system.database.restore', $this->systemDatabaseBackupService->pageBoard());
     }
 
     /**
@@ -145,7 +162,7 @@ class SysDatabase extends Controller
     public function runDatabaseRestore(Request $request): JsonResponse
     {
         $file = (string) $request->input('file', '');
-        $data = $this->systemDatabaseBackupService->restoreBackup($file);
+        $data = $this->systemDatabaseBackupService->restoreBackup($file, $request->boolean('snapshot'));
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 
@@ -155,7 +172,7 @@ class SysDatabase extends Controller
      */
     public function showDatabaseSql(): View|Factory
     {
-        return view('admin.system.database.sql');
+        return view('admin.system.database.sql', $this->systemDatabaseSqlService->pageBoard());
     }
 
     /**
@@ -165,8 +182,10 @@ class SysDatabase extends Controller
      */
     public function runDatabaseSql(Request $request): JsonResponse
     {
-        $sql = (string) $request->input('sql', '');
-        $data = $this->systemDatabaseSqlService->run($sql);
+        $data = $this->systemDatabaseSqlService->run(
+            (string) $request->input('sql', ''),
+            (string) $request->input('word', '')
+        );
         return Ajax::message($data['code'], $data['msg'], $data['data']);
     }
 

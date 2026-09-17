@@ -26,6 +26,8 @@ class ReplaceIndexPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('批量替换', $html);
+        $this->assertStringContainsString('db-tabs', $html);
+        $this->assertStringContainsString('class="is-on">替换</a>', $html);
         $this->assertStringContainsString('影片', $html);
         $this->assertStringContainsString('播放地址', $html);
         $this->assertStringContainsString('看看会改几条', $html);

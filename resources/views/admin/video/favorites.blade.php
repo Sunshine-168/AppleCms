@@ -46,7 +46,7 @@
                 <button type="button" class="btn-link" id="fav-clear-focus">看全部</button>
             </p>
         @else
-            <p class="muted recycle-lead">会员在影片页点收藏才会出现。后台不能代收藏，删掉只影响这个人的收藏夹，不会删影片。</p>
+            <p class="muted recycle-lead">会员在影片页点收藏后出现。后台不能代收藏。删除只影响此人的收藏夹，不删影片。</p>
         @endif
         <div class="batch-bar" id="fav-batch" hidden>
             <strong id="fav-batch-count">已选 0 条</strong>

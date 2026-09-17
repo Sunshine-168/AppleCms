@@ -16,7 +16,7 @@ class VisitStat
             return $response;
         }
         $path = trim($request->path(), '/');
-        foreach (['admin', 'install', 'member', 'api', 'api.php', 'player', 'css', 'js', 'static', 'storage'] as $prefix) {
+        foreach (['admin', 'install', 'member', 'api', 'api.php', 'player', 'css', 'js', 'static', 'storage', 'plugin-assets', 'livewire'] as $prefix) {
             if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
                 return $response;
             }

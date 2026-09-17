@@ -216,37 +216,110 @@
         var page = parseInt(meta.page || meta.current_page || 1, 10) || 1;
         var last = parseInt(meta.last || meta.last_page || 1, 10) || 1;
         var total = parseInt(meta.total || 0, 10) || 0;
-        var html = '<div class="pagination">';
-        html += '<span>共 ' + total + ' 条</span>';
-        if (page > 1) html += '<a href="#" data-p="' + (page - 1) + '">上一页</a>';
-        html += '<span>' + page + ' / ' + last + '</span>';
-        if (page < last) html += '<a href="#" data-p="' + (page + 1) + '">下一页</a>';
-        html += '</div>';
+        var html = '<nav class="pagination" aria-label="分页">';
+        html += '<span>共' + total + '条</span>';
+        if (page > 1) html += '<a href="#" data-p="' + (page - 1) + '" rel="prev">上一页</a>';
+        html += '<span>' + page + '/' + last + '</span>';
+        if (page < last) html += '<a href="#" data-p="' + (page + 1) + '" rel="next">下一页</a>';
+        html += '</nav>';
         el.innerHTML = html;
         Array.prototype.forEach.call(el.querySelectorAll('a[data-p]'), function (a) {
             a.addEventListener('click', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 onGo(parseInt(a.getAttribute('data-p'), 10));
             });
         });
     }
 
+    function cleanWhere(data) {
+        var out = {};
+        Object.keys(data || {}).forEach(function (k) {
+            if (data[k] === undefined || data[k] === null) return;
+            if (String(data[k]).trim() === '') return;
+            out[k] = data[k];
+        });
+        return out;
+    }
+
+    function eventEl(e) {
+        var t = e && e.target;
+        if (t && t.nodeType === 3) t = t.parentNode;
+        return t && t.nodeType === 1 ? t : null;
+    }
+
+    function rowFromClick(e, api) {
+        var t = eventEl(e);
+        if (!t || !t.closest) return null;
+        if (t.closest('.js-pager, .pagination')) return null;
+        var tr = t.closest('tr[data-idx]');
+        if (!tr) return null;
+        var rows = api && api.rows ? api.rows() : [];
+        return rows[tr.getAttribute('data-idx')] || null;
+    }
+
+    function nearestFilter(wrap) {
+        var root = wrap.closest('.card-body, .card-panel, .card, .content') || wrap.parentNode;
+        if (!root || !root.querySelectorAll) return null;
+        var forms = root.querySelectorAll('form.filter-bar');
+        for (var i = 0; i < forms.length; i++) {
+            var id = forms[i].id || '';
+            var cls = forms[i].className || '';
+            if (/-try/.test(id) || /try-bar/.test(cls)) continue;
+            return forms[i];
+        }
+        return null;
+    }
+
+    function bindFilter(wrap, api, opts) {
+        var form = opts.filter
+            ? (typeof opts.filter === 'string' ? document.querySelector(opts.filter) : opts.filter)
+            : nearestFilter(wrap);
+        if (!form || form._adminTableBound) return;
+        form._adminTableBound = true;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            api.reload(cleanWhere(formData(form)));
+        });
+        form.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            var tag = e.target && e.target.tagName;
+            if (tag !== 'INPUT' && tag !== 'SELECT') return;
+            e.preventDefault();
+            api.reload(cleanWhere(formData(form)));
+        });
+    }
+
     function table(opts) {
         var wrap = typeof opts.el === 'string' ? document.querySelector(opts.el) : opts.el;
+        var limit = parseInt(opts.limit, 10) || 15;
         var state = { page: 1, where: Object.assign({}, opts.where || {}) };
 
         function rowsFrom(res) {
             var d = res.data || {};
             var list = Array.isArray(d) ? d : (d.data || []);
-            var total = d.total != null ? d.total : list.length;
-            var per = d.per_page || 15;
+            var total = d.total != null ? parseInt(d.total, 10) : list.length;
+            var per = parseInt(d.per_page, 10) || limit;
+            var last = parseInt(d.last_page, 10);
+            if (!last) last = Math.max(1, Math.ceil((total || 0) / per));
+            var page = parseInt(d.current_page, 10);
+            if (!page) page = state.page;
+            var dumped = list.length === total && total > per && d.current_page == null && (d.last_page == null || last > 1);
+            if (dumped) {
+                last = Math.max(1, Math.ceil(total / per));
+                if (page > last) page = last;
+                list = list.slice((page - 1) * per, page * per);
+            }
             return {
                 list: list,
                 total: total,
-                page: d.current_page || state.page,
-                last: d.last_page || Math.max(1, Math.ceil(total / per)),
+                page: page,
+                last: last,
                 types: d.types || [],
-                queues: d.queues || {}
+                queues: d.queues || {},
+                groups: d.groups || [],
+                families: d.families || [],
+                away: !!d.away
             };
         }
 
@@ -310,7 +383,7 @@
         }
 
         function load() {
-            var params = Object.assign({}, state.where, { page: state.page });
+            var params = Object.assign({}, state.where, { page: state.page, limit: limit });
             return request('GET', opts.url, params).then(function (res) {
                 if (res && res.code === 0) render(res);
                 else toast((res && res.msg) || '加载失败', 'err');
@@ -338,6 +411,7 @@
             },
             rows: function () { return wrap._rows || []; }
         };
+        bindFilter(wrap, wrap._table, opts);
         load();
         return wrap._table;
     }
@@ -374,6 +448,8 @@
         fillForm: fillForm,
         table: table,
         pager: pager,
+        rowFromClick: rowFromClick,
+        cleanWhere: cleanWhere,
         upload: upload,
         pickFile: pickFile,
         on: function (sel, ev, fn) {

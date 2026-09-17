@@ -34,7 +34,7 @@
             <button type="button" class="chip" data-queue="expired" data-value="1">已到期@if($q('expired') > 0)<em>{{ $q('expired') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">广告是页头、页脚、播放器下插入的 HTML。主题按位置调用，例如 <code>@@vodAd(['slot' => 'header'])</code>。过期或停用后前台不再输出。</p>
+        <p class="muted recycle-lead">页头、页脚、播放器下插入的 HTML。主题按位置调用，例如 <code>@@vodAd(['slot' => 'header'])</code>。过期或停用后前台不再输出。</p>
         <div class="batch-bar" id="ad-batch" hidden>
             <strong id="ad-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="ad-batch-on">启用</button>

@@ -28,7 +28,7 @@
             <button type="button" class="btn btn-sm" id="recycle-search-btn">搜索</button>
             <button type="reset" class="btn btn-muted btn-sm" id="recycle-reset-btn">重置</button>
         </form>
-        <p class="muted recycle-lead">删除的影片先放这里，分类和状态保持删除前的样子。还原后回到影片列表；彻底删除无法恢复。不会自动清空。</p>
+        <p class="muted recycle-lead">删除的影片先放这里。还原后回影片列表；彻底删除无法恢复。不会自动清空。</p>
         <div class="batch-bar" id="recycle-batch" hidden>
             <strong id="recycle-batch-count">已选 0 部</strong>
             <button type="button" class="btn btn-sm" id="recycle-batch-restore">还原所选</button>

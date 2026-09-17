@@ -7,6 +7,7 @@ use App\Models\System\SysRolePermModel;
 use App\Models\System\SysUserModel;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class SysRoleService
 {
@@ -204,7 +205,14 @@ class SysRoleService
             if ($pid < 1) {
                 continue;
             }
-            $rows[] = ['role_id' => $roleId, 'perm_id' => $pid, 'create_time' => $time, 'update_time' => $time];
+            $row = ['role_id' => $roleId, 'perm_id' => $pid];
+            if (Schema::hasColumn('sys_role_perm', 'create_time')) {
+                $row['create_time'] = $time;
+            }
+            if (Schema::hasColumn('sys_role_perm', 'update_time')) {
+                $row['update_time'] = $time;
+            }
+            $rows[] = $row;
         }
         if ($rows !== []) {
             $this->sysRolePermModel->insertsAll($rows);

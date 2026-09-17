@@ -58,7 +58,7 @@
                 <option value="2" @selected($mid === '2')>文章</option>
                 <option value="3" @selected($mid === '3')>网址导航</option>
             </select>
-            <p class="muted field-hint">影片进「影片」列表。文章进「文章」。网址导航很少用，一般不要选。</p>
+            <p class="muted field-hint">影片进「影片」列表。文章进「文章」。网址导航进顶栏「导航」页，和页脚友情链接不是一回事。</p>
 
             <h3>显示</h3>
             <label for="type-sort">排序</label>

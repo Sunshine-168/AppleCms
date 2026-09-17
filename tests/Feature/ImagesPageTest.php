@@ -23,12 +23,12 @@ class ImagesPageTest extends TestCase
         $this->assertStringContainsString('还没扫描', $html);
         $this->assertStringContainsString('扫描封面', $html);
         $this->assertStringContainsString('下载到本站', $html);
-        $this->assertStringContainsString('去无封面列表补图', $html);
+        $this->assertStringContainsString('补无封面', $html);
         $this->assertStringContainsString('/admin/video?empty_pic=1', $html);
         $this->assertStringContainsString('/admin/video/config/collect', $html);
         $this->assertStringContainsString('/uploads/vod/', $html);
         $this->assertStringContainsString('img-scan-btn', $html);
-        $this->assertStringContainsString('不会改片子', $html);
+        $this->assertStringContainsString('不改影片', $html);
         $this->assertStringNotContainsString('id="out"', $html);
         $this->assertStringNotContainsString('JSON.stringify', $html);
         $this->assertStringNotContainsString('本地化远程封面', $html);

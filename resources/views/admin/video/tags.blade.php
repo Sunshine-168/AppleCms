@@ -25,7 +25,7 @@
             <button type="button" class="chip" data-queue="status" data-value="0">禁用</button>
             <button type="button" class="chip" data-queue="unused" data-value="1">未使用</button>
         </div>
-        <p class="muted recycle-lead">标签是聚合词，比如贺岁、高分，不是分类。影片保存时填的标签会自动建档；没用过的可以清掉。</p>
+        <p class="muted recycle-lead">贺岁、高分这类聚合词，不是分类。影片保存时填的标签会自动建档。没用过的可以清掉。</p>
         <div class="batch-bar" id="tag-batch" hidden>
             <strong id="tag-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-sm" id="tag-batch-on">启用</button>

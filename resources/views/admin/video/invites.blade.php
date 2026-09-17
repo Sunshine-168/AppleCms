@@ -32,7 +32,7 @@
             <button type="button" class="chip" data-queue="queue" data-value="void">作废@if($q('void') > 0)<em>{{ $q('void') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">注册用的码，一码一次。批量生成可带邀请人会员 ID 和积分：注册成功后新会员加这份积分；邀请人 ID 大于 0 时，邀请人也加同样积分。已用的不能删。卡密是兑积分，邀请码是注册。</p>
+        <p class="muted recycle-lead">注册码，一码一次。批量生成可带邀请人会员 ID 和积分：注册成功后新会员加这份积分；邀请人 ID 大于 0 时，邀请人也加同样积分。已用的不能删。卡密兑积分，邀请码管注册。</p>
         <div class="batch-bar" id="invite-batch" hidden>
             <strong id="invite-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-sm" id="invite-batch-copy">复制邀请码</button>

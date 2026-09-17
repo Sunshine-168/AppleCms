@@ -32,7 +32,7 @@
             <button type="button" class="chip" data-queue="group_id" data-value="0">未分组@if($q('none') > 0)<em>{{ $q('none') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">他们登录的是网站，不是后台。积分用来点播；分组决定试看和门槛。点姓名改资料，勾选后可停用、换组或调积分。</p>
+        <p class="muted recycle-lead">会员登录的是网站，不是后台。积分点播，分组决定试看和门槛。点姓名改资料，勾选后可停用、换组或调积分。</p>
         <div class="batch-bar" id="member-batch" hidden>
             <strong id="member-batch-count">已选 0 人</strong>
             <button type="button" class="btn btn-sm" id="member-batch-on">启用</button>

@@ -9,10 +9,7 @@ class MoreIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_more_index_is_a_searchable_catalog_not_a_button_dump(): void
@@ -26,13 +23,18 @@ class MoreIndexPageTest extends TestCase
         $this->assertStringContainsString('more-tile', $html);
         $this->assertStringContainsString('搜功能', $html);
         $this->assertStringContainsString('没有符合的功能', $html);
-        $this->assertStringContainsString('关掉后这里和侧栏都会收走', $html);
-        $this->assertStringContainsString('很少用到', $html);
-        $this->assertStringContainsString('站点设置', $html);
-        $this->assertStringContainsString('失败和成功记录', $html);
-        $this->assertStringContainsString('/admin/plugins', $html);
+        $this->assertStringContainsString('顶栏按工作切开', $html);
         $this->assertStringContainsString('角色库', $html);
-        $this->assertStringContainsString('more-fold', $html);
+        $this->assertStringContainsString('内容质量', $html);
+        $this->assertStringContainsString('服务器组', $html);
+        $this->assertStringContainsString('备份、恢复、跑 SQL', $html);
+        $this->assertStringContainsString('href="/admin/system/database/backup"', $html);
+        $this->assertStringNotContainsString('href="/admin/system/database/restore"', $html);
+        $this->assertStringNotContainsString('href="/admin/system/database/sql"', $html);
+        $this->assertStringNotContainsString('href="/admin/system/database/replace"', $html);
+        $this->assertStringNotContainsString('href="/admin/system/database/dict"', $html);
+        $this->assertStringNotContainsString('很少用到', $html);
+        $this->assertStringNotContainsString('more-fold', $html);
         $this->assertStringNotContainsString('class="tool-grid"', $html);
         $this->assertStringNotContainsString('/admin/video/config/seo', $html);
         $this->assertStringNotContainsString('/admin/video/config/theme', $html);

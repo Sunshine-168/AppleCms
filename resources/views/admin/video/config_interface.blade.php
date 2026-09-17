@@ -5,8 +5,7 @@
     $s = $site ?? [];
     $key = trim((string) ($s['inbound_key'] ?? ''));
     $hasKey = $key !== '';
-    $receiveUrl = (string) ($receiveUrl ?? url('/api.php/receive/vod'));
-    $altUrl = url('/api/receive/vod');
+    $receiveUrl = (string) ($receiveUrl ?? url('/api/receive/vod'));
 @endphp
 
 @section('plain')
@@ -21,19 +20,14 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">给<strong>别的程序</strong>把片子 POST 进本站用。去资源站拉片请用「<a href="/admin/video/collects">采集源</a>」。进库后是否先待审，在「<a href="/admin/video/config/collect">内容接入</a>」里改。</p>
+        <p class="muted recycle-lead">给别的程序 POST 片子进本站。去资源站拉片用「<a href="/admin/video/collects">采集源</a>」。是否先待审，在「<a href="/admin/video/config/collect">内容接入</a>」改。</p>
         <form class="settings-page interface-config-form" id="site-form">
             <h3>接收地址</h3>
-            <p class="muted field-hint">只接受 POST。两个地址一样，兼容苹果 CMS 写法。</p>
-            <label for="inbound_receive_url">主地址</label>
+            <p class="muted field-hint">只接受 POST。地址是 Laravel 路由 <code>/api/receive/vod</code>。</p>
+            <label for="inbound_receive_url">接口地址</label>
             <div class="field-inline">
                 <input id="inbound_receive_url" type="text" value="{{ $receiveUrl }}" readonly>
                 <button type="button" class="btn btn-muted" id="inbound-copy-url">复制</button>
-            </div>
-            <label for="inbound_receive_alt">备用</label>
-            <div class="field-inline">
-                <input id="inbound_receive_alt" type="text" value="{{ $altUrl }}" readonly>
-                <button type="button" class="btn btn-muted" id="inbound-copy-alt">复制</button>
             </div>
 
             <h3>入库密钥</h3>
@@ -101,7 +95,6 @@
         btn.addEventListener('click', function () { copyText(input.value, msg); });
     }
     bindCopy('inbound-copy-url', 'inbound_receive_url', '已复制地址');
-    bindCopy('inbound-copy-alt', 'inbound_receive_alt', '已复制地址');
     var genBtn = document.getElementById('inbound-gen-key');
     var keyInput = document.getElementById('inbound_key');
     if (genBtn && keyInput) {

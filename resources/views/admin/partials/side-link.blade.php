@@ -5,7 +5,8 @@
     $active = (bool) ($active ?? false);
     $force = (bool) ($force ?? false);
     $allowed = is_object($nav ?? null) ? ($nav->allowed ?? []) : [];
-    $ok = $force || ($url !== '' && ($allowed === [] || isset($allowed[$url])));
+    $founder = (int) session('admin_uid', 0) === 1;
+    $ok = $force || $founder || ($url !== '' && isset($allowed[$url]));
     if ($ok && is_object($nav ?? null)) {
         $nav->shown[$url] = true;
     }

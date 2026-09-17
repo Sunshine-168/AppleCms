@@ -38,7 +38,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">已发布@if($q('published') > 0)<em>{{ $q('published') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="0">草稿@if($q('draft') > 0)<em>{{ $q('draft') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">文章是站内资讯，不是影片。栏目在「分类」里把模型选成文章。勾选后可发布、改栏目或删除。</p>
+        <p class="muted recycle-lead">站内资讯，不是影片。栏目在「分类」里把模型选成文章。勾选后可发布、改栏目或删除。</p>
         <div class="batch-bar" id="art-batch" hidden>
             <strong id="art-batch-count">已选 0 篇</strong>
             <button type="button" class="btn btn-sm" id="art-batch-on">发布到前台</button>

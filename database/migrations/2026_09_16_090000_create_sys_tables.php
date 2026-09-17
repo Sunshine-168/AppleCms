@@ -110,6 +110,8 @@ return new class extends Migration
                 $table->unsignedInteger('timeout')->default(0);
                 $table->unsignedInteger('max_attempts')->default(1);
                 $table->unsignedInteger('last_run_time')->default(0);
+                $table->unsignedTinyInteger('last_status')->default(0);
+                $table->string('last_error', 255)->default('');
                 $table->unsignedInteger('next_run_time')->default(0);
                 $table->string('remark', 255)->default('');
                 $table->unsignedInteger('sort')->default(0);

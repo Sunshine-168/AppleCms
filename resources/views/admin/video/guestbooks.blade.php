@@ -34,9 +34,9 @@
             <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
         @if($audit)
-            <p class="muted recycle-lead">新留言先进待审，通过后才出现在前台留言板。回复会显示在访客那条下面。影片评论在「评论」。</p>
+            <p class="muted recycle-lead">新留言先进待审，通过后才出现在前台留言板。回复显示在访客那条下面。影片评论在「评论」。</p>
         @else
-            <p class="muted recycle-lead">新留言会直接显示在前台。要先审再上，打开「审核设置」里的「留言要先审再显示」。回复会显示在访客那条下面。</p>
+            <p class="muted recycle-lead">新留言会直接显示在前台。要先审再上，打开「审核设置」里的「留言要先审再显示」。回复显示在访客那条下面。</p>
         @endif
         <div class="batch-bar" id="gbook-batch" hidden>
             <strong id="gbook-batch-count">已选 0 条</strong>

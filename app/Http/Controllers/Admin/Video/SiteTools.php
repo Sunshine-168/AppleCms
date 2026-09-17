@@ -46,6 +46,9 @@ class SiteTools extends Controller
                 'types' => is_array($types) ? $types : [],
             ]);
         }
+        if ($tool === 'quality') {
+            return view('admin.video.quality', $this->tools->qualityPage());
+        }
 
         return view('admin.video.tools', compact('tool'));
     }

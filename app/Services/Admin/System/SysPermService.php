@@ -3,7 +3,10 @@ namespace App\Services\Admin\System;
 use App\Models\System\SysPermModel;
 use App\Models\System\SysRolePermModel;
 use App\Models\System\SysUserModel;
+use App\Support\AdminNav;
+use App\Support\AdminPage;
 use App\Support\Utils\Result;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * 权限服务
@@ -42,12 +45,12 @@ class SysPermService
 
         if (!empty($params['name']))
         {
-            $where[] = ['name', '=', trim((string) $params['name'])];
+            $where[] = ['name', 'like', '%'.addcslashes(trim((string) $params['name']), '%_\\').'%'];
         }
 
         if (!empty($params['code']))
         {
-            $where[] = ['code', '=', trim((string) $params['code'])];
+            $where[] = ['code', 'like', '%'.addcslashes(trim((string) $params['code']), '%_\\').'%'];
         }
 
         if (isset($params['type']) && $params['type'] !== '')
@@ -62,7 +65,7 @@ class SysPermService
 
         if (!empty($params['api']))
         {
-            $where[] = ['api', '=', trim((string) $params['api'])];
+            $where[] = ['api', 'like', '%'.addcslashes(trim((string) $params['api']), '%_\\').'%'];
         }
 
         if (!empty($params['method']))
@@ -82,21 +85,6 @@ class SysPermService
     public function getMenuFlatList(array $params): array
     {
         $where = [];
-
-        if (!empty($params['name']))
-        {
-            $where[] = ['name', '=', trim((string) $params['name'])];
-        }
-
-        if (!empty($params['code']))
-        {
-            $where[] = ['code', '=', trim((string) $params['code'])];
-        }
-
-        if (!empty($params['api']))
-        {
-            $where[] = ['api', '=', trim((string) $params['api'])];
-        }
 
         if (!empty($params['method']))
         {
@@ -135,10 +123,32 @@ class SysPermService
         }
         unset($row);
 
-        return Result::success([
-            'total' => count($rows),
-            'data' => $rows,
-        ]);
+        $name = mb_strtolower(trim((string) ($params['name'] ?? '')));
+        $api = mb_strtolower(trim((string) ($params['api'] ?? '')));
+        $code = mb_strtolower(trim((string) ($params['code'] ?? '')));
+        if ($name !== '' || $api !== '' || $code !== '') {
+            $rows = array_values(array_filter($rows, static function (array $row) use ($name, $api, $code): bool {
+                $hay = mb_strtolower(trim(
+                    (string) ($row['name'] ?? '').' '.
+                    (string) ($row['api'] ?? '').' '.
+                    (string) ($row['code'] ?? '').' '.
+                    (string) ($row['parent_name'] ?? '')
+                ));
+                if ($name !== '' && ! str_contains($hay, $name)) {
+                    return false;
+                }
+                if ($api !== '' && ! str_contains(mb_strtolower((string) ($row['api'] ?? '')), $api)) {
+                    return false;
+                }
+                if ($code !== '' && ! str_contains(mb_strtolower((string) ($row['code'] ?? '')), $code)) {
+                    return false;
+                }
+
+                return true;
+            }));
+        }
+
+        return Result::success(AdminPage::slice($rows, $params));
     }
 
     /**
@@ -369,6 +379,8 @@ class SysPermService
             return Result::fail('删除失败');
         }
 
+        $this->sysRolePermModel->deleteByCondition([['perm_id', 'in', $ids]]);
+
         return Result::success();
     }
 
@@ -525,12 +537,110 @@ class SysPermService
     }
 
     /**
+     * 把当前工作区的页写成权限点，角色勾选才对得上侧栏。
+     */
+    public function syncFromWorkspaces(): array
+    {
+        if (! Schema::hasTable('sys_perm')) {
+            return Result::fail('还没有权限表');
+        }
+
+        $now = time();
+        $created = 0;
+        $updated = 0;
+        $parentSort = 800;
+
+        foreach (AdminNav::workspacePages() as $mod) {
+            $parentCode = $this->clip('nav.'.$mod['id'], 80);
+            $parentName = $this->clip((string) ($mod['label'] ?? $mod['id']), 50);
+            $parent = $this->sysPermModel->findByCondition([['code', '=', $parentCode]]);
+            if ($parent === []) {
+                $pid = (int) $this->sysPermModel->insertsGetId([
+                    'name' => $parentName,
+                    'code' => $parentCode,
+                    'api' => '',
+                    'method' => '',
+                    'pid' => 0,
+                    'type' => 1,
+                    'icon' => '',
+                    'sort' => $parentSort,
+                    'create_time' => $now,
+                    'update_time' => $now,
+                ]);
+                if ($pid < 1) {
+                    $parentSort -= 10;
+                    continue;
+                }
+                $created++;
+            } else {
+                $pid = (int) ($parent['id'] ?? 0);
+                $this->sysPermModel->updateById($pid, [
+                    'name' => $parentName,
+                    'type' => 1,
+                    'sort' => $parentSort,
+                    'update_time' => $now,
+                ]);
+                $updated++;
+            }
+
+            $childSort = 500;
+            foreach ($mod['items'] as $item) {
+                $url = (string) ($item['url'] ?? '');
+                if ($url === '') {
+                    continue;
+                }
+                $code = $this->clip($this->codeFromApi($url), 80);
+                if ($code === '') {
+                    $childSort--;
+                    continue;
+                }
+                $name = $this->clip((string) ($item['label'] ?? $url), 50);
+                $icon = $this->clip((string) ($item['icon'] ?? ''), 40);
+                $row = $this->sysPermModel->findByCondition([['code', '=', $code]]);
+                if ($row === []) {
+                    $row = $this->sysPermModel->findByCondition([['api', '=', $url], ['type', '=', 1]]);
+                }
+                $payload = [
+                    'name' => $name,
+                    'code' => $code,
+                    'api' => $url,
+                    'method' => '',
+                    'pid' => $pid,
+                    'type' => 1,
+                    'icon' => $icon,
+                    'sort' => $childSort,
+                    'update_time' => $now,
+                ];
+                if ($row === []) {
+                    $payload['create_time'] = $now;
+                    $ok = $this->sysPermModel->inserts($payload);
+                    if ($ok) {
+                        $created++;
+                    }
+                } else {
+                    $this->sysPermModel->updateById((int) ($row['id'] ?? 0), $payload);
+                    $updated++;
+                }
+                $childSort--;
+            }
+            $parentSort -= 10;
+        }
+
+        return Result::success([
+            'created' => $created,
+            'updated' => $updated,
+        ], '已对齐当前工作区');
+    }
+
+    /**
      * 权限树（三级树形结构）
      * 返回包含一级模块、二级菜单、三级按钮的完整树形结构
      * 用于权限管理列表展示
      */
     public function getPermTree(): array
     {
+        $this->syncFromWorkspaces();
+
         // 获取所有权限数据
         $list = $this->sysPermModel->selectByCondition([], '*', ['sort' => 'desc', 'id' => 'asc']);
 
@@ -697,5 +807,17 @@ class SysPermService
             }
         }
         return $rows;
+    }
+
+    protected function clip(string $s, int $max): string
+    {
+        if ($max < 1) {
+            return '';
+        }
+        if (function_exists('mb_substr')) {
+            return (string) mb_substr($s, 0, $max);
+        }
+
+        return (string) substr($s, 0, $max);
     }
 }

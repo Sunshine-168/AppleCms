@@ -27,7 +27,7 @@
             <button type="button" class="chip" data-queue="empty_pic" data-value="1">无头像</button>
             <button type="button" class="chip" data-queue="repeat" data-value="1">重名</button>
         </div>
-        <p class="muted recycle-lead">演员是人物库。影片里填主演名会自动建档；这里补头像和简介，前台人物页才好看。</p>
+        <p class="muted recycle-lead">演员是人物库。影片里填主演名会自动建档；这里补头像和简介。</p>
         <div class="batch-bar" id="actor-batch" hidden>
             <strong id="actor-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-sm" id="actor-batch-on">上架</button>

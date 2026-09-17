@@ -129,7 +129,7 @@
                 @endforelse
                 </tbody>
             </table>
+            {{ $logs->links() }}
         </div>
     </div>
-    {{ $logs->links() }}
 @endsection

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', $isEdit ? '编辑定时任务' : '新增定时任务')
+@section('title', $isEdit ? '编辑定时采集' : '新增定时采集')
 
 @php
     $task = is_array($task ?? null) ? $task : [];
@@ -17,7 +17,7 @@
     $hoursIsPreset = array_key_exists($hours, $hourPresets);
     $sourceIds = array_map(fn ($row) => (int) ($row['id'] ?? 0), $sources);
     $sourceMissing = $sourceId > 0 && ! in_array($sourceId, $sourceIds, true);
-    $title = $isEdit ? '编辑定时任务' : '新增定时任务';
+    $title = $isEdit ? '编辑定时采集' : '新增定时采集';
 @endphp
 
 @section('plain')
@@ -27,7 +27,8 @@
         <a class="btn btn-muted btn-sm" href="/admin/video/collect_tasks">返回定时采集</a>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">选一个采集源，设好多久采一次。到期后会按「当天 / 近 7 天 / 全库」去拉接口，结果记在采集日志里。</p>
+        @include('admin.partials.schedule-kind-tabs', ['tab' => 'collect'])
+        <p class="muted recycle-lead">选一个采集源，设好多久采一次。到期后会按「当天 / 近 7 天 / 全库」去拉接口，结果记在采集日志里。备份、推送、插件任务（数据统计这类）去「备份 / 推送 / 插件」。</p>
 
         @if($sources === [])
             <p class="hint">还没有采集源。<a href="/admin/video/collects">先去加一个</a>，再回来设定时。</p>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="Z9HlcgTEIi8cgWqg9jwL5suxu7HgX2k5YS6lq8cf">
+    <title>专题 - LaraVideo</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<link rel="canonical" href="http://localhost/topics">
+<meta property="og:type" content="website">
+<meta property="og:title" content="专题 - LaraVideo">
+<meta property="og:description" content="">
+<meta property="og:url" content="http://localhost/topics">    <link rel="stylesheet" href="http://localhost/css/vod.css">
+    </head>
+<body>
+<header class="site">
+    <div class="wrap">
+        <a class="logo" href="http://localhost">
+                            LaraVideo
+                    </a>
+        <nav class="main">
+                            <a href="http://localhost/type/movie">电影</a>
+                            <a href="http://localhost/type/tv">电视剧</a>
+                            <a href="http://localhost/type/show">综艺</a>
+                            <a href="http://localhost/type/anime">动漫</a>
+                                    <a href="http://localhost/latest">最新</a>
+            <a href="http://localhost/topics">专题</a>
+            <a href="http://localhost/actors">演员</a>
+            <a href="http://localhost/roles">角色</a>
+            <a href="http://localhost/arts">资讯</a>
+            <a href="http://localhost/website">导航</a>
+            <a href="http://localhost/manga">漫画</a>
+                                </nav>
+        <form class="search" action="http://localhost/search" method="get">
+            <input type="search" name="wd" value="" placeholder="搜影片">
+        </form>
+        <nav class="main">
+                            <a href="http://localhost/member/login">登录</a>
+                <a href="http://localhost/member/register">注册</a>
+                    </nav>
+    </div>
+</header>
+<main class="wrap page">
+                    <nav class="breadcrumb"><a href="http://localhost">首页</a> / <span>专题</span></nav>    <h1>专题</h1>
+    <form class="search topic-search" action="http://localhost/topics/search" method="get">
+        <input type="search" name="wd" value="" placeholder="搜专题">
+        <button type="submit">搜索</button>
+    </form>
+    <div class="grid">
+            </div>
+            <p class="muted">还没有专题</p>
+        <div class="pager"></div>
+</main>
+<footer class="site">
+    <div class="wrap">
+                        <div>LaraVideo · LaraVideo · <a href="http://localhost/gbook">留言</a></div>
+    </div>
+</footer>
+<script>
+window.vodToast = function (text, type) {
+    var old = document.querySelector('.vod-toast');
+    if (old) old.remove();
+    if (!text) return;
+    var el = document.createElement('div');
+    el.className = 'vod-toast' + (type === 'ok' ? ' is-ok' : ' is-err');
+    el.textContent = text;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 2800);
+};
+window.vodResult = function (res, fallback) {
+    var msg = (res && (res.msg || res.message)) || fallback || '失败';
+    var ok = !!(res && Number(res.code) === 0);
+    window.vodToast(msg, ok ? 'ok' : 'err');
+    return ok;
+};
+</script>
+</body>
+</html>

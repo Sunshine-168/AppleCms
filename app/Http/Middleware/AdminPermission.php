@@ -44,7 +44,7 @@ class AdminPermission
         // 获取权限标识
         $perm = $this->getPermission($request);
 
-        // 没配置权限 = 默认放行（可改成拒绝）
+        // 没写进菜单的地址仍放行（列表接口等）
         if (empty($perm) || empty($perm['id'])) {
             return $next($request);
         }
@@ -80,6 +80,10 @@ class AdminPermission
             'admin/captcha',
             'admin/logout',
             'admin/ui-locale',
+            'admin/unlock',
+            'admin/welcome',
+            'admin/more',
+            'admin/plugins',
         ]);
     }
 

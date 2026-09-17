@@ -10,24 +10,23 @@
 <div class="card card-panel role-index">
     <div class="card-header">
         <span>角色 <em id="role-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/user">管理员</a>
     </div>
     <div class="card-body">
+        @include('admin.partials.access-chain', ['step' => 'roles'])
         <div class="role-compose">
-            <form id="role-compose" autocomplete="off" onsubmit="return false;">
+            <form id="role-compose" autocomplete="off">
                 <label class="role-compose-label" for="role-quick-name">新增角色</label>
                 <div class="role-compose-row">
                     <input id="role-quick-name" type="text" name="name" placeholder="名称，如 审核员" aria-label="角色名称" required>
                     <button class="btn" type="submit">添加</button>
                 </div>
-                <p class="muted field-hint">添加后点名称去勾能进哪些菜单。1 号创始人不用角色，能做所有事。</p>
             </form>
         </div>
 
-        <form class="filter-bar role-find" id="role-search" onsubmit="return false;">
+        <form class="filter-bar role-find" id="role-search">
             <input type="hidden" name="kind">
             <input type="search" name="q" placeholder="搜名称或备注" autocomplete="off" aria-label="搜索角色">
-            <button type="button" class="btn btn-sm" id="role-search-btn">搜索</button>
+            <button type="submit" class="btn btn-sm" id="role-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">重置</button>
         </form>
         <div class="queue-chips" id="role-queues">
@@ -36,7 +35,6 @@
             <button type="button" class="chip" data-queue="kind" data-value="empty">还没人@if($q('empty') > 0)<em>{{ $q('empty') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="kind" data-value="off">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">点名称去勾权限。有人在用的角色，要先换人再删。</p>
         <div id="role-table"></div>
     </div>
 </div>
@@ -56,7 +54,7 @@
             <option value="0">停用</option>
         </select>
         <p class="role-perms-label">能进哪些菜单</p>
-        <p class="muted field-hint">不勾的菜单，这个角色的人进后台看不到。未登记的地址默认仍可进。</p>
+        <p class="muted field-hint">不勾的工作区页，这个角色进后台看不到也打不开。工作台、全部功能、插件不用勾。1 号创始人不用勾。</p>
         <div class="html-cache-actions" style="margin:0 0 8px">
             <button type="button" class="btn btn-muted btn-sm" id="role-perm-checkall">全选</button>
             <button type="button" class="btn btn-muted btn-sm" id="role-perm-uncheckall">全不选</button>
@@ -116,7 +114,7 @@
     function usersHtml(d) {
         var n = parseInt(d.users_count || '0', 10) || 0;
         if (n < 1) return '<span class="muted">还没人</span>';
-        return '<a href="/admin/user">' + n + ' 人</a>';
+        return '<a href="/admin/user?role_id=' + encodeURIComponent(d.id) + '">' + n + ' 人</a>';
     }
 
     var table = U.table({
@@ -127,7 +125,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的角色。</p><p><button type="button" class="btn btn-muted btn-sm" id="role-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有角色。</p><p class="muted">在上方填写名称即可添加。点名称去勾能进哪些菜单。</p></div>';
+            return '<div class="list-empty"><p>还没有角色。</p><p class="muted">在上方填写名称即可添加。点名称去勾能进哪些页，再给管理员套上。</p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
@@ -158,7 +156,7 @@
     }
     function renderGroups(nodes, checkedMap) {
         if (!nodes || !nodes.length) {
-            return '<p class="muted">还没有菜单权限点。可到「全部功能」里的菜单管理添加。</p>';
+            return '<p class="muted">还没有可勾的页。先到「<a href="/admin/system/menus">菜单</a>」点对齐当前工作区。</p>';
         }
         return nodes.map(function (n) {
             return '<div class="role-perm-group">' + renderNode(n, checkedMap) + '</div>';
@@ -212,6 +210,15 @@
                     if (uncheck) uncheck.addEventListener('click', function () {
                         U.qa('#role-perm-box input[type=checkbox]', body).forEach(function (c) { c.checked = false; });
                     });
+                    if (box) box.addEventListener('change', function (e) {
+                        var input = e.target;
+                        if (!input || input.type !== 'checkbox') return;
+                        var wrap = input.closest('label');
+                        var kids = wrap && wrap.nextElementSibling;
+                        if (kids && kids.classList.contains('role-perms')) {
+                            kids.querySelectorAll('input[type=checkbox]').forEach(function (c) { c.checked = input.checked; });
+                        }
+                    });
                 },
                 onSave: function (body) {
                     var payload = U.formData(body.querySelector('form'));
@@ -236,6 +243,7 @@
         });
     }
 
+    U.on('#role-search', 'submit', function (e) { e.preventDefault(); runSearch(); });
     U.on('#role-search-btn', 'click', runSearch);
     U.on('#role-reset-btn', 'click', function () { setTimeout(function () { form.kind.value = ''; runSearch(); }, 0); });
     U.on('#role-queues', 'click', function (e) {

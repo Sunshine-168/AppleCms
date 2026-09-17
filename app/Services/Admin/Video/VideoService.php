@@ -13,6 +13,7 @@ use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTypeModel;
 use App\Support\AdminOpLog;
+use App\Support\AdminPage;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Exception;
@@ -160,10 +161,7 @@ class VideoService
                 $q->where('type_id', (int) $typeId);
             }
             $page = $q->orderByDesc('deleted_at')->paginate($limit);
-            $data = [
-                'total' => $page->total(),
-                'data' => collect($page->items())->map(fn ($row) => $row->toArray())->all(),
-            ];
+            $data = AdminPage::of($page);
             $typeIds = [];
             $videoIds = [];
             foreach (($data['data'] ?? []) as $row) {
@@ -195,7 +193,8 @@ class VideoService
         $emptyPic = (string) ($params['empty_pic'] ?? '') === '1';
         $emptyContent = (string) ($params['empty_content'] ?? '') === '1';
         $noActor = (string) ($params['no_actor'] ?? '') === '1';
-        if ($emptyUrl || $repeat || $needPoints || $hasPlot || $emptyPic || $emptyContent || $noActor) {
+        $missingEp = (string) ($params['missing_ep'] ?? '') === '1';
+        if ($emptyUrl || $repeat || $needPoints || $hasPlot || $emptyPic || $emptyContent || $noActor || $missingEp) {
             $q = VideoModel::query();
             if ($title !== '') {
                 $q->where('title', 'like', '%'.$title.'%');
@@ -216,41 +215,36 @@ class VideoService
                 $q->where('points', '>', 0);
             }
             if ($emptyUrl) {
-                $q->whereDoesntHave('episodes');
+                $this->scopeEmptyUrl($q);
             }
             if ($hasPlot) {
                 $q->whereHas('plots');
             }
             if ($emptyPic) {
-                $q->where(function ($inner) {
-                    $inner->whereNull('cover')->orWhere('cover', '');
-                });
+                $this->scopeEmptyPic($q);
             }
             if ($emptyContent) {
-                $q->where(function ($inner) {
-                    $inner->whereNull('description')->orWhere('description', '');
-                });
+                $this->scopeEmptyContent($q);
             }
             if ($noActor) {
-                $q->where(function ($inner) {
-                    $inner->whereDoesntHave('actors');
-                    if (Schema::hasColumn('videos', 'actor')) {
-                        $inner->orWhereNull('actor')->orWhere('actor', '');
-                    }
-                });
+                $this->scopeNoActor($q);
+            }
+            if ($missingEp) {
+                $this->scopeMissingEp($q);
             }
             if ($relIds !== null) {
                 $q->whereIn('id', $relIds);
             }
             if ($repeat) {
-                $dup = VideoModel::query()->select('title')->groupBy('title')->havingRaw('COUNT(*) > 1')->pluck('title');
-                $q->whereIn('title', $dup);
+                $dup = $this->duplicateTitles();
+                if ($dup === []) {
+                    $q->whereRaw('0 = 1');
+                } else {
+                    $q->whereIn('title', $dup);
+                }
             }
             $page = $q->orderByDesc('id')->paginate($limit);
-            $data = [
-                'total' => $page->total(),
-                'data' => collect($page->items())->map(fn ($row) => $row->toArray())->all(),
-            ];
+            $data = AdminPage::of($page);
         } else {
             $data = $this->videoModel->paginates($where, '*', $limit, ['id' => 'desc']);
         }
@@ -289,9 +283,13 @@ class VideoService
             }
             try {
                 if (Schema::hasTable('video_episodes')) {
-                    $playIds = VideoEpisodeModel::query()->whereIn('video_id', $videoIds)->distinct()->pluck('video_id');
-                    foreach ($playIds as $pid) {
-                        $playMap[(int) $pid] = true;
+                    $countRows = VideoEpisodeModel::query()
+                        ->selectRaw('video_id, COUNT(*) as c')
+                        ->whereIn('video_id', $videoIds)
+                        ->groupBy('video_id')
+                        ->get();
+                    foreach ($countRows as $row) {
+                        $playMap[(int) $row->video_id] = (int) $row->c;
                     }
                 }
             } catch (\Throwable) {
@@ -303,14 +301,19 @@ class VideoService
             foreach ($data['data'] as &$item)
         {
             $tid = (int)($item['type_id'] ?? 0);
+            $vid = (int) ($item['id'] ?? 0);
+            $epCount = (int) ($playMap[$vid] ?? 0);
+            $total = (int) ($item['total'] ?? 0);
             $item['type_name'] = $tid > 0 && isset($typeMap[$tid]) ? (string)$typeMap[$tid]['name'] : '';
-            $item['hits'] = (int)($statMap[(int)$item['id']]['hits'] ?? 0);
+            $item['hits'] = (int)($statMap[$vid]['hits'] ?? 0);
             $createdTs = (int)($item['created_at'] ?? ($item['create_time'] ?? 0));
             $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
             $item['created_at_text'] = $createdTs > 0 ? date('Y-m-d H:i:s', $createdTs) : '';
             $item['updated_at_text'] = $updatedTs > 0 ? date('Y-m-d H:i:s', $updatedTs) : '';
             $item['has_cover'] = trim((string) ($item['cover'] ?? '')) !== '';
-            $item['has_play'] = isset($playMap[(int) $item['id']]);
+            $item['episode_count'] = $epCount;
+            $item['has_play'] = $epCount > 0;
+            $item['ep_gap'] = $total > 0 ? max(0, $total - $epCount) : 0;
         }
         unset($item);
         }
@@ -321,38 +324,149 @@ class VideoService
     /** @return array<string, int> */
     public function queueCounts(): array
     {
-        $zero = ['all' => 0, 'pending' => 0, 'empty_url' => 0, 'empty_pic' => 0, 'repeat' => 0, 'recycle' => 0];
+        $zero = [
+            'all' => 0,
+            'pending' => 0,
+            'empty_url' => 0,
+            'empty_pic' => 0,
+            'empty_content' => 0,
+            'no_actor' => 0,
+            'repeat' => 0,
+            'repeat_groups' => 0,
+            'missing_ep' => 0,
+            'recycle' => 0,
+        ];
         try {
             if (! Schema::hasTable('videos')) {
                 return $zero;
             }
-            $repeat = 0;
-            try {
-                $repeat = (int) VideoModel::query()
-                    ->select('title')
-                    ->groupBy('title')
-                    ->havingRaw('COUNT(*) > 1')
-                    ->get()
-                    ->count();
-            } catch (\Throwable) {
-            }
+            $quality = $this->qualityCounts();
 
-            return [
-                'all' => (int) VideoModel::query()->count(),
+            return array_merge($zero, $quality, [
                 'pending' => (int) VideoModel::query()->where('status', 0)->count(),
-                'empty_url' => Schema::hasTable('video_episodes')
-                    ? (int) VideoModel::query()->whereDoesntHave('episodes')->count()
-                    : 0,
-                'empty_pic' => (int) VideoModel::query()->where(function ($q) {
-                    $q->whereNull('cover')->orWhere('cover', '');
-                })->count(),
-                'repeat' => $repeat,
                 'recycle' => Schema::hasColumn('videos', 'deleted_at')
                     ? (int) VideoModel::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->count()
                     : 0,
+            ]);
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function qualityCounts(): array
+    {
+        $zero = [
+            'all' => 0,
+            'empty_url' => 0,
+            'empty_pic' => 0,
+            'empty_content' => 0,
+            'no_actor' => 0,
+            'repeat' => 0,
+            'repeat_groups' => 0,
+            'missing_ep' => 0,
+        ];
+        try {
+            if (! Schema::hasTable('videos')) {
+                return $zero;
+            }
+            $dupTitles = $this->duplicateTitles();
+
+            return [
+                'all' => (int) VideoModel::query()->count(),
+                'empty_url' => $this->issueCount('empty_url'),
+                'empty_pic' => $this->issueCount('empty_pic'),
+                'empty_content' => $this->issueCount('empty_content'),
+                'no_actor' => $this->issueCount('no_actor'),
+                'repeat' => $dupTitles === [] ? 0 : (int) VideoModel::query()->whereIn('title', $dupTitles)->count(),
+                'repeat_groups' => count($dupTitles),
+                'missing_ep' => $this->issueCount('missing_ep'),
             ];
         } catch (\Throwable) {
             return $zero;
+        }
+    }
+
+    private function issueCount(string $issue): int
+    {
+        $q = VideoModel::query();
+        match ($issue) {
+            'empty_url' => $this->scopeEmptyUrl($q),
+            'empty_pic' => $this->scopeEmptyPic($q),
+            'empty_content' => $this->scopeEmptyContent($q),
+            'no_actor' => $this->scopeNoActor($q),
+            'missing_ep' => $this->scopeMissingEp($q),
+            default => $q->whereRaw('0 = 1'),
+        };
+
+        return (int) $q->count();
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeEmptyUrl($q): void
+    {
+        if (! Schema::hasTable('video_episodes')) {
+            $q->whereRaw('0 = 1');
+
+            return;
+        }
+        $q->whereDoesntHave('episodes');
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeEmptyPic($q): void
+    {
+        $q->where(function ($inner) {
+            $inner->whereNull('cover')->orWhere('cover', '');
+        });
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeEmptyContent($q): void
+    {
+        $q->where(function ($inner) {
+            $inner->whereNull('description')->orWhere('description', '');
+        });
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeNoActor($q): void
+    {
+        if (Schema::hasTable('video_actor_rel')) {
+            $q->whereDoesntHave('actors');
+        }
+        if (Schema::hasColumn('videos', 'actor')) {
+            $q->where(function ($inner) {
+                $inner->whereNull('actor')->orWhere('actor', '');
+            });
+        }
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeMissingEp($q): void
+    {
+        if (! Schema::hasColumn('videos', 'total') || ! Schema::hasTable('video_episodes')) {
+            $q->whereRaw('0 = 1');
+
+            return;
+        }
+        $q->where('total', '>', 0)
+            ->whereRaw('(select count(*) from video_episodes where video_episodes.video_id = videos.id) < videos.total');
+    }
+
+    /** @return list<string> */
+    private function duplicateTitles(): array
+    {
+        try {
+            return VideoModel::query()
+                ->select('title')
+                ->groupBy('title')
+                ->havingRaw('COUNT(*) > 1')
+                ->pluck('title')
+                ->map(fn ($title) => (string) $title)
+                ->all();
+        } catch (\Throwable) {
+            return [];
         }
     }
 
@@ -441,6 +555,7 @@ class VideoService
             'type_id' => ($data['type_id'] ?? '') === '' ? null : (int)$data['type_id'],
             'area' => (string)($data['area'] ?? ''),
             'lang' => (string)($data['lang'] ?? ''),
+            'class' => (string)($data['class'] ?? ''),
             'year' => (string)($data['year'] ?? ''),
             'director' => (string)($data['director'] ?? ''),
             'remarks' => (string)($data['remarks'] ?? ''),
@@ -457,6 +572,22 @@ class VideoService
             'letter' => VideoMeta::letter($title),
             'updated_at' => $now,
         ];
+        if (Schema::hasColumn('videos', 'class')) {
+            $parts = preg_split('/[,，]+/u', (string) $payload['class']) ?: [];
+            $seen = [];
+            $clean = [];
+            foreach ($parts as $part) {
+                $part = trim((string) $part);
+                if ($part === '' || isset($seen[$part])) {
+                    continue;
+                }
+                $seen[$part] = true;
+                $clean[] = $part;
+            }
+            $payload['class'] = implode(',', $clean);
+        } else {
+            unset($payload['class']);
+        }
         if (Schema::hasColumn('videos', 'weekday')) {
             $payload['weekday'] = trim((string) ($data['weekday'] ?? ''));
         }
@@ -1073,10 +1204,7 @@ class VideoService
         }
         unset($row);
 
-        return Result::success([
-            'total' => $page->total(),
-            'data' => $rows,
-        ]);
+        return Result::success(AdminPage::of($page, $rows));
     }
     /**
      * 保存视频标签
@@ -1185,6 +1313,9 @@ class VideoService
         }
 
         $q = ActorModel::query();
+        if (array_key_exists('id', $params) && $params['id'] !== '' && $params['id'] !== null) {
+            $q->where('id', (int) $params['id']);
+        }
         $name = trim((string) ($params['name'] ?? ''));
         if ($name !== '') {
             $q->where('name', 'like', '%'.$name.'%');
@@ -1233,10 +1364,7 @@ class VideoService
         }
         unset($row);
 
-        return Result::success([
-            'total' => $page->total(),
-            'data' => $rows,
-        ]);
+        return Result::success(AdminPage::of($page, $rows));
     }
     /**
      * 保存视频演员

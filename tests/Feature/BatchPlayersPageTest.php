@@ -21,9 +21,9 @@ class BatchPlayersPageTest extends TestCase
 
         $this->assertStringContainsString('批量更换播放器', $html);
         $this->assertStringContainsString('还没改', $html);
-        $this->assertStringContainsString('看线路上的标识', $html);
-        $this->assertStringContainsString('换成站内播放器，或下线', $html);
-        $this->assertStringContainsString('到播放器页核对内核', $html);
+        $this->assertStringContainsString('查看线路标识', $html);
+        $this->assertStringContainsString('更换或下线', $html);
+        $this->assertStringContainsString('核对播放器', $html);
         $this->assertStringContainsString('不改播放地址', $html);
         $this->assertStringContainsString('更换播放器', $html);
         $this->assertStringContainsString('下线这些线路', $html);

@@ -31,6 +31,15 @@ class SiteToolsProbeTest extends TestCase
         $this->assertArrayHasKey('watermark', $page);
     }
 
+    public function test_quality_page_has_issue_counts(): void
+    {
+        $page = app(SiteToolsService::class)->qualityPage();
+        $this->assertContains($page['focus'] ?? '', ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'repeat', 'missing_ep']);
+        $this->assertArrayHasKey('empty_url', $page['counts'] ?? []);
+        $this->assertArrayHasKey('missing_ep', $page['counts'] ?? []);
+        $this->assertArrayHasKey('repeat_groups', $page['counts'] ?? []);
+    }
+
     public function test_replace_player_asks_for_from(): void
     {
         $res = app(SiteToolsService::class)->replacePlayer('  ', 'dplayer');

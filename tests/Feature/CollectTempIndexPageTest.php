@@ -29,6 +29,7 @@ class CollectTempIndexPageTest extends TestCase
         $this->assertStringContainsString('转入失败', $html);
         $this->assertStringContainsString('/admin/video/collects', $html);
         $this->assertStringContainsString('/admin/video/config/collect', $html);
+        $this->assertStringNotContainsString('href="/admin/video/collect_logs">采集日志', $html);
         $this->assertMatchesRegularExpression('/id="ctemp-source-chip"[^>]*\bhidden\b/', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('mod-add', $html);

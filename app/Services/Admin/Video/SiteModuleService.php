@@ -12,18 +12,23 @@ use App\Models\Member\MemberPointLog;
 use App\Models\Member\MemberWithdraw;
 use App\Models\Video\CollectSourceModel;
 use App\Models\Video\FriendLink;
+use App\Models\Video\ActorModel;
 use App\Models\Video\VideoAd;
 use App\Models\Video\VideoArt;
 use App\Models\Video\VideoCard;
+use App\Models\Video\VideoClass;
 use App\Models\Video\VideoComment;
+use App\Models\Video\VideoDownloader;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoSlide;
 use App\Models\Video\VideoSourceModel;
+use App\Models\Video\VideoSynonym;
 use App\Models\Video\VideoTopicArtRelModel;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTopicRelModel;
 use App\Models\Video\VideoTypeModel;
+use App\Models\Video\VideoWebsite;
 use App\Models\Video\VideoAuditRule;
 use App\Models\Video\VideoCollectLog;
 use App\Models\Video\VideoCollectTask;
@@ -34,8 +39,15 @@ use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoGuestbook;
 use App\Models\Video\VideoNotify;
 use App\Models\Video\VideoPlayFail;
+use App\Models\Video\VideoPlot;
 use App\Models\Video\VideoReport;
+use App\Models\Video\VideoRole;
+use App\Models\Video\VideoServer;
+use App\Models\Video\VideoAccessLog;
+use App\Services\Stats\SpiderDetector;
+use App\Services\Video\SynonymService;
 use App\Support\AdminOpLog;
+use App\Support\AdminPage;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -166,28 +178,28 @@ class SiteModuleService
             ],
             'downloaders' => [
                 'title' => '下载器',
-                'hint' => '这是下载地址模板，不是任务队列。线路填「下载器」标识后，{url} {id} 会替换成剧集地址。前缀匹配也可。',
+                'hint' => '下载页把剧集地址套进模板。不是后台去下文件，也不是播放器。',
                 'model' => \App\Models\Video\VideoDownloader::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'code', 'label' => '标识', 'type' => 'text'],
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
-                    ['name' => 'parse', 'label' => '解析', 'type' => 'textarea'],
+                    ['name' => 'parse', 'label' => '模板', 'type' => 'textarea'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'code', 'name', 'status', 'sort'],
             ],
             'servers' => [
                 'title' => '服务器组',
-                'hint' => '地址前缀。线路选中一组后，相对路径的播放地址会拼上此前缀，再交给播放器解析。',
+                'hint' => '相对播放地址会拼上此前缀。已经是 http(s) 的地址不会改。不是下载器，也不是播放内核。',
                 'model' => \App\Models\Video\VideoServer::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
                     ['name' => 'url', 'label' => '地址前缀', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'name', 'url', 'status', 'sort'],
             ],
@@ -356,7 +368,7 @@ class SiteModuleService
             ],
             'roles' => [
                 'title' => '角色库',
-                'hint' => '影视角色，挂到影片和演员。详情页会列出；角色页显示简介、影片和演员。',
+                'hint' => '片子里的角色名，挂到影片和演员。不是后台管理员。启用的才会出现在详情页。',
                 'model' => \App\Models\Video\VideoRole::class,
                 'search' => 'name',
                 'fields' => [
@@ -374,6 +386,7 @@ class SiteModuleService
             ],
             'websites' => [
                 'title' => '网址导航',
+                'hint' => '顶栏「导航」里的站外目录，可按分类分组。页脚交换链接请去友情链接，不是同一张表。',
                 'model' => \App\Models\Video\VideoWebsite::class,
                 'search' => 'name',
                 'fields' => [
@@ -442,6 +455,7 @@ class SiteModuleService
             ],
             'plots' => [
                 'title' => '分集剧情',
+                'hint' => '按集写剧情简介，挂到一部片子。详情页会列出；不是整部片子的剧情简介。',
                 'model' => \App\Models\Video\VideoPlot::class,
                 'search' => 'title',
                 'fields' => [
@@ -455,6 +469,7 @@ class SiteModuleService
             ],
             'synonyms' => [
                 'title' => '同义词',
+                'hint' => '搜到这个词时，按那个词去查。采集入库时片名也会换。不会改已经在库里的片子。',
                 'model' => \App\Models\Video\VideoSynonym::class,
                 'search' => 'from_word',
                 'fields' => [
@@ -479,12 +494,13 @@ class SiteModuleService
             ],
             'classes' => [
                 'title' => '扩展分类',
+                'hint' => '分类页「类型」筛选词，如喜剧、动作。不是电影/电视剧那种栏目树，栏目请去分类；聚合词请去标签。',
                 'model' => \App\Models\Video\VideoClass::class,
                 'search' => 'name',
                 'fields' => [
                     ['name' => 'name', 'label' => '名称', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
-                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '禁用']],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
                 'cols' => ['id', 'name', 'sort', 'status'],
             ],
@@ -501,28 +517,28 @@ class SiteModuleService
             ],
             'accesslogs' => [
                 'title' => '访问风控',
+                'hint' => '前台页面 GET。不是封 IP。静态和插件资源不记。爬虫是同一张表的切片。',
                 'model' => \App\Models\Video\VideoAccessLog::class,
-                'search' => 'ip',
+                'search' => 'q',
                 'fields' => [
                     ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
-                    ['name' => 'url', 'label' => 'URL', 'type' => 'text'],
-                    ['name' => 'ua', 'label' => 'UA', 'type' => 'text'],
-                    ['name' => 'is_bot', 'label' => '爬虫', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
+                    ['name' => 'url', 'label' => '地址', 'type' => 'text'],
+                    ['name' => 'ua', 'label' => '标识', 'type' => 'text'],
                 ],
-                'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
+                'cols' => ['id', 'ip', 'url', 'ua', 'created_at'],
             ],
             'botlogs' => [
                 'title' => '爬虫日志',
+                'hint' => '访问风控同一张表，只看爬虫。图表在蜘蛛统计。不是封 IP。',
                 'model' => \App\Models\Video\VideoAccessLog::class,
-                'search' => 'ua',
+                'search' => 'q',
                 'where' => ['is_bot' => 1],
                 'fields' => [
                     ['name' => 'ip', 'label' => 'IP', 'type' => 'text'],
-                    ['name' => 'url', 'label' => 'URL', 'type' => 'text'],
-                    ['name' => 'ua', 'label' => 'UA', 'type' => 'text'],
-                    ['name' => 'is_bot', 'label' => '爬虫', 'type' => 'select', 'options' => ['1' => '是', '0' => '否']],
+                    ['name' => 'url', 'label' => '地址', 'type' => 'text'],
+                    ['name' => 'ua', 'label' => '标识', 'type' => 'text'],
                 ],
-                'cols' => ['id', 'ip', 'url', 'ua', 'is_bot', 'created_at'],
+                'cols' => ['id', 'ip', 'url', 'ua', 'created_at'],
             ],
             'searchwords' => [
                 'title' => '搜索词',
@@ -596,7 +612,7 @@ class SiteModuleService
         } catch (\Throwable) {
             return Result::fail('请先执行数据库迁移');
         }
-        $limit = max(1, (int) ($params['limit'] ?? 10));
+        $limit = max(1, (int) ($params['limit'] ?? 15));
         $q = $class::query();
         foreach ($cfg['where'] ?? [] as $col => $val) {
             $q->where($col, $val);
@@ -755,6 +771,26 @@ class SiteModuleService
                         ->orWhere('url', 'like', '%'.$kw.'%');
                     if (ctype_digit($kw)) {
                         $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'websites') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('url', 'like', '%'.$kw.'%')
+                        ->orWhere('blurb', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)
+                            ->orWhere('type_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('video_types')) {
+                        $typeQ = VideoTypeModel::query()->where('name', 'like', '%'.$kw.'%')->limit(50);
+                        if (Schema::hasColumn('video_types', 'mid')) {
+                            $typeQ->where('mid', 3);
+                        }
+                        $typeIds = $typeQ->pluck('id')->all();
+                        if ($typeIds !== []) {
+                            $inner->orWhereIn('type_id', $typeIds);
+                        }
                     }
                 });
             } elseif ($module === 'players') {
@@ -961,11 +997,96 @@ class SiteModuleService
                         $inner->orWhere('id', (int) $kw);
                     }
                 });
+            } elseif ($module === 'botlogs' || $module === 'accesslogs') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('ip', 'like', '%'.$kw.'%')
+                        ->orWhere('url', 'like', '%'.$kw.'%')
+                        ->orWhere('ua', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'roles') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('blurb', 'like', '%'.$kw.'%')
+                        ->orWhere('slug', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)
+                            ->orWhere('video_id', (int) $kw)
+                            ->orWhere('actor_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
+                    if (Schema::hasTable('actors')) {
+                        $actorIds = ActorModel::query()
+                            ->where('name', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($actorIds !== []) {
+                            $inner->orWhereIn('actor_id', $actorIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'plots') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('content', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)
+                            ->orWhere('video_id', (int) $kw)
+                            ->orWhere('episode_num', (int) $kw);
+                    }
+                    if (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'synonyms') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('from_word', 'like', '%'.$kw.'%')
+                        ->orWhere('to_word', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'downloaders') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('code', 'like', '%'.$kw.'%')
+                        ->orWhere('parse', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'servers') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('url', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
             } else {
                 $q->where($cfg['search'], 'like', '%'.$kw.'%');
             }
         }
-        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups' || $module === 'reports' || $module === 'guestbooks' || $module === 'playfails') {
+        if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups' || $module === 'reports' || $module === 'guestbooks' || $module === 'playfails' || $module === 'roles') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
             }
@@ -990,6 +1111,49 @@ class SiteModuleService
             }
             if ($module === 'orders' && trim((string) ($params['channel'] ?? '')) !== '') {
                 $q->where('channel', trim((string) $params['channel']));
+            }
+            if ($module === 'roles') {
+                if (array_key_exists('video_id', $params) && $params['video_id'] !== '' && $params['video_id'] !== null) {
+                    $q->where('video_id', (int) $params['video_id']);
+                }
+                if (array_key_exists('actor_id', $params) && $params['actor_id'] !== '' && $params['actor_id'] !== null) {
+                    $q->where('actor_id', (int) $params['actor_id']);
+                }
+                if ((string) ($params['empty_video'] ?? '') === '1') {
+                    $q->where(function ($inner) {
+                        $inner->where('video_id', 0)->orWhereNull('video_id');
+                    });
+                }
+                if ((string) ($params['empty_actor'] ?? '') === '1') {
+                    $q->where(function ($inner) {
+                        $inner->where('actor_id', 0)->orWhereNull('actor_id');
+                    });
+                }
+                if ((string) ($params['empty_pic'] ?? '') === '1') {
+                    $q->where(function ($inner) {
+                        $inner->whereNull('cover')->orWhere('cover', '');
+                    });
+                }
+            }
+        }
+        if ($module === 'plots') {
+            if (array_key_exists('video_id', $params) && $params['video_id'] !== '' && $params['video_id'] !== null) {
+                $q->where('video_id', (int) $params['video_id']);
+            }
+            if ((string) ($params['empty_video'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->where('video_id', 0)->orWhereNull('video_id');
+                });
+            }
+            if ((string) ($params['empty_content'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->whereNull('content')->orWhere('content', '');
+                });
+            }
+            if ((string) ($params['empty_title'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->whereNull('title')->orWhere('title', '');
+                });
             }
         }
         if ($module === 'reports' && (string) ($params['today'] ?? '') === '1') {
@@ -1089,6 +1253,27 @@ class SiteModuleService
                 $q->where('member_id', (int) $params['member_id']);
             }
         }
+        if ($module === 'botlogs') {
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            $this->applyBotlogEngine($q, trim((string) ($params['engine'] ?? '')));
+        }
+        if ($module === 'accesslogs') {
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            $visitor = trim((string) ($params['visitor'] ?? ''));
+            if ($visitor === 'people') {
+                $q->where('is_bot', 0);
+            } elseif ($visitor === 'bot') {
+                $q->where('is_bot', 1);
+            }
+            $ip = trim((string) ($params['ip'] ?? ''));
+            if ($ip !== '') {
+                $q->where('ip', $ip);
+            }
+        }
         if ($module === 'favorites') {
             if (array_key_exists('member_id', $params) && $params['member_id'] !== '' && $params['member_id'] !== null) {
                 $q->where('member_id', (int) $params['member_id']);
@@ -1121,6 +1306,73 @@ class SiteModuleService
             }
             if ((string) ($params['logo'] ?? '') === '1') {
                 $q->where('logo', '!=', '')->whereNotNull('logo');
+            }
+        }
+        if ($module === 'websites') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            $hasType = Schema::hasTable('video_websites') && Schema::hasColumn('video_websites', 'type_id');
+            if ($hasType && array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null) {
+                $q->where('type_id', (int) $params['type_id']);
+            }
+            if ($hasType && (string) ($params['empty_type'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->where('type_id', 0)->orWhereNull('type_id');
+                });
+            }
+            if ((string) ($params['logo'] ?? '') === '1') {
+                $q->where('logo', '!=', '')->whereNotNull('logo');
+            }
+        }
+        if ($module === 'classes') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['unused'] ?? '') === '1') {
+                $used = array_keys($this->classUsageCounts());
+                if ($used !== []) {
+                    $q->whereNotIn('name', $used);
+                }
+            }
+        }
+        if ($module === 'synonyms') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['empty_to'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->whereNull('to_word')->orWhere('to_word', '');
+                });
+            }
+        }
+        if ($module === 'downloaders') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            $kind = trim((string) ($params['kind'] ?? ''));
+            if ($kind === 'empty') {
+                $q->where(function ($inner) {
+                    $inner->whereNull('parse')->orWhere('parse', '');
+                });
+            } elseif ($kind === 'tpl') {
+                $q->where(function ($inner) {
+                    $inner->where('parse', 'like', '%{url}%')->orWhere('parse', 'like', '%{id}%');
+                });
+            } elseif ($kind === 'prefix') {
+                $q->where('parse', '!=', '')->whereNotNull('parse')
+                    ->where('parse', 'not like', '%{url}%')
+                    ->where('parse', 'not like', '%{id}%');
+            }
+        }
+        if ($module === 'servers') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['empty_url'] ?? '') === '1') {
+                $q->where(function ($inner) {
+                    $inner->whereNull('url')->orWhere('url', '');
+                });
             }
         }
         if ($module === 'players') {
@@ -1214,8 +1466,12 @@ class SiteModuleService
                 $q->where('scope', $scope);
             }
         }
-        if ($module === 'topics' || $module === 'slides' || $module === 'groups' || $module === 'ads' || $module === 'links' || $module === 'players' || $module === 'unions' || $module === 'audits') {
+        if ($module === 'topics' || $module === 'slides' || $module === 'groups' || $module === 'ads' || $module === 'links' || $module === 'websites' || $module === 'players' || $module === 'downloaders' || $module === 'servers' || $module === 'unions' || $module === 'audits' || $module === 'roles' || $module === 'classes') {
             $q->orderByDesc('sort')->orderByDesc('id');
+        } elseif ($module === 'plots') {
+            $q->orderByDesc('video_id')->orderBy('episode_num')->orderBy('sort')->orderBy('id');
+        } elseif ($module === 'synonyms') {
+            $q->orderBy('from_word')->orderBy('id');
         } elseif ($module === 'arts') {
             $q->orderByDesc('updated_at')->orderByDesc('id');
         } elseif ($module === 'collect_temps') {
@@ -1239,7 +1495,8 @@ class SiteModuleService
         } else {
             $q->orderByDesc('id');
         }
-        $page = $q->paginate($limit);
+        $pageNo = max(1, (int) ($params['page'] ?? request()->input('page', 1)));
+        $page = $q->paginate($limit, ['*'], 'page', $pageNo);
         $rows = collect($page->items())->map(function ($row) {
             $arr = $row->toArray();
             unset($arr['password'], $arr['remember_token']);
@@ -1300,6 +1557,21 @@ class SiteModuleService
         if ($module === 'links') {
             $rows = $this->decorateLinks($rows);
         }
+        if ($module === 'websites') {
+            $rows = $this->decorateWebsites($rows);
+        }
+        if ($module === 'classes') {
+            $rows = $this->decorateClasses($rows);
+        }
+        if ($module === 'synonyms') {
+            $rows = $this->decorateSynonyms($rows);
+        }
+        if ($module === 'downloaders') {
+            $rows = $this->decorateDownloaders($rows);
+        }
+        if ($module === 'servers') {
+            $rows = $this->decorateServers($rows);
+        }
         if ($module === 'players') {
             $rows = $this->decoratePlayers($rows);
         }
@@ -1324,11 +1596,17 @@ class SiteModuleService
         if ($module === 'favorites') {
             $rows = $this->decorateFavorites($rows);
         }
+        if ($module === 'roles') {
+            $rows = $this->decorateRoles($rows);
+        }
+        if ($module === 'plots') {
+            $rows = $this->decoratePlots($rows);
+        }
+        if ($module === 'botlogs' || $module === 'accesslogs') {
+            $rows = $this->decorateBotlogs($rows);
+        }
 
-        return Result::success([
-            'total' => $page->total(),
-            'data' => $rows,
-        ]);
+        return Result::success(AdminPage::of($page, $rows));
     }
 
     public function save(string $module, array $data, ?int $id = null): array
@@ -1347,6 +1625,12 @@ class SiteModuleService
         }
         if ($module === 'favorites') {
             return Result::fail('收藏由会员在影片页点出来。后台只查看和删除。');
+        }
+        if ($module === 'botlogs') {
+            return Result::fail('爬虫日志是前台访问记下来的，不能手添。');
+        }
+        if ($module === 'accesslogs') {
+            return Result::fail('访问流水是前台打开页面记下来的，不能手添。');
         }
         if ($module === 'withdraws' && $id === null) {
             return Result::fail('提现由会员申请。后台只审核打款或拒绝。');
@@ -1728,6 +2012,225 @@ class SiteModuleService
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
             }
         }
+        if ($module === 'websites') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写站点名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('url', $payload) || $id === null) {
+                $raw = trim((string) ($payload['url'] ?? ''));
+                if ($raw === '') {
+                    return Result::fail('请填写网址');
+                }
+                $url = $this->normalizeLinkUrl($raw);
+                if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
+                    return Result::fail('网址格式不对');
+                }
+                $payload['url'] = $url;
+            }
+            $typeId = array_key_exists('type_id', $payload) || $id === null
+                ? max(0, (int) ($payload['type_id'] ?? 0))
+                : null;
+            if ($typeId !== null) {
+                $payload['type_id'] = $typeId;
+                if ($typeId > 0) {
+                    if (! Schema::hasTable('video_types')) {
+                        return Result::fail('分类不存在');
+                    }
+                    $type = VideoTypeModel::query()->find($typeId);
+                    if (! $type) {
+                        return Result::fail('分类不存在');
+                    }
+                    if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 3) {
+                        return Result::fail('这个分类不是网址导航，请到分类里把「用来放什么」选成网址导航');
+                    }
+                }
+            }
+            if (array_key_exists('logo', $payload)) {
+                $payload['logo'] = trim((string) $payload['logo']);
+            }
+            if (array_key_exists('blurb', $payload)) {
+                $payload['blurb'] = mb_substr(trim((string) $payload['blurb']), 0, 255);
+            }
+            foreach (['sort', 'status'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'classes') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写类型词');
+            }
+            if ($name !== '') {
+                if (preg_match('/[,，]/u', $name)) {
+                    return Result::fail('一次只写一个词，不要逗号');
+                }
+                $name = mb_substr($name, 0, 80);
+                $dup = VideoClass::query()->where('name', $name);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个词已经有了');
+                }
+                $payload['name'] = $name;
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'synonyms') {
+            $from = array_key_exists('from_word', $payload) || $id === null
+                ? mb_substr(trim((string) ($payload['from_word'] ?? '')), 0, 80)
+                : null;
+            if ($id === null && ($from === null || $from === '')) {
+                return Result::fail('请填写原词');
+            }
+            if ($from !== null) {
+                if ($from === '') {
+                    return Result::fail('请填写原词');
+                }
+                $payload['from_word'] = $from;
+            }
+            $to = array_key_exists('to_word', $payload) || $id === null
+                ? mb_substr(trim((string) ($payload['to_word'] ?? '')), 0, 80)
+                : null;
+            if ($id === null && ($to === null || $to === '')) {
+                return Result::fail('请填写要当成的词');
+            }
+            if ($to !== null) {
+                if ($to === '') {
+                    return Result::fail('请填写要当成的词');
+                }
+                $payload['to_word'] = $to;
+            }
+            $checkFrom = $from;
+            $checkTo = $to;
+            if ($id !== null) {
+                $existing = VideoSynonym::query()->find($id);
+                if ($existing) {
+                    if ($checkFrom === null) {
+                        $checkFrom = trim((string) $existing->from_word);
+                    }
+                    if ($checkTo === null) {
+                        $checkTo = trim((string) $existing->to_word);
+                    }
+                }
+            }
+            if ($checkFrom !== null && $checkTo !== null && $checkFrom !== '' && $checkFrom === $checkTo) {
+                return Result::fail('原词和当成的词不能一样');
+            }
+            if ($checkFrom !== null && $checkFrom !== '') {
+                $dup = VideoSynonym::query()->where('from_word', $checkFrom);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个原词已经有了');
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null && ! array_key_exists('status', $payload)) {
+                $payload['status'] = 1;
+            }
+        }
+        if ($module === 'downloaders') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = mb_substr($name, 0, 80);
+            }
+            if (array_key_exists('code', $payload) || $id === null) {
+                $code = strtolower(trim((string) ($payload['code'] ?? '')));
+                if ($code === '') {
+                    return Result::fail('请填写标识，要和线路上的下载器字段一致');
+                }
+                if (! preg_match('/^[a-z][a-z0-9._-]{0,39}$/', $code)) {
+                    return Result::fail('标识用英文字母开头，如 http、xunlei');
+                }
+                $dup = VideoDownloader::query()->where('code', $code);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个标识已经有了');
+                }
+                $payload['code'] = $code;
+            }
+            if (array_key_exists('parse', $payload)) {
+                $parse = trim((string) $payload['parse']);
+                if (preg_match('#^(javascript|data|vbscript):#i', $parse)) {
+                    return Result::fail('模板地址不能用这种协议');
+                }
+                $payload['parse'] = $parse;
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null && ! array_key_exists('status', $payload)) {
+                $payload['status'] = 1;
+            }
+        }
+        if ($module === 'servers') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== '') {
+                $payload['name'] = mb_substr($name, 0, 80);
+                $dup = VideoServer::query()->where('name', $payload['name']);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个名称已经有了');
+                }
+            }
+            if (array_key_exists('url', $payload) || $id === null) {
+                $raw = trim((string) ($payload['url'] ?? ''));
+                if (preg_match('#^(javascript|data|vbscript):#i', $raw)) {
+                    return Result::fail('前缀不能用这种协议');
+                }
+                if (preg_match('#^(https?:)?/+$#i', $raw)) {
+                    return Result::fail('前缀不完整');
+                }
+                $url = $this->normalizeServerPrefix($raw);
+                if ($raw !== '' && $url === '') {
+                    return Result::fail('前缀不能用这种协议');
+                }
+                if (mb_strlen($url) > 255) {
+                    return Result::fail('前缀太长');
+                }
+                $payload['url'] = $url;
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null && ! array_key_exists('status', $payload)) {
+                $payload['status'] = 1;
+            }
+        }
         if ($module === 'unions') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
@@ -1877,6 +2380,116 @@ class SiteModuleService
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
             }
         }
+        if ($module === 'roles') {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($id === null && $name === '') {
+                return Result::fail('请填写角色名');
+            }
+            if ($name !== '') {
+                $payload['name'] = $name;
+            }
+            $videoId = array_key_exists('video_id', $payload) || $id === null
+                ? max(0, (int) ($payload['video_id'] ?? 0))
+                : null;
+            if ($videoId !== null) {
+                $payload['video_id'] = $videoId;
+                if ($videoId > 0) {
+                    if (! Schema::hasTable('videos') || ! VideoModel::query()->where('id', $videoId)->exists()) {
+                        return Result::fail('影片不存在');
+                    }
+                }
+            }
+            $actorId = array_key_exists('actor_id', $payload) || $id === null
+                ? max(0, (int) ($payload['actor_id'] ?? 0))
+                : null;
+            if ($actorId !== null) {
+                $payload['actor_id'] = $actorId;
+                if ($actorId > 0) {
+                    if (! Schema::hasTable('actors') || ! ActorModel::query()->where('id', $actorId)->exists()) {
+                        return Result::fail('演员不存在');
+                    }
+                }
+            }
+            if (array_key_exists('slug', $payload)) {
+                $payload['slug'] = trim((string) $payload['slug']);
+            }
+            if (array_key_exists('cover', $payload)) {
+                $payload['cover'] = trim((string) $payload['cover']);
+            }
+            if (array_key_exists('blurb', $payload)) {
+                $payload['blurb'] = mb_substr(trim((string) $payload['blurb']), 0, 255);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+        }
+        if ($module === 'plots') {
+            $videoId = array_key_exists('video_id', $payload) || $id === null
+                ? (int) ($payload['video_id'] ?? 0)
+                : null;
+            if ($id === null && $videoId < 1) {
+                return Result::fail('请填写影片 ID');
+            }
+            if ($videoId !== null) {
+                if ($videoId < 1) {
+                    return Result::fail('请填写影片 ID');
+                }
+                if (! Schema::hasTable('videos') || ! VideoModel::query()->where('id', $videoId)->exists()) {
+                    return Result::fail('影片不存在');
+                }
+                $payload['video_id'] = $videoId;
+            }
+            $ep = array_key_exists('episode_num', $payload) || $id === null
+                ? (int) ($payload['episode_num'] ?? 0)
+                : null;
+            if ($id === null && $ep < 1) {
+                return Result::fail('请填写集数，从 1 开始');
+            }
+            if ($ep !== null) {
+                if ($ep < 1) {
+                    return Result::fail('请填写集数，从 1 开始');
+                }
+                $payload['episode_num'] = $ep;
+            }
+            $content = array_key_exists('content', $payload) ? trim((string) $payload['content']) : null;
+            if ($id === null && ($content === null || $content === '')) {
+                return Result::fail('请填写这一集的剧情');
+            }
+            if ($content !== null) {
+                $payload['content'] = $content;
+            }
+            if (array_key_exists('title', $payload)) {
+                $payload['title'] = mb_substr(trim((string) $payload['title']), 0, 200);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            $checkVideo = $videoId;
+            $checkEp = $ep;
+            if ($id !== null) {
+                $existing = VideoPlot::query()->find($id);
+                if ($existing) {
+                    if ($checkVideo === null) {
+                        $checkVideo = (int) $existing->video_id;
+                    }
+                    if ($checkEp === null) {
+                        $checkEp = (int) $existing->episode_num;
+                    }
+                }
+            }
+            if ($checkVideo !== null && $checkVideo > 0 && $checkEp !== null && $checkEp > 0) {
+                $dup = VideoPlot::query()->where('video_id', $checkVideo)->where('episode_num', $checkEp);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这一集已经写过剧情');
+                }
+            }
+        }
         $now = time();
         $oldStatus = null;
         $memberPointsTo = null;
@@ -1997,6 +2610,32 @@ class SiteModuleService
                 }
             }
         }
+        if ($module === 'downloaders') {
+            $code = trim((string) ($row->code ?? ''));
+            $name = trim((string) ($row->name ?? ''));
+            if (($code !== '' || $name !== '') && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'downer')) {
+                $used = (int) VideoSourceModel::query()->where(function ($inner) use ($code, $name) {
+                    if ($code !== '') {
+                        $inner->where('downer', $code);
+                    }
+                    if ($name !== '') {
+                        $code !== '' ? $inner->orWhere('downer', $name) : $inner->where('downer', $name);
+                    }
+                })->count();
+                if ($used > 0) {
+                    return Result::fail('还有 '.$used.' 条线路在用这个下载器。先改线路再删。');
+                }
+            }
+        }
+        if ($module === 'servers') {
+            $sid = (int) ($row->id ?? 0);
+            if ($sid > 0 && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'server_id')) {
+                $used = (int) VideoSourceModel::query()->where('server_id', $sid)->count();
+                if ($used > 0) {
+                    return Result::fail('还有 '.$used.' 条线路在用这个组。先改线路再删。');
+                }
+            }
+        }
         $subject = AdminOpLog::subjectFrom([], $row);
         $row->delete();
 
@@ -2019,6 +2658,62 @@ class SiteModuleService
                 'report' => Schema::hasColumn('video_comments', 'comment_report')
                     ? (int) VideoComment::query()->where('comment_report', '>', 0)->count()
                     : 0,
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function roleQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'no_video' => 0, 'no_actor' => 0, 'no_cover' => 0];
+        try {
+            if (! Schema::hasTable('video_roles')) {
+                return $zero;
+            }
+            $q = VideoRole::query();
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'no_video' => (int) (clone $q)->where(function ($inner) {
+                    $inner->where('video_id', 0)->orWhereNull('video_id');
+                })->count(),
+                'no_actor' => (int) (clone $q)->where(function ($inner) {
+                    $inner->where('actor_id', 0)->orWhereNull('actor_id');
+                })->count(),
+                'no_cover' => (int) (clone $q)->where(function ($inner) {
+                    $inner->whereNull('cover')->orWhere('cover', '');
+                })->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function plotQueues(): array
+    {
+        $zero = ['all' => 0, 'no_content' => 0, 'no_title' => 0, 'no_video' => 0];
+        try {
+            if (! Schema::hasTable('video_plots')) {
+                return $zero;
+            }
+            $q = VideoPlot::query();
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'no_content' => (int) (clone $q)->where(function ($inner) {
+                    $inner->whereNull('content')->orWhere('content', '');
+                })->count(),
+                'no_title' => (int) (clone $q)->where(function ($inner) {
+                    $inner->whereNull('title')->orWhere('title', '');
+                })->count(),
+                'no_video' => (int) (clone $q)->where(function ($inner) {
+                    $inner->where('video_id', 0)->orWhereNull('video_id');
+                })->count(),
             ];
         } catch (\Throwable) {
             return $zero;
@@ -2143,7 +2838,7 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -2161,6 +2856,13 @@ class SiteModuleService
                 'plogs' => '请先勾选流水',
                 'ads' => '请先勾选广告',
                 'links' => '请先勾选友链',
+                'websites' => '请先勾选站点',
+                'classes' => '请先勾选类型词',
+                'synonyms' => '请先勾选同义词',
+                'downloaders' => '请先勾选下载器',
+                'servers' => '请先勾选服务器组',
+                'roles' => '请先勾选角色',
+                'plots' => '请先勾选剧情',
                 'players' => '请先勾选播放器',
                 'collect_logs' => '请先勾选日志',
                 'collect_tasks' => '请先勾选任务',
@@ -2172,6 +2874,8 @@ class SiteModuleService
                 'pms' => '请先勾选站内信',
                 'notifies' => '请先勾选通知',
                 'favorites' => '请先勾选收藏',
+                'botlogs' => '请先勾选记录',
+                'accesslogs' => '请先勾选记录',
                 'audits' => '请先勾选规则',
                 default => '请先勾选评论',
             });
@@ -2593,6 +3297,172 @@ class SiteModuleService
         }
 
         return ['member_name' => $name, 'video_title' => $title];
+    }
+
+    /** @return array{video_title:string,actor_name:string} */
+    public function roleFocus(int $videoId, int $actorId): array
+    {
+        $title = '';
+        $name = '';
+        try {
+            if ($videoId > 0 && Schema::hasTable('videos')) {
+                $title = trim((string) (VideoModel::query()->where('id', $videoId)->value('title') ?? ''));
+            }
+            if ($actorId > 0 && Schema::hasTable('actors')) {
+                $name = trim((string) (ActorModel::query()->where('id', $actorId)->value('name') ?? ''));
+            }
+        } catch (\Throwable) {
+        }
+
+        return ['video_title' => $title, 'actor_name' => $name];
+    }
+
+    /** @return array{video_title:string} */
+    public function plotFocus(int $videoId): array
+    {
+        $focus = $this->roleFocus($videoId, 0);
+
+        return ['video_title' => $focus['video_title']];
+    }
+
+    /** @return array<string, int> */
+    public function botlogQueues(): array
+    {
+        $zero = ['all' => 0, 'today' => 0, 'baidu' => 0, 'google' => 0, 'bing' => 0, 'other' => 0];
+        try {
+            if (! Schema::hasTable('video_access_logs')) {
+                return $zero;
+            }
+            $base = VideoAccessLog::query()->where('is_bot', 1);
+
+            return [
+                'all' => (int) (clone $base)->count(),
+                'today' => (int) (clone $base)->where('created_at', '>=', strtotime('today'))->count(),
+                'baidu' => (int) $this->botlogEngineQuery('baidu')->count(),
+                'google' => (int) $this->botlogEngineQuery('google')->count(),
+                'bing' => (int) $this->botlogEngineQuery('bing')->count(),
+                'other' => (int) $this->botlogEngineQuery('other')->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function accesslogQueues(): array
+    {
+        $zero = ['all' => 0, 'today' => 0, 'people' => 0, 'bot' => 0];
+        try {
+            if (! Schema::hasTable('video_access_logs')) {
+                return $zero;
+            }
+            $base = VideoAccessLog::query();
+
+            return [
+                'all' => (int) (clone $base)->count(),
+                'today' => (int) (clone $base)->where('created_at', '>=', strtotime('today'))->count(),
+                'people' => (int) (clone $base)->where('is_bot', 0)->count(),
+                'bot' => (int) (clone $base)->where('is_bot', 1)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>  $q */
+    private function applyBotlogEngine($q, string $engine): void
+    {
+        $engine = strtolower($engine);
+        if (! in_array($engine, ['baidu', 'google', 'bing', 'other'], true)) {
+            return;
+        }
+        $detector = app(SpiderDetector::class);
+        if ($engine === 'other') {
+            foreach ($detector->watchNeedles() as $needle) {
+                $q->where('ua', 'not like', '%'.$needle.'%');
+            }
+
+            return;
+        }
+        $needles = $detector->engineNeedles($engine);
+        if ($needles === []) {
+            return;
+        }
+        $q->where(function ($inner) use ($needles) {
+            foreach ($needles as $i => $needle) {
+                $method = $i === 0 ? 'where' : 'orWhere';
+                $inner->{$method}('ua', 'like', '%'.$needle.'%');
+            }
+        });
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model> */
+    private function botlogEngineQuery(string $engine)
+    {
+        $q = VideoAccessLog::query()->where('is_bot', 1);
+        $this->applyBotlogEngine($q, $engine);
+
+        return $q;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateBotlogs(array $rows): array
+    {
+        $detector = app(SpiderDetector::class);
+        foreach ($rows as &$row) {
+            $ua = (string) ($row['ua'] ?? '');
+            [, $name] = $detector->detect($ua);
+            $group = $detector->group($name);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['spider_name'] = (string) $name;
+            $row['spider_label'] = $detector->displayName($name);
+            $row['group'] = $group;
+            $row['group_label'] = $detector->groupLabel($group);
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['ua_short'] = $this->shortBotUa($ua);
+            $row['url_short'] = $this->shortBotUrl((string) ($row['url'] ?? ''));
+            $bot = (int) ($row['is_bot'] ?? 0) === 1;
+            $row['visitor_kind'] = $bot ? 'bot' : 'people';
+            $row['visitor_label'] = $bot ? ((string) $row['spider_label'] !== '' ? (string) $row['spider_label'] : '爬虫') : '访客';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    private function shortBotUa(string $ua): string
+    {
+        $ua = trim($ua);
+        if ($ua === '') {
+            return '';
+        }
+        if (function_exists('mb_strlen') && mb_strlen($ua) > 72) {
+            return mb_substr($ua, 0, 72).'…';
+        }
+        if (strlen($ua) > 72) {
+            return substr($ua, 0, 72).'…';
+        }
+
+        return $ua;
+    }
+
+    private function shortBotUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        $path = (string) (parse_url($url, PHP_URL_PATH) ?: $url);
+        $query = (string) (parse_url($url, PHP_URL_QUERY) ?: '');
+        $shown = $query !== '' ? $path.'?'.$query : $path;
+        if (function_exists('mb_strlen') && mb_strlen($shown) > 64) {
+            return mb_substr($shown, 0, 64).'…';
+        }
+        if (strlen($shown) > 64) {
+            return substr($shown, 0, 64).'…';
+        }
+
+        return $shown;
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
@@ -3475,6 +4345,89 @@ class SiteModuleService
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateRoles(array $rows): array
+    {
+        $videoIds = [];
+        $actorIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+            $aid = (int) ($row['actor_id'] ?? 0);
+            if ($aid > 0) {
+                $actorIds[] = $aid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== [] && Schema::hasTable('videos')) {
+            try {
+                $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        $actors = [];
+        if ($actorIds !== [] && Schema::hasTable('actors')) {
+            try {
+                $actors = ActorModel::query()->whereIn('id', array_values(array_unique($actorIds)))->pluck('name', 'id')->all();
+            } catch (\Throwable) {
+                $actors = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $aid = (int) ($row['actor_id'] ?? 0);
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['video_missing'] = $vid > 0 && ! array_key_exists($vid, $titles) ? 1 : 0;
+            $row['actor_name'] = (string) ($actors[$aid] ?? '');
+            $row['actor_missing'] = $aid > 0 && ! array_key_exists($aid, $actors) ? 1 : 0;
+            $row['has_cover'] = trim((string) ($row['cover'] ?? '')) !== '';
+            $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decoratePlots(array $rows): array
+    {
+        $videoIds = [];
+        foreach ($rows as $row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            if ($vid > 0) {
+                $videoIds[] = $vid;
+            }
+        }
+        $titles = [];
+        if ($videoIds !== [] && Schema::hasTable('videos')) {
+            try {
+                $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $vid = (int) ($row['video_id'] ?? 0);
+            $ep = (int) ($row['episode_num'] ?? 0);
+            $title = trim((string) ($row['title'] ?? ''));
+            $content = trim((string) ($row['content'] ?? ''));
+            $ts = (int) ($row['created_at'] ?? 0);
+            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['video_missing'] = $vid > 0 && ! array_key_exists($vid, $titles) ? 1 : 0;
+            $row['episode_label'] = $ep > 0 ? '第'.$ep.'集' : '未写集数';
+            $row['title_text'] = $title !== '' ? $title : ($ep > 0 ? '第'.$ep.'集' : '未写标题');
+            $row['has_content'] = $content !== '' ? 1 : 0;
+            $row['content_preview'] = mb_substr($content, 0, 80);
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function decoratePms(array $rows): array
     {
         $memberIds = [];
@@ -3581,6 +4534,30 @@ class SiteModuleService
             $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
             if (Schema::hasColumn('video_types', 'mid')) {
                 $q->where('mid', 2);
+            }
+
+            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
+                return [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'parent_id' => (int) ($row->parent_id ?? 0),
+                ];
+            })->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @return list<array{id:int,name:string,parent_id:int}> */
+    public function websiteTypeOptions(): array
+    {
+        try {
+            if (! Schema::hasTable('video_types')) {
+                return [];
+            }
+            $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
+            if (Schema::hasColumn('video_types', 'mid')) {
+                $q->where('mid', 3);
             }
 
             return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
@@ -3810,6 +4787,199 @@ class SiteModuleService
         return $rows;
     }
 
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateWebsites(array $rows): array
+    {
+        $typeIds = [];
+        $hasType = Schema::hasTable('video_websites') && Schema::hasColumn('video_websites', 'type_id');
+        if ($hasType) {
+            foreach ($rows as $row) {
+                $tid = (int) ($row['type_id'] ?? 0);
+                if ($tid > 0) {
+                    $typeIds[] = $tid;
+                }
+            }
+        }
+        $types = [];
+        $hasMid = Schema::hasTable('video_types') && Schema::hasColumn('video_types', 'mid');
+        if ($typeIds !== [] && Schema::hasTable('video_types')) {
+            try {
+                $cols = ['id', 'name'];
+                if ($hasMid) {
+                    $cols[] = 'mid';
+                }
+                foreach (VideoTypeModel::query()->whereIn('id', array_values(array_unique($typeIds)))->get($cols) as $type) {
+                    $types[(int) $type->id] = $type;
+                }
+            } catch (\Throwable) {
+                $types = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $tid = $hasType ? (int) ($row['type_id'] ?? 0) : 0;
+            $type = $types[$tid] ?? null;
+            $logo = trim((string) ($row['logo'] ?? ''));
+            $url = trim((string) ($row['url'] ?? ''));
+            $ts = (int) ($row['created_at'] ?? 0);
+            $id = (int) ($row['id'] ?? 0);
+            $row['type_name'] = $type ? (string) $type->name : '';
+            $row['type_missing'] = $tid > 0 && $type === null ? 1 : 0;
+            $row['type_wrong'] = $type && $hasMid && (int) ($type->mid ?? 0) !== 3 ? 1 : 0;
+            $row['has_logo'] = $logo !== '' ? 1 : 0;
+            $row['has_url'] = $url !== '' ? 1 : 0;
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['front_url'] = $id > 0 ? vod_url('website', ['id' => $id]) : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateClasses(array $rows): array
+    {
+        $counts = $this->classUsageCounts();
+        foreach ($rows as &$row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            $used = $name !== '' ? (int) ($counts[$name] ?? 0) : 0;
+            $row['used_count'] = $used;
+            $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateSynonyms(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $from = trim((string) ($row['from_word'] ?? ''));
+            $to = trim((string) ($row['to_word'] ?? ''));
+            $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
+            $row['empty_to'] = $to === '';
+            $row['preview'] = ($from !== '' && $to !== '') ? ('「'.$from.'」当成「'.$to.'」') : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateDownloaders(array $rows): array
+    {
+        $keys = [];
+        foreach ($rows as $row) {
+            $code = trim((string) ($row['code'] ?? ''));
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($code !== '') {
+                $keys[] = $code;
+            }
+            if ($name !== '') {
+                $keys[] = $name;
+            }
+        }
+        $counts = [];
+        if ($keys !== [] && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'downer')) {
+            $countRows = VideoSourceModel::query()
+                ->selectRaw('downer, COUNT(*) as c')
+                ->whereIn('downer', array_values(array_unique($keys)))
+                ->groupBy('downer')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(string) $row->downer] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $code = trim((string) ($row['code'] ?? ''));
+            $name = trim((string) ($row['name'] ?? ''));
+            $parse = trim((string) ($row['parse'] ?? ''));
+            $kind = $this->downloaderParseKind($parse);
+            $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
+            $row['parse_kind'] = $kind;
+            $row['parse_kind_label'] = match ($kind) {
+                'tpl' => '模板',
+                'prefix' => '前缀',
+                default => '原样',
+            };
+            $row['source_count'] = ($counts[$code] ?? 0) + ($name !== '' && $name !== $code ? ($counts[$name] ?? 0) : 0);
+            $row['parse_preview'] = $parse === '' ? '' : mb_substr($parse, 0, 80);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateServers(array $rows): array
+    {
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $counts = [];
+        if ($ids !== [] && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'server_id')) {
+            $countRows = VideoSourceModel::query()
+                ->selectRaw('server_id, COUNT(*) as c')
+                ->whereIn('server_id', $ids)
+                ->groupBy('server_id')
+                ->get();
+            foreach ($countRows as $row) {
+                $counts[(int) $row->server_id] = (int) $row->c;
+            }
+        }
+        foreach ($rows as &$row) {
+            $url = trim((string) ($row['url'] ?? ''));
+            $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
+            $row['has_url'] = $url !== '';
+            $row['url_preview'] = $url === '' ? '' : mb_substr($url, 0, 80);
+            $row['source_count'] = (int) ($counts[(int) ($row['id'] ?? 0)] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    private function downloaderParseKind(string $parse): string
+    {
+        $parse = trim($parse);
+        if ($parse === '') {
+            return 'empty';
+        }
+        if (str_contains($parse, '{url}') || str_contains($parse, '{id}')) {
+            return 'tpl';
+        }
+
+        return 'prefix';
+    }
+
+    /** @return array<string, int> */
+    private function classUsageCounts(): array
+    {
+        $counts = [];
+        try {
+            if (! Schema::hasTable('videos') || ! Schema::hasColumn('videos', 'class')) {
+                return $counts;
+            }
+            $rows = VideoModel::query()->where('class', '!=', '')->pluck('class');
+            foreach ($rows as $raw) {
+                foreach (preg_split('/[,，]+/u', (string) $raw) ?: [] as $part) {
+                    $part = trim($part);
+                    if ($part !== '') {
+                        $counts[$part] = ($counts[$part] ?? 0) + 1;
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return $counts;
+    }
+
     /** @return array<string, int> */
     public function linkQueues(): array
     {
@@ -3830,6 +5000,235 @@ class SiteModuleService
         }
     }
 
+    /** @return array<string, int> */
+    public function websiteQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'no_type' => 0, 'logo' => 0];
+        try {
+            if (! Schema::hasTable('video_websites')) {
+                return $zero;
+            }
+            $q = VideoWebsite::query();
+            $hasType = Schema::hasColumn('video_websites', 'type_id');
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'no_type' => $hasType
+                    ? (int) (clone $q)->where(function ($inner) {
+                        $inner->where('type_id', 0)->orWhereNull('type_id');
+                    })->count()
+                    : 0,
+                'logo' => (int) (clone $q)->where('logo', '!=', '')->whereNotNull('logo')->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function classQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'unused' => 0];
+        try {
+            if (! Schema::hasTable('video_classes')) {
+                return $zero;
+            }
+            $q = VideoClass::query();
+            $used = array_keys($this->classUsageCounts());
+            $unusedQ = clone $q;
+            if ($used !== []) {
+                $unusedQ->whereNotIn('name', $used);
+            }
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'unused' => (int) $unusedQ->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function synonymQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'empty_to' => 0];
+        try {
+            if (! Schema::hasTable('video_synonyms')) {
+                return $zero;
+            }
+            $q = VideoSynonym::query();
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'empty_to' => (int) (clone $q)->where(function ($inner) {
+                    $inner->whereNull('to_word')->orWhere('to_word', '');
+                })->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param  array<string, mixed>  $data */
+    public function trySynonym(array $data): array
+    {
+        $kw = trim((string) ($data['kw'] ?? $data['word'] ?? $data['sample'] ?? ''));
+        if ($kw === '') {
+            return Result::fail('请填一个词试试');
+        }
+        $on = 0;
+        try {
+            if (Schema::hasTable('video_synonyms')) {
+                $on = (int) VideoSynonym::query()->where('status', 1)->count();
+            }
+        } catch (\Throwable) {
+            $on = 0;
+        }
+        $out = app(SynonymService::class)->expand($kw);
+        if ($on === 0) {
+            return Result::success(['from' => $kw, 'to' => $out, 'changed' => false], '还没有启用的规则，搜什么就是什么');
+        }
+        if ($out !== $kw) {
+            return Result::success(['from' => $kw, 'to' => $out, 'changed' => true], '会当成「'.$out.'」去查');
+        }
+
+        return Result::success(['from' => $kw, 'to' => $out, 'changed' => false], '现有启用规则不会改这个词');
+    }
+
+    /** @return array<string, int> */
+    public function downloaderQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'tpl' => 0, 'prefix' => 0, 'empty' => 0];
+        try {
+            if (! Schema::hasTable('video_downloaders')) {
+                return $zero;
+            }
+            $q = VideoDownloader::query();
+            $tpl = (clone $q)->where(function ($inner) {
+                $inner->where('parse', 'like', '%{url}%')->orWhere('parse', 'like', '%{id}%');
+            });
+            $empty = (clone $q)->where(function ($inner) {
+                $inner->whereNull('parse')->orWhere('parse', '');
+            });
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'tpl' => (int) $tpl->count(),
+                'empty' => (int) $empty->count(),
+                'prefix' => (int) (clone $q)->where('parse', '!=', '')->whereNotNull('parse')
+                    ->where('parse', 'not like', '%{url}%')
+                    ->where('parse', 'not like', '%{id}%')
+                    ->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return array<string, int> */
+    public function serverQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'empty' => 0];
+        try {
+            if (! Schema::hasTable('video_servers')) {
+                return $zero;
+            }
+            $q = VideoServer::query();
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'empty' => (int) (clone $q)->where(function ($inner) {
+                    $inner->whereNull('url')->orWhere('url', '');
+                })->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function enabledServers(): array
+    {
+        try {
+            if (! Schema::hasTable('video_servers')) {
+                return [];
+            }
+
+            return VideoServer::query()
+                ->where('status', 1)
+                ->orderByDesc('sort')
+                ->orderBy('id')
+                ->get(['id', 'name', 'url'])
+                ->toArray();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** @param  array<string, mixed>  $data */
+    public function tryDownloader(array $data): array
+    {
+        $url = trim((string) ($data['url'] ?? $data['sample'] ?? ''));
+        if ($url === '') {
+            return Result::fail('请填一条下载地址试试');
+        }
+        if (preg_match('#^(javascript|data|vbscript):#i', $url)) {
+            return Result::fail('这个地址不能用');
+        }
+        $code = strtolower(trim((string) ($data['code'] ?? '')));
+        $videoId = max(0, (int) ($data['video_id'] ?? $data['id'] ?? 0));
+        $source = new VideoSourceModel;
+        $source->downer = $code;
+        $episode = new VideoEpisodeModel;
+        $episode->url = $url;
+        $out = app(\App\Services\Video\SiteFrontService::class)->resolveDownUrl($source, $episode, $videoId);
+        if ($out === $url) {
+            return Result::success(['from' => $url, 'to' => $out, 'changed' => false], '没有匹配的启用模板，地址原样');
+        }
+
+        return Result::success(['from' => $url, 'to' => $out, 'changed' => true], '会变成 '.$out);
+    }
+
+    /** @param  array<string, mixed>  $data */
+    public function tryServer(array $data): array
+    {
+        $url = trim((string) ($data['url'] ?? $data['sample'] ?? ''));
+        if ($url === '') {
+            return Result::fail('请填一条相对路径试试');
+        }
+        if (preg_match('#^(javascript|data|vbscript):#i', $url)) {
+            return Result::fail('这个地址不能用');
+        }
+        $id = (int) ($data['server_id'] ?? $data['id'] ?? 0);
+        $source = new VideoSourceModel;
+        $source->server_id = $id;
+        $episode = new VideoEpisodeModel;
+        $episode->url = $url;
+        $out = app(\App\Services\Video\SiteFrontService::class)->resolvePlayUrl($source, $episode);
+        if (preg_match('#^(https?:)?//#i', $url)) {
+            return Result::success(['from' => $url, 'to' => $out, 'changed' => false], '这是完整地址，不会拼前缀');
+        }
+        if ($id < 1) {
+            return Result::success(['from' => $url, 'to' => $out, 'changed' => false], '没选组，地址原样');
+        }
+        if ($out === $url) {
+            return Result::success(['from' => $url, 'to' => $out, 'changed' => false], '这组停用或前缀空着，地址原样');
+        }
+
+        return Result::success(['from' => $url, 'to' => $out, 'changed' => true], '会变成 '.$out);
+    }
+
     private function normalizeLinkUrl(string $url): string
     {
         $url = trim($url);
@@ -3844,6 +5243,35 @@ class SiteModuleService
         }
 
         return $url;
+    }
+
+    private function normalizeServerPrefix(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        if (preg_match('#^(javascript|data|vbscript):#i', $url)) {
+            return '';
+        }
+        if (preg_match('#^(https?:)?/+$#i', $url)) {
+            return '';
+        }
+        $url = rtrim($url, '/');
+        if ($url === '' || preg_match('#^https?:$#i', $url)) {
+            return '';
+        }
+        if (str_starts_with($url, '/') || str_starts_with($url, '.')) {
+            return $url;
+        }
+        if (preg_match('#^(https?:)?//#i', $url)) {
+            return $url;
+        }
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
+            return preg_match('#^https?://#i', $url) ? $url : '';
+        }
+
+        return 'https://'.$url;
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */

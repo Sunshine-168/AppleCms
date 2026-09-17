@@ -1,6 +1,5 @@
 @php
     $titles = [
-        'quality' => admin_t('page.tool_quality'),
         'annex' => admin_t('page.tool_annex'),
         'recycle' => admin_t('page.tool_recycle'),
     ];
@@ -9,16 +8,7 @@
 @section('title', $titles[$tool] ?? admin_t('page.tools'))
 
 @section('content')
-    @if($tool === 'quality')
-        <p class="hint">统计无地址、无封面、无简介、无演员、重名、集数不足。</p>
-        <div class="toolbar">
-            <button type="button" class="btn btn-sm" id="btn-scan">开始体检</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_url=1">无地址列表</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_pic=1">无封面列表</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?repeat=1">重名列表</a>
-        </div>
-        <pre id="out" class="out"></pre>
-    @elseif($tool === 'annex')
+    @if($tool === 'annex')
         <p class="hint">对照影片/文章/演员封面，找出 <code>/uploads/vod/</code> 里未被引用的文件。</p>
         <div class="toolbar">
             <button type="button" class="btn btn-sm" id="btn-scan">扫描</button>

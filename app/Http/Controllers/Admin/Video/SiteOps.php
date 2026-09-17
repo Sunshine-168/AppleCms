@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Video;
 
 use App\Http\Controllers\Controller;
+use App\Services\Admin\System\SysSafetyScanService;
 use App\Services\Video\DiskHtmlService;
 use App\Services\Video\HtmlCacheService;
 use App\Services\Video\SiteOpsService;
@@ -21,6 +22,7 @@ class SiteOps extends Controller
         private readonly HtmlCacheService $htmlCache,
         private readonly DiskHtmlService $diskHtml,
         private readonly VideoSettingService $settings,
+        private readonly SysSafetyScanService $safetyScan,
     ) {}
 
     public function templates(): View
@@ -282,7 +284,25 @@ class SiteOps extends Controller
 
     public function wizard(): View
     {
-        return view('admin.video.wizard');
+        return view('admin.video.wizard', [
+            'catalog' => app(\App\Services\Admin\Video\ThemeTagWizardService::class)->catalog(),
+        ]);
+    }
+
+    public function wizardSnippet(Request $request): JsonResponse
+    {
+        $data = app(\App\Services\Admin\Video\ThemeTagWizardService::class)
+            ->snippet((string) $request->input('tag', ''), $request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function wizardTry(Request $request): JsonResponse
+    {
+        $data = app(\App\Services\Admin\Video\ThemeTagWizardService::class)
+            ->tryTag((string) $request->input('tag', ''), $request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     public function hitsReset(Request $request): JsonResponse
@@ -306,12 +326,20 @@ class SiteOps extends Controller
 
     public function safety(): View
     {
-        return view('admin.video.safety');
+        return view('admin.video.safety', $this->safetyScan->pageBoard());
     }
 
-    public function malwareScan(): JsonResponse
+    public function malwareScan(Request $request): JsonResponse
     {
-        $data = $this->ops->malwareScan();
+        if ($request->boolean('cancel')) {
+            $data = $this->safetyScan->cancelScan((string) $request->input('token', ''));
+
+            return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+        }
+        $token = trim((string) $request->input('token', ''));
+        $data = $token !== ''
+            ? $this->safetyScan->continueScan($token)
+            : $this->safetyScan->beginScan($request->boolean('with_app'));
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }

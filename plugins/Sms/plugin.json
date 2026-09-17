@@ -30,6 +30,15 @@
         },
         "settings_links": [
             {"url": "/admin/video/config/sms", "label": "item.config_sms"}
+        ],
+        "schedule": [
+            {
+                "id": "prune",
+                "label": "清过期短信码",
+                "hint": "过期验证码从库里删掉",
+                "cron": "0 4 * * *",
+                "handler": "Plugins\\Sms\\Jobs\\PruneExpiredCodes"
+            }
         ]
     }
 }

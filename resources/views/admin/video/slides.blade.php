@@ -30,7 +30,7 @@
             <button type="button" class="chip" data-queue="slot" data-value="play">播放页@if($q('play') > 0)<em>{{ $q('play') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="0">已隐藏@if($q('hidden') > 0)<em>{{ $q('hidden') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">幻灯是首页轮播、播放页贴片。先选位置，再上传横图和跳转链接。主题用位置调用，例如 <code>@@vodSlide(['slot' => 'home'])</code>。</p>
+        <p class="muted recycle-lead">首页轮播、播放页贴片。先选位置，再上传横图和跳转链接。主题用位置调用，例如 <code>@@vodSlide(['slot' => 'home'])</code>。</p>
         <div class="batch-bar" id="slide-batch" hidden>
             <strong id="slide-batch-count">已选 0 张</strong>
             <button type="button" class="btn btn-sm" id="slide-batch-on">显示</button>

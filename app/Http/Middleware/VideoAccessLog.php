@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\FrontPageHit;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -12,26 +13,20 @@ class VideoAccessLog
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        if (! in_array($request->method(), ['GET', 'HEAD'], true)) {
+        if (! FrontPageHit::isDocumentGet($request)) {
             return $response;
-        }
-        $path = trim($request->path(), '/');
-        foreach (['admin', 'install', 'css', 'js', 'static', 'storage'] as $prefix) {
-            if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
-                return $response;
-            }
         }
         try {
             if (! Schema::hasTable('video_access_logs')) {
                 return $response;
             }
             $ua = (string) $request->userAgent();
-            $isBot = preg_match('/bot|spider|crawl|slurp/i', $ua) ? 1 : 0;
+            [$isBot] = app(\App\Services\Stats\SpiderDetector::class)->detect($ua);
             \App\Models\Video\VideoAccessLog::query()->create([
                 'ip' => (string) $request->ip(),
                 'url' => mb_substr($request->fullUrl(), 0, 500),
                 'ua' => mb_substr($ua, 0, 500),
-                'is_bot' => $isBot,
+                'is_bot' => $isBot ? 1 : 0,
                 'created_at' => time(),
             ]);
         } catch (\Throwable) {

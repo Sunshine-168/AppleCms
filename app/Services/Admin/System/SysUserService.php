@@ -409,6 +409,167 @@ class SysUserService
      * @param  array<string, mixed>  $item
      * @return array<string, mixed>
      */
+    protected function decorateSystemLog(array $item, string $me): array
+    {
+        $stamp = 0;
+        if (! empty($item['create_time']) && is_numeric($item['create_time'])) {
+            $stamp = (int) $item['create_time'];
+        } elseif (! empty($item['create_at']) && is_numeric($item['create_at'])) {
+            $stamp = (int) $item['create_at'];
+        }
+        $class = trim((string) ($item['exception_class'] ?? ''));
+        $msg = trim((string) ($item['exception_message'] ?? ''));
+        if ($msg === '') {
+            $msg = trim((string) ($item['message'] ?? ''));
+        }
+        $url = trim((string) ($item['url'] ?? ''));
+        $file = trim((string) ($item['file'] ?? ''));
+        $line = (int) ($item['line'] ?? 0);
+        $level = strtolower(trim((string) ($item['level'] ?? '')));
+        $username = trim((string) ($item['username'] ?? ''));
+        $extra = trim((string) ($item['extra'] ?? ''));
+        $item['is_self'] = $me !== '' && $username === $me;
+        $item['is_error'] = in_array($level, ['error', 'critical', 'alert', 'emergency'], true) || $class !== '';
+        $item['kind_text'] = $this->systemLogKind($class, $level);
+        $item['summary'] = $this->systemLogSummary($msg);
+        $item['path_text'] = $this->systemLogPath($url);
+        $item['file_text'] = $this->systemLogFile($file, $line);
+        $item['who_text'] = $username !== '' ? $username : '系统';
+        $item['area_text'] = str_contains($url, '/admin') || (string) ($item['module'] ?? '') === 'admin' ? '后台' : '前台';
+        $item['time_text'] = $this->loginLogTimeText($stamp);
+        $item['create_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : (string) ($item['create_time'] ?? '');
+        $bits = [];
+        if ($extra !== '') {
+            $bits[] = $this->systemLogExtraHint($extra);
+        }
+        $channel = trim((string) ($item['channel'] ?? ''));
+        if ($channel !== '' && $channel !== 'system') {
+            $bits[] = $this->systemLogChannel($channel);
+        }
+        $item['extra_text'] = implode(' · ', array_filter($bits));
+        $item['detail_message'] = $msg;
+        $item['detail_class'] = $class !== '' ? $class : '';
+        $item['detail_file'] = $file !== '' ? ($file.($line > 0 ? ':'.$line : '')) : '';
+        $item['detail_url'] = $url;
+        $item['detail_trace'] = mb_substr(trim((string) ($item['trace'] ?? '')), 0, 8000);
+
+        return $item;
+    }
+
+    protected function systemLogKind(string $class, string $level): string
+    {
+        $short = $class !== '' ? (string) class_basename($class) : '';
+        if (str_contains($class, 'QueryException') || str_contains($class, 'PDOException')) {
+            return '数据库';
+        }
+        if (str_contains($class, 'ModelNotFound')) {
+            return '找不到记录';
+        }
+        if (str_contains($class, 'NotFoundHttp')) {
+            return '页面不存在';
+        }
+        if (str_contains($class, 'Authentication') || str_contains($class, 'Unauthorized')) {
+            return '未登录';
+        }
+        if ($short === 'InvalidArgumentException') {
+            return '参数不对';
+        }
+        if ($short === 'RuntimeException') {
+            return '程序出错';
+        }
+        if ($short !== '') {
+            return $short;
+        }
+
+        return match ($level) {
+            'warning' => '偏慢/警告',
+            'info', 'notice', 'debug' => '记录',
+            default => '报错',
+        };
+    }
+
+    protected function systemLogSummary(string $msg): string
+    {
+        $msg = trim(preg_replace('/\s+/', ' ', $msg) ?? $msg);
+        if ($msg === '') {
+            return '一次程序报错';
+        }
+        if (function_exists('mb_strlen') && mb_strlen($msg) > 120) {
+            return mb_substr($msg, 0, 120).'…';
+        }
+        if (strlen($msg) > 120) {
+            return substr($msg, 0, 120).'…';
+        }
+
+        return $msg;
+    }
+
+    protected function systemLogPath(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+        $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
+        $query = (string) (parse_url($url, PHP_URL_QUERY) ?: '');
+        if ($path === '' && $query === '') {
+            return $url;
+        }
+        $shown = $path !== '' ? $path : '/';
+        if ($query !== '') {
+            $shown .= '?'.$query;
+        }
+        if (function_exists('mb_strlen') && mb_strlen($shown) > 80) {
+            return mb_substr($shown, 0, 80).'…';
+        }
+
+        return $shown;
+    }
+
+    protected function systemLogFile(string $file, int $line): string
+    {
+        $file = trim($file);
+        if ($file === '') {
+            return '';
+        }
+        $base = str_replace('\\', '/', $file);
+        $name = basename($base);
+
+        return $line > 0 ? $name.':'.$line : $name;
+    }
+
+    protected function systemLogChannel(string $channel): string
+    {
+        return match ($channel) {
+            'repository' => '查库',
+            'cache' => '缓存',
+            'admin' => '后台',
+            'request' => '请求',
+            'transaction' => '事务',
+            default => $channel,
+        };
+    }
+
+    protected function systemLogExtraHint(string $extra): string
+    {
+        $extra = trim($extra);
+        if ($extra === '') {
+            return '';
+        }
+        if (str_starts_with($extra, '{') || str_starts_with($extra, '[')) {
+            return '';
+        }
+        if (function_exists('mb_strlen') && mb_strlen($extra) > 40) {
+            return mb_substr($extra, 0, 40).'…';
+        }
+
+        return $extra;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
     protected function decorateLoginLog(array $item, string $me): array
     {
         $stamp = 0;
@@ -541,12 +702,9 @@ class SysUserService
             return Result::fail('验证码错误');
         }
 
-        $where   = [];
-        $where[] = ['username', '=', $username];
-        $where[] = ['password', '=', $password];
-        $user    = $this->sysUserModel->findByCondition($where);
+        $user = $this->sysUserModel->findByCondition([['username', '=', $username]]);
 
-        if (!$user)
+        if (! $user || ! $this->passwordMatches($password, $this->storedPassword((int) ($user['id'] ?? 0), $user)))
         {
             $failKey = 'admin.login.fail.'.md5((string) $ip);
             $fails = (int) Cache::get($failKey, 0) + 1;
@@ -763,98 +921,60 @@ class SysUserService
         return Result::success($data);
     }
     /**
-     * 获取系统日志列表
-     * 支持按日志级别、渠道、模块、用户名、用户ID、请求ID、方法、URL、IP、时间范围筛选，返回分页数据
-     * @param array $params
-     * @return array
+     * @param  array{q?:string,level?:string,area?:string,ip?:string,start_time?:string,end_time?:string,limit?:int}  $params
      */
     public function getSysSystemLogLists(array $params): array
     {
         $where = [];
-        $limit = (int) ($params['limit'] ?? 10);
-        if ($limit < 1)
-        {
-            $limit = 10;
+        $limit = (int) ($params['limit'] ?? 20);
+        if ($limit < 1) {
+            $limit = 20;
         }
-
-        if (!empty($params['level']))
-        {
-            $where[] = ['level', '=', (string) $params['level']];
+        $q = trim((string) ($params['q'] ?? ''));
+        $level = strtolower(trim((string) ($params['level'] ?? '')));
+        $area = strtolower(trim((string) ($params['area'] ?? '')));
+        $ip = trim((string) ($params['ip'] ?? ''));
+        if ($level === 'error') {
+            $where[] = ['level', 'in', ['error', 'critical', 'alert', 'emergency']];
+        } elseif ($level !== '') {
+            $where[] = ['level', '=', $level];
         }
-
-        if (!empty($params['channel']))
-        {
-            $where[] = ['channel', '=', (string) $params['channel']];
+        if ($area === 'admin') {
+            $where[] = ['url', 'like', '%/admin%'];
+        } elseif ($area === 'front') {
+            $where[] = ['url', 'not like', '%/admin%'];
         }
-
-        if (!empty($params['module']))
-        {
-            $where[] = ['module', '=', (string) $params['module']];
+        if ($q !== '') {
+            $like = '%'.$q.'%';
+            $where['or'] = [
+                ['message', 'like', $like],
+                ['exception_message', 'like', $like],
+                ['exception_class', 'like', $like],
+                ['url', 'like', $like],
+                ['username', 'like', $like],
+                ['ip', 'like', $like],
+                ['extra', 'like', $like],
+            ];
         }
-
-        if (!empty($params['username']))
-        {
-            $where[] = ['username', '=', (string) $params['username']];
+        if ($ip !== '') {
+            $where[] = ['ip', '=', $ip];
         }
-
-        if ($params['uid'] !== '' && $params['uid'] !== null)
-        {
-            $uid = (int) $params['uid'];
-            if ($uid > 0)
-            {
-                $where[] = ['uid', '=', $uid];
-            }
-        }
-
-        if (!empty($params['request_id']))
-        {
-            $where[] = ['request_id', '=', (string) $params['request_id']];
-        }
-
-        if (!empty($params['method']))
-        {
-            $where[] = ['method', '=', strtoupper((string) $params['method'])];
-        }
-
-        if (!empty($params['url']))
-        {
-            $where[] = ['url', '=', '%' . (string) $params['url'] . '%'];
-        }
-
-        if (!empty($params['ip']))
-        {
-            $where[] = ['ip', '=', (string) $params['ip']];
-        }
-
-        if (!empty($params['start_time']))
-        {
+        if (! empty($params['start_time'])) {
             $where[] = ['create_time', '>=', strtotime((string) $params['start_time'])];
         }
-
-        if (!empty($params['end_time']))
-        {
+        if (! empty($params['end_time'])) {
             $where[] = ['create_time', '<=', strtotime((string) $params['end_time']) + 86400];
         }
 
         $data = $this->sysSystemLogModel->paginates($where, '*', $limit, ['id' => 'desc']);
-
-        foreach ($data['data'] as &$item)
-        {
-            if (empty($item['create_time']) && !empty($item['create_at']))
-            {
-                $item['create_time'] = $item['create_at'];
-                continue;
-            }
-
-            if (!empty($item['create_time']) && is_numeric($item['create_time']))
-            {
-                $timestamp = (int) $item['create_time'];
-                if ($timestamp > 0)
-                {
-                    $item['create_time'] = date('Y-m-d H:i:s', $timestamp);
-                }
-            }
+        if (! isset($data['data']) || ! is_array($data['data'])) {
+            $data = ['total' => 0, 'data' => []];
         }
+        $me = (string) session('admin_username', '');
+        foreach ($data['data'] as &$item) {
+            $item = $this->decorateSystemLog($item, $me);
+        }
+        unset($item);
 
         return Result::success($data);
     }
@@ -908,8 +1028,7 @@ class SysUserService
             return Result::fail('用户不存在');
         }
 
-        $dbPassword = (string) ($user['password'] ?? '');
-        if ($dbPassword !== $currentPassword)
+        if (! $this->passwordMatches($currentPassword, $this->storedPassword($uid, $user)))
         {
             return Result::fail('当前密码错误');
         }
@@ -929,6 +1048,72 @@ class SysUserService
             'target_type' => 'users',
             'target_id' => $uid,
         ]);
+    }
+
+    public function unlock(int $uid, string $password): array
+    {
+        $password = trim($password);
+        if ($uid <= 0) {
+            return Result::fail('未登录');
+        }
+        if ($password === '') {
+            return Result::fail(admin_t('top.unlock_empty'));
+        }
+        $user = $this->sysUserModel->findById($uid);
+        if (! $user) {
+            try {
+                $row = DB::table('sys_user')->where('id', $uid)->first();
+                $user = $row ? (array) $row : [];
+            } catch (Exception) {
+                $user = [];
+            }
+        }
+        if (! $user) {
+            return Result::fail('用户不存在');
+        }
+        if (! $this->passwordMatches($password, $this->storedPassword($uid, $user))) {
+            return Result::fail(admin_t('top.unlock_fail'));
+        }
+
+        return Result::success([], admin_t('top.unlock_ok'));
+    }
+
+    /**
+     * 读取库里的密码。模型若藏了 password 字段，退回直接查表。
+     */
+    private function storedPassword(int $uid, array $user = []): string
+    {
+        $fromRow = (string) ($user['password'] ?? '');
+        if ($fromRow !== '') {
+            return $fromRow;
+        }
+        if ($uid <= 0) {
+            return '';
+        }
+        try {
+            return (string) (DB::table('sys_user')->where('id', $uid)->value('password') ?? '');
+        } catch (Exception) {
+            return '';
+        }
+    }
+
+    /**
+     * 登录密码校验：bcrypt/argon、遗留 md5、明文。
+     */
+    private function passwordMatches(string $plain, string $stored): bool
+    {
+        if ($plain === '' || $stored === '') {
+            return false;
+        }
+        $info = password_get_info($stored);
+        if (is_array($info) && (int) ($info['algo'] ?? 0) !== 0) {
+            return password_verify($plain, $stored);
+        }
+        if (preg_match('/^[0-9a-f]{32}$/i', $stored) === 1) {
+            return hash_equals(strtolower($stored), md5($plain));
+        }
+
+        return hash_equals($stored, $plain);
     }
 
     private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool

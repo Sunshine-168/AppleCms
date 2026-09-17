@@ -5,7 +5,7 @@
     "description": "用会员积分兑换商品。不接微信支付宝，发货请在订单里改状态。",
     "description_en": "Redeem member points for goods. No WeChat/Alipay. Mark orders shipped in admin.",
     "version": "1.0.0",
-    "enabled": false,
+    "enabled": true,
     "capability": "ready",
     "group": "member",
     "provider": "Plugins\\Mall\\MallServiceProvider",
@@ -17,15 +17,54 @@
                 "model": "Plugins\\Mall\\Models\\MallGood",
                 "search": "name",
                 "fields": [
-                    {"name": "name", "label": "名称", "type": "text"},
-                    {"name": "cover", "label": "封面", "type": "text"},
-                    {"name": "points", "label": "积分", "type": "number"},
-                    {"name": "stock", "label": "库存", "type": "number"},
-                    {"name": "hint", "label": "说明", "type": "textarea"},
-                    {"name": "sort", "label": "排序", "type": "number"},
-                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "上架", "0": "下架"}}
+                    {
+                        "name": "name",
+                        "label": "名称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "cover",
+                        "label": "封面",
+                        "type": "text"
+                    },
+                    {
+                        "name": "points",
+                        "label": "积分",
+                        "type": "number"
+                    },
+                    {
+                        "name": "stock",
+                        "label": "库存",
+                        "type": "number"
+                    },
+                    {
+                        "name": "hint",
+                        "label": "说明",
+                        "type": "textarea"
+                    },
+                    {
+                        "name": "sort",
+                        "label": "排序",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "上架",
+                            "0": "下架"
+                        }
+                    }
                 ],
-                "cols": ["id", "name", "points", "stock", "status", "sort"]
+                "cols": [
+                    "id",
+                    "name",
+                    "points",
+                    "stock",
+                    "status",
+                    "sort"
+                ]
             },
             "mall_orders": {
                 "title": "商城订单",
@@ -33,25 +72,74 @@
                 "model": "Plugins\\Mall\\Models\\MallOrder",
                 "search": "goods_name",
                 "fields": [
-                    {"name": "member_id", "label": "会员ID", "type": "number"},
-                    {"name": "goods_id", "label": "商品ID", "type": "number"},
-                    {"name": "goods_name", "label": "商品名", "type": "text"},
-                    {"name": "points", "label": "积分", "type": "number"},
-                    {"name": "remark", "label": "备注", "type": "text"},
-                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "待处理", "2": "已发货", "0": "已关闭"}}
+                    {
+                        "name": "member_id",
+                        "label": "会员ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "goods_id",
+                        "label": "商品ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "goods_name",
+                        "label": "商品名",
+                        "type": "text"
+                    },
+                    {
+                        "name": "points",
+                        "label": "积分",
+                        "type": "number"
+                    },
+                    {
+                        "name": "remark",
+                        "label": "备注",
+                        "type": "text"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "待处理",
+                            "2": "已发货",
+                            "0": "已关闭"
+                        }
+                    }
                 ],
-                "cols": ["id", "member_id", "goods_name", "points", "status", "created_at"]
+                "cols": [
+                    "id",
+                    "member_id",
+                    "goods_name",
+                    "points",
+                    "status",
+                    "created_at"
+                ]
             }
         },
         "sidebar_fold": {
             "users": [
-                {"url": "/admin/video/mall_goods", "icon": "store", "label": "nav.mall_goods"},
-                {"url": "/admin/video/mall_orders", "icon": "receipt", "label": "nav.mall_orders"}
+                {
+                    "url": "/admin/video/mall_goods",
+                    "icon": "store",
+                    "label": "nav.mall_goods"
+                },
+                {
+                    "url": "/admin/video/mall_orders",
+                    "icon": "receipt",
+                    "label": "nav.mall_orders"
+                }
             ]
         },
         "catalog": {
             "more.member": [
-                {"url": "/admin/video/mall_goods", "label": "item.mall_goods", "hint": "hint.mall_goods", "tag": "plugin"}
+                {
+                    "url": "/admin/video/mall_goods",
+                    "label": "item.mall_goods",
+                    "hint": "hint.mall_goods",
+                    "tag": "plugin"
+                }
             ]
         }
     }

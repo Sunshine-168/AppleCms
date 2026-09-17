@@ -65,6 +65,7 @@ class PluginManager
 
     public function hydrate(PluginHost $host): void
     {
+        $this->registerAutoload();
         foreach ($this->enabledManifests() as $meta) {
             $admin = is_array($meta['admin'] ?? null) ? $meta['admin'] : [];
             foreach ($admin['extra_pages'] ?? [] as $key => $page) {
@@ -104,6 +105,26 @@ class PluginManager
                         'label' => (string) $link['label'],
                     ]);
                 }
+            }
+            $pluginId = (string) ($meta['id'] ?? '');
+            $pluginName = (string) ($meta['name'] ?? $pluginId);
+            foreach ($admin['schedule'] ?? [] as $job) {
+                if (! is_array($job) || $pluginId === '') {
+                    continue;
+                }
+                $handler = trim((string) ($job['handler'] ?? ''));
+                if ($handler === '' || ! str_starts_with($handler, 'Plugins\\') || ! class_exists($handler)) {
+                    continue;
+                }
+                $host->scheduleJob([
+                    'plugin' => $pluginId,
+                    'plugin_label' => $pluginName,
+                    'id' => (string) ($job['id'] ?? ''),
+                    'label' => (string) ($job['label'] ?? ''),
+                    'hint' => (string) ($job['hint'] ?? ''),
+                    'cron' => (string) ($job['cron'] ?? '0 4 * * *'),
+                    'handler' => $handler,
+                ]);
             }
         }
     }
@@ -168,17 +189,17 @@ class PluginManager
     /** @return list<array<string, mixed>> */
     public function listForAdmin(): array
     {
-        $en = AdminUi::current() === 'en';
+        $zh = AdminUi::isChinese();
         $out = [];
         foreach ($this->manifests() as $meta) {
             $out[] = [
                 'id' => (string) ($meta['id'] ?? ''),
-                'name' => $en
-                    ? (string) ($meta['name_en'] ?? $meta['name'] ?? '')
-                    : (string) ($meta['name'] ?? ''),
-                'description' => $en
-                    ? (string) ($meta['description_en'] ?? $meta['description'] ?? '')
-                    : (string) ($meta['description'] ?? ''),
+                'name' => $zh
+                    ? (string) ($meta['name'] ?? '')
+                    : (string) ($meta['name_en'] ?? $meta['name'] ?? ''),
+                'description' => $zh
+                    ? (string) ($meta['description'] ?? '')
+                    : (string) ($meta['description_en'] ?? $meta['description'] ?? ''),
                 'version' => (string) ($meta['version'] ?? '1.0.0'),
                 'enabled' => self::flagOn($meta['enabled'] ?? false),
                 'capability' => (string) ($meta['capability'] ?? 'stub'),

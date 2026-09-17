@@ -57,11 +57,9 @@
             <p class="mac-error" id="loginError" hidden></p>
             <button type="submit" class="mac-submit" id="loginBtn">{{ admin_t('auth.submit') }}</button>
         </form>
-        <p class="login-links ui-switch-login">
-            @foreach(\App\Support\AdminUi::options() as $code => $label)
-                <a href="{{ request()->fullUrlWithQuery(['ui' => $code]) }}" class="{{ \App\Support\AdminUi::current() === $code ? 'is-on' : '' }}">{{ $label }}</a>
-            @endforeach
-        </p>
+        <div class="login-links lang-pick-login">
+            @include('admin.partials.lang-pick', ['asForm' => false])
+        </div>
         <p class="mac-copy">© {{ date('Y') }} {{ conf('name') ?: '苹果v12' }}</p>
         <div class="mac-declare">
             <strong>{{ admin_t('auth.disclaimer') }}</strong>

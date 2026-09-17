@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Schema;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -98,11 +99,12 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
-            'api.php/receive/*',
-            'api/receive/*',
             'api/admin/login',
             'pay/notify/*',
             'weixin',
+        ]);
+        $middleware->api(prepend: [
+            \App\Http\Middleware\CheckInstalled::class,
         ]);
         $middleware->alias([
             'member.auth' => \App\Http\Middleware\MemberAuth::class,

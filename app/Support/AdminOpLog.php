@@ -215,7 +215,7 @@ class AdminOpLog
 
     public static function subjectFrom(array $data, ?object $row = null): string
     {
-        foreach (['title', 'name', 'code', 'username', 'author_name', 'order_no', 'content', 'email', 'api_url', 'path'] as $key) {
+        foreach (['title', 'name', 'from_word', 'word', 'code', 'username', 'author_name', 'order_no', 'content', 'email', 'api_url', 'path'] as $key) {
             $value = $data[$key] ?? null;
             if ($value === null && $row !== null) {
                 $value = $row->{$key} ?? null;
@@ -280,6 +280,10 @@ class AdminOpLog
         $ids = $input['ids'] ?? null;
         $count = is_array($ids) ? count($ids) : (is_string($ids) && $ids !== '' ? count(array_filter(explode(',', $ids))) : 0);
 
+        if ($path === 'admin/system/database/sql/run') {
+            return self::sqlRunSummary($input);
+        }
+
         $exact = [
             'admin/video/settings' => '改了站点设置',
             'admin/video/settings/test-mail' => '发了测试邮件',
@@ -307,7 +311,7 @@ class AdminOpLog
             'admin/video/make/clear' => '删掉了静态页',
             'admin/video/make/run' => '生成了静态页',
             'admin/video/push/run' => '推送了搜索引擎',
-            'admin/video/safety/scan' => '扫了挂马',
+            'admin/video/safety/scan' => '扫了 PHP 危险函数',
             'admin/video/templates/save' => '保存了主题模板',
             'admin/video/templates/backup' => '备份了主题模板',
             'admin/video/templates/rollback' => '回滚了主题模板',
@@ -321,15 +325,15 @@ class AdminOpLog
             'admin/system/menus/add' => '新增了菜单'.($subject !== '' ? '《'.$subject.'》' : ''),
             'admin/system/menus/update' => '保存了菜单'.($subject !== '' ? '《'.$subject.'》' : ''),
             'admin/system/menus/delete' => '删除了菜单'.($id > 0 ? ' #'.$id : ''),
-            'admin/system/dicts/add' => '新增了字典'.($subject !== '' ? '《'.$subject.'》' : ''),
+            'admin/system/dicts/import' => '从站点设置拆进了字典',
             'admin/system/dicts/update' => '保存了字典'.($subject !== '' ? '《'.$subject.'》' : ''),
             'admin/system/dicts/delete' => '删除了字典'.($id > 0 ? ' #'.$id : ''),
             'admin/system/attachments/upload' => '上传了附件',
             'admin/system/attachments/delete' => '删除了附件',
             'admin/system/database/backup/run' => '备份了数据库',
+            'admin/system/database/backup/schedule' => '改了数据库备份定时',
             'admin/system/database/backup/delete' => '删除了数据库备份',
-            'admin/system/database/restore/run' => '还原了数据库',
-            'admin/system/database/sql/run' => '执行了 SQL',
+            'admin/system/database/restore/run' => '把备份盖回了当前库',
             'admin/system/database/replace/run' => '批量替换了数据',
             'admin/system/tools/schedule/save' => '保存了定时任务',
             'admin/system/tools/schedule/delete' => '删除了定时任务',
@@ -417,7 +421,13 @@ class AdminOpLog
             'api/admin/login',
             'admin/logout',
             'admin/ui-locale',
+            'admin/unlock',
             'admin/video/audits/try',
+            'admin/video/synonyms/try',
+            'admin/video/downloaders/try',
+            'admin/video/servers/try',
+            'admin/video/wizard/try',
+            'admin/video/wizard/snippet',
             'admin/video/make/step',
             'admin/video/make/status',
             'admin/video/collects/suggest',
@@ -561,12 +571,14 @@ class AdminOpLog
             'plogs' => '积分流水',
             'ads' => '广告',
             'links' => '友链',
+            'websites' => '网址导航',
             'players' => '播放器',
             'unions' => '资源联盟',
             'collect_logs' => '采集日志',
             'collect_tasks' => '采集任务',
             'collect_temps' => '待审采集',
             'searchwords' => '搜索词',
+            'synonyms' => '同义词',
             'reports' => '报错',
             'guestbooks' => '留言',
             'playfails' => '播放失败',
@@ -575,11 +587,14 @@ class AdminOpLog
             'withdraws' => '提现',
             'invites' => '邀请码',
             'favorites' => '收藏',
+            'botlogs' => '爬虫日志',
+            'accesslogs' => '访问流水',
             'audits' => '审核规则',
             'downloaders' => '下载器',
             'servers' => '服务器组',
             'types' => '分类',
             'tags' => '标签',
+            'classes' => '扩展分类',
             'actors' => '演员',
             'sources' => '线路',
             'episodes' => '剧集',
@@ -587,7 +602,8 @@ class AdminOpLog
             'settings' => '站点设置',
             'plugins' => '插件',
             'users' => '管理员',
-            'roles' => '角色',
+            'roles' => '影片角色',
+            'plots' => '分集剧情',
             'menus' => '菜单',
             'dicts' => '字典',
             'cache' => '缓存',
@@ -653,6 +669,29 @@ class AdminOpLog
         }
 
         return in_array($column, self::$columns, true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private static function sqlRunSummary(array $input): string
+    {
+        $sql = trim((string) ($input['sql'] ?? ''));
+        $sql = trim((string) preg_replace('/\s+/u', ' ', $sql));
+        if ($sql === '') {
+            return '执行了 SQL';
+        }
+        $kw = preg_match('/^([A-Za-z]+)/', $sql, $m) === 1 ? strtolower($m[1]) : '';
+        $cut = self::cut($sql, 72);
+
+        return match ($kw) {
+            'select', 'show', 'describe', 'desc', 'explain', 'with' => '查了 SQL：'.$cut,
+            'update' => '用 SQL 改了行：'.$cut,
+            'delete' => '用 SQL 删了行：'.$cut,
+            'insert' => '用 SQL 插入了行：'.$cut,
+            'replace' => '用 SQL 替换了行：'.$cut,
+            default => '执行了 SQL：'.$cut,
+        };
     }
 
     private static function cut(string $value, int $max): string

@@ -10,7 +10,10 @@
 <div class="card card-panel link-index">
     <div class="card-header">
         <span>友情链接 <em id="link-count"></em></span>
-        <button type="button" class="btn btn-sm" id="link-add-btn">新增友链</button>
+        <div>
+            <button type="button" class="btn btn-sm" id="link-add-btn">新增友链</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/websites">网址导航</a>
+        </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="link-search" onsubmit="return false;">
@@ -30,7 +33,7 @@
             <button type="button" class="chip" data-queue="status" data-value="0">已隐藏@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="logo" data-value="1">有图@if($q('logo') > 0)<em>{{ $q('logo') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">友链出现在页脚。默认主题只显示文字，主题写法 <code>@@vodLink</code>。有 Logo 时自定义主题可改成图链。隐藏后前台不再输出。</p>
+        <p class="muted recycle-lead">友链出现在页脚。默认主题显示文字，写法 <code>@@vodLink</code>。隐藏后前台不再输出。顶栏导航请去网址导航。</p>
         <div class="batch-bar" id="link-batch" hidden>
             <strong id="link-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="link-batch-on">显示</button>

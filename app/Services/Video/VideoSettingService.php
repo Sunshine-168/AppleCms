@@ -476,7 +476,6 @@ class VideoSettingService
      *     app_key_set: bool,
      *     video_count: int,
      *     provide_url: string,
-     *     provide_alt: string,
      *     app_url: string
      * }
      */
@@ -497,9 +496,8 @@ class VideoSettingService
             'has_key' => trim((string) ($site['provide_key'] ?? '')) !== '',
             'app_key_set' => trim((string) ($site['app_key'] ?? '')) !== '',
             'video_count' => $count,
-            'provide_url' => url('/api.php/provide/vod'),
-            'provide_alt' => url('/api/provide/vod'),
-            'app_url' => url('/api.php/app/vod'),
+            'provide_url' => url('/api/provide/vod'),
+            'app_url' => url('/api/app/vod'),
         ];
     }
 

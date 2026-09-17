@@ -23,7 +23,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">上架</button>
             <button type="button" class="chip" data-queue="status" data-value="0">下架</button>
         </div>
-        <p class="muted recycle-lead">专题是片单，比如贺岁档、冷门佳片。先建专题，再点「绑片」挂影片；资讯站还可以「绑文」。</p>
+        <p class="muted recycle-lead">专题是片单，如贺岁档、冷门佳片。先建专题，再点「绑片」挂影片；资讯站还可以「绑文」。</p>
         <div class="batch-bar" id="topic-batch" hidden>
             <strong id="topic-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-sm" id="topic-batch-on">上架</button>
