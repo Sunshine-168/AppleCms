@@ -1,0 +1,66 @@
+{
+    "id": "friendlink",
+    "name": "友情链接",
+    "name_en": "Friend links",
+    "description": "页脚友链。普通按排序；强化按来路，来路够了才从待审改成显示。不编造成功。",
+    "description_en": "Footer friend links. Normal sorts by rank; strong ranks by referrers and activates pending when the threshold is met. No fake success.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "site",
+    "provider": "Plugins\\FriendLink\\FriendLinkServiceProvider",
+    "admin": {
+        "modules": {
+            "flinks": {
+                "title": "友情链接",
+                "hint": "页脚友链。普通按排序；强化按来路，待审在来路达到阈值后才显示。出站和来路由前台产生。",
+                "model": "Plugins\\FriendLink\\Models\\FriendLink",
+                "search": "name",
+                "view": "friendlink::admin.board",
+                "handler": "Plugins\\FriendLink\\Services\\FriendLinkAdmin",
+                "desks": ["links", "pending", "cates", "clicks", "hits", "stats", "settings"],
+                "default_desk": "links",
+                "fields": [
+                    {"name": "cate_id", "label": "分类", "type": "number"},
+                    {"name": "name", "label": "名称", "type": "text"},
+                    {"name": "url", "label": "网址", "type": "text"},
+                    {"name": "logo", "label": "Logo", "type": "text"},
+                    {"name": "email", "label": "邮箱", "type": "text"},
+                    {"name": "remark", "label": "备注", "type": "text"},
+                    {"name": "type", "label": "类型", "type": "select", "options": {"text": "文字", "image": "图片"}},
+                    {"name": "sort", "label": "排序", "type": "number"},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"0": "待审", "1": "显示", "2": "拒绝", "3": "冻结"}}
+                ],
+                "cols": ["id", "name", "url", "status", "sort", "clicks", "referer_total"]
+            }
+        },
+        "sidebar_fold": {
+            "site": [
+                {
+                    "url": "/admin/video/flinks",
+                    "icon": "link",
+                    "label": "nav.flink",
+                    "children": [
+                        {"url": "/admin/video/flinks", "label": "nav.flink_list"},
+                        {"url": "/admin/video/flinks?desk=pending", "label": "nav.flink_pending"},
+                        {"url": "/admin/video/flinks?desk=cates", "label": "nav.flink_cates"},
+                        {"url": "/admin/video/flinks?desk=clicks", "label": "nav.flink_clicks"},
+                        {"url": "/admin/video/flinks?desk=hits", "label": "nav.flink_hits"},
+                        {"url": "/admin/video/flinks?desk=stats", "label": "nav.flink_stats"},
+                        {"url": "/admin/video/flinks?desk=settings", "label": "nav.flink_settings"}
+                    ]
+                }
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {
+                    "url": "/admin/video/flinks",
+                    "label": "item.flink",
+                    "hint": "hint.flink",
+                    "tag": "plugin"
+                }
+            ]
+        }
+    }
+}

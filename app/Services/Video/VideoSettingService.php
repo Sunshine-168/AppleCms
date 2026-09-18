@@ -91,6 +91,28 @@ class VideoSettingService
             'oauth_weibo' => '',
             'theme_primary' => '',
             'theme_logo' => '',
+            'theme_logo_foot' => '',
+            'theme_favicon' => '',
+            'theme_webapp' => '',
+            'theme_lazy' => '',
+            'theme_head_code' => '',
+            'theme_foot_code' => '',
+            'theme_home_rec_num' => '12',
+            'theme_play_notice' => '',
+            'theme_nav_latest' => '1',
+            'theme_nav_topic' => '1',
+            'theme_nav_actor' => '1',
+            'theme_nav_role' => '1',
+            'theme_nav_art' => '1',
+            'theme_nav_website' => '1',
+            'theme_nav_name1' => '',
+            'theme_nav_url1' => '',
+            'theme_nav_name2' => '',
+            'theme_nav_url2' => '',
+            'theme_nav_name3' => '',
+            'theme_nav_url3' => '',
+            'theme_nav_name4' => '',
+            'theme_nav_url4' => '',
             'watermark_text' => '',
             'analytics_code' => '',
             'seo_title_play' => '{name} 在线播放 - {site}',
@@ -142,7 +164,12 @@ class VideoSettingService
             'play_buffer', 'play_encrypt', 'danmaku_enabled', 'danmaku_login', 'collect_areawords', 'collect_langwords',
             'collect_to_temp', 'admin_ip_allow', 'weixin_appid', 'weixin_secret', 'weixin_token',
             'sms_provider', 'sms_key', 'sms_secret', 'sms_sign', 'sms_tpl_code', 'oauth_qq', 'oauth_wechat', 'oauth_weibo',
-            'theme_primary', 'theme_logo', 'watermark_text', 'analytics_code', 'seo_title_play',
+            'theme_primary', 'theme_logo', 'theme_logo_foot', 'theme_favicon', 'theme_webapp', 'theme_lazy',
+            'theme_head_code', 'theme_foot_code', 'theme_home_rec_num', 'theme_play_notice',
+            'theme_nav_latest', 'theme_nav_topic', 'theme_nav_actor', 'theme_nav_role', 'theme_nav_art', 'theme_nav_website',
+            'theme_nav_name1', 'theme_nav_url1', 'theme_nav_name2', 'theme_nav_url2',
+            'theme_nav_name3', 'theme_nav_url3', 'theme_nav_name4', 'theme_nav_url4',
+            'watermark_text', 'analytics_code', 'seo_title_play',
             'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model', 'ai_endpoint',
         ];
         try {
@@ -156,6 +183,11 @@ class VideoSettingService
         } catch (\Throwable) {
         }
         $keys = array_values(array_unique($keys));
+        $checkedTheme = $this->prepareThemeValues($data);
+        if ((int) ($checkedTheme['code'] ?? 1) !== 0) {
+            return $checkedTheme;
+        }
+        $data = $checkedTheme['data']['values'] ?? $data;
         if (array_key_exists('admin_ip_allow', $data)) {
             $checked = $this->prepareAdminIpAllow((string) $data['admin_ip_allow']);
             if ((int) ($checked['code'] ?? 1) !== 0) {
@@ -184,6 +216,7 @@ class VideoSettingService
         $tab = trim((string) ($data['tab'] ?? ''));
         $summary = match (true) {
             $tab === 'look' => '改了站点外观设置',
+            $tab === 'theme' => '改了主题配置',
             $tab === 'interact' => '改了站点互动设置',
             $tab === 'more' => '改了站点更多设置',
             array_key_exists('admin_ip_allow', $data) && $tab === '' => ((string) ($data['admin_ip_allow'] ?? '')) === ''
@@ -348,6 +381,28 @@ class VideoSettingService
             'oauth_weibo' => (string) ($all['oauth_weibo'] ?? ''),
             'theme_primary' => (string) ($all['theme_primary'] ?? ''),
             'theme_logo' => (string) ($all['theme_logo'] ?? ''),
+            'theme_logo_foot' => (string) ($all['theme_logo_foot'] ?? ''),
+            'theme_favicon' => (string) ($all['theme_favicon'] ?? ''),
+            'theme_webapp' => (string) ($all['theme_webapp'] ?? ''),
+            'theme_lazy' => (string) ($all['theme_lazy'] ?? ''),
+            'theme_head_code' => (string) ($all['theme_head_code'] ?? ''),
+            'theme_foot_code' => (string) ($all['theme_foot_code'] ?? ''),
+            'theme_home_rec_num' => (string) ($all['theme_home_rec_num'] ?? '12'),
+            'theme_play_notice' => (string) ($all['theme_play_notice'] ?? ''),
+            'theme_nav_latest' => (string) ($all['theme_nav_latest'] ?? '1'),
+            'theme_nav_topic' => (string) ($all['theme_nav_topic'] ?? '1'),
+            'theme_nav_actor' => (string) ($all['theme_nav_actor'] ?? '1'),
+            'theme_nav_role' => (string) ($all['theme_nav_role'] ?? '1'),
+            'theme_nav_art' => (string) ($all['theme_nav_art'] ?? '1'),
+            'theme_nav_website' => (string) ($all['theme_nav_website'] ?? '1'),
+            'theme_nav_name1' => (string) ($all['theme_nav_name1'] ?? ''),
+            'theme_nav_url1' => (string) ($all['theme_nav_url1'] ?? ''),
+            'theme_nav_name2' => (string) ($all['theme_nav_name2'] ?? ''),
+            'theme_nav_url2' => (string) ($all['theme_nav_url2'] ?? ''),
+            'theme_nav_name3' => (string) ($all['theme_nav_name3'] ?? ''),
+            'theme_nav_url3' => (string) ($all['theme_nav_url3'] ?? ''),
+            'theme_nav_name4' => (string) ($all['theme_nav_name4'] ?? ''),
+            'theme_nav_url4' => (string) ($all['theme_nav_url4'] ?? ''),
             'watermark_text' => (string) ($all['watermark_text'] ?? ''),
             'analytics_code' => (string) ($all['analytics_code'] ?? ''),
             'seo_title_play' => (string) ($all['seo_title_play'] ?? ''),
@@ -365,7 +420,8 @@ class VideoSettingService
     {
         $core = [
             'theme' => [
-                'title' => '主题参数',
+                'title' => '主题配置',
+                'hint' => '完整项在主题配置工作台',
                 'fields' => [
                     ['name' => 'theme_logo', 'label' => 'Logo 地址', 'type' => 'text'],
                     ['name' => 'theme_primary', 'label' => '主色', 'type' => 'text', 'placeholder' => '#1e9fff'],
@@ -602,6 +658,83 @@ class VideoSettingService
         }
 
         return 'other';
+    }
+
+    public function themeHasPlayView(?string $theme = null): bool
+    {
+        $theme = trim((string) ($theme ?: config('video.theme', 'default')));
+        if ($theme === '') {
+            $theme = 'default';
+        }
+        if (view()->exists("themes.{$theme}.vod.play") || view()->exists("themes.{$theme}.play")) {
+            return true;
+        }
+        $dir = resource_path('views/themes/'.$theme.'/play');
+        if (is_dir($dir)) {
+            foreach (glob($dir.DIRECTORY_SEPARATOR.'*.blade.php') ?: [] as $file) {
+                if (is_file($file)) {
+                    return true;
+                }
+            }
+        }
+
+        return $theme !== 'default' && $this->themeHasPlayView('default');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{code:int,msg:string,data?:array{values:array<string, mixed>}}
+     */
+    protected function prepareThemeValues(array $data): array
+    {
+        $urlKeys = [
+            'theme_logo', 'theme_logo_foot', 'theme_favicon', 'theme_webapp', 'theme_lazy',
+            'theme_nav_url1', 'theme_nav_url2', 'theme_nav_url3', 'theme_nav_url4',
+        ];
+        foreach ($urlKeys as $key) {
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            $value = is_scalar($data[$key]) ? trim((string) $data[$key]) : '';
+            $data[$key] = $value;
+            if ($value !== '' && ! $this->isSafeThemeUrl($value)) {
+                return Result::fail('地址只能是 http(s) 或站点路径（以 / 开头），不能使用 javascript:');
+            }
+        }
+        if (array_key_exists('theme_home_rec_num', $data)) {
+            $n = (int) $data['theme_home_rec_num'];
+            $data['theme_home_rec_num'] = (string) ($n < 1 ? 12 : min(100, $n));
+        }
+        foreach ([
+            'theme_nav_latest', 'theme_nav_topic', 'theme_nav_actor',
+            'theme_nav_role', 'theme_nav_art', 'theme_nav_website',
+        ] as $key) {
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            $data[$key] = (string) $data[$key] === '1' ? '1' : '0';
+        }
+
+        return Result::success(['values' => $data]);
+    }
+
+    protected function isSafeThemeUrl(string $value): bool
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return true;
+        }
+        if (preg_match('#^\s*javascript:#i', $value) === 1) {
+            return false;
+        }
+        if (str_starts_with($value, '//')) {
+            return false;
+        }
+        if (str_starts_with($value, '/')) {
+            return true;
+        }
+
+        return preg_match('#^https?://#i', $value) === 1;
     }
 
     private function ready(): bool

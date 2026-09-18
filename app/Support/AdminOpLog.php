@@ -215,7 +215,7 @@ class AdminOpLog
 
     public static function subjectFrom(array $data, ?object $row = null): string
     {
-        foreach (['title', 'name', 'from_word', 'word', 'code', 'username', 'author_name', 'order_no', 'content', 'email', 'api_url', 'path'] as $key) {
+        foreach (['title', 'name', 'host', 'from_word', 'word', 'code', 'username', 'author_name', 'order_no', 'content', 'email', 'api_url', 'path'] as $key) {
             $value = $data[$key] ?? null;
             if ($value === null && $row !== null) {
                 $value = $row->{$key} ?? null;
@@ -265,6 +265,9 @@ class AdminOpLog
             'group' => '批量改了 '.$n.'会员的分组',
             'slot' => '批量改了 '.$n.'广告位',
             'engine' => '批量改了 '.$n.'播放器内核',
+            'copy' => '复制了 '.$n.$object,
+            'restore' => '从回收站还原了 '.$n.$object,
+            'purge' => '彻底删除了 '.$n.$object,
             default => '批量处理了 '.$n.$object,
         };
     }
@@ -339,6 +342,10 @@ class AdminOpLog
             'admin/system/tools/schedule/delete' => '删除了定时任务',
             'admin/system/tools/schedule/status' => '改了定时任务开关',
             'admin/system/tools/schedule/run' => '立刻跑了定时任务',
+            'admin/system/runtime/settings' => '改了运行监控设置',
+            'admin/system/runtime/rules/save' => '保存了告警规则',
+            'admin/system/runtime/rules/status' => '改了告警规则开关',
+            'admin/system/runtime/events/ack' => '确认了监控事件',
             'admin/video/collect_temps/promote' => '转入了待审采集'.($count > 0 ? ' '.$count.' 条' : ''),
         ];
         if (isset($exact[$path])) {
@@ -572,6 +579,7 @@ class AdminOpLog
             'ads' => '广告',
             'links' => '友链',
             'websites' => '网址导航',
+            'domains' => '绑定域名',
             'players' => '播放器',
             'unions' => '资源联盟',
             'collect_logs' => '采集日志',
@@ -609,6 +617,7 @@ class AdminOpLog
             'cache' => '缓存',
             'templates' => '模板',
             'schedule' => '定时任务',
+            'runtime' => '监控',
         ];
     }
 

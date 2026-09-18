@@ -28,6 +28,7 @@ class RoleIndexPageTest extends TestCase
         $this->assertStringContainsString('/admin/user', $html);
         $this->assertStringContainsString('/admin/system/menus', $html);
         $this->assertStringContainsString('class="is-on">角色</a>', $html);
+        $this->assertStringContainsString('access-board', $html);
         $this->assertStringContainsString('access-chain', $html);
         $this->assertStringNotContainsString('role-refresh-btn', $html);
         $this->assertStringNotContainsString('>刷新<', $html);

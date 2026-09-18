@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Video\VideoModel;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Plugins\Danmaku\Models\Danmaku;
 use Tests\TestCase;
 
 class DanmakuPluginTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {

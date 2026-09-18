@@ -27,6 +27,7 @@ class AdminUserIndexPageTest extends TestCase
         $this->assertStringContainsString('从未登录', $html);
         $this->assertStringContainsString('/admin/system/roles', $html);
         $this->assertStringContainsString('/admin/system/menus', $html);
+        $this->assertStringContainsString('access-board', $html);
         $this->assertStringContainsString('access-chain', $html);
         $this->assertStringContainsString('class="is-on">管理员</a>', $html);
         $this->assertStringContainsString('密码，至少 6 位', $html);

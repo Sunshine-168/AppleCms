@@ -46,9 +46,9 @@ class PluginAdminTest extends TestCase
         $this->assertContains('manga', $ids);
         $this->assertContains('mall', $ids);
         $this->assertContains('chatroom', $ids);
-        $this->assertFalse($manager->isEnabled('sms'));
-        $this->assertFalse($manager->isEnabled('mall'));
-        $this->assertFalse($manager->isEnabled('chatroom'));
+        $this->assertContains('friendlink', $ids);
+        $this->assertContains('advert', $ids);
+        $this->assertContains('publishpage', $ids);
 
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/plugins')
@@ -59,6 +59,9 @@ class PluginAdminTest extends TestCase
             ->assertSee('漫画')
             ->assertSee('积分商城')
             ->assertSee('聊天室')
+            ->assertSee('友情链接')
+            ->assertSee('广告')
+            ->assertSee('发布页')
             ->assertSee('已接通')
             ->assertSee('后台占位')
             ->assertSee('/admin/plugins/sms', false);
@@ -71,41 +74,119 @@ class PluginAdminTest extends TestCase
 
         $hostPages = array_keys(app(\App\Support\Plugins\PluginHost::class)->extraPages());
         $extraPages = array_keys(app(\App\Services\Video\VideoSettingService::class)->extraPages());
-        $this->assertNotContains('sms', $hostPages, json_encode($hostPages));
-        $this->assertNotContains('sms', $extraPages, json_encode($extraPages));
+        if (! $manager->isEnabled('sms')) {
+            $this->assertNotContains('sms', $hostPages, json_encode($hostPages));
+            $this->assertNotContains('sms', $extraPages, json_encode($extraPages));
+            $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+                ->get('/admin/video/config/sms')
+                ->assertNotFound();
+        }
 
-        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/config/sms')
-            ->assertNotFound();
-
-        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/coupons')
-            ->assertNotFound();
+        $coupons = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/coupons');
+        if ($manager->isEnabled('coupon')) {
+            $html = $coupons->assertOk()->getContent();
+            $this->assertStringContainsString('class="is-on">会员</a>', $html);
+            $this->assertStringNotContainsString('class="is-on">插件</a>', $html);
+            $this->assertStringContainsString('coupon-board', $html);
+            $this->assertStringContainsString('/admin/video/coupons?desk=received', $html);
+            $this->assertStringNotContainsString('>刷新<', $html);
+        } else {
+            $coupons->assertNotFound();
+        }
 
         $mangas = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/mangas');
         if ($manager->isEnabled('manga')) {
-            $mangas->assertOk();
+            $html = $mangas->assertOk()->getContent();
+            $this->assertStringContainsString('独立漫画库', $html);
+            $this->assertStringContainsString('manga-board', $html);
+            $this->assertStringContainsString('作品', $html);
+            $this->assertStringContainsString('待审', $html);
+            $this->assertStringContainsString('分类', $html);
+            $this->assertStringContainsString('章节', $html);
+            $this->assertStringContainsString('图片', $html);
+            $this->assertStringNotContainsString('nav-fold-nested', $html);
+            $this->assertStringContainsString('/admin/video/mangas?desk=pending', $html);
+            $this->assertStringContainsString('/admin/video/mangas?desk=types', $html);
+            $this->assertStringContainsString('/admin/video/mangas?desk=chapters', $html);
+            $this->assertStringContainsString('/admin/video/mangas?desk=pics', $html);
+            $this->assertStringNotContainsString('mod-refresh', $html);
+            $this->assertStringNotContainsString('>刷新<', $html);
+            $this->assertStringNotContainsString('placeholder="host"', $html);
         } else {
             $mangas->assertNotFound();
             $this->get('/manga')->assertNotFound();
         }
-        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/mall_goods')
-            ->assertNotFound();
-        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/chat_messages')
-            ->assertNotFound();
-        $this->get('/mall')->assertNotFound();
-        $this->get('/chatroom/1')->assertNotFound();
+        $mallGoods = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mall_goods');
+        if ($manager->isEnabled('mall')) {
+            $mallHtml = $mallGoods->assertOk()->getContent();
+            $this->assertStringContainsString('mall-board', $mallHtml);
+            $this->assertStringNotContainsString('nav-fold-nested', $mallHtml);
+            $this->assertStringNotContainsString('href="/admin/video/mall_orders"', $mallHtml);
+            $this->assertStringNotContainsString('>刷新<', $mallHtml);
+        } else {
+            $mallGoods->assertNotFound();
+            $this->get('/mall')->assertNotFound();
+        }
+        $chatMessages = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/chat_messages');
+        if ($manager->isEnabled('chatroom')) {
+            $chatHtml = $chatMessages->assertOk()->getContent();
+            $this->assertStringContainsString('chat-board', $chatHtml);
+            $this->assertStringContainsString('本片讨论', $chatHtml);
+            $this->assertStringContainsString('不能手添', $chatHtml);
+            $this->assertStringNotContainsString('id="mod-add"', $chatHtml);
+            $this->assertStringNotContainsString('>刷新<', $chatHtml);
+            $this->assertStringNotContainsString('nav-fold-nested', $chatHtml);
+        } else {
+            $chatMessages->assertNotFound();
+            $this->get('/chatroom/1')->assertNotFound();
+        }
+        if (! $manager->isEnabled('mall')) {
+            $this->get('/mall')->assertNotFound();
+        }
 
         $danmaku = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/danmaku');
         if ($manager->isEnabled('danmaku')) {
-            $danmaku->assertOk();
+            $dmHtml = $danmaku->assertOk()->getContent();
+            $this->assertStringContainsString('danmaku-board', $dmHtml);
+            $this->assertStringContainsString('播放器滚动弹幕', $dmHtml);
+            $this->assertStringContainsString('不能手添', $dmHtml);
+            $this->assertStringNotContainsString('id="mod-add"', $dmHtml);
+            $this->assertStringNotContainsString('>刷新<', $dmHtml);
+            $this->assertStringNotContainsString('nav-fold-nested', $dmHtml);
         } else {
             $danmaku->assertNotFound();
         }
+    }
+
+    public function test_manga_board_is_nested_workbench_when_enabled(): void
+    {
+        $manager = app(PluginManager::class);
+        $mangas = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas');
+        if (! $manager->isEnabled('manga')) {
+            $mangas->assertNotFound();
+            $this->get('/manga')->assertNotFound();
+
+            return;
+        }
+        $html = $mangas->assertOk()->getContent();
+        $this->assertStringContainsString('独立漫画库', $html);
+        $this->assertStringContainsString('manga-board', $html);
+        $this->assertStringContainsString('作品', $html);
+        $this->assertStringContainsString('待审', $html);
+        $this->assertStringContainsString('分类', $html);
+        $this->assertStringContainsString('章节', $html);
+        $this->assertStringContainsString('图片', $html);
+        $this->assertStringNotContainsString('nav-fold-nested', $html);
+        $this->assertStringContainsString('/admin/video/mangas?desk=pending', $html);
+        $this->assertStringNotContainsString('mod-refresh', $html);
+        $this->assertStringNotContainsString('>刷新<', $html);
+        $this->assertStringNotContainsString('placeholder="host"', $html);
     }
 
     public function test_plugins_page_offers_upload_not_a_store(): void
@@ -123,6 +204,10 @@ class PluginAdminTest extends TestCase
         $this->assertStringNotContainsString('购买插件', $html);
         $this->assertStringNotContainsString('远程安装', $html);
         $this->assertStringNotContainsString('评分', $html);
+        $this->assertStringNotContainsString('nav-fold-nested', $html);
+        if (! app(PluginManager::class)->isEnabled('cj_rule')) {
+            $this->assertStringNotContainsString('href="/admin/video/cj"', $html);
+        }
     }
 
     public function test_upload_without_file_fails(): void

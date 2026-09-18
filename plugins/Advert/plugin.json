@@ -1,0 +1,63 @@
+{
+    "id": "advert",
+    "name": "广告",
+    "name_en": "Ads",
+    "description": "文字或图片广告。顶栏、底栏、播放器、正文。记展示和点击。不编造成功。",
+    "description_en": "Text or image ads in top, bottom, player, and content slots. Impressions and clicks are counted. No fake success.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "site",
+    "provider": "Plugins\\Advert\\AdvertServiceProvider",
+    "admin": {
+        "modules": {
+            "adverts": {
+                "title": "广告",
+                "hint": "文字或图片。顶栏/底栏固定，播放器在播放框下，正文在主栏顶部。点击由前台产生。",
+                "model": "Plugins\\Advert\\Models\\PluginAd",
+                "search": "name",
+                "view": "advert::admin.board",
+                "handler": "Plugins\\Advert\\Services\\AdvertAdmin",
+                "desks": ["ads", "clicks", "stats"],
+                "default_desk": "ads",
+                "fields": [
+                    {"name": "name", "label": "名称", "type": "text"},
+                    {"name": "type", "label": "类型", "type": "select", "options": {"text": "文字", "image": "图片"}},
+                    {"name": "slot", "label": "位置", "type": "select", "options": {"top": "顶栏", "bottom": "底栏", "player": "播放器", "content": "正文"}},
+                    {"name": "title", "label": "标题", "type": "text"},
+                    {"name": "url", "label": "网址", "type": "text"},
+                    {"name": "image", "label": "图片", "type": "text"},
+                    {"name": "sort", "label": "排序", "type": "number"},
+                    {"name": "start_at", "label": "开始", "type": "number"},
+                    {"name": "expire_at", "label": "结束", "type": "number"},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "启用", "0": "停用"}}
+                ],
+                "cols": ["id", "name", "slot", "type", "status", "impressions", "clicks"]
+            }
+        },
+        "sidebar_fold": {
+            "site": [
+                {
+                    "url": "/admin/video/adverts",
+                    "icon": "bullhorn",
+                    "label": "nav.advert",
+                    "children": [
+                        {"url": "/admin/video/adverts", "label": "nav.advert_list"},
+                        {"url": "/admin/video/adverts?desk=clicks", "label": "nav.advert_clicks"},
+                        {"url": "/admin/video/adverts?desk=stats", "label": "nav.advert_stats"}
+                    ]
+                }
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {
+                    "url": "/admin/video/adverts",
+                    "label": "item.advert",
+                    "hint": "hint.advert",
+                    "tag": "plugin"
+                }
+            ]
+        }
+    }
+}

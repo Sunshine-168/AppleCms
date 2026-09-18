@@ -1,0 +1,54 @@
+{
+    "id": "publishpage",
+    "name": "发布页",
+    "name_en": "Publish page",
+    "description": "首次访问首页根路径可拦一层地址发布页。点进入本站写 Cookie，以后直接进主站。默认关闭。不是服务器 HTML 缓存。",
+    "description_en": "Optional first-visit gate on GET /. Entering the site sets a cookie. Off by default. Not a server HTML cache.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "site",
+    "provider": "Plugins\\PublishPage\\PublishPageServiceProvider",
+    "admin": {
+        "modules": {
+            "publish_pages": {
+                "title": "发布页",
+                "hint": "首次进首页根路径可拦一层。进入本站写 Cookie，不是整页缓存。默认关闭，现有首页测试不受影响。",
+                "model": "Plugins\\PublishPage\\Models\\PublishOption",
+                "search": "k",
+                "view": "publishpage::admin.board",
+                "handler": "Plugins\\PublishPage\\Services\\PublishAdmin",
+                "desks": ["config", "groups"],
+                "default_desk": "config",
+                "fields": [
+                    {"name": "k", "label": "键", "type": "text"},
+                    {"name": "v", "label": "值", "type": "textarea"}
+                ],
+                "cols": ["id", "k", "v"]
+            }
+        },
+        "sidebar_fold": {
+            "site": [
+                {
+                    "url": "/admin/video/publish_pages",
+                    "icon": "door-open",
+                    "label": "nav.publish_page",
+                    "children": [
+                        {"url": "/admin/video/publish_pages", "label": "nav.publish_config"},
+                        {"url": "/admin/video/publish_pages?desk=groups", "label": "nav.publish_groups"}
+                    ]
+                }
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {
+                    "url": "/admin/video/publish_pages",
+                    "label": "item.publish_page",
+                    "hint": "hint.publish_page",
+                    "tag": "plugin"
+                }
+            ]
+        }
+    }
+}

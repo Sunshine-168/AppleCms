@@ -9,6 +9,7 @@ use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTypeModel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class VideoInstallService
@@ -180,7 +181,7 @@ class VideoInstallService
             DB::table('sys_user')->insert([
                 'id' => 1,
                 'username' => $username,
-                'password' => $password,
+                'password' => Hash::make($password),
                 'email' => $email,
                 'remark' => '超级管理员',
                 'role' => 1,

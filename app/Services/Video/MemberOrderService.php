@@ -40,6 +40,17 @@ class MemberOrderService
             $row->updated_at = time();
             $row->save();
             $this->creditRow($row);
+            if ((int) ($row->coupon_user_id ?? 0) > 0 && class_exists(\Plugins\Coupon\Services\CouponService::class)) {
+                $written = app(\Plugins\Coupon\Services\CouponService::class)->writeOff(
+                    (int) $row->coupon_user_id,
+                    (int) $row->member_id,
+                    (int) $row->id,
+                    (string) $row->order_no
+                );
+                if ((int) ($written['code'] ?? 1) !== 0) {
+                    throw new \RuntimeException((string) ($written['msg'] ?? '优惠券核销失败'));
+                }
+            }
 
             return Result::success(['id' => $row->id], '已到账');
         });

@@ -103,7 +103,7 @@ class TopicTag
             && Schema::hasTable('video_arts')
         ) {
             $counts['arts'] = function ($q) {
-                $q->where('video_arts.status', 1);
+                $q->listed();
             };
         }
         if ($counts !== []) {

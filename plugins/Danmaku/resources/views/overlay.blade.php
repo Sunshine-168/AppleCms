@@ -1,22 +1,39 @@
 @php
-    $dmOn = (int) app(\App\Services\Video\VideoSettingService::class)->get('danmaku_enabled', '1') === 1;
+    $settings = app(\App\Services\Video\VideoSettingService::class);
+    $dmOn = (int) $settings->get('danmaku_enabled', '1') === 1;
+    $needLogin = (int) $settings->get('danmaku_login', '0') === 1;
+    $loggedIn = \Illuminate\Support\Facades\Auth::guard('member')->check();
 @endphp
 @if($dmOn)
 <div id="danmaku-layer" aria-hidden="true"></div>
+@if($needLogin && ! $loggedIn)
+    <p id="danmaku-login"><a href="{{ url('/member/login') }}" target="_top">登录后发弹幕</a></p>
+@else
 <form id="danmaku-bar" autocomplete="off">
-    <input id="danmaku-text" maxlength="80" placeholder="发弹幕，回车发送" />
+    <div class="dm-modes" id="danmaku-modes">
+        <button type="button" data-mode="0" class="on">滚动</button>
+        <button type="button" data-mode="1">顶部</button>
+        <button type="button" data-mode="2">底部</button>
+    </div>
+    <input id="danmaku-text" maxlength="120" placeholder="发弹幕，回车发送" />
     <input id="danmaku-color" type="color" value="#ffffff" title="颜色" />
     <button type="submit">发送</button>
 </form>
+@endif
 <style>
 #player-shell{position:relative;width:100%;height:100%;overflow:hidden}
 #danmaku-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
 .dm-item{position:absolute;white-space:nowrap;font:600 18px/1.2 "Segoe UI","PingFang SC",sans-serif;text-shadow:0 0 2px #000,1px 1px 2px #000;left:100%;transition:transform 8s linear;will-change:transform}
 .dm-item.is-top,.dm-item.is-bottom{left:50%;transform:translateX(-50%);transition:opacity .4s}
-#danmaku-bar{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;gap:6px;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+#danmaku-bar,#danmaku-login{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;gap:6px;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.65));align-items:center}
+#danmaku-login{color:#fff;margin:0}
+#danmaku-login a{color:#fff}
 #danmaku-bar input[type=text],#danmaku-text{flex:1;height:32px;border:0;border-radius:4px;padding:0 10px;background:rgba(255,255,255,.92)}
 #danmaku-color{width:36px;height:32px;border:0;background:transparent;padding:0}
-#danmaku-bar button{height:32px;border:0;border-radius:4px;padding:0 12px;background:#1e9fff;color:#fff;cursor:pointer}
+#danmaku-bar button[type=submit]{height:32px;border:0;border-radius:4px;padding:0 12px;background:#1e9fff;color:#fff;cursor:pointer}
+.dm-modes{display:flex;gap:4px}
+.dm-modes button{height:28px;border:0;border-radius:4px;padding:0 8px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
+.dm-modes button.on{background:#1e9fff}
 </style>
 <script>
 (function () {
@@ -29,7 +46,9 @@
     var form = document.getElementById('danmaku-bar');
     var input = document.getElementById('danmaku-text');
     var colorEl = document.getElementById('danmaku-color');
-    if (!layer || !form) return;
+    var modes = document.getElementById('danmaku-modes');
+    if (!layer) return;
+    var mode = 0;
     var pool = [];
     var fired = {};
     var wall = Date.now();
@@ -77,22 +96,34 @@
             pool.forEach(function (d, i) { if (d.time < t) fired[i] = true; });
         });
     }
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var text = (input.value || '').trim();
-        if (!text) return;
-        var payload = { text: text, color: colorEl.value, time: now(), episode_id: episodeId, mode: 0 };
-        fetch(sendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-        }).then(function (r) { return r.json(); }).then(function (res) {
-            if (!res || res.code !== 0) { alert((res && res.msg) || '发送失败'); return; }
-            input.value = '';
-            spawn(res.data || payload);
-        }).catch(function () { alert('发送失败'); });
-    });
+    if (modes) {
+        modes.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-mode]');
+            if (!btn) return;
+            mode = parseInt(btn.getAttribute('data-mode'), 10) || 0;
+            Array.prototype.forEach.call(modes.querySelectorAll('[data-mode]'), function (b) {
+                b.classList.toggle('on', b === btn);
+            });
+        });
+    }
+    if (form && input) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var text = (input.value || '').trim();
+            if (!text) return;
+            var payload = { text: text, color: colorEl ? colorEl.value : '#ffffff', time: now(), episode_id: episodeId, mode: mode };
+            fetch(sendUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                if (!res || res.code !== 0) { alert((res && res.msg) || '发送失败'); return; }
+                input.value = '';
+                spawn(res.data || payload);
+            }).catch(function () { alert('发送失败'); });
+        });
+    }
 })();
 </script>
 @endif

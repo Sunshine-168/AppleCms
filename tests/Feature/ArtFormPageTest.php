@@ -19,14 +19,33 @@ class ArtFormPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('写内容', $html);
+        $this->assertStringContainsString('写文章', $html);
         $this->assertStringContainsString('entry-layout', $html);
         $this->assertStringContainsString('entry-aside', $html);
         $this->assertStringContainsString('读者看到的标题', $html);
         $this->assertStringContainsString('栏目与展示', $html);
         $this->assertStringContainsString('name="content"', $html);
         $this->assertStringContainsString('cms-editor', $html);
+        $this->assertStringContainsString('name="blurb"', $html);
+        $this->assertStringContainsString('name="seo_title"', $html);
+        $this->assertStringContainsString('name="seo_key"', $html);
+        $this->assertStringContainsString('name="seo_des"', $html);
+        $this->assertStringContainsString('name="published_at"', $html);
+        $this->assertStringContainsString('datetime-local', $html);
+        $this->assertStringContainsString('name="author"', $html);
+        $this->assertStringContainsString('name="source"', $html);
+        $this->assertStringContainsString('name="tag_extra"', $html);
+        $this->assertStringContainsString('新标签', $html);
+        $this->assertStringContainsString('/admin/video/art-tags', $html);
+        $this->assertStringContainsString('js-art-flag', $html);
+        $this->assertStringContainsString('置顶', $html);
+        $this->assertStringContainsString('推荐', $html);
+        $this->assertStringContainsString('热门', $html);
+        $this->assertStringContainsString('name="sort"', $html);
         $this->assertStringContainsString('/admin/video/arts', $html);
+        $this->assertStringContainsString('/admin/video/art-types', $html);
+        $this->assertStringContainsString('class="is-on">文章</a>', $html);
+        $this->assertStringNotContainsString('先去分类里建一个', $html);
         $this->assertStringNotContainsString('ui-dialog', $html);
         $this->assertStringNotContainsString('iframe', $html);
         $this->assertStringNotContainsString('art-dialog-tpl', $html);

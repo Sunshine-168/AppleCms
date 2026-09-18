@@ -249,15 +249,58 @@ class VodController extends Controller
                 $this->context->setSeo($type->name.' - '.$site['title'], $type->seo_keywords ?: $site['keyword'], $type->seo_description ?: $site['description']);
             }
         }
+        $typeIds = [];
+        $currentType = null;
+        if ($typeId > 0 && \Illuminate\Support\Facades\Schema::hasTable('video_types')) {
+            $currentType = \App\Models\Video\VideoTypeModel::query()->find($typeId);
+            if ($currentType && \Illuminate\Support\Facades\Schema::hasColumn('video_types', 'mid') && (int) ($currentType->mid ?? 0) !== 2) {
+                $currentType = null;
+                $typeId = 0;
+            }
+            $typeIds = $currentType ? $currentType->descendantIds() : [];
+        } elseif ($typeId > 0) {
+            $typeIds = [$typeId];
+        }
         $arts = \Illuminate\Support\Facades\Schema::hasTable('video_arts')
-            ? \App\Models\Video\VideoArt::query()->where('status', 1)
-                ->when($wd !== '', fn ($q) => $q->where('title', 'like', '%'.$wd.'%'))
-                ->when($typeId > 0, fn ($q) => $q->where('type_id', $typeId))
+            ? \App\Models\Video\VideoArt::query()->listed()
+                ->when($wd !== '', function ($q) use ($wd) {
+                    $q->where(function ($inner) use ($wd) {
+                        $inner->where('title', 'like', '%'.$wd.'%');
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('video_arts', 'blurb')) {
+                            $inner->orWhere('blurb', 'like', '%'.$wd.'%');
+                        }
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('video_arts', 'tag')) {
+                            $inner->orWhere('tag', 'like', '%'.$wd.'%');
+                        }
+                    });
+                })
+                ->when($typeIds !== [], fn ($q) => $q->whereIn('type_id', $typeIds))
                 ->orderByDesc('id')->paginate(20)->withQueryString()
             : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
         $this->context->setPaginator($arts);
+        $artTypes = $this->artTypeTree();
+        $currentTag = null;
 
-        return view($this->front->themeView('vod.arts'), compact('site', 'arts'));
+        return view($this->front->themeView('vod.arts'), compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag'));
+    }
+
+    public function artTag(string $slug): View
+    {
+        $site = $this->front->bootSite();
+        $key = preg_replace('/\.html$/i', '', $slug);
+        $tag = app(\App\Services\Admin\Video\ArtTagService::class)->findPublic((string) $key);
+        if (! $tag) {
+            throw new NotFoundHttpException();
+        }
+        $this->context->setSeo($tag->name.' - '.$site['title'], $tag->name, $site['description']);
+        $arts = $tag->arts()->listed()->orderByDesc('id')->paginate(20)->withQueryString();
+        $this->context->setPaginator($arts);
+        $artTypes = $this->artTypeTree();
+        $typeId = 0;
+        $currentType = null;
+        $currentTag = $tag;
+
+        return view($this->front->themeView('vod.arts'), compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag'));
     }
 
     public function actor(int|string $id): View
@@ -299,7 +342,7 @@ class VodController extends Controller
             && \Illuminate\Support\Facades\Schema::hasTable('video_topic_art_rel')
             && \Illuminate\Support\Facades\Schema::hasTable('video_arts')
         ) {
-            $arts = $topic->arts()->where('video_arts.status', 1)->get();
+            $arts = $topic->arts()->listed()->get();
         }
         $obj = $topic;
         $vod_list = $videos;
@@ -355,10 +398,50 @@ class VodController extends Controller
         if (! $art) {
             throw new NotFoundHttpException();
         }
-        $this->context->setSeo($art->title.' - '.$site['title'], $art->title, mb_substr(strip_tags((string) $art->content), 0, 120));
         $art->increment('hits');
+        $type = null;
+        if ((int) $art->type_id > 0 && \Illuminate\Support\Facades\Schema::hasTable('video_types')) {
+            $type = \App\Models\Video\VideoTypeModel::query()->find((int) $art->type_id);
+            if ($type) {
+                $this->context->setType($type);
+            }
+        }
+        $listedBase = \App\Models\Video\VideoArt::query()->listed();
+        if ((int) $art->type_id > 0) {
+            $listedBase->where('type_id', (int) $art->type_id);
+        }
+        $prev = (clone $listedBase)->where('id', '<', $art->id)->orderByDesc('id')->first();
+        $next = (clone $listedBase)->where('id', '>', $art->id)->orderBy('id')->first();
+        $related = \App\Models\Video\VideoArt::query()->listed()
+            ->where('id', '!=', $art->id)
+            ->when((int) $art->type_id > 0, fn ($q) => $q->where('type_id', (int) $art->type_id))
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get();
+        $seoTitle = trim((string) ($art->seo_title ?? ''));
+        $seoKey = trim((string) ($art->seo_key ?? ''));
+        $seoDes = trim((string) ($art->seo_des ?? ''));
+        if ($seoDes === '') {
+            $seoDes = trim((string) ($art->blurb ?? ''));
+        }
+        if ($seoDes === '') {
+            $seoDes = mb_substr(strip_tags((string) $art->content), 0, 120);
+        }
+        $this->context->setSeo(
+            $seoTitle !== '' ? $seoTitle : ($art->title.' - '.$site['title']),
+            $seoKey !== '' ? $seoKey : (string) $art->title,
+            $seoDes
+        );
+        $artTags = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('video_art_tags') && \Illuminate\Support\Facades\Schema::hasTable('video_art_tag_rel')) {
+                $artTags = $art->tags()->where('video_art_tags.status', 1)->orderByDesc('video_art_tags.sort')->orderByDesc('video_art_tags.id')->get();
+            }
+        } catch (\Throwable) {
+            $artTags = collect();
+        }
 
-        return view($this->front->themeView('vod.art'), compact('site', 'art'));
+        return view($this->front->themeView('vod.art'), compact('site', 'art', 'type', 'prev', 'next', 'related', 'artTags'));
     }
 
     public function role(int|string $id): View
@@ -434,5 +517,26 @@ class VodController extends Controller
     private function vodId(int|string $id): int
     {
         return (int) preg_replace('/\.html$/i', '', (string) $id);
+    }
+
+    /** @return \Illuminate\Support\Collection<int, \App\Models\Video\VideoTypeModel> */
+    private function artTypeTree(): \Illuminate\Support\Collection
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_types')) {
+            return collect();
+        }
+        $q = \App\Models\Video\VideoTypeModel::query()
+            ->where('status', 1)
+            ->where('parent_id', 0)
+            ->orderByDesc('sort')
+            ->orderBy('id');
+        $hasMid = \Illuminate\Support\Facades\Schema::hasColumn('video_types', 'mid');
+        if ($hasMid) {
+            $q->where('mid', 2);
+        }
+
+        return $hasMid
+            ? $q->with(['children' => fn ($rel) => $rel->where('mid', 2)])->get()
+            : $q->with(['children'])->get();
     }
 }

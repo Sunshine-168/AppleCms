@@ -8,6 +8,7 @@ use App\Support\Utils\Ajax;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -370,13 +371,20 @@ class Video extends Controller
      */
     public function showTypes(): View|Factory
     {
-        return view('admin.video.types');
+        return view('admin.video.types', ['scope' => 'vod']);
+    }
+
+    public function showArtTypes(): View|Factory
+    {
+        return view('admin.video.types', ['scope' => 'art']);
     }
 
     public function createType(Request $request): View|Factory
     {
+        $scope = $this->typeScope($request);
+        $mid = $scope === 'art' ? 2 : 1;
         $parentId = (int) $request->query('parent_id', 0);
-        $parents = $this->typeParentOptions(null);
+        $parents = $this->typeParentOptions(null, $mid);
         $parent = $this->findTypeOption($parents, $parentId);
         if ($parentId > 0 && $parent === null) {
             $parentId = 0;
@@ -384,23 +392,34 @@ class Video extends Controller
 
         return $this->typeFormPage([
             'parent_id' => $parentId,
-            'mid' => (int) ($parent['mid'] ?? 1),
+            'mid' => $mid,
             'sort' => 0,
             'status' => 1,
-        ], $parents, $parent);
+        ], $parents, $parent, $scope);
     }
 
-    public function editType(int $id): View|Factory
+    public function editType(Request $request, int $id): View|Factory|RedirectResponse
     {
         $res = $this->videoService->getTypeInfo($id);
         if ((int) ($res['code'] ?? 1) !== 0) {
             abort(404);
         }
         $type = is_array($res['data'] ?? null) ? $res['data'] : [];
-        $parents = $this->typeParentOptions($id);
+        $scope = $this->typeScope($request);
+        $want = $scope === 'art' ? 2 : 1;
+        $got = (int) ($type['mid'] ?? 1);
+        if ($got < 1) {
+            $got = 1;
+        }
+        if ($got !== $want) {
+            $url = $got === 2 ? '/admin/video/art-types/'.$id.'/edit' : '/admin/video/types/'.$id.'/edit';
+
+            return redirect($url);
+        }
+        $parents = $this->typeParentOptions($id, $want);
         $parentId = (int) ($type['parent_id'] ?? 0);
 
-        return $this->typeFormPage($type, $parents, $this->findTypeOption($parents, $parentId));
+        return $this->typeFormPage($type, $parents, $this->findTypeOption($parents, $parentId), $scope);
     }
 
     /**
@@ -408,20 +427,21 @@ class Video extends Controller
      * @param list<array<string, mixed>> $parents
      * @param array<string, mixed>|null $parent
      */
-    private function typeFormPage(array $type, array $parents, ?array $parent): View|Factory
+    private function typeFormPage(array $type, array $parents, ?array $parent, string $scope = 'vod'): View|Factory
     {
         return view('admin.video.type_form', [
             'type' => $type,
             'isEdit' => (int) ($type['id'] ?? 0) > 0,
             'parents' => $parents,
             'parent' => $parent,
+            'scope' => $scope === 'art' ? 'art' : 'vod',
         ]);
     }
 
     /** @return list<array{id:int,name:string,depth:int,parent_id:int,mid:int}> */
-    private function typeParentOptions(?int $excludeId): array
+    private function typeParentOptions(?int $excludeId, int $mid = 1): array
     {
-        $res = $this->videoService->getVideoTypeLists(['name' => '']);
+        $res = $this->videoService->getVideoTypeLists(['name' => '', 'mid' => $mid]);
         $rows = $res['data']['data'] ?? [];
         if (! is_array($rows)) {
             return [];
@@ -449,11 +469,18 @@ class Video extends Controller
                 'name' => (string) ($row['name'] ?? ''),
                 'depth' => (int) ($row['depth'] ?? 0),
                 'parent_id' => $pid,
-                'mid' => (int) ($row['mid'] ?? 1),
+                'mid' => (int) ($row['mid'] ?? $mid),
             ];
         }
 
         return $out;
+    }
+
+    private function typeScope(Request $request): string
+    {
+        $path = '/'.$request->path();
+
+        return str_contains($path, '/art-types') ? 'art' : 'vod';
     }
 
     /**
@@ -483,6 +510,7 @@ class Video extends Controller
             'name' => (string)$request->input('name', ''),
             'parent_id' => $request->input('parent_id', ''),
             'limit' => (int)$request->input('limit', 10),
+            'mid' => $this->typeScope($request) === 'art' ? 2 : 1,
         ];
         $data = $this->videoService->getVideoTypeLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -504,7 +532,7 @@ class Video extends Controller
             'name' => (string) $request->input('name', ''),
             'slug' => (string) $request->input('slug', ''),
             'parent_id' => (int) $request->input('parent_id', 0),
-            'mid' => (int) $request->input('mid', 1),
+            'mid' => $this->typeScope($request) === 'art' ? 2 : 1,
             'sort' => (int) $request->input('sort', 0),
             'status' => (int) $request->input('status', 1),
             'seo_title' => (string) $request->input('seo_title', ''),

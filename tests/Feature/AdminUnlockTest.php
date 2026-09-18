@@ -82,4 +82,31 @@ class AdminUnlockTest extends TestCase
             ->assertOk()
             ->assertJsonPath('code', 0);
     }
+
+    public function test_login_accepts_a_hashed_password(): void
+    {
+        $this->insertAdmin(Hash::make(self::PLAIN));
+
+        $this->withSession(['captcha' => 8])
+            ->postJson('/api/admin/login', [
+                'username' => 'admin',
+                'password' => self::PLAIN,
+                'captcha' => '8',
+            ])
+            ->assertOk()
+            ->assertJsonPath('code', 0);
+    }
+
+    public function test_login_says_when_there_is_no_admin(): void
+    {
+        $this->withSession(['captcha' => 8])
+            ->postJson('/api/admin/login', [
+                'username' => 'admin',
+                'password' => self::PLAIN,
+                'captcha' => '8',
+            ])
+            ->assertOk()
+            ->assertJsonPath('code', 1)
+            ->assertJsonPath('msg', '还没有管理员，请重新安装');
+    }
 }

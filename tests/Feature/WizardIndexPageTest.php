@@ -26,12 +26,18 @@ class WizardIndexPageTest extends TestCase
 
         $this->assertStringContainsString('wizard-index', $html);
         $this->assertStringContainsString('生成主题里能跑的 Blade 标签', $html);
-        $this->assertStringContainsString('影片标签', $html);
-        $this->assertStringContainsString('/admin/video/tags', $html);
-        $this->assertStringContainsString('/admin/video/templates', $html);
+        $this->assertStringContainsString('模板编辑', $html);
+        $this->assertStringContainsString('标签', $html);
+        $this->assertStringContainsString('wiz-group-chips', $html);
+        $this->assertStringContainsString('wiz-tag-chips', $html);
+        $this->assertStringContainsString('wiz-work', $html);
+        $this->assertStringContainsString('更多条件', $html);
         $this->assertStringContainsString('/admin/video/wizard/try', $html);
         $this->assertStringContainsString('{maccms:vod}', $html);
         $this->assertStringContainsString("selectTag('vod')", $html);
+        preg_match('/id="wizard-index"[\s\S]*?<div class="card-header">([\s\S]*?)<\/div>/', $html, $header);
+        $this->assertStringNotContainsString('href="/admin/video/templates"', $header[1] ?? '');
+        $this->assertStringNotContainsString('href="/admin/video/tags"', $header[1] ?? '');
         $this->assertStringNotContainsString('保存前会备份', $html);
         $this->assertStringNotContainsString("['by'=>'hits'", $html);
         $this->assertStringNotContainsString("['by' => 'hits'", $html);

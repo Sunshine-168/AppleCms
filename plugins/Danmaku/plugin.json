@@ -4,8 +4,8 @@
     "name_en": "Danmaku",
     "description": "播放页发送和滚动弹幕，后台可审。已接通前台。",
     "description_en": "Send and scroll comments on the player. Front-end is wired.",
-    "version": "1.0.0",
-    "enabled": false,
+    "version": "1.1.0",
+    "enabled": true,
     "capability": "ready",
     "group": "play",
     "provider": "Plugins\\Danmaku\\DanmakuServiceProvider",
@@ -13,7 +13,7 @@
         "extra_pages": {
             "danmaku": {
                 "title": "弹幕参数",
-                "hint": "关闭后播放器不再加载弹幕层。",
+                "hint": "关闭后播放器不再加载弹幕层。不是聊天室。违禁词走站点设置，没有 DPlayer 第三方接口。",
                 "fields": [
                     {
                         "name": "danmaku_enabled",
@@ -28,45 +28,25 @@
                         "name": "danmaku_login",
                         "label": "发送需登录",
                         "type": "select",
-                        "options": [
-                            "否",
-                            "是"
-                        ]
+                        "options": {
+                            "0": "否",
+                            "1": "是"
+                        }
                     }
                 ]
             }
         },
         "modules": {
             "danmaku": {
-                "title": "弹幕管理",
+                "title": "弹幕",
+                "hint": "播放器滚动弹幕。后台只审显示、隐藏或删除，不能手添。",
                 "model": "Plugins\\Danmaku\\Models\\Danmaku",
                 "search": "text",
+                "view": "danmaku::admin.board",
+                "handler": "Plugins\\Danmaku\\Services\\DanmakuAdmin",
+                "desks": ["messages", "settings"],
+                "default_desk": "messages",
                 "fields": [
-                    {
-                        "name": "video_id",
-                        "label": "影片ID",
-                        "type": "number"
-                    },
-                    {
-                        "name": "episode_id",
-                        "label": "分集ID",
-                        "type": "number"
-                    },
-                    {
-                        "name": "text",
-                        "label": "内容",
-                        "type": "textarea"
-                    },
-                    {
-                        "name": "color",
-                        "label": "颜色",
-                        "type": "text"
-                    },
-                    {
-                        "name": "time",
-                        "label": "秒",
-                        "type": "text"
-                    },
                     {
                         "name": "status",
                         "label": "状态",
@@ -82,8 +62,9 @@
                     "video_id",
                     "episode_id",
                     "text",
+                    "mode",
                     "time",
-                    "ip",
+                    "report",
                     "status"
                 ]
             }
@@ -97,9 +78,19 @@
                 }
             ]
         },
+        "catalog": {
+            "more.interact": [
+                {
+                    "url": "/admin/video/danmaku",
+                    "label": "item.danmaku",
+                    "hint": "hint.danmaku",
+                    "tag": "plugin"
+                }
+            ]
+        },
         "settings_links": [
             {
-                "url": "/admin/video/config/danmaku",
+                "url": "/admin/video/danmaku?desk=settings",
                 "label": "item.config_danmaku"
             }
         ]

@@ -11,6 +11,7 @@ class ChatroomServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_17_160000_create_plugin_chatroom.php');
+        PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_18_230000_expand_plugin_chatroom.php');
         $this->loadViewsFrom(__DIR__.'/resources/views', 'chatroom');
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');

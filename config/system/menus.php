@@ -35,7 +35,6 @@ return [
                     ['name' => '分类管理', 'url' => '/admin/video/types'],
                     ['name' => '采集资源', 'url' => '/admin/video/collects'],
                     ['name' => '推荐资源', 'url' => '/admin/video/unions'],
-                    ['name' => '自定义规则', 'url' => '/admin/video/cj'],
                     ['name' => '采集日志', 'url' => '/admin/video/collect_logs'],
                     ['name' => '待审入库', 'url' => '/admin/video/collect_temps'],
                     ['name' => '定时采集', 'url' => '/admin/video/collect_tasks'],
@@ -44,6 +43,9 @@ return [
                     ['name' => '角色库', 'url' => '/admin/video/roles'],
                     ['name' => '专题管理', 'url' => '/admin/video/topics'],
                     ['name' => '文章管理', 'url' => '/admin/video/arts'],
+                    ['name' => '文章栏目', 'url' => '/admin/video/art-types'],
+                    ['name' => '文章标签', 'url' => '/admin/video/art-tags'],
+                    ['name' => '文章回收站', 'url' => '/admin/video/art-recycle'],
                     ['name' => '网址导航', 'url' => '/admin/video/websites'],
                     ['name' => '播放器', 'url' => '/admin/video/players'],
                     ['name' => '下载器', 'url' => '/admin/video/downloaders'],
@@ -100,13 +102,13 @@ return [
                     ['name' => '关注', 'url' => '/admin/video/follows'],
                     ['name' => '动态', 'url' => '/admin/video/dynamics'],
                     ['name' => '分享', 'url' => '/admin/video/shares'],
-                    ['name' => '签到', 'url' => '/admin/video/signs'],
+                    ['name' => '用户活动', 'url' => '/admin/video/activity'],
                     ['name' => '待审入库', 'url' => '/admin/video/collect_temps'],
                     ['name' => '微信公众号', 'url' => '/admin/video/config/weixin'],
                     ['name' => '短信网关', 'url' => '/admin/video/config/sms'],
                     ['name' => '第三方登录', 'url' => '/admin/video/config/connect'],
                     ['name' => '后台IP白名单', 'url' => '/admin/video/config/ip'],
-                    ['name' => '主题参数', 'url' => '/admin/video/config/theme'],
+                    ['name' => '主题参数', 'url' => '/admin/video/theme'],
                     ['name' => '图片水印', 'url' => '/admin/video/config/watermark'],
                     ['name' => '统计代码', 'url' => '/admin/video/config/analytics'],
                     ['name' => 'SEO标题', 'url' => '/admin/video/config/seo'],
@@ -208,6 +210,10 @@ return [
                     [
                         'name' => '定时任务',
                         'url' => '/admin/system/tools/schedule'
+                    ],
+                    [
+                        'name' => '监控',
+                        'url' => '/admin/system/runtime'
                     ],
                     [
                         'name' => '缓存管理',

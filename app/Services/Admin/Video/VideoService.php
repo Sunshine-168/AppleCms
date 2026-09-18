@@ -6,6 +6,7 @@ use App\Models\Video\ActorModel;
 use App\Models\Video\CollectSourceModel;
 use App\Models\Video\VideoActorRelModel;
 use App\Models\Video\VideoEpisodeModel;
+use App\Models\Video\VideoArt;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
@@ -754,27 +755,49 @@ class VideoService
     /**
      * 获取视频类型选项
      */
-    public function getTypeOptions(): array
+    public function getTypeOptions(?int $mid = 1): array
     {
-        $all = $this->videoTypeModel->selectByCondition([], ['id', 'parent_id', 'name'], ['sort' => 'desc', 'id' => 'asc']);
-        $byParent = [];
-        foreach ($all as $row)
-        {
-            $pid = (int)($row['parent_id'] ?? 0);
-            $byParent[$pid][] = $row;
+        $cols = ['id', 'parent_id', 'name'];
+        $hasMid = Schema::hasTable('video_types') && Schema::hasColumn('video_types', 'mid');
+        if ($hasMid) {
+            $cols[] = 'mid';
         }
+        $all = $this->videoTypeModel->selectByCondition([], $cols, ['sort' => 'desc', 'id' => 'asc']);
+        if ($hasMid && $mid !== null) {
+            $want = $mid < 1 ? 1 : $mid;
+            $all = array_values(array_filter($all, static function (array $row) use ($want): bool {
+                $got = (int) ($row['mid'] ?? 1);
+                if ($got < 1) {
+                    $got = 1;
+                }
 
-        $options = [];
-        foreach (($byParent[0] ?? []) as $p)
-        {
-            $options[] = ['id' => (int)$p['id'], 'name' => (string)$p['name']];
-            foreach (($byParent[(int)$p['id']] ?? []) as $c)
-            {
-                $options[] = ['id' => (int)$c['id'], 'name' => '— ' . (string)$c['name']];
-            }
+                return $got === $want;
+            }));
         }
+        $byParent = [];
+        foreach ($all as $row) {
+            $byParent[(int) ($row['parent_id'] ?? 0)][] = $row;
+        }
+        $options = [];
+        $this->walkTypeOptions($byParent, 0, 0, $options);
 
         return Result::success($options);
+    }
+
+    /**
+     * @param  array<int, list<array<string, mixed>>>  $byParent
+     * @param  list<array{id:int,name:string}>  $out
+     */
+    private function walkTypeOptions(array $byParent, int $parentId, int $depth, array &$out): void
+    {
+        foreach ($byParent[$parentId] ?? [] as $row) {
+            $pad = $depth > 0 ? str_repeat('└ ', $depth) : '';
+            $out[] = [
+                'id' => (int) ($row['id'] ?? 0),
+                'name' => $pad.(string) ($row['name'] ?? ''),
+            ];
+            $this->walkTypeOptions($byParent, (int) ($row['id'] ?? 0), $depth + 1, $out);
+        }
     }
 
     /**
@@ -792,6 +815,18 @@ class VideoService
     {
         $name = trim((string) ($params['name'] ?? ''));
         $all = $this->videoTypeModel->selectByCondition([], '*', ['sort' => 'desc', 'id' => 'asc']);
+        $mid = (int) ($params['mid'] ?? 0);
+        $hasMid = Schema::hasTable('video_types') && Schema::hasColumn('video_types', 'mid');
+        if ($hasMid && $mid > 0) {
+            $all = array_values(array_filter($all, static function (array $row) use ($mid): bool {
+                $got = (int) ($row['mid'] ?? 1);
+                if ($got < 1) {
+                    $got = 1;
+                }
+
+                return $got === $mid;
+            }));
+        }
 
         $videoCounts = [];
         try {
@@ -802,6 +837,20 @@ class VideoService
                     ->get();
                 foreach ($countRows as $row) {
                     $videoCounts[(int) $row->type_id] = (int) $row->c;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        $artCounts = [];
+        try {
+            if (Schema::hasTable('video_arts')) {
+                $artRows = VideoArt::query()
+                    ->selectRaw('type_id, COUNT(*) as c')
+                    ->groupBy('type_id')
+                    ->get();
+                foreach ($artRows as $row) {
+                    $artCounts[(int) $row->type_id] = (int) $row->c;
                 }
             }
         } catch (\Throwable) {
@@ -856,6 +905,7 @@ class VideoService
             $pid = (int) ($item['parent_id'] ?? 0);
             $item['parent_name'] = $pid > 0 ? (string) ($byId[$pid]['name'] ?? '') : '顶级';
             $item['video_count'] = $videoCounts[$id] ?? 0;
+            $item['art_count'] = $artCounts[$id] ?? 0;
             $item['child_count'] = count($byParent[$id] ?? []);
             $item['depth'] = (int) ($item['depth'] ?? 0);
         }
@@ -899,13 +949,30 @@ class VideoService
      */
     public function saveVideoType(array $data, ?int $id = null): array
     {
+        $parentId = (int) ($data['parent_id'] ?? 0);
+        $mid = (int) ($data['mid'] ?? 1);
+        if (! in_array($mid, [1, 2, 3], true)) {
+            $mid = 1;
+        }
+        $noun = $mid === 2 ? '栏目' : '分类';
         $name = trim((string)($data['name'] ?? ''));
         if ($name === '')
         {
-            return Result::fail('分类名称不能为空');
+            return Result::fail($noun.'名称不能为空');
         }
-
-        $parentId = (int) ($data['parent_id'] ?? 0);
+        if ($parentId > 0) {
+            $parent = $this->videoTypeModel->findById($parentId);
+            if (empty($parent)) {
+                return Result::fail('上级不存在');
+            }
+            $parentMid = (int) ($parent['mid'] ?? 1);
+            if ($parentMid < 1) {
+                $parentMid = 1;
+            }
+            if ($parentMid !== $mid) {
+                return Result::fail('上级必须和本栏目同一类');
+            }
+        }
         if ($id !== null && $id > 0) {
             if ($parentId === $id) {
                 return Result::fail('不能把自己设为上级');
@@ -921,7 +988,7 @@ class VideoService
             'name' => $name,
             'slug' => trim((string) ($data['slug'] ?? '')),
             'parent_id' => $parentId,
-            'mid' => (int) ($data['mid'] ?? 1),
+            'mid' => $mid,
             'sort' => (int) ($data['sort'] ?? 0),
             'status' => (int) ($data['status'] ?? 1),
             'seo_title' => trim((string) ($data['seo_title'] ?? '')),
@@ -961,16 +1028,27 @@ class VideoService
             return Result::fail('数据不存在');
         }
 
+        $isArt = (int) ($exists['mid'] ?? 1) === 2;
         $childCount = $this->videoTypeModel->countByCondition([['parent_id', '=', $id]]);
         if ($childCount > 0)
         {
-            return Result::fail('请先删除子分类');
+            return Result::fail($isArt ? '请先删掉下级栏目' : '请先删除子分类');
         }
 
         $useCount = $this->videoModel->countByCondition([['type_id', '=', $id]]);
         if ($useCount > 0)
         {
-            return Result::fail('该分类下存在视频，无法删除');
+            return Result::fail('该分类下还有影片，无法删除');
+        }
+        $artCount = 0;
+        try {
+            if (Schema::hasTable('video_arts')) {
+                $artCount = (int) VideoArt::query()->where('type_id', $id)->count();
+            }
+        } catch (\Throwable) {
+        }
+        if ($artCount > 0) {
+            return Result::fail('该栏目下还有文章，无法删除');
         }
 
         $ok = $this->videoTypeModel->deleteById($id);
@@ -1699,14 +1777,10 @@ class VideoService
             return [];
         }
 
-        $rows = DB::select('SHOW FULL COLUMNS FROM `' . $table . '`');
-        $cols = [];
-        foreach ($rows as $r)
-        {
-            $col = (string)($r->Field ?? '');
-            if ($col !== '') {
-                $cols[] = $col;
-            }
+        try {
+            $cols = Schema::hasTable($table) ? Schema::getColumnListing($table) : [];
+        } catch (\Throwable) {
+            $cols = [];
         }
         self::$tableColumnsCache[$table] = $cols;
         return $cols;

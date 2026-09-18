@@ -4,7 +4,9 @@ namespace App\Services\Video;
 
 use App\Models\Video\ActorModel;
 use App\Models\Video\VideoArt;
+use App\Models\Video\VideoArtTag;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoRole;
 use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTopicModel;
 use App\Models\Video\VideoTypeModel;
@@ -20,6 +22,12 @@ use Illuminate\Support\Facades\Schema;
 class DiskHtmlService
 {
     public const JOB_TTL = 3600;
+
+    public const DETAIL_CAP = 2000;
+
+    public const LIST_CAP = 200;
+
+    public const PICK_CAP = 300;
 
     public function __construct(private readonly VideoSettingService $settings) {}
 
@@ -44,7 +52,12 @@ class DiskHtmlService
             'topic' => '专题',
             'tag' => '标签',
             'art' => '文章',
+            'art_type' => '文章分类',
+            'art_tag' => '文章标签',
+            'role' => '角色',
             'website' => '网址',
+            'vod_day' => '当天视频',
+            'art_day' => '当天文章',
         ];
     }
 
@@ -163,10 +176,14 @@ class DiskHtmlService
     /**
      * @return array{code:int,msg:string,data:array<string,mixed>}
      */
-    public function buildOnce(string $scope = 'all'): array
+    /**
+     * @param  array<string, mixed>  $filter
+     * @return array{code:int,msg:string,data:array<string,mixed>}
+     */
+    public function buildOnce(string $scope = 'all', array $filter = []): array
     {
         File::ensureDirectoryExists($this->rootPath());
-        $urls = $this->collectUrls($scope);
+        $urls = $this->collectUrls($scope, $filter);
         $ok = 0;
         $fail = 0;
         $files = [];
@@ -196,14 +213,18 @@ class DiskHtmlService
     /**
      * @return array{status:string,kind:string,done:int,total:int,ok:int,fail:int,percent:int,current:string,message:string,file_count:int,errors:list<string>,conflict?:bool}
      */
-    public function startJob(string $scope = 'all'): array
+    /**
+     * @param  array<string, mixed>  $filter  ids[], type_ids[], when=all|today|missing, extra='index'|''
+     * @return array{status:string,kind:string,done:int,total:int,ok:int,fail:int,percent:int,current:string,message:string,file_count:int,errors:list<string>,conflict?:bool}
+     */
+    public function startJob(string $scope = 'all', array $filter = []): array
     {
         $busy = $this->busyPublic('build');
         if ($busy !== null) {
             return $busy;
         }
 
-        $urls = $this->collectUrls($scope);
+        $urls = $this->collectUrls($scope, $filter);
         $job = $this->emptyJob();
         $job['kind'] = 'build';
         $job['status'] = $urls === [] ? 'done' : 'running';
@@ -327,75 +348,417 @@ class DiskHtmlService
         return $this->toPublic($job);
     }
 
-    /** @return list<string> */
-    public function collectUrls(string $scope = 'all'): array
+    /**
+     * @param  array<string, mixed>  $filter
+     * @return list<string>
+     */
+    public function collectUrls(string $scope = 'all', array $filter = []): array
     {
+        $filter = $this->normalizeFilter($filter);
         $scope = array_key_exists($scope, self::scopes()) ? $scope : 'all';
         $urls = [];
-        if (in_array($scope, ['all', 'index'], true)) {
-            $this->pushUrl($urls, '/');
-            $this->pushUrl($urls, '/latest');
-            $this->pushUrl($urls, '/actors');
-            $this->pushUrl($urls, '/topics');
-            $this->pushUrl($urls, '/arts');
-            $this->pushUrl($urls, '/website');
+
+        if ($filter['extra'] === 'index') {
+            $this->collectIndexOnly($urls, $scope);
+
+            return $this->uniqueUrls($urls);
         }
-        $this->collectGroup($urls, in_array($scope, ['all', 'type'], true) && Schema::hasTable('video_types'), function () use (&$urls) {
-            VideoTypeModel::query()->active()->orderBy('id')->limit(200)->each(function (VideoTypeModel $type) use (&$urls) {
+
+        $all = $scope === 'all';
+        $vodDay = $scope === 'vod_day';
+        $artDay = $scope === 'art_day';
+        $todayFilter = array_merge($filter, ['when' => 'today', 'ids' => [], 'type_ids' => []]);
+
+        if ($all || $scope === 'index') {
+            $this->pushIndexUrls($urls);
+        }
+        if ($all || $scope === 'type' || $vodDay) {
+            $this->collectVodTypeUrls($urls, $vodDay ? $todayFilter : $filter);
+        }
+        if ($all || $scope === 'detail' || $vodDay) {
+            $this->collectVodDetailUrls($urls, $vodDay ? $todayFilter : $filter);
+        }
+        if ($all || $scope === 'art_type' || $artDay) {
+            $this->collectArtTypeUrls($urls, $artDay ? $todayFilter : $filter);
+        }
+        if ($all || $scope === 'art' || $artDay) {
+            $this->collectArtDetailUrls($urls, $artDay ? $todayFilter : $filter);
+        }
+        if ($all || $scope === 'art' || $scope === 'art_tag' || $artDay) {
+            $this->collectArtTagUrls($urls, $artDay && $scope !== 'art_tag' ? $todayFilter : $filter);
+        }
+        if ($all || $scope === 'actor') {
+            $this->collectActorUrls($urls, $filter);
+        }
+        if ($all || $scope === 'topic') {
+            $this->collectTopicUrls($urls, $filter);
+        }
+        if ($all || $scope === 'role') {
+            $this->collectRoleUrls($urls, $filter);
+        }
+        if ($all || $scope === 'tag') {
+            $this->collectTagUrls($urls, $filter);
+        }
+        if ($all || $scope === 'website') {
+            $this->collectWebsiteUrls($urls, $filter);
+        }
+
+        $out = $this->uniqueUrls($urls);
+        if ($filter['when'] === 'missing') {
+            $out = $this->filterMissing($out);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array{
+     *     vodTypes: list<array{id:int,name:string,parent_id:int,depth:int}>,
+     *     artTypes: list<array{id:int,name:string,parent_id:int,depth:int}>,
+     *     topics: list<array{id:int,name:string}>,
+     *     actors: list<array{id:int,name:string}>,
+     *     roles: list<array{id:int,name:string}>,
+     *     hasArts: bool,
+     *     detailCap: int,
+     *     listCap: int
+     * }
+     */
+    public function optCatalog(): array
+    {
+        $hasArts = false;
+        try {
+            $hasArts = Schema::hasTable('video_arts');
+        } catch (\Throwable) {
+            $hasArts = false;
+        }
+
+        return [
+            'vodTypes' => $this->typeCatalog(1),
+            'artTypes' => $hasArts ? $this->typeCatalog(2) : [],
+            'topics' => $this->pickNameRows('video_topics', VideoTopicModel::class, self::PICK_CAP),
+            'actors' => $this->pickNameRows('actors', ActorModel::class, self::PICK_CAP),
+            'roles' => $this->pickNameRows('video_roles', VideoRole::class, self::PICK_CAP),
+            'hasArts' => $hasArts,
+            'detailCap' => self::DETAIL_CAP,
+            'listCap' => self::LIST_CAP,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @return array{ids: list<int>, type_ids: list<int>, when: string, extra: string}
+     */
+    protected function normalizeFilter(array $filter): array
+    {
+        $when = strtolower((string) ($filter['when'] ?? 'all'));
+        if (! in_array($when, ['all', 'today', 'missing'], true)) {
+            $when = 'all';
+        }
+
+        return [
+            'ids' => $this->intIds($filter['ids'] ?? [], self::PICK_CAP),
+            'type_ids' => $this->intIds($filter['type_ids'] ?? [], self::PICK_CAP),
+            'when' => $when,
+            'extra' => trim((string) ($filter['extra'] ?? '')),
+        ];
+    }
+
+    /** @return list<int> */
+    protected function intIds(mixed $raw, int $cap): array
+    {
+        if (is_string($raw) || is_numeric($raw)) {
+            $raw = preg_split('/[,\s]+/', trim((string) $raw)) ?: [];
+        }
+        if (! is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $item) {
+            if (is_array($item)) {
+                continue;
+            }
+            $n = (int) $item;
+            if ($n <= 0) {
+                continue;
+            }
+            $out[] = $n;
+            if (count($out) >= $cap) {
+                break;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    /** @param list<string> $urls */
+    protected function collectIndexOnly(array &$urls, string $scope): void
+    {
+        if ($scope === 'topic') {
+            $this->pushUrl($urls, '/topics');
+
+            return;
+        }
+        if ($scope === 'actor') {
+            $this->pushUrl($urls, '/actors');
+
+            return;
+        }
+        if ($scope === 'role') {
+            $this->pushUrl($urls, '/roles');
+
+            return;
+        }
+        if (in_array($scope, ['art', 'art_type', 'art_tag'], true)) {
+            $this->pushUrl($urls, '/arts');
+
+            return;
+        }
+        $this->pushIndexUrls($urls);
+    }
+
+    /** @param list<string> $urls */
+    protected function pushIndexUrls(array &$urls): void
+    {
+        $this->pushUrl($urls, '/');
+        $this->pushUrl($urls, '/latest');
+        $this->pushUrl($urls, '/actors');
+        $this->pushUrl($urls, '/topics');
+        $this->pushUrl($urls, '/arts');
+        $this->pushUrl($urls, '/website');
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectVodTypeUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_types'), function () use (&$urls, $filter) {
+            $q = VideoTypeModel::query()->active()->orderBy('id');
+            $this->constrainMid($q, 1);
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            $this->constrainWhen($q, 'video_types', $filter['when']);
+            $q->limit(self::LIST_CAP)->each(function (VideoTypeModel $type) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf(vod_url('type', ['id' => $type->id]), '/type/'.$type->id));
             });
         });
-        $this->collectGroup($urls, in_array($scope, ['all', 'detail'], true) && Schema::hasTable('videos'), function () use (&$urls) {
-            VideoModel::query()->published()->orderByDesc('id')->limit(500)->each(function (VideoModel $video) use (&$urls) {
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectArtTypeUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_types') && Schema::hasTable('video_arts'), function () use (&$urls, $filter) {
+            $q = VideoTypeModel::query()->active()->orderBy('id');
+            $this->constrainMid($q, 2);
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            $this->constrainWhen($q, 'video_types', $filter['when']);
+            $q->limit(self::LIST_CAP)->each(function (VideoTypeModel $type) use (&$urls) {
+                $this->pushUrl($urls, '/art/type/'.$type->id);
+            });
+        });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectVodDetailUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('videos'), function () use (&$urls, $filter) {
+            $q = VideoModel::query()->published()->orderByDesc('id');
+            if ($filter['type_ids'] !== []) {
+                $q->whereIn('type_id', $filter['type_ids']);
+            }
+            $this->constrainWhen($q, 'videos', $filter['when']);
+            $q->limit(self::DETAIL_CAP)->each(function (VideoModel $video) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf(vod_url('detail', ['id' => $video->id]), '/vod/'.$video->id));
             });
         });
-        $this->collectGroup($urls, in_array($scope, ['all', 'actor'], true) && Schema::hasTable('actors'), function () use (&$urls) {
-            $q = ActorModel::query()->orderByDesc('id')->limit(200);
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectArtDetailUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_arts'), function () use (&$urls, $filter) {
+            $q = VideoArt::query()->listed()->orderByDesc('id');
+            if ($filter['type_ids'] !== [] && Schema::hasColumn('video_arts', 'type_id')) {
+                $q->whereIn('type_id', $filter['type_ids']);
+            }
+            $this->constrainWhen($q, 'video_arts', $filter['when']);
+            $q->limit(self::DETAIL_CAP)->each(function (VideoArt $art) use (&$urls) {
+                $this->pushUrl($urls, $this->pathOf((string) $art->url, '/art/'.$art->id));
+            });
+        });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectArtTagUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_art_tags'), function () use (&$urls, $filter) {
+            $q = VideoArtTag::query()->where('status', 1)->orderByDesc('id')->limit(self::LIST_CAP);
+            $this->constrainWhen($q, 'video_art_tags', $filter['when']);
+            $q->each(function (VideoArtTag $tag) use (&$urls) {
+                $slug = trim((string) $tag->slug);
+                $this->pushUrl($urls, $this->pathOf((string) $tag->url, '/art/tag/'.($slug !== '' ? $slug : $tag->id)));
+            });
+        });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectActorUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('actors'), function () use (&$urls, $filter) {
+            $q = ActorModel::query()->orderByDesc('id');
             if (Schema::hasColumn('actors', 'status')) {
                 $q->where('status', 1);
             }
-            $q->each(function (ActorModel $actor) use (&$urls) {
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            $this->constrainWhen($q, 'actors', $filter['when']);
+            $cap = $filter['ids'] !== [] ? self::PICK_CAP : self::LIST_CAP;
+            $q->limit($cap)->each(function (ActorModel $actor) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf(vod_url('actor', ['id' => $actor->id]), '/actor/'.$actor->id));
             });
         });
-        $this->collectGroup($urls, in_array($scope, ['all', 'topic'], true) && Schema::hasTable('video_topics'), function () use (&$urls) {
-            $q = VideoTopicModel::query()->orderByDesc('id')->limit(200);
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectTopicUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_topics'), function () use (&$urls, $filter) {
+            $q = VideoTopicModel::query()->orderByDesc('id');
             if (Schema::hasColumn('video_topics', 'status')) {
                 $q->where('status', 1);
             }
-            $q->each(function (VideoTopicModel $topic) use (&$urls) {
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            $this->constrainWhen($q, 'video_topics', $filter['when']);
+            $cap = $filter['ids'] !== [] ? self::PICK_CAP : self::LIST_CAP;
+            $q->limit($cap)->each(function (VideoTopicModel $topic) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf((string) $topic->url, '/topic/'.$topic->id));
             });
         });
-        $this->collectGroup($urls, in_array($scope, ['all', 'tag'], true) && Schema::hasTable('video_tags'), function () use (&$urls) {
-            $q = VideoTagModel::query()->orderByDesc('id')->limit(200);
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectRoleUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_roles'), function () use (&$urls, $filter) {
+            $q = VideoRole::query()->orderByDesc('id');
+            if (Schema::hasColumn('video_roles', 'status')) {
+                $q->where('status', 1);
+            }
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            $this->constrainWhen($q, 'video_roles', $filter['when']);
+            $cap = $filter['ids'] !== [] ? self::PICK_CAP : self::LIST_CAP;
+            $q->limit($cap)->each(function (VideoRole $role) use (&$urls) {
+                $this->pushUrl($urls, $this->pathOf((string) $role->url, '/role/'.$role->id));
+            });
+        });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectTagUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_tags'), function () use (&$urls, $filter) {
+            $q = VideoTagModel::query()->orderByDesc('id')->limit(self::LIST_CAP);
             if (Schema::hasColumn('video_tags', 'status')) {
                 $q->where('status', 1);
             }
+            $this->constrainWhen($q, 'video_tags', $filter['when']);
             $q->each(function (VideoTagModel $tag) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf((string) $tag->url, '/tag/'.$tag->id));
             });
         });
-        $this->collectGroup($urls, in_array($scope, ['all', 'art'], true) && Schema::hasTable('video_arts'), function () use (&$urls) {
-            $q = VideoArt::query()->orderByDesc('id')->limit(200);
-            if (Schema::hasColumn('video_arts', 'status')) {
-                $q->where('status', 1);
-            }
-            $q->each(function (VideoArt $art) use (&$urls) {
-                $this->pushUrl($urls, $this->pathOf((string) $art->url, '/art/'.$art->id));
-            });
-        });
-        $this->collectGroup($urls, in_array($scope, ['all', 'website'], true) && Schema::hasTable('video_websites'), function () use (&$urls) {
-            $q = VideoWebsite::query()->orderByDesc('id')->limit(200);
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     */
+    protected function collectWebsiteUrls(array &$urls, array $filter): void
+    {
+        $this->collectGroup($urls, Schema::hasTable('video_websites'), function () use (&$urls, $filter) {
+            $q = VideoWebsite::query()->orderByDesc('id')->limit(self::LIST_CAP);
             if (Schema::hasColumn('video_websites', 'status')) {
                 $q->where('status', 1);
             }
+            $this->constrainWhen($q, 'video_websites', $filter['when']);
             $q->each(function (VideoWebsite $website) use (&$urls) {
                 $this->pushUrl($urls, $this->pathOf(vod_url('website', ['id' => $website->id]), '/website/'.$website->id));
             });
         });
+    }
 
+    protected function constrainMid(\Illuminate\Database\Eloquent\Builder $query, int $mid): void
+    {
+        if (! Schema::hasColumn('video_types', 'mid')) {
+            if ($mid !== 1) {
+                $query->whereRaw('0 = 1');
+            }
+
+            return;
+        }
+        if ($mid === 1) {
+            $query->where(function ($inner) {
+                $inner->where('mid', 1)->orWhere('mid', 0)->orWhereNull('mid');
+            });
+
+            return;
+        }
+        $query->where('mid', $mid);
+    }
+
+    protected function constrainWhen(\Illuminate\Database\Eloquent\Builder $query, string $table, string $when): void
+    {
+        if ($when !== 'today') {
+            return;
+        }
+        if (! Schema::hasColumn($table, 'updated_at')) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+        $query->where('updated_at', '>=', $this->todayStart());
+    }
+
+    protected function todayStart(): int
+    {
+        return (int) strtotime('today');
+    }
+
+    /** @param list<string> $urls @return list<string> */
+    protected function uniqueUrls(array $urls): array
+    {
         $out = [];
         foreach ($urls as $url) {
             $norm = $this->normalizeUrl((string) $url);
@@ -405,6 +768,110 @@ class DiskHtmlService
         }
 
         return array_values(array_unique($out));
+    }
+
+    /** @param list<string> $urls @return list<string> */
+    protected function filterMissing(array $urls): array
+    {
+        $root = $this->rootPath();
+        $out = [];
+        foreach ($urls as $url) {
+            $norm = $this->normalizeUrl((string) $url);
+            if ($norm === null) {
+                continue;
+            }
+            if (! is_file($this->pathForUrl($root, $norm))) {
+                $out[] = $norm;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array{id:int,name:string,parent_id:int,depth:int}>
+     */
+    protected function typeCatalog(int $mid): array
+    {
+        try {
+            if (! Schema::hasTable('video_types')) {
+                return [];
+            }
+            if ($mid !== 1 && ! Schema::hasColumn('video_types', 'mid')) {
+                return [];
+            }
+            $q = VideoTypeModel::query()->active()->orderByDesc('sort')->orderBy('id');
+            $this->constrainMid($q, $mid);
+            $rows = $q->get(['id', 'name', 'parent_id'])->map(function (VideoTypeModel $row) {
+                return [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'parent_id' => (int) ($row->parent_id ?? 0),
+                ];
+            })->all();
+
+            return $this->treeTypes($rows);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * @param  list<array{id:int,name:string,parent_id:int}>  $rows
+     * @return list<array{id:int,name:string,parent_id:int,depth:int}>
+     */
+    protected function treeTypes(array $rows): array
+    {
+        $byParent = [];
+        foreach ($rows as $row) {
+            $byParent[(int) $row['parent_id']][] = $row;
+        }
+        $out = [];
+        $walk = function (int $pid, int $depth) use (&$walk, &$out, $byParent): void {
+            foreach ($byParent[$pid] ?? [] as $row) {
+                $row['depth'] = $depth;
+                $out[] = $row;
+                $walk((int) $row['id'], $depth + 1);
+            }
+        };
+        $walk(0, 0);
+        $seen = [];
+        foreach ($out as $row) {
+            $seen[(int) $row['id']] = true;
+        }
+        foreach ($rows as $row) {
+            if (! isset($seen[(int) $row['id']])) {
+                $row['depth'] = 0;
+                $out[] = $row;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  class-string  $class
+     * @return list<array{id:int,name:string}>
+     */
+    protected function pickNameRows(string $table, string $class, int $limit): array
+    {
+        try {
+            if (! Schema::hasTable($table)) {
+                return [];
+            }
+            $q = $class::query()->orderByDesc('id')->limit($limit);
+            if (Schema::hasColumn($table, 'status')) {
+                $q->where('status', 1);
+            }
+            $out = [];
+            foreach ($q->get(['id', 'name']) as $row) {
+                $out[] = ['id' => (int) $row->id, 'name' => (string) $row->name];
+            }
+
+            return $out;
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** @param  list<string>  $urls */

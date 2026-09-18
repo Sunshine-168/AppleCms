@@ -12,6 +12,7 @@
         @else
             <a href="{{ url('/member/login') }}">登录后收藏</a>
         @endauth
+        @include('themes.default.partials.share-link')
     </p>
     <div class="desc">@vodSubstr(['name' => $video->description, 'len' => 400])</div>
     @php $roleList = $roles ?? collect(); @endphp

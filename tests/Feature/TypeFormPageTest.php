@@ -9,6 +9,7 @@ class TypeFormPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->actingAsAdmin();
         if (! is_dir(storage_path('app'))) {
             mkdir(storage_path('app'), 0777, true);
         }
@@ -28,6 +29,8 @@ class TypeFormPageTest extends TestCase
         $this->assertStringContainsString('保存并添加下级', $html);
         $this->assertStringContainsString('name="name"', $html);
         $this->assertStringContainsString('顶级（不挂在任何分类下）', $html);
+        $this->assertStringNotContainsString('用来放什么', $html);
+        $this->assertStringNotContainsString('保存并写文章', $html);
         $this->assertStringNotContainsString('ui-dialog', $html);
         $this->assertStringNotContainsString('iframe', $html);
         $this->assertStringNotContainsString('video-type-dialog-tpl', $html);

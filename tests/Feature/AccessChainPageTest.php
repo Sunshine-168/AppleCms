@@ -26,6 +26,10 @@ class AccessChainPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
+        $this->assertStringContainsString('access-board', $html);
+        $this->assertStringContainsString('id="admin-content"', $html);
+        $this->assertStringContainsString('id="admin-page-scripts"', $html);
+        $this->assertStringNotContainsString('access-chip-slot', $html);
         $this->assertStringContainsString('access-chain', $html);
         $this->assertStringContainsString('class="is-on">菜单</a>', $html);
         $this->assertStringContainsString('对齐当前工作区', $html);

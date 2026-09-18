@@ -16,6 +16,7 @@ class AdminNav
         return [
             ['id' => 'work', 'label' => 'nav.overview', 'home' => '/admin/welcome'],
             ['id' => 'vod', 'label' => 'nav.videos', 'home' => '/admin/video'],
+            ['id' => 'art', 'label' => 'nav.arts', 'home' => '/admin/video/arts'],
             ['id' => 'collect', 'label' => 'nav.collects', 'home' => '/admin/video/collects'],
             ['id' => 'member', 'label' => 'nav.members', 'home' => '/admin/video/members'],
             ['id' => 'site', 'label' => 'nav.site', 'home' => '/admin/video/settings'],
@@ -35,16 +36,6 @@ class AdminNav
                 $best = $prefix;
                 $module = $id;
             }
-        }
-        $pluginBest = '';
-        foreach (self::pluginPrefixes() as $prefix) {
-            $hit = $path === $prefix || str_starts_with($path, $prefix.'/');
-            if ($hit && strlen($prefix) >= strlen($pluginBest)) {
-                $pluginBest = $prefix;
-            }
-        }
-        if ($pluginBest !== '' && strlen($pluginBest) >= strlen($best)) {
-            return 'plugin';
         }
 
         return $module;
@@ -69,25 +60,39 @@ class AdminNav
         $groups = $all[$module] ?? $all['work'];
         $host = self::host();
         if ($module === 'plugin') {
-            $groups[0]['items'] = array_merge($groups[0]['items'] ?? [], $host->allSidebarFoldItems());
+            $groups[0]['items'] = array_merge(
+                $groups[0]['items'] ?? [],
+                $host->allSidebarFoldItems()
+            );
 
-            return $groups;
+            return self::flattenNavGroups(self::hideCoreWhenPlugin($groups));
         }
         $pluginGroup = [
             'vod' => 'content',
             'member' => 'users',
             'site' => 'site',
             'system' => 'system',
+            'collect' => 'collect',
         ][$module] ?? '';
-        foreach ($groups as &$group) {
-            if ($pluginGroup === '' || empty($group['fold'])) {
-                continue;
-            }
-            $group['fold']['items'] = array_merge($group['fold']['items'], $host->sidebarFoldItems($pluginGroup));
+        if ($pluginGroup === '') {
+            return self::flattenNavGroups($groups);
         }
-        unset($group);
+        $pluginItems = $host->sidebarFoldItems($pluginGroup);
+        if ($pluginItems !== []) {
+            if ($module === 'site') {
+                $groups = self::spliceSitePluginItems($groups, $pluginItems);
+            } elseif ($module === 'member') {
+                $groups = self::spliceMemberPluginItems($groups, $pluginItems);
+            } elseif ($module === 'collect') {
+                $groups = self::spliceCollectPluginItems($groups, $pluginItems);
+            } elseif ($module === 'vod') {
+                $groups = self::spliceVodPluginItems($groups, $pluginItems);
+            } else {
+                $groups = self::appendPluginItems($groups, $pluginItems);
+            }
+        }
 
-        return $groups;
+        return self::flattenNavGroups(self::hideCoreWhenPlugin($groups));
     }
 
     /**
@@ -219,9 +224,103 @@ class AdminNav
 
     public static function foldOpen(array $group, string $activeUrl): bool
     {
+        $uri = self::requestUri();
         foreach ($group['fold']['items'] ?? [] as $item) {
-            $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
-            if ($href !== '' && ($href === $activeUrl || str_starts_with($activeUrl, $href.'/'))) {
+            if (self::foldItemMatches($item, $activeUrl, $uri)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function requestUri(): string
+    {
+        $uri = (string) request()->getRequestUri();
+        $uri = explode('#', $uri)[0];
+        if ($uri === '') {
+            return '/';
+        }
+        if ($uri[0] !== '/') {
+            $uri = '/'.$uri;
+        }
+
+        return $uri;
+    }
+
+    public static function hrefIsActive(string $href, ?string $current = null): bool
+    {
+        $current = $current ?? self::requestUri();
+        [$hrefPath, $hrefQuery] = self::splitUri($href);
+        [$curPath, $curQuery] = self::splitUri($current);
+        if ($hrefPath === '' || $hrefPath !== $curPath) {
+            return false;
+        }
+        $hrefDesk = strtolower(trim((string) ($hrefQuery['desk'] ?? '')));
+        $curDesk = strtolower(trim((string) ($curQuery['desk'] ?? '')));
+        if (in_array($hrefDesk, ['works', 'tasks'], true)) {
+            $hrefDesk = '';
+        }
+        if (in_array($curDesk, ['works', 'tasks'], true)) {
+            $curDesk = '';
+        }
+        if ($hrefDesk !== '') {
+            return $hrefDesk === $curDesk;
+        }
+
+        return true;
+    }
+
+    public static function itemIsActive(array $item, ?string $current = null): bool
+    {
+        $current = $current ?? self::requestUri();
+        if (self::hrefIsActive((string) ($item['url'] ?? ''), $current)) {
+            return true;
+        }
+        foreach ($item['children'] ?? [] as $child) {
+            if (is_array($child) && self::itemIsActive($child, $current)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return array{0:string,1:array<string, string>} */
+    private static function splitUri(string $uri): array
+    {
+        $uri = explode('#', $uri)[0];
+        $parts = explode('?', $uri, 2);
+        $path = $parts[0];
+        if ($path === '') {
+            $path = '/';
+        }
+        if ($path[0] !== '/') {
+            $path = '/'.$path;
+        }
+        $path = rtrim($path, '/');
+        if ($path === '') {
+            $path = '/';
+        }
+        $query = [];
+        if (isset($parts[1]) && $parts[1] !== '') {
+            parse_str($parts[1], $query);
+        }
+
+        return [$path, is_array($query) ? $query : []];
+    }
+
+    private static function foldItemMatches(array $item, string $activeUrl, string $uri): bool
+    {
+        $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+        if ($href !== '' && ($href === $activeUrl || str_starts_with($activeUrl, $href.'/'))) {
+            return true;
+        }
+        if (self::hrefIsActive((string) ($item['url'] ?? ''), $uri)) {
+            return true;
+        }
+        foreach ($item['children'] ?? [] as $child) {
+            if (is_array($child) && self::foldItemMatches($child, $activeUrl, $uri)) {
                 return true;
             }
         }
@@ -257,6 +356,10 @@ class AdminNav
                 'title' => 'more.complete',
                 'hint' => 'more.complete_hint',
                 'items' => [
+                    self::cat('/admin/video/arts', 'item.arts', 'hint.arts'),
+                    self::cat('/admin/video/art-types', 'item.art_types', 'hint.art_types'),
+                    self::cat('/admin/video/art-tags', 'item.art_tags', 'hint.art_tags'),
+                    self::cat('/admin/video/art-recycle', 'item.art_recycle', 'hint.art_recycle'),
                     self::cat('/admin/video/searchwords', 'item.searchwords', 'hint.searchwords'),
                     self::cat('/admin/video/tools/images', 'item.images', 'hint.images'),
                     self::cat('/admin/video/tools/players', 'item.batch_players', 'hint.batch_players'),
@@ -296,6 +399,7 @@ class AdminNav
                 'hint' => 'more.site_hint',
                 'items' => [
                     self::cat('/admin/video/settings', 'nav.settings', 'hint.settings', '', 'hint.settings_keys'),
+                    self::cat('/admin/video/theme', 'item.theme_config', 'hint.theme_config'),
                     self::cat('/admin/video/rewrite', 'item.rewrite', 'hint.rewrite'),
                     self::cat('/admin/video/domains', 'item.domains', 'hint.domains'),
                     self::cat('/admin/video/push', 'item.push', 'hint.push'),
@@ -331,6 +435,7 @@ class AdminNav
                     self::cat('/admin/video/tools/annex', 'item.annex', 'hint.annex'),
                     self::cat('/admin/system/tools/cache', 'item.cache', 'hint.cache'),
                     self::cat('/admin/system/tools/schedule', 'item.schedule', 'hint.schedule'),
+                    self::cat('/admin/system/runtime', 'item.runtime', 'hint.runtime'),
                     self::cat('/admin/system/monitor/login-logs', 'nav.logs', 'hint.logs'),
                     self::cat('/admin/system/database/backup', 'nav.database', 'hint.database', '', 'hint.database_keys'),
                     self::cat('/admin/system/shortcut', 'item.shortcut', 'hint.shortcut'),
@@ -407,6 +512,14 @@ class AdminNav
                     ['url' => '/admin/plugins', 'icon' => 'puzzle-piece', 'label' => 'item.plugins', 'force' => true],
                 ],
             ]],
+            'art' => [[
+                'items' => [
+                    ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => 'nav.arts'],
+                    ['url' => '/admin/video/art-types', 'icon' => 'sitemap', 'label' => 'nav.art_types'],
+                    ['url' => '/admin/video/art-tags', 'icon' => 'tags', 'label' => 'nav.art_tags'],
+                    ['url' => '/admin/video/art-recycle', 'icon' => 'trash-alt', 'label' => 'nav.art_recycle'],
+                ],
+            ]],
             'vod' => [[
                 'items' => [
                     ['url' => '/admin/video', 'icon' => 'video', 'label' => 'nav.videos'],
@@ -419,7 +532,6 @@ class AdminNav
                     'label' => 'nav.more',
                     'items' => [
                         ['url' => '/admin/video/tags', 'icon' => 'tags', 'label' => 'nav.tags'],
-                        ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => 'nav.arts'],
                         ['url' => '/admin/video/slides', 'icon' => 'images', 'label' => 'nav.slides'],
                         ['url' => '/admin/video/tools/recycle', 'icon' => 'trash-alt', 'label' => 'nav.recycle'],
                         ['url' => '/admin/video/roles', 'icon' => 'theater-masks', 'label' => 'item.roles'],
@@ -460,6 +572,7 @@ class AdminNav
                 'fold' => [
                     'label' => 'nav.more',
                     'items' => [
+                        ['url' => '/admin/video/activity', 'icon' => 'tasks', 'label' => 'nav.activity'],
                         ['url' => '/admin/video/withdraws', 'icon' => 'hand-holding-usd', 'label' => 'item.withdraws'],
                         ['url' => '/admin/video/invites', 'icon' => 'ticket-alt', 'label' => 'item.invites'],
                         ['url' => '/admin/video/favorites', 'icon' => 'star', 'label' => 'item.favorites'],
@@ -471,6 +584,7 @@ class AdminNav
             'site' => [[
                 'items' => [
                     ['url' => '/admin/video/settings', 'icon' => 'cog', 'label' => 'nav.settings'],
+                    ['url' => '/admin/video/theme', 'icon' => 'paint-brush', 'label' => 'nav.theme_config'],
                     ['url' => '/admin/video/templates', 'icon' => 'palette', 'label' => 'nav.templates'],
                     ['url' => '/admin/video/ads', 'icon' => 'bullhorn', 'label' => 'nav.ads'],
                     ['url' => '/admin/video/players', 'icon' => 'play-circle', 'label' => 'nav.players'],
@@ -497,6 +611,7 @@ class AdminNav
                     ['url' => '/admin/system/roles', 'icon' => 'user-shield', 'label' => 'nav.roles'],
                     ['url' => '/admin/system/menus', 'icon' => 'sitemap', 'label' => 'nav.menus'],
                     ['url' => '/admin/system/monitor/login-logs', 'icon' => 'history', 'label' => 'nav.logs'],
+                    ['url' => '/admin/system/runtime', 'icon' => 'heartbeat', 'label' => 'nav.runtime'],
                     ['url' => '/admin/system/database/backup', 'icon' => 'database', 'label' => 'nav.database'],
                 ],
                 'fold' => [
@@ -518,7 +633,7 @@ class AdminNav
     /** @return array<string, string> */
     private static function modulePrefixes(): array
     {
-        return [
+        $core = [
             '/admin/video/config/interface' => 'collect',
             '/admin/video/config/collect' => 'collect',
             '/admin/video/config/player' => 'site',
@@ -538,18 +653,34 @@ class AdminNav
             '/admin/video/unions' => 'collect',
             '/admin/video/audits' => 'collect',
             '/admin/video/cj' => 'collect',
+            '/admin/video/art-recycle' => 'art',
+            '/admin/video/art-tags' => 'art',
+            '/admin/video/art-types' => 'art',
+            '/admin/video/arts' => 'art',
             '/admin/video/members' => 'member',
             '/admin/video/orders' => 'member',
             '/admin/video/groups' => 'member',
             '/admin/video/cards' => 'member',
             '/admin/video/plogs' => 'member',
+            '/admin/video/activity' => 'member',
+            '/admin/video/task_logs' => 'member',
+            '/admin/video/signs' => 'member',
+            '/admin/video/sign_milestones' => 'member',
             '/admin/video/withdraws' => 'member',
             '/admin/video/invites' => 'member',
             '/admin/video/favorites' => 'member',
             '/admin/video/pms' => 'member',
             '/admin/video/notifies' => 'member',
             '/admin/video/settings' => 'site',
+            '/admin/video/theme' => 'site',
             '/admin/video/templates' => 'site',
+            '/admin/video/adverts' => 'site',
+            '/admin/video/flinks' => 'site',
+            '/admin/video/publish_pages' => 'site',
+            '/admin/video/mall_goods' => 'member',
+            '/admin/video/mall_orders' => 'member',
+            '/admin/video/mangas' => 'vod',
+            '/admin/video/manga_chapters' => 'vod',
             '/admin/video/ads' => 'site',
             '/admin/video/players' => 'site',
             '/admin/video/links' => 'site',
@@ -566,6 +697,7 @@ class AdminNav
             '/admin/video/accesslogs' => 'system',
             '/admin/video/botlogs' => 'system',
             '/admin/video/apidoc' => 'system',
+            '/admin/system/runtime' => 'system',
             '/admin/system/shortcut' => 'work',
             '/admin/system' => 'system',
             '/admin/user' => 'system',
@@ -577,21 +709,51 @@ class AdminNav
             '/admin/video' => 'vod',
             '/admin' => 'work',
         ];
+
+        return self::withPluginWorkspacePrefixes($core);
     }
 
-    /** @return list<string> */
-    private static function pluginPrefixes(): array
+    /**
+     * 插件台面跟它的侧栏分组走，不要被顶栏「插件」抢走。
+     *
+     * @param  array<string, string>  $core
+     * @return array<string, string>
+     */
+    private static function withPluginWorkspacePrefixes(array $core): array
     {
-        $out = ['/admin/plugins'];
-        foreach (self::host()->allSidebarFoldItems() as $item) {
+        $map = [
+            'content' => 'vod',
+            'users' => 'member',
+            'site' => 'site',
+            'system' => 'system',
+            'collect' => 'collect',
+        ];
+        $add = static function (array $item, string $module) use (&$core, &$add): void {
             $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
             $href = rtrim($href, '/');
-            if ($href !== '') {
-                $out[] = $href[0] === '/' ? $href : '/'.$href;
+            if ($href === '') {
+                return;
+            }
+            $href = $href[0] === '/' ? $href : '/'.$href;
+            if (! isset($core[$href])) {
+                $core[$href] = $module;
+            }
+            foreach ($item['children'] ?? [] as $child) {
+                if (is_array($child)) {
+                    $add($child, $module);
+                }
+            }
+        };
+        $host = self::host();
+        foreach ($map as $group => $module) {
+            foreach ($host->sidebarFoldItems($group) as $item) {
+                if (is_array($item)) {
+                    $add($item, $module);
+                }
             }
         }
 
-        return array_values(array_unique($out));
+        return $core;
     }
 
     private static function normPath(?string $path): string
@@ -608,6 +770,272 @@ class AdminNav
         $path = rtrim($path, '/');
 
         return $path === '' ? '/' : $path;
+    }
+
+    /**
+     * 侧栏只占一行。台面切换用页内芯片，不再向下展开子项。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @return list<array<string, mixed>>
+     */
+    private static function flattenNavGroups(array $groups): array
+    {
+        foreach ($groups as &$group) {
+            if (! is_array($group)) {
+                continue;
+            }
+            if (! empty($group['items']) && is_array($group['items'])) {
+                $group['items'] = self::withoutNavChildren($group['items']);
+            }
+            if (! empty($group['fold']['items']) && is_array($group['fold']['items'])) {
+                $group['fold']['items'] = self::withoutNavChildren($group['fold']['items']);
+            }
+        }
+        unset($group);
+
+        return $groups;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private static function withoutNavChildren(array $items): array
+    {
+        $out = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            unset($item['children']);
+            $out[] = $item;
+        }
+
+        return $out;
+    }
+
+    /**
+     * 影片栏本身就是片库、评论的位置。漫画启用后排进主列表；聊天室、弹幕进「更多」，不再另开一栏「插件」。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @param  list<array<string, mixed>>  $pluginItems
+     * @return list<array<string, mixed>>
+     */
+    private static function spliceVodPluginItems(array $groups, array $pluginItems): array
+    {
+        $flat = self::withoutNavChildren($pluginItems);
+        $byPath = [];
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $byPath[$path] = $item;
+        }
+        $chat = $byPath['/admin/video/chat_messages'] ?? null;
+        $danmaku = $byPath['/admin/video/danmaku'] ?? null;
+        $manga = $byPath['/admin/video/mangas'] ?? null;
+        $used = [];
+        $out = [];
+        foreach ($groups[0]['items'] ?? [] as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $out[] = $item;
+            if ($path === '/admin/video/actors' && $manga !== null) {
+                $out[] = $manga;
+                $used['/admin/video/mangas'] = true;
+            }
+        }
+        $foldExtra = [];
+        if ($chat !== null) {
+            $foldExtra[] = $chat;
+            $used['/admin/video/chat_messages'] = true;
+        }
+        if ($danmaku !== null) {
+            $foldExtra[] = $danmaku;
+            $used['/admin/video/danmaku'] = true;
+        }
+        if ($foldExtra !== []) {
+            $groups[0]['fold']['items'] = array_merge($foldExtra, $groups[0]['fold']['items'] ?? []);
+        }
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            if (! isset($used[$path])) {
+                $out[] = $item;
+            }
+        }
+        $groups[0]['items'] = $out;
+
+        return $groups;
+    }
+
+    /**
+     * 站点栏本身就是广告、友链的位置。插件启用后顶掉核心入口，不再另开一栏「插件」。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @param  list<array<string, mixed>>  $pluginItems
+     * @return list<array<string, mixed>>
+     */
+    private static function spliceSitePluginItems(array $groups, array $pluginItems): array
+    {
+        $flat = self::withoutNavChildren($pluginItems);
+        $byPath = [];
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $byPath[$path] = $item;
+        }
+        $ads = $byPath['/admin/video/adverts'] ?? null;
+        $links = $byPath['/admin/video/flinks'] ?? null;
+        $used = [];
+        $out = [];
+        foreach ($groups[0]['items'] ?? [] as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            if ($path === '/admin/video/players' && $ads !== null) {
+                $out[] = $ads;
+                $used['/admin/video/adverts'] = true;
+            }
+            $out[] = $item;
+            if ($path === '/admin/video/players' && $links !== null) {
+                $out[] = $links;
+                $used['/admin/video/flinks'] = true;
+            }
+        }
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            if (! isset($used[$path])) {
+                $out[] = $item;
+            }
+        }
+        $groups[0]['items'] = $out;
+
+        return $groups;
+    }
+
+    /**
+     * 会员栏本身就是积分、商城的位置。优惠券进「更多」，不再另开一栏「插件」。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @param  list<array<string, mixed>>  $pluginItems
+     * @return list<array<string, mixed>>
+     */
+    private static function spliceMemberPluginItems(array $groups, array $pluginItems): array
+    {
+        $flat = self::withoutNavChildren($pluginItems);
+        $byPath = [];
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $byPath[$path] = $item;
+        }
+        $coupons = $byPath['/admin/video/coupons'] ?? null;
+        $mall = $byPath['/admin/video/mall_goods'] ?? null;
+        $used = [];
+        $out = [];
+        foreach ($groups[0]['items'] ?? [] as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $out[] = $item;
+            if ($path === '/admin/video/plogs' && $mall !== null) {
+                $out[] = $mall;
+                $used['/admin/video/mall_goods'] = true;
+            }
+        }
+        if ($coupons !== null) {
+            $foldItems = $groups[0]['fold']['items'] ?? [];
+            array_unshift($foldItems, $coupons);
+            $groups[0]['fold']['items'] = $foldItems;
+            $used['/admin/video/coupons'] = true;
+        }
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            if (! isset($used[$path])) {
+                $out[] = $item;
+            }
+        }
+        $groups[0]['items'] = $out;
+
+        return $groups;
+    }
+
+    /**
+     * 网站采集属于采集。关掉插件后侧栏不再出现。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @param  list<array<string, mixed>>  $pluginItems
+     * @return list<array<string, mixed>>
+     */
+    private static function spliceCollectPluginItems(array $groups, array $pluginItems): array
+    {
+        $flat = self::withoutNavChildren($pluginItems);
+        $byPath = [];
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $byPath[$path] = $item;
+        }
+        $cj = $byPath['/admin/video/cj'] ?? null;
+        $used = [];
+        $out = [];
+        foreach ($groups[0]['items'] ?? [] as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $out[] = $item;
+            if ($path === '/admin/video/collects' && $cj !== null) {
+                $out[] = $cj;
+                $used['/admin/video/cj'] = true;
+            }
+        }
+        foreach ($flat as $item) {
+            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            if (! isset($used[$path])) {
+                $out[] = $item;
+            }
+        }
+        $groups[0]['items'] = $out;
+
+        return $groups;
+    }
+
+    /**
+     * 功能工作区不出现「插件」分组。对不上锚点的项接到主列表末尾。
+     *
+     * @param  list<array<string, mixed>>  $groups
+     * @param  list<array<string, mixed>>  $pluginItems
+     * @return list<array<string, mixed>>
+     */
+    private static function appendPluginItems(array $groups, array $pluginItems): array
+    {
+        $groups[0]['items'] = array_merge($groups[0]['items'] ?? [], self::withoutNavChildren($pluginItems));
+
+        return $groups;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $groups
+     * @return list<array<string, mixed>>
+     */
+    private static function hideCoreWhenPlugin(array $groups): array
+    {
+        $host = self::host();
+        $skip = [];
+        if ($host->findModule('flinks') !== null) {
+            $skip['/admin/video/links'] = true;
+        }
+        if ($host->findModule('adverts') !== null) {
+            $skip['/admin/video/ads'] = true;
+        }
+        if ($skip === []) {
+            return $groups;
+        }
+        $keep = static function (array $item) use ($skip): bool {
+            $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $href = rtrim($href, '/') ?: '/';
+
+            return ! isset($skip[$href]);
+        };
+        foreach ($groups as &$group) {
+            if (isset($group['items']) && is_array($group['items'])) {
+                $group['items'] = array_values(array_filter($group['items'], $keep));
+            }
+            if (isset($group['fold']['items']) && is_array($group['fold']['items'])) {
+                $group['fold']['items'] = array_values(array_filter($group['fold']['items'], $keep));
+            }
+        }
+        unset($group);
+
+        return $groups;
     }
 
     private static function host(): PluginHost

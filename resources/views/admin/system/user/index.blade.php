@@ -19,7 +19,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel admin-user-index">
+<div class="card card-panel admin-user-index access-board">
     <div class="card-header">
         <span>管理员 <em id="admin-user-count"></em></span>
     </div>
@@ -59,7 +59,7 @@
             @endforeach
             <button type="button" class="chip" data-queue="kind" data-value="never">从未登录@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
         </div>
-        <div id="admin-user-table"></div>
+        <div id="admin-user-table" class="access-table"></div>
     </div>
 </div>
 <template id="admin-user-dialog-tpl">

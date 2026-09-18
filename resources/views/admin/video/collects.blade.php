@@ -2,7 +2,7 @@
 @section('title', admin_t('page.collects'))
 
 @section('plain')
-<div class="card card-panel collect-index">
+<div class="card card-panel collect-index desk-board">
     <div class="card-header">
         <span>采集源</span>
         <div>
@@ -25,7 +25,7 @@
             <button type="button" class="chip" data-queue="has_error" data-value="1">有失败</button>
         </div>
         <p class="muted recycle-lead">苹果 CMS 接口填 <code>api.php/provide/vod/</code>。先绑定分类，再采当天；未绑定的分类会跳过。不确定接口先去「<a href="/admin/video/tools/hub">试试接口</a>」，现成的站从「<a href="/admin/video/unions">推荐资源</a>」接入。</p>
-        <div id="collect-source-table"></div>
+        <div id="collect-source-table" class="desk-table"></div>
     </div>
 </div>
 <template id="collect-source-dialog-tpl">

@@ -2,7 +2,7 @@
 @section('title', admin_t('nav.menus'))
 
 @section('plain')
-<div class="card card-panel menu-index">
+<div class="card card-panel menu-index access-board">
     <div class="card-header">
         <span>{{ admin_t('access.step_menus') }} <em id="menu-count"></em></span>
     </div>
@@ -20,7 +20,7 @@
             <button type="submit" class="btn btn-sm" id="menu-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="menu-reset-btn">重置</button>
         </form>
-        <div id="menu-table"></div>
+        <div id="menu-table" class="access-table"></div>
     </div>
 </div>
 <template id="menu-dialog-tpl">

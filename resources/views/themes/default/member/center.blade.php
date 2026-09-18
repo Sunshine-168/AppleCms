@@ -15,11 +15,13 @@
         <button type="submit">生成邀请码</button>
     </form>
     <p>
-        <a href="{{ url('/member/favorites') }}">我的收藏</a>
+        <a href="{{ url('/member/activity') }}">用户活动</a>
+        · <a href="{{ url('/member/favorites') }}">我的收藏</a>
         · <a href="{{ url('/member/history') }}">观看历史</a>
         · <a href="{{ url('/member/inbox') }}">站内信</a>
         @includeIf('mall::member')
         @includeIf('pay::member')
+        @includeIf('coupon::member')
     </p>
     <h2>卡密充值</h2>
     <form method="post" action="{{ url('/member/redeem') }}">

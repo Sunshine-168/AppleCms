@@ -4,8 +4,8 @@
     "name_en": "Chat room",
     "description": "播放页本片讨论。关掉后入口消失。不是弹幕，也不走弹幕表。",
     "description_en": "Per-title chat on the play page. Not danmaku and not the danmaku table.",
-    "version": "1.0.0",
-    "enabled": false,
+    "version": "1.1.0",
+    "enabled": true,
     "capability": "ready",
     "group": "play",
     "provider": "Plugins\\Chatroom\\ChatroomServiceProvider",
@@ -13,19 +13,25 @@
         "extra_pages": {
             "chatroom": {
                 "title": "聊天室",
-                "hint": "关闭后播放页不再出现本片讨论。弹幕插件单独开关。",
+                "hint": "关闭后播放页不再出现本片讨论。弹幕插件单独开关。违禁词走站点设置，没有独立 IP 黑名单。",
                 "fields": [
                     {
                         "name": "chatroom_enabled",
                         "label": "聊天室",
                         "type": "select",
-                        "options": {"1": "开启", "0": "关闭"}
+                        "options": {
+                            "1": "开启",
+                            "0": "关闭"
+                        }
                     },
                     {
                         "name": "chatroom_login",
                         "label": "发言需登录",
                         "type": "select",
-                        "options": {"0": "否", "1": "是"}
+                        "options": {
+                            "0": "否",
+                            "1": "是"
+                        }
                     }
                 ]
             }
@@ -33,31 +39,59 @@
         "modules": {
             "chat_messages": {
                 "title": "聊天室",
-                "hint": "按影片审发言。隐藏后前台列表不再显示。",
+                "hint": "播放页本片讨论。后台只审显示、隐藏或删除，不能手添。",
                 "model": "Plugins\\Chatroom\\Models\\ChatMessage",
                 "search": "text",
+                "view": "chatroom::admin.board",
+                "handler": "Plugins\\Chatroom\\Services\\ChatroomAdmin",
+                "desks": ["messages", "settings"],
+                "default_desk": "messages",
                 "fields": [
-                    {"name": "video_id", "label": "影片ID", "type": "number"},
-                    {"name": "member_id", "label": "会员ID", "type": "number"},
-                    {"name": "name", "label": "昵称", "type": "text"},
-                    {"name": "text", "label": "内容", "type": "textarea"},
-                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "显示", "0": "隐藏"}}
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "显示",
+                            "0": "隐藏"
+                        }
+                    }
                 ],
-                "cols": ["id", "video_id", "name", "text", "ip", "status", "created_at"]
+                "cols": [
+                    "id",
+                    "video_id",
+                    "name",
+                    "text",
+                    "report",
+                    "status",
+                    "created_at"
+                ]
             }
         },
         "sidebar_fold": {
             "content": [
-                {"url": "/admin/video/chat_messages", "icon": "comments", "label": "nav.chatroom"}
+                {
+                    "url": "/admin/video/chat_messages",
+                    "icon": "comments",
+                    "label": "nav.chatroom"
+                }
             ]
         },
         "catalog": {
             "more.interact": [
-                {"url": "/admin/video/chat_messages", "label": "item.chatroom", "hint": "hint.chatroom", "tag": "plugin"}
+                {
+                    "url": "/admin/video/chat_messages",
+                    "label": "item.chatroom",
+                    "hint": "hint.chatroom",
+                    "tag": "plugin"
+                }
             ]
         },
         "settings_links": [
-            {"url": "/admin/video/config/chatroom", "label": "item.config_chatroom"}
+            {
+                "url": "/admin/video/chat_messages?desk=settings",
+                "label": "item.config_chatroom"
+            }
         ]
     }
 }

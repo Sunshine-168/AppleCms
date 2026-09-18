@@ -156,8 +156,10 @@ body.mac-login {
 }
 .mac-captcha .mac-control { flex: 1; }
 .mac-captcha-q {
-    flex: 0 0 132px;
-    height: 40px;
+    flex: 0 0 160px;
+    height: 48px;
+    padding: 0;
+    overflow: hidden;
     border: 1px solid #cfeedf;
     border-radius: 4px;
     background: #ecfbf4;
@@ -167,6 +169,12 @@ body.mac-login {
     font-weight: 600;
     cursor: pointer;
     letter-spacing: .02em;
+}
+.mac-captcha-q img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .mac-captcha-q:hover { background: #dff7eb; }
 
@@ -363,7 +371,7 @@ body.mac-login {
 @media (max-width: 420px) {
     .mac-login-card h1 { margin-bottom: 20px; font-size: 18px; }
     .mac-field { margin-bottom: 16px; }
-    .mac-captcha-q { flex-basis: 108px; font-size: 14px; }
+    .mac-captcha-q { flex-basis: 160px; height: 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

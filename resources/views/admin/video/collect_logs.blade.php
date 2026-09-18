@@ -12,7 +12,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel collect-log-index">
+<div class="card card-panel collect-log-index desk-board">
     <div class="card-header">
         <span>采集日志 <em id="clog-count"></em></span>
     </div>
@@ -38,7 +38,7 @@
             <button type="button" class="btn btn-danger btn-sm" id="clog-batch-del">删除记录</button>
             <button type="button" class="btn btn-muted btn-sm" id="clog-batch-clear">取消选择</button>
         </div>
-        <div id="clog-table"></div>
+        <div id="clog-table" class="desk-table"></div>
     </div>
 </div>
 @endsection

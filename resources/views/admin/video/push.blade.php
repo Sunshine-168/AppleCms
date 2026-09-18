@@ -89,7 +89,7 @@
 
         <h3>主动推一批</h3>
         <p class="muted field-hint">按最新发布的往外推。一次最多 100 条。失败时会把接口原话报出来。</p>
-        <div class="field-inline push-limit-row">
+        <div class="push-limit-row">
             <label for="push-limit">每次条数</label>
             <select id="push-limit">
                 <option value="20">20</option>

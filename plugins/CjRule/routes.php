@@ -8,4 +8,5 @@ use Plugins\CjRule\Http\Controllers\CjRuleController;
 Route::middleware(['web', AdminIpAllow::class, AdminAuth::class])->group(function () {
     Route::post('/admin/video/cj/try', [CjRuleController::class, 'tryRun']);
     Route::post('/admin/video/cj/run', [CjRuleController::class, 'import']);
+    Route::post('/admin/video/cj/toggle', [CjRuleController::class, 'toggle']);
 });

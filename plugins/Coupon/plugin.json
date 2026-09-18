@@ -2,59 +2,34 @@
     "id": "coupon",
     "name": "优惠券",
     "name_en": "Coupons",
-    "description": "后台可发券，会员兑换只能加积分，不能抵扣下单。",
-    "description_en": "Admin can issue codes. Redeem adds points only, not checkout discount.",
-    "version": "1.0.0",
-    "enabled": false,
-    "capability": "stub",
+    "description": "会员领取后，现金充值可满减或打折。积分商城不抵扣。全额抵成 0 元会拒绝。没配支付密钥不会假装付成功。",
+    "description_en": "Members claim coupons and apply them to cash recharge. Points mall is not discounted. A full write-off to 0 is refused. Empty pay keys fail honestly.",
+    "version": "1.1.0",
+    "enabled": true,
+    "capability": "ready",
     "group": "pay",
+    "provider": "Plugins\\Coupon\\CouponServiceProvider",
     "admin": {
         "modules": {
             "coupons": {
                 "title": "优惠券",
-                "hint": "兑换只加积分，不能在订单里抵扣。",
-                "model": "App\\Models\\Video\\VideoCoupon",
-                "search": "code",
+                "hint": "对照苹果：名称、满减/折扣、门槛、通用/充值/会员、发放数、每人 1 张、会员组和时长、有效期。本站现金通道只有充值；会员组用积分商城换，勾了会员场景的券在充值里会对不上。领取记录由前台产生。",
+                "model": "Plugins\\Coupon\\Models\\PluginCoupon",
+                "search": "name",
+                "view": "coupon::admin.board",
+                "handler": "Plugins\\Coupon\\Services\\CouponAdmin",
+                "desks": ["campaigns", "received"],
+                "default_desk": "campaigns",
                 "fields": [
-                    {
-                        "name": "code",
-                        "label": "券码",
-                        "type": "text"
-                    },
-                    {
-                        "name": "points",
-                        "label": "积分",
-                        "type": "number"
-                    },
-                    {
-                        "name": "min_points",
-                        "label": "门槛积分",
-                        "type": "number"
-                    },
-                    {
-                        "name": "expire_at",
-                        "label": "过期时间戳",
-                        "type": "number"
-                    },
-                    {
-                        "name": "status",
-                        "label": "状态",
-                        "type": "select",
-                        "options": {
-                            "1": "未用",
-                            "0": "作废"
-                        }
-                    }
+                    {"name": "name", "label": "名称", "type": "text"},
+                    {"name": "type", "label": "类型", "type": "select", "options": {"amount": "满减", "discount": "折扣"}},
+                    {"name": "value", "label": "面额/折扣", "type": "text"},
+                    {"name": "min_price", "label": "满减门槛", "type": "text"},
+                    {"name": "scene", "label": "适用场景", "type": "select", "options": {"all": "通用", "recharge": "充值", "vip": "会员"}},
+                    {"name": "total", "label": "发放总数", "type": "number"},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "启用", "0": "停用"}}
                 ],
-                "cols": [
-                    "id",
-                    "code",
-                    "points",
-                    "min_points",
-                    "expire_at",
-                    "used_by",
-                    "status"
-                ]
+                "cols": ["id", "name", "type", "value", "scene", "total", "received", "used", "status"]
             }
         },
         "sidebar_fold": {
@@ -63,6 +38,16 @@
                     "url": "/admin/video/coupons",
                     "icon": "ticket-alt",
                     "label": "nav.coupons"
+                }
+            ]
+        },
+        "catalog": {
+            "more.member": [
+                {
+                    "url": "/admin/video/coupons",
+                    "label": "item.coupon",
+                    "hint": "hint.coupon",
+                    "tag": "plugin"
                 }
             ]
         }

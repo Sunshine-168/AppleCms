@@ -13,9 +13,18 @@
         "modules": {
             "mangas": {
                 "title": "漫画",
-                "hint": "封面填图片地址。章节在「漫画章节」里加，一话一行图片。",
+                "hint": "独立漫画库，不是影片分类。分类、章节、图片都在这页切换。",
                 "model": "Plugins\\Manga\\Models\\Manga",
                 "search": "title",
+                "view": "manga::admin.board",
+                "desks": [
+                    "works",
+                    "pending",
+                    "types",
+                    "chapters",
+                    "pics"
+                ],
+                "default_desk": "works",
                 "fields": [
                     {
                         "name": "title",
@@ -31,6 +40,43 @@
                         "name": "author",
                         "label": "作者",
                         "type": "text"
+                    },
+                    {
+                        "name": "type_id",
+                        "label": "分类",
+                        "type": "number"
+                    },
+                    {
+                        "name": "serialize",
+                        "label": "连载",
+                        "type": "select",
+                        "options": [
+                            "连载",
+                            "完结"
+                        ]
+                    },
+                    {
+                        "name": "tags",
+                        "label": "标签",
+                        "type": "text"
+                    },
+                    {
+                        "name": "recommend",
+                        "label": "推荐",
+                        "type": "select",
+                        "options": [
+                            "否",
+                            "是"
+                        ]
+                    },
+                    {
+                        "name": "yid",
+                        "label": "审核",
+                        "type": "select",
+                        "options": [
+                            "已审",
+                            "待审"
+                        ]
                     },
                     {
                         "name": "remarks",
@@ -72,11 +118,52 @@
                     "sort"
                 ]
             },
+            "manga_types": {
+                "title": "漫画分类",
+                "hint": "漫画自己的分类，不是影片分类。",
+                "model": "Plugins\\Manga\\Models\\MangaType",
+                "search": "name",
+                "redirect": "/admin/video/mangas?desk=types",
+                "fields": [
+                    {
+                        "name": "name",
+                        "label": "名称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "parent_id",
+                        "label": "上级",
+                        "type": "number"
+                    },
+                    {
+                        "name": "sort",
+                        "label": "排序",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "显示",
+                            "0": "隐藏"
+                        }
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "name",
+                    "parent_id",
+                    "sort",
+                    "status"
+                ]
+            },
             "manga_chapters": {
                 "title": "漫画章节",
                 "hint": "图片地址每行一条，http(s) 或站内路径。",
                 "model": "Plugins\\Manga\\Models\\MangaChapter",
                 "search": "name",
+                "redirect": "/admin/video/mangas?desk=chapters",
                 "fields": [
                     {
                         "name": "manga_id",
@@ -105,6 +192,42 @@
                     "name",
                     "sort"
                 ]
+            },
+            "manga_pics": {
+                "title": "漫画图片",
+                "hint": "一话一张图一行。http(s) 或站内路径。",
+                "model": "Plugins\\Manga\\Models\\MangaPic",
+                "search": "url",
+                "redirect": "/admin/video/mangas?desk=pics",
+                "fields": [
+                    {
+                        "name": "manga_id",
+                        "label": "漫画ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "chapter_id",
+                        "label": "章节ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "url",
+                        "label": "图片地址",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sort",
+                        "label": "排序",
+                        "type": "number"
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "manga_id",
+                    "chapter_id",
+                    "url",
+                    "sort"
+                ]
             }
         },
         "sidebar_fold": {
@@ -112,12 +235,29 @@
                 {
                     "url": "/admin/video/mangas",
                     "icon": "book-open",
-                    "label": "nav.manga"
-                },
-                {
-                    "url": "/admin/video/manga_chapters",
-                    "icon": "list-ol",
-                    "label": "nav.manga_chapters"
+                    "label": "nav.manga",
+                    "children": [
+                        {
+                            "url": "/admin/video/mangas",
+                            "label": "nav.manga_list"
+                        },
+                        {
+                            "url": "/admin/video/mangas?desk=pending",
+                            "label": "nav.manga_pending"
+                        },
+                        {
+                            "url": "/admin/video/mangas?desk=types",
+                            "label": "nav.manga_types"
+                        },
+                        {
+                            "url": "/admin/video/mangas?desk=chapters",
+                            "label": "nav.manga_chapters"
+                        },
+                        {
+                            "url": "/admin/video/mangas?desk=pics",
+                            "label": "nav.manga_pics"
+                        }
+                    ]
                 }
             ]
         },

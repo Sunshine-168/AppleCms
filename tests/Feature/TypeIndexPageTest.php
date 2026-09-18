@@ -9,6 +9,7 @@ class TypeIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->actingAsAdmin();
         if (! is_dir(storage_path('app'))) {
             mkdir(storage_path('app'), 0777, true);
         }
@@ -23,6 +24,7 @@ class TypeIndexPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('搜分类名', $html);
+        $this->assertStringContainsString('文章栏目请去', $html);
         $this->assertStringContainsString('js-child', $html);
         $this->assertStringContainsString('/admin/video/types/create', $html);
         $this->assertStringContainsString('type-batch', $html);

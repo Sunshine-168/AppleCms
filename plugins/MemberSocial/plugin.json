@@ -2,9 +2,9 @@
     "id": "member_social",
     "name": "会员互动",
     "name_en": "Member social",
-    "description": "关注、动态、分享、签到有数据表和后台增删改。前台和任务没有接上。",
-    "description_en": "Follow, feed, share and check-in tables exist. Front-end is not wired.",
-    "version": "1.0.0",
+    "description": "关注、动态、分享有数据表和后台增删改。签到已归核心用户活动。复制链接会写分享记录。",
+    "description_en": "Follow, feed and share tables exist. Check-in moved to core user activity. Copy-link writes a share row.",
+    "version": "1.0.1",
     "enabled": true,
     "capability": "stub",
     "group": "member",
@@ -78,7 +78,7 @@
             },
             "shares": {
                 "title": "分享记录",
-                "hint": "仅后台记录，前台没有分享回写。",
+                "hint": "前台复制链接会记一条，不是微信分享。",
                 "model": "App\\Models\\Member\\MemberShare",
                 "search": "channel",
                 "fields": [
@@ -111,42 +111,6 @@
                     "ip",
                     "created_at"
                 ]
-            },
-            "signs": {
-                "title": "签到里程碑",
-                "hint": "仅后台记录，没有每日签到接口。",
-                "model": "App\\Models\\Member\\MemberSign",
-                "search": "day_key",
-                "fields": [
-                    {
-                        "name": "member_id",
-                        "label": "会员ID",
-                        "type": "number"
-                    },
-                    {
-                        "name": "days",
-                        "label": "连续天数",
-                        "type": "number"
-                    },
-                    {
-                        "name": "points",
-                        "label": "积分",
-                        "type": "number"
-                    },
-                    {
-                        "name": "day_key",
-                        "label": "日期Ymd",
-                        "type": "text"
-                    }
-                ],
-                "cols": [
-                    "id",
-                    "member_id",
-                    "days",
-                    "points",
-                    "day_key",
-                    "created_at"
-                ]
             }
         },
         "catalog": {
@@ -167,12 +131,6 @@
                     "url": "/admin/video/shares",
                     "label": "item.shares",
                     "hint": "hint.shares",
-                    "tag": "plugin"
-                },
-                {
-                    "url": "/admin/video/signs",
-                    "label": "item.signs",
-                    "hint": "hint.signs",
                     "tag": "plugin"
                 }
             ]

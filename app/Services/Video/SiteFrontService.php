@@ -3,7 +3,6 @@
 namespace App\Services\Video;
 
 use App\Models\Video\ActorModel;
-use App\Models\Video\VideoDomain;
 use App\Models\Video\VideoDownloader;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
@@ -27,13 +26,12 @@ class SiteFrontService
     public function bootSite(): array
     {
         $theme = (string) config('video.theme', 'default');
+        $bind = null;
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('video_domains')) {
-                $host = (string) request()->getHost();
-                $bind = VideoDomain::query()->where('status', 1)->where('host', $host)->first();
-                if ($bind && trim((string) $bind->theme) !== '') {
-                    $theme = (string) $bind->theme;
-                }
+            $bind = DomainBindService::findActive();
+            $boundTheme = trim((string) ($bind?->theme ?? ''));
+            if ($boundTheme !== '' && DomainBindService::themeExists($boundTheme)) {
+                $theme = $boundTheme;
             }
         } catch (\Throwable) {
         }
@@ -43,7 +41,8 @@ class SiteFrontService
             'description' => '',
             'theme' => $theme,
         ], config('video.site', []), $this->settings->site());
-        $site['theme'] = $theme;
+        $site = DomainBindService::apply($site, $bind);
+        $theme = (string) ($site['theme'] ?? $theme);
         $this->context->setSite($site);
         config(['video.theme' => $theme]);
 
@@ -160,7 +159,7 @@ class SiteFrontService
             return null;
         }
 
-        return \App\Models\Video\VideoArt::query()->where('status', 1)->find($id);
+        return \App\Models\Video\VideoArt::query()->listed()->find($id);
     }
 
     public function findPlot(int $id): ?\App\Models\Video\VideoPlot

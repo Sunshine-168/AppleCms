@@ -25,6 +25,28 @@ class AdminLoginPromptTest extends TestCase
         $this->assertStringContainsString('data-captcha-empty="请填写验证码"', $html);
         $this->assertStringContainsString('function pickMsg', $html);
         $this->assertStringContainsString('mac-toast', $html);
+        $this->assertStringContainsString('/admin/captcha', $html);
+        $this->assertStringContainsString('captchaImg', $html);
+        $this->assertStringNotContainsString(' = ?', $html);
+        $this->assertStringNotContainsString("{{ \$cap['question'] }}", $html);
+    }
+
+    public function test_captcha_endpoint_returns_image_and_stores_answer(): void
+    {
+        $res = $this->get('/admin/captcha');
+        $res->assertOk();
+
+        $ctype = (string) $res->headers->get('Content-Type');
+        $this->assertTrue(
+            str_contains($ctype, 'image/png') || str_contains($ctype, 'image/svg+xml'),
+            $ctype
+        );
+        $this->assertStringContainsString('no-store', (string) $res->headers->get('Cache-Control'));
+        $this->assertFalse(str_starts_with(ltrim($res->getContent()), '{'));
+
+        $answer = session('captcha');
+        $this->assertNotNull($answer);
+        $this->assertTrue(\App\Support\Captcha::check((string) $answer));
     }
 
     public function test_login_api_returns_captcha_prompt(): void

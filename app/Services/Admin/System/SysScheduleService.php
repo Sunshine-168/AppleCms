@@ -103,6 +103,7 @@ class SysScheduleService
             'video:hits-reset' => '人气日清',
             'stats:prune' => '访问统计清理',
             'video:db-backup' => '备份数据库',
+            'monitor:tick' => '监控采集',
         ];
         foreach ($this->pluginJobs() as $job) {
             $cmds['plugin:run '.$job['params']] = $job['label'].'（'.$job['plugin_label'].'）';
@@ -186,6 +187,7 @@ class SysScheduleService
                 ['label' => '到期上架', 'when' => '每分钟', 'hint' => '到点把定时发布的片子上架', 'url' => ''],
                 ['label' => '人气日清', 'when' => '每天 00:05', 'hint' => '把今日人气归零', 'url' => ''],
                 ['label' => '访问统计清理', 'when' => '每天 03:20', 'hint' => '删过期统计', 'url' => '/admin/stats'],
+                ['label' => '监控', 'when' => '每分钟', 'hint' => '采指标、评估告警。曲线在系统里的监控。', 'url' => '/admin/system/runtime'],
             ],
             'artisan_cmds' => $this->artisanCommands(),
             'ui' => [
@@ -798,7 +800,7 @@ class SysScheduleService
         $allow = [
             'video:baidu-push', 'video:collect-due', 'video:publish-due',
             'video:hits-reset', 'video:html-make', 'video:collect', 'stats:prune',
-            'video:db-backup',
+            'video:db-backup', 'monitor:tick',
         ];
         if (in_array($name, $allow, true)) {
             return '';
@@ -1084,6 +1086,7 @@ class SysScheduleService
             'video:collect' => '采集入库',
             'stats:prune' => '访问统计清理',
             'video:db-backup' => '备份数据库',
+            'monitor:tick' => '监控采集',
         ];
 
         $label = $map[$command] ?? $command;

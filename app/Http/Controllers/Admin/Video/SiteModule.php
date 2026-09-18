@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Admin\Video\SiteModuleService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -13,9 +14,57 @@ class SiteModule extends Controller
 {
     public function __construct(private readonly SiteModuleService $modules) {}
 
-    public function index(string $module): View
+    public function index(string $module): View|RedirectResponse
     {
         $cfg = $this->cfg($module);
+        $redirect = trim((string) ($cfg['redirect'] ?? ''));
+        if ($redirect !== '') {
+            return redirect($redirect);
+        }
+        $pluginView = trim((string) ($cfg['view'] ?? ''));
+        if ($pluginView !== '') {
+            $allowed = $cfg['desks'] ?? [];
+            $default = (string) ($cfg['default_desk'] ?? ($allowed[0] ?? 'works'));
+            $desk = strtolower(trim((string) request()->query('desk', '')));
+            if ($allowed !== [] && ! in_array($desk, $allowed, true)) {
+                $desk = $default;
+            }
+            $payload = [
+                'title' => $cfg['title'],
+                'hint' => $cfg['hint'] ?? '',
+                'module' => $module,
+                'desk' => $desk,
+            ];
+            if ($module === 'mangas') {
+                $payload['types'] = [];
+                $payload['filterMangaId'] = (int) request()->query('manga_id', 0);
+                try {
+                    $payload['types'] = app(\Plugins\Manga\Services\MangaService::class)->adminTypes();
+                } catch (\Throwable) {
+                    $payload['types'] = [];
+                }
+            }
+            if ($module === 'mall_goods') {
+                $payload['groups'] = [];
+                try {
+                    $payload['groups'] = app(\Plugins\Mall\Services\MallService::class)->adminGroups();
+                } catch (\Throwable) {
+                    $payload['groups'] = [];
+                }
+            }
+            $handler = trim((string) ($cfg['handler'] ?? ''));
+            if ($handler !== '' && class_exists($handler)) {
+                $svc = app($handler);
+                if (method_exists($svc, 'boardPayload')) {
+                    $extra = $svc->boardPayload($payload);
+                    if (is_array($extra)) {
+                        $payload = array_merge($payload, $extra);
+                    }
+                }
+            }
+
+            return view($pluginView, $payload);
+        }
         if ($module === 'comments') {
             return view('admin.video.comments', [
                 'title' => $cfg['title'],
@@ -28,10 +77,25 @@ class SiteModule extends Controller
             ]);
         }
         if ($module === 'arts') {
+            $tagId = (int) request()->query('tag_id', 0);
+            $tags = app(\App\Services\Admin\Video\ArtTagService::class)->options();
+            $filterTag = null;
+            foreach ($tags as $tag) {
+                if ((int) ($tag['id'] ?? 0) === $tagId) {
+                    $filterTag = $tag;
+                    break;
+                }
+            }
+
             return view('admin.video.arts', [
                 'title' => $cfg['title'],
                 'types' => $this->modules->artTypeOptions(),
                 'queues' => $this->modules->artQueues(),
+                'looseCount' => $this->modules->artLooseCount(),
+                'tags' => $tags,
+                'tagsReady' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
+                'filterTag' => $filterTag,
+                'recycleCount' => $this->modules->artRecycleCount(),
             ]);
         }
         if ($module === 'slides') {
@@ -117,6 +181,14 @@ class SiteModule extends Controller
                 'queues' => $this->modules->websiteQueues(),
                 'types' => $this->modules->websiteTypeOptions(),
                 'typeId' => $typeId,
+            ]);
+        }
+        if ($module === 'domains') {
+            return view('admin.video.domains', [
+                'title' => $cfg['title'],
+                'queues' => $this->modules->domainQueues(),
+                'themes' => $this->modules->domainThemeOptions(),
+                'currentHost' => \App\Services\Video\DomainBindService::currentHost(),
             ]);
         }
         if ($module === 'classes') {
@@ -395,13 +467,27 @@ class SiteModule extends Controller
             'art' => [
                 'status' => 1,
                 'hits' => 0,
-                'type_id' => (int) request()->query('type_id', 0),
+                'type_id' => $this->modules->resolveArtTypeId((int) request()->query('type_id', 0)),
                 'title' => '',
+                'blurb' => '',
                 'cover' => '',
                 'content' => '',
+                'source' => '',
+                'author' => '',
+                'tag' => '',
+                'tag_ids' => [],
+                'tag_extra' => '',
+                'flags' => '',
+                'sort' => 0,
+                'seo_title' => '',
+                'seo_key' => '',
+                'seo_des' => '',
+                'published_at' => 0,
             ],
             'isEdit' => false,
             'types' => $this->modules->artTypeOptions(),
+            'tags' => app(\App\Services\Admin\Video\ArtTagService::class)->options(),
+            'tagsReady' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
         ]);
     }
 
@@ -416,7 +502,100 @@ class SiteModule extends Controller
             'art' => $art,
             'isEdit' => true,
             'types' => $this->modules->artTypeOptions(),
+            'tags' => app(\App\Services\Admin\Video\ArtTagService::class)->options(),
+            'tagsReady' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
         ]);
+    }
+
+    public function showArtTags(): View
+    {
+        return view('admin.video.art_tags', [
+            'title' => '标签',
+            'ready' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
+        ]);
+    }
+
+    public function createArtTag(): View
+    {
+        return view('admin.video.art_tag_form', [
+            'tag' => ['name' => '', 'slug' => '', 'sort' => 0, 'status' => 1, 'art_count' => 0],
+            'isEdit' => false,
+        ]);
+    }
+
+    public function editArtTag(int $id): View
+    {
+        $row = app(\App\Services\Admin\Video\ArtTagService::class)->find($id);
+        if ($row === null) {
+            abort(404);
+        }
+
+        return view('admin.video.art_tag_form', [
+            'tag' => [
+                'id' => (int) $row->id,
+                'name' => (string) $row->name,
+                'slug' => (string) $row->slug,
+                'sort' => (int) $row->sort,
+                'status' => (int) $row->status,
+                'art_count' => (int) $row->arts()->count(),
+                'url' => (string) $row->url,
+            ],
+            'isEdit' => true,
+        ]);
+    }
+
+    public function listArtTags(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $data = app(\App\Services\Admin\Video\ArtTagService::class)->paginate($request->all());
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function saveArtTag(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $id = (int) $request->input('id', 0);
+        $data = app(\App\Services\Admin\Video\ArtTagService::class)->save($request->all(), $id > 0 ? $id : null);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function deleteArtTag(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $data = app(\App\Services\Admin\Video\ArtTagService::class)->delete((int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function batchArtTags(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = app(\App\Services\Admin\Video\ArtTagService::class)->batch(
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function showArtRecycle(): View
+    {
+        return view('admin.video.art_recycle', [
+            'title' => '回收站',
+            'ready' => \Illuminate\Support\Facades\Schema::hasTable('video_arts')
+                && \Illuminate\Support\Facades\Schema::hasColumn('video_arts', 'deleted_at'),
+            'count' => $this->modules->artRecycleCount(),
+        ]);
+    }
+
+    public function emptyArtRecycle(): JsonResponse
+    {
+        $data = $this->modules->emptyArtRecycle();
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
     public function createUnion(): View

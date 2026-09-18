@@ -2,9 +2,9 @@
     "id": "mall",
     "name": "积分商城",
     "name_en": "Points mall",
-    "description": "用会员积分兑换商品。不接微信支付宝，发货请在订单里改状态。",
-    "description_en": "Redeem member points for goods. No WeChat/Alipay. Mark orders shipped in admin.",
-    "version": "1.0.0",
+    "description": "用会员积分兑换。不接微信支付宝。会员组和积分卡密自动发，实物要改订单发货。",
+    "description_en": "Redeem member points. No WeChat/Alipay. VIP group and card codes auto-grant; physical goods wait for ship.",
+    "version": "1.1.0",
     "enabled": true,
     "capability": "ready",
     "group": "member",
@@ -12,15 +12,28 @@
     "admin": {
         "modules": {
             "mall_goods": {
-                "title": "商城商品",
-                "hint": "积分兑换。库存为 0 时前台不能再兑。没有在线支付。",
+                "title": "积分商城",
+                "hint": "用会员积分兑换。不接微信支付宝。苹果那三类里，本站做会员组和积分卡密；实物仍要改订单发货。",
                 "model": "Plugins\\Mall\\Models\\MallGood",
                 "search": "name",
+                "view": "mall::admin.board",
+                "desks": ["goods", "orders", "ship"],
+                "default_desk": "goods",
                 "fields": [
                     {
                         "name": "name",
                         "label": "名称",
                         "type": "text"
+                    },
+                    {
+                        "name": "type",
+                        "label": "类型",
+                        "type": "select",
+                        "options": {
+                            "goods": "实物发货",
+                            "vip": "会员组",
+                            "card": "积分卡密"
+                        }
                     },
                     {
                         "name": "cover",
@@ -60,6 +73,7 @@
                 "cols": [
                     "id",
                     "name",
+                    "type",
                     "points",
                     "stock",
                     "status",
@@ -68,9 +82,10 @@
             },
             "mall_orders": {
                 "title": "商城订单",
-                "hint": "会员兑换记录。改成已发货即完成，不会扣第二次积分。",
+                "hint": "会员兑换记录。实物改成已发货即完成。会员组和卡密兑换当时就完成。",
                 "model": "Plugins\\Mall\\Models\\MallOrder",
                 "search": "goods_name",
+                "redirect": "/admin/video/mall_goods?desk=orders",
                 "fields": [
                     {
                         "name": "member_id",
@@ -102,9 +117,8 @@
                         "label": "状态",
                         "type": "select",
                         "options": {
-                            "1": "待处理",
-                            "2": "已发货",
-                            "0": "已关闭"
+                            "1": "待发货",
+                            "2": "已完成"
                         }
                     }
                 ],
@@ -123,12 +137,12 @@
                 {
                     "url": "/admin/video/mall_goods",
                     "icon": "store",
-                    "label": "nav.mall_goods"
-                },
-                {
-                    "url": "/admin/video/mall_orders",
-                    "icon": "receipt",
-                    "label": "nav.mall_orders"
+                    "label": "nav.mall",
+                    "children": [
+                        {"url": "/admin/video/mall_goods", "label": "nav.mall_goods"},
+                        {"url": "/admin/video/mall_goods?desk=orders", "label": "nav.mall_orders"},
+                        {"url": "/admin/video/mall_goods?desk=ship", "label": "nav.mall_ship"}
+                    ]
                 }
             ]
         },
@@ -136,8 +150,8 @@
             "more.member": [
                 {
                     "url": "/admin/video/mall_goods",
-                    "label": "item.mall_goods",
-                    "hint": "hint.mall_goods",
+                    "label": "item.mall",
+                    "hint": "hint.mall",
                     "tag": "plugin"
                 }
             ]

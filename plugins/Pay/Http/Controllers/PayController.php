@@ -26,11 +26,20 @@ class PayController extends Controller
             throw new NotFoundHttpException();
         }
         $site = $this->front->bootSite();
+        $coupons = [];
+        if (class_exists(\Plugins\Coupon\Services\CouponService::class)) {
+            try {
+                $coupons = app(\Plugins\Coupon\Services\CouponService::class)->wallet((int) $member->id, 'recharge');
+            } catch (\Throwable) {
+                $coupons = [];
+            }
+        }
 
         return view('pay::checkout', [
             'site' => $site,
             'member' => $member,
             'packages' => PayService::PACKAGES,
+            'coupons' => $coupons,
             'wechatReady' => $this->pay->wechatReady(),
             'alipayReady' => $this->pay->alipayReady(),
         ]);
@@ -44,7 +53,8 @@ class PayController extends Controller
         }
         $yuan = (float) $request->input('amount_yuan', 0);
         $channel = (string) $request->input('channel', 'wechat');
-        $result = $this->pay->create($member, $channel, $yuan);
+        $couponUserId = (int) $request->input('coupon_user_id', 0);
+        $result = $this->pay->create($member, $channel, $yuan, $couponUserId);
         if (($result['code'] ?? 1) !== 0) {
             return back()->withErrors(['pay' => $result['msg'] ?? '下单失败'])->withInput();
         }

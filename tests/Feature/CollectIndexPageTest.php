@@ -20,6 +20,7 @@ class CollectIndexPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('还没有采集源', $html);
+        $this->assertStringContainsString('desk-board', $html);
         $this->assertStringContainsString('collect-source-add-btn', $html);
         $this->assertStringContainsString('新增采集源', $html);
         $this->assertStringContainsString('js-today', $html);

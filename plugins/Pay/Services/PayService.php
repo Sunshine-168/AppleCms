@@ -34,7 +34,7 @@ class PayService
     }
 
     /** @return array{code:int,msg:string,data:array<string,mixed>} */
-    public function create(Member $member, string $channel, float $yuan): array
+    public function create(Member $member, string $channel, float $yuan, int $couponUserId = 0): array
     {
         $yuan = round($yuan, 2);
         if ($yuan < 0.01) {
@@ -51,19 +51,58 @@ class PayService
             return Result::fail('订单表不存在');
         }
         $fen = (int) round($yuan * 100);
+        $originalFen = $fen;
+        $discountFen = 0;
+        $payFen = $fen;
+        if ($couponUserId > 0) {
+            if (! class_exists(\Plugins\Coupon\Services\CouponService::class)) {
+                return Result::fail('优惠券插件未启用');
+            }
+            $priced = app(\Plugins\Coupon\Services\CouponService::class)->quote('recharge', $yuan, $couponUserId, (int) $member->id);
+            if (($priced['code'] ?? 1) !== 0) {
+                return $priced;
+            }
+            $originalFen = (int) ($priced['data']['original_fen'] ?? $fen);
+            $discountFen = (int) ($priced['data']['discount_fen'] ?? 0);
+            $payFen = (int) ($priced['data']['pay_fen'] ?? $fen);
+            if ($payFen < 1) {
+                return Result::fail('全额抵扣不成单，至少要付 0.01 元');
+            }
+        }
         $now = time();
-        $order = MemberOrder::query()->create([
+        $payload = [
             'member_id' => (int) $member->id,
             'order_no' => 'P'.date('YmdHis').Str::upper(Str::random(6)),
-            'amount' => $fen,
-            'points' => $fen,
+            'amount' => $payFen,
+            'points' => $originalFen,
             'status' => 0,
             'channel' => $channel,
             'trade_no' => '',
-            'remark' => '在线充值',
+            'remark' => $discountFen > 0 ? '在线充值 券抵 '.$discountFen.' 分' : '在线充值',
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+        if (Schema::hasColumn('member_orders', 'original_amount')) {
+            $payload['original_amount'] = $originalFen;
+        }
+        if (Schema::hasColumn('member_orders', 'coupon_user_id')) {
+            $payload['coupon_user_id'] = $couponUserId;
+        }
+        if (Schema::hasColumn('member_orders', 'coupon_discount')) {
+            $payload['coupon_discount'] = $discountFen;
+        }
+        $order = MemberOrder::query()->create($payload);
+        if ($couponUserId > 0) {
+            $hold = app(\Plugins\Coupon\Services\CouponService::class)->reserve($couponUserId, (int) $member->id, (int) $order->id, (string) $order->order_no);
+            if (($hold['code'] ?? 1) !== 0) {
+                $order->status = 2;
+                $order->remark = mb_substr((string) ($hold['msg'] ?? '占券失败'), 0, 250);
+                $order->updated_at = time();
+                $order->save();
+
+                return $hold;
+            }
+        }
 
         if ($channel === 'wechat') {
             $pay = $this->wechatNative($order);
@@ -75,6 +114,9 @@ class PayService
             $order->remark = mb_substr((string) ($pay['msg'] ?? '下单失败'), 0, 250);
             $order->updated_at = time();
             $order->save();
+            if ($couponUserId > 0 && class_exists(\Plugins\Coupon\Services\CouponService::class)) {
+                app(\Plugins\Coupon\Services\CouponService::class)->release($couponUserId);
+            }
 
             return $pay;
         }

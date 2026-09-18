@@ -3,6 +3,9 @@
 @section('content')
     @vodBreadcrumb
     <h1>{{ $video->title }} {{ $episode?->display_name }}</h1>
+    @if(!empty($site['theme_play_notice']))
+        <p class="muted play-notice">{{ $site['theme_play_notice'] }}</p>
+    @endif
     @if(($trysee ?? 0) > 0)<p class="muted">试看 {{ (int) $trysee }} 秒，完整播放需积分</p>@endif
     <div class="player">
         @if($episode && $episode->url)
@@ -12,11 +15,16 @@
         @endif
     </div>
     @includeIf('chatroom::panel')
+    @if(\Illuminate\Support\Facades\View::exists('advert::player'))
+        @include('advert::player')
+    @else
     @vodAd(['slot' => 'play'])
         <div class="desc">{!! $item->content !!}</div>
     @endvodAd
+    @endif
     <p>
         <button type="button" id="play-fail">播放报错</button>
+        @include('themes.default.partials.share-link')
     </p>
     <div class="lines">
         @vodSource(['type' => 'play'])

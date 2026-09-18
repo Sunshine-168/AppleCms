@@ -7,7 +7,8 @@
         @endif
         <div>
             <h1>{{ $goods->name }}</h1>
-            <p>{{ (int) $goods->points }} 积分 · 库存 {{ (int) $goods->stock }}</p>
+            <p>{{ \Plugins\Mall\Services\MallService::typeLabel($goods->type ?? '') }} · {{ (int) $goods->points }} 积分 · 库存 {{ (int) $goods->stock }}</p>
+            <p class="muted">没有在线支付。</p>
             @if($goods->hint)<div class="desc">{!! nl2br(e($goods->hint)) !!}</div>@endif
             @auth('member')
                 @if((int) $goods->stock > 0)

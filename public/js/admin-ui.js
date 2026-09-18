@@ -111,6 +111,7 @@
         el.className = 'ui-toast' + (type === 'ok' ? ' is-ok' : type === 'err' ? ' is-err' : '');
         el.textContent = msg || '';
         document.body.appendChild(el);
+        if (type === 'err') return;
         setTimeout(function () { el.remove(); }, 2400);
     }
 
@@ -292,6 +293,19 @@
 
     function table(opts) {
         var wrap = typeof opts.el === 'string' ? document.querySelector(opts.el) : opts.el;
+        if (!wrap) {
+            return {
+                reload: function () { return Promise.resolve(); },
+                refresh: function () { return Promise.resolve(); },
+                selectedIds: function () { return []; },
+                clearSelection: function () {},
+                rows: function () { return []; }
+            };
+        }
+        wrap.classList.add('js-table-mount');
+        if (!String(wrap.innerHTML || '').trim()) {
+            wrap.innerHTML = '<div class="ui-table-pending" aria-hidden="true"></div>';
+        }
         var limit = parseInt(opts.limit, 10) || 15;
         var state = { page: 1, where: Object.assign({}, opts.where || {}) };
 
@@ -382,12 +396,26 @@
             if (opts.onDraw) opts.onDraw(wrap, parsed.list, parsed);
         }
 
+        function failHtml(msg) {
+            return '<div class="list-empty"><p>' + escape(msg || '加载失败') + '</p></div>';
+        }
+
         function load() {
             var params = Object.assign({}, state.where, { page: state.page, limit: limit });
             return request('GET', opts.url, params).then(function (res) {
-                if (res && res.code === 0) render(res);
-                else toast((res && res.msg) || '加载失败', 'err');
+                if (res && res.code === 0) {
+                    render(res);
+                    return res;
+                }
+                var msg = (res && res.msg) || '加载失败';
+                toast(msg, 'err');
+                wrap.innerHTML = failHtml(msg);
+                wrap._rows = [];
+                if (opts.onDraw) opts.onDraw(wrap, [], { list: [], total: 0, page: 1, last: 1 });
                 return res;
+            }).catch(function () {
+                wrap.innerHTML = failHtml('加载失败');
+                wrap._rows = [];
             });
         }
 
@@ -460,6 +488,188 @@
         qa: function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); },
         status: function (ok, text) {
             return '<span class="status ' + (ok ? 'status-ok' : 'status-off') + '">' + escape(text) + '</span>';
-        }
+        },
+        visit: function (href) { visit(href); }
     };
+
+    var nativeSetInterval = global.setInterval.bind(global);
+    var nativeClearInterval = global.clearInterval.bind(global);
+    var pageTimers = [];
+    global.setInterval = function () {
+        var id = nativeSetInterval.apply(null, arguments);
+        pageTimers.push(id);
+        return id;
+    };
+    global.clearInterval = function (id) {
+        pageTimers = pageTimers.filter(function (x) { return x !== id; });
+        nativeClearInterval(id);
+    };
+
+    var visitCtl = null;
+    var shellBound = false;
+
+    function clearPageTimers() {
+        pageTimers.forEach(function (id) { nativeClearInterval(id); });
+        pageTimers = [];
+    }
+
+    function closeFloaters() {
+        Array.prototype.slice.call(document.querySelectorAll('.ui-mask, .ui-toast, #ui-loading')).forEach(function (el) {
+            el.remove();
+        });
+        Array.prototype.slice.call(document.querySelectorAll('details.account-menu, details.lang-pick')).forEach(function (d) {
+            d.open = false;
+        });
+    }
+
+    function syncCsrf(token) {
+        if (!token) return;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) meta.setAttribute('content', token);
+        Array.prototype.forEach.call(document.querySelectorAll('input[name="_token"]'), function (inp) {
+            inp.value = token;
+        });
+    }
+
+    function runScripts(root) {
+        if (!root) return;
+        Array.prototype.slice.call(root.querySelectorAll('script')).forEach(function (old) {
+            var s = document.createElement('script');
+            Array.prototype.forEach.call(old.attributes || [], function (a) {
+                s.setAttribute(a.name, a.value);
+            });
+            s.textContent = old.textContent;
+            old.parentNode.replaceChild(s, old);
+        });
+    }
+
+    function headIsSimple(doc) {
+        var nodes = doc.head ? doc.head.querySelectorAll('link[rel="stylesheet"], style') : [];
+        var extra = 0;
+        Array.prototype.forEach.call(nodes, function (n) {
+            var href = n.getAttribute('href') || n.href || '';
+            if (n.tagName === 'LINK' && /admin\.css|font-awesome/.test(href)) return;
+            extra += 1;
+        });
+        return extra === 0;
+    }
+
+    function applyShell(doc, url, push) {
+        var newContent = doc.getElementById('admin-content');
+        var content = document.getElementById('admin-content');
+        var newSide = doc.getElementById('adminSide');
+        var side = document.getElementById('adminSide');
+        var newScripts = doc.getElementById('admin-page-scripts');
+        var scripts = document.getElementById('admin-page-scripts');
+        if (!newContent || !content || !newSide || !side || !newScripts || !scripts) {
+            location.href = url;
+            return;
+        }
+        if (!headIsSimple(doc)) {
+            location.href = url;
+            return;
+        }
+        clearPageTimers();
+        closeFloaters();
+        document.title = doc.title || document.title;
+        var htmlLang = doc.documentElement.getAttribute('lang');
+        if (htmlLang) document.documentElement.setAttribute('lang', htmlLang);
+        var newCsrf = doc.querySelector('meta[name="csrf-token"]');
+        if (newCsrf) syncCsrf(newCsrf.getAttribute('content'));
+        side.innerHTML = newSide.innerHTML;
+        var nav = document.querySelector('.mod-nav-top');
+        var newNav = doc.querySelector('.mod-nav-top');
+        if (nav && newNav) nav.innerHTML = newNav.innerHTML;
+        var title = document.querySelector('.topbar-title');
+        var newTitle = doc.querySelector('.topbar-title');
+        if (title && newTitle) title.textContent = newTitle.textContent;
+        content.className = newContent.className;
+        content.innerHTML = newContent.innerHTML;
+        scripts.innerHTML = newScripts.innerHTML;
+        if (push) history.pushState({ adminShell: 1 }, '', url);
+        else history.replaceState({ adminShell: 1 }, '', url);
+        window.scrollTo(0, 0);
+        runScripts(scripts);
+    }
+
+    function visit(href, opts) {
+        opts = opts || {};
+        var url;
+        try { url = new URL(href, location.href); } catch (err) { location.href = href; return; }
+        if (visitCtl) visitCtl.abort();
+        visitCtl = new AbortController();
+        fetch(url.href, {
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'text/html',
+                'X-Admin-Shell': '1'
+            },
+            signal: visitCtl.signal
+        }).then(function (r) {
+            if (/\/admin\/login(?:\/|\?|$)/.test(r.url)) {
+                location.href = r.url;
+                return null;
+            }
+            var ct = (r.headers.get('content-type') || '').toLowerCase();
+            if (!r.ok || ct.indexOf('text/html') === -1) {
+                location.href = url.href;
+                return null;
+            }
+            return r.text().then(function (html) {
+                return { html: html, url: r.url };
+            });
+        }).then(function (pack) {
+            if (!pack) return;
+            var doc = new DOMParser().parseFromString(pack.html, 'text/html');
+            if (!doc.getElementById('admin-content') || doc.querySelector('.mac-login-card')) {
+                location.href = pack.url;
+                return;
+            }
+            applyShell(doc, pack.url, !opts.replace);
+        }).catch(function (err) {
+            if (err && err.name === 'AbortError') return;
+            location.href = url.href;
+        });
+    }
+
+    function shouldVisit(a) {
+        if (!a || a.hasAttribute('download')) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.getAttribute('data-full-reload') === '1') return false;
+        var raw = a.getAttribute('href');
+        if (!raw || raw.charAt(0) === '#' || raw.indexOf('javascript:') === 0) return false;
+        var url;
+        try { url = new URL(a.href, location.href); } catch (err) { return false; }
+        if (url.origin !== location.origin) return false;
+        if (url.pathname.indexOf('/admin') !== 0) return false;
+        if (/^\/admin\/(login|logout|captcha|unlock)(\/|$)/.test(url.pathname)) return false;
+        if (/\/(download|export|attachments\/open)(\/|$)/.test(url.pathname)) return false;
+        return url;
+    }
+
+    function bindShell() {
+        if (shellBound || !document.getElementById('admin-content')) return;
+        shellBound = true;
+        history.replaceState({ adminShell: 1 }, '', location.href);
+        document.addEventListener('click', function (e) {
+            if (e.defaultPrevented || e.button !== 0) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            var url = shouldVisit(a);
+            if (!url) return;
+            if (a.closest && a.closest('.ui-dialog, .ui-mask')) return;
+            if (url.pathname === location.pathname && url.search === location.search && url.hash === location.hash) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            visit(url.href);
+        });
+        window.addEventListener('popstate', function () {
+            if (!document.getElementById('admin-content')) return;
+            visit(location.href, { replace: true });
+        });
+    }
+
+    bindShell();
 })(window);

@@ -9,12 +9,18 @@ use App\Models\Member\MemberInvite;
 use App\Models\Member\MemberOrder;
 use App\Models\Member\MemberPm;
 use App\Models\Member\MemberPointLog;
+use App\Models\Member\MemberSign;
+use App\Models\Member\MemberSignMilestone;
+use App\Models\Member\MemberTask;
+use App\Models\Member\MemberTaskLog;
 use App\Models\Member\MemberWithdraw;
+use App\Services\Member\MemberActivityService;
 use App\Models\Video\CollectSourceModel;
 use App\Models\Video\FriendLink;
 use App\Models\Video\ActorModel;
 use App\Models\Video\VideoAd;
 use App\Models\Video\VideoArt;
+use App\Models\Video\VideoArtTag;
 use App\Models\Video\VideoCard;
 use App\Models\Video\VideoClass;
 use App\Models\Video\VideoComment;
@@ -44,13 +50,16 @@ use App\Models\Video\VideoReport;
 use App\Models\Video\VideoRole;
 use App\Models\Video\VideoServer;
 use App\Models\Video\VideoAccessLog;
+use App\Models\Video\VideoDomain;
 use App\Services\Stats\SpiderDetector;
+use App\Services\Video\DomainBindService;
 use App\Services\Video\SynonymService;
 use App\Support\AdminOpLog;
 use App\Support\AdminPage;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -402,26 +411,40 @@ class SiteModuleService
             ],
             'arts' => [
                 'title' => '文章管理',
-                'hint' => '文章是资讯，不是影片。栏目在分类里把模型选成「文章」。这里按 LaraCMS 内容列表来写稿、发布。',
+                'hint' => '站内资讯，有自己的栏目，不是影片。按 LaraCMS 内容列表来写稿、发布。',
                 'model' => \App\Models\Video\VideoArt::class,
                 'search' => 'title',
                 'fields' => [
                     ['name' => 'type_id', 'label' => '栏目', 'type' => 'number'],
                     ['name' => 'title', 'label' => '标题', 'type' => 'text'],
+                    ['name' => 'blurb', 'label' => '摘要', 'type' => 'text'],
                     ['name' => 'cover', 'label' => '封面', 'type' => 'text'],
                     ['name' => 'content', 'label' => '正文', 'type' => 'textarea'],
+                    ['name' => 'source', 'label' => '来源', 'type' => 'text'],
+                    ['name' => 'author', 'label' => '署名', 'type' => 'text'],
+                    ['name' => 'tag', 'label' => '标签', 'type' => 'text'],
+                    ['name' => 'flags', 'label' => '推荐属性', 'type' => 'text'],
+                    ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
+                    ['name' => 'seo_title', 'label' => '搜索标题', 'type' => 'text'],
+                    ['name' => 'seo_key', 'label' => '关键字', 'type' => 'text'],
+                    ['name' => 'seo_des', 'label' => '搜索描述', 'type' => 'text'],
+                    ['name' => 'published_at', 'label' => '定时发布', 'type' => 'number'],
                     ['name' => 'hits', 'label' => '点击', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '已发布', '0' => '草稿']],
                 ],
-                'cols' => ['id', 'type_id', 'title', 'hits', 'status'],
+                'cols' => ['id', 'type_id', 'title', 'hits', 'status', 'flags', 'sort'],
             ],
             'domains' => [
                 'title' => '绑定域名',
+                'hint' => '同一套片库。按访问域名换站名和模板；没绑的走站点设置。不是独立分站库。',
                 'model' => \App\Models\Video\VideoDomain::class,
-                'search' => 'host',
+                'search' => 'q',
                 'fields' => [
                     ['name' => 'host', 'label' => '域名', 'type' => 'text'],
-                    ['name' => 'theme', 'label' => '主题目录', 'type' => 'text'],
+                    ['name' => 'theme', 'label' => '模板', 'type' => 'text'],
+                    ['name' => 'site_name', 'label' => '站点名', 'type' => 'text'],
+                    ['name' => 'site_keyword', 'label' => '关键词', 'type' => 'text'],
+                    ['name' => 'site_description', 'label' => '描述', 'type' => 'text'],
                     ['name' => 'remark', 'label' => '备注', 'type' => 'text'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '停用']],
                 ],
@@ -591,18 +614,88 @@ class SiteModuleService
                 ],
                 'cols' => ['id', 'title', 'status', 'msg', 'created_at'],
             ],
+            'activity' => [
+                'title' => '用户活动',
+                'hint' => '对照苹果：每日签到当场入账；连续天数达标再加里程碑。观看、评论、复制链接会涨每日任务。绑定手机有号才发一次。绑定邮箱默认关闭（注册就要邮箱）。分享不是微信。',
+                'model' => MemberTask::class,
+                'search' => 'name',
+                'view' => 'admin.video.activity',
+                'desks' => ['tasks', 'logs', 'signs', 'milestones'],
+                'default_desk' => 'tasks',
+                'fields' => [
+                    ['name' => 'name', 'label' => '名称', 'type' => 'text'],
+                    ['name' => 'type', 'label' => '类型', 'type' => 'select', 'options' => ['1' => '每日', '2' => '新手']],
+                    ['name' => 'action', 'label' => '动作', 'type' => 'text'],
+                    ['name' => 'hint', 'label' => '说明', 'type' => 'text'],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'target', 'label' => '目标', 'type' => 'number'],
+                    ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '未启用']],
+                ],
+                'cols' => ['id', 'name', 'type', 'action', 'points', 'target', 'status', 'sort'],
+            ],
+            'task_logs' => [
+                'title' => '任务记录',
+                'hint' => '会员完成任务的进度和入账。由前台产生。',
+                'model' => MemberTaskLog::class,
+                'search' => 'action',
+                'redirect' => '/admin/video/activity?desk=logs',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'task_id', 'label' => '任务ID', 'type' => 'number'],
+                    ['name' => 'action', 'label' => '动作', 'type' => 'text'],
+                    ['name' => 'progress', 'label' => '进度', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '进行中', '1' => '待领取', '2' => '已入账']],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'day_key', 'label' => '日期', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'member_id', 'action', 'progress', 'status', 'points', 'day_key'],
+            ],
+            'signs' => [
+                'title' => '签到记录',
+                'hint' => '每日签到和连续奖励。由会员在前台点。',
+                'model' => MemberSign::class,
+                'search' => 'day_key',
+                'redirect' => '/admin/video/activity?desk=signs',
+                'fields' => [
+                    ['name' => 'member_id', 'label' => '会员ID', 'type' => 'number'],
+                    ['name' => 'days', 'label' => '连续天数', 'type' => 'number'],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'day_key', 'label' => '日期Ymd', 'type' => 'text'],
+                ],
+                'cols' => ['id', 'member_id', 'days', 'points', 'day_key', 'created_at'],
+            ],
+            'sign_milestones' => [
+                'title' => '签到里程碑',
+                'hint' => '达到连续天数当场入账。',
+                'model' => MemberSignMilestone::class,
+                'search' => 'name',
+                'redirect' => '/admin/video/activity?desk=milestones',
+                'fields' => [
+                    ['name' => 'name', 'label' => '名称', 'type' => 'text'],
+                    ['name' => 'days', 'label' => '连续天数', 'type' => 'number'],
+                    ['name' => 'points', 'label' => '积分', 'type' => 'number'],
+                    ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
+                    ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '启用', '0' => '未启用']],
+                ],
+                'cols' => ['id', 'name', 'days', 'points', 'status', 'sort'],
+            ],
             default => throw new \InvalidArgumentException('未知模块'),
         };
     }
 
     public static function names(): array
     {
-        return ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs', 'searchwords', 'slides', 'notifies', 'collect_temps'];
+        return ['topics', 'players', 'links', 'comments', 'reports', 'members', 'cards', 'downloaders', 'servers', 'playfails', 'audits', 'collect_tasks', 'ads', 'guestbooks', 'groups', 'orders', 'withdraws', 'pms', 'collect_logs', 'plogs', 'roles', 'websites', 'arts', 'domains', 'unions', 'ulogs', 'plots', 'synonyms', 'invites', 'classes', 'favorites', 'accesslogs', 'botlogs', 'searchwords', 'slides', 'notifies', 'collect_temps', 'activity', 'task_logs', 'signs', 'sign_milestones'];
     }
 
     public function lists(string $module, array $params): array
     {
         $cfg = $this->config($module);
+        $handled = $this->dispatchPlugin($cfg, 'lists', [$params]);
+        if ($handled !== null) {
+            return $handled;
+        }
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
         try {
@@ -614,6 +707,9 @@ class SiteModuleService
         }
         $limit = max(1, (int) ($params['limit'] ?? 15));
         $q = $class::query();
+        if ($module === 'arts' && Schema::hasColumn('video_arts', 'deleted_at') && (string) ($params['trash'] ?? '') === '1') {
+            $q = $class::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0);
+        }
         foreach ($cfg['where'] ?? [] as $col => $val) {
             $q->where($col, $val);
         }
@@ -638,6 +734,11 @@ class SiteModuleService
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('title', 'like', '%'.$kw.'%')
                         ->orWhere('content', 'like', '%'.$kw.'%');
+                    foreach (['blurb', 'tag', 'author', 'source'] as $col) {
+                        if (Schema::hasColumn('video_arts', $col)) {
+                            $inner->orWhere($col, 'like', '%'.$kw.'%');
+                        }
+                    }
                     if (ctype_digit($kw)) {
                         $inner->orWhere('id', (int) $kw);
                     }
@@ -1082,19 +1183,136 @@ class SiteModuleService
                         $inner->orWhere('id', (int) $kw);
                     }
                 });
+            } elseif ($module === 'domains') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('host', 'like', '%'.$kw.'%')
+                        ->orWhere('theme', 'like', '%'.$kw.'%')
+                        ->orWhere('remark', 'like', '%'.$kw.'%');
+                    if (Schema::hasColumn('video_domains', 'site_name')) {
+                        $inner->orWhere('site_name', 'like', '%'.$kw.'%');
+                    }
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'mangas') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('title', 'like', '%'.$kw.'%')
+                        ->orWhere('author', 'like', '%'.$kw.'%')
+                        ->orWhere('remarks', 'like', '%'.$kw.'%');
+                    if (Schema::hasColumn('plugin_mangas', 'tags')) {
+                        $inner->orWhere('tags', 'like', '%'.$kw.'%');
+                    }
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'manga_chapters') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('manga_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('plugin_mangas')) {
+                        $mangaIds = \Plugins\Manga\Models\Manga::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($mangaIds !== []) {
+                            $inner->orWhereIn('manga_id', $mangaIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'manga_pics') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('url', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)
+                            ->orWhere('manga_id', (int) $kw)
+                            ->orWhere('chapter_id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'activity') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%')
+                        ->orWhere('action', 'like', '%'.$kw.'%')
+                        ->orWhere('hint', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw);
+                    }
+                });
+            } elseif ($module === 'task_logs') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('action', 'like', '%'.$kw.'%')
+                        ->orWhere('day_key', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw)->orWhere('task_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'signs') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('day_key', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('member_id', (int) $kw);
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                });
+            } elseif ($module === 'sign_milestones') {
+                $q->where(function ($inner) use ($kw) {
+                    $inner->where('name', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('days', (int) $kw);
+                    }
+                });
             } else {
                 $q->where($cfg['search'], 'like', '%'.$kw.'%');
             }
         }
         if ($module === 'comments' || $module === 'topics' || $module === 'arts' || $module === 'slides' || $module === 'members' || $module === 'orders' || $module === 'groups' || $module === 'reports' || $module === 'guestbooks' || $module === 'playfails' || $module === 'roles') {
-            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+            $artQueue = $module === 'arts' ? trim((string) ($params['queue'] ?? '')) : '';
+            $artQueued = in_array($artQueue, ['published', 'draft', 'pending'], true);
+            if (! $artQueued && array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
             }
             if ($module === 'comments' && (string) ($params['report'] ?? '') === '1' && Schema::hasColumn('video_comments', 'comment_report')) {
                 $q->where('comment_report', '>', 0);
             }
             if ($module === 'arts' && array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null) {
-                $q->where('type_id', (int) $params['type_id']);
+                $this->applyArtTypeFilter($q, (int) $params['type_id']);
+            }
+            if ($module === 'arts') {
+                $this->applyArtQueue($q, $artQueue);
+                $flag = strtolower(trim((string) ($params['flag'] ?? '')));
+                if (in_array($flag, VideoArt::FLAGS, true) && Schema::hasColumn('video_arts', 'flags')) {
+                    $q->withFlag($flag);
+                }
+                $this->applyArtTagFilter($q, $params);
             }
             if ($module === 'slides' && trim((string) ($params['slot'] ?? '')) !== '') {
                 $q->where('slot', trim((string) $params['slot']));
@@ -1325,6 +1543,87 @@ class SiteModuleService
                 $q->where('logo', '!=', '')->whereNotNull('logo');
             }
         }
+        if ($module === 'domains') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if ((string) ($params['current'] ?? '') === '1') {
+                $hosts = DomainBindService::hostCandidates(DomainBindService::currentHost());
+                if ($hosts === []) {
+                    $q->whereRaw('1 = 0');
+                } else {
+                    $q->whereIn('host', $hosts);
+                }
+            }
+        }
+        if ($module === 'mangas') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if (array_key_exists('yid', $params) && $params['yid'] !== '' && $params['yid'] !== null && Schema::hasColumn('plugin_mangas', 'yid')) {
+                $q->where('yid', (int) $params['yid']);
+            }
+            if (array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null && Schema::hasColumn('plugin_mangas', 'type_id')) {
+                $q->where('type_id', (int) $params['type_id']);
+            }
+        }
+        if ($module === 'manga_types') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+        }
+        if ($module === 'manga_chapters' || $module === 'manga_pics') {
+            if (array_key_exists('manga_id', $params) && $params['manga_id'] !== '' && $params['manga_id'] !== null) {
+                $q->where('manga_id', (int) $params['manga_id']);
+            }
+        }
+        if ($module === 'manga_pics' && array_key_exists('chapter_id', $params) && $params['chapter_id'] !== '' && $params['chapter_id'] !== null) {
+            $q->where('chapter_id', (int) $params['chapter_id']);
+        }
+        if ($module === 'mall_goods') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if (array_key_exists('type', $params) && $params['type'] !== '' && $params['type'] !== null && Schema::hasColumn('plugin_mall_goods', 'type')) {
+                $q->where('type', strtolower(trim((string) $params['type'])));
+            }
+        }
+        if ($module === 'mall_orders') {
+            $desk = strtolower(trim((string) ($params['desk'] ?? '')));
+            if ($desk === 'ship') {
+                $q->where('status', 1);
+                if (Schema::hasColumn('plugin_mall_orders', 'goods_type')) {
+                    $q->where(function ($inner) {
+                        $inner->where('goods_type', 'goods')->orWhere('goods_type', '')->orWhereNull('goods_type');
+                    });
+                }
+            } else {
+                if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                    $q->where('status', (int) $params['status']);
+                }
+                if (array_key_exists('goods_type', $params) && $params['goods_type'] !== '' && $params['goods_type'] !== null && Schema::hasColumn('plugin_mall_orders', 'goods_type')) {
+                    $q->where('goods_type', strtolower(trim((string) $params['goods_type'])));
+                }
+            }
+        }
+        if ($module === 'activity') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+            if (array_key_exists('type', $params) && $params['type'] !== '' && $params['type'] !== null) {
+                $q->where('type', (int) $params['type']);
+            }
+        }
+        if ($module === 'task_logs') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+        }
+        if ($module === 'sign_milestones') {
+            if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
+                $q->where('status', (int) $params['status']);
+            }
+        }
         if ($module === 'classes') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
@@ -1473,7 +1772,11 @@ class SiteModuleService
         } elseif ($module === 'synonyms') {
             $q->orderBy('from_word')->orderBy('id');
         } elseif ($module === 'arts') {
-            $q->orderByDesc('updated_at')->orderByDesc('id');
+            if ((string) ($params['trash'] ?? '') === '1' && Schema::hasColumn('video_arts', 'deleted_at')) {
+                $q->orderByDesc('deleted_at')->orderByDesc('id');
+            } else {
+                $q->orderByDesc('updated_at')->orderByDesc('id');
+            }
         } elseif ($module === 'collect_temps') {
             $q->orderBy('status')->orderByDesc('id');
         } elseif ($module === 'reports') {
@@ -1492,6 +1795,10 @@ class SiteModuleService
             $q->orderByDesc('status')->orderByDesc('id');
         } elseif ($module === 'searchwords') {
             $q->orderByDesc('hits')->orderByDesc('updated_at')->orderByDesc('id');
+        } elseif ($module === 'mangas' || $module === 'manga_types' || $module === 'mall_goods' || $module === 'activity' || $module === 'sign_milestones') {
+            $q->orderByDesc('sort')->orderByDesc('id');
+        } elseif ($module === 'manga_chapters' || $module === 'manga_pics') {
+            $q->orderBy('sort')->orderBy('id');
         } else {
             $q->orderByDesc('id');
         }
@@ -1560,6 +1867,36 @@ class SiteModuleService
         if ($module === 'websites') {
             $rows = $this->decorateWebsites($rows);
         }
+        if ($module === 'domains') {
+            $rows = $this->decorateDomains($rows);
+        }
+        if ($module === 'mangas') {
+            $rows = $this->decorateMangas($rows);
+        }
+        if ($module === 'manga_chapters') {
+            $rows = $this->decorateMangaChapters($rows);
+        }
+        if ($module === 'manga_pics') {
+            $rows = $this->decorateMangaPics($rows);
+        }
+        if ($module === 'mall_goods') {
+            $rows = $this->decorateMallGoods($rows);
+        }
+        if ($module === 'mall_orders') {
+            $rows = $this->decorateMallOrders($rows);
+        }
+        if ($module === 'activity') {
+            $rows = app(MemberActivityService::class)->decorateTasks($rows);
+        }
+        if ($module === 'task_logs') {
+            $rows = app(MemberActivityService::class)->decorateTaskLogs($rows);
+        }
+        if ($module === 'signs') {
+            $rows = app(MemberActivityService::class)->decorateSigns($rows);
+        }
+        if ($module === 'sign_milestones') {
+            $rows = app(MemberActivityService::class)->decorateMilestones($rows);
+        }
         if ($module === 'classes') {
             $rows = $this->decorateClasses($rows);
         }
@@ -1626,6 +1963,12 @@ class SiteModuleService
         if ($module === 'favorites') {
             return Result::fail('收藏由会员在影片页点出来。后台只查看和删除。');
         }
+        if ($module === 'task_logs') {
+            return Result::fail('任务记录由前台完成产生，不能手添或改。');
+        }
+        if ($module === 'signs') {
+            return Result::fail('签到由会员在前台点。后台只查看和删除。');
+        }
         if ($module === 'botlogs') {
             return Result::fail('爬虫日志是前台访问记下来的，不能手添。');
         }
@@ -1636,6 +1979,10 @@ class SiteModuleService
             return Result::fail('提现由会员申请。后台只审核打款或拒绝。');
         }
         $cfg = $this->config($module);
+        $handled = $this->dispatchPlugin($cfg, 'save', [$data, $id]);
+        if ($handled !== null) {
+            return $handled;
+        }
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
         $probe = new $class;
@@ -1792,10 +2139,50 @@ class SiteModuleService
                 $payload['title'] = $title;
             }
             if (array_key_exists('type_id', $payload)) {
-                $payload['type_id'] = max(0, (int) $payload['type_id']);
+                $tid = max(0, (int) $payload['type_id']);
+                if ($tid > 0) {
+                    if (! Schema::hasTable('video_types')) {
+                        return Result::fail('请先执行数据库迁移');
+                    }
+                    $type = VideoTypeModel::query()->find($tid);
+                    if (! $type) {
+                        return Result::fail('请选择文章栏目');
+                    }
+                    if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 2) {
+                        return Result::fail('请选择文章栏目，不要用影片分类');
+                    }
+                }
+                $payload['type_id'] = $tid;
             }
-            if (array_key_exists('cover', $payload)) {
-                $payload['cover'] = trim((string) $payload['cover']);
+            foreach (['cover' => 255, 'blurb' => 500, 'source' => 120, 'author' => 80, 'tag' => 255, 'seo_title' => 255, 'seo_key' => 255, 'seo_des' => 500] as $col => $max) {
+                if (array_key_exists($col, $payload)) {
+                    $payload[$col] = mb_substr(trim((string) $payload[$col]), 0, $max);
+                }
+            }
+            if (array_key_exists('flags', $payload) || array_key_exists('flag_list', $data)
+                || array_key_exists('flag_top', $data) || array_key_exists('flag_recommend', $data) || array_key_exists('flag_hot', $data)) {
+                $rawFlags = $payload['flags'] ?? '';
+                if (! empty($data['flag_list']) && is_array($data['flag_list'])) {
+                    $rawFlags = $data['flag_list'];
+                }
+                if (is_string($rawFlags) || is_array($rawFlags)) {
+                    $merged = is_array($rawFlags) ? $rawFlags : (preg_split('/[,，]/u', (string) $rawFlags) ?: []);
+                    foreach (VideoArt::FLAGS as $flag) {
+                        $key = 'flag_'.$flag;
+                        if (array_key_exists($key, $data) && ! in_array((string) $data[$key], ['', '0', 'false'], true)) {
+                            $merged[] = $flag;
+                        }
+                    }
+                    $payload['flags'] = VideoArt::normalizeFlags($merged);
+                } else {
+                    $payload['flags'] = VideoArt::normalizeFlags($rawFlags);
+                }
+            }
+            if (array_key_exists('published_at', $payload)) {
+                $payload['published_at'] = $this->parseExpireAt($payload['published_at']);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
             }
             if (array_key_exists('hits', $payload)) {
                 $payload['hits'] = max(0, (int) $payload['hits']);
@@ -2063,6 +2450,55 @@ class SiteModuleService
             if (array_key_exists('status', $payload)) {
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
             }
+        }
+        if ($module === 'domains') {
+            $rawHost = array_key_exists('host', $payload) || $id === null
+                ? (string) ($payload['host'] ?? '')
+                : null;
+            if ($rawHost !== null) {
+                $host = DomainBindService::normalizeHost($rawHost);
+                if ($host === '') {
+                    return Result::fail('请填写域名，不要带 http 和路径');
+                }
+                $dup = VideoDomain::query()->where('host', $host);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个域名已经绑过');
+                }
+                $payload['host'] = $host;
+            }
+            if (array_key_exists('theme', $payload) || $id === null) {
+                $theme = trim((string) ($payload['theme'] ?? ''));
+                if ($theme !== '' && ! DomainBindService::themeExists($theme)) {
+                    return Result::fail('这个模板目录不存在');
+                }
+                $payload['theme'] = $theme;
+            }
+            foreach (['site_name' => 120, 'site_keyword' => 255, 'site_description' => 500, 'remark' => 255] as $col => $max) {
+                if (array_key_exists($col, $payload) && $this->hasColumn($probe, $col)) {
+                    $payload[$col] = mb_substr(trim((string) $payload[$col]), 0, $max);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if ($id === null && ! array_key_exists('status', $payload)) {
+                $payload['status'] = 1;
+            }
+        }
+        $mangaSave = $this->applyMangaSave($module, $payload, $id);
+        if ($mangaSave !== null) {
+            return $mangaSave;
+        }
+        $mallSave = $this->applyMallSave($module, $payload, $data, $id);
+        if ($mallSave !== null) {
+            return $mallSave;
+        }
+        $activitySave = $this->applyActivitySave($module, $payload, $id);
+        if ($activitySave !== null) {
+            return $activitySave;
         }
         if ($module === 'classes') {
             $name = trim((string) ($payload['name'] ?? ''));
@@ -2522,6 +2958,7 @@ class SiteModuleService
                 $this->changePoints($id, $memberPointsTo - (int) $row->points, 'admin', '后台改积分');
             }
             $this->afterMoneySave($module, $row, $oldStatus);
+            $this->syncArtTagsIfPresent($id, $data, $module);
 
             return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, true, AdminOpLog::subjectFrom($payload, $row), $id), $id, Result::success(['id' => $id]));
         }
@@ -2535,6 +2972,7 @@ class SiteModuleService
         $row = $class::query()->create($payload);
         $this->afterMoneySave($module, $row, null);
         $newId = (int) $row->id;
+        $this->syncArtTagsIfPresent($newId, $data, $module);
 
         return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, false, AdminOpLog::subjectFrom($payload, $row), $newId), $newId, Result::success(['id' => $newId]));
     }
@@ -2580,6 +3018,10 @@ class SiteModuleService
     public function delete(string $module, int $id): array
     {
         $cfg = $this->config($module);
+        $handled = $this->dispatchPlugin($cfg, 'delete', [$id]);
+        if ($handled !== null) {
+            return $handled;
+        }
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
         $row = $class::query()->find($id);
@@ -2637,6 +3079,18 @@ class SiteModuleService
             }
         }
         $subject = AdminOpLog::subjectFrom([], $row);
+        if ($module === 'arts' && Schema::hasColumn('video_arts', 'deleted_at')) {
+            $row->deleted_at = time();
+            if ($this->hasColumn($row, 'updated_at')) {
+                $row->updated_at = time();
+            }
+            $row->save();
+
+            return $this->loggedModule($module, 'delete', AdminOpLog::moduleDeleteSummary($module, $subject, $id), $id, Result::success([], '已移入回收站'));
+        }
+        if ($module === 'arts') {
+            app(ArtTagService::class)->detachArt($id);
+        }
         $row->delete();
 
         return $this->loggedModule($module, 'delete', AdminOpLog::moduleDeleteSummary($module, $subject, $id), $id, Result::success());
@@ -2838,7 +3292,16 @@ class SiteModuleService
      */
     public function batch(string $module, array $ids, string $action, mixed $value = ''): array
     {
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs'], true)) {
+        try {
+            $cfg = $this->config($module);
+        } catch (\InvalidArgumentException) {
+            return Result::fail('不支持的操作');
+        }
+        $handled = $this->dispatchPlugin($cfg, 'batch', [$ids, $action, $value]);
+        if ($handled !== null) {
+            return $handled;
+        }
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -2857,6 +3320,7 @@ class SiteModuleService
                 'ads' => '请先勾选广告',
                 'links' => '请先勾选友链',
                 'websites' => '请先勾选站点',
+                'domains' => '请先勾选域名',
                 'classes' => '请先勾选类型词',
                 'synonyms' => '请先勾选同义词',
                 'downloaders' => '请先勾选下载器',
@@ -2891,6 +3355,18 @@ class SiteModuleService
                     'group' => $this->save($module, ['group_id' => (int) $value], $id),
                     'engine' => $this->save($module, ['engine' => (string) $value], $id),
                     'points' => $this->adjustMemberPoints($id, (int) $value),
+                    'flags' => $module === 'arts'
+                        ? $this->save($module, ['flags' => (string) $value], $id)
+                        : Result::fail('不支持的操作'),
+                    'flag_top', 'flag_recommend', 'flag_hot' => $module === 'arts'
+                        ? $this->applyArtFlag($id, substr($action, 5), true)
+                        : Result::fail('不支持的操作'),
+                    'unflag_top', 'unflag_recommend', 'unflag_hot' => $module === 'arts'
+                        ? $this->applyArtFlag($id, substr($action, 7), false)
+                        : Result::fail('不支持的操作'),
+                    'copy' => $module === 'arts' ? $this->copyArt($id) : Result::fail('不支持的操作'),
+                    'restore' => $module === 'arts' ? $this->restoreArt($id) : Result::fail('不支持的操作'),
+                    'purge' => $module === 'arts' ? $this->purgeArt($id) : Result::fail('不支持的操作'),
                     'offline' => $module === 'playfails'
                         ? app(\App\Services\Video\SiteOpsService::class)->disablePlayFailSource($id)
                         : Result::fail('不支持的操作'),
@@ -4511,83 +4987,359 @@ class SiteModuleService
         if ($typeIds !== [] && Schema::hasTable('video_types')) {
             $names = VideoTypeModel::query()->whereIn('id', array_values(array_unique($typeIds)))->pluck('name', 'id')->all();
         }
+        $now = time();
+        $flagMap = ['top' => '置顶', 'recommend' => '推荐', 'hot' => '热门'];
+        $tagMap = $this->artTagMap(array_values(array_filter(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows))));
         foreach ($rows as &$row) {
             $tid = (int) ($row['type_id'] ?? 0);
             $ts = (int) ($row['updated_at'] ?? ($row['created_at'] ?? 0));
             $row['type_name'] = (string) ($names[$tid] ?? '');
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['updated_at_unix'] = $ts;
+            $row['deleted_at_unix'] = (int) ($row['deleted_at'] ?? 0);
             $row['has_cover'] = trim((string) ($row['cover'] ?? '')) !== '';
+            $flags = array_values(array_filter(array_map('trim', explode(',', (string) ($row['flags'] ?? '')))));
+            $labels = [];
+            foreach ($flags as $flag) {
+                if (isset($flagMap[$flag])) {
+                    $labels[] = $flagMap[$flag];
+                }
+            }
+            $row['flags_label'] = implode('/', $labels);
+            $pub = (int) ($row['published_at'] ?? 0);
+            if ($pub > $now) {
+                $row['published_text'] = '定时 '.date('Y-m-d H:i', $pub);
+            } elseif ($pub > 0) {
+                $row['published_text'] = date('Y-m-d H:i', $pub);
+            } else {
+                $created = (int) ($row['created_at'] ?? 0);
+                $row['published_text'] = $created > 0 ? date('Y-m-d H:i', $created) : '';
+            }
+            $row['listed'] = ((int) ($row['status'] ?? 0) === 1) && ($pub === 0 || $pub <= $now);
+            $artId = (int) ($row['id'] ?? 0);
+            $tags = $tagMap[$artId] ?? [];
+            if ($tags === []) {
+                foreach (preg_split('/[,，]/u', (string) ($row['tag'] ?? '')) ?: [] as $name) {
+                    $name = trim((string) $name);
+                    if ($name !== '') {
+                        $tags[] = ['id' => 0, 'name' => $name, 'slug' => ''];
+                    }
+                }
+            }
+            $row['tag_list'] = $tags;
+            $row['tag_label'] = implode(' / ', array_column($tags, 'name'));
         }
         unset($row);
 
         return $rows;
     }
 
-    /** @return list<array{id:int,name:string,parent_id:int}> */
+    /** @return list<array{id:int,name:string,parent_id:int,depth:int}> */
     public function artTypeOptions(): array
     {
-        try {
-            if (! Schema::hasTable('video_types')) {
-                return [];
-            }
-            $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
-            if (Schema::hasColumn('video_types', 'mid')) {
-                $q->where('mid', 2);
-            }
-
-            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
-                return [
-                    'id' => (int) $row->id,
-                    'name' => (string) $row->name,
-                    'parent_id' => (int) ($row->parent_id ?? 0),
-                ];
-            })->all();
-        } catch (\Throwable) {
-            return [];
-        }
+        return $this->typeOptionTree(2);
     }
 
-    /** @return list<array{id:int,name:string,parent_id:int}> */
+    /** @return list<array{id:int,name:string,parent_id:int,depth:int}> */
     public function websiteTypeOptions(): array
     {
-        try {
-            if (! Schema::hasTable('video_types')) {
-                return [];
-            }
-            $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
-            if (Schema::hasColumn('video_types', 'mid')) {
-                $q->where('mid', 3);
-            }
-
-            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
-                return [
-                    'id' => (int) $row->id,
-                    'name' => (string) $row->name,
-                    'parent_id' => (int) ($row->parent_id ?? 0),
-                ];
-            })->all();
-        } catch (\Throwable) {
-            return [];
-        }
+        return $this->typeOptionTree(3);
     }
 
     /** @return array<string, int> */
     public function artQueues(): array
     {
-        $zero = ['all' => 0, 'published' => 0, 'draft' => 0];
+        $zero = ['all' => 0, 'published' => 0, 'draft' => 0, 'pending' => 0];
         try {
             if (! Schema::hasTable('video_arts')) {
                 return $zero;
             }
+            $pending = 0;
+            $publishedQ = VideoArt::query()->listed();
+            if (Schema::hasColumn('video_arts', 'published_at')) {
+                $pending = (int) VideoArt::query()->where('status', 1)->where('published_at', '>', time())->count();
+            }
 
             return [
                 'all' => (int) VideoArt::query()->count(),
-                'published' => (int) VideoArt::query()->where('status', 1)->count(),
+                'published' => (int) $publishedQ->count(),
                 'draft' => (int) VideoArt::query()->where('status', 0)->count(),
+                'pending' => $pending,
             ];
         } catch (\Throwable) {
             return $zero;
+        }
+    }
+
+    private function applyArtTypeFilter(\Illuminate\Database\Eloquent\Builder $q, int $typeId): void
+    {
+        if ($typeId < 1) {
+            $q->where(function ($inner) {
+                $inner->where('type_id', 0)->orWhereNull('type_id');
+            });
+
+            return;
+        }
+        $type = VideoTypeModel::query()->find($typeId);
+        if (! $type) {
+            $q->whereRaw('0 = 1');
+
+            return;
+        }
+        if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 2) {
+            $q->whereRaw('0 = 1');
+
+            return;
+        }
+        $q->whereIn('type_id', $type->descendantIds());
+    }
+
+    public function artLooseCount(): int
+    {
+        try {
+            if (! Schema::hasTable('video_arts')) {
+                return 0;
+            }
+
+            return (int) VideoArt::query()->where(function ($inner) {
+                $inner->where('type_id', 0)->orWhereNull('type_id');
+            })->count();
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
+    public function resolveArtTypeId(int $typeId): int
+    {
+        if ($typeId < 1) {
+            return 0;
+        }
+        foreach ($this->artTypeOptions() as $row) {
+            if ((int) ($row['id'] ?? 0) === $typeId) {
+                return $typeId;
+            }
+        }
+
+        return 0;
+    }
+
+    private function applyArtQueue(\Illuminate\Database\Eloquent\Builder $q, string $queue): void
+    {
+        if ($queue === 'draft') {
+            $q->where('status', 0);
+
+            return;
+        }
+        if ($queue === 'pending') {
+            $q->where('status', 1);
+            if (Schema::hasColumn('video_arts', 'published_at')) {
+                $q->where('published_at', '>', time());
+            } else {
+                $q->whereRaw('0 = 1');
+            }
+
+            return;
+        }
+        if ($queue === 'published') {
+            $q->listed();
+        }
+    }
+
+    private function applyArtFlag(int $id, string $flag, bool $on): array
+    {
+        $flag = strtolower(trim($flag));
+        if (! in_array($flag, VideoArt::FLAGS, true)) {
+            return Result::fail('不支持的操作');
+        }
+        $row = VideoArt::query()->find($id);
+        if (! $row) {
+            return Result::fail('数据不存在');
+        }
+        $list = $row->flagList();
+        if ($on) {
+            if (! in_array($flag, $list, true)) {
+                $list[] = $flag;
+            }
+        } else {
+            $list = array_values(array_filter($list, fn ($item) => $item !== $flag));
+        }
+
+        return $this->save('arts', ['flags' => implode(',', $list)], $id);
+    }
+
+    private function applyArtTagFilter(\Illuminate\Database\Eloquent\Builder $q, array $params): void
+    {
+        $tagId = (int) ($params['tag_id'] ?? 0);
+        if ($tagId < 1) {
+            return;
+        }
+        if (Schema::hasTable('video_art_tag_rel') && Schema::hasTable('video_art_tags')) {
+            $q->whereHas('tags', fn ($inner) => $inner->where('video_art_tags.id', $tagId));
+
+            return;
+        }
+        $name = '';
+        if (Schema::hasTable('video_art_tags')) {
+            $name = trim((string) (VideoArtTag::query()->find($tagId)?->name ?? ''));
+        }
+        if ($name !== '' && Schema::hasColumn('video_arts', 'tag')) {
+            $q->where('tag', 'like', '%'.$name.'%');
+
+            return;
+        }
+        $q->whereRaw('0 = 1');
+    }
+
+    /**
+     * @param  list<int>  $artIds
+     * @return array<int, list<array{id:int,name:string,slug:string}>>
+     */
+    private function artTagMap(array $artIds): array
+    {
+        $artIds = array_values(array_unique(array_filter($artIds)));
+        if ($artIds === [] || ! Schema::hasTable('video_art_tag_rel') || ! Schema::hasTable('video_art_tags')) {
+            return [];
+        }
+        $map = [];
+        $rows = DB::table('video_art_tag_rel as r')
+            ->join('video_art_tags as t', 't.id', '=', 'r.tag_id')
+            ->whereIn('r.art_id', $artIds)
+            ->orderByDesc('t.sort')
+            ->orderByDesc('t.id')
+            ->get(['r.art_id', 't.id', 't.name', 't.slug']);
+        foreach ($rows as $row) {
+            $map[(int) $row->art_id][] = [
+                'id' => (int) $row->id,
+                'name' => (string) $row->name,
+                'slug' => (string) $row->slug,
+            ];
+        }
+
+        return $map;
+    }
+
+    private function syncArtTagsIfPresent(int $id, array $data, string $module): void
+    {
+        if ($module !== 'arts' || $id < 1) {
+            return;
+        }
+        if (
+            ! array_key_exists('tag', $data)
+            && ! array_key_exists('tags', $data)
+            && ! array_key_exists('tag_ids', $data)
+            && ! array_key_exists('tag_ids[]', $data)
+            && ! array_key_exists('tag_extra', $data)
+        ) {
+            return;
+        }
+        if (! isset($data['tag_ids']) && isset($data['tag_ids[]'])) {
+            $data['tag_ids'] = $data['tag_ids[]'];
+        }
+        app(ArtTagService::class)->syncArt($id, $data);
+    }
+
+    public function copyArt(int $id): array
+    {
+        $row = VideoArt::query()->find($id);
+        if (! $row) {
+            return Result::fail('数据不存在');
+        }
+        $now = time();
+        $payload = $row->getAttributes();
+        unset($payload['id']);
+        $title = trim((string) ($payload['title'] ?? ''));
+        $payload['title'] = mb_substr($title === '' ? '副本' : $title.' 副本', 0, 200);
+        $payload['status'] = 0;
+        $payload['hits'] = 0;
+        if (Schema::hasColumn('video_arts', 'deleted_at')) {
+            $payload['deleted_at'] = 0;
+        }
+        $payload['created_at'] = $now;
+        $payload['updated_at'] = $now;
+        $copy = VideoArt::query()->create($payload);
+        $newId = (int) $copy->id;
+        app(ArtTagService::class)->syncArt($newId, [
+            'tag_ids' => app(ArtTagService::class)->idsForArt($id),
+            'tag' => (string) ($row->tag ?? ''),
+        ]);
+
+        return Result::success(['id' => $newId], '已复制为草稿');
+    }
+
+    public function restoreArt(int $id): array
+    {
+        if (! Schema::hasColumn('video_arts', 'deleted_at')) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $row = VideoArt::query()->withoutGlobalScope('alive')->find($id);
+        if (! $row) {
+            return Result::fail('数据不存在');
+        }
+        if ((int) ($row->deleted_at ?? 0) < 1) {
+            return Result::fail('不在回收站');
+        }
+        $row->deleted_at = 0;
+        if ($this->hasColumn($row, 'updated_at')) {
+            $row->updated_at = time();
+        }
+        $row->save();
+
+        return $this->loggedModule('arts', 'restore', '从回收站还原了文章「'.trim((string) $row->title).'」', $id, Result::success(['id' => $id], '已还原'));
+    }
+
+    public function purgeArt(int $id): array
+    {
+        $row = Schema::hasColumn('video_arts', 'deleted_at')
+            ? VideoArt::query()->withoutGlobalScope('alive')->find($id)
+            : VideoArt::query()->find($id);
+        if (! $row) {
+            return Result::fail('数据不存在');
+        }
+        if (Schema::hasColumn('video_arts', 'deleted_at') && (int) ($row->deleted_at ?? 0) < 1) {
+            return Result::fail('请先删进回收站');
+        }
+        $subject = trim((string) $row->title);
+        app(ArtTagService::class)->detachArt($id);
+        $row->delete();
+
+        return $this->loggedModule('arts', 'purge', '彻底删除了文章「'.$subject.'」', $id, Result::success([], '已彻底删除'));
+    }
+
+    public function emptyArtRecycle(): array
+    {
+        if (! Schema::hasColumn('video_arts', 'deleted_at')) {
+            return Result::fail('请先执行数据库迁移');
+        }
+        $ids = VideoArt::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if ($ids === []) {
+            return Result::fail('回收站是空的');
+        }
+        $ok = 0;
+        AdminOpLog::quiet(function () use ($ids, &$ok) {
+            foreach ($ids as $id) {
+                $res = $this->purgeArt($id);
+                if ((int) ($res['code'] ?? 1) === 0) {
+                    $ok++;
+                }
+            }
+        });
+        if ($ok === 0) {
+            return Result::fail('操作失败');
+        }
+
+        return $this->loggedModule('arts', 'purge', '清空了文章回收站 '.$ok.' 篇', 0, Result::success(['ok' => $ok], '已清空回收站'), ['count' => $ok]);
+    }
+
+    public function artRecycleCount(): int
+    {
+        try {
+            if (! Schema::hasTable('video_arts') || ! Schema::hasColumn('video_arts', 'deleted_at')) {
+                return 0;
+            }
+
+            return (int) VideoArt::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->count();
+        } catch (\Throwable) {
+            return 0;
         }
     }
 
@@ -4668,8 +5420,16 @@ class SiteModuleService
         }
     }
 
-    /** @return list<array{id:int,name:string,parent_id:int}> */
+    /** @return list<array{id:int,name:string,parent_id:int,depth:int}> */
     public function vodTypeOptions(): array
+    {
+        return $this->typeOptionTree(1);
+    }
+
+    /**
+     * @return list<array{id:int,name:string,parent_id:int,depth:int}>
+     */
+    private function typeOptionTree(int $mid): array
     {
         try {
             if (! Schema::hasTable('video_types')) {
@@ -4677,16 +5437,55 @@ class SiteModuleService
             }
             $q = VideoTypeModel::query()->orderByDesc('sort')->orderBy('id');
             if (Schema::hasColumn('video_types', 'mid')) {
-                $q->where('mid', 1);
+                $q->where('mid', $mid);
+            } elseif ($mid !== 1) {
+                return [];
             }
+            $rows = $q->get(['id', 'name', 'parent_id']);
+            $counts = [];
+            if ($mid === 2 && Schema::hasTable('video_arts')) {
+                try {
+                    $counts = VideoArt::query()
+                        ->selectRaw('type_id, count(*) as c')
+                        ->groupBy('type_id')
+                        ->pluck('c', 'type_id')
+                        ->all();
+                } catch (\Throwable) {
+                    $counts = [];
+                }
+            }
+            $byParent = [];
+            $ids = [];
+            foreach ($rows as $row) {
+                $ids[(int) $row->id] = true;
+            }
+            foreach ($rows as $row) {
+                $pid = (int) ($row->parent_id ?? 0);
+                if ($pid > 0 && ! isset($ids[$pid])) {
+                    $pid = 0;
+                }
+                $byParent[$pid][] = $row;
+            }
+            $out = [];
+            $walk = function (int $parentId, int $depth) use (&$walk, &$out, $byParent, $counts): void {
+                foreach ($byParent[$parentId] ?? [] as $row) {
+                    $id = (int) $row->id;
+                    $raw = (string) $row->name;
+                    $pad = $depth > 0 ? str_repeat('└ ', $depth) : '';
+                    $out[] = [
+                        'id' => $id,
+                        'name' => $pad.$raw,
+                        'title' => $raw,
+                        'parent_id' => (int) ($row->parent_id ?? 0),
+                        'depth' => $depth,
+                        'art_count' => (int) ($counts[$id] ?? $counts[(string) $id] ?? 0),
+                    ];
+                    $walk($id, $depth + 1);
+                }
+            };
+            $walk(0, 0);
 
-            return $q->get(['id', 'name', 'parent_id'])->map(function ($row) {
-                return [
-                    'id' => (int) $row->id,
-                    'name' => (string) $row->name,
-                    'parent_id' => (int) ($row->parent_id ?? 0),
-                ];
-            })->all();
+            return $out;
         } catch (\Throwable) {
             return [];
         }
@@ -5025,6 +5824,52 @@ class SiteModuleService
         } catch (\Throwable) {
             return $zero;
         }
+    }
+
+    public function domainThemeOptions(): array
+    {
+        return DomainBindService::themeOptions();
+    }
+
+    /** @return array<string, int> */
+    public function domainQueues(): array
+    {
+        $zero = ['all' => 0, 'on' => 0, 'off' => 0, 'current' => 0];
+        try {
+            if (! Schema::hasTable('video_domains')) {
+                return $zero;
+            }
+            $hosts = DomainBindService::hostCandidates(DomainBindService::currentHost());
+            $q = VideoDomain::query();
+
+            return [
+                'all' => (int) (clone $q)->count(),
+                'on' => (int) (clone $q)->where('status', 1)->count(),
+                'off' => (int) (clone $q)->where('status', 0)->count(),
+                'current' => $hosts === [] ? 0 : (int) (clone $q)->whereIn('host', $hosts)->count(),
+            ];
+        } catch (\Throwable) {
+            return $zero;
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateDomains(array $rows): array
+    {
+        $current = DomainBindService::hostCandidates(DomainBindService::currentHost());
+        foreach ($rows as &$row) {
+            $host = (string) ($row['host'] ?? '');
+            $theme = trim((string) ($row['theme'] ?? ''));
+            $name = trim((string) ($row['site_name'] ?? ''));
+            $row['is_current'] = $host !== '' && in_array($host, $current, true);
+            $row['theme_label'] = $theme === '' ? '跟站点设置' : DomainBindService::themeTitle($theme);
+            $row['theme_missing'] = $theme !== '' && ! DomainBindService::themeExists($theme);
+            $row['site_name_label'] = $name !== '' ? $name : '跟站点设置';
+            $row['status'] = (int) ($row['status'] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
     }
 
     /** @return array<string, int> */
@@ -5387,8 +6232,36 @@ class SiteModuleService
                 return null;
             }
             $decorated = $this->decorateArts([$row->toArray()]);
+            $art = $decorated[0] ?? null;
+            if (! is_array($art)) {
+                return null;
+            }
+            $svc = app(ArtTagService::class);
+            $ids = $svc->idsForArt($id);
+            $comma = $svc->collectNames(['tag' => (string) ($art['tag'] ?? '')]);
+            if ($ids === [] && $comma !== []) {
+                foreach ($svc->options() as $opt) {
+                    if (in_array((string) ($opt['name'] ?? ''), $comma, true)) {
+                        $ids[] = (int) $opt['id'];
+                    }
+                }
+            }
+            $picked = [];
+            foreach ($svc->options() as $opt) {
+                if (in_array((int) $opt['id'], $ids, true)) {
+                    $picked[] = (string) $opt['name'];
+                }
+            }
+            $extra = [];
+            foreach ($comma as $name) {
+                if (! in_array($name, $picked, true)) {
+                    $extra[] = $name;
+                }
+            }
+            $art['tag_ids'] = array_values(array_unique($ids));
+            $art['tag_extra'] = implode(',', $extra);
 
-            return $decorated[0] ?? null;
+            return $art;
         } catch (\Throwable) {
             return null;
         }
@@ -5879,6 +6752,500 @@ class SiteModuleService
             'target_id' => $targetId,
             'payload' => $extra,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{code?:int,msg?:string,data?:mixed}|null
+     */
+    private function applyMangaSave(string $module, array &$payload, ?int $id): ?array
+    {
+        if ($module === 'mangas') {
+            $title = array_key_exists('title', $payload) || $id === null
+                ? trim((string) ($payload['title'] ?? ''))
+                : null;
+            if ($id === null && ($title === null || $title === '')) {
+                return Result::fail('请填写名称');
+            }
+            if ($title !== null) {
+                if ($title === '') {
+                    return Result::fail('请填写名称');
+                }
+                $payload['title'] = mb_substr($title, 0, 200);
+            }
+            if (array_key_exists('serialize', $payload)) {
+                $payload['serialize'] = (int) $payload['serialize'] === 1 ? 1 : 0;
+            }
+            if (array_key_exists('yid', $payload)) {
+                $payload['yid'] = (int) $payload['yid'] === 1 ? 1 : 0;
+            }
+            if (array_key_exists('recommend', $payload)) {
+                $payload['recommend'] = (int) $payload['recommend'] === 1 ? 1 : 0;
+            }
+            if (array_key_exists('type_id', $payload)) {
+                $payload['type_id'] = max(0, (int) $payload['type_id']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            if (array_key_exists('tags', $payload)) {
+                $payload['tags'] = mb_substr(trim((string) $payload['tags']), 0, 255);
+            }
+
+            return null;
+        }
+        if ($module === 'manga_chapters') {
+            $mangaId = array_key_exists('manga_id', $payload) || $id === null
+                ? (int) ($payload['manga_id'] ?? 0)
+                : null;
+            if ($mangaId !== null) {
+                if ($mangaId < 1 || ! Schema::hasTable('plugin_mangas') || ! \Plugins\Manga\Models\Manga::query()->where('id', $mangaId)->exists()) {
+                    return Result::fail('漫画作品不存在');
+                }
+                $payload['manga_id'] = $mangaId;
+            }
+            if (array_key_exists('name', $payload) || $id === null) {
+                $name = trim((string) ($payload['name'] ?? ''));
+                if ($id === null && $name === '') {
+                    return Result::fail('请填写章节名');
+                }
+                if ($name !== '') {
+                    $payload['name'] = mb_substr($name, 0, 120);
+                }
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+
+            return null;
+        }
+        if ($module === 'manga_pics') {
+            $url = array_key_exists('url', $payload) || $id === null
+                ? (string) ($payload['url'] ?? '')
+                : null;
+            if ($url !== null) {
+                $safe = \Plugins\Manga\Models\MangaChapter::safeUrl($url);
+                if ($safe === '') {
+                    return Result::fail('图片地址必须是 http(s) 或站内路径，不能是 javascript:');
+                }
+                $payload['url'] = mb_substr($safe, 0, 500);
+            }
+            if (array_key_exists('manga_id', $payload)) {
+                $payload['manga_id'] = max(0, (int) $payload['manga_id']);
+            }
+            if (array_key_exists('chapter_id', $payload) || $id === null) {
+                $chapterId = (int) ($payload['chapter_id'] ?? 0);
+                if ($chapterId < 1 || ! Schema::hasTable('plugin_manga_chapters') || ! \Plugins\Manga\Models\MangaChapter::query()->where('id', $chapterId)->exists()) {
+                    return Result::fail('章节不存在');
+                }
+                $payload['chapter_id'] = $chapterId;
+                if (! array_key_exists('manga_id', $payload) || (int) $payload['manga_id'] < 1) {
+                    $chapter = \Plugins\Manga\Models\MangaChapter::query()->find($chapterId);
+                    if ($chapter) {
+                        $payload['manga_id'] = (int) $chapter->manga_id;
+                    }
+                }
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+
+            return null;
+        }
+        if ($module === 'manga_types') {
+            $name = array_key_exists('name', $payload) || $id === null
+                ? trim((string) ($payload['name'] ?? ''))
+                : null;
+            if ($id === null && ($name === null || $name === '')) {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== null) {
+                if ($name === '') {
+                    return Result::fail('请填写名称');
+                }
+                $payload['name'] = mb_substr($name, 0, 80);
+            }
+            if (array_key_exists('parent_id', $payload)) {
+                $payload['parent_id'] = max(0, (int) $payload['parent_id']);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{code?:int,msg?:string,data?:mixed}|null
+     */
+    private function applyActivitySave(string $module, array &$payload, ?int $id): ?array
+    {
+        if ($module === 'activity') {
+            $name = array_key_exists('name', $payload) || $id === null
+                ? trim((string) ($payload['name'] ?? ''))
+                : null;
+            if ($id === null && ($name === null || $name === '')) {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== null) {
+                if ($name === '') {
+                    return Result::fail('请填写名称');
+                }
+                $payload['name'] = mb_substr($name, 0, 40);
+            }
+            $action = array_key_exists('action', $payload) || $id === null
+                ? trim((string) ($payload['action'] ?? ''))
+                : null;
+            if ($id === null && ($action === null || $action === '')) {
+                return Result::fail('请填写动作标识');
+            }
+            if ($action !== null) {
+                if ($action === '') {
+                    return Result::fail('请填写动作标识');
+                }
+                if (! preg_match('/^[a-z][a-z0-9_]{0,39}$/', $action)) {
+                    return Result::fail('动作标识用英文字母开头，如 daily_sign');
+                }
+                $dup = MemberTask::query()->where('action', $action);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('这个动作标识已经有了');
+                }
+                $payload['action'] = $action;
+            }
+            if (array_key_exists('type', $payload) || $id === null) {
+                $type = (int) ($payload['type'] ?? 1);
+                $payload['type'] = $type === 2 ? 2 : 1;
+            }
+            if (array_key_exists('hint', $payload)) {
+                $payload['hint'] = mb_substr(trim((string) $payload['hint']), 0, 255);
+            }
+            foreach (['points', 'sort'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('target', $payload) || $id === null) {
+                $payload['target'] = max(1, (int) ($payload['target'] ?? 1));
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+
+            return null;
+        }
+        if ($module === 'sign_milestones') {
+            $name = array_key_exists('name', $payload) || $id === null
+                ? trim((string) ($payload['name'] ?? ''))
+                : null;
+            if ($id === null && ($name === null || $name === '')) {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== null) {
+                if ($name === '') {
+                    return Result::fail('请填写名称');
+                }
+                $payload['name'] = mb_substr($name, 0, 40);
+            }
+            if (array_key_exists('days', $payload) || $id === null) {
+                $days = max(1, (int) ($payload['days'] ?? 0));
+                $dup = MemberSignMilestone::query()->where('days', $days);
+                if ($id) {
+                    $dup->where('id', '!=', $id);
+                }
+                if ($dup->exists()) {
+                    return Result::fail('已经有这个连续天数');
+                }
+                $payload['days'] = $days;
+            }
+            foreach (['points', 'sort'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $data
+     * @return array{code?:int,msg?:string,data?:mixed}|null
+     */
+    private function applyMallSave(string $module, array &$payload, array $data, ?int $id): ?array
+    {
+        if ($module === 'mall_goods') {
+            $name = array_key_exists('name', $payload) || $id === null
+                ? trim((string) ($payload['name'] ?? ''))
+                : null;
+            if ($id === null && ($name === null || $name === '')) {
+                return Result::fail('请填写名称');
+            }
+            if ($name !== null) {
+                if ($name === '') {
+                    return Result::fail('请填写名称');
+                }
+                $payload['name'] = mb_substr($name, 0, 120);
+            }
+            $type = array_key_exists('type', $payload) || $id === null
+                ? \Plugins\Mall\Services\MallService::normalizeType((string) ($payload['type'] ?? 'goods'))
+                : null;
+            if ($type !== null) {
+                if (! in_array($type, ['goods', 'vip', 'card'], true)) {
+                    return Result::fail('没有这种商品');
+                }
+                $payload['type'] = $type;
+            }
+            foreach (['points', 'stock', 'sort'] as $intField) {
+                if (array_key_exists($intField, $payload)) {
+                    $payload[$intField] = max(0, (int) $payload[$intField]);
+                }
+            }
+            if (array_key_exists('status', $payload)) {
+                $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            $touchExt = array_key_exists('group_id', $data)
+                || array_key_exists('card_points', $data)
+                || array_key_exists('card_mode', $data)
+                || array_key_exists('mode', $data)
+                || array_key_exists('type', $payload);
+            if ($touchExt && $this->hasColumn(new \Plugins\Mall\Models\MallGood, 'ext')) {
+                $ext = [];
+                if ($id) {
+                    $old = \Plugins\Mall\Models\MallGood::query()->find($id);
+                    if ($old) {
+                        $ext = \Plugins\Mall\Services\MallService::decodeExt($old->ext ?? '');
+                    }
+                }
+                if (array_key_exists('group_id', $data)) {
+                    $ext['group_id'] = max(0, (int) $data['group_id']);
+                }
+                if (array_key_exists('card_points', $data)) {
+                    $ext['card_points'] = max(0, (int) $data['card_points']);
+                }
+                $mode = strtolower(trim((string) ($data['card_mode'] ?? $data['mode'] ?? ($ext['card_mode'] ?? $ext['mode'] ?? 'generate'))));
+                if (! in_array($mode, ['generate', 'assign'], true)) {
+                    $mode = 'generate';
+                }
+                $resolvedType = $type ?? \Plugins\Mall\Services\MallService::normalizeType((string) ($payload['type'] ?? ''));
+                if ($resolvedType === 'card' || array_key_exists('card_mode', $data) || array_key_exists('mode', $data)) {
+                    $ext['card_mode'] = $mode;
+                    $ext['mode'] = $mode;
+                }
+                if ($resolvedType === 'goods') {
+                    $payload['ext'] = '';
+                } else {
+                    $payload['ext'] = json_encode($ext, JSON_UNESCAPED_UNICODE) ?: '';
+                }
+            }
+
+            return null;
+        }
+        if ($module === 'mall_orders') {
+            if (array_key_exists('status', $payload)) {
+                $status = (int) $payload['status'];
+                if (! in_array($status, [1, 2], true)) {
+                    return Result::fail('订单只能标待发货或已完成');
+                }
+                $payload['status'] = $status;
+                if ($status === 2 && $this->hasColumn(new \Plugins\Mall\Models\MallOrder, 'complete_at')) {
+                    $payload['complete_at'] = time();
+                }
+            }
+
+            return null;
+        }
+
+        return null;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMallGoods(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $type = \Plugins\Mall\Services\MallService::normalizeType((string) ($row['type'] ?? 'goods'));
+            $row['type'] = $type;
+            $row['type_label'] = \Plugins\Mall\Services\MallService::typeLabel($type);
+            $row['status_label'] = (int) ($row['status'] ?? 0) === 1 ? '上架' : '下架';
+            $ext = \Plugins\Mall\Services\MallService::decodeExt($row['ext'] ?? '');
+            $row['group_id'] = (int) ($ext['group_id'] ?? 0);
+            $row['card_points'] = (int) ($ext['card_points'] ?? 0);
+            $row['card_mode'] = (string) ($ext['card_mode'] ?? $ext['mode'] ?? 'generate');
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMallOrders(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $type = \Plugins\Mall\Services\MallService::normalizeType((string) ($row['goods_type'] ?? 'goods'));
+            $row['goods_type'] = $type;
+            $row['type_label'] = \Plugins\Mall\Services\MallService::typeLabel($type);
+            $status = (int) ($row['status'] ?? 0);
+            $row['status_label'] = match ($status) {
+                2 => '已完成',
+                1 => '待发货',
+                default => '已关闭',
+            };
+            $delivery = \Plugins\Mall\Services\MallService::decodeExt($row['delivery'] ?? '');
+            $code = strtoupper(trim((string) ($delivery['code'] ?? '')));
+            $row['delivery_label'] = $code !== '' ? $code : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMangas(array $rows): array
+    {
+        $ids = [];
+        $typeIds = [];
+        foreach ($rows as $row) {
+            $ids[] = (int) ($row['id'] ?? 0);
+            $typeIds[] = (int) ($row['type_id'] ?? 0);
+        }
+        $ids = array_values(array_filter(array_unique($ids)));
+        $typeIds = array_values(array_filter(array_unique($typeIds)));
+        $typeNames = [];
+        if ($typeIds !== [] && Schema::hasTable('plugin_manga_types')) {
+            $typeNames = \Plugins\Manga\Models\MangaType::query()->whereIn('id', $typeIds)->pluck('name', 'id')->all();
+        }
+        $chapterCounts = [];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_chapters')) {
+            $chapterCounts = \Plugins\Manga\Models\MangaChapter::query()
+                ->selectRaw('manga_id, COUNT(*) as c')
+                ->whereIn('manga_id', $ids)
+                ->groupBy('manga_id')
+                ->pluck('c', 'manga_id')
+                ->all();
+        }
+        foreach ($rows as &$row) {
+            $id = (int) ($row['id'] ?? 0);
+            $typeId = (int) ($row['type_id'] ?? 0);
+            $row['type_name'] = (string) ($typeNames[$typeId] ?? '');
+            $row['chapter_count'] = (int) ($chapterCounts[$id] ?? 0);
+            $row['serialize'] = (int) ($row['serialize'] ?? 0);
+            $row['serialize_label'] = $row['serialize'] === 1 ? '完结' : '连载';
+            $row['yid'] = (int) ($row['yid'] ?? 0);
+            $row['yid_label'] = $row['yid'] === 1 ? '待审' : '已审';
+            $row['status'] = (int) ($row['status'] ?? 0);
+            $row['recommend'] = (int) ($row['recommend'] ?? 0);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMangaChapters(array $rows): array
+    {
+        $ids = [];
+        $mangaIds = [];
+        foreach ($rows as $row) {
+            $ids[] = (int) ($row['id'] ?? 0);
+            $mangaIds[] = (int) ($row['manga_id'] ?? 0);
+        }
+        $ids = array_values(array_filter(array_unique($ids)));
+        $mangaIds = array_values(array_filter(array_unique($mangaIds)));
+        $titles = [];
+        if ($mangaIds !== [] && Schema::hasTable('plugin_mangas')) {
+            $titles = \Plugins\Manga\Models\Manga::query()->whereIn('id', $mangaIds)->pluck('title', 'id')->all();
+        }
+        $picCounts = [];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_pics')) {
+            $picCounts = \Plugins\Manga\Models\MangaPic::query()
+                ->selectRaw('chapter_id, COUNT(*) as c')
+                ->whereIn('chapter_id', $ids)
+                ->groupBy('chapter_id')
+                ->pluck('c', 'chapter_id')
+                ->all();
+        }
+        foreach ($rows as &$row) {
+            $id = (int) ($row['id'] ?? 0);
+            $mangaId = (int) ($row['manga_id'] ?? 0);
+            $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
+            if (isset($picCounts[$id])) {
+                $row['pic_count'] = (int) $picCounts[$id];
+            } else {
+                $n = 0;
+                foreach (preg_split('/\r\n|\r|\n/', (string) ($row['pics'] ?? '')) ?: [] as $line) {
+                    if (trim((string) $line) !== '') {
+                        $n++;
+                    }
+                }
+                $row['pic_count'] = $n;
+            }
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMangaPics(array $rows): array
+    {
+        $mangaIds = [];
+        $chapterIds = [];
+        foreach ($rows as $row) {
+            $mangaIds[] = (int) ($row['manga_id'] ?? 0);
+            $chapterIds[] = (int) ($row['chapter_id'] ?? 0);
+        }
+        $mangaIds = array_values(array_filter(array_unique($mangaIds)));
+        $chapterIds = array_values(array_filter(array_unique($chapterIds)));
+        $titles = [];
+        $names = [];
+        if ($mangaIds !== [] && Schema::hasTable('plugin_mangas')) {
+            $titles = \Plugins\Manga\Models\Manga::query()->whereIn('id', $mangaIds)->pluck('title', 'id')->all();
+        }
+        if ($chapterIds !== [] && Schema::hasTable('plugin_manga_chapters')) {
+            $names = \Plugins\Manga\Models\MangaChapter::query()->whereIn('id', $chapterIds)->pluck('name', 'id')->all();
+        }
+        foreach ($rows as &$row) {
+            $row['manga_title'] = (string) ($titles[(int) ($row['manga_id'] ?? 0)] ?? '');
+            $row['chapter_name'] = (string) ($names[(int) ($row['chapter_id'] ?? 0)] ?? '');
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /**
+     * @param  array<string, mixed>  $cfg
+     * @param  list<mixed>  $args
+     * @return array<string, mixed>|null
+     */
+    private function dispatchPlugin(array $cfg, string $method, array $args): ?array
+    {
+        $handler = trim((string) ($cfg['handler'] ?? ''));
+        if ($handler === '' || ! class_exists($handler)) {
+            return null;
+        }
+        $svc = app($handler);
+        if (! method_exists($svc, $method)) {
+            return null;
+        }
+        $out = $svc->{$method}(...$args);
+
+        return is_array($out) ? $out : null;
     }
 
     private function hasColumn(Model $model, string $column): bool

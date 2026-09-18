@@ -10,7 +10,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel collect-task-index">
+<div class="card card-panel collect-task-index desk-board">
     <div class="card-header">
         <span>定时采集 <em id="ctask-count"></em></span>
         <div>
@@ -45,7 +45,7 @@
             <button type="button" class="btn btn-danger btn-sm" id="ctask-batch-del">删除</button>
             <button type="button" class="btn btn-muted btn-sm" id="ctask-batch-clear">取消选择</button>
         </div>
-        <div id="ctask-table"></div>
+        <div id="ctask-table" class="desk-table"></div>
     </div>
 </div>
 @endsection

@@ -25,6 +25,7 @@ Route::post('/vod/{id}/comment', [InteractionController::class, 'comment'])->mid
 Route::post('/vod/{id}/report', [InteractionController::class, 'report'])->middleware('throttle:8,1')->whereNumber('id');
 Route::post('/vod/{id}/score', [InteractionController::class, 'score'])->middleware('throttle:20,1')->whereNumber('id');
 Route::post('/vod/{id}/favorite', [InteractionController::class, 'favorite'])->middleware('throttle:20,1')->whereNumber('id');
+Route::post('/vod/{id}/share', [InteractionController::class, 'share'])->middleware('throttle:20,1')->whereNumber('id');
 Route::post('/comment/{id}/report', [InteractionController::class, 'reportComment'])->middleware('throttle:20,1')->whereNumber('id');
 Route::post('/comment/{id}/like', [InteractionController::class, 'likeComment'])->middleware('throttle:30,1')->whereNumber('id');
 Route::get('/play/{id}/{sid?}/{nid?}', [VodController::class, 'play'])->name('vod.play')->whereNumber('id');
@@ -41,6 +42,7 @@ Route::get('/website', [VodController::class, 'websites'])->name('vod.website');
 Route::get('/website/{id}', [VodController::class, 'website'])->name('vod.website.show')->whereNumber('id');
 Route::get('/arts', [VodController::class, 'arts'])->name('vod.arts');
 Route::get('/art/type/{id}', [VodController::class, 'arts'])->whereNumber('id');
+Route::get('/art/tag/{slug}', [VodController::class, 'artTag'])->where('slug', '[^/]+');
 Route::get('/art/{id}', [VodController::class, 'art'])->name('vod.art')->whereNumber('id');
 Route::get('/roles', [VodController::class, 'roles'])->name('vod.roles');
 Route::get('/role/{id}', [VodController::class, 'role'])->name('vod.role')->whereNumber('id');
@@ -77,6 +79,7 @@ Route::prefix('index.php/vod')->group(function () {
     Route::get('website/id/{id}', [VodController::class, 'website'])->where('id', '[0-9]+(?:\.html)?');
     Route::get('website{suffix?}', [VodController::class, 'websites'])->where('suffix', '\.html');
     Route::get('art/type/id/{id}', [VodController::class, 'arts'])->where('id', '[0-9]+(?:\.html)?');
+    Route::get('art/tag/id/{slug}', [VodController::class, 'artTag'])->where('slug', '[^/]+');
     Route::get('art/id/{id}', [VodController::class, 'art'])->where('id', '[0-9]+(?:\.html)?');
     Route::get('art{suffix?}', [VodController::class, 'arts'])->where('suffix', '\.html');
 });
@@ -98,4 +101,6 @@ Route::middleware('member.auth')->group(function () {
     Route::get('/member/favorites', [MemberController::class, 'favorites']);
     Route::get('/member/history', [MemberController::class, 'histories']);
     Route::get('/member/inbox', [MemberController::class, 'inbox']);
+    Route::get('/member/activity', [MemberController::class, 'activity']);
+    Route::post('/member/sign', [MemberController::class, 'sign'])->middleware('throttle:10,1');
 });

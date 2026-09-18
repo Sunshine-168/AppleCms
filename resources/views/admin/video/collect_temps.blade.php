@@ -11,7 +11,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel collect-temp-index">
+<div class="card card-panel collect-temp-index desk-board">
     <div class="card-header">
         <span>待审入库 <em id="ctemp-count"></em></span>
     </div>
@@ -42,7 +42,7 @@
             <button type="button" class="btn btn-danger btn-sm" id="ctemp-batch-del">删除</button>
             <button type="button" class="btn btn-muted btn-sm" id="ctemp-batch-clear">取消选择</button>
         </div>
-        <div id="ctemp-table"></div>
+        <div id="ctemp-table" class="desk-table"></div>
     </div>
 </div>
 @endsection

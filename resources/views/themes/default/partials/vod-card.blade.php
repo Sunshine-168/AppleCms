@@ -1,7 +1,8 @@
 <article class="card">
     <a href="{{ $item->url }}">
-        @if($item->cover)
-            <img src="{{ $item->cover }}" alt="{{ $item->title }}">
+        @php $cover = trim((string) ($item->cover ?? '')) ?: trim((string) ($site['theme_lazy'] ?? '')); @endphp
+        @if($cover)
+            <img src="{{ $cover }}" alt="{{ $item->title }}">
         @else
             <img alt="{{ $item->title }}">
         @endif

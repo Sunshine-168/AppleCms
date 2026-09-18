@@ -52,7 +52,7 @@
             </div>
 
             <div class="settings-pane{{ $tab === 'look' ? ' active' : '' }}" data-pane="look">
-                <p class="muted field-hint">改 Logo 和主色，不用改模板。皮肤文件在「<a href="/admin/video/templates">模板</a>」里。</p>
+                <p class="muted field-hint">改 Logo 和主色，不用改模板。皮肤文件在「<a href="/admin/video/templates">模板</a>」里。<a href="/admin/video/theme">图标、头部代码、导航在主题配置</a>。</p>
 
                 <label for="theme_logo">网站 Logo</label>
                 <div class="settings-file-preview" id="logo-preview">

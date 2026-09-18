@@ -43,7 +43,8 @@ class ScheduleIndexPageTest extends TestCase
         $this->assertStringContainsString('采集片子', $html);
         $this->assertStringContainsString('备份 / 推送 / 插件', $html);
         $this->assertStringContainsString('hub-tabs', $html);
-        $this->assertStringNotContainsString('清过期短信码', $html);
+        $this->assertStringContainsString('监控', $html);
+        $this->assertStringContainsString('monitor:tick', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('暂无数据', $html);
         $this->assertStringNotContainsString('未知', $html);

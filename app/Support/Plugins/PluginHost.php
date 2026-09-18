@@ -37,6 +37,9 @@ class PluginHost
     /** @param array<string, mixed> $item */
     public function sidebarFold(string $group, array $item): void
     {
+        if (trim((string) ($item['url'] ?? '')) === '' || trim((string) ($item['label'] ?? '')) === '') {
+            return;
+        }
         $this->sidebarFold[$group][] = $item;
     }
 
@@ -95,7 +98,11 @@ class PluginHost
         return $this->extraPages;
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * Parents keep `children`; nested entries are not promoted to siblings.
+     *
+     * @return list<array<string, mixed>>
+     */
     public function sidebarFoldItems(string $group): array
     {
         return $this->sidebarFold[$group] ?? [];

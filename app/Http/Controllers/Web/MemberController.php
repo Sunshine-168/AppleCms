@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Member\MemberFavorite;
 use App\Models\Member\MemberHistory;
 use App\Models\Video\VideoModel;
+use App\Services\Member\MemberActivityService;
 use App\Services\Video\InteractionService;
 use App\Services\Video\SiteFrontService;
+use App\Support\Utils\Ajax;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -146,6 +149,31 @@ class MemberController extends Controller
             'title' => '观看历史',
             'videos' => $videos,
         ]);
+    }
+
+    public function activity(): View
+    {
+        $site = $this->front->bootSite();
+        $member = Auth::guard('member')->user();
+        $activity = app(MemberActivityService::class);
+        $state = $activity->ready()
+            ? $activity->frontState($member)
+            : ['signed_today' => false, 'days' => 0, 'points' => (int) $member->points, 'tasks' => [], 'milestones' => []];
+
+        return view($this->front->themeView('member.activity'), compact('site', 'member', 'state'));
+    }
+
+    public function sign(Request $request): JsonResponse|RedirectResponse
+    {
+        $result = app(MemberActivityService::class)->sign(Auth::guard('member')->user());
+        if ($request->expectsJson() || $request->ajax()) {
+            return Ajax::message($result['code'], $result['msg'], $result['data'] ?? []);
+        }
+        if ($result['code'] !== 0) {
+            return back()->with('error', $result['msg']);
+        }
+
+        return back()->with('status', $result['msg']);
     }
 
     public function inbox(): View

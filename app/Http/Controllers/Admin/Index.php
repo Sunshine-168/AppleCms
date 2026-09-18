@@ -11,6 +11,7 @@ use App\Support\Captcha;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -99,14 +100,10 @@ class Index extends Controller
     }
 
     /**
-     * 加减法验证码
+     * 加减法验证码（干扰图，非 JSON 题目）
      */
-    public function captcha(): JsonResponse
+    public function captcha(): Response
     {
-        $cap = Captcha::generate();
-
-        return Ajax::message(0, 'success', [
-            'question' => $cap['question'],
-        ]);
+        return Captcha::response();
     }
 }

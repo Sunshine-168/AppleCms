@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ asset('css/admin-login.css') }}?v={{ @filemtime(public_path('css/admin-login.css')) ?: '1' }}">
 </head>
 <body class="mac-login">
-@php $cap = \App\Support\Captcha::generate(); @endphp
 <div class="mac-login-stage">
     <div class="mac-login-hero">
         <p class="mac-login-hello">{{ admin_t('auth.hello', ['name' => conf('flag') ?: '苹果v12']) }}</p>
@@ -50,7 +49,7 @@
                         </svg>
                         <input type="text" id="captcha" name="captcha" required inputmode="numeric" autocomplete="off" maxlength="4">
                     </div>
-                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="{{ admin_t('auth.captcha_hint') }}">{{ $cap['question'] }}</button>
+                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="看不清就点一下换一题"><img id="captchaImg" src="/admin/captcha" width="160" height="48" alt="验证码"></button>
                 </div>
             </div>
             <label class="mac-remember"><input type="checkbox" name="remember" value="1"> {{ admin_t('auth.remember') }}</label>
@@ -114,14 +113,9 @@
     }
 
     function refreshCaptcha() {
-        fetch('/admin/captcha', {
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        }).then(function (res) { return res.json(); }).then(function (json) {
-            var question = json && json.data && json.data.question;
-            if (question) label.textContent = question;
-            input.value = '';
-        }).catch(function () {});
+        var img = document.getElementById('captchaImg');
+        if (img) img.src = '/admin/captcha?t=' + Date.now();
+        input.value = '';
     }
 
     label.addEventListener('click', refreshCaptcha);

@@ -187,6 +187,18 @@ class InteractionService
             ['source_id' => $sourceId, 'episode_id' => $episodeId, 'updated_at' => time()]
         );
         $this->writeUlog($memberId, (int) $video->id, 'play', (string) request()->ip());
+        if ($memberId > 0) {
+            try {
+                $activity = app(\App\Services\Member\MemberActivityService::class);
+                if ($activity->ready()) {
+                    $member = Member::query()->find($memberId);
+                    if ($member) {
+                        $activity->reportWatch($member);
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
     }
 
     public function writeUlog(int $memberId, int $videoId, string $type, string $ip = ''): void
@@ -240,7 +252,12 @@ class InteractionService
             'created_at' => time(),
         ]);
         if ($member) {
-            $member->increment('points', 1);
+            $activity = app(\App\Services\Member\MemberActivityService::class);
+            if ($activity->ready()) {
+                $activity->reportComment($member);
+            } else {
+                $member->increment('points', 1);
+            }
         }
 
         return Result::success(['id' => $row->id], '评论已发布');

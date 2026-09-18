@@ -31,4 +31,14 @@ class DanmakuController extends Controller
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
+
+    public function report(Request $request): JsonResponse
+    {
+        $data = $this->danmaku->report(
+            (int) $request->input('id', 0),
+            Auth::guard('member')->user()
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
 }

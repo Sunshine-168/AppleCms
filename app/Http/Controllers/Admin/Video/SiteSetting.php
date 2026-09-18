@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Video\VideoSettingService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
@@ -35,6 +36,36 @@ class SiteSetting extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
+    public function theme(Request $request): View
+    {
+        $tab = (string) $request->query('tab', 'base');
+        $tabs = ['base', 'home', 'page', 'nav', 'other', 'seo', 'ads'];
+        $hasPlayView = $this->settings->themeHasPlayView();
+        if (! $hasPlayView) {
+            $tabs = array_values(array_filter($tabs, fn (string $key) => $key !== 'page'));
+        }
+        if (! in_array($tab, $tabs, true)) {
+            $tab = 'base';
+        }
+
+        return view('admin.video.theme', [
+            'site' => $this->settings->site(),
+            'tab' => $tab,
+            'hasPlayView' => $hasPlayView,
+        ]);
+    }
+
+    public function themeSave(Request $request): JsonResponse
+    {
+        $payload = $request->all();
+        if (! isset($payload['tab']) || trim((string) $payload['tab']) === '') {
+            $payload['tab'] = 'theme';
+        }
+        $data = $this->settings->save($payload);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
     public function testMail(Request $request): JsonResponse
     {
         $to = trim((string) $request->input('to', ''));
@@ -60,8 +91,11 @@ class SiteSetting extends Controller
         ]);
     }
 
-    public function configPage(string $page): View
+    public function configPage(string $page): View|RedirectResponse
     {
+        if ($page === 'theme') {
+            return redirect('/admin/video/theme');
+        }
         if ($page === 'ai') {
             return view('admin.video.config_ai', $this->settings->aiPage());
         }

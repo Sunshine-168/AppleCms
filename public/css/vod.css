@@ -37,6 +37,7 @@ input, textarea, button { background:#0b0d12; border:1px solid #2a2f3a; color:va
 .eps a, .lines a { background:#223; color:var(--text); padding:6px 10px; border-radius:4px; font-size:13px; }
 .eps a.on, .lines a.on { background:var(--accent); }
 footer.site { margin-top:40px; padding:24px 0; border-top:1px solid #222; color:var(--muted); font-size:13px; }
+.foot-logo img { height:28px; display:block; margin-bottom:12px; }
 .page { padding:24px 0 40px; }
 .flash {
     margin: 0 0 16px;
@@ -87,4 +88,27 @@ footer.site { margin-top:40px; padding:24px 0; border-top:1px solid #222; color:
 .type-block { margin-top:28px; }
 .type-block h2 { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
 .type-block .more { font-size:13px; font-weight:400; color:var(--muted); }
+.art-nav { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 20px; }
+.art-nav a { color:var(--muted); }
+.art-nav a.on, .art-nav a:hover { color:var(--text); }
+.art-list { display:grid; gap:16px; margin:16px 0; }
+.art-card { background:var(--card); border-radius:8px; overflow:hidden; }
+.art-card > a { display:flex; gap:16px; color:var(--text); }
+.art-card img { width:140px; height:92px; object-fit:cover; background:#222; flex-shrink:0; }
+.art-card .meta { padding:10px 12px; min-width:0; }
+.art-card h3 { margin:0 0 6px; font-size:16px; }
+.art-cover img { max-width:100%; border-radius:8px; }
+.art-tags { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+.art-tags a { color:var(--muted); }
+.art-near { display:flex; flex-wrap:wrap; gap:12px 24px; margin:24px 0; }
 h2 { font-size:18px; }
+.plugin-ad-fixed { background:#111; border-bottom:1px solid #222; }
+.plugin-ad-fixed.is-top { position:fixed; top:0; left:0; right:0; z-index:40; text-align:center; padding:8px 12px; }
+.plugin-ad-fixed.is-bottom { position:fixed; bottom:0; left:0; right:0; z-index:40; text-align:center; padding:8px 12px; border-bottom:0; border-top:1px solid #222; }
+body.has-ad-top { padding-top:56px; }
+body.has-ad-bottom { padding-bottom:56px; }
+.flink { display:flex; flex-wrap:wrap; gap:10px 16px; margin-bottom:12px; }
+.flink a { color:var(--muted); }
+.plugin-ad-text { color:var(--text); }
+.plugin-ad-img img { max-height:48px; max-width:100%; vertical-align:middle; }
+.plugin-ad-player, .plugin-ad-content { margin:12px 0; }

@@ -218,6 +218,7 @@ class WiredPluginsTest extends TestCase
             'title_rule' => '<a[^>]*>(.*?)</a>',
             'url_rule' => 'href="(.*?)"',
             'status' => 1,
+            'publish_immediately' => 1,
             'note' => '',
         ]);
         Http::fake([

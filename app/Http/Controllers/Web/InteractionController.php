@@ -113,4 +113,15 @@ class InteractionController extends Controller
 
         return Ajax::message($result['code'], $result['msg'], $result['data'] ?? []);
     }
+
+    public function share(int $id): JsonResponse
+    {
+        $member = Auth::guard('member')->user();
+        if (! $member) {
+            return Ajax::message(1, '请先登录');
+        }
+        $result = app(\App\Services\Member\MemberActivityService::class)->reportShare($member, $id);
+
+        return Ajax::message($result['code'], $result['msg'], $result['data'] ?? []);
+    }
 }

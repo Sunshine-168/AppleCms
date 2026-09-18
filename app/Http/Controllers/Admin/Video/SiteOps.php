@@ -109,8 +109,12 @@ class SiteOps extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
-    public function make(): View
+    public function make(Request $request): View
     {
+        $desk = (string) $request->query('desk', 'opt');
+        if (! in_array($desk, ['opt', 'index', 'map', 'cache'], true)) {
+            $desk = 'opt';
+        }
         $site = [];
         try {
             $site = $this->settings->site();
@@ -122,8 +126,10 @@ class SiteOps extends Controller
             $ttlOptions[$ttl] = '当前 '.$this->ttlPlain($ttl);
         }
         $lastBust = $this->htmlCache->lastBust();
+        $catalog = $this->diskHtml->optCatalog();
 
         return view('admin.video.make', [
+            'desk' => $desk,
             'enabled' => (bool) ($site['html_cache_enabled'] ?? false),
             'ttl' => $ttl,
             'ttlOptions' => $ttlOptions,
@@ -132,7 +138,13 @@ class SiteOps extends Controller
             'diskEnabled' => $this->diskHtml->enabled(),
             'diskCount' => $this->diskHtml->fileCount(),
             'diskJob' => $this->diskHtml->publicJob(),
-            'scopes' => DiskHtmlService::scopes(),
+            'vodTypes' => $catalog['vodTypes'],
+            'artTypes' => $catalog['artTypes'],
+            'topics' => $catalog['topics'],
+            'actors' => $catalog['actors'],
+            'roles' => $catalog['roles'],
+            'hasArts' => $catalog['hasArts'],
+            'detailCap' => $catalog['detailCap'],
         ]);
     }
 
@@ -144,7 +156,7 @@ class SiteOps extends Controller
             'html_cache_ttl' => (string) max(0, (int) $request->input('html_cache_ttl', 3600)),
         ]);
         if (($saved['code'] ?? 1) !== 0) {
-            return redirect('/admin/video/make')->with('error', (string) ($saved['msg'] ?? '没能保存'));
+            return redirect($this->makeUrl('cache'))->with('error', (string) ($saved['msg'] ?? '没能保存'));
         }
         $this->htmlCache->forgetAll('settings');
         AdminOpLog::write('save', $on ? '开启了全页缓存' : '关闭了全页缓存', [
@@ -152,7 +164,7 @@ class SiteOps extends Controller
             'target_type' => 'cache',
         ]);
 
-        return redirect('/admin/video/make')->with('status', $on ? '已开启全页缓存' : '已关闭全页缓存');
+        return redirect($this->makeUrl('cache'))->with('status', $on ? '已开启全页缓存' : '已关闭全页缓存');
     }
 
     public function makeCacheClear(): RedirectResponse
@@ -163,13 +175,13 @@ class SiteOps extends Controller
             'target_type' => 'cache',
         ]);
 
-        return redirect('/admin/video/make')->with('status', '已清空。访客下一次打开会重新生成页面。');
+        return redirect($this->makeUrl('cache'))->with('status', '已清空。访客下一次打开会重新生成页面。');
     }
 
     public function makeCacheWarm(Request $request): RedirectResponse
     {
         if (! $this->htmlCache->enabled()) {
-            return redirect('/admin/video/make')->with('error', '请先打开全页缓存并保存');
+            return redirect($this->makeUrl('cache'))->with('error', '请先打开全页缓存并保存');
         }
         $result = $this->htmlCache->warm((int) $request->input('entries', 30));
         $msg = '已预热 '.$result['ok'].' 页';
@@ -177,7 +189,7 @@ class SiteOps extends Controller
             $msg .= '，'.$result['fail'].' 页没生成好';
         }
 
-        return redirect('/admin/video/make')->with('status', $msg);
+        return redirect($this->makeUrl('cache'))->with('status', $msg);
     }
 
     public function makeDiskSave(Request $request): RedirectResponse
@@ -186,11 +198,12 @@ class SiteOps extends Controller
         $saved = $this->settings->saveOptions([
             'disk_html_enabled' => $on ? '1' : '0',
         ]);
+        $desk = (string) $request->input('desk', 'opt');
         if (($saved['code'] ?? 1) !== 0) {
-            return redirect('/admin/video/make')->with('error', (string) ($saved['msg'] ?? '没能保存'));
+            return redirect($this->makeUrl($desk))->with('error', (string) ($saved['msg'] ?? '没能保存'));
         }
 
-        return redirect('/admin/video/make')->with('status', $on ? '已打开磁盘静态页，可以开始生成' : '已关闭磁盘静态页');
+        return redirect($this->makeUrl($desk))->with('status', $on ? '已打开磁盘静态页，可以开始生成' : '已关闭磁盘静态页');
     }
 
     public function makeStart(Request $request): JsonResponse
@@ -198,7 +211,12 @@ class SiteOps extends Controller
         if (! $this->diskHtml->enabled()) {
             return Ajax::fail('请先打开磁盘静态页并保存');
         }
-        $job = $this->diskHtml->startJob((string) $request->input('scope', 'all'));
+        $job = $this->diskHtml->startJob((string) $request->input('scope', 'all'), [
+            'ids' => $request->input('ids', []),
+            'type_ids' => $request->input('type_ids', []),
+            'when' => (string) $request->input('when', 'all'),
+            'extra' => (string) $request->input('extra', ''),
+        ]);
         if (! empty($job['conflict'])) {
             return Ajax::message(1, (string) ($job['message'] ?? '请先停止当前任务'), $job);
         }
@@ -255,6 +273,15 @@ class SiteOps extends Controller
         $data = $this->ops->makeMap((string) $request->input('scope', 'sitemap'));
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    protected function makeUrl(string $desk = 'opt'): string
+    {
+        if (! in_array($desk, ['opt', 'index', 'map', 'cache'], true)) {
+            $desk = 'opt';
+        }
+
+        return $desk === 'opt' ? '/admin/video/make' : '/admin/video/make?desk='.$desk;
     }
 
     protected function ttlPlain(int $seconds): string

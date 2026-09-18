@@ -15,6 +15,7 @@ use App\Support\Utils\Syslog;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Request;
 
 
@@ -193,7 +194,7 @@ class SysUserService
 
         $insert = [
             'username' => $username,
-            'password' => $password,
+            'password' => $this->hashLoginPassword($password),
             'email' => $email,
             'remark' => $remark,
             'role' => 1,
@@ -254,7 +255,7 @@ class SysUserService
             'update_time' => time(),
         ];
         if ($password !== '') {
-            $update['password'] = $password;
+            $update['password'] = $this->hashLoginPassword($password);
         }
         if ($id === 1) {
             $update['role'] = 0;
@@ -706,6 +707,9 @@ class SysUserService
 
         if (! $user || ! $this->passwordMatches($password, $this->storedPassword((int) ($user['id'] ?? 0), $user)))
         {
+            if (! $user && (int) DB::table('sys_user')->count() === 0) {
+                return Result::fail('还没有管理员，请重新安装');
+            }
             $failKey = 'admin.login.fail.'.md5((string) $ip);
             $fails = (int) Cache::get($failKey, 0) + 1;
             Cache::put($failKey, $fails, 900);
@@ -1098,22 +1102,26 @@ class SysUserService
     }
 
     /**
-     * 登录密码校验：bcrypt/argon、遗留 md5、明文。
+     * 登录密码校验：Laravel Hash、遗留 md5、明文。
      */
     private function passwordMatches(string $plain, string $stored): bool
     {
         if ($plain === '' || $stored === '') {
             return false;
         }
-        $info = password_get_info($stored);
-        if (is_array($info) && (int) ($info['algo'] ?? 0) !== 0) {
-            return password_verify($plain, $stored);
+        if (Hash::isHashed($stored)) {
+            return Hash::check($plain, $stored);
         }
         if (preg_match('/^[0-9a-f]{32}$/i', $stored) === 1) {
             return hash_equals(strtolower($stored), md5($plain));
         }
 
         return hash_equals($stored, $plain);
+    }
+
+    private function hashLoginPassword(string $plain): string
+    {
+        return Hash::make($plain);
     }
 
     private function verifyTotp(string $secret, string $code, int $window = 1, int $period = 30, int $digits = 6): bool

@@ -598,27 +598,135 @@ NGINX;
 </IfModule>
 APACHE;
 
+        $routeGroups = $this->rewriteRouteGroups($mac, $suffix);
+        $exampleLabels = ['首页', '分类', '详情', '播放', '搜索'];
+        $examples = [];
+        foreach ($routeGroups[0]['rows'] ?? [] as $row) {
+            if (in_array($row['label'], $exampleLabels, true)) {
+                $examples[] = ['label' => $row['label'], 'path' => $row['path']];
+            }
+        }
+
         return [
             'mode' => $mode,
             'mode_label' => $mac ? '苹果风格' : '本站路由',
             'mode_sample' => $mac ? '/index.php/vod/detail/id/123'.$suffix : '/vod/123',
             'suffix' => $suffix,
             'mac' => $mac,
-            'examples' => $mac ? [
-                ['label' => '首页', 'path' => '/'],
-                ['label' => '分类', 'path' => '/index.php/vod/type/id/1'.$suffix],
-                ['label' => '详情', 'path' => '/index.php/vod/detail/id/1'.$suffix],
-                ['label' => '播放', 'path' => '/index.php/vod/play/id/1/sid/1/nid/1'.$suffix],
-                ['label' => '搜索', 'path' => '/index.php/vod/search'.$suffix],
-            ] : [
-                ['label' => '首页', 'path' => '/'],
-                ['label' => '分类', 'path' => '/type/1'],
-                ['label' => '详情', 'path' => '/vod/1'],
-                ['label' => '播放', 'path' => '/play/1/1/1'],
-                ['label' => '搜索', 'path' => '/search'],
-            ],
+            'route_groups' => $routeGroups,
+            'examples' => $examples,
             'nginx' => $nginx,
             'apache' => $apache,
+        ];
+    }
+
+    /** @return list<array{title:string, rows:list<array{label:string, path:string, note?:string}>}> */
+    private function rewriteRouteGroups(bool $mac, string $suffix): array
+    {
+        if ($mac) {
+            return [
+                [
+                    'title' => '片子',
+                    'rows' => [
+                        ['label' => '首页', 'path' => '/'],
+                        ['label' => '分类', 'path' => '/index.php/vod/type/id/1'.$suffix],
+                        ['label' => '详情', 'path' => '/index.php/vod/detail/id/1'.$suffix],
+                        ['label' => '播放', 'path' => '/index.php/vod/play/id/1/sid/1/nid/1'.$suffix],
+                        ['label' => '下载', 'path' => '/index.php/vod/down/id/1/sid/1/nid/1'.$suffix],
+                        ['label' => '播放器内嵌', 'path' => '/player/1/1/1', 'note' => '本站路径'],
+                        ['label' => '筛选', 'path' => '/index.php/vod/show'.$suffix],
+                        ['label' => '搜索', 'path' => '/index.php/vod/search'.$suffix],
+                        ['label' => '最近更新', 'path' => '/latest', 'note' => '本站路径'],
+                    ],
+                ],
+                [
+                    'title' => '其它栏目',
+                    'rows' => [
+                        ['label' => '标签', 'path' => '/index.php/vod/tag/id/1'.$suffix],
+                        ['label' => '演员列表', 'path' => '/actors', 'note' => '本站路径'],
+                        ['label' => '演员', 'path' => '/index.php/vod/actor/id/1'.$suffix],
+                        ['label' => '专题列表', 'path' => '/topics', 'note' => '本站路径'],
+                        ['label' => '专题', 'path' => '/index.php/vod/topic/id/1'.$suffix],
+                        ['label' => '文章列表', 'path' => '/index.php/vod/art'.$suffix],
+                        ['label' => '文章', 'path' => '/index.php/vod/art/id/1'.$suffix],
+                        ['label' => '角色列表', 'path' => '/index.php/vod/role'.$suffix],
+                        ['label' => '角色', 'path' => '/index.php/vod/role/id/1'.$suffix],
+                        ['label' => '剧情列表', 'path' => '/index.php/vod/plot'.$suffix],
+                        ['label' => '剧情', 'path' => '/index.php/vod/plot/id/1'.$suffix],
+                        ['label' => '网址导航列表', 'path' => '/index.php/vod/website'.$suffix],
+                        ['label' => '网址导航', 'path' => '/index.php/vod/website/id/1'.$suffix],
+                        ['label' => '留言', 'path' => '/gbook'],
+                    ],
+                ],
+                [
+                    'title' => '会员',
+                    'rows' => [
+                        ['label' => '登录', 'path' => '/member/login'],
+                        ['label' => '注册', 'path' => '/member/register'],
+                        ['label' => '会员中心', 'path' => '/member', 'note' => '要登录'],
+                    ],
+                ],
+                [
+                    'title' => '给搜索引擎',
+                    'rows' => [
+                        ['label' => '站点地图', 'path' => '/sitemap.xml'],
+                        ['label' => 'RSS', 'path' => '/rss.xml'],
+                        ['label' => 'robots', 'path' => '/robots.txt'],
+                    ],
+                ],
+            ];
+        }
+
+        return [
+            [
+                'title' => '片子',
+                'rows' => [
+                    ['label' => '首页', 'path' => '/'],
+                    ['label' => '分类', 'path' => '/type/1'],
+                    ['label' => '详情', 'path' => '/vod/1'],
+                    ['label' => '播放', 'path' => '/play/1/1/1'],
+                    ['label' => '下载', 'path' => '/down/1/1/1'],
+                    ['label' => '播放器内嵌', 'path' => '/player/1/1/1'],
+                    ['label' => '筛选', 'path' => '/show'],
+                    ['label' => '搜索', 'path' => '/search'],
+                    ['label' => '最近更新', 'path' => '/latest'],
+                ],
+            ],
+            [
+                'title' => '其它栏目',
+                'rows' => [
+                    ['label' => '标签', 'path' => '/tag/贺岁'],
+                    ['label' => '演员列表', 'path' => '/actors'],
+                    ['label' => '演员', 'path' => '/actor/1'],
+                    ['label' => '专题列表', 'path' => '/topics'],
+                    ['label' => '专题', 'path' => '/topic/1'],
+                    ['label' => '文章列表', 'path' => '/arts'],
+                    ['label' => '文章', 'path' => '/art/1'],
+                    ['label' => '角色列表', 'path' => '/roles'],
+                    ['label' => '角色', 'path' => '/role/1'],
+                    ['label' => '剧情列表', 'path' => '/plot'],
+                    ['label' => '剧情', 'path' => '/plot/1'],
+                    ['label' => '网址导航列表', 'path' => '/website'],
+                    ['label' => '网址导航', 'path' => '/website/1'],
+                    ['label' => '留言', 'path' => '/gbook'],
+                ],
+            ],
+            [
+                'title' => '会员',
+                'rows' => [
+                    ['label' => '登录', 'path' => '/member/login'],
+                    ['label' => '注册', 'path' => '/member/register'],
+                    ['label' => '会员中心', 'path' => '/member', 'note' => '要登录'],
+                ],
+            ],
+            [
+                'title' => '给搜索引擎',
+                'rows' => [
+                    ['label' => '站点地图', 'path' => '/sitemap.xml'],
+                    ['label' => 'RSS', 'path' => '/rss.xml'],
+                    ['label' => 'robots', 'path' => '/robots.txt'],
+                ],
+            ],
         ];
     }
 

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\System\SysDatabase;
 use App\Http\Controllers\Admin\System\SysCache;
 use App\Http\Controllers\Admin\System\SysSchedule;
+use App\Http\Controllers\Admin\System\SysRuntime;
 use App\Http\Controllers\Admin\System\SysRole;
 use App\Http\Controllers\Admin\System\SysDict;
 use App\Http\Controllers\Admin\System\SysFile;
@@ -125,9 +126,25 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/types/create', [Video::class, 'createType'])->name('admin.video.types.create');
     Route::get('/video/types/{id}/edit', [Video::class, 'editType'])->whereNumber('id')->name('admin.video.types.edit');
     Route::get('/video/types/list', [Video::class, 'getTypeLists'])->name('admin.video.types.list');
-    Route::post('/video/types/save', [Video::class, 'saveType'])->name('admin.video.types.save');// 保存视频类型
-    Route::post('/video/types/delete', [Video::class, 'deleteType'])->name('admin.video.types.delete');// 删除视频类型
+    Route::post('/video/types/save', [Video::class, 'saveType'])->name('admin.video.types.save');
+    Route::post('/video/types/delete', [Video::class, 'deleteType'])->name('admin.video.types.delete');
     Route::post('/video/types/batch', [Video::class, 'batchTypes'])->name('admin.video.types.batch');
+    Route::get('/video/art-types', [Video::class, 'showArtTypes'])->name('admin.video.art-types');
+    Route::get('/video/art-types/create', [Video::class, 'createType'])->name('admin.video.art-types.create');
+    Route::get('/video/art-types/{id}/edit', [Video::class, 'editType'])->whereNumber('id')->name('admin.video.art-types.edit');
+    Route::get('/video/art-types/list', [Video::class, 'getTypeLists'])->name('admin.video.art-types.list');
+    Route::post('/video/art-types/save', [Video::class, 'saveType'])->name('admin.video.art-types.save');
+    Route::post('/video/art-types/delete', [Video::class, 'deleteType'])->name('admin.video.art-types.delete');
+    Route::post('/video/art-types/batch', [Video::class, 'batchTypes'])->name('admin.video.art-types.batch');
+    Route::get('/video/art-tags', [SiteModule::class, 'showArtTags'])->name('admin.video.art-tags');
+    Route::get('/video/art-tags/create', [SiteModule::class, 'createArtTag'])->name('admin.video.art-tags.create');
+    Route::get('/video/art-tags/{id}/edit', [SiteModule::class, 'editArtTag'])->whereNumber('id')->name('admin.video.art-tags.edit');
+    Route::get('/video/art-tags/list', [SiteModule::class, 'listArtTags'])->name('admin.video.art-tags.list');
+    Route::post('/video/art-tags/save', [SiteModule::class, 'saveArtTag'])->name('admin.video.art-tags.save');
+    Route::post('/video/art-tags/delete', [SiteModule::class, 'deleteArtTag'])->name('admin.video.art-tags.delete');
+    Route::post('/video/art-tags/batch', [SiteModule::class, 'batchArtTags'])->name('admin.video.art-tags.batch');
+    Route::get('/video/art-recycle', [SiteModule::class, 'showArtRecycle'])->name('admin.video.art-recycle');
+    Route::post('/video/art-recycle/empty', [SiteModule::class, 'emptyArtRecycle'])->name('admin.video.art-recycle.empty');
 
     // 视频采集源管理
     Route::get('/video/collects', [Video::class, 'showCollectSources'])->name('admin.video.collects');// 显示视频采集源管理页
@@ -170,6 +187,9 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/video/settings', [SiteSetting::class, 'index']);
     Route::post('/video/settings', [SiteSetting::class, 'save']);
     Route::post('/video/settings/test-mail', [SiteSetting::class, 'testMail']);
+    Route::get('/video/theme', [SiteSetting::class, 'theme']);
+    Route::post('/video/theme', [SiteSetting::class, 'themeSave']);
+    Route::get('/video/config/theme', fn () => redirect('/admin/video/theme'));
     Route::get('/video/config/email', [SiteSetting::class, 'configEmail']);
     Route::get('/video/config/{page}', [SiteSetting::class, 'configPage'])->where('page', '[a-z]+');
     Route::get('/video/tools/{tool}', [SiteTools::class, 'page'])->whereIn('tool', ['images', 'quality', 'players', 'annex', 'recycle', 'hub']);
@@ -249,6 +269,17 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
         Route::post('/password', 'changePassword');// 修改密码
     });
 
+    // 运行监控
+    Route::prefix('/system/runtime')->controller(SysRuntime::class)->group(function () {
+        Route::get('/', 'index');
+        Route::get('/series', 'series');
+        Route::get('/live', 'live');
+        Route::post('/settings', 'saveSettings');
+        Route::post('/rules/save', 'saveRule');
+        Route::post('/rules/status', 'updateRuleStatus');
+        Route::post('/rules/test', 'testRule');
+        Route::post('/events/ack', 'ackEvent');
+    });
     // 系统监控
     Route::prefix('/system/monitor')->controller(SysUser::class)->group(function () {
         Route::get('/login-logs', 'showSystemUserLoginLogs');// 显示系统用户登录日志页

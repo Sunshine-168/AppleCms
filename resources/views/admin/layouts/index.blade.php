@@ -48,6 +48,7 @@
         'shown' => [],
     ];
     $activeUrl = \App\Support\AdminNav::activeUrl();
+    $navUri = \App\Support\AdminNav::requestUri();
 @endphp
 <div class="shell">
     <div class="side-backdrop" id="sideBackdrop"></div>
@@ -63,13 +64,36 @@
                     <div class="nav-header">{{ admin_t($group['header']) }}</div>
                 @endif
                 @foreach($group['items'] as $item)
-                    @include('admin.partials.side-link', [
-                        'url' => $item['url'],
-                        'icon' => $item['icon'],
-                        'label' => admin_t($item['label']),
-                        'active' => ($item['url'] ?? '') === $activeUrl,
-                        'force' => (bool) ($item['force'] ?? false),
-                    ])
+                    @if(! empty($item['children']) && is_array($item['children']))
+                        @php
+                            $nestedOpen = \App\Support\AdminNav::itemIsActive($item, $navUri);
+                        @endphp
+                        <details class="nav-fold nav-fold-nested{{ $nestedOpen ? ' is-open is-active' : '' }}" @if($nestedOpen) open @endif>
+                            <summary>
+                                <i class="fas fa-{{ $item['icon'] ?? 'circle' }}" aria-hidden="true"></i>
+                                <span>{{ admin_t($item['label']) }}</span>
+                            </summary>
+                            <div class="side-sub">
+                                @foreach($item['children'] as $child)
+                                    @include('admin.partials.side-link', [
+                                        'url' => $child['url'] ?? '',
+                                        'icon' => $child['icon'] ?? '',
+                                        'label' => admin_t($child['label'] ?? ''),
+                                        'active' => \App\Support\AdminNav::hrefIsActive((string) ($child['url'] ?? ''), $navUri),
+                                        'force' => (bool) ($child['force'] ?? $item['force'] ?? false),
+                                    ])
+                                @endforeach
+                            </div>
+                        </details>
+                    @else
+                        @include('admin.partials.side-link', [
+                            'url' => $item['url'],
+                            'icon' => $item['icon'],
+                            'label' => admin_t($item['label']),
+                            'active' => \App\Support\AdminNav::itemIsActive($item, $navUri),
+                            'force' => (bool) ($item['force'] ?? false),
+                        ])
+                    @endif
                 @endforeach
                 @if(! empty($group['fold']['items']))
                     @php $foldOpen = \App\Support\AdminNav::foldOpen($group, $activeUrl); @endphp
@@ -77,13 +101,36 @@
                         <summary>{{ admin_t($group['fold']['label'] ?? 'nav.more') }}</summary>
                         <div class="side-sub">
                             @foreach($group['fold']['items'] as $item)
-                                @include('admin.partials.side-link', [
-                                    'url' => $item['url'],
-                                    'icon' => $item['icon'],
-                                    'label' => admin_t($item['label']),
-                                    'active' => ($item['url'] ?? '') === $activeUrl,
-                                    'force' => (bool) ($item['force'] ?? false),
-                                ])
+                                @if(! empty($item['children']) && is_array($item['children']))
+                                    @php
+                                        $nestedOpen = \App\Support\AdminNav::itemIsActive($item, $navUri);
+                                    @endphp
+                                    <details class="nav-fold nav-fold-nested{{ $nestedOpen ? ' is-open is-active' : '' }}" @if($nestedOpen) open @endif>
+                                        <summary>
+                                            <i class="fas fa-{{ $item['icon'] ?? 'circle' }}" aria-hidden="true"></i>
+                                            <span>{{ admin_t($item['label']) }}</span>
+                                        </summary>
+                                        <div class="side-sub">
+                                            @foreach($item['children'] as $child)
+                                                @include('admin.partials.side-link', [
+                                                    'url' => $child['url'] ?? '',
+                                                    'icon' => $child['icon'] ?? '',
+                                                    'label' => admin_t($child['label'] ?? ''),
+                                                    'active' => \App\Support\AdminNav::hrefIsActive((string) ($child['url'] ?? ''), $navUri),
+                                                    'force' => (bool) ($child['force'] ?? $item['force'] ?? false),
+                                                ])
+                                            @endforeach
+                                        </div>
+                                    </details>
+                                @else
+                                    @include('admin.partials.side-link', [
+                                        'url' => $item['url'],
+                                        'icon' => $item['icon'],
+                                        'label' => admin_t($item['label']),
+                                        'active' => \App\Support\AdminNav::itemIsActive($item, $navUri),
+                                        'force' => (bool) ($item['force'] ?? false),
+                                    ])
+                                @endif
                             @endforeach
                         </div>
                     </details>
@@ -125,7 +172,7 @@
                 </details>
             </div>
         </header>
-        <main class="content">
+        <main class="content" id="admin-content">
             @if(session('status'))
                 <div class="flash">{{ session('status') }}</div>
             @endif
@@ -162,22 +209,27 @@
 </div>
 <script>
 (function () {
-    var side = document.getElementById('adminSide');
     var backdrop = document.getElementById('sideBackdrop');
 
+    function sideEl() { return document.getElementById('adminSide'); }
     function setOpen(open) {
+        var side = sideEl();
         side && side.classList.toggle('open', open);
         backdrop && backdrop.classList.toggle('show', open);
         document.body.classList.toggle('side-open', open);
     }
 
-    document.getElementById('toggleSide') && document.getElementById('toggleSide').addEventListener('click', function () {
-        setOpen(!(side && side.classList.contains('open')));
+    document.addEventListener('click', function (e) {
+        var t = e.target && e.target.closest ? e.target : (e.target && e.target.parentElement);
+        if (!t || !t.closest) return;
+        if (t.closest('#toggleSide')) {
+            var side = sideEl();
+            setOpen(!(side && side.classList.contains('open')));
+            return;
+        }
+        if (t.closest('#adminSide a')) setOpen(false);
     });
     backdrop && backdrop.addEventListener('click', function () { setOpen(false); });
-    side && side.querySelectorAll('a').forEach(function (a) {
-        a.addEventListener('click', function () { setOpen(false); });
-    });
     document.getElementById('logoutForm') && document.getElementById('logoutForm').addEventListener('submit', function (ev) {
         ev.preventDefault();
         fetch('/admin/logout', {
@@ -325,6 +377,8 @@
     });
 })();
 </script>
+<div id="admin-page-scripts">
 @stack('scripts')
+</div>
 </body>
 </html>

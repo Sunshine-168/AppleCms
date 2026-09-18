@@ -1,43 +1,51 @@
 {
     "id": "cj_rule",
-    "name": "自定义采集规则",
-    "name_en": "Custom collect rules",
-    "description": "按列表/标题/地址正则抓 HTML 入库。试跑不写库；规则不合法或抓取失败会报错。",
-    "description_en": "Fetch HTML with list/title/url regex. Try-run does not import. Bad rules fail.",
-    "version": "1.1.0",
-    "enabled": false,
+    "name": "网站采集",
+    "name_en": "Site collect",
+    "description": "从网页、RSS 或 JSON 把内容采进影片、文章或漫画。先试抓再启用。漫画只建作品，不编造章节。日常接资源站请用采集源。内网地址会拒绝。",
+    "description_en": "Pull films, articles or manga from pages, RSS, or JSON. Preview does not write. Manga creates the work only, no fake chapters. Use collect sources for resource APIs. Private URLs are refused.",
+    "version": "1.3.0",
+    "enabled": true,
     "capability": "ready",
     "group": "collect",
     "provider": "Plugins\\CjRule\\CjRuleServiceProvider",
     "admin": {
         "modules": {
             "cj": {
-                "title": "自定义规则",
-                "hint": "列表页 URL + 正则。试跑只看前几条；入库按标题去重，没有播放地址的写成草稿。",
+                "title": "网站采集",
+                "hint": "从网页 / RSS / JSON 采进影片、文章或漫画。先试抓再启用。漫画只建作品。日常接资源站请用采集源。",
                 "model": "App\\Models\\Video\\VideoCjRule",
                 "search": "name",
+                "view": "cj_rule::admin.board",
+                "handler": "Plugins\\CjRule\\Services\\CjRuleAdmin",
+                "desks": ["rules", "form", "logs"],
+                "default_desk": "rules",
                 "fields": [
                     {"name": "name", "label": "名称", "type": "text"},
                     {"name": "url", "label": "列表地址", "type": "text"},
-                    {"name": "list_rule", "label": "列表规则", "type": "text"},
-                    {"name": "title_rule", "label": "标题规则", "type": "text"},
-                    {"name": "url_rule", "label": "地址规则", "type": "text"},
-                    {"name": "content_rule", "label": "简介规则", "type": "text"},
-                    {"name": "type_id", "label": "分类ID", "type": "number"},
-                    {"name": "status", "label": "状态", "type": "select", "options": {"0": "停用", "1": "启用"}},
-                    {"name": "note", "label": "备注", "type": "text"}
+                    {"name": "type", "label": "方式", "type": "select", "options": {"html": "网站页面", "rss": "RSS", "json": "JSON"}},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "启用", "0": "停用"}}
                 ],
-                "cols": ["id", "name", "url", "status", "note"]
+                "cols": ["id", "name", "type", "status"]
             }
         },
         "sidebar_fold": {
-            "content": [
-                {"url": "/admin/video/cj", "icon": "spider", "label": "nav.cj"}
+            "collect": [
+                {
+                    "url": "/admin/video/cj",
+                    "icon": "spider",
+                    "label": "nav.cj"
+                }
             ]
         },
         "catalog": {
             "more.collect": [
-                {"url": "/admin/video/cj", "label": "item.cj", "hint": "hint.cj", "tag": "plugin"}
+                {
+                    "url": "/admin/video/cj",
+                    "label": "item.cj",
+                    "hint": "hint.cj",
+                    "tag": "plugin"
+                }
             ]
         }
     }

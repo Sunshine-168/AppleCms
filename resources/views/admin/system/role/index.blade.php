@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel role-index">
+<div class="card card-panel role-index access-board">
     <div class="card-header">
         <span>角色 <em id="role-count"></em></span>
     </div>
@@ -35,7 +35,7 @@
             <button type="button" class="chip" data-queue="kind" data-value="empty">还没人@if($q('empty') > 0)<em>{{ $q('empty') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="kind" data-value="off">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <div id="role-table"></div>
+        <div id="role-table" class="access-table"></div>
     </div>
 </div>
 <template id="role-dialog-tpl">

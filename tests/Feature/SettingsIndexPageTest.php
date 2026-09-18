@@ -22,6 +22,8 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('网站名称', $html);
         $this->assertStringContainsString('暂时关闭网站', $html);
         $this->assertStringContainsString('还没有 Logo', $html);
+        $this->assertStringContainsString('图标、头部代码、导航在主题配置', $html);
+        $this->assertStringContainsString('/admin/video/theme', $html);
         $this->assertStringContainsString('允许前台注册', $html);
         $this->assertStringContainsString('新评论要先审再显示', $html);
         $this->assertStringContainsString('保存设置', $html);

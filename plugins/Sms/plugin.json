@@ -5,7 +5,7 @@
     "description": "阿里云 / 腾讯云发送注册验证码。没配密钥或模板会发送失败。",
     "description_en": "Aliyun/Tencent send register OTP. Empty keys fail.",
     "version": "1.1.0",
-    "enabled": false,
+    "enabled": true,
     "capability": "ready",
     "group": "connect",
     "provider": "Plugins\\Sms\\SmsServiceProvider",
@@ -15,21 +15,54 @@
                 "title": "短信网关",
                 "hint": "配齐后注册页可发验证码。阿里云填 AccessKey；腾讯云 Key=SdkAppId、密钥=AppKey。模板变量必须能填验证码。没配会发送失败。",
                 "fields": [
-                    {"name": "sms_provider", "label": "服务商", "type": "select", "options": {"aliyun": "阿里云", "tencent": "腾讯云"}},
-                    {"name": "sms_key", "label": "AccessKey / SdkAppId", "type": "text"},
-                    {"name": "sms_secret", "label": "密钥 / AppKey", "type": "text"},
-                    {"name": "sms_sign", "label": "签名", "type": "text"},
-                    {"name": "sms_tpl_code", "label": "模板编号", "type": "text", "placeholder": "如 SMS_123456"}
+                    {
+                        "name": "sms_provider",
+                        "label": "服务商",
+                        "type": "select",
+                        "options": {
+                            "aliyun": "阿里云",
+                            "tencent": "腾讯云"
+                        }
+                    },
+                    {
+                        "name": "sms_key",
+                        "label": "AccessKey / SdkAppId",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sms_secret",
+                        "label": "密钥 / AppKey",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sms_sign",
+                        "label": "签名",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sms_tpl_code",
+                        "label": "模板编号",
+                        "type": "text",
+                        "placeholder": "如 SMS_123456"
+                    }
                 ]
             }
         },
         "catalog": {
             "more.security": [
-                {"url": "/admin/video/config/sms", "label": "item.config_sms", "hint": "hint.config_sms", "tag": "plugin"}
+                {
+                    "url": "/admin/video/config/sms",
+                    "label": "item.config_sms",
+                    "hint": "hint.config_sms",
+                    "tag": "plugin"
+                }
             ]
         },
         "settings_links": [
-            {"url": "/admin/video/config/sms", "label": "item.config_sms"}
+            {
+                "url": "/admin/video/config/sms",
+                "label": "item.config_sms"
+            }
         ],
         "schedule": [
             {

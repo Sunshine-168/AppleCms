@@ -14,7 +14,15 @@ class VideoCollectDueCommand extends Command
     public function handle(SiteOpsService $ops): int
     {
         $n = $ops->runDueCollectTasks();
-        $this->info('已执行 '.$n.' 个任务');
+        $cj = 0;
+        try {
+            if (class_exists(\Plugins\CjRule\Services\CjRuleService::class)
+                && app(\App\Support\Plugins\PluginManager::class)->isEnabled('cj_rule')) {
+                $cj = (int) (app(\Plugins\CjRule\Services\CjRuleService::class)->runDue()['data']['ran'] ?? 0);
+            }
+        } catch (\Throwable) {
+        }
+        $this->info('已执行 '.$n.' 个任务'.($cj > 0 ? '，网站采集 '.$cj.' 个' : ''));
 
         return self::SUCCESS;
     }

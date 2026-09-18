@@ -21,10 +21,13 @@ class MangaController extends Controller
             throw new NotFoundHttpException();
         }
         $site = $this->front->bootSite();
+        $typeId = (int) request()->query('type', 0);
 
         return view('manga::index', [
             'site' => $site,
-            'list' => $this->manga->paginate(),
+            'list' => $this->manga->paginate(24, $typeId > 0 ? $typeId : null),
+            'types' => $this->manga->listedTypes(),
+            'typeId' => $typeId,
         ]);
     }
 
