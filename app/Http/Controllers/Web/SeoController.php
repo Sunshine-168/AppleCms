@@ -44,6 +44,24 @@ class SeoController extends Controller
         foreach ($videos as $video) {
             $xml .= '<url><loc>'.e($video->url).'</loc><lastmod>'.e(date('Y-m-d', (int) $video->updated_at)).'</lastmod></url>';
         }
+        if (class_exists(\Plugins\Manga\Services\MangaService::class)) {
+            try {
+                $mangaSvc = app(\Plugins\Manga\Services\MangaService::class);
+                if ($mangaSvc->ready()) {
+                    $xml .= '<url><loc>'.e(url('/manga')).'</loc><changefreq>hourly</changefreq></url>';
+                    $xml .= '<url><loc>'.e(url('/manga/rank')).'</loc><changefreq>daily</changefreq></url>';
+                    $xml .= '<url><loc>'.e(url('/manga/update')).'</loc><changefreq>hourly</changefreq></url>';
+                    $mangaQ = \Plugins\Manga\Models\Manga::query()->published()->orderByDesc('id');
+                    if ($request->boolean('inc')) {
+                        $mangaQ->where('updated_at', '>=', time() - 86400 * 2);
+                    }
+                    foreach ($mangaQ->limit(2000)->get(['id', 'updated_at']) as $manga) {
+                        $xml .= '<url><loc>'.e(url('/manga/'.$manga->id)).'</loc><lastmod>'.e(date('Y-m-d', (int) $manga->updated_at)).'</lastmod></url>';
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
         $xml .= '</urlset>';
 
         return $xml;

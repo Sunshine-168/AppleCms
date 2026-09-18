@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Plugins\Manga\Models\Manga;
 use Plugins\Manga\Models\MangaChapter;
 use Plugins\Manga\Models\MangaPic;
+use Plugins\Manga\Models\MangaType;
 use Tests\TestCase;
 
 class MangaPluginBoardTest extends TestCase
@@ -30,25 +31,26 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('manga-board', $html);
         $this->assertStringContainsString('独立漫画库', $html);
         $this->assertStringContainsString('不是影片分类', $html);
-        $this->assertStringContainsString('作品', $html);
-        $this->assertStringContainsString('待审', $html);
-        $this->assertStringContainsString('分类', $html);
-        $this->assertStringContainsString('章节', $html);
-        $this->assertStringContainsString('图片', $html);
-        $this->assertStringContainsString('评论', $html);
+        $this->assertStringNotContainsString('id="manga-desks"', $html);
+        $this->assertStringNotContainsString('queue-chips', $html);
+        $this->assertStringContainsString('/admin/video/mangas?desk=stats', $html);
+        $this->assertStringContainsString('/admin/video/config/manga', $html);
+        $this->assertStringContainsString('/admin/video/manga-tags', $html);
         $this->assertStringNotContainsString('nav-fold-nested', $html);
         $this->assertStringContainsString('/admin/video/mangas?desk=pending', $html);
         $this->assertStringContainsString("title: '名称'", $html);
         $this->assertStringContainsString('manga-batch', $html);
         $this->assertStringContainsString("{check: true, width: 36}", $html);
         $this->assertStringContainsString("/admin/video/' + module + '/list'", $html);
-        $this->assertStringContainsString("/admin/video/' + module + '/save'", $html);
+        $this->assertStringContainsString("/admin/video/' + saveModule + '/save'", $html);
+        $this->assertStringContainsString('desk=work&manga_id=', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('placeholder="host"', $html);
         $this->assertStringNotContainsString('href="/admin/video/manga_chapters"', $html);
 
-        $this->assertStringContainsString('class="is-on">插件</a>', $html);
+        $this->assertStringContainsString('class="is-on">漫画</a>', $html);
+        $this->assertStringNotContainsString('class="is-on">插件</a>', $html);
         $this->assertStringNotContainsString('class="is-on">影片</a>', $html);
 
         $vod = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
@@ -56,7 +58,7 @@ class MangaPluginBoardTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('nav-fold-nested', $vod);
-        $this->assertStringNotContainsString('/admin/video/mangas', $vod);
+        $this->assertStringContainsString('>漫画<', $vod);
         $this->assertStringNotContainsString('href="/admin/video/manga_chapters"', $vod);
         $this->assertDoesNotMatchRegularExpression(
             '/<details class="nav-fold(?: is-open)?"[^>]*>\s*<summary>\s*插件\s*<\/summary>/u',
@@ -66,6 +68,10 @@ class MangaPluginBoardTest extends TestCase
         $morePos = strpos($vod, '<summary>更多</summary>');
         $this->assertNotFalse($morePos);
         $more = substr($vod, $morePos);
+        $foldEnd = strpos($more, '</details>');
+        if ($foldEnd !== false) {
+            $more = substr($more, 0, $foldEnd);
+        }
         $this->assertStringContainsString('<span>标签</span>', $more);
         $this->assertStringContainsString('<span>回收站</span>', $more);
         $this->assertStringNotContainsString('/admin/video/mangas', $more);
@@ -75,7 +81,10 @@ class MangaPluginBoardTest extends TestCase
     {
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/manga_types')
-            ->assertRedirect('/admin/video/mangas?desk=types');
+            ->assertRedirect('/admin/video/manga-types');
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?desk=types')
+            ->assertRedirect('/admin/video/manga-types');
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/manga_chapters')
             ->assertRedirect('/admin/video/mangas?desk=chapters');
@@ -111,6 +120,22 @@ class MangaPluginBoardTest extends TestCase
         $this->assertSame(1, (int) $row->serialize);
         $this->assertSame(0, (int) $row->yid);
 
+        $blank = $svc->save('mangas', [
+            'title' => '空备注本',
+            'cover' => '/uploads/x.png',
+            'author' => '',
+            'remarks' => null,
+            'content' => null,
+            'tags' => null,
+            'yid' => 1,
+            'status' => 1,
+        ], null);
+        $this->assertSame(0, $blank['code'] ?? 1, $blank['msg'] ?? '');
+        $blankRow = Manga::query()->where('title', '空备注本')->first();
+        $this->assertNotNull($blankRow);
+        $this->assertSame('', (string) $blankRow->remarks);
+        $this->assertSame('', (string) ($blankRow->author ?? ''));
+
         $badChapter = $svc->save('manga_chapters', ['manga_id' => 9999, 'name' => '第1话'], null);
         $this->assertSame(1, $badChapter['code']);
 
@@ -144,6 +169,7 @@ class MangaPluginBoardTest extends TestCase
         $this->assertSame('已审', $rows[0]['yid_label'] ?? '');
         $this->assertSame(1, (int) ($rows[0]['chapter_count'] ?? 0));
         $this->assertSame(1, (int) ($rows[0]['status'] ?? 0));
+        $this->assertSame('/manga/'.$row->id, $rows[0]['front_url'] ?? '');
 
         $chapters = $svc->lists('manga_chapters', ['limit' => 20, 'q' => '一人']);
         $this->assertSame(0, $chapters['code']);
@@ -170,6 +196,79 @@ class MangaPluginBoardTest extends TestCase
         $types = $svc->lists('manga_types', ['limit' => 20]);
         $top = collect($types['data']['data'] ?? [])->firstWhere('name', '热血');
         $this->assertSame('顶级', $top['parent_name'] ?? '');
+        $this->assertSame(0, (int) ($top['depth'] ?? -1));
+        $this->assertArrayHasKey('manga_count', $top);
+        $this->assertArrayHasKey('child_count', $top);
+    }
+
+    public function test_types_desk_matches_art_style_tree_and_batch(): void
+    {
+        $svc = app(SiteModuleService::class);
+        $parent = $svc->save('manga_types', ['name' => '少年', 'status' => 1, 'sort' => 10, 'slug' => 'shonen'], null);
+        $this->assertSame(0, $parent['code'] ?? 1, $parent['msg'] ?? '');
+        $pid = (int) ($parent['data']['id'] ?? 0);
+        $child = $svc->save('manga_types', ['name' => '热血', 'parent_id' => $pid, 'status' => 1, 'sort' => 5, 'page_size' => 12], null);
+        $this->assertSame(0, $child['code'] ?? 1, $child['msg'] ?? '');
+        $cid = (int) ($child['data']['id'] ?? 0);
+
+        $work = $svc->save('mangas', ['title' => '分类里的本', 'type_id' => $cid, 'status' => 1, 'yid' => 0], null);
+        $this->assertSame(0, $work['code'] ?? 1, $work['msg'] ?? '');
+
+        $list = $svc->lists('manga_types', ['limit' => 50]);
+        $this->assertSame(0, $list['code'] ?? 1);
+        $rows = $list['data']['data'] ?? [];
+        $this->assertSame(['少年', '热血'], array_column($rows, 'name'));
+        $this->assertSame(0, (int) ($rows[0]['depth'] ?? -1));
+        $this->assertSame(1, (int) ($rows[1]['depth'] ?? -1));
+        $this->assertSame(1, (int) ($rows[0]['child_count'] ?? 0));
+        $this->assertSame(1, (int) ($rows[1]['manga_count'] ?? 0));
+        $this->assertSame('shonen', (string) ($rows[0]['slug'] ?? ''));
+
+        $cycle = $svc->save('manga_types', ['parent_id' => $cid], $pid);
+        $this->assertSame(1, $cycle['code'] ?? 0);
+        $this->assertStringContainsString('下级', (string) ($cycle['msg'] ?? ''));
+
+        $block = $svc->delete('manga_types', $pid);
+        $this->assertSame(1, $block['code'] ?? 0);
+        $this->assertStringContainsString('下级', (string) ($block['msg'] ?? ''));
+
+        $blockWork = $svc->delete('manga_types', $cid);
+        $this->assertSame(1, $blockWork['code'] ?? 0);
+        $this->assertStringContainsString('作品', (string) ($blockWork['msg'] ?? ''));
+
+        $off = $svc->batch('manga_types', [$cid], 'status', 0);
+        $this->assertSame(0, $off['code'] ?? 1, $off['msg'] ?? '');
+        $this->assertSame(0, (int) MangaType::query()->find($cid)?->status);
+
+        $move = $svc->batch('manga_types', [$cid], 'parent', 0);
+        $this->assertSame(0, $move['code'] ?? 1, $move['msg'] ?? '');
+        $this->assertSame(0, (int) MangaType::query()->find($cid)?->parent_id);
+
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/manga-types')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('添加下级', $html);
+        $this->assertStringContainsString('manga-type-table', $html);
+        $this->assertStringContainsString('下级会缩进', $html);
+        $this->assertStringContainsString('/admin/video/manga-types/create', $html);
+
+        $form = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/manga-types/create')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('新增分类', $form);
+        $this->assertStringContainsString('网址别名', $form);
+        $this->assertStringContainsString('分页条数', $form);
+        $this->assertStringContainsString('在前台显示', $form);
+        $this->assertStringContainsString('保存并添加下级', $form);
+
+        $edit = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/manga-types/'.$pid.'/edit')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('编辑分类', $edit);
+        $this->assertStringContainsString('少年', $edit);
     }
 
     public function test_batch_status_recommend_and_comments(): void
@@ -220,6 +319,56 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('manga-batch-on', $commentsDesk);
         $this->assertStringContainsString('通过', $commentsDesk);
         $this->assertStringContainsString('隐藏', $commentsDesk);
+    }
+
+    public function test_delete_cascades_and_work_filter_banner(): void
+    {
+        $svc = app(SiteModuleService::class);
+        $ok = $svc->save('mangas', ['title' => '级联本', 'status' => 1, 'yid' => 0], null);
+        $this->assertSame(0, $ok['code'] ?? 1, $ok['msg'] ?? '');
+        $id = (int) ($ok['data']['id'] ?? 0);
+        $ch = $svc->save('manga_chapters', [
+            'manga_id' => $id,
+            'name' => '第1话',
+            'pics' => "/x.jpg\n/y.jpg",
+        ], null);
+        $this->assertSame(0, $ch['code'] ?? 1, $ch['msg'] ?? '');
+        $this->assertSame(2, MangaPic::query()->where('manga_id', $id)->count());
+
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?desk=chapters&manga_id='.$id)
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('正在看作品', $html);
+        $this->assertStringContainsString('级联本', $html);
+        $this->assertStringContainsString('/manga/'.$id, $html);
+        $this->assertStringContainsString('作品工作台', $html);
+        $this->assertStringContainsString('<select name="manga_id"', $html);
+
+        $work = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?desk=work&manga_id='.$id)
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('作品工作台', $work);
+        $this->assertStringContainsString('级联本', $work);
+        $this->assertStringContainsString('新增章节', $work);
+        $this->assertStringContainsString('manga_chapters', $work);
+
+        $stats = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?desk=stats')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('漫画统计', $stats);
+        $this->assertStringContainsString('今日阅读', $stats);
+        $this->assertStringContainsString('近 14 日趋势', $stats);
+        $this->assertStringContainsString('人气 TOP', $stats);
+        $this->assertStringContainsString('stat-grid', $stats);
+
+        $del = $svc->delete('mangas', $id);
+        $this->assertSame(0, $del['code'] ?? 1, $del['msg'] ?? '');
+        $this->assertNull(Manga::query()->find($id));
+        $this->assertSame(0, MangaChapter::query()->where('manga_id', $id)->count());
+        $this->assertSame(0, MangaPic::query()->where('manga_id', $id)->count());
     }
 }
 

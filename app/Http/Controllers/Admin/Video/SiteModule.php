@@ -36,12 +36,38 @@ class SiteModule extends Controller
                 'desk' => $desk,
             ];
             if ($module === 'mangas') {
+                $desk = strtolower(trim((string) request()->query('desk', '')));
+                if ($desk === 'types') {
+                    return redirect('/admin/video/manga-types');
+                }
                 $payload['types'] = [];
+                $payload['works'] = [];
                 $payload['filterMangaId'] = (int) request()->query('manga_id', 0);
+                $payload['filterMangaTitle'] = '';
+                $payload['filterTypeId'] = (int) request()->query('type_id', 0);
+                $payload['filterTagId'] = (int) request()->query('tag_id', 0);
+                $payload['tags'] = [];
+                $payload['filterTag'] = null;
                 try {
-                    $payload['types'] = app(\Plugins\Manga\Services\MangaService::class)->adminTypes();
+                    $svc = app(\Plugins\Manga\Services\MangaService::class);
+                    $payload['types'] = $svc->adminTypes();
+                    $payload['works'] = $svc->adminWorkOptions();
+                    if ($payload['filterMangaId'] > 0) {
+                        $filter = $svc->findAny($payload['filterMangaId']);
+                        $payload['filterMangaTitle'] = $filter ? (string) $filter->title : '';
+                    }
+                    $tagSvc = app(\Plugins\Manga\Services\MangaTagService::class);
+                    $payload['tags'] = $tagSvc->options();
+                    foreach ($payload['tags'] as $tag) {
+                        if ((int) ($tag['id'] ?? 0) === $payload['filterTagId']) {
+                            $payload['filterTag'] = $tag;
+                            break;
+                        }
+                    }
                 } catch (\Throwable) {
                     $payload['types'] = [];
+                    $payload['works'] = [];
+                    $payload['tags'] = [];
                 }
             }
             if ($module === 'mall_goods') {

@@ -22,6 +22,7 @@
         @includeIf('mall::member')
         @includeIf('pay::member')
         @includeIf('coupon::member')
+        @includeIf('manga::member')
     </p>
     <h2>卡密充值</h2>
     <form method="post" action="{{ url('/member/redeem') }}">

@@ -109,7 +109,18 @@ class PayChannelTest extends TestCase
         $order->refresh();
         $member->refresh();
         $this->assertSame(1, (int) $order->status);
-        $this->assertSame(1000, (int) $member->points);
+        // 订单 1000 + 每日「在线充值」任务 5
+        $this->assertSame(1005, (int) $member->points);
+        $this->assertGreaterThan(0, (int) ($order->paid_at ?? 0));
+        $this->assertDatabaseHas('member_point_logs', [
+            'member_id' => $member->id,
+            'type' => 'order',
+            'points' => 1000,
+        ]);
+        $this->assertDatabaseHas('member_pms', [
+            'to_id' => $member->id,
+            'title' => '充值到账',
+        ]);
     }
 
     public function test_dfpay_create_and_notify(): void
@@ -161,7 +172,8 @@ class PayChannelTest extends TestCase
             ->assertSee('success');
 
         $member->refresh();
-        $this->assertSame(3005, (int) $member->points);
+        // 原有 5 + 订单 3000 + 充值任务 5
+        $this->assertSame(3010, (int) $member->points);
     }
 
     public function test_checkout_lists_gateway_channels(): void
@@ -194,7 +206,105 @@ class PayChannelTest extends TestCase
             ->get('/member/pay')
             ->assertOk()
             ->assertSee('前台可见')
-            ->assertSee('ch:');
+            ->assertSee('ch:')
+            ->assertSee('用订单号查询');
+    }
+
+    public function test_member_can_lookup_own_order_no(): void
+    {
+        $member = Member::query()->create([
+            'name' => '查单人',
+            'email' => 'pay-lookup-'.uniqid().'@test.local',
+            'password' => Hash::make('secret'),
+            'points' => 0,
+            'status' => 1,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        $other = Member::query()->create([
+            'name' => '别人',
+            'email' => 'pay-other-'.uniqid().'@test.local',
+            'password' => Hash::make('secret'),
+            'points' => 0,
+            'status' => 1,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        $order = MemberOrder::query()->create([
+            'order_no' => 'P20260918120000LOOKUP',
+            'member_id' => $member->id,
+            'amount' => 1000,
+            'points' => 1000,
+            'channel' => 'manual',
+            'status' => 0,
+            'trade_no' => '',
+            'remark' => '',
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        MemberOrder::query()->create([
+            'order_no' => 'P20260918120000OTHER',
+            'member_id' => $other->id,
+            'amount' => 500,
+            'points' => 500,
+            'channel' => 'manual',
+            'status' => 0,
+            'trade_no' => '',
+            'remark' => '',
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+
+        $this->actingAs($member, 'member')
+            ->get('/member/pay/lookup')
+            ->assertOk()
+            ->assertSee('查询订单');
+
+        $this->actingAs($member, 'member')
+            ->post('/member/pay/lookup', ['order_no' => 'p20260918120000lookup'])
+            ->assertRedirect('/member/pay/'.$order->id);
+
+        $this->actingAs($member, 'member')
+            ->from('/member/pay/lookup')
+            ->post('/member/pay/lookup', ['order_no' => 'P20260918120000OTHER'])
+            ->assertOk()
+            ->assertSee('没有找到这个订单号');
+    }
+
+    public function test_admin_pay_stats_desk(): void
+    {
+        $member = Member::query()->create([
+            'name' => '统计会员',
+            'email' => 'pay-stats-'.uniqid().'@test.local',
+            'password' => Hash::make('secret'),
+            'points' => 0,
+            'status' => 1,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        $now = time();
+        MemberOrder::query()->create([
+            'order_no' => 'PSTATS'.uniqid(),
+            'member_id' => $member->id,
+            'amount' => 2500,
+            'points' => 2500,
+            'channel' => 'epay',
+            'status' => 1,
+            'trade_no' => 'T1',
+            'remark' => '',
+            'paid_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/pay_channels?desk=stats')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('支付统计', $html);
+        $this->assertStringContainsString('今日实收', $html);
+        $this->assertStringContainsString('25.00', $html);
+        $this->assertStringContainsString('易支付', $html);
     }
 }
 

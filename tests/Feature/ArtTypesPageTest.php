@@ -61,6 +61,8 @@ class ArtTypesPageTest extends TestCase
         $this->assertStringContainsString('name="jump_url"', $html);
         $this->assertStringContainsString('name="page_size"', $html);
         $this->assertStringContainsString('name="pic"', $html);
+        $this->assertStringContainsString('media-preview', $html);
+        $this->assertStringContainsString('type-pic-preview', $html);
         $this->assertStringContainsString('name="tpl_list"', $html);
         $this->assertStringContainsString('保存并添加下级', $html);
         $this->assertStringContainsString('保存并写文章', $html);

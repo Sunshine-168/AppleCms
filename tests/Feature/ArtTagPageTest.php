@@ -29,7 +29,7 @@ class ArtTagPageTest extends TestCase
         $this->assertStringContainsString('<span>标签', $html);
         $this->assertStringContainsString('只给文章用，不会进影片标签库', $html);
         $this->assertStringContainsString('影片标签在影片', $html);
-        $this->assertStringContainsString('漫画词写在漫画作品上', $html);
+        $this->assertStringContainsString('漫画标签在漫画', $html);
         $this->assertStringNotContainsString('贺岁、院线', $html);
         $this->assertStringContainsString('未使用', $html);
         $this->assertStringContainsString('打开完整表单', $html);

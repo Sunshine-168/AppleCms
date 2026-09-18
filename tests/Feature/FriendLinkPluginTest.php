@@ -134,6 +134,16 @@ class FriendLinkPluginTest extends TestCase
         $year = $svc->lists('flinks', ['desk' => 'stats', 'period' => 'year']);
         $this->assertSame(0, $year['code']);
 
+        $dash = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/flinks?desk=stats')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('友链统计', $dash);
+        $this->assertStringContainsString('今日', $dash);
+        $this->assertStringContainsString('近 14 日趋势', $dash);
+        $this->assertStringContainsString('近 30 日来路 TOP', $dash);
+        $this->assertStringContainsString('stat-grid', $dash);
+
         $this->assertTrue(app(PluginManager::class)->isEnabled('friendlink'));
     }
 

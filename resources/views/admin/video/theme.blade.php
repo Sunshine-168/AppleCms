@@ -41,14 +41,16 @@
     <div class="card-header"><span>模板</span></div>
     <div class="card-body">
         <p class="muted recycle-lead">改当前主题会用到的 Logo、导航和页头代码。页面文件切到「文件」。广告位、标签向导仍是独立入口。</p>
-        @include('admin.video.partials.theme-desks', ['desk' => 'look'])
-        <form class="settings-page" id="theme-form">
-            <input type="hidden" name="tab" value="theme">
+        <div class="theme-look-nav">
+            @include('admin.video.partials.theme-desks', ['desk' => 'look'])
             <div class="tabs settings-tabs" id="themeTabs">
                 @foreach($tabs as $key => $label)
                     <button type="button" class="{{ $tab === $key ? 'active' : '' }}" data-tab="{{ $key }}">{{ $label }}</button>
                 @endforeach
             </div>
+        </div>
+        <form class="settings-page" id="theme-form">
+            <input type="hidden" name="tab" value="theme">
 
             <div class="settings-pane{{ $tab === 'base' ? ' active' : '' }}" data-pane="base">
                 <p class="muted field-hint">默认主题只有一套顶栏，没有深浅双套 Lottie。</p>
@@ -62,15 +64,17 @@
                             <img data-img src="{{ $val }}" alt="" @if($val === '') hidden @endif>
                             <span class="settings-file-empty muted" data-empty @if($val !== '') hidden @endif>{{ $field['empty'] }}</span>
                         </div>
-                        <input id="{{ $field['name'] }}" type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="图片地址，或点上传" data-url>
-                        <button type="button" class="btn btn-muted btn-sm" data-upload>上传图片</button>
+                        <div class="field-inline">
+                            <input id="{{ $field['name'] }}" type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="图片地址，或点上传" data-url>
+                            <button type="button" class="btn btn-muted btn-sm" data-upload>上传图片</button>
+                        </div>
                     </div>
                     <p class="muted field-hint">{{ $field['hint'] }}</p>
                 @endforeach
 
                 <label for="theme_head_code">头部代码</label>
                 <textarea id="theme_head_code" name="theme_head_code" rows="5" placeholder="统计、验证等 HTML，会原样插到 &lt;head&gt;">{{ $s['theme_head_code'] ?? '' }}</textarea>
-                <p class="muted field-hint">管理员专用，和站点设置里的统计代码一样原样输出，不会剥掉 HTML。</p>
+                <p class="muted field-hint">管理员专用，原样输出，不会剥掉 HTML。</p>
 
                 <label for="theme_foot_code">底部说明</label>
                 <textarea id="theme_foot_code" name="theme_foot_code" rows="4" placeholder="页脚补充 HTML">{{ $s['theme_foot_code'] ?? '' }}</textarea>
@@ -94,13 +98,15 @@
 
             <div class="settings-pane{{ $tab === 'nav' ? ' active' : '' }}" data-pane="nav">
                 <p class="muted field-hint">顶部分类和专题仍由模板标签输出。下面开关控制默认主题写死的那几项，以及 4 条自定义链接。</p>
-                @foreach($navToggles as $nav)
-                    <input type="hidden" name="{{ $nav['name'] }}" value="0">
-                    <label class="inline">
-                        <input type="checkbox" name="{{ $nav['name'] }}" value="1" @checked($on($nav['name']))>
-                        {{ $nav['label'] }}
-                    </label>
-                @endforeach
+                <div class="theme-nav-toggles">
+                    @foreach($navToggles as $nav)
+                        <input type="hidden" name="{{ $nav['name'] }}" value="0">
+                        <label class="inline">
+                            <input type="checkbox" name="{{ $nav['name'] }}" value="1" @checked($on($nav['name']))>
+                            {{ $nav['label'] }}
+                        </label>
+                    @endforeach
+                </div>
                 <h3>自定义链接</h3>
                 @for($i = 1; $i <= 4; $i++)
                     <div class="settings-two">

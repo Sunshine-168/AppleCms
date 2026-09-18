@@ -13,13 +13,20 @@ use Plugins\FriendLink\Models\FriendLinkHit;
 
 class FriendLinkAdmin
 {
-    public function __construct(private readonly FriendLinkService $links) {}
+    public function __construct(
+        private readonly FriendLinkService $links,
+        private readonly FriendLinkStatsService $stats,
+    ) {}
 
     /** @param  array<string, mixed>  $payload */
     public function boardPayload(array $payload): array
     {
         $payload['cates'] = $this->cateOptions();
         $payload['options'] = $this->links->options();
+        $desk = strtolower(trim((string) ($payload['desk'] ?? 'links')));
+        if ($desk === 'stats') {
+            $payload['stats'] = $this->stats->summary();
+        }
 
         return $payload;
     }
@@ -342,6 +349,7 @@ class FriendLinkAdmin
         if (! in_array($period, ['day', 'month', 'year'], true)) {
             $period = 'day';
         }
+        $kw = mb_strtolower(trim((string) ($params['q'] ?? '')));
         $rows = [];
         if (Schema::hasTable('plugin_friend_link_hits')) {
             $hits = FriendLinkHit::query()->orderBy('id')->get(['link_id', 'day_key']);
@@ -362,12 +370,16 @@ class FriendLinkAdmin
             krsort($bucket);
             foreach ($bucket as $key => $byLink) {
                 foreach ($byLink as $lid => $count) {
+                    $name = $this->linkName($lid);
+                    if ($kw !== '' && ! str_contains(mb_strtolower($name), $kw) && ! str_contains((string) $lid, $kw)) {
+                        continue;
+                    }
                     $rows[] = [
                         'id' => $key.'-'.$lid,
                         'period' => $period,
                         'period_key' => $key,
                         'link_id' => $lid,
-                        'link_name' => $this->linkName($lid),
+                        'link_name' => $name,
                         'hits' => $count,
                     ];
                 }

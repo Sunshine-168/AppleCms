@@ -49,7 +49,12 @@
         <div class="filter-row">
             <span>标签</span>
             @foreach($tags as $tag)
-                <a href="{{ url('/manga?tag='.urlencode($tag['name'])) }}"@if(($filters['tag'] ?? '') === $tag['name']) class="active"@endif>{{ $tag['name'] }}</a>
+                @php
+                    $tagHref = (string) ($tag['slug'] ?? $tag['name'] ?? '');
+                    $cur = (string) ($filters['tag'] ?? '');
+                    $tagOn = $cur !== '' && ($cur === $tagHref || $cur === (string) ($tag['name'] ?? '') || $cur === (string) ($tag['slug'] ?? ''));
+                @endphp
+                <a href="{{ url('/manga?tag='.urlencode($tagHref !== '' ? $tagHref : (string) ($tag['name'] ?? ''))) }}"@if($tagOn) class="active"@endif>{{ $tag['name'] }}</a>
             @endforeach
         </div>
     @endif

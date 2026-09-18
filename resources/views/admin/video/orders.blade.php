@@ -23,6 +23,8 @@
                 <option value="">全部渠道</option>
                 <option value="wechat">微信</option>
                 <option value="alipay">支付宝</option>
+                <option value="epay">易支付</option>
+                <option value="dfpay">DfPay</option>
                 <option value="manual">人工</option>
             </select>
             <button type="button" class="btn btn-sm" id="order-search-btn">搜索</button>
@@ -34,7 +36,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">已付@if($q('paid') > 0)<em>{{ $q('paid') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="status" data-value="2">已关闭@if($q('closed') > 0)<em>{{ $q('closed') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">确认已付会加积分，每笔只加一次。关掉或删除不会扣回。线上到账等支付回调；线下在这里补录。</p>
+        <p class="muted recycle-lead">确认已付会走同一套入账：加积分、写流水、核销券、充值任务、站内信。每笔只加一次。关掉或删除不会扣回。线上到账等支付回调；线下在这里补录。</p>
         <div class="batch-bar" id="order-batch" hidden>
             <strong id="order-batch-count">已选 0 笔</strong>
             <button type="button" class="btn btn-sm" id="order-batch-pay">确认已付</button>
@@ -63,6 +65,8 @@
             <option value="manual">人工</option>
             <option value="wechat">微信</option>
             <option value="alipay">支付宝</option>
+            <option value="epay">易支付</option>
+            <option value="dfpay">DfPay</option>
         </select>
         <label>支付流水</label>
         <input type="text" name="trade_no" placeholder="可空">

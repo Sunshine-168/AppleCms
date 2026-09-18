@@ -4,7 +4,7 @@
     "name_en": "Friend links",
     "description": "页脚友链。普通按排序；强化按来路，来路够了才从待审改成显示。不编造成功。",
     "description_en": "Footer friend links. Normal sorts by rank; strong ranks by referrers and activates pending when the threshold is met. No fake success.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "enabled": true,
     "capability": "ready",
     "group": "site",
@@ -13,7 +13,7 @@
         "modules": {
             "flinks": {
                 "title": "友情链接",
-                "hint": "页脚友链。普通按排序；强化按来路，待审在来路达到阈值后才显示。出站和来路由前台产生。",
+                "hint": "页脚友链。普通按排序；强化按来路，待审达标后显示。统计含卡片、TOP、14 日趋势；出站/来路由前台产生。",
                 "model": "Plugins\\FriendLink\\Models\\FriendLink",
                 "search": "name",
                 "view": "friendlink::admin.board",

@@ -2,41 +2,145 @@
 @section('title', $title ?? '支付通道')
 
 @php
+    $desk = in_array((string) ($desk ?? ''), ['channels', 'stats'], true) ? (string) $desk : 'channels';
     $drivers = is_array($drivers ?? null) ? $drivers : ['epay' => '易支付', 'dfpay' => 'DfPay（A13 协议）'];
     $notifyEpay = (string) ($notify_epay ?? url('/pay/notify/epay'));
     $notifyDfpay = (string) ($notify_dfpay ?? url('/pay/notify/dfpay'));
+    $stats = is_array($stats ?? null) ? $stats : [];
+    $today = is_array($stats['today'] ?? null) ? $stats['today'] : ['orders' => 0, 'amount_yuan' => '0.00', 'points' => 0];
+    $yesterday = is_array($stats['yesterday'] ?? null) ? $stats['yesterday'] : ['orders' => 0, 'amount_yuan' => '0.00', 'points' => 0];
+    $week = is_array($stats['week'] ?? null) ? $stats['week'] : ['orders' => 0, 'amount_yuan' => '0.00', 'points' => 0];
+    $month = is_array($stats['month'] ?? null) ? $stats['month'] : ['orders' => 0, 'amount_yuan' => '0.00', 'points' => 0];
+    $byChannel = is_array($stats['by_channel'] ?? null) ? $stats['by_channel'] : [];
+    $daily = is_array($stats['daily'] ?? null) ? $stats['daily'] : [];
 @endphp
 
 @section('plain')
 <div class="card card-panel pay-channel-board desk-board" id="pay-channel-board">
     <div class="card-header">
-        <span>支付通道 <em id="pay-ch-count"></em></span>
+        <span>{{ $desk === 'stats' ? '支付统计' : '支付通道' }} <em id="pay-ch-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="pay-ch-add-btn">新增通道</button>
+            @if($desk === 'channels')
+                <button type="button" class="btn btn-sm" id="pay-ch-add-btn">新增通道</button>
+            @endif
+            <a class="btn btn-muted btn-sm" href="/admin/video/orders">充值订单</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">简化版聚合通道：易支付（MacCMS 同款）和 DfPay（A13 协议）。填网关、商户号、密钥即可对接。官方微信 / 支付宝仍在「支付参数」页。回调地址：易支付 <code>{{ $notifyEpay }}</code> · DfPay <code>{{ $notifyDfpay }}</code></p>
-        <form class="filter-bar" id="pay-ch-search" onsubmit="return false;">
-            <input type="search" name="q" placeholder="搜名称、商户号、产品码" autocomplete="off">
-            <select name="driver" aria-label="驱动">
-                <option value="">全部驱动</option>
-                @foreach($drivers as $k => $label)
-                    <option value="{{ $k }}">{{ $label }}</option>
-                @endforeach
-            </select>
-            <select name="status" aria-label="状态">
-                <option value="">全部状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
-            </select>
-            <button type="button" class="btn btn-sm" id="pay-ch-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="pay-ch-reset-btn">重置</button>
-        </form>
-        <div id="pay-ch-table"></div>
+        <div class="queue-chips" id="pay-desks">
+            <a class="chip{{ $desk === 'channels' ? ' active' : '' }}" href="/admin/video/pay_channels">通道</a>
+            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/pay_channels?desk=stats">统计</a>
+        </div>
+
+        @if($desk === 'stats')
+            <p class="muted recycle-lead">按已付订单统计（含官方微信/支付宝、易支付、DfPay、人工补录）。明细在 <a href="/admin/video/orders">充值订单</a>，可按单号搜索。</p>
+            <div class="stat-grid dash" style="margin:12px 0 20px">
+                <div class="stat-card">
+                    <em>今日实收</em>
+                    <strong>¥ {{ $today['amount_yuan'] }}</strong>
+                    <span class="muted">{{ (int) $today['orders'] }} 笔 · {{ (int) $today['points'] }} 积分</span>
+                </div>
+                <div class="stat-card">
+                    <em>昨日实收</em>
+                    <strong>¥ {{ $yesterday['amount_yuan'] }}</strong>
+                    <span class="muted">{{ (int) $yesterday['orders'] }} 笔 · {{ (int) $yesterday['points'] }} 积分</span>
+                </div>
+                <div class="stat-card">
+                    <em>近 7 日</em>
+                    <strong>¥ {{ $week['amount_yuan'] }}</strong>
+                    <span class="muted">{{ (int) $week['orders'] }} 笔 · {{ (int) $week['points'] }} 积分</span>
+                </div>
+                <div class="stat-card">
+                    <em>近 30 日</em>
+                    <strong>¥ {{ $month['amount_yuan'] }}</strong>
+                    <span class="muted">{{ (int) $month['orders'] }} 笔 · {{ (int) $month['points'] }} 积分</span>
+                </div>
+            </div>
+            <div class="stat-grid dash" style="margin:0 0 20px">
+                <div class="stat-card">
+                    <em>待付</em>
+                    <strong>{{ (int) ($stats['pending'] ?? 0) }}</strong>
+                </div>
+                <div class="stat-card">
+                    <em>已付累计</em>
+                    <strong>{{ (int) ($stats['paid'] ?? 0) }}</strong>
+                </div>
+                <div class="stat-card">
+                    <em>已关闭</em>
+                    <strong>{{ (int) ($stats['closed'] ?? 0) }}</strong>
+                </div>
+            </div>
+
+            <h3 style="font-size:15px;margin:0 0 10px">近 30 日渠道</h3>
+            @if($byChannel === [])
+                <p class="muted">还没有已付订单。</p>
+            @else
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr><th>渠道</th><th>笔数</th><th>金额</th><th>积分</th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach($byChannel as $row)
+                            <tr>
+                                <td>{{ $row['label'] }}</td>
+                                <td>{{ (int) $row['orders'] }}</td>
+                                <td>¥ {{ $row['amount_yuan'] }}</td>
+                                <td>{{ (int) $row['points'] }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            <h3 style="font-size:15px;margin:20px 0 10px">近 14 日趋势</h3>
+            @if($daily === [])
+                <p class="muted">暂无数据。</p>
+            @else
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr><th>日期</th><th>笔数</th><th>金额</th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach(array_reverse($daily) as $row)
+                            <tr>
+                                <td>{{ $row['day'] }}</td>
+                                <td>{{ (int) $row['orders'] }}</td>
+                                <td>¥ {{ $row['amount_yuan'] }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        @else
+            <p class="muted recycle-lead">简化版聚合通道：易支付 / DfPay。填网关、商户号、密钥即可对接。官方微信支付宝在「支付参数」。<br>
+                回调成功：订单已付 → 加积分写流水 → 核销券 → 充值任务 → 站内信 → <code>MemberOrderPaid</code>。订单明细：<a href="/admin/video/orders">充值订单</a>（可搜单号）。统计见上方「统计」页签。<br>
+                回调：易支付 <code>{{ $notifyEpay }}</code> · DfPay <code>{{ $notifyDfpay }}</code></p>
+            <form class="filter-bar" id="pay-ch-search" onsubmit="return false;">
+                <input type="search" name="q" placeholder="搜名称、商户号、产品码" autocomplete="off">
+                <select name="driver" aria-label="驱动">
+                    <option value="">全部驱动</option>
+                    @foreach($drivers as $k => $label)
+                        <option value="{{ $k }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select name="status" aria-label="状态">
+                    <option value="">全部状态</option>
+                    <option value="1">启用</option>
+                    <option value="0">停用</option>
+                </select>
+                <button type="button" class="btn btn-sm" id="pay-ch-search-btn">查询</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="pay-ch-reset-btn">重置</button>
+            </form>
+            <div id="pay-ch-table"></div>
+        @endif
     </div>
 </div>
 
+@if($desk === 'channels')
 <template id="pay-ch-tpl">
     <form>
         <input type="hidden" name="id">
@@ -73,8 +177,10 @@
         </select>
     </form>
 </template>
+@endif
 @endsection
 
+@if($desk === 'channels')
 @push('scripts')
 <script>
 (function () {
@@ -191,3 +297,4 @@
 })();
 </script>
 @endpush
+@endif

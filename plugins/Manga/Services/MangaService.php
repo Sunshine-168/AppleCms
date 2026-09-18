@@ -13,6 +13,8 @@ use Plugins\Manga\Models\Manga;
 use Plugins\Manga\Models\MangaChapter;
 use Plugins\Manga\Models\MangaComment;
 use Plugins\Manga\Models\MangaFavor;
+use Plugins\Manga\Models\MangaHistory;
+use Plugins\Manga\Models\MangaPic;
 use Plugins\Manga\Models\MangaType;
 
 class MangaService
@@ -74,9 +76,33 @@ class MangaService
         return $rows;
     }
 
-    /** @return list<array{name:string,count:int}> */
+    /** @return list<array{name:string,count:int,slug?:string}> */
     public function tagCloud(int $limit = 24): array
     {
+        try {
+            if (app(MangaTagService::class)->ready()) {
+                $rows = \Plugins\Manga\Models\MangaTag::query()
+                    ->where('status', 1)
+                    ->withCount(['mangas' => fn ($q) => $q->published()])
+                    ->having('mangas_count', '>', 0)
+                    ->orderByDesc('mangas_count')
+                    ->orderByDesc('sort')
+                    ->orderByDesc('id')
+                    ->limit($limit)
+                    ->get(['id', 'name', 'slug']);
+                $out = [];
+                foreach ($rows as $row) {
+                    $out[] = [
+                        'name' => (string) $row->name,
+                        'count' => (int) $row->mangas_count,
+                        'slug' => (string) $row->slug,
+                    ];
+                }
+
+                return $out;
+            }
+        } catch (\Throwable) {
+        }
         if (! Schema::hasColumn('plugin_mangas', 'tags')) {
             return [];
         }
@@ -250,6 +276,150 @@ class MangaService
         return $out;
     }
 
+    /** @return list<array{id:int,title:string}> */
+    public function adminWorkOptions(int $limit = 500): array
+    {
+        if (! $this->ready()) {
+            return [];
+        }
+        $out = [];
+        foreach (Manga::query()->orderByDesc('id')->limit($limit)->get(['id', 'title']) as $row) {
+            $out[] = [
+                'id' => (int) $row->id,
+                'title' => (string) $row->title,
+            ];
+        }
+
+        return $out;
+    }
+
+    public function findAny(int $id): ?Manga
+    {
+        if ($id < 1 || ! $this->ready()) {
+            return null;
+        }
+
+        return Manga::query()->find($id);
+    }
+
+    public function recordHistory(int $memberId, Manga $manga, MangaChapter $chapter): void
+    {
+        if ($memberId < 1 || ! Schema::hasTable('plugin_manga_histories')) {
+            return;
+        }
+        $now = time();
+        $row = MangaHistory::query()
+            ->where('member_id', $memberId)
+            ->where('manga_id', (int) $manga->id)
+            ->first();
+        if ($row) {
+            $row->chapter_id = (int) $chapter->id;
+            $row->updated_at = $now;
+            $row->save();
+
+            return;
+        }
+        MangaHistory::query()->create([
+            'member_id' => $memberId,
+            'manga_id' => (int) $manga->id,
+            'chapter_id' => (int) $chapter->id,
+            'updated_at' => $now,
+        ]);
+    }
+
+    /**
+     * @return list<array{manga_id:int,chapter_id:int,title:string,name:string,url:string,updated_at:int}>
+     */
+    public function memberHistory(int $memberId, int $limit = 50): array
+    {
+        if ($memberId < 1 || ! Schema::hasTable('plugin_manga_histories')) {
+            return [];
+        }
+        $rows = MangaHistory::query()
+            ->where('member_id', $memberId)
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get();
+        if ($rows->isEmpty()) {
+            return [];
+        }
+        $mangaIds = $rows->pluck('manga_id')->map(static fn ($id) => (int) $id)->unique()->all();
+        $chapterIds = $rows->pluck('chapter_id')->map(static fn ($id) => (int) $id)->unique()->all();
+        $mangas = Manga::query()->published()->whereIn('id', $mangaIds)->get()->keyBy('id');
+        $chapters = MangaChapter::query()->whereIn('id', $chapterIds)->get()->keyBy('id');
+        $out = [];
+        foreach ($rows as $row) {
+            $manga = $mangas->get((int) $row->manga_id);
+            if (! $manga) {
+                continue;
+            }
+            $chapter = $chapters->get((int) $row->chapter_id);
+            $chapterId = (int) ($chapter?->id ?? $row->chapter_id);
+            $name = $chapter ? (string) ($chapter->name ?: ('第'.$chapter->id.'话')) : '';
+            $out[] = [
+                'manga_id' => (int) $manga->id,
+                'chapter_id' => $chapterId,
+                'title' => (string) $manga->title,
+                'name' => $name,
+                'url' => url('/manga/'.$manga->id.($chapterId > 0 ? '/'.$chapterId : '')),
+                'updated_at' => (int) $row->updated_at,
+            ];
+        }
+
+        return $out;
+    }
+
+    public function continueChapterId(int $memberId, int $mangaId): int
+    {
+        if ($memberId < 1 || $mangaId < 1 || ! Schema::hasTable('plugin_manga_histories')) {
+            return 0;
+        }
+
+        return (int) MangaHistory::query()
+            ->where('member_id', $memberId)
+            ->where('manga_id', $mangaId)
+            ->value('chapter_id');
+    }
+
+    public function purgeWork(int $mangaId): void
+    {
+        if ($mangaId < 1) {
+            return;
+        }
+        if (Schema::hasTable('plugin_manga_pics')) {
+            MangaPic::query()->where('manga_id', $mangaId)->delete();
+        }
+        if (Schema::hasTable('plugin_manga_chapters')) {
+            MangaChapter::query()->where('manga_id', $mangaId)->delete();
+        }
+        if (Schema::hasTable('plugin_manga_comments')) {
+            MangaComment::query()->where('manga_id', $mangaId)->delete();
+        }
+        if (Schema::hasTable('plugin_manga_favors')) {
+            MangaFavor::query()->where('manga_id', $mangaId)->delete();
+        }
+        if (Schema::hasTable('plugin_manga_histories')) {
+            MangaHistory::query()->where('manga_id', $mangaId)->delete();
+        }
+        try {
+            app(MangaTagService::class)->detachManga($mangaId);
+        } catch (\Throwable) {
+        }
+    }
+
+    public function purgeChapter(int $chapterId): void
+    {
+        if ($chapterId < 1) {
+            return;
+        }
+        if (Schema::hasTable('plugin_manga_pics')) {
+            MangaPic::query()->where('chapter_id', $chapterId)->delete();
+        }
+        if (Schema::hasTable('plugin_manga_histories')) {
+            MangaHistory::query()->where('chapter_id', $chapterId)->update(['chapter_id' => 0]);
+        }
+    }
+
     /** @return array<string, mixed> */
     public function frontFilters(): array
     {
@@ -261,9 +431,18 @@ class MangaService
         if (! in_array($board, ['hits', 'new', 'end'], true)) {
             $board = 'hits';
         }
+        $typeRaw = trim((string) request()->query('type', ''));
+        $typeId = 0;
+        if ($typeRaw !== '') {
+            if (ctype_digit($typeRaw)) {
+                $typeId = (int) $typeRaw;
+            } elseif (Schema::hasTable('plugin_manga_types') && Schema::hasColumn('plugin_manga_types', 'slug')) {
+                $typeId = (int) (MangaType::query()->where('slug', $typeRaw)->where('status', 1)->value('id') ?? 0);
+            }
+        }
 
         return [
-            'type' => (int) request()->query('type', 0),
+            'type' => $typeId,
             'serialize' => (string) request()->query('serialize', ''),
             'recommend' => (string) request()->query('recommend', ''),
             'wd' => trim((string) request()->query('wd', '')),
@@ -273,6 +452,16 @@ class MangaService
             'order' => $order,
             'board' => $board,
         ];
+    }
+
+    public function pageSizeForType(int $typeId, int $default = 24): int
+    {
+        if ($typeId < 1 || ! Schema::hasTable('plugin_manga_types') || ! Schema::hasColumn('plugin_manga_types', 'page_size')) {
+            return $default;
+        }
+        $size = (int) (MangaType::query()->where('id', $typeId)->value('page_size') ?? 0);
+
+        return $size > 0 ? min(100, $size) : $default;
     }
 
     /** @param array<string, mixed> $over */
@@ -436,8 +625,53 @@ class MangaService
             }
         }
         $this->decorateFrontRows($out);
+        $this->decorateShelfProgress($out, $memberId);
 
         return $out;
+    }
+
+    /**
+     * Mark shelf rows that have chapters newer than the member's last read chapter.
+     *
+     * @param  Collection<int, Manga>  $rows
+     */
+    public function decorateShelfProgress(Collection $rows, int $memberId): void
+    {
+        if ($rows->isEmpty()) {
+            return;
+        }
+        $ids = $rows->pluck('id')->map(static fn ($id): int => (int) $id)->filter()->unique()->values()->all();
+        $continue = [];
+        if ($memberId > 0 && Schema::hasTable('plugin_manga_histories')) {
+            foreach (MangaHistory::query()->where('member_id', $memberId)->whereIn('manga_id', $ids)->get(['manga_id', 'chapter_id']) as $his) {
+                $continue[(int) $his->manga_id] = (int) $his->chapter_id;
+            }
+        }
+        $chapterMeta = [];
+        if (Schema::hasTable('plugin_manga_chapters')) {
+            foreach (MangaChapter::query()->whereIn('manga_id', $ids)->get(['id', 'manga_id', 'sort']) as $ch) {
+                $chapterMeta[(int) $ch->id] = [
+                    'manga_id' => (int) $ch->manga_id,
+                    'sort' => (int) $ch->sort,
+                ];
+            }
+        }
+        foreach ($rows as $row) {
+            $id = (int) $row->id;
+            $contId = (int) ($continue[$id] ?? 0);
+            $latest = is_array($row->latest_chapter ?? null) ? $row->latest_chapter : null;
+            $latestId = is_array($latest) ? (int) ($latest['id'] ?? 0) : 0;
+            $hasUpdate = false;
+            if ($latestId > 0 && $contId > 0 && $latestId !== $contId) {
+                $contSort = (int) ($chapterMeta[$contId]['sort'] ?? 0);
+                $latestSort = (int) ($chapterMeta[$latestId]['sort'] ?? 0);
+                $hasUpdate = $latestSort > $contSort || ($latestSort === $contSort && $latestId > $contId);
+            } elseif ($latestId > 0 && $contId < 1) {
+                $hasUpdate = true;
+            }
+            $row->setAttribute('continue_chapter_id', $contId > 0 ? $contId : 0);
+            $row->setAttribute('has_update', $hasUpdate);
+        }
     }
 
     /** @param Collection<int, Manga> $rows */
@@ -514,13 +748,27 @@ class MangaService
             $q->where('author', $author);
         }
         $tag = trim((string) ($filters['tag'] ?? ''));
-        if ($tag !== '' && Schema::hasColumn('plugin_mangas', 'tags')) {
-            $q->where(function (Builder $inner) use ($tag): void {
-                $inner->where('tags', $tag)
-                    ->orWhere('tags', 'like', $tag.',%')
-                    ->orWhere('tags', 'like', '%,'.$tag)
-                    ->orWhere('tags', 'like', '%,'.$tag.',%');
-            });
+        if ($tag !== '') {
+            $tagName = $tag;
+            $tagId = 0;
+            try {
+                $row = app(MangaTagService::class)->findPublic($tag);
+                if ($row) {
+                    $tagId = (int) $row->id;
+                    $tagName = (string) $row->name;
+                }
+            } catch (\Throwable) {
+            }
+            if ($tagId > 0 && Schema::hasTable('plugin_manga_tag_rel')) {
+                $q->whereHas('tagRels', fn (Builder $inner) => $inner->where('plugin_manga_tags.id', $tagId));
+            } elseif (Schema::hasColumn('plugin_mangas', 'tags')) {
+                $q->where(function (Builder $inner) use ($tagName): void {
+                    $inner->where('tags', $tagName)
+                        ->orWhere('tags', 'like', $tagName.',%')
+                        ->orWhere('tags', 'like', '%,'.$tagName)
+                        ->orWhere('tags', 'like', '%,'.$tagName.',%');
+                });
+            }
         }
         $day = trim((string) ($filters['day'] ?? ''));
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1) {

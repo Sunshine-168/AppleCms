@@ -41,6 +41,23 @@ class ProvideController extends Controller
         return response()->json($payload);
     }
 
+    public function manga(Request $request): JsonResponse|Response
+    {
+        if (! class_exists(\Plugins\Manga\Services\MangaProvideService::class)) {
+            return response()->json(['code' => 0, 'msg' => '漫画插件未启用'], 404);
+        }
+        /** @var \Plugins\Manga\Services\MangaProvideService $svc */
+        $svc = app(\Plugins\Manga\Services\MangaProvideService::class);
+        if (! $svc->ready()) {
+            return response()->json(['code' => 0, 'msg' => '漫画插件未启用'], 404);
+        }
+        if (! $svc->guarded($request)) {
+            return response()->json(['code' => 0, 'msg' => '密钥无效'], 403);
+        }
+
+        return response()->json($svc->payload($request));
+    }
+
     /** @return array<string, mixed> */
     public function vodPayload(Request $request): array
     {

@@ -1,7 +1,7 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>在线充值</h1>
-    <p class="muted">1 元 = 100 积分。可接微信 / 支付宝官方，或易支付、DfPay 等聚合通道。优惠券只减实付现金，积分按套餐原价到账。</p>
+    <p class="muted">1 元 = 100 积分。下单后会生成订单号，付款页可复制。也可凭订单号查询状态。</p>
     @if($errors->any())
         <p class="flash is-err">{{ $errors->first() }}</p>
     @endif
@@ -9,6 +9,16 @@
         $coupons = is_array($coupons ?? null) ? $coupons : [];
         $channels = is_array($channels ?? null) ? $channels : [];
     @endphp
+
+    <form method="post" action="{{ url('/member/pay/lookup') }}" class="mall-buy" style="margin-bottom:20px">
+        @csrf
+        <label>用订单号查询</label>
+        <div class="field-inline" style="display:flex;gap:8px;max-width:420px">
+            <input type="text" name="order_no" placeholder="粘贴订单号，如 P2026…" autocomplete="off" style="flex:1">
+            <button type="submit">查询</button>
+        </div>
+    </form>
+
     @if($coupons !== [])
         <p>
             已领可用：
@@ -57,5 +67,9 @@
             <p><button type="submit">去支付</button></p>
         </form>
     @endif
-    <p><a href="{{ url('/member') }}">返回会员中心</a></p>
+    <p>
+        <a href="{{ url('/member/pay/orders') }}">我的充值订单</a>
+        · <a href="{{ url('/member/pay/lookup') }}">订单号查询</a>
+        · <a href="{{ url('/member') }}">返回会员中心</a>
+    </p>
 @endsection

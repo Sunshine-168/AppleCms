@@ -92,7 +92,7 @@ class MangaFrontTest extends TestCase
         $rank->assertSee('漫画排行')->assertSee('人气本')->assertSee('完结');
         $this->get('/manga/rank?board=end')->assertOk()->assertSee('人气本')->assertDontSee('新连载');
         $this->get('/manga/update')->assertOk()->assertSee('最近更新')->assertSee('新连载')->assertSee('今天');
-        $this->get('/manga/history')->assertOk()->assertSee('阅读历史')->assertSee('不是账号同步');
+        $this->get('/manga/history')->assertOk()->assertSee('阅读历史')->assertSee('未登录时记在这台浏览器');
         $home = $this->get('/')->assertOk()->getContent();
         $this->assertStringContainsString('<h2>漫画', $home);
         $this->assertStringContainsString('人气本', $home);
@@ -122,12 +122,87 @@ class MangaFrontTest extends TestCase
 
         $read1 = $this->get('/manga/'.$hot->id.'/'.$ep1->id)->assertOk();
         $read1->assertSee('没有上一话')->assertSee('下一话')->assertSee('/img/1.jpg')->assertSee('夜间')->assertSee('本话目录');
+        $read1->assertSee('页漫')->assertSee('manga-progress')->assertSee('加载失败，点此重试');
         $read2 = $this->get('/manga/'.$hot->id.'/'.$ep2->id)->assertOk();
         $read2->assertSee('上一话')->assertSee('没有下一话')->assertSee('/img/2.jpg');
+        $this->assertStringContainsString('manga_read_mode', $read1->getContent());
+        $this->assertStringContainsString('data-mode', $read1->getContent());
 
         $this->get('/manga/shelf')->assertRedirect('/member/login');
         $this->post('/manga/'.$hot->id.'/favor')->assertRedirect('/member/login');
         $this->assertSame(0, MangaFavor::query()->count());
+    }
+
+    public function test_member_read_history_and_seo_sitemap_provide(): void
+    {
+        $row = $this->manga('续看本');
+        $ep1 = MangaChapter::query()->create([
+            'manga_id' => $row->id,
+            'name' => '第1话',
+            'sort' => 1,
+            'pics' => '/a.jpg',
+            'created_at' => time(),
+        ]);
+        $ep2 = MangaChapter::query()->create([
+            'manga_id' => $row->id,
+            'name' => '第2话',
+            'sort' => 2,
+            'pics' => '/b.jpg',
+            'created_at' => time(),
+        ]);
+        $member = Member::query()->create([
+            'name' => '读者',
+            'email' => 'manga-his-'.uniqid().'@test.local',
+            'password' => Hash::make('secret'),
+            'points' => 0,
+            'status' => 1,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+
+        $this->actingAs($member, 'member')
+            ->get('/manga/'.$row->id.'/'.$ep2->id)
+            ->assertOk()
+            ->assertSee('续看本');
+
+        $this->assertDatabaseHas('plugin_manga_histories', [
+            'member_id' => $member->id,
+            'manga_id' => $row->id,
+            'chapter_id' => $ep2->id,
+        ]);
+
+        $show = $this->actingAs($member, 'member')
+            ->get('/manga/'.$row->id)
+            ->assertOk();
+        $show->assertSee('继续阅读');
+        $show->assertSee('/manga/'.$row->id.'/'.$ep2->id);
+
+        $his = $this->actingAs($member, 'member')
+            ->get('/manga/history')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('账号记录', $his);
+        $this->assertStringContainsString('续看本', $his);
+
+        $center = $this->actingAs($member, 'member')
+            ->get('/member')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('/manga/history', $center);
+        $this->assertStringContainsString('漫画历史', $center);
+
+        $map = $this->get('/sitemap.xml')->assertOk()->getContent();
+        $this->assertStringContainsString('/manga', $map);
+        $this->assertStringContainsString('/manga/'.$row->id, $map);
+
+        $detail = $this->getJson('/api/provide/manga?ac=detail&ids='.$row->id)
+            ->assertOk()
+            ->json();
+        $this->assertSame(1, (int) ($detail['code'] ?? 0));
+        $this->assertSame('续看本', $detail['list'][0]['manga_name'] ?? '');
+        $this->assertStringContainsString('第2话', (string) ($detail['list'][0]['manga_play_url'] ?? ''));
+
+        unset($ep1);
     }
 
     public function test_empty_list_points_to_plugin_board(): void
@@ -186,6 +261,31 @@ class MangaFrontTest extends TestCase
             ->get('/manga/shelf')
             ->assertOk()
             ->assertSee('可评本');
+
+        $ep1 = MangaChapter::query()->create([
+            'manga_id' => $row->id,
+            'name' => '第1话',
+            'sort' => 1,
+            'pics' => '/a.jpg',
+            'created_at' => time(),
+        ]);
+        $this->actingAs($member, 'member')
+            ->get('/manga/'.$row->id.'/'.$ep1->id)
+            ->assertOk();
+        MangaChapter::query()->create([
+            'manga_id' => $row->id,
+            'name' => '第2话',
+            'sort' => 2,
+            'pics' => '/b.jpg',
+            'created_at' => time(),
+        ]);
+        $shelf = $this->actingAs($member, 'member')
+            ->get('/manga/shelf')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('有更新', $shelf);
+        $this->assertStringContainsString('更新至 第2话', $shelf);
+
         $this->actingAs($member, 'member')
             ->post('/manga/'.$row->id.'/favor')
             ->assertRedirect()

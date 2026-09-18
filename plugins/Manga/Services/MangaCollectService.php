@@ -51,7 +51,7 @@ class MangaCollectService
 
     /**
      * @param  array<string, mixed>  $item
-     * @return array{action:string,msg:string,title:string,id?:int}
+     * @return array{action:string,msg:string,title:string,id?:int,chapters_added?:int}
      */
     public function upsert(CollectSourceModel $source, array $item, bool $requireBind = true): array
     {
@@ -74,9 +74,19 @@ class MangaCollectService
 
         $collectId = mb_substr(trim((string) ($item['manga_id'] ?? $item['vod_id'] ?? $item['src_url'] ?? '')), 0, 80);
         $now = time();
-        $manga = $this->findExisting($source, $collectId, $title);
         $cover = trim((string) ($item['manga_pic'] ?? $item['vod_pic'] ?? ''));
         $author = mb_substr(trim((string) ($item['manga_author'] ?? $item['vod_actor'] ?? '')), 0, 80);
+        $found = $this->findExisting($source, $collectId, $title, $author);
+        if (($found['action'] ?? '') === 'skipped') {
+            return [
+                'action' => 'skipped',
+                'msg' => (string) ($found['msg'] ?? '跳过'),
+                'title' => $title,
+                'id' => (int) ($found['id'] ?? 0),
+            ];
+        }
+        /** @var Manga|null $manga */
+        $manga = $found['manga'] ?? null;
         $tags = mb_substr(trim((string) ($item['manga_tag'] ?? $item['vod_class'] ?? '')), 0, 255);
         $content = (string) ($item['manga_content'] ?? $item['vod_content'] ?? '');
         $remarks = mb_substr(trim((string) ($item['manga_remarks'] ?? $item['vod_remarks'] ?? '')), 0, 80);
@@ -102,7 +112,7 @@ class MangaCollectService
         if (Schema::hasColumn('plugin_mangas', 'content') && $content !== '') {
             $payload['content'] = $content;
         }
-        if (Schema::hasColumn('plugin_mangas', 'remarks') && $remarks !== '' && ! ($manga && $remarks === '')) {
+        if (Schema::hasColumn('plugin_mangas', 'remarks') && $remarks !== '') {
             $payload['remarks'] = $remarks;
         }
         if (Schema::hasColumn('plugin_mangas', 'serialize')) {
@@ -112,7 +122,13 @@ class MangaCollectService
             $payload['status'] = $status;
         }
         if (Schema::hasColumn('plugin_mangas', 'yid') && ! $manga) {
-            $payload['yid'] = 0;
+            $audit = false;
+            try {
+                $audit = (string) app(\App\Services\Video\VideoSettingService::class)->get('manga_collect_audit', '0') === '1';
+            } catch (\Throwable) {
+                $audit = false;
+            }
+            $payload['yid'] = $audit ? 1 : 0;
         }
         if (Schema::hasColumn('plugin_mangas', 'collect_source_id')) {
             $payload['collect_source_id'] = (int) $source->id;
@@ -136,10 +152,19 @@ class MangaCollectService
             $manga->save();
         }
 
-        $chapters = $this->mergeChapters($manga, $item);
-        $msg = $chapters > 0 ? ('ok · '.$chapters.' 话') : 'ok';
+        if (array_key_exists('tags', $payload)) {
+            try {
+                app(MangaTagService::class)->syncManga((int) $manga->id, ['tags' => (string) ($payload['tags'] ?? '')]);
+            } catch (\Throwable) {
+            }
+        }
 
-        return ['action' => $action, 'msg' => $msg, 'title' => $title, 'id' => (int) $manga->id];
+        $chapters = $this->mergeChapters($manga, $item);
+        $msg = $chapters > 0
+            ? ('ok · 新增 '.$chapters.' 话')
+            : ($action === 'created' ? 'ok · 无章节' : 'ok · 无新章');
+
+        return ['action' => $action, 'msg' => $msg, 'title' => $title, 'id' => (int) $manga->id, 'chapters_added' => $chapters];
     }
 
     /**
@@ -195,6 +220,12 @@ class MangaCollectService
         if (! Schema::hasTable('plugin_manga_chapters')) {
             return 0;
         }
+        $localize = false;
+        try {
+            $localize = (string) app(\App\Services\Video\VideoSettingService::class)->get('manga_collect_localize', '0') === '1';
+        } catch (\Throwable) {
+            $localize = false;
+        }
         $changed = 0;
         foreach ($this->chapterPayloads($item) as $i => $chapter) {
             $name = mb_substr(trim((string) ($chapter['name'] ?? '')), 0, 120);
@@ -207,19 +238,30 @@ class MangaCollectService
                 ->where('name', $name)
                 ->first();
             if (! $row) {
-                $row = new MangaChapter();
-                $row->fill([
+                if ($localize && $pics !== '') {
+                    $pics = $this->localizePics((int) $manga->id, $pics);
+                }
+                $fill = [
                     'manga_id' => (int) $manga->id,
                     'name' => $name,
                     'sort' => (int) ($chapter['sort'] ?? ($i + 1)),
                     'pics' => $pics,
                     'created_at' => time(),
-                ]);
+                ];
+                if (Schema::hasColumn('plugin_manga_chapters', 'vip')) {
+                    $fill['vip'] = 0;
+                }
+                $row = new MangaChapter();
+                $row->fill($fill);
                 $row->save();
                 $changed++;
                 continue;
             }
-            if ($pics !== '' && trim((string) $row->pics) !== $pics) {
+            // 增量：已有章节且已有图则不覆盖，只补空图。
+            if ($pics !== '' && trim((string) $row->pics) === '') {
+                if ($localize) {
+                    $pics = $this->localizePics((int) $manga->id, $pics, (int) $row->id);
+                }
                 $row->pics = $pics;
                 $row->save();
                 $changed++;
@@ -260,6 +302,47 @@ class MangaCollectService
         }
 
         return implode("\n", array_values(array_unique($out)));
+    }
+
+    /** Download remote images into public/uploads/manga when enabled. */
+    private function localizePics(int $mangaId, string $pics, int $chapterId = 0): string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $pics) ?: [];
+        $out = [];
+        $dir = public_path('uploads/manga/'.$mangaId.($chapterId > 0 ? '/'.$chapterId : ''));
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            return $pics;
+        }
+        foreach ($lines as $i => $line) {
+            $url = MangaChapter::safeUrl((string) $line);
+            if ($url === '') {
+                continue;
+            }
+            if (! preg_match('#^https?://#i', $url)) {
+                $out[] = $url;
+                continue;
+            }
+            try {
+                $bin = @file_get_contents($url);
+                if ($bin === false || $bin === '') {
+                    $out[] = $url;
+                    continue;
+                }
+                $ext = pathinfo((string) (parse_url($url, PHP_URL_PATH) ?: ''), PATHINFO_EXTENSION) ?: 'jpg';
+                $ext = preg_replace('/[^a-z0-9]/i', '', (string) $ext) ?: 'jpg';
+                $name = 'p'.($i + 1).'_'.substr(md5($url), 0, 8).'.'.$ext;
+                $path = $dir.DIRECTORY_SEPARATOR.$name;
+                if (@file_put_contents($path, $bin) === false) {
+                    $out[] = $url;
+                    continue;
+                }
+                $out[] = '/uploads/manga/'.$mangaId.($chapterId > 0 ? '/'.$chapterId : '').'/'.$name;
+            } catch (\Throwable) {
+                $out[] = $url;
+            }
+        }
+
+        return implode("\n", $out);
     }
 
     /** @param  array<string, mixed>  $item */
@@ -313,7 +396,6 @@ class MangaCollectService
         if ($url === '') {
             return [];
         }
-        // ### 是多图分隔；# 是分话分隔。先把 ### 换成换行，避免被 explode('#') 拆碎。
         $url = str_replace(['||', '###'], ['//', "\n"], $url);
         if ($from === '') {
             $from = 'default';
@@ -326,7 +408,6 @@ class MangaCollectService
                 if ($name === '' && $pics === '') {
                     continue;
                 }
-                // 纯图片行（无话名）并入上一话
                 if ($name !== '' && ! str_contains($name, '/') && ! preg_match('#^https?://#i', $name)) {
                     $out[] = [
                         'name' => $name,
@@ -355,7 +436,8 @@ class MangaCollectService
         return true;
     }
 
-    private function findExisting(CollectSourceModel $source, string $collectId, string $title): ?Manga
+    /** @return array{manga?:?Manga,action?:string,msg?:string,id?:int} */
+    private function findExisting(CollectSourceModel $source, string $collectId, string $title, string $author = ''): array
     {
         if ($collectId !== '' && Schema::hasColumn('plugin_mangas', 'collect_id')) {
             $row = Manga::query()
@@ -363,11 +445,31 @@ class MangaCollectService
                 ->where('collect_id', $collectId)
                 ->first();
             if ($row) {
-                return $row;
+                return ['manga' => $row];
             }
         }
 
-        return Manga::query()->where('title', $title)->first();
+        $sameTitle = Manga::query()->where('title', $title)->get();
+        if ($sameTitle->isEmpty()) {
+            return ['manga' => null];
+        }
+        if ($author !== '') {
+            foreach ($sameTitle as $row) {
+                $existAuthor = trim((string) ($row->author ?? ''));
+                if ($existAuthor === '' || mb_strtolower($existAuthor) === mb_strtolower($author)) {
+                    return ['manga' => $row];
+                }
+            }
+            $first = $sameTitle->first();
+
+            return [
+                'action' => 'skipped',
+                'msg' => '同名不同作者，已跳过（#'.(int) $first->id.' · '.$first->author.'）',
+                'id' => (int) $first->id,
+            ];
+        }
+
+        return ['manga' => $sameTitle->first()];
     }
 
     /** @return array<string, int> */

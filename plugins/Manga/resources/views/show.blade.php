@@ -6,6 +6,7 @@
         $comments = $comments ?? collect();
         $commentCount = (int) ($commentCount ?? $comments->count());
         $favored = (bool) ($favored ?? false);
+        $continueId = (int) ($continueId ?? 0);
         $first = $manga->chapters->first();
         $last = $manga->chapters->last();
     @endphp
@@ -39,7 +40,11 @@
             <p class="manga-actions">
                 @if($first)
                     <a class="btn-link" href="{{ url('/manga/'.$manga->id.'/'.$first->id) }}">开始阅读</a>
-                    <a class="btn-link" id="manga-continue" hidden href="{{ url('/manga/'.$manga->id.'/'.$first->id) }}">继续阅读</a>
+                    @if($continueId > 0 && $continueId !== (int) $first->id)
+                        <a class="btn-link" href="{{ url('/manga/'.$manga->id.'/'.$continueId) }}">继续阅读</a>
+                    @else
+                        <a class="btn-link" id="manga-continue" hidden href="{{ url('/manga/'.$manga->id.'/'.$first->id) }}">继续阅读</a>
+                    @endif
                 @endif
                 @if($last && $first && (int) $last->id !== (int) $first->id)
                     <a class="btn-link" href="{{ url('/manga/'.$manga->id.'/'.$last->id) }}">最新 {{ $last->name ?: ('第'.$last->id.'话') }}</a>
@@ -61,7 +66,7 @@
     @else
         <div class="eps" id="manga-eps">
             @foreach($manga->chapters as $ep)
-                <a href="{{ url('/manga/'.$manga->id.'/'.$ep->id) }}">{{ $ep->name ?: ('第'.$ep->id.'话') }}</a>
+                <a href="{{ url('/manga/'.$manga->id.'/'.$ep->id) }}">{{ $ep->name ?: ('第'.$ep->id.'话') }}{{ (int) ($ep->vip ?? 0) === 1 ? ' ·VIP' : '' }}</a>
             @endforeach
         </div>
     @endif

@@ -89,7 +89,82 @@ class PayController extends Controller
             'site' => $site,
             'member' => $member,
             'order' => $order,
+            'channelLabel' => $this->channelLabel($order),
         ]);
+    }
+
+    public function orders(): View
+    {
+        $member = Auth::guard('member')->user();
+        if (! $member) {
+            throw new NotFoundHttpException();
+        }
+        $site = $this->front->bootSite();
+        $list = \App\Models\Member\MemberOrder::query()
+            ->where('member_id', $member->id)
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view('pay::orders', [
+            'site' => $site,
+            'member' => $member,
+            'list' => $list,
+            'channelLabels' => [
+                'wechat' => '微信',
+                'alipay' => '支付宝',
+                'epay' => '易支付',
+                'dfpay' => 'DfPay',
+                'manual' => '人工',
+            ],
+        ]);
+    }
+
+    public function lookup(Request $request): View|RedirectResponse
+    {
+        $member = Auth::guard('member')->user();
+        if (! $member) {
+            throw new NotFoundHttpException();
+        }
+        $site = $this->front->bootSite();
+        $orderNo = strtoupper(trim((string) $request->input('order_no', $request->query('order_no', ''))));
+        $order = null;
+        $error = '';
+        if ($request->isMethod('post') || $orderNo !== '') {
+            if ($orderNo === '') {
+                $error = '请填写订单号';
+            } else {
+                $order = \App\Models\Member\MemberOrder::query()
+                    ->where('member_id', $member->id)
+                    ->where('order_no', $orderNo)
+                    ->first();
+                if (! $order) {
+                    $error = '没有找到这个订单号（只能查自己的单）';
+                } else {
+                    return redirect('/member/pay/'.$order->id);
+                }
+            }
+        }
+
+        return view('pay::lookup', [
+            'site' => $site,
+            'member' => $member,
+            'order_no' => $orderNo,
+            'error' => $error,
+        ]);
+    }
+
+    private function channelLabel(\App\Models\Member\MemberOrder $order): string
+    {
+        $map = [
+            'wechat' => '微信',
+            'alipay' => '支付宝',
+            'epay' => '易支付',
+            'dfpay' => 'DfPay',
+            'manual' => '人工',
+        ];
+        $ch = trim((string) ($order->channel ?? ''));
+
+        return $map[$ch] ?? ($ch !== '' ? $ch : '未知');
     }
 
     public function notifyWechat(Request $request): Response

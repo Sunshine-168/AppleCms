@@ -26,6 +26,17 @@ class ProvideApiTest extends TestCase
             ->assertJsonStructure(['page', 'pagecount', 'limit', 'total', 'list', 'class']);
     }
 
+    public function test_manga_provide_lists_when_plugin_ready(): void
+    {
+        if (! app(\App\Support\Plugins\PluginManager::class)->isEnabled('manga')) {
+            $this->markTestSkipped('manga plugin disabled');
+        }
+        $this->getJson('/api/provide/manga?ac=list')
+            ->assertOk()
+            ->assertJsonPath('code', 1)
+            ->assertJsonStructure(['page', 'pagecount', 'limit', 'total', 'list']);
+    }
+
     public function test_legacy_api_php_path_is_gone(): void
     {
         $this->get('/api.php/provide/vod?ac=list')->assertNotFound();

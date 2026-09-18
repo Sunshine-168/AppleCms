@@ -164,6 +164,15 @@ class MemberActivityService
         $this->addProgress($member, 'post_comment', 1);
     }
 
+    /** Cash recharge paid (online pay / admin confirm). */
+    public function reportRecharge(Member $member): void
+    {
+        if (! $this->ready()) {
+            return;
+        }
+        $this->addProgress($member, 'recharge', 1);
+    }
+
     /** @return array{code:int,msg:string,data:array<string, mixed>} */
     public function reportShare(Member $member, int $videoId): array
     {

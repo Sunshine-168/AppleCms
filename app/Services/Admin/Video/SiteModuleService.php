@@ -696,6 +696,9 @@ class SiteModuleService
         if ($handled !== null) {
             return $handled;
         }
+        if ($module === 'manga_types') {
+            return $this->listMangaTypes($params);
+        }
         /** @var class-string<Model> $class */
         $class = $cfg['model'];
         try {
@@ -1608,7 +1611,16 @@ class SiteModuleService
                 $q->where('yid', (int) $params['yid']);
             }
             if (array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null && Schema::hasColumn('plugin_mangas', 'type_id')) {
-                $q->where('type_id', (int) $params['type_id']);
+                $typeId = (int) $params['type_id'];
+                if ($typeId > 0 && Schema::hasTable('plugin_manga_types')) {
+                    $ids = array_values(array_unique(array_merge(
+                        [$typeId],
+                        array_map('intval', \Plugins\Manga\Models\MangaType::query()->where('parent_id', $typeId)->pluck('id')->all())
+                    )));
+                    $q->whereIn('type_id', $ids);
+                } else {
+                    $q->where('type_id', $typeId);
+                }
             }
             if (array_key_exists('serialize', $params) && $params['serialize'] !== '' && $params['serialize'] !== null && Schema::hasColumn('plugin_mangas', 'serialize')) {
                 $q->where('serialize', (int) $params['serialize']);
@@ -1616,6 +1628,7 @@ class SiteModuleService
             if (array_key_exists('recommend', $params) && $params['recommend'] !== '' && $params['recommend'] !== null && Schema::hasColumn('plugin_mangas', 'recommend')) {
                 $q->where('recommend', (int) $params['recommend']);
             }
+            $this->applyMangaTagFilter($q, $params);
         }
         if ($module === 'manga_types') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
@@ -3059,6 +3072,7 @@ class SiteModuleService
             }
             $this->afterMoneySave($module, $row, $oldStatus);
             $this->syncArtTagsIfPresent($id, $data, $module);
+            $this->syncMangaTagsIfPresent($id, $data, $module);
 
             return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, true, AdminOpLog::subjectFrom($payload, $row), $id), $id, Result::success(['id' => $id]));
         }
@@ -3073,6 +3087,7 @@ class SiteModuleService
         $this->afterMoneySave($module, $row, null);
         $newId = (int) $row->id;
         $this->syncArtTagsIfPresent($newId, $data, $module);
+        $this->syncMangaTagsIfPresent($newId, $data, $module);
 
         return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, false, AdminOpLog::subjectFrom($payload, $row), $newId), $newId, Result::success(['id' => $newId]));
     }
@@ -3081,7 +3096,7 @@ class SiteModuleService
     {
         $status = (int) ($row->status ?? 0);
         if ($module === 'orders' && $status === 1 && $oldStatus !== 1) {
-            app(\App\Services\Video\MemberOrderService::class)->credit((int) $row->id);
+            app(\App\Services\Video\MemberOrderService::class)->fulfillById((int) $row->id);
         }
         if ($module === 'withdraws' && $status === 1 && $oldStatus !== 1) {
             $this->changePoints((int) $row->member_id, -abs((int) $row->amount), 'withdraw', '提现审核通过');
@@ -3143,6 +3158,20 @@ class SiteModuleService
         if ($module === 'invites' && (int) ($row->used_by ?? 0) > 0) {
             return Result::fail('已用的邀请码不能删。');
         }
+        if ($module === 'manga_types') {
+            if (Schema::hasTable('plugin_manga_types')) {
+                $childCount = (int) \Plugins\Manga\Models\MangaType::query()->where('parent_id', $id)->count();
+                if ($childCount > 0) {
+                    return Result::fail('请先删掉下级分类');
+                }
+            }
+            if (Schema::hasTable('plugin_mangas') && Schema::hasColumn('plugin_mangas', 'type_id')) {
+                $useCount = (int) \Plugins\Manga\Models\Manga::query()->where('type_id', $id)->count();
+                if ($useCount > 0) {
+                    return Result::fail('该分类下还有作品，请先移走再删');
+                }
+            }
+        }
         if ($module === 'players') {
             $code = trim((string) ($row->code ?? ''));
             if ($code !== '' && Schema::hasTable('video_sources') && Schema::hasColumn('video_sources', 'player')) {
@@ -3190,6 +3219,18 @@ class SiteModuleService
         }
         if ($module === 'arts') {
             app(ArtTagService::class)->detachArt($id);
+        }
+        if ($module === 'mangas') {
+            try {
+                app(\Plugins\Manga\Services\MangaService::class)->purgeWork($id);
+            } catch (\Throwable) {
+            }
+        }
+        if ($module === 'manga_chapters') {
+            try {
+                app(\Plugins\Manga\Services\MangaService::class)->purgeChapter($id);
+            } catch (\Throwable) {
+            }
         }
         $row->delete();
 
@@ -3431,7 +3472,7 @@ class SiteModuleService
         if ($handled !== null) {
             return $handled;
         }
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs', 'mangas', 'manga_comments', 'manga_chapters', 'manga_pics'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs', 'mangas', 'manga_comments', 'manga_chapters', 'manga_pics', 'manga_types'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -3475,6 +3516,7 @@ class SiteModuleService
                 'manga_comments' => '请先勾选评论',
                 'manga_chapters' => '请先勾选章节',
                 'manga_pics' => '请先勾选图片',
+                'manga_types' => '请先勾选分类',
                 default => '请先勾选评论',
             });
         }
@@ -3489,6 +3531,9 @@ class SiteModuleService
                         : Result::fail('不支持的操作'),
                     'recommend' => $module === 'mangas'
                         ? $this->save($module, ['recommend' => (int) $value], $id)
+                        : Result::fail('不支持的操作'),
+                    'parent' => $module === 'manga_types'
+                        ? $this->save($module, ['parent_id' => (int) $value], $id)
                         : Result::fail('不支持的操作'),
                     'type' => $this->save($module, ['type_id' => (int) $value], $id),
                     'slot' => $this->save($module, ['slot' => (string) $value], $id),
@@ -3669,6 +3714,14 @@ class SiteModuleService
         }
         $channels = ['wechat' => '微信', 'alipay' => '支付宝', 'manual' => '人工', 'epay' => '易支付', 'dfpay' => 'DfPay'];
         $statuses = ['0' => '待付', '1' => '已付', '2' => '关闭'];
+        $channelTitles = [];
+        try {
+            if (Schema::hasTable('plugin_pay_channels') && class_exists(\Plugins\Pay\Models\PayChannel::class)) {
+                $channelTitles = \Plugins\Pay\Models\PayChannel::query()->pluck('title', 'id')->all();
+            }
+        } catch (\Throwable) {
+            $channelTitles = [];
+        }
         foreach ($rows as &$row) {
             $mid = (int) ($row['member_id'] ?? 0);
             $member = $members[$mid] ?? null;
@@ -3678,7 +3731,15 @@ class SiteModuleService
             $row['amount_yuan'] = number_format($fen / 100, 2, '.', '');
             $ch = trim((string) ($row['channel'] ?? ''));
             $row['channel_label'] = $channels[$ch] ?? ($ch !== '' ? $ch : '人工');
+            $cid = (int) ($row['pay_channel_id'] ?? 0);
+            $title = $cid > 0 ? trim((string) ($channelTitles[$cid] ?? '')) : '';
+            if ($title !== '') {
+                $row['channel_label'] = $row['channel_label'].' · '.$title;
+            }
             $row['status_label'] = $statuses[(string) ($row['status'] ?? '0')] ?? '待付';
+            $row['paid_at_text'] = (int) ($row['paid_at'] ?? 0) > 0
+                ? date('Y-m-d H:i', (int) $row['paid_at'])
+                : '';
         }
         unset($row);
 
@@ -5415,6 +5476,54 @@ class SiteModuleService
         app(ArtTagService::class)->syncArt($id, $data);
     }
 
+    private function syncMangaTagsIfPresent(int $id, array $data, string $module): void
+    {
+        if ($module !== 'mangas' || $id < 1) {
+            return;
+        }
+        if (
+            ! array_key_exists('tag', $data)
+            && ! array_key_exists('tags', $data)
+            && ! array_key_exists('tag_ids', $data)
+            && ! array_key_exists('tag_ids[]', $data)
+            && ! array_key_exists('tag_extra', $data)
+        ) {
+            return;
+        }
+        if (! isset($data['tag_ids']) && isset($data['tag_ids[]'])) {
+            $data['tag_ids'] = $data['tag_ids[]'];
+        }
+        try {
+            app(\Plugins\Manga\Services\MangaTagService::class)->syncManga($id, $data);
+        } catch (\Throwable) {
+        }
+    }
+
+    private function applyMangaTagFilter(\Illuminate\Database\Eloquent\Builder $q, array $params): void
+    {
+        $tagId = (int) ($params['tag_id'] ?? 0);
+        if ($tagId < 1) {
+            return;
+        }
+        if (Schema::hasTable('plugin_manga_tag_rel') && Schema::hasTable('plugin_manga_tags')) {
+            $q->whereHas('tagRels', fn ($inner) => $inner->where('plugin_manga_tags.id', $tagId));
+
+            return;
+        }
+        $name = '';
+        if (Schema::hasTable('plugin_manga_tags')) {
+            $name = trim((string) (\Plugins\Manga\Models\MangaTag::query()->find($tagId)?->name ?? ''));
+        }
+        if ($name !== '' && Schema::hasColumn('plugin_mangas', 'tags')) {
+            $q->where(function ($inner) use ($name) {
+                $inner->where('tags', $name)
+                    ->orWhere('tags', 'like', $name.',%')
+                    ->orWhere('tags', 'like', '%,'.$name)
+                    ->orWhere('tags', 'like', '%,'.$name.',%');
+            });
+        }
+    }
+
     public function copyArt(int $id): array
     {
         $row = VideoArt::query()->find($id);
@@ -6973,10 +7082,42 @@ class SiteModuleService
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
             }
             if (array_key_exists('tags', $payload)) {
-                $payload['tags'] = mb_substr(trim((string) $payload['tags']), 0, 255);
+                $payload['tags'] = mb_substr(trim((string) ($payload['tags'] ?? '')), 0, 255);
             }
             if (array_key_exists('cover', $payload)) {
-                $payload['cover'] = mb_substr(trim((string) $payload['cover']), 0, 500);
+                $payload['cover'] = mb_substr(trim((string) ($payload['cover'] ?? '')), 0, 500);
+            }
+            if (array_key_exists('author', $payload)) {
+                $payload['author'] = mb_substr(trim((string) ($payload['author'] ?? '')), 0, 80);
+            }
+            if (array_key_exists('remarks', $payload)) {
+                $payload['remarks'] = mb_substr(trim((string) ($payload['remarks'] ?? '')), 0, 80);
+            }
+            if (array_key_exists('content', $payload)) {
+                $payload['content'] = (string) ($payload['content'] ?? '');
+            }
+            if (array_key_exists('hits', $payload)) {
+                $payload['hits'] = max(0, (int) $payload['hits']);
+            }
+            if (array_key_exists('sort', $payload)) {
+                $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            // SQLite NOT NULL string cols reject null; empty form fields must be ''.
+            if ($id === null) {
+                foreach (['cover', 'author', 'remarks', 'tags', 'content'] as $col) {
+                    if (! array_key_exists($col, $payload) || $payload[$col] === null) {
+                        $payload[$col] = '';
+                    }
+                }
+                if (! array_key_exists('hits', $payload)) {
+                    $payload['hits'] = 0;
+                }
+                if (! array_key_exists('sort', $payload)) {
+                    $payload['sort'] = 0;
+                }
+                if (! array_key_exists('status', $payload)) {
+                    $payload['status'] = 1;
+                }
             }
 
             return null;
@@ -7002,6 +7143,9 @@ class SiteModuleService
             }
             if (array_key_exists('sort', $payload)) {
                 $payload['sort'] = max(0, (int) $payload['sort']);
+            }
+            if (array_key_exists('vip', $payload) && Schema::hasColumn('plugin_manga_chapters', 'vip')) {
+                $payload['vip'] = (int) $payload['vip'] === 1 ? 1 : 0;
             }
 
             return null;
@@ -7052,21 +7196,60 @@ class SiteModuleService
                 }
                 $payload['name'] = mb_substr($name, 0, 80);
             }
+            if (array_key_exists('slug', $payload)) {
+                $slug = strtolower(trim((string) $payload['slug']));
+                if ($slug !== '' && ! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+                    return Result::fail('别名只填英文、数字和短横线');
+                }
+                if ($slug !== '' && Schema::hasTable('plugin_manga_types') && Schema::hasColumn('plugin_manga_types', 'slug')) {
+                    $dup = \Plugins\Manga\Models\MangaType::query()->where('slug', $slug);
+                    if ($id !== null) {
+                        $dup->where('id', '!=', $id);
+                    }
+                    if ($dup->exists()) {
+                        return Result::fail('这个别名已经被用了');
+                    }
+                }
+                $payload['slug'] = mb_substr($slug, 0, 80);
+            }
+            if (array_key_exists('pic', $payload)) {
+                $pic = trim((string) $payload['pic']);
+                if ($pic !== '' && ! preg_match('#^(https?:)?/#i', $pic) && ! str_starts_with($pic, 'data:')) {
+                    return Result::fail('封面请填 http(s) 地址或站内路径');
+                }
+                if (stripos($pic, 'javascript:') === 0) {
+                    return Result::fail('封面地址不合法');
+                }
+                $payload['pic'] = mb_substr($pic, 0, 255);
+            }
             if (array_key_exists('parent_id', $payload)) {
                 $parentId = max(0, (int) $payload['parent_id']);
                 if ($id !== null && $parentId === (int) $id) {
                     return Result::fail('上级不能是自己');
                 }
-                if ($parentId > 0 && Schema::hasTable('plugin_manga_types') && ! \Plugins\Manga\Models\MangaType::query()->where('id', $parentId)->exists()) {
-                    return Result::fail('上级分类不存在');
+                if ($parentId > 0 && Schema::hasTable('plugin_manga_types')) {
+                    if (! \Plugins\Manga\Models\MangaType::query()->where('id', $parentId)->exists()) {
+                        return Result::fail('上级分类不存在');
+                    }
+                    if ($id !== null && $this->mangaTypeIsDescendant((int) $id, $parentId)) {
+                        return Result::fail('不能挂到自己的下级下面');
+                    }
                 }
                 $payload['parent_id'] = $parentId;
             }
             if (array_key_exists('sort', $payload)) {
                 $payload['sort'] = max(0, (int) $payload['sort']);
             }
+            if (array_key_exists('page_size', $payload)) {
+                $payload['page_size'] = max(0, min(100, (int) $payload['page_size']));
+            }
             if (array_key_exists('status', $payload)) {
                 $payload['status'] = (int) $payload['status'] === 1 ? 1 : 0;
+            }
+            foreach (['seo_title' => 120, 'seo_keywords' => 255, 'seo_description' => 500] as $col => $max) {
+                if (array_key_exists($col, $payload)) {
+                    $payload[$col] = mb_substr(trim((string) $payload[$col]), 0, $max);
+                }
             }
 
             return null;
@@ -7418,6 +7601,8 @@ class SiteModuleService
             $row['yid_label'] = $row['yid'] === 1 ? '待审' : '已审';
             $row['status'] = (int) ($row['status'] ?? 0);
             $row['recommend'] = (int) ($row['recommend'] ?? 0);
+            $row['front_url'] = '/manga/'.$id;
+            $row['collect_id'] = (string) ($row['collect_id'] ?? '');
         }
         unset($row);
 
@@ -7452,6 +7637,8 @@ class SiteModuleService
             $id = (int) ($row['id'] ?? 0);
             $mangaId = (int) ($row['manga_id'] ?? 0);
             $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
+            $row['vip'] = (int) ($row['vip'] ?? 0);
+            $row['vip_label'] = $row['vip'] === 1 ? 'VIP' : '免费';
             if (isset($picCounts[$id])) {
                 $row['pic_count'] = (int) $picCounts[$id];
             } else {
@@ -7512,10 +7699,147 @@ class SiteModuleService
         foreach ($rows as &$row) {
             $parentId = (int) ($row['parent_id'] ?? 0);
             $row['parent_name'] = $parentId > 0 ? (string) ($names[$parentId] ?? ('#'.$parentId)) : '顶级';
+            $row['depth'] = (int) ($row['depth'] ?? 0);
+            $row['child_count'] = (int) ($row['child_count'] ?? 0);
+            $row['manga_count'] = (int) ($row['manga_count'] ?? 0);
         }
         unset($row);
 
         return $rows;
+    }
+
+    /** @param array<string, mixed> $params */
+    private function listMangaTypes(array $params): array
+    {
+        if (! Schema::hasTable('plugin_manga_types')) {
+            return Result::fail('请先执行数据库迁移');
+        }
+
+        $all = \Plugins\Manga\Models\MangaType::query()
+            ->orderByDesc('sort')
+            ->orderBy('id')
+            ->get()
+            ->map(static fn ($row) => $row->toArray())
+            ->all();
+
+        $mangaCounts = [];
+        try {
+            if (Schema::hasTable('plugin_mangas') && Schema::hasColumn('plugin_mangas', 'type_id')) {
+                $countRows = \Plugins\Manga\Models\Manga::query()
+                    ->selectRaw('type_id, COUNT(*) as c')
+                    ->groupBy('type_id')
+                    ->get();
+                foreach ($countRows as $row) {
+                    $mangaCounts[(int) $row->type_id] = (int) $row->c;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        $byParent = [];
+        $byId = [];
+        foreach ($all as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id < 1) {
+                continue;
+            }
+            $byId[$id] = $row;
+            $byParent[(int) ($row['parent_id'] ?? 0)][] = $row;
+        }
+
+        $flat = [];
+        $walk = function (int $parentId, int $depth) use (&$walk, &$flat, $byParent): void {
+            foreach ($byParent[$parentId] ?? [] as $row) {
+                $row['depth'] = $depth;
+                $flat[] = $row;
+                $walk((int) ($row['id'] ?? 0), $depth + 1);
+            }
+        };
+        $walk(0, 0);
+        $seen = [];
+        foreach ($flat as $row) {
+            $seen[(int) ($row['id'] ?? 0)] = true;
+        }
+        foreach ($all as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0 && ! isset($seen[$id])) {
+                $row['depth'] = 0;
+                $flat[] = $row;
+                $seen[$id] = true;
+            }
+        }
+
+        $name = trim((string) ($params['name'] ?? $params['q'] ?? ''));
+        if ($name !== '') {
+            $keep = [];
+            foreach ($flat as $row) {
+                if (mb_stripos((string) ($row['name'] ?? ''), $name) === false) {
+                    continue;
+                }
+                $id = (int) ($row['id'] ?? 0);
+                $keep[$id] = true;
+                $pid = (int) ($row['parent_id'] ?? 0);
+                $guard = 0;
+                while ($pid > 0 && $guard++ < 8 && isset($byId[$pid])) {
+                    $keep[$pid] = true;
+                    $pid = (int) ($byId[$pid]['parent_id'] ?? 0);
+                }
+            }
+            $flat = array_values(array_filter(
+                $flat,
+                static fn (array $row): bool => isset($keep[(int) ($row['id'] ?? 0)])
+            ));
+        }
+
+        foreach ($flat as &$item) {
+            $id = (int) ($item['id'] ?? 0);
+            $pid = (int) ($item['parent_id'] ?? 0);
+            $item['parent_name'] = $pid > 0 ? (string) ($byId[$pid]['name'] ?? ('#'.$pid)) : '顶级';
+            $item['manga_count'] = $mangaCounts[$id] ?? 0;
+            $item['child_count'] = count($byParent[$id] ?? []);
+            $item['depth'] = (int) ($item['depth'] ?? 0);
+            $item['status'] = (int) ($item['status'] ?? 0);
+            $item['slug'] = (string) ($item['slug'] ?? '');
+            $item['pic'] = (string) ($item['pic'] ?? '');
+            $item['page_size'] = (int) ($item['page_size'] ?? 0);
+        }
+        unset($item);
+
+        return Result::success([
+            'total' => count($flat),
+            'data' => $flat,
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => max(count($flat), 1),
+        ]);
+    }
+
+    private function mangaTypeIsDescendant(int $rootId, int $candidateId): bool
+    {
+        if ($rootId < 1 || $candidateId < 1 || ! Schema::hasTable('plugin_manga_types')) {
+            return false;
+        }
+        $children = \Plugins\Manga\Models\MangaType::query()
+            ->where('parent_id', $rootId)
+            ->pluck('id')
+            ->all();
+        $queue = array_map('intval', $children);
+        $guard = 0;
+        while ($queue !== [] && $guard++ < 200) {
+            $cur = array_shift($queue);
+            if ($cur === $candidateId) {
+                return true;
+            }
+            $more = \Plugins\Manga\Models\MangaType::query()
+                ->where('parent_id', $cur)
+                ->pluck('id')
+                ->all();
+            foreach ($more as $cid) {
+                $queue[] = (int) $cid;
+            }
+        }
+
+        return false;
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */

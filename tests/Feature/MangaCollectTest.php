@@ -160,6 +160,94 @@ class MangaCollectTest extends TestCase
         $this->assertSame(3, MangaChapter::query()->where('manga_id', $row->id)->count());
     }
 
+    public function test_incremental_skip_same_title_different_author_and_vip_gate(): void
+    {
+        if (! app(MangaCollectService::class)->ready()) {
+            $this->markTestSkipped('manga plugin disabled');
+        }
+        $type = MangaType::query()->create([
+            'name' => '少年',
+            'parent_id' => 0,
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => time(),
+        ]);
+        $source = CollectSourceModel::query()->create([
+            'name' => '去重源',
+            'api_url' => 'https://manga-dup.test/api.php/provide/manga/',
+            'api_type' => 'json',
+            'mid' => 2,
+            'param' => '',
+            'bind_json' => json_encode(['1' => (int) $type->id], JSON_UNESCAPED_UNICODE),
+            'status' => 1,
+            'sort' => 0,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        Manga::query()->create([
+            'title' => '同名作',
+            'author' => '原作者',
+            'cover' => '',
+            'status' => 1,
+            'yid' => 0,
+            'type_id' => $type->id,
+            'serialize' => 0,
+            'created_at' => time(),
+            'updated_at' => time(),
+        ]);
+        $skip = app(MangaCollectService::class)->upsert($source, [
+            'manga_id' => 'x1',
+            'type_id' => 1,
+            'manga_name' => '同名作',
+            'manga_author' => '另一人',
+            'manga_play_url' => '第1话$/a.jpg',
+            'manga_play_from' => 'default',
+        ], true);
+        $this->assertSame('skipped', $skip['action'] ?? '');
+        $this->assertStringContainsString('同名不同作者', (string) ($skip['msg'] ?? ''));
+
+        $ok = app(MangaCollectService::class)->upsert($source, [
+            'manga_id' => 'x2',
+            'type_id' => 1,
+            'manga_name' => '同名作',
+            'manga_author' => '原作者',
+            'manga_play_from' => 'default',
+            'manga_play_url' => "第1话$/a.jpg#第2话$/b.jpg",
+        ], true);
+        $this->assertSame('updated', $ok['action'] ?? '');
+        $manga = Manga::query()->where('title', '同名作')->where('author', '原作者')->first();
+        $this->assertNotNull($manga);
+        $this->assertSame(2, MangaChapter::query()->where('manga_id', $manga->id)->count());
+
+        $again = app(MangaCollectService::class)->upsert($source, [
+            'manga_id' => 'x2',
+            'type_id' => 1,
+            'manga_name' => '同名作',
+            'manga_author' => '原作者',
+            'manga_play_from' => 'default',
+            'manga_play_url' => "第1话$/a.jpg###/changed.jpg#第2话$/b.jpg",
+        ], true);
+        $this->assertSame('updated', $again['action'] ?? '');
+        $this->assertSame(0, (int) ($again['chapters_added'] ?? -1));
+        $ep1 = MangaChapter::query()->where('manga_id', $manga->id)->where('name', '第1话')->first();
+        $this->assertNotNull($ep1);
+        $this->assertStringNotContainsString('changed.jpg', (string) $ep1->pics);
+
+        $ep1->vip = 1;
+        $ep1->pics = "/a.jpg\n/b.jpg\n/c.jpg\n/d.jpg";
+        $ep1->save();
+
+        VideoOption::query()->updateOrCreate(['k' => 'manga_trysee_pages'], ['v' => '2']);
+        Cache::forget(VideoSettingService::CACHE_KEY);
+
+        $guest = $this->get('/manga/'.$manga->id.'/'.$ep1->id)->assertOk();
+        $guest->assertSee('VIP 章节');
+        $guest->assertSee('/a.jpg')->assertSee('/b.jpg');
+        $guest->assertDontSee('/c.jpg');
+        $guest->assertSee('试看结束');
+    }
+
+
     public function test_receive_manga_api_and_rejects_without_key(): void
     {
         if (! app(MangaCollectService::class)->ready()) {

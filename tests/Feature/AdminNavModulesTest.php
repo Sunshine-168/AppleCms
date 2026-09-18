@@ -33,7 +33,12 @@ class AdminNavModulesTest extends TestCase
         $this->assertStringContainsString('插件', $html);
         $this->assertStringContainsString('搜功能', $html);
         $this->assertStringContainsString('href="/admin/plugins"', $html);
-        $this->assertStringNotContainsString('>漫画<', $html);
+        if (app(PluginManager::class)->isEnabled('manga')) {
+            $this->assertStringContainsString('>漫画<', $html);
+            $this->assertStringContainsString('href="/admin/video/mangas"', $html);
+        } else {
+            $this->assertStringNotContainsString('>漫画<', $html);
+        }
         $this->assertStringNotContainsString('直播', $html);
         $this->assertStringNotContainsString('入金', $html);
         $this->assertStringNotContainsString('监控告警', $html);
@@ -139,7 +144,9 @@ class AdminNavModulesTest extends TestCase
         $this->assertStringContainsString('<span>回收站</span>', $fold);
         $this->assertStringNotContainsString('/admin/video/arts', $fold);
         $this->assertStringNotContainsString('/admin/video/mangas', $fold);
-        $this->assertStringNotContainsString('/admin/video/mangas', $html);
+        if ($manager->isEnabled('manga')) {
+            $this->assertStringContainsString('>漫画<', $html);
+        }
         if ($manager->isEnabled('chatroom')) {
             $this->assertStringContainsString('/admin/video/chat_messages', $fold);
         } else {
@@ -166,11 +173,16 @@ class AdminNavModulesTest extends TestCase
         $this->assertNotContains('/admin/video/mangas', $moreUrls);
         $this->assertNotContains('/admin/video/mangas', $urls);
         if ($manager->isEnabled('manga')) {
+            $mangaPaths = array_map(
+                static fn ($url) => explode('?', (string) $url)[0],
+                array_column(AdminNav::groupsFor('manga')[0]['items'] ?? [], 'url')
+            );
+            $this->assertContains('/admin/video/mangas', $mangaPaths);
             $pluginPaths = array_map(
                 static fn ($url) => explode('?', (string) $url)[0],
                 array_column(AdminNav::groupsFor('plugin')[0]['items'] ?? [], 'url')
             );
-            $this->assertContains('/admin/video/mangas', $pluginPaths);
+            $this->assertNotContains('/admin/video/mangas', $pluginPaths);
         }
         if ($manager->isEnabled('chatroom')) {
             $this->assertContains('/admin/video/chat_messages', $moreUrls);
@@ -207,18 +219,29 @@ class AdminNavModulesTest extends TestCase
             $this->assertNotSame('nav.manga_chapters', $item['label'] ?? '');
         }
         $pluginFold = app(PluginHost::class)->sidebarFoldItems('plugin');
-        $manga = null;
         foreach ($pluginFold as $item) {
             $href = explode('?', (string) ($item['url'] ?? ''))[0];
+            $this->assertNotSame('/admin/video/mangas', $href);
             $this->assertNotSame('/admin/video/manga_chapters', $href);
-            if ($href === '/admin/video/mangas') {
-                $manga = $item;
-            }
         }
+        $mangaFold = app(PluginHost::class)->sidebarFoldItems('manga');
         if ($manager->isEnabled('manga')) {
-            $this->assertIsArray($manga);
-            $this->assertNotEmpty($manga['children'] ?? []);
-            $this->assertContains('nav.manga_chapters', array_column($manga['children'], 'label'));
+            $this->assertNotEmpty($mangaFold);
+            $labels = array_column($mangaFold, 'label');
+            $this->assertContains('nav.manga_list', $labels);
+            $this->assertContains('nav.manga_stats', $labels);
+            $this->assertContains('nav.manga_config', $labels);
+            $this->assertNotContains('nav.manga_chapters', $labels);
+            $this->assertNotContains('nav.manga_pics', $labels);
+            $urls = array_map(
+                static fn ($url) => explode('?', (string) $url)[0],
+                array_column($mangaFold, 'url')
+            );
+            $this->assertContains('/admin/video/mangas', $urls);
+            $this->assertContains('/admin/video/manga-types', $urls);
+            $this->assertContains('/admin/video/manga-tags', $urls);
+            $this->assertContains('/admin/video/config/manga', $urls);
+            $this->assertContains('nav.manga_tags', $labels);
         }
     }
 
@@ -286,11 +309,17 @@ class AdminNavModulesTest extends TestCase
         $this->assertSame('member', AdminNav::currentModule('/admin/video/mall_orders'));
         $this->assertSame('member', AdminNav::currentModule('/admin/video/coupons'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/coupons?nav=plugin'));
-        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/mangas'));
-        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_chapters'));
-        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_types'));
-        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_pics'));
-        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_comments'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/mangas'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga-types'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga-types/create'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga-tags'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga-tags/create'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga_chapters'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga_types'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga_pics'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/manga_comments'));
+        $this->assertSame('manga', AdminNav::currentModule('/admin/video/config/manga'));
+        $this->assertSame('site', AdminNav::currentModule('/admin/video/config/player'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/chat_messages'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/chat_messages?nav=plugin'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/danmaku'));
@@ -328,6 +357,22 @@ class AdminNavModulesTest extends TestCase
         $this->assertContains('/admin/video/publish_pages', $urls);
         $this->assertNotContains('/admin/video/ads', $urls);
         $this->assertNotContains('/admin/video/links', $urls);
+    }
+
+    public function test_default_desk_sidebar_link_is_not_active_on_other_desks(): void
+    {
+        $works = '/admin/video/mangas';
+        $pending = '/admin/video/mangas?desk=pending';
+        $chapters = '/admin/video/mangas?desk=chapters';
+
+        $this->assertTrue(AdminNav::hrefIsActive($works, $works));
+        $this->assertTrue(AdminNav::hrefIsActive($works, '/admin/video/mangas?desk=works'));
+        $this->assertFalse(AdminNav::hrefIsActive($works, $pending));
+        $this->assertFalse(AdminNav::hrefIsActive($works, $chapters));
+        $this->assertTrue(AdminNav::hrefIsActive($pending, $pending));
+        $this->assertFalse(AdminNav::hrefIsActive($pending, $works));
+        $this->assertFalse(AdminNav::hrefIsActive($pending, $chapters));
+        $this->assertTrue(AdminNav::hrefIsActive($chapters, $chapters));
     }
 
     private function topNavFoldChunk(string $html, string $summary): string

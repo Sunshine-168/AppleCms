@@ -10,20 +10,33 @@
     $period = in_array((string) request()->query('period', 'day'), ['day', 'month', 'year'], true)
         ? (string) request()->query('period', 'day')
         : 'day';
+    $stats = is_array($stats ?? null) ? $stats : [];
+    $today = is_array($stats['today'] ?? null) ? $stats['today'] : ['hits' => 0, 'clicks' => 0];
+    $yesterday = is_array($stats['yesterday'] ?? null) ? $stats['yesterday'] : ['hits' => 0, 'clicks' => 0];
+    $week = is_array($stats['week'] ?? null) ? $stats['week'] : ['hits' => 0, 'clicks' => 0];
+    $month = is_array($stats['month'] ?? null) ? $stats['month'] : ['hits' => 0, 'clicks' => 0];
+    $linksStat = is_array($stats['links'] ?? null) ? $stats['links'] : ['all' => 0, 'show' => 0, 'pending' => 0, 'reject' => 0, 'freeze' => 0];
+    $topHits = is_array($stats['top_hits'] ?? null) ? $stats['top_hits'] : [];
+    $topClicks = is_array($stats['top_clicks'] ?? null) ? $stats['top_clicks'] : [];
+    $daily = is_array($stats['daily'] ?? null) ? $stats['daily'] : [];
+    $hosts = is_array($stats['hosts'] ?? null) ? $stats['hosts'] : [];
 @endphp
 
 @section('plain')
 <div class="card card-panel flink-board desk-board" id="flink-board">
     <div class="card-header">
-        <span>友情链接 <em id="flink-count"></em></span>
+        <span>{{ $desk === 'stats' ? '友链统计' : '友情链接' }} <em id="flink-count"></em></span>
         <div>
             @if(! in_array($desk, ['clicks', 'hits', 'stats', 'settings'], true))
                 <button type="button" class="btn btn-sm" id="flink-add-btn">新增</button>
             @endif
+            @if($desk === 'stats')
+                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=hits">来路明细</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=clicks">出站明细</a>
+            @endif
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路，待审在来路达到阈值后才显示。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。</p>
         <div class="queue-chips" id="flink-desks">
             <a class="chip{{ $desk === 'links' ? ' active' : '' }}" href="/admin/video/flinks">链接</a>
             <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="/admin/video/flinks?desk=pending">待审</a>
@@ -33,7 +46,158 @@
             <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/flinks?desk=stats">统计</a>
             <a class="chip{{ $desk === 'settings' ? ' active' : '' }}" href="/admin/video/flinks?desk=settings">设置</a>
         </div>
-        @if($desk === 'settings')
+
+        @if($desk === 'stats')
+            <p class="muted recycle-lead">按来路 / 出站汇总（前台访问自动产生）。明细在「来路」「出站」；链接库状态见下方卡片。</p>
+            <div class="stat-grid dash" style="margin:12px 0 20px">
+                <div class="stat-card">
+                    <em>今日</em>
+                    <strong>{{ (int) $today['hits'] }}</strong>
+                    <span class="muted">来路 · 出站 {{ (int) $today['clicks'] }}</span>
+                </div>
+                <div class="stat-card">
+                    <em>昨日</em>
+                    <strong>{{ (int) $yesterday['hits'] }}</strong>
+                    <span class="muted">来路 · 出站 {{ (int) $yesterday['clicks'] }}</span>
+                </div>
+                <div class="stat-card">
+                    <em>近 7 日</em>
+                    <strong>{{ (int) $week['hits'] }}</strong>
+                    <span class="muted">来路 · 出站 {{ (int) $week['clicks'] }}</span>
+                </div>
+                <div class="stat-card">
+                    <em>近 30 日</em>
+                    <strong>{{ (int) $month['hits'] }}</strong>
+                    <span class="muted">来路 · 出站 {{ (int) $month['clicks'] }}</span>
+                </div>
+            </div>
+            <div class="stat-grid dash" style="margin:0 0 20px">
+                <div class="stat-card">
+                    <em>显示中</em>
+                    <strong>{{ (int) ($linksStat['show'] ?? 0) }}</strong>
+                    <span class="muted">共 {{ (int) ($linksStat['all'] ?? 0) }} 条</span>
+                </div>
+                <div class="stat-card">
+                    <em>待审</em>
+                    <strong>{{ (int) ($linksStat['pending'] ?? 0) }}</strong>
+                </div>
+                <div class="stat-card">
+                    <em>拒绝</em>
+                    <strong>{{ (int) ($linksStat['reject'] ?? 0) }}</strong>
+                </div>
+                <div class="stat-card">
+                    <em>冻结</em>
+                    <strong>{{ (int) ($linksStat['freeze'] ?? 0) }}</strong>
+                </div>
+            </div>
+
+            <div class="flink-stats-split" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:8px">
+                <div>
+                    <h3 style="font-size:15px;margin:0 0 10px">近 30 日来路 TOP</h3>
+                    @if($topHits === [])
+                        <p class="muted">还没有来路。</p>
+                    @else
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead><tr><th>友链</th><th>来路</th></tr></thead>
+                                <tbody>
+                                @foreach($topHits as $row)
+                                    <tr>
+                                        <td>
+                                            {{ $row['name'] }}
+                                            @if(($row['url'] ?? '') !== '')
+                                                <div class="muted" style="font-size:12px">{{ $row['url'] }}</div>
+                                            @endif
+                                        </td>
+                                        <td>{{ (int) $row['hits'] }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+                <div>
+                    <h3 style="font-size:15px;margin:0 0 10px">近 30 日出站 TOP</h3>
+                    @if($topClicks === [])
+                        <p class="muted">还没有出站点击。</p>
+                    @else
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead><tr><th>友链</th><th>出站</th></tr></thead>
+                                <tbody>
+                                @foreach($topClicks as $row)
+                                    <tr>
+                                        <td>
+                                            {{ $row['name'] }}
+                                            @if(($row['url'] ?? '') !== '')
+                                                <div class="muted" style="font-size:12px">{{ $row['url'] }}</div>
+                                            @endif
+                                        </td>
+                                        <td>{{ (int) $row['clicks'] }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <h3 style="font-size:15px;margin:20px 0 10px">近 14 日趋势</h3>
+            @if($daily === [])
+                <p class="muted">暂无数据。</p>
+            @else
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>日期</th><th>来路</th><th>出站</th></tr></thead>
+                        <tbody>
+                        @foreach(array_reverse($daily) as $row)
+                            <tr>
+                                <td>{{ $row['day'] }}</td>
+                                <td>{{ (int) $row['hits'] }}</td>
+                                <td>{{ (int) $row['clicks'] }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            <h3 style="font-size:15px;margin:20px 0 10px">近 30 日来路主机</h3>
+            @if($hosts === [])
+                <p class="muted">还没有带主机名的来路。</p>
+            @else
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>主机</th><th>次数</th></tr></thead>
+                        <tbody>
+                        @foreach($hosts as $row)
+                            <tr>
+                                <td>{{ $row['host'] }}</td>
+                                <td>{{ (int) $row['hits'] }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            <h3 style="font-size:15px;margin:20px 0 10px">周期明细</h3>
+            <form class="filter-bar" id="flink-search" onsubmit="return false;">
+                <input type="hidden" name="desk" value="stats">
+                <input type="search" name="q" placeholder="搜名称" autocomplete="off">
+                <select name="period" aria-label="周期">
+                    <option value="day" @selected($period === 'day')>按日</option>
+                    <option value="month" @selected($period === 'month')>按月</option>
+                    <option value="year" @selected($period === 'year')>按年</option>
+                </select>
+                <button type="button" class="btn btn-sm" id="flink-search-btn">查询</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">重置</button>
+            </form>
+            <div id="flink-table"></div>
+        @elseif($desk === 'settings')
+            <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。</p>
             <form id="flink-settings" onsubmit="return false;">
                 <input type="hidden" name="desk" value="settings">
                 <label>模式</label>
@@ -57,16 +221,11 @@
                 <p><button type="button" class="btn btn-sm" id="flink-settings-save">保存</button></p>
             </form>
         @else
+            <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。汇总见「统计」。</p>
             <form class="filter-bar" id="flink-search" onsubmit="return false;">
                 <input type="hidden" name="desk" value="{{ $desk }}">
                 <input type="search" name="q" placeholder="{{ $desk === 'cates' ? '搜分类' : ($desk === 'clicks' || $desk === 'hits' ? '搜 IP、网址' : '搜名称、网址') }}" autocomplete="off">
-                @if($desk === 'stats')
-                    <select name="period" aria-label="周期">
-                        <option value="day" @selected($period === 'day')>按日</option>
-                        <option value="month" @selected($period === 'month')>按月</option>
-                        <option value="year" @selected($period === 'year')>按年</option>
-                    </select>
-                @elseif($desk === 'links')
+                @if($desk === 'links')
                     <select name="status" aria-label="状态">
                         <option value="">全部状态</option>
                         <option value="1">显示</option>
@@ -160,6 +319,7 @@
     var addBtn = document.getElementById('flink-add-btn');
     var addLabels = {links: '新增链接', pending: '新增链接', cates: '新增分类'};
     if (addBtn) addBtn.textContent = addLabels[desk] || '新增';
+    if (!form) return;
 
     function cleanWhere(data) {
         var out = {};
@@ -249,7 +409,7 @@
         where: queryWhere(),
         emptyHtml: emptyHtml,
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
+            if (countEl && desk !== 'stats') countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('flink-empty-add');
             var reset = document.getElementById('flink-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });
@@ -320,4 +480,9 @@
     });
 })();
 </script>
+<style>
+@media (max-width: 900px) {
+    .flink-stats-split { grid-template-columns: 1fr !important; }
+}
+</style>
 @endpush

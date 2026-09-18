@@ -32,7 +32,7 @@
             <button type="button" class="chip" data-unused="">全部</button>
             <button type="button" class="chip" data-unused="1">未使用</button>
         </div>
-        <p class="muted recycle-lead">影讯、片单这类给稿件用的聚合词，不是栏目，也不是影片标签。影片标签在影片 → 更多。漫画词写在漫画作品上。删标签只拿掉标记，稿件还在。</p>
+        <p class="muted recycle-lead">影讯、片单这类给稿件用的聚合词，不是栏目，也不是影片标签。影片标签在影片 → 更多。漫画标签在漫画 → 标签。删标签只拿掉标记，稿件还在。</p>
         <div class="batch-bar" id="art-tag-batch" hidden>
             <strong id="art-tag-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-danger btn-sm" id="art-tag-batch-del">删除</button>

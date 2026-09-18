@@ -25,6 +25,10 @@ class ThemeConfigPageTest extends TestCase
 
         $this->assertStringContainsString('id="theme-index"', $html);
         $this->assertStringContainsString('id="theme-desks"', $html);
+        $this->assertStringContainsString('theme-look-nav', $html);
+        $this->assertStringContainsString('settings-file-preview', $html);
+        $this->assertStringContainsString('上传图片', $html);
+        $this->assertStringContainsString('name="theme_logo"', $html);
         $this->assertStringContainsString('href="/admin/video/templates?desk=files"', $html);
         $this->assertStringContainsString('基本设置', $html);
         $this->assertStringContainsString('导航菜单', $html);
@@ -33,6 +37,8 @@ class ThemeConfigPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/ads', $html);
         $this->assertStringContainsString('没有深浅双套 Lottie', $html);
         $this->assertStringContainsString('theme-index', $html);
+        $this->assertStringNotContainsString('theme-asset-grid', $html);
+        $this->assertStringNotContainsString('theme-asset-card', $html);
         $this->assertStringNotContainsString('还没有打开文件', $html);
         $this->assertStringNotContainsString('模板市场', $html);
         $this->assertStringNotContainsString('Lottie 必填', $html);

@@ -4,7 +4,7 @@
     "name_en": "Online pay",
     "description": "会员充值：微信 / 支付宝官方，以及可对接的易支付、DfPay 聚合通道。回调验签后加积分。",
     "description_en": "Member recharge via WeChat/Alipay or pluggable Epay/DfPay gateways. Points credit after verified notify.",
-    "version": "1.2.0",
+    "version": "1.3.1",
     "enabled": true,
     "capability": "ready",
     "group": "pay",
@@ -13,11 +13,13 @@
         "modules": {
             "pay_channels": {
                 "title": "支付通道",
-                "hint": "易支付 / DfPay 简化对接。填网关、商户号、密钥。官方微信支付宝仍在支付参数页。",
+                "hint": "易支付 / DfPay。通道页对接网关；统计页看实收。会员可用订单号查询自己的单。",
                 "model": "Plugins\\Pay\\Models\\PayChannel",
                 "search": "title",
                 "view": "pay::admin.channels",
                 "handler": "Plugins\\Pay\\Services\\PayChannelAdmin",
+                "desks": ["channels", "stats"],
+                "default_desk": "channels",
                 "fields": [
                     {"name": "title", "label": "名称", "type": "text"},
                     {"name": "driver", "label": "驱动", "type": "select", "options": {"epay": "易支付", "dfpay": "DfPay"}},

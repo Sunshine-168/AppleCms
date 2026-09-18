@@ -17,6 +17,8 @@
             <tbody>
                 <tr><td><code>GET /api/provide/vod?ac=list</code></td><td>分类与影片列表</td></tr>
                 <tr><td><code>GET /api/provide/vod?ac=detail&amp;ids=1,2</code></td><td>详情（含播放地址）</td></tr>
+                <tr><td><code>GET /api/provide/manga?ac=list</code></td><td>漫画列表（插件开启）</td></tr>
+                <tr><td><code>GET /api/provide/manga?ac=detail&amp;ids=1,2</code></td><td>漫画详情含章节图片</td></tr>
                 <tr><td><code>&amp;t=分类ID &amp;wd=关键词 &amp;pg=页码 &amp;h=小时</code></td><td>筛选参数</td></tr>
                 <tr><td><code>&amp;at=xml</code></td><td>输出 XML，默认 JSON</td></tr>
                 <tr><td><code>GET /api/app/vod</code></td><td>APP 列表，可另设密钥</td></tr>

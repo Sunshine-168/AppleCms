@@ -109,10 +109,19 @@ class PluginHost
     }
 
     /** @return list<array<string, mixed>> */
-    public function allSidebarFoldItems(): array
+    public function allSidebarFoldItems(array $exceptGroups = []): array
     {
+        $except = [];
+        foreach ($exceptGroups as $group) {
+            if (is_string($group) && $group !== '') {
+                $except[$group] = true;
+            }
+        }
         $out = [];
-        foreach ($this->sidebarFold as $items) {
+        foreach ($this->sidebarFold as $group => $items) {
+            if (isset($except[$group])) {
+                continue;
+            }
             foreach ($items as $item) {
                 $out[] = $item;
             }

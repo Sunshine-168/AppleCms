@@ -8,7 +8,10 @@ use Plugins\Pay\Models\PayChannel;
 
 class PayChannelAdmin
 {
-    public function __construct(private readonly PayChannelService $channels) {}
+    public function __construct(
+        private readonly PayChannelService $channels,
+        private readonly PayStatsService $stats,
+    ) {}
 
     /** @param  array<string, mixed>  $payload */
     public function boardPayload(array $payload): array
@@ -16,6 +19,10 @@ class PayChannelAdmin
         $payload['drivers'] = PayChannelService::DRIVERS;
         $payload['notify_epay'] = url('/pay/notify/epay');
         $payload['notify_dfpay'] = url('/pay/notify/dfpay');
+        $desk = (string) ($payload['desk'] ?? 'channels');
+        if ($desk === 'stats') {
+            $payload['stats'] = $this->stats->summary();
+        }
 
         return $payload;
     }

@@ -4,26 +4,67 @@
     "name_en": "Manga",
     "description": "独立漫画库和阅读页。关掉后 /manga 和后台入口一起消失。不是影片分类。",
     "description_en": "Standalone manga library and reader. /manga and admin entries leave when you turn it off. Not a video category.",
-    "version": "1.0.0",
+    "version": "1.4.0",
     "enabled": true,
     "capability": "ready",
     "group": "content",
     "provider": "Plugins\\Manga\\MangaServiceProvider",
     "admin": {
+        "extra_pages": {
+            "manga": {
+                "title": "漫画参数",
+                "hint": "采集进待审、VIP 试看页数、VIP 会员组、采集图本地化。资源接口 /api/provide/manga 与影片共用 provide_key。",
+                "fields": [
+                    {
+                        "name": "manga_collect_audit",
+                        "label": "采集进待审",
+                        "type": "select",
+                        "options": [
+                            "否（直接已审）",
+                            "是（进待审台）"
+                        ]
+                    },
+                    {
+                        "name": "manga_trysee_pages",
+                        "label": "VIP试看页数",
+                        "type": "text",
+                        "hint": "非 VIP 可读前 N 页，默认 3。填 0 则完全锁。"
+                    },
+                    {
+                        "name": "manga_vip_group_ids",
+                        "label": "VIP会员组ID",
+                        "type": "text",
+                        "hint": "可多组，逗号分隔。留空=任意已分配会员组都算 VIP。"
+                    },
+                    {
+                        "name": "manga_collect_localize",
+                        "label": "采集图片本地化",
+                        "type": "select",
+                        "options": [
+                            "否（保留远程地址）",
+                            "是（下载到 /uploads/manga）"
+                        ]
+                    }
+                ]
+            }
+        },
         "modules": {
             "mangas": {
                 "title": "漫画",
-                "hint": "独立漫画库，不是影片分类。分类、章节、图片、评论都在这页切换。",
+                "hint": "独立漫画库，不是影片分类。点作品「管理」进工作台；统计含人气/收藏/阅读趋势。",
                 "model": "Plugins\\Manga\\Models\\Manga",
                 "search": "title",
                 "view": "manga::admin.board",
+                "handler": "Plugins\\Manga\\Services\\MangaAdmin",
                 "desks": [
                     "works",
                     "pending",
                     "types",
+                    "work",
                     "chapters",
                     "pics",
-                    "comments"
+                    "comments",
+                    "stats"
                 ],
                 "default_desk": "works",
                 "fields": [
@@ -124,11 +165,21 @@
                 "hint": "漫画自己的分类，不是影片分类。",
                 "model": "Plugins\\Manga\\Models\\MangaType",
                 "search": "name",
-                "redirect": "/admin/video/mangas?desk=types",
+                "redirect": "/admin/video/manga-types",
                 "fields": [
                     {
                         "name": "name",
                         "label": "名称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "slug",
+                        "label": "别名",
+                        "type": "text"
+                    },
+                    {
+                        "name": "pic",
+                        "label": "封面",
                         "type": "text"
                     },
                     {
@@ -142,6 +193,11 @@
                         "type": "number"
                     },
                     {
+                        "name": "page_size",
+                        "label": "分页",
+                        "type": "number"
+                    },
+                    {
                         "name": "status",
                         "label": "状态",
                         "type": "select",
@@ -149,11 +205,27 @@
                             "1": "显示",
                             "0": "隐藏"
                         }
+                    },
+                    {
+                        "name": "seo_title",
+                        "label": "SEO标题",
+                        "type": "text"
+                    },
+                    {
+                        "name": "seo_keywords",
+                        "label": "SEO关键词",
+                        "type": "text"
+                    },
+                    {
+                        "name": "seo_description",
+                        "label": "SEO描述",
+                        "type": "textarea"
                     }
                 ],
                 "cols": [
                     "id",
                     "name",
+                    "slug",
                     "parent_id",
                     "sort",
                     "status"
@@ -182,6 +254,15 @@
                         "type": "number"
                     },
                     {
+                        "name": "vip",
+                        "label": "VIP",
+                        "type": "select",
+                        "options": [
+                            "免费",
+                            "VIP"
+                        ]
+                    },
+                    {
                         "name": "pics",
                         "label": "图片地址",
                         "type": "textarea"
@@ -191,6 +272,7 @@
                     "id",
                     "manga_id",
                     "name",
+                    "vip",
                     "sort"
                 ]
             },
@@ -272,37 +354,41 @@
             }
         },
         "sidebar_fold": {
-            "plugin": [
+            "manga": [
                 {
                     "url": "/admin/video/mangas",
                     "icon": "book-open",
-                    "label": "nav.manga",
-                    "children": [
-                        {
-                            "url": "/admin/video/mangas",
-                            "label": "nav.manga_list"
-                        },
-                        {
-                            "url": "/admin/video/mangas?desk=pending",
-                            "label": "nav.manga_pending"
-                        },
-                        {
-                            "url": "/admin/video/mangas?desk=types",
-                            "label": "nav.manga_types"
-                        },
-                        {
-                            "url": "/admin/video/mangas?desk=chapters",
-                            "label": "nav.manga_chapters"
-                        },
-                        {
-                            "url": "/admin/video/mangas?desk=pics",
-                            "label": "nav.manga_pics"
-                        },
-                        {
-                            "url": "/admin/video/mangas?desk=comments",
-                            "label": "nav.manga_comments"
-                        }
-                    ]
+                    "label": "nav.manga_list"
+                },
+                {
+                    "url": "/admin/video/mangas?desk=pending",
+                    "icon": "clock",
+                    "label": "nav.manga_pending"
+                },
+                {
+                    "url": "/admin/video/manga-types",
+                    "icon": "sitemap",
+                    "label": "nav.manga_types"
+                },
+                {
+                    "url": "/admin/video/manga-tags",
+                    "icon": "tags",
+                    "label": "nav.manga_tags"
+                },
+                {
+                    "url": "/admin/video/mangas?desk=comments",
+                    "icon": "comments",
+                    "label": "nav.manga_comments"
+                },
+                {
+                    "url": "/admin/video/mangas?desk=stats",
+                    "icon": "chart-bar",
+                    "label": "nav.manga_stats"
+                },
+                {
+                    "url": "/admin/video/config/manga",
+                    "icon": "sliders-h",
+                    "label": "nav.manga_config"
                 }
             ]
         },
@@ -313,8 +399,20 @@
                     "label": "item.manga",
                     "hint": "hint.manga",
                     "tag": "plugin"
+                },
+                {
+                    "url": "/admin/video/config/manga",
+                    "label": "item.config_manga",
+                    "hint": "hint.config_manga",
+                    "tag": "plugin"
                 }
             ]
-        }
+        },
+        "settings_links": [
+            {
+                "url": "/admin/video/config/manga",
+                "label": "item.config_manga"
+            }
+        ]
     }
 }

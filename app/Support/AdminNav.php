@@ -7,22 +7,27 @@ use App\Support\Plugins\PluginHost;
 class AdminNav
 {
     /**
-     * 顶栏工作区。不是多产品控制台：没有漫画、直播、入金。插件单独一栏。
+     * 顶栏工作区。漫画插件启用时单独一栏（与文章同级）。没有直播、入金。插件单独一栏。
      *
      * @return list<array{id:string,label:string,home:string}>
      */
     public static function modules(): array
     {
-        return [
+        $mods = [
             ['id' => 'work', 'label' => 'nav.overview', 'home' => '/admin/welcome'],
             ['id' => 'vod', 'label' => 'nav.videos', 'home' => '/admin/video'],
             ['id' => 'art', 'label' => 'nav.arts', 'home' => '/admin/video/arts'],
-            ['id' => 'collect', 'label' => 'nav.collects', 'home' => '/admin/video/collects'],
-            ['id' => 'member', 'label' => 'nav.members', 'home' => '/admin/video/members'],
-            ['id' => 'site', 'label' => 'nav.site', 'home' => '/admin/video/settings'],
-            ['id' => 'system', 'label' => 'nav.system', 'home' => '/admin/user'],
-            ['id' => 'plugin', 'label' => 'nav.plugins', 'home' => '/admin/plugins'],
         ];
+        if (self::host()->findModule('mangas') !== null) {
+            $mods[] = ['id' => 'manga', 'label' => 'nav.manga', 'home' => '/admin/video/mangas'];
+        }
+        $mods[] = ['id' => 'collect', 'label' => 'nav.collects', 'home' => '/admin/video/collects'];
+        $mods[] = ['id' => 'member', 'label' => 'nav.members', 'home' => '/admin/video/members'];
+        $mods[] = ['id' => 'site', 'label' => 'nav.site', 'home' => '/admin/video/settings'];
+        $mods[] = ['id' => 'system', 'label' => 'nav.system', 'home' => '/admin/user'];
+        $mods[] = ['id' => 'plugin', 'label' => 'nav.plugins', 'home' => '/admin/plugins'];
+
+        return $mods;
     }
 
     public static function currentModule(?string $path = null): string
@@ -70,10 +75,18 @@ class AdminNav
         $all = self::moduleGroups();
         $groups = $all[$module] ?? $all['work'];
         $host = self::host();
+        if ($module === 'manga') {
+            $items = $host->sidebarFoldItems('manga');
+            if ($items === []) {
+                return self::flattenNavGroups($all['work']);
+            }
+
+            return self::flattenNavGroups([['items' => $items]]);
+        }
         if ($module === 'plugin') {
             $groups[0]['items'] = array_merge(
                 $groups[0]['items'] ?? [],
-                self::withPluginStayQuery($host->allSidebarFoldItems())
+                self::withPluginStayQuery($host->allSidebarFoldItems(['manga']))
             );
 
             return self::flattenNavGroups(self::hideCoreWhenPlugin($groups));
@@ -272,14 +285,15 @@ class AdminNav
         if (in_array($hrefDesk, ['works', 'tasks'], true)) {
             $hrefDesk = '';
         }
-        if (in_array($curDesk, ['works', 'tasks'], true)) {
+        if (in_array($curDesk, ['works', 'tasks', 'work'], true)) {
             $curDesk = '';
         }
         if ($hrefDesk !== '') {
             return $hrefDesk === $curDesk;
         }
 
-        return true;
+        // Default desk link (no ?desk=) must not stay active on other desks.
+        return $curDesk === '';
     }
 
     public static function itemIsActive(array $item, ?string $current = null): bool
@@ -526,6 +540,9 @@ class AdminNav
                     ['url' => '/admin/plugins', 'icon' => 'puzzle-piece', 'label' => 'item.plugins', 'force' => true],
                 ],
             ]],
+            'manga' => [[
+                'items' => [],
+            ]],
             'art' => [[
                 'items' => [
                     ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => 'nav.arts'],
@@ -703,11 +720,14 @@ class AdminNav
             '/admin/video/publish_pages' => 'site',
             '/admin/video/mall_goods' => 'member',
             '/admin/video/mall_orders' => 'member',
-            '/admin/video/mangas' => 'plugin',
-            '/admin/video/manga_chapters' => 'plugin',
-            '/admin/video/manga_types' => 'plugin',
-            '/admin/video/manga_pics' => 'plugin',
-            '/admin/video/manga_comments' => 'plugin',
+            '/admin/video/mangas' => 'manga',
+            '/admin/video/manga-types' => 'manga',
+            '/admin/video/manga-tags' => 'manga',
+            '/admin/video/manga_chapters' => 'manga',
+            '/admin/video/manga_types' => 'manga',
+            '/admin/video/manga_pics' => 'manga',
+            '/admin/video/manga_comments' => 'manga',
+            '/admin/video/config/manga' => 'manga',
             '/admin/video/ads' => 'site',
             '/admin/video/players' => 'site',
             '/admin/video/links' => 'site',
@@ -854,7 +874,7 @@ class AdminNav
                 }
             }
         };
-        foreach (self::host()->allSidebarFoldItems() as $item) {
+        foreach (self::host()->allSidebarFoldItems(['manga']) as $item) {
             if (is_array($item)) {
                 $walk($item);
             }
@@ -878,6 +898,7 @@ class AdminNav
             'site' => 'site',
             'system' => 'system',
             'collect' => 'collect',
+            'manga' => 'manga',
             'plugin' => 'plugin',
         ];
         $add = static function (array $item, string $module) use (&$core, &$add): void {
@@ -967,7 +988,7 @@ class AdminNav
     }
 
     /**
-     * 影片栏本身就是片库、评论的位置。聊天室、弹幕进「更多」。漫画是独立库，进插件工作区，不进影片栏。
+     * 影片栏本身就是片库、评论的位置。聊天室、弹幕进「更多」。漫画是独立顶栏工作区，不进影片栏。
      *
      * @param  list<array<string, mixed>>  $groups
      * @param  list<array<string, mixed>>  $pluginItems
