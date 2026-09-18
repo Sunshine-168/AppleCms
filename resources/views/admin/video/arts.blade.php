@@ -27,7 +27,7 @@
     <a class="art-cat-item" data-type="0" href="/admin/video/arts?type_id=0">未分栏<em>{{ $looseCount }}</em></a>
     @forelse($types as $type)
         <a class="art-cat-item" data-type="{{ $type['id'] }}" href="/admin/video/arts?type_id={{ $type['id'] }}" style="padding-left: {{ 10 + (int) ($type['depth'] ?? 0) * 14 }}px">
-            <span>{{ $type['title'] ?? $type['name'] }}</span>
+            <span>{{ $type['title'] ?? $type['name'] }}@if(!empty($type['kind_label']) && ($type['kind'] ?? 'list') !== 'list') <small class="muted">{{ $type['kind_label'] }}</small>@endif</span>
             <em>{{ (int) ($type['art_count'] ?? 0) }}</em>
         </a>
     @empty

@@ -117,6 +117,75 @@ class ArtFrontTest extends TestCase
         $this->get('/art/type/'.$child->id)->assertOk()->assertSee('子栏目稿', false);
     }
 
+    public function test_column_kinds_hub_link_single_and_page_size(): void
+    {
+        $now = time();
+        $hub = VideoTypeModel::query()->create([
+            'parent_id' => 0,
+            'name' => '新闻中心',
+            'slug' => 'hub',
+            'mid' => 2,
+            'kind' => 'hub',
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $list = VideoTypeModel::query()->create([
+            'parent_id' => $hub->id,
+            'name' => '国内',
+            'slug' => 'china',
+            'mid' => 2,
+            'kind' => 'list',
+            'page_size' => 1,
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $single = VideoTypeModel::query()->create([
+            'parent_id' => 0,
+            'name' => '关于',
+            'slug' => 'about',
+            'mid' => 2,
+            'kind' => 'single',
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $link = VideoTypeModel::query()->create([
+            'parent_id' => 0,
+            'name' => '友站',
+            'slug' => 'out',
+            'mid' => 2,
+            'kind' => 'link',
+            'jump_url' => '/arts',
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $this->makeArt(['title' => '国内一', 'type_id' => $list->id]);
+        $this->makeArt(['title' => '国内二', 'type_id' => $list->id]);
+        $this->makeArt(['title' => '关于我们', 'type_id' => $single->id, 'content' => '<p>单页正文</p>']);
+
+        $hubHtml = $this->get('/art/type/'.$hub->id)->assertOk()->getContent();
+        $this->assertStringContainsString('新闻中心', $hubHtml);
+        $this->assertStringContainsString('国内', $hubHtml);
+        $this->assertStringContainsString('art-hub', $hubHtml);
+
+        $this->get('/art/type/'.$link->id)->assertRedirect('/arts');
+
+        $singleHtml = $this->get('/art/type/'.$single->id)->assertOk()->getContent();
+        $this->assertStringContainsString('关于我们', $singleHtml);
+        $this->assertStringContainsString('单页正文', $singleHtml);
+
+        $page = $this->get('/art/type/'.$list->id)->assertOk()->getContent();
+        $this->assertStringContainsString('国内二', $page);
+        $this->assertStringNotContainsString('国内一', $page);
+    }
+
     public function test_art_tag_flag_recommend_skips_others(): void
     {
         $rec = $this->makeArt(['title' => '推荐资讯', 'flags' => 'recommend']);
@@ -133,6 +202,27 @@ class ArtFrontTest extends TestCase
         $this->assertStringContainsString('资讯', $home);
         $this->assertStringContainsString('推荐资讯', $home);
         $this->assertStringContainsString('普通资讯', $home);
+    }
+
+    public function test_article_comments_stay_off_the_film(): void
+    {
+        $art = $this->makeArt(['title' => '可评稿']);
+        $this->post('/art/'.$art->id.'/comment', [
+            '_token' => csrf_token(),
+            'author_name' => '读者甲',
+            'content' => '这篇写得清楚',
+        ])->assertRedirect();
+
+        $html = $this->get('/art/'.$art->id)->assertOk()->getContent();
+        $this->assertStringContainsString('这篇写得清楚', $html);
+        $this->assertStringContainsString('发表评论', $html);
+        $this->assertStringContainsString('/art/'.$art->id.'/comment', $html);
+
+        $this->assertDatabaseHas('video_comments', [
+            'video_id' => $art->id,
+            'mid' => 2,
+            'content' => '这篇写得清楚',
+        ]);
     }
 
     /** @param  array<string, mixed>  $attrs */

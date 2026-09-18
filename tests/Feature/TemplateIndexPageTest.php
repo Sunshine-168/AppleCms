@@ -15,14 +15,17 @@ class TemplateIndexPageTest extends TestCase
     public function test_template_index_is_a_page_picker_not_a_raw_file_dump(): void
     {
         $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/templates')
+            ->get('/admin/video/templates?desk=files')
             ->assertOk()
             ->getContent();
 
+        $this->assertStringContainsString('id="theme-desks"', $html);
+        $this->assertStringContainsString('href="/admin/video/templates"', $html);
+        $this->assertStringContainsString('href="/admin/video/templates?desk=files"', $html);
         $this->assertStringContainsString('还没有打开文件', $html);
         $this->assertStringContainsString('首页', $html);
         $this->assertStringContainsString('整站头尾', $html);
-        $this->assertStringContainsString('站点设置 → 外观', $html);
+        $this->assertStringContainsString('切到「外观」', $html);
         $this->assertStringContainsString('搜页面', $html);
         $this->assertStringContainsString('tpl-group', $html);
         $this->assertStringContainsString('data-fold', $html);

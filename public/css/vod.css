@@ -101,6 +101,9 @@ footer.site { margin-top:40px; padding:24px 0; border-top:1px solid #222; color:
 .art-tags { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
 .art-tags a { color:var(--muted); }
 .art-near { display:flex; flex-wrap:wrap; gap:12px 24px; margin:24px 0; }
+.art-hub { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin:16px 0 28px; }
+.art-hub-item { display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--card); border-radius:8px; color:var(--text); }
+.art-hub-item img { width:100%; height:90px; object-fit:cover; border-radius:6px; background:#222; }
 h2 { font-size:18px; }
 .plugin-ad-fixed { background:#111; border-bottom:1px solid #222; }
 .plugin-ad-fixed.is-top { position:fixed; top:0; left:0; right:0; z-index:40; text-align:center; padding:8px 12px; }

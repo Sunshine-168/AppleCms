@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', admin_t('page.templates'))
+@section('title', admin_t('nav.templates'))
 
 @php
     $groups = $groups ?? [];
@@ -18,11 +18,14 @@
 @endif
 
 @section('plain')
+<div class="tpl-board desk-board">
+    <p class="muted recycle-lead">改当前主题的页面文件。Logo、导航、页头代码切到「外观」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
+    @include('admin.video.partials.theme-desks', ['desk' => 'files'])
+</div>
 <div class="split-side tpl-index">
     <div class="card card-panel">
         <div class="card-header"><span>{{ $theme['title'] }}</span></div>
         <div class="card-body">
-            <p class="muted recycle-lead">改页面文件。Logo 和主色在「<a href="/admin/video/settings?tab=look">站点设置 → 外观</a>」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
             @if($hasFiles)
                 <input type="search" id="tpl-search" class="tpl-search" placeholder="搜页面，如 首页、播放" autocomplete="off" aria-label="搜索模板">
                 <div class="file-list" id="tpl-files" data-theme="{{ $theme['slug'] }}">

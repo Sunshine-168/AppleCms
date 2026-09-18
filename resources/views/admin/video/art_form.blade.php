@@ -93,13 +93,13 @@
                     <select id="art-type" name="type_id">
                         <option value="0">未分栏</option>
                         @foreach($types as $type)
-                            <option value="{{ $type['id'] }}" @selected($typeId === (string) $type['id'])>{{ $type['name'] }}</option>
+                            <option value="{{ $type['id'] }}" @selected($typeId === (string) $type['id'])>{{ $type['name'] }}@if(!empty($type['kind_label']) && ($type['kind'] ?? 'list') !== 'list') · {{ $type['kind_label'] }}@endif</option>
                         @endforeach
                     </select>
                     @if($types === [])
-                        <p class="muted field-hint">还没有文章栏目。<a href="/admin/video/art-types/create">去建一个栏目</a>，也可以先不选。</p>
+                        <p class="muted field-hint">还没有文章栏目。<a href="/admin/video/art-types/create">去建一个栏目</a>，也可以先不选。频道和外链不能挂稿。</p>
                     @else
-                        <p class="muted field-hint">决定这篇出现在哪个文章栏目。栏目和影片分类不是同一棵树。</p>
+                        <p class="muted field-hint">决定这篇出现在哪个文章栏目。频道和外链不能挂稿，请选列表或单页。</p>
                     @endif
                     <label for="art-cover">封面</label>
                     <div class="media-field">

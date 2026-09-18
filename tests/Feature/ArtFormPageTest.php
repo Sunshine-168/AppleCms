@@ -44,6 +44,7 @@ class ArtFormPageTest extends TestCase
         $this->assertStringContainsString('name="sort"', $html);
         $this->assertStringContainsString('/admin/video/arts', $html);
         $this->assertStringContainsString('/admin/video/art-types', $html);
+        $this->assertStringContainsString('频道和外链不能挂稿', $html);
         $this->assertStringContainsString('class="is-on">文章</a>', $html);
         $this->assertStringNotContainsString('先去分类里建一个', $html);
         $this->assertStringNotContainsString('ui-dialog', $html);

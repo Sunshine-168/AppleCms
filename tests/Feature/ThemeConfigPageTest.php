@@ -19,11 +19,13 @@ class ThemeConfigPageTest extends TestCase
     public function test_theme_workbench_is_seven_tabs_not_a_marketplace_or_lottie_builder(): void
     {
         $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/theme')
+            ->get('/admin/video/templates')
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('主题配置', $html);
+        $this->assertStringContainsString('id="theme-index"', $html);
+        $this->assertStringContainsString('id="theme-desks"', $html);
+        $this->assertStringContainsString('href="/admin/video/templates?desk=files"', $html);
         $this->assertStringContainsString('基本设置', $html);
         $this->assertStringContainsString('导航菜单', $html);
         $this->assertStringContainsString('SEO', $html);
@@ -31,12 +33,14 @@ class ThemeConfigPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/ads', $html);
         $this->assertStringContainsString('没有深浅双套 Lottie', $html);
         $this->assertStringContainsString('theme-index', $html);
+        $this->assertStringNotContainsString('还没有打开文件', $html);
         $this->assertStringNotContainsString('模板市场', $html);
         $this->assertStringNotContainsString('Lottie 必填', $html);
         $this->assertStringNotContainsString('主题设计', $html);
         $this->assertStringNotContainsString('type.hom', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
+        $this->assertStringNotContainsString('href="/admin/video/theme"', $html);
     }
 
     public function test_theme_save_persists_favicon_head_code_and_hides_latest_nav(): void
@@ -71,8 +75,11 @@ class ThemeConfigPageTest extends TestCase
     public function test_legacy_theme_config_url_redirects_to_workbench(): void
     {
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/theme')
+            ->assertRedirect('/admin/video/templates');
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/config/theme')
-            ->assertRedirect('/admin/video/theme');
+            ->assertRedirect('/admin/video/templates');
     }
 
     public function test_settings_admin_nav_contains_theme_workbench(): void
@@ -82,7 +89,13 @@ class ThemeConfigPageTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('/admin/video/theme', $html);
+        $this->assertStringContainsString('/admin/video/templates', $html);
+        $this->assertStringContainsString('模板 → 外观', $html);
+        $this->assertStringNotContainsString('href="/admin/video/theme"', $html);
+        $site = \App\Support\AdminNav::groupsFor('site');
+        $urls = array_column($site[0]['items'] ?? [], 'url');
+        $this->assertContains('/admin/video/templates', $urls);
+        $this->assertNotContains('/admin/video/theme', $urls);
     }
 
     public function test_theme_asset_url_rejects_javascript(): void

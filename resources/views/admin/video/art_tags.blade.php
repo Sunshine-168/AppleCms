@@ -19,7 +19,7 @@
                     <input id="art-tag-quick" type="text" name="name" value="" placeholder="输入名称，如 影讯" aria-label="新增标签" @if($ready) autofocus @endif>
                     <button class="btn" type="submit" id="art-tag-add">添加</button>
                 </div>
-                <p class="muted field-hint">回车可连续添加。需要改网址时，<a href="/admin/video/art-tags/create">打开完整表单</a>。文章保存时勾选或新填的词也会建档。</p>
+                <p class="muted field-hint">回车可连续添加。需要改网址时，<a href="/admin/video/art-tags/create">打开完整表单</a>。只给文章用，不会进影片标签库。</p>
             </form>
         </div>
         <form class="filter-bar" id="art-tag-search" onsubmit="return false;">
@@ -32,7 +32,7 @@
             <button type="button" class="chip" data-unused="">全部</button>
             <button type="button" class="chip" data-unused="1">未使用</button>
         </div>
-        <p class="muted recycle-lead">贺岁、院线这类聚合词，不是栏目。删标签只拿掉标记，稿件还在。</p>
+        <p class="muted recycle-lead">影讯、片单这类给稿件用的聚合词，不是栏目，也不是影片标签。影片标签在影片 → 更多。漫画词写在漫画作品上。删标签只拿掉标记，稿件还在。</p>
         <div class="batch-bar" id="art-tag-batch" hidden>
             <strong id="art-tag-batch-count">已选 0 个</strong>
             <button type="button" class="btn btn-danger btn-sm" id="art-tag-batch-del">删除</button>

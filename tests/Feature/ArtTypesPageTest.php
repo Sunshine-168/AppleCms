@@ -36,6 +36,8 @@ class ArtTypesPageTest extends TestCase
         $this->assertStringContainsString('写文章', $html);
         $this->assertStringContainsString('class="is-on">文章</a>', $html);
         $this->assertStringContainsString('文章自己的栏目', $html);
+        $this->assertStringContainsString('频道', $html);
+        $this->assertStringContainsString('title: \'类型\'', $html);
         $this->assertStringNotContainsString('class="is-on">影片</a>', $html);
         $this->assertStringNotContainsString('用来放什么', $html);
         $this->assertStringNotContainsString('title: \'模型\'', $html);
@@ -52,6 +54,14 @@ class ArtTypesPageTest extends TestCase
         $this->assertStringContainsString('新建栏目', $html);
         $this->assertStringContainsString('name="mid" value="2"', $html);
         $this->assertStringContainsString('和影片分类不是同一棵树', $html);
+        $this->assertStringContainsString('name="kind"', $html);
+        $this->assertStringContainsString('频道（只做目录，下面再挂列表）', $html);
+        $this->assertStringContainsString('单页（打开栏目即那一篇）', $html);
+        $this->assertStringContainsString('外链', $html);
+        $this->assertStringContainsString('name="jump_url"', $html);
+        $this->assertStringContainsString('name="page_size"', $html);
+        $this->assertStringContainsString('name="pic"', $html);
+        $this->assertStringContainsString('name="tpl_list"', $html);
         $this->assertStringContainsString('保存并添加下级', $html);
         $this->assertStringContainsString('保存并写文章', $html);
         $this->assertStringNotContainsString('用来放什么', $html);
@@ -75,6 +85,7 @@ class ArtTypesPageTest extends TestCase
         $row = VideoTypeModel::query()->find($id);
         $this->assertNotNull($row);
         $this->assertSame(2, (int) $row->mid);
+        $this->assertSame('list', $row->kind());
 
         $film = VideoTypeModel::query()->create([
             'parent_id' => 0,
@@ -154,11 +165,19 @@ class ArtTypesPageTest extends TestCase
     public function test_art_workspace_nav(): void
     {
         $urls = array_column(AdminNav::groupsFor('art')[0]['items'] ?? [], 'url');
+        $fold = array_column(AdminNav::groupsFor('art')[0]['fold']['items'] ?? [], 'url');
         $this->assertContains('/admin/video/arts', $urls);
         $this->assertContains('/admin/video/art-types', $urls);
         $this->assertContains('/admin/video/art-tags', $urls);
-        $this->assertContains('/admin/video/art-recycle', $urls);
+        $this->assertContains('/admin/video/art-media', $urls);
+        $this->assertContains('/admin/video/art-comments', $urls);
+        $this->assertContains('/admin/video/art-flags', $fold);
+        $this->assertContains('/admin/video/art-recycle', $fold);
+        $this->assertNotContains('/admin/video/art-recycle', $urls);
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-types/create'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-media'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-comments'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-flags'));
     }
 
     public function test_art_list_parent_column_includes_child_articles(): void
@@ -228,5 +247,83 @@ class ArtTypesPageTest extends TestCase
         $looseTitles = array_column($loose['data']['data'] ?? [], 'title');
         $this->assertContains('没分栏', $looseTitles);
         $this->assertNotContains('挂在下级', $looseTitles);
+    }
+
+    public function test_art_column_kinds_save_and_reject_hub_link_articles(): void
+    {
+        $hub = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/art-types/save', [
+                'name' => '新闻中心',
+                'slug' => 'news-hub',
+                'kind' => 'hub',
+                'parent_id' => 0,
+                'status' => 1,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(0, (int) ($hub['code'] ?? 1), (string) ($hub['msg'] ?? ''));
+        $hubId = (int) ($hub['data']['id'] ?? 0);
+        $this->assertSame('hub', VideoTypeModel::query()->find($hubId)?->kind());
+
+        $linkFail = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/art-types/save', [
+                'name' => '坏外链',
+                'kind' => 'link',
+                'jump_url' => 'javascript:alert(1)',
+                'parent_id' => 0,
+                'status' => 1,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(1, (int) ($linkFail['code'] ?? 0));
+
+        $link = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/art-types/save', [
+                'name' => '友站',
+                'kind' => 'link',
+                'jump_url' => '/arts',
+                'parent_id' => 0,
+                'status' => 1,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(0, (int) ($link['code'] ?? 1), (string) ($link['msg'] ?? ''));
+        $linkId = (int) ($link['data']['id'] ?? 0);
+        $linkRow = VideoTypeModel::query()->find($linkId);
+        $this->assertSame('link', $linkRow?->kind());
+        $this->assertSame('/arts', $linkRow?->jumpUrl());
+
+        $denyHub = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/arts/save', [
+                'title' => '挂到频道',
+                'type_id' => $hubId,
+                'status' => 0,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(1, (int) ($denyHub['code'] ?? 0));
+        $this->assertStringContainsString('频道', (string) ($denyHub['msg'] ?? ''));
+
+        $denyLink = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/arts/save', [
+                'title' => '挂到外链',
+                'type_id' => $linkId,
+                'status' => 0,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(1, (int) ($denyLink['code'] ?? 0));
+        $this->assertStringContainsString('外链', (string) ($denyLink['msg'] ?? ''));
+
+        $list = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/art-types/list')
+            ->assertOk()
+            ->json();
+        $byName = [];
+        foreach ($list['data']['data'] ?? [] as $row) {
+            $byName[(string) ($row['name'] ?? '')] = $row;
+        }
+        $this->assertSame('频道', $byName['新闻中心']['kind_label'] ?? '');
+        $this->assertSame('外链', $byName['友站']['kind_label'] ?? '');
     }
 }

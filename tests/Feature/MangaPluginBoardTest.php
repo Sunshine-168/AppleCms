@@ -45,13 +45,15 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringNotContainsString('placeholder="host"', $html);
         $this->assertStringNotContainsString('href="/admin/video/manga_chapters"', $html);
 
+        $this->assertStringContainsString('class="is-on">插件</a>', $html);
+        $this->assertStringNotContainsString('class="is-on">影片</a>', $html);
+
         $vod = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video')
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('nav-fold-nested', $vod);
-        $this->assertStringContainsString('/admin/video/mangas', $vod);
-        $this->assertStringNotContainsString('/admin/video/mangas?desk=pics', $vod);
+        $this->assertStringNotContainsString('/admin/video/mangas', $vod);
         $this->assertStringNotContainsString('href="/admin/video/manga_chapters"', $vod);
         $this->assertDoesNotMatchRegularExpression(
             '/<details class="nav-fold(?: is-open)?"[^>]*>\s*<summary>\s*插件\s*<\/summary>/u',

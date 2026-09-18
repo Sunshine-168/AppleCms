@@ -145,6 +145,13 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/art-tags/batch', [SiteModule::class, 'batchArtTags'])->name('admin.video.art-tags.batch');
     Route::get('/video/art-recycle', [SiteModule::class, 'showArtRecycle'])->name('admin.video.art-recycle');
     Route::post('/video/art-recycle/empty', [SiteModule::class, 'emptyArtRecycle'])->name('admin.video.art-recycle.empty');
+    Route::get('/video/art-media', [SiteModule::class, 'showArtMedia'])->name('admin.video.art-media');
+    Route::get('/video/art-comments', [SiteModule::class, 'showArtComments'])->name('admin.video.art-comments');
+    Route::get('/video/art-comments/list', [SiteModule::class, 'listArtComments'])->name('admin.video.art-comments.list');
+    Route::post('/video/art-comments/save', [SiteModule::class, 'saveArtComment'])->name('admin.video.art-comments.save');
+    Route::post('/video/art-comments/delete', [SiteModule::class, 'deleteArtComment'])->name('admin.video.art-comments.delete');
+    Route::post('/video/art-comments/batch', [SiteModule::class, 'batchArtComments'])->name('admin.video.art-comments.batch');
+    Route::get('/video/art-flags', [SiteModule::class, 'showArtFlags'])->name('admin.video.art-flags');
 
     // 视频采集源管理
     Route::get('/video/collects', [Video::class, 'showCollectSources'])->name('admin.video.collects');// 显示视频采集源管理页
@@ -189,7 +196,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/settings/test-mail', [SiteSetting::class, 'testMail']);
     Route::get('/video/theme', [SiteSetting::class, 'theme']);
     Route::post('/video/theme', [SiteSetting::class, 'themeSave']);
-    Route::get('/video/config/theme', fn () => redirect('/admin/video/theme'));
+    Route::get('/video/config/theme', fn () => redirect('/admin/video/templates'));
     Route::get('/video/config/email', [SiteSetting::class, 'configEmail']);
     Route::get('/video/config/{page}', [SiteSetting::class, 'configPage'])->where('page', '[a-z]+');
     Route::get('/video/tools/{tool}', [SiteTools::class, 'page'])->whereIn('tool', ['images', 'quality', 'players', 'annex', 'recycle', 'hub']);

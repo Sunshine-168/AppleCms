@@ -5,6 +5,14 @@
     $ui = $ui ?? [];
     $queues = $queues ?? ['all' => 0, 'image' => 0, 'video' => 0, 'file' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $hideExtras = (bool) ($hide_extras ?? false);
+    $api = is_array($api ?? null) ? $api : [];
+    $api = array_merge([
+        'list' => '/admin/system/attachments/list',
+        'upload' => '/admin/system/attachments/upload',
+        'delete' => '/admin/system/attachments/delete',
+        'open' => '/admin/system/attachments/open',
+    ], $api);
 @endphp
 
 @section('plain')
@@ -14,9 +22,11 @@
         <div>
             <button type="button" class="btn btn-sm" id="upload-btn">{{ $ui['upload'] ?? '上传文件' }}</button>
             <button type="button" class="btn btn-danger btn-sm" id="batch-del-btn">批量删除</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/templates">{{ $ui['templates'] ?? '模板' }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/settings">{{ $ui['settings'] ?? '站点设置' }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tools/annex">{{ $ui['annex'] ?? '附件清理' }}</a>
+            @unless($hideExtras)
+                <a class="btn btn-muted btn-sm" href="/admin/video/templates">{{ $ui['templates'] ?? '模板' }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/settings">{{ $ui['settings'] ?? '站点设置' }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/tools/annex">{{ $ui['annex'] ?? '附件清理' }}</a>
+            @endunless
         </div>
     </div>
     <div class="card-body">
@@ -50,9 +60,10 @@
 (function () {
     var U = AdminUi;
     var ui = @json($ui);
+    var api = {!! json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var table = U.table({
         el: '#file-table',
-        url: '/admin/system/attachments/list',
+        url: api.list,
         cols: [
             {check: true, width: 36},
             {title: ui.preview || '预览', width: 88, cls: 'file-preview-cell', html: previewCell},
@@ -137,7 +148,7 @@
         U.pickFile('*/*').then(function (file) {
             if (!file) return;
             U.loading(true);
-            return U.upload(file).then(function (res) {
+            return U.upload(file, api.upload).then(function (res) {
                 U.loading(false);
                 if (res && res.code === 0) { U.toast('上传成功', 'ok'); table.refresh(); }
                 else U.toast((res && res.msg) || '上传失败', 'err');
@@ -148,7 +159,7 @@
         var ids = table.selectedIds();
         if (!ids.length) { U.toast('请勾选要删除的文件', 'err'); return; }
         if (!U.confirm('确认删除选中的文件？')) return;
-        U.post('/admin/system/attachments/delete', {ids: ids}).then(function (res) {
+        U.post(api.delete, {ids: ids}).then(function (res) {
             if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
             table.refresh(); U.toast('删除成功', 'ok');
         });
@@ -209,7 +220,7 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-open')) {
-            var href = row.open_url || (row.id ? '/admin/system/attachments/open?id=' + row.id : row.url);
+            var href = row.open_url || (row.id ? api.open + '?id=' + row.id : row.url);
             if (href) window.open(href, '_blank');
             else U.toast('无可用链接', 'err');
         }
@@ -223,7 +234,7 @@
             }
         }
         if (a.classList.contains('js-del') && U.confirm('确认删除该文件？')) {
-            U.post('/admin/system/attachments/delete', {ids: [row.id]}).then(function (res) {
+            U.post(api.delete, {ids: [row.id]}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
                 table.refresh(); U.toast('删除成功', 'ok');
             });

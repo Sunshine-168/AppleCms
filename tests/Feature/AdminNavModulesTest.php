@@ -49,6 +49,41 @@ class AdminNavModulesTest extends TestCase
         $this->assertStringContainsString('class="is-on">插件</a>', $html);
         $this->assertStringContainsString('插件管理', $html);
         $this->assertStringNotContainsString('>数据库备份<', $html);
+        $manager = app(PluginManager::class);
+        if ($manager->isEnabled('advert')) {
+            $this->assertStringContainsString('/admin/video/adverts?nav=plugin', $html);
+        }
+        if ($manager->isEnabled('mall')) {
+            $this->assertStringContainsString('/admin/video/mall_goods?nav=plugin', $html);
+        }
+        if ($manager->isEnabled('chatroom')) {
+            $this->assertStringContainsString('/admin/video/chat_messages?nav=plugin', $html);
+        }
+    }
+
+    public function test_plugin_sidebar_keeps_boards_in_the_plugin_workspace(): void
+    {
+        $manager = app(PluginManager::class);
+        if (! $manager->isEnabled('advert')) {
+            $this->markTestSkipped('advert plugin disabled');
+        }
+
+        $site = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/adverts')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('class="is-on">站点</a>', $site);
+        $this->assertStringNotContainsString('class="is-on">插件</a>', $site);
+
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/adverts?nav=plugin')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('class="is-on">插件</a>', $html);
+        $this->assertStringNotContainsString('class="is-on">站点</a>', $html);
+        $this->assertStringContainsString('advert-board', $html);
+        $this->assertStringContainsString('/admin/video/flinks?nav=plugin', $html);
+        $this->assertStringContainsString('插件管理', $html);
     }
 
     public function test_sidebar_only_shows_the_current_workspace(): void
@@ -104,6 +139,7 @@ class AdminNavModulesTest extends TestCase
         $this->assertStringContainsString('<span>回收站</span>', $fold);
         $this->assertStringNotContainsString('/admin/video/arts', $fold);
         $this->assertStringNotContainsString('/admin/video/mangas', $fold);
+        $this->assertStringNotContainsString('/admin/video/mangas', $html);
         if ($manager->isEnabled('chatroom')) {
             $this->assertStringContainsString('/admin/video/chat_messages', $fold);
         } else {
@@ -114,11 +150,7 @@ class AdminNavModulesTest extends TestCase
         } else {
             $this->assertStringNotContainsString('/admin/video/danmaku', $html);
         }
-        if ($manager->isEnabled('manga')) {
-            $this->assertStringContainsString('/admin/video/mangas', $html);
-            $this->assertStringNotContainsString('/admin/video/mangas?desk=pics', $html);
-            $this->assertStringNotContainsString('nav-fold-nested', $html);
-        }
+        $this->assertStringNotContainsString('nav-fold-nested', $html);
         if ($manager->isEnabled('cj_rule')) {
             $this->assertStringNotContainsString('/admin/video/cj', $html);
         }
@@ -132,8 +164,13 @@ class AdminNavModulesTest extends TestCase
         $this->assertNotContains('/admin/video/arts', $urls);
         $this->assertContains('/admin/video/tools/recycle', $moreUrls);
         $this->assertNotContains('/admin/video/mangas', $moreUrls);
+        $this->assertNotContains('/admin/video/mangas', $urls);
         if ($manager->isEnabled('manga')) {
-            $this->assertContains('/admin/video/mangas', $urls);
+            $pluginPaths = array_map(
+                static fn ($url) => explode('?', (string) $url)[0],
+                array_column(AdminNav::groupsFor('plugin')[0]['items'] ?? [], 'url')
+            );
+            $this->assertContains('/admin/video/mangas', $pluginPaths);
         }
         if ($manager->isEnabled('chatroom')) {
             $this->assertContains('/admin/video/chat_messages', $moreUrls);
@@ -155,17 +192,25 @@ class AdminNavModulesTest extends TestCase
         $pluginItemUrls = array_column($pluginWorkspace[0]['items'] ?? [], 'url');
         $this->assertContains('/admin/plugins', $pluginItemUrls);
         foreach ($pluginWorkspace[0]['items'] ?? [] as $item) {
-            if (in_array($item['url'] ?? '', ['/admin/video/adverts', '/admin/video/flinks', '/admin/video/publish_pages'], true)) {
+            $path = explode('?', (string) ($item['url'] ?? ''))[0];
+            if (in_array($path, ['/admin/video/adverts', '/admin/video/flinks', '/admin/video/publish_pages'], true)) {
+                $this->assertStringContainsString('nav=plugin', (string) ($item['url'] ?? ''));
                 $this->assertArrayNotHasKey('children', $item);
             }
         }
 
         $content = app(PluginHost::class)->sidebarFoldItems('content');
-        $manga = null;
         foreach ($content as $item) {
             $href = explode('?', (string) ($item['url'] ?? ''))[0];
+            $this->assertNotSame('/admin/video/mangas', $href);
             $this->assertNotSame('/admin/video/manga_chapters', $href);
             $this->assertNotSame('nav.manga_chapters', $item['label'] ?? '');
+        }
+        $pluginFold = app(PluginHost::class)->sidebarFoldItems('plugin');
+        $manga = null;
+        foreach ($pluginFold as $item) {
+            $href = explode('?', (string) ($item['url'] ?? ''))[0];
+            $this->assertNotSame('/admin/video/manga_chapters', $href);
             if ($href === '/admin/video/mangas') {
                 $manga = $item;
             }
@@ -232,21 +277,33 @@ class AdminNavModulesTest extends TestCase
     public function test_plugin_boards_stay_in_their_workspace_not_stolen_by_equal_prefix(): void
     {
         $this->assertSame('site', AdminNav::currentModule('/admin/video/adverts'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/adverts?nav=plugin'));
         $this->assertSame('site', AdminNav::currentModule('/admin/video/flinks'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/flinks?nav=plugin'));
         $this->assertSame('site', AdminNav::currentModule('/admin/video/publish_pages'));
         $this->assertSame('member', AdminNav::currentModule('/admin/video/mall_goods'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/mall_goods?nav=plugin'));
         $this->assertSame('member', AdminNav::currentModule('/admin/video/mall_orders'));
         $this->assertSame('member', AdminNav::currentModule('/admin/video/coupons'));
-        $this->assertSame('vod', AdminNav::currentModule('/admin/video/mangas'));
-        $this->assertSame('vod', AdminNav::currentModule('/admin/video/manga_chapters'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/coupons?nav=plugin'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/mangas'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_chapters'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_types'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_pics'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/chat_messages'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/chat_messages?nav=plugin'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/danmaku'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/danmaku?nav=plugin'));
         $this->assertSame('collect', AdminNav::currentModule('/admin/video/cj'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/cj?nav=plugin'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/arts'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/arts/create'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-types'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-tags'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-recycle'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-media'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-comments'));
+        $this->assertSame('art', AdminNav::currentModule('/admin/video/art-flags'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/types'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/plugins'));
 

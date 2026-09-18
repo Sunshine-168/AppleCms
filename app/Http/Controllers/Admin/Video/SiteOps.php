@@ -25,8 +25,31 @@ class SiteOps extends Controller
         private readonly SysSafetyScanService $safetyScan,
     ) {}
 
-    public function templates(): View
+    public function templates(Request $request): View
     {
+        $desk = (string) $request->query('desk', 'look');
+        if (! in_array($desk, ['look', 'files'], true)) {
+            $desk = 'look';
+        }
+        if ($desk === 'look') {
+            $tab = (string) $request->query('tab', 'base');
+            $tabs = ['base', 'home', 'page', 'nav', 'other', 'seo', 'ads'];
+            $hasPlayView = $this->settings->themeHasPlayView();
+            if (! $hasPlayView) {
+                $tabs = array_values(array_filter($tabs, fn (string $key) => $key !== 'page'));
+            }
+            if (! in_array($tab, $tabs, true)) {
+                $tab = 'base';
+            }
+
+            return view('admin.video.theme', [
+                'desk' => 'look',
+                'site' => $this->settings->site(),
+                'tab' => $tab,
+                'hasPlayView' => $hasPlayView,
+            ]);
+        }
+
         $codeEditor = false;
         try {
             $codeEditor = app(\App\Support\Plugins\PluginManager::class)->isEnabled('code_editor');
@@ -34,6 +57,7 @@ class SiteOps extends Controller
         }
 
         return view('admin.video.templates', [
+            'desk' => 'files',
             'groups' => $this->ops->themeFiles(),
             'theme' => $this->ops->themeInfo(),
             'codeEditor' => $codeEditor,

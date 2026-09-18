@@ -44,6 +44,7 @@ Route::get('/arts', [VodController::class, 'arts'])->name('vod.arts');
 Route::get('/art/type/{id}', [VodController::class, 'arts'])->whereNumber('id');
 Route::get('/art/tag/{slug}', [VodController::class, 'artTag'])->where('slug', '[^/]+');
 Route::get('/art/{id}', [VodController::class, 'art'])->name('vod.art')->whereNumber('id');
+Route::post('/art/{id}/comment', [InteractionController::class, 'artComment'])->middleware('throttle:10,1')->whereNumber('id');
 Route::get('/roles', [VodController::class, 'roles'])->name('vod.roles');
 Route::get('/role/{id}', [VodController::class, 'role'])->name('vod.role')->whereNumber('id');
 Route::get('/plot', [VodController::class, 'plots'])->name('vod.plots');

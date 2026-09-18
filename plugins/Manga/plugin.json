@@ -231,7 +231,7 @@
             }
         },
         "sidebar_fold": {
-            "content": [
+            "plugin": [
                 {
                     "url": "/admin/video/mangas",
                     "icon": "book-open",

@@ -8,6 +8,7 @@ use App\Models\Member\MemberGroup;
 use App\Models\Member\MemberHistory;
 use App\Models\Member\MemberInvite;
 use App\Models\Member\MemberPointLog;
+use App\Models\Video\VideoArt;
 use App\Models\Video\VideoComment;
 use App\Models\Video\VideoModel;
 use App\Models\Video\VideoReport;
@@ -218,11 +219,20 @@ class InteractionService
         }
     }
 
-    public function addComment(int $videoId, string $content, ?Member $member, string $guestName, string $ip): array
+    public function addComment(int $videoId, string $content, ?Member $member, string $guestName, string $ip, int $mid = 1): array
     {
         $content = trim($content);
         if ($content === '') {
             return Result::fail('请填写评论');
+        }
+        $mid = $mid === 2 ? 2 : 1;
+        if ($mid === 2) {
+            if (! Schema::hasTable('video_arts') || ! VideoArt::query()->where('id', $videoId)->exists()) {
+                return Result::fail('文章不存在');
+            }
+            if (! Schema::hasColumn('video_comments', 'mid')) {
+                return Result::fail('请先执行数据库迁移');
+            }
         }
         $settings = app(VideoSettingService::class);
         if ((int) $settings->get('member_comment_login', '0') === 1 && ! $member) {
@@ -241,8 +251,9 @@ class InteractionService
         if ($name === '') {
             $name = '游客';
         }
-        $row = VideoComment::query()->create([
+        $row = VideoComment::query()->create(array_filter([
             'video_id' => $videoId,
+            'mid' => Schema::hasColumn('video_comments', 'mid') ? $mid : null,
             'member_id' => (int) ($member?->id ?: 0),
             'parent_id' => 0,
             'author_name' => mb_substr($name, 0, 80),
@@ -250,7 +261,7 @@ class InteractionService
             'status' => (int) $settings->get('comment_audit', '0') === 1 ? 0 : 1,
             'ip' => $ip,
             'created_at' => time(),
-        ]);
+        ], fn ($v) => $v !== null));
         if ($member) {
             $activity = app(\App\Services\Member\MemberActivityService::class);
             if ($activity->ready()) {

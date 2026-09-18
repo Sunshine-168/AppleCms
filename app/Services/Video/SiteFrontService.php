@@ -70,6 +70,59 @@ class SiteFrontService
         return "themes.default.{$name}";
     }
 
+    public function themeViewOr(string $name, string $fallback): string
+    {
+        $name = $this->normalizeThemeName($name);
+        $fallback = $this->normalizeThemeName($fallback);
+        $theme = (string) config('video.theme', 'default');
+        foreach ([$name, $fallback] as $key) {
+            $preferred = "themes.{$theme}.{$key}";
+            if (view()->exists($preferred)) {
+                return $preferred;
+            }
+            $def = "themes.default.{$key}";
+            if (view()->exists($def)) {
+                return $def;
+            }
+        }
+
+        return "themes.default.{$fallback}";
+    }
+
+    public function artListView(VideoTypeModel $type): string
+    {
+        $fallback = $type->kind() === 'hub' ? 'vod.art-hub' : 'vod.arts';
+        $tpl = VideoTypeModel::normalizeTpl((string) ($type->tpl_list ?? ''));
+        if ($tpl === '') {
+            return $this->themeViewOr($fallback, $fallback);
+        }
+
+        return $this->themeViewOr($tpl, $fallback);
+    }
+
+    public function artShowView(?VideoTypeModel $type): string
+    {
+        $tpl = VideoTypeModel::normalizeTpl((string) ($type?->tpl_detail ?? ''));
+        if ($tpl === '') {
+            return $this->themeView('vod.art');
+        }
+
+        return $this->themeViewOr($tpl, 'vod.art');
+    }
+
+    private function normalizeThemeName(string $name): string
+    {
+        $name = trim(str_replace(['/', '\\'], '.', $name), '.');
+        if ($name === '') {
+            return 'vod.arts';
+        }
+        if (! str_contains($name, '.')) {
+            return 'vod.'.$name;
+        }
+
+        return $name;
+    }
+
     public function applyRequestFilters(Request $request): array
     {
         $filters = [];

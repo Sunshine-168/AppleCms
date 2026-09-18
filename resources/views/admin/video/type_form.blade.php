@@ -61,10 +61,45 @@
             </select>
             <p class="muted field-hint">选上级即可做多级。不能挂到自己的下级下面。</p>
 
+            @if($isArt)
+                @php $kind = \App\Models\Video\VideoTypeModel::normalizeKind($type['kind'] ?? 'list'); @endphp
+                <label for="type-kind">类型</label>
+                <select id="type-kind" name="kind">
+                    <option value="list" @selected($kind === 'list')>列表（显示文章）</option>
+                    <option value="hub" @selected($kind === 'hub')>频道（只做目录，下面再挂列表）</option>
+                    <option value="single" @selected($kind === 'single')>单页（打开栏目即那一篇）</option>
+                    <option value="link" @selected($kind === 'link')>外链</option>
+                </select>
+                <p class="muted field-hint" id="type-kind-hint"></p>
+                <div id="type-jump-wrap" hidden>
+                    <label for="type-jump">外链地址</label>
+                    <input id="type-jump" type="text" name="jump_url" value="{{ $type['jump_url'] ?? '' }}" placeholder="https:// 或 /arts">
+                    <p class="muted field-hint">前台点这一栏会跳走。不能挂文章。</p>
+                </div>
+                <label for="type-pic">封面</label>
+                <div class="media-field">
+                    <div class="media-preview" id="type-pic-preview" @if(trim((string) ($type['pic'] ?? '')) === '') hidden @endif>
+                        <img id="type-pic-img" src="{{ $type['pic'] ?? '' }}" alt="封面预览">
+                        <button type="button" class="media-preview-clear" id="type-pic-clear" title="移除封面">&times;</button>
+                    </div>
+                    <div class="cover-row">
+                        <input id="type-pic" type="text" name="pic" value="{{ $type['pic'] ?? '' }}" placeholder="图片地址，可空">
+                        <button type="button" class="btn btn-muted" id="type-pic-upload">上传</button>
+                    </div>
+                </div>
+            @endif
+
             <h3>显示</h3>
             <label for="type-sort">排序</label>
             <input id="type-sort" type="number" name="sort" value="{{ $type['sort'] ?? 0 }}">
             <p class="muted field-hint">同一上级下，数字越大越靠前。</p>
+            @if($isArt)
+                <div id="type-page-wrap">
+                    <label for="type-page-size">分页条数</label>
+                    <input id="type-page-size" type="number" name="page_size" min="0" max="100" value="{{ (int) ($type['page_size'] ?? 0) }}">
+                    <p class="muted field-hint">列表栏目前台每页篇数。0 表示用站点默认 20。</p>
+                </div>
+            @endif
             <input type="hidden" name="status" value="0">
             <label class="inline">
                 <input type="checkbox" name="status" value="1" @checked($status === '1')>
@@ -82,6 +117,19 @@
                 <label for="type-seo-description">描述</label>
                 <textarea id="type-seo-description" name="seo_description" rows="3">{{ $type['seo_description'] ?? '' }}</textarea>
             </details>
+
+            @if($isArt)
+                <details class="settings-details" @if(trim((string) ($type['tpl_list'] ?? '').($type['tpl_detail'] ?? '')) !== '') open @endif>
+                    <summary>模板（可空）</summary>
+                    <p class="muted field-hint">对应主题里的视图名，例如 arts_news 会找 vod.arts_news。找不到则用默认。</p>
+                    <div id="type-tpl-list-wrap">
+                        <label for="type-tpl-list">列表 / 频道模板</label>
+                        <input id="type-tpl-list" type="text" name="tpl_list" value="{{ $type['tpl_list'] ?? '' }}" placeholder="空则用默认">
+                    </div>
+                    <label for="type-tpl-detail">详情 / 单页模板</label>
+                    <input id="type-tpl-detail" type="text" name="tpl_detail" value="{{ $type['tpl_detail'] ?? '' }}" placeholder="空则用默认">
+                </details>
+            @endif
 
             <div class="form-actions">
                 <button type="submit" class="btn" id="type-save">保存</button>
@@ -142,6 +190,66 @@
     document.getElementById('type-save-child').addEventListener('click', function () { save('child'); });
     var writeBtn = document.getElementById('type-save-art');
     if (writeBtn) writeBtn.addEventListener('click', function () { save('write'); });
+
+    var kindSel = document.getElementById('type-kind');
+    var hints = {
+        list: '列表页显示这个栏目和下级里的文章。',
+        hub: '频道只做目录，下面再挂列表栏目。前台打开这一栏会看到下级。',
+        single: '前台打开这一栏，显示该栏目下排序最高的一篇已发布文章。',
+        link: '前台点这一栏会跳到填写的地址，不能挂文章。'
+    };
+    function syncKind() {
+        var kind = kindSel ? kindSel.value : 'list';
+        var jump = document.getElementById('type-jump-wrap');
+        var page = document.getElementById('type-page-wrap');
+        var tplList = document.getElementById('type-tpl-list-wrap');
+        var hint = document.getElementById('type-kind-hint');
+        if (jump) jump.hidden = kind !== 'link';
+        if (page) page.hidden = kind !== 'list';
+        if (tplList) tplList.hidden = kind === 'link' || kind === 'single';
+        if (hint) hint.textContent = hints[kind] || '';
+        if (writeBtn) writeBtn.hidden = kind === 'hub' || kind === 'link';
+    }
+    if (kindSel) {
+        kindSel.addEventListener('change', syncKind);
+        syncKind();
+    }
+    var picInput = document.getElementById('type-pic');
+    function syncPic(url) {
+        var img = document.getElementById('type-pic-img');
+        var preview = document.getElementById('type-pic-preview');
+        url = String(url || '').trim();
+        if (!img || !preview) return;
+        if (!url) {
+            img.removeAttribute('src');
+            preview.hidden = true;
+            return;
+        }
+        img.onload = function () { preview.hidden = false; };
+        img.onerror = function () { preview.hidden = true; };
+        if (img.getAttribute('src') !== url) img.src = url;
+        else preview.hidden = false;
+    }
+    if (picInput) picInput.addEventListener('input', function () { syncPic(picInput.value); });
+    U.on('#type-pic-clear', 'click', function () {
+        if (!picInput) return;
+        picInput.value = '';
+        syncPic('');
+    });
+    U.on('#type-pic-upload', 'click', function () {
+        U.pickFile('image/*').then(function (file) {
+            if (!file) return;
+            U.loading(true);
+            return U.upload(file).then(function (res) {
+                U.loading(false);
+                if (res && res.code === 0 && res.data && res.data.url) {
+                    picInput.value = res.data.url;
+                    syncPic(res.data.url);
+                    U.toast('上传成功', 'ok');
+                } else U.toast((res && res.msg) || '上传失败', 'err');
+            });
+        });
+    });
 })();
 </script>
 @endpush

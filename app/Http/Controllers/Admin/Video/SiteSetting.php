@@ -36,23 +36,15 @@ class SiteSetting extends Controller
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
     }
 
-    public function theme(Request $request): View
+    public function theme(Request $request): RedirectResponse
     {
-        $tab = (string) $request->query('tab', 'base');
-        $tabs = ['base', 'home', 'page', 'nav', 'other', 'seo', 'ads'];
-        $hasPlayView = $this->settings->themeHasPlayView();
-        if (! $hasPlayView) {
-            $tabs = array_values(array_filter($tabs, fn (string $key) => $key !== 'page'));
-        }
-        if (! in_array($tab, $tabs, true)) {
-            $tab = 'base';
+        $query = [];
+        $tab = (string) $request->query('tab', '');
+        if ($tab !== '' && $tab !== 'base') {
+            $query['tab'] = $tab;
         }
 
-        return view('admin.video.theme', [
-            'site' => $this->settings->site(),
-            'tab' => $tab,
-            'hasPlayView' => $hasPlayView,
-        ]);
+        return redirect('/admin/video/templates'.($query !== [] ? '?'.http_build_query($query) : ''));
     }
 
     public function themeSave(Request $request): JsonResponse
@@ -94,7 +86,7 @@ class SiteSetting extends Controller
     public function configPage(string $page): View|RedirectResponse
     {
         if ($page === 'theme') {
-            return redirect('/admin/video/theme');
+            return redirect('/admin/video/templates');
         }
         if ($page === 'ai') {
             return view('admin.video.config_ai', $this->settings->aiPage());

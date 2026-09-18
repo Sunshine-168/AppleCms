@@ -1,9 +1,10 @@
 @extends('admin.layouts.inner')
-@section('title', admin_t('page.theme_config'))
+@section('title', admin_t('nav.templates'))
 
 @php
     $s = $site ?? [];
     $tab = $tab ?? 'base';
+    $desk = 'look';
     $hasPlayView = (bool) ($hasPlayView ?? false);
     $tabs = [
         'base' => '基本设置',
@@ -36,10 +37,11 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel" id="theme-index">
-    <div class="card-header"><span>主题配置</span></div>
+<div class="card card-panel desk-board" id="theme-index">
+    <div class="card-header"><span>模板</span></div>
     <div class="card-body">
-        <p class="muted recycle-lead">改当前默认主题会真正用到的键。模板文件、广告位、标签向导仍是旁边的独立入口。</p>
+        <p class="muted recycle-lead">改当前主题会用到的 Logo、导航和页头代码。页面文件切到「文件」。广告位、标签向导仍是独立入口。</p>
+        @include('admin.video.partials.theme-desks', ['desk' => 'look'])
         <form class="settings-page" id="theme-form">
             <input type="hidden" name="tab" value="theme">
             <div class="tabs settings-tabs" id="themeTabs">

@@ -908,6 +908,15 @@ class VideoService
             $item['art_count'] = $artCounts[$id] ?? 0;
             $item['child_count'] = count($byParent[$id] ?? []);
             $item['depth'] = (int) ($item['depth'] ?? 0);
+            $item['kind'] = VideoTypeModel::normalizeKind($item['kind'] ?? 'list');
+            $item['kind_label'] = VideoTypeModel::kindLabel($item['kind']);
+            $item['jump_url'] = (string) ($item['jump_url'] ?? '');
+            $item['page_size'] = (int) ($item['page_size'] ?? 0);
+            $item['pic'] = (string) ($item['pic'] ?? '');
+            if ((int) ($item['mid'] ?? 1) !== 2) {
+                $item['kind'] = 'list';
+                $item['kind_label'] = '';
+            }
         }
         unset($item);
 
@@ -983,6 +992,21 @@ class VideoService
             }
         }
 
+        $kind = 'list';
+        $jump = '';
+        $pageSize = 0;
+        if ($mid === 2) {
+            $kind = VideoTypeModel::normalizeKind($data['kind'] ?? 'list');
+            if ($kind === 'link') {
+                $safe = VideoTypeModel::safeJumpUrl((string) ($data['jump_url'] ?? ''));
+                if ($safe === null) {
+                    return Result::fail('外链栏目请填写 http(s) 地址或站内路径，例如 /arts');
+                }
+                $jump = $safe;
+            }
+            $pageSize = max(0, min(100, (int) ($data['page_size'] ?? 0)));
+        }
+
         $now = time();
         $candidate = [
             'name' => $name,
@@ -991,6 +1015,12 @@ class VideoService
             'mid' => $mid,
             'sort' => (int) ($data['sort'] ?? 0),
             'status' => (int) ($data['status'] ?? 1),
+            'pic' => mb_substr(trim((string) ($data['pic'] ?? '')), 0, 255),
+            'tpl_list' => VideoTypeModel::normalizeTpl((string) ($data['tpl_list'] ?? '')),
+            'tpl_detail' => VideoTypeModel::normalizeTpl((string) ($data['tpl_detail'] ?? '')),
+            'kind' => $kind,
+            'jump_url' => $jump,
+            'page_size' => $pageSize,
             'seo_title' => trim((string) ($data['seo_title'] ?? '')),
             'seo_keywords' => trim((string) ($data['seo_keywords'] ?? '')),
             'seo_description' => trim((string) ($data['seo_description'] ?? '')),

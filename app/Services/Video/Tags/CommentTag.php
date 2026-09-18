@@ -5,6 +5,7 @@ namespace App\Services\Video\Tags;
 use App\Models\Video\VideoComment;
 use App\Cms\CmsViewContext;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class CommentTag
 {
@@ -18,10 +19,23 @@ class CommentTag
             return collect();
         }
         $num = max(1, (int) ($options['num'] ?? 30));
-
-        return VideoComment::query()
+        $mid = (int) ($options['mid'] ?? 1) === 2 ? 2 : 1;
+        $q = VideoComment::query()
             ->where('video_id', $videoId)
-            ->where('status', 1)
+            ->where('status', 1);
+        if (Schema::hasColumn('video_comments', 'mid')) {
+            if ($mid === 2) {
+                $q->where('mid', 2);
+            } else {
+                $q->where(function ($inner) {
+                    $inner->where('mid', 1)->orWhereNull('mid')->orWhere('mid', 0);
+                });
+            }
+        } elseif ($mid === 2) {
+            return collect();
+        }
+
+        return $q
             ->orderByDesc('id')
             ->limit($num)
             ->get();

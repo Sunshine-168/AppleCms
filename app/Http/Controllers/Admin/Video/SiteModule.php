@@ -68,7 +68,8 @@ class SiteModule extends Controller
         if ($module === 'comments') {
             return view('admin.video.comments', [
                 'title' => $cfg['title'],
-                'queues' => $this->modules->commentQueues(),
+                'queues' => $this->modules->commentQueues(1),
+                'scope' => 'vod',
             ]);
         }
         if ($module === 'topics') {
@@ -596,6 +597,90 @@ class SiteModule extends Controller
         $data = $this->modules->emptyArtRecycle();
 
         return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function showArtMedia(): View
+    {
+        $board = app(\App\Services\Admin\System\SysFileService::class)->pageBoard();
+        $ui = is_array($board['ui'] ?? null) ? $board['ui'] : [];
+        $ui['title'] = '媒体';
+        $ui['lead'] = '写稿封面和正文用的文件。和系统「附件」是同一库，这里不改系统菜单。';
+        $ui['empty'] = '还没有文件';
+        $ui['empty_hint'] = '点右上角上传。图片会出现缩略图，可复制地址贴进封面或正文。';
+        $board['ui'] = $ui;
+        $board['hide_extras'] = true;
+
+        return view('admin.system.file.index', $board);
+    }
+
+    public function showArtComments(): View
+    {
+        $ready = \Illuminate\Support\Facades\Schema::hasTable('video_comments')
+            && \Illuminate\Support\Facades\Schema::hasColumn('video_comments', 'mid');
+
+        return view('admin.video.comments', [
+            'title' => '评论',
+            'queues' => $ready ? $this->modules->commentQueues(2) : ['all' => 0, 'pending' => 0, 'pass' => 0, 'report' => 0],
+            'scope' => 'art',
+            'ready' => $ready,
+        ]);
+    }
+
+    public function listArtComments(Request $request): JsonResponse
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('video_comments')
+            || ! \Illuminate\Support\Facades\Schema::hasColumn('video_comments', 'mid')) {
+            return Ajax::fail('请先执行数据库迁移');
+        }
+        $params = $request->all();
+        $params['comment_mid'] = 2;
+        $data = $this->modules->lists('comments', $params);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function saveArtComment(Request $request): JsonResponse
+    {
+        $payload = $request->all();
+        $payload['mid'] = 2;
+        $id = (int) $request->input('id', 0);
+        $data = $this->modules->save('comments', $payload, $id > 0 ? $id : null);
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function deleteArtComment(Request $request): JsonResponse
+    {
+        $data = $this->modules->delete('comments', (int) $request->input('id', 0));
+
+        return Ajax::message($data['code'], $data['msg'], $data['data']);
+    }
+
+    public function batchArtComments(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $data = $this->modules->batch(
+            'comments',
+            is_array($ids) ? $ids : [],
+            (string) $request->input('action', ''),
+            $request->input('value', '')
+        );
+
+        return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
+    }
+
+    public function showArtFlags(): View
+    {
+        $board = $this->modules->artFlagBoard();
+
+        return view('admin.video.art_flags', [
+            'title' => '推荐属性',
+            'ready' => $board['ready'],
+            'flags' => $board['flags'],
+        ]);
     }
 
     public function createUnion(): View

@@ -228,7 +228,7 @@ class VodController extends Controller
         return view($this->front->themeView('vod.topic-search'), compact('site', 'q', 'aid', 'mid'));
     }
 
-    public function arts(Request $request, int|string|null $id = null): View
+    public function arts(Request $request, int|string|null $id = null): View|RedirectResponse
     {
         $site = $this->front->bootSite();
         $this->context->setSeo('资讯 - '.$site['title'], $site['keyword'], $site['description']);
@@ -246,7 +246,12 @@ class VodController extends Controller
             if ($type) {
                 $typeId = (int) $type->id;
                 $this->context->setType($type);
-                $this->context->setSeo($type->name.' - '.$site['title'], $type->seo_keywords ?: $site['keyword'], $type->seo_description ?: $site['description']);
+                $seoTitle = trim((string) ($type->seo_title ?? ''));
+                $this->context->setSeo(
+                    $seoTitle !== '' ? $seoTitle : ($type->name.' - '.$site['title']),
+                    $type->seo_keywords ?: $site['keyword'],
+                    $type->seo_description ?: $site['description']
+                );
             }
         }
         $typeIds = [];
@@ -261,6 +266,29 @@ class VodController extends Controller
         } elseif ($typeId > 0) {
             $typeIds = [$typeId];
         }
+        if ($currentType) {
+            $kind = $currentType->kind();
+            if ($kind === 'link') {
+                $jump = $currentType->jumpUrl();
+                if ($jump === null) {
+                    throw new NotFoundHttpException();
+                }
+                if (str_starts_with($jump, '/')) {
+                    return redirect($jump);
+                }
+
+                return redirect()->away($jump);
+            }
+            if ($kind === 'single') {
+                $art = $currentType->singleArt();
+                if (! $art) {
+                    throw new NotFoundHttpException();
+                }
+
+                return $this->renderArtPage($site, $art);
+            }
+        }
+        $perPage = $currentType ? $currentType->pageSize(20) : 20;
         $arts = \Illuminate\Support\Facades\Schema::hasTable('video_arts')
             ? \App\Models\Video\VideoArt::query()->listed()
                 ->when($wd !== '', function ($q) use ($wd) {
@@ -275,13 +303,17 @@ class VodController extends Controller
                     });
                 })
                 ->when($typeIds !== [], fn ($q) => $q->whereIn('type_id', $typeIds))
-                ->orderByDesc('id')->paginate(20)->withQueryString()
-            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+                ->orderByDesc('id')->paginate($perPage)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
         $this->context->setPaginator($arts);
         $artTypes = $this->artTypeTree();
         $currentTag = null;
+        $children = $currentType ? $currentType->children : collect();
+        $view = $currentType
+            ? $this->front->artListView($currentType)
+            : $this->front->themeView('vod.arts');
 
-        return view($this->front->themeView('vod.arts'), compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag'));
+        return view($view, compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag', 'children'));
     }
 
     public function artTag(string $slug): View
@@ -299,8 +331,9 @@ class VodController extends Controller
         $typeId = 0;
         $currentType = null;
         $currentTag = $tag;
+        $children = collect();
 
-        return view($this->front->themeView('vod.arts'), compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag'));
+        return view($this->front->themeView('vod.arts'), compact('site', 'arts', 'artTypes', 'typeId', 'currentType', 'currentTag', 'children'));
     }
 
     public function actor(int|string $id): View
@@ -398,6 +431,13 @@ class VodController extends Controller
         if (! $art) {
             throw new NotFoundHttpException();
         }
+
+        return $this->renderArtPage($site, $art);
+    }
+
+    /** @param  array<string, mixed>  $site */
+    private function renderArtPage(array $site, \App\Models\Video\VideoArt $art): View
+    {
         $art->increment('hits');
         $type = null;
         if ((int) $art->type_id > 0 && \Illuminate\Support\Facades\Schema::hasTable('video_types')) {
@@ -441,7 +481,7 @@ class VodController extends Controller
             $artTags = collect();
         }
 
-        return view($this->front->themeView('vod.art'), compact('site', 'art', 'type', 'prev', 'next', 'related', 'artTags'));
+        return view($this->front->artShowView($type), compact('site', 'art', 'type', 'prev', 'next', 'related', 'artTags'));
     }
 
     public function role(int|string $id): View

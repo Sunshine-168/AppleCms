@@ -9,10 +9,7 @@ class CommentIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_comment_index_is_an_audit_queue(): void
@@ -26,6 +23,8 @@ class CommentIndexPageTest extends TestCase
         $this->assertStringContainsString('被举报', $html);
         $this->assertStringContainsString('comment-batch', $html);
         $this->assertStringContainsString('审核设置', $html);
+        $this->assertStringContainsString('用户在播放页发的评论', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
+        $this->assertStringNotContainsString('文章页发来的评论', $html);
     }
 }

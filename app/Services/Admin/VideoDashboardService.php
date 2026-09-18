@@ -56,7 +56,16 @@ class VideoDashboardService
             'vod_total' => $this->safe('videos', fn () => VideoModel::query()->count()),
             'vod_today' => $this->safe('videos', fn () => VideoModel::query()->where('created_at', '>=', $today)->count()),
             'vod_yesterday' => $this->safe('videos', fn () => VideoModel::query()->whereBetween('created_at', [$today - 86400, $today - 1])->count()),
-            'comment_pending' => $this->safe('video_comments', fn () => VideoComment::query()->where('status', 0)->count()),
+            'comment_pending' => $this->safe('video_comments', function () {
+                $q = VideoComment::query()->where('status', 0);
+                if (Schema::hasColumn('video_comments', 'mid')) {
+                    $q->where(function ($inner) {
+                        $inner->where('mid', 1)->orWhereNull('mid')->orWhere('mid', 0);
+                    });
+                }
+
+                return $q->count();
+            }),
             'report_open' => $this->safe('video_reports', fn () => VideoReport::query()->where('status', 0)->count()),
             'playfail_open' => $this->safe('video_play_fails', fn () => VideoPlayFail::query()->where('status', 0)->count()),
             'gbook_pending' => $this->safe('video_guestbooks', fn () => VideoGuestbook::query()->where('status', 0)->count()),

@@ -4,6 +4,27 @@
 @php
     $queues = $queues ?? ['all' => 0, 'pending' => 0, 'pass' => 0, 'report' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $scope = ($scope ?? 'vod') === 'art' ? 'art' : 'vod';
+    $ready = (bool) ($ready ?? true);
+    $api = $scope === 'art'
+        ? [
+            'list' => '/admin/video/art-comments/list',
+            'save' => '/admin/video/art-comments/save',
+            'delete' => '/admin/video/art-comments/delete',
+            'batch' => '/admin/video/art-comments/batch',
+        ]
+        : [
+            'list' => '/admin/video/comments/list',
+            'save' => '/admin/video/comments/save',
+            'delete' => '/admin/video/comments/delete',
+            'batch' => '/admin/video/comments/batch',
+        ];
+    $lead = $scope === 'art'
+        ? '文章页发来的评论。不是影片评论。打开「审核设置」后，新评论会先进入待审。'
+        : '待审优先处理。勾选后可批量通过或删除。打开「审核设置」后，新评论会先进入待审。';
+    $emptyHint = $scope === 'art'
+        ? '用户在文章页发的评论会出现在这里。需要先审再显示时，打开右上角「审核设置」。'
+        : '用户在播放页发的评论会出现在这里。需要先审再显示时，打开右上角「审核设置」。';
 @endphp
 
 @section('plain')
@@ -13,8 +34,14 @@
         <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">审核设置</a>
     </div>
     <div class="card-body">
+        @if($scope === 'art' && ! $ready)
+            <p class="muted recycle-lead">请先执行数据库迁移，文章评论才能和影片评论分开。</p>
+        @else
         <form class="filter-bar" id="comment-search" onsubmit="return false;">
             <input type="hidden" name="report">
+            @if($scope === 'art')
+                <input type="hidden" name="comment_mid" value="2">
+            @endif
             <input type="text" name="q" placeholder="搜内容或昵称" autocomplete="off">
             <select name="status">
                 <option value="">状态</option>
@@ -30,7 +57,7 @@
             <button type="button" class="chip" data-queue="status" data-value="1">已通过@if($q('pass') > 0)<em>{{ $q('pass') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="report" data-value="1">被举报@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">待审优先处理。勾选后可批量通过或删除。打开「审核设置」后，新评论会先进入待审。</p>
+        <p class="muted recycle-lead">{{ $lead }}</p>
         <div class="batch-bar" id="comment-batch" hidden>
             <strong id="comment-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-sm" id="comment-batch-on">通过</button>
@@ -39,12 +66,16 @@
             <button type="button" class="btn btn-muted btn-sm" id="comment-batch-clear">取消选择</button>
         </div>
         <div id="comment-table"></div>
+        @endif
     </div>
 </div>
 <template id="comment-dialog-tpl">
     <form>
         <input type="hidden" name="id">
         <input type="hidden" name="video_id">
+        @if($scope === 'art')
+            <input type="hidden" name="mid" value="2">
+        @endif
         <label>昵称</label>
         <input type="text" name="author_name">
         <label>内容</label>
@@ -59,10 +90,14 @@
 @endsection
 
 @push('scripts')
+@if($scope !== 'art' || $ready)
 <script>
 (function () {
     var U = AdminUi;
     var QUEUE_KEYS = ['report'];
+    var SCOPE = {!! json_encode($scope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+    var API = {!! json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+    var EMPTY_HINT = {!! json_encode($emptyHint, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var form = document.getElementById('comment-search');
     var batchBar = document.getElementById('comment-batch');
     var batchCount = document.getElementById('comment-batch-count');
@@ -70,10 +105,14 @@
     function cleanWhere(data) {
         var out = {};
         Object.keys(data).forEach(function (k) { if (data[k] !== '') out[k] = data[k]; });
+        if (SCOPE === 'art') out.comment_mid = 2;
         return out;
     }
     function isFiltered(where) {
-        return Object.keys(where || {}).some(function (k) { return where[k] !== ''; });
+        return Object.keys(where || {}).some(function (k) {
+            if (k === 'comment_mid') return false;
+            return where[k] !== '';
+        });
     }
     function markChips() {
         var status = form.status.value;
@@ -106,9 +145,13 @@
         var meta = who;
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         if (d.ip) meta += ' · ' + U.escape(d.ip);
+        var href = d.target_url || '';
+        var kind = d.target_kind === 'art' || SCOPE === 'art' ? '文章' : '影片';
         var film = d.video_title
-            ? '<a href="/vod/' + encodeURIComponent(d.video_id) + '" target="_blank" rel="noopener">' + U.escape(d.video_title) + '</a>'
-            : (d.video_id ? '影片 #' + U.escape(d.video_id) : '影片已删');
+            ? (href
+                ? '<a href="' + U.escape(href) + '" target="_blank" rel="noopener">' + U.escape(d.video_title) + '</a>'
+                : U.escape(d.video_title))
+            : (d.video_id ? kind + ' #' + U.escape(d.video_id) : kind + '已删');
         var badges = [];
         if (parseInt(d.comment_report, 10) > 0) badges.push('<span class="badge badge-off">举报 ' + U.escape(d.comment_report) + '</span>');
         if (parseInt(d.comment_up, 10) > 0) badges.push('<span class="badge badge-ok">赞 ' + U.escape(d.comment_up) + '</span>');
@@ -120,19 +163,20 @@
 
     var table = U.table({
         el: '#comment-table',
-        url: '/admin/video/comments/list',
+        url: API.list,
         where: cleanWhere(U.formData(form)),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的评论</p><p><button type="button" class="btn btn-muted btn-sm" id="comment-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有评论</p><p class="muted">用户在播放页发的评论会出现在这里。需要先审再显示时，打开右上角「审核设置」。</p></div>';
+            return '<div class="list-empty"><p>还没有评论</p><p class="muted">' + U.escape(EMPTY_HINT) + '</p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('comment-empty-reset');
             if (reset) reset.addEventListener('click', function () {
                 form.reset();
                 QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; });
+                if (form.comment_mid) form.comment_mid.value = '2';
                 runSearch();
             });
         },
@@ -173,7 +217,8 @@
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
                 if (!data.content) { U.toast('请填写内容', 'err'); return false; }
-                return U.post('/admin/video/comments/save', data).then(function (res) {
+                if (SCOPE === 'art') data.mid = 2;
+                return U.post(API.save, data).then(function (res) {
                     if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
                     U.toast('已保存', 'ok');
                     table.refresh();
@@ -186,14 +231,16 @@
         var ids = selectedIds();
         if (!ids.length) { U.toast('请先勾选评论', 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
-        U.post('/admin/video/comments/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
+        U.post(API.batch, {ids: ids.join(','), action: action, value: value}).then(function (res) {
             if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
             table.refresh();
             U.toast((res && res.msg) || '操作成功', 'ok');
         });
     }
     function setStatus(row, status) {
-        U.post('/admin/video/comments/save', {id: row.id, status: status}).then(function (res) {
+        var payload = {id: row.id, status: status};
+        if (SCOPE === 'art') payload.mid = 2;
+        U.post(API.save, payload).then(function (res) {
             if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
             table.refresh();
             U.toast(status === 1 ? '已通过' : '已隐藏', 'ok');
@@ -204,6 +251,7 @@
     U.on('#comment-reset-btn', 'click', function () {
         setTimeout(function () {
             QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; });
+            if (form.comment_mid) form.comment_mid.value = '2';
             runSearch();
         }, 0);
     });
@@ -229,7 +277,7 @@
         if (a.classList.contains('js-hide')) setStatus(row, 0);
         if (a.classList.contains('js-del')) {
             if (!U.confirm('删除这条评论？')) return;
-            U.post('/admin/video/comments/delete', {id: row.id}).then(function (res) {
+            U.post(API.delete, {id: row.id}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
                 table.refresh();
                 U.toast('已删除', 'ok');
@@ -238,4 +286,5 @@
     });
 })();
 </script>
+@endif
 @endpush

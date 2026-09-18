@@ -25,7 +25,7 @@
         </form>
         <p class="muted recycle-lead">
             @if($isArt)
-                这是文章自己的栏目，不是影片分类。下级会缩进。点「添加下级」挂到这一栏下面；有文章时请先移走再删。
+                这是文章自己的栏目，不是影片分类。类型可以是列表、频道、单页或外链。下级会缩进。点「添加下级」挂到这一栏下面；有文章时请先移走再删。
             @else
                 下级缩进显示。先建电影 / 剧集这种一级，再在下面加动作片、国产剧。文章栏目请去「文章 → 栏目」。
             @endif
@@ -105,6 +105,9 @@
         } else {
             meta += ' · 0 ' + unit;
         }
+        if (isArt && d.kind_label && d.kind && d.kind !== 'list') {
+            meta += ' · ' + U.escape(d.kind_label);
+        }
         if (parseInt(d.child_count, 10) > 0) meta += ' · ' + U.escape(d.child_count) + ' 个子类';
         return '<div class="cat-cell" style="padding-left:' + (depth * 22) + 'px">' + branch
             + '<div><a class="vod-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || '') + '</a>'
@@ -134,29 +137,41 @@
             batchBar.hidden = ids.length === 0;
             batchCount.textContent = '已选 ' + ids.length + ' 个';
         },
-        cols: [
-            {check: true, width: 36},
-            {title: noun, html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
-            }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var id = encodeURIComponent(d.id);
-                var html = '';
-                if (isArt && String(d.status) === '1') {
-                    html += '<a href="/art/type/' + id + '" target="_blank" rel="noopener">前台</a>';
-                }
-                html += '<a class="js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
-                html += '<a href="' + contentUrl + '?type_id=' + id + '">' + contentLabel + '</a>';
-                if (isArt) {
-                    html += '<a href="/admin/video/arts/create?type_id=' + id + '">写文章</a>';
-                }
-                html += '<a href="' + base + '/' + id + '/edit">编辑</a>';
-                html += '<a href="#" class="js-del">删除</a>';
-                return html;
-            }}
-        ]
+        cols: (function () {
+            var cols = [
+                {check: true, width: 36},
+                {title: noun, html: nameHtml}
+            ];
+            if (isArt) {
+                cols.push({title: '类型', width: 72, html: function (d) {
+                    return d.kind_label ? '<span class="badge">' + U.escape(d.kind_label) + '</span>' : '—';
+                }});
+            }
+            cols.push(
+                {key: 'sort', title: '排序', width: 64},
+                {title: '状态', width: 72, html: function (d) {
+                    return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
+                }},
+                {title: '操作', cls: 'actions', html: function (d) {
+                    var id = encodeURIComponent(d.id);
+                    var html = '';
+                    var kind = String(d.kind || 'list');
+                    if (isArt && String(d.status) === '1') {
+                        var front = (kind === 'link' && d.jump_url) ? String(d.jump_url) : ('/art/type/' + id);
+                        html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener">前台</a>';
+                    }
+                    html += '<a class="js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
+                    html += '<a href="' + contentUrl + '?type_id=' + id + '">' + contentLabel + '</a>';
+                    if (isArt && kind !== 'hub' && kind !== 'link') {
+                        html += '<a href="/admin/video/arts/create?type_id=' + id + '">写文章</a>';
+                    }
+                    html += '<a href="' + base + '/' + id + '/edit">编辑</a>';
+                    html += '<a href="#" class="js-del">删除</a>';
+                    return html;
+                }}
+            );
+            return cols;
+        })()
     });
 
     function selectedIds() { return table.selectedIds(); }

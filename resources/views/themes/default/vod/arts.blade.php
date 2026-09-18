@@ -8,6 +8,9 @@
     @endphp
     @vodBreadcrumb(['last' => $typeTitle])
     <h1>{{ $typeTitle }}</h1>
+    @if($currentType && trim((string) ($currentType->pic ?? '')) !== '')
+        <p class="art-cover"><img src="{{ $currentType->pic }}" alt=""></p>
+    @endif
     @if($currentTag)
         <p class="muted">标签 · {{ $currentTag->name }}</p>
     @endif

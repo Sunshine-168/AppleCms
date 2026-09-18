@@ -716,9 +716,32 @@ class SiteModuleService
         $kw = trim((string) ($params[$cfg['search']] ?? $params['q'] ?? ''));
         if ($kw !== '') {
             if ($module === 'comments') {
-                $q->where(function ($inner) use ($kw) {
+                $commentMid = (int) ($params['comment_mid'] ?? 1) === 2 ? 2 : 1;
+                $q->where(function ($inner) use ($kw, $commentMid) {
                     $inner->where('content', 'like', '%'.$kw.'%')
                         ->orWhere('author_name', 'like', '%'.$kw.'%');
+                    if (ctype_digit($kw)) {
+                        $inner->orWhere('id', (int) $kw)->orWhere('video_id', (int) $kw);
+                    }
+                    if ($commentMid === 2 && Schema::hasTable('video_arts')) {
+                        $artIds = VideoArt::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($artIds !== []) {
+                            $inner->orWhereIn('video_id', $artIds);
+                        }
+                    } elseif (Schema::hasTable('videos')) {
+                        $videoIds = VideoModel::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($videoIds !== []) {
+                            $inner->orWhereIn('video_id', $videoIds);
+                        }
+                    }
                 });
             } elseif ($module === 'guestbooks') {
                 $q->where(function ($inner) use ($kw) {
@@ -1302,6 +1325,9 @@ class SiteModuleService
             }
             if ($module === 'comments' && (string) ($params['report'] ?? '') === '1' && Schema::hasColumn('video_comments', 'comment_report')) {
                 $q->where('comment_report', '>', 0);
+            }
+            if ($module === 'comments') {
+                $this->applyCommentMid($q, (int) ($params['comment_mid'] ?? 1) === 2 ? 2 : 1);
             }
             if ($module === 'arts' && array_key_exists('type_id', $params) && $params['type_id'] !== '' && $params['type_id'] !== null) {
                 $this->applyArtTypeFilter($q, (int) $params['type_id']);
@@ -2151,6 +2177,11 @@ class SiteModuleService
                     if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 2) {
                         return Result::fail('请选择文章栏目，不要用影片分类');
                     }
+                    if (! $type->acceptsArticles()) {
+                        return Result::fail($type->kind() === 'link'
+                            ? '外链栏目不能挂文章，请换到列表或单页栏目'
+                            : '频道栏目只做目录，请把文章挂到下级列表栏目');
+                    }
                 }
                 $payload['type_id'] = $tid;
             }
@@ -2926,6 +2957,37 @@ class SiteModuleService
                 }
             }
         }
+        if ($module === 'comments') {
+            $wantMid = (int) ($data['mid'] ?? 1) === 2 ? 2 : 1;
+            if ($id) {
+                $existing = VideoComment::query()->find($id);
+                if ($existing && Schema::hasColumn('video_comments', 'mid')) {
+                    $existingMid = (int) ($existing->mid ?: 1);
+                    if ($existingMid === 2 && $wantMid !== 2) {
+                        return Result::fail('这条是文章评论，请到文章里处理');
+                    }
+                    if ($existingMid !== 2 && $wantMid === 2) {
+                        return Result::fail('这条是影片评论，请到影片里处理');
+                    }
+                    $wantMid = $existingMid === 2 ? 2 : 1;
+                }
+            } elseif (Schema::hasColumn('video_comments', 'mid')) {
+                $payload['mid'] = $wantMid;
+            }
+            $rid = (int) ($payload['video_id'] ?? 0);
+            if ($id === null && $rid < 1) {
+                return Result::fail($wantMid === 2 ? '请填写文章编号' : '请填写影片ID');
+            }
+            if ($rid > 0) {
+                if ($wantMid === 2) {
+                    if (! Schema::hasTable('video_arts') || ! VideoArt::query()->where('id', $rid)->exists()) {
+                        return Result::fail('文章不存在');
+                    }
+                } elseif (Schema::hasTable('videos') && ! VideoModel::query()->where('id', $rid)->exists()) {
+                    return Result::fail('影片不存在');
+                }
+            }
+        }
         $now = time();
         $oldStatus = null;
         $memberPointsTo = null;
@@ -3097,25 +3159,55 @@ class SiteModuleService
     }
 
     /** @return array<string, int> */
-    public function commentQueues(): array
+    public function commentQueues(int $mid = 1): array
     {
         $zero = ['all' => 0, 'pending' => 0, 'pass' => 0, 'report' => 0];
+        $mid = $mid === 2 ? 2 : 1;
         try {
             if (! Schema::hasTable('video_comments')) {
                 return $zero;
             }
+            $q = VideoComment::query();
+            $this->applyCommentMid($q, $mid);
 
             return [
-                'all' => (int) VideoComment::query()->count(),
-                'pending' => (int) VideoComment::query()->where('status', 0)->count(),
-                'pass' => (int) VideoComment::query()->where('status', 1)->count(),
+                'all' => (int) (clone $q)->count(),
+                'pending' => (int) (clone $q)->where('status', 0)->count(),
+                'pass' => (int) (clone $q)->where('status', 1)->count(),
                 'report' => Schema::hasColumn('video_comments', 'comment_report')
-                    ? (int) VideoComment::query()->where('comment_report', '>', 0)->count()
+                    ? (int) (clone $q)->where('comment_report', '>', 0)->count()
                     : 0,
             ];
         } catch (\Throwable) {
             return $zero;
         }
+    }
+
+    /**
+     * @return array{ready: bool, flags: list<array{key:string,label:string,hint:string,art_count:int,url:string}>}
+     */
+    public function artFlagBoard(): array
+    {
+        $defs = [
+            ['key' => 'top', 'label' => '置顶', 'hint' => '列表里排在最前。写稿时勾选。'],
+            ['key' => 'recommend', 'label' => '推荐', 'hint' => '给前台当推荐稿。写稿时勾选。'],
+            ['key' => 'hot', 'label' => '热门', 'hint' => '给前台当热门稿。写稿时勾选。'],
+        ];
+        $ready = Schema::hasTable('video_arts') && Schema::hasColumn('video_arts', 'flags');
+        $flags = [];
+        foreach ($defs as $def) {
+            $flags[] = [
+                'key' => $def['key'],
+                'label' => $def['label'],
+                'hint' => $def['hint'],
+                'art_count' => $ready
+                    ? (int) VideoArt::query()->withFlag($def['key'])->count()
+                    : 0,
+                'url' => '/admin/video/arts?flag='.$def['key'],
+            ];
+        }
+
+        return ['ready' => $ready, 'flags' => $flags];
     }
 
     /** @return array<string, int> */
@@ -4594,21 +4686,39 @@ class SiteModuleService
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function decorateComments(array $rows): array
     {
-        $videoIds = [];
+        $filmIds = [];
+        $artIds = [];
         foreach ($rows as $row) {
-            $vid = (int) ($row['video_id'] ?? 0);
-            if ($vid > 0) {
-                $videoIds[] = $vid;
+            $rid = (int) ($row['video_id'] ?? 0);
+            if ($rid < 1) {
+                continue;
+            }
+            if ((int) ($row['mid'] ?? 1) === 2) {
+                $artIds[] = $rid;
+            } else {
+                $filmIds[] = $rid;
             }
         }
-        $titles = [];
-        if ($videoIds !== []) {
-            $titles = VideoModel::query()->whereIn('id', array_values(array_unique($videoIds)))->pluck('title', 'id')->all();
+        $filmTitles = [];
+        if ($filmIds !== [] && Schema::hasTable('videos')) {
+            $filmTitles = VideoModel::query()->whereIn('id', array_values(array_unique($filmIds)))->pluck('title', 'id')->all();
+        }
+        $artTitles = [];
+        if ($artIds !== [] && Schema::hasTable('video_arts')) {
+            $artTitles = VideoArt::query()->whereIn('id', array_values(array_unique($artIds)))->pluck('title', 'id')->all();
         }
         foreach ($rows as &$row) {
-            $vid = (int) ($row['video_id'] ?? 0);
+            $rid = (int) ($row['video_id'] ?? 0);
+            $mid = (int) ($row['mid'] ?? 1) === 2 ? 2 : 1;
             $ts = (int) ($row['created_at'] ?? 0);
-            $row['video_title'] = (string) ($titles[$vid] ?? '');
+            $row['mid'] = $mid;
+            $row['video_title'] = $mid === 2
+                ? (string) ($artTitles[$rid] ?? '')
+                : (string) ($filmTitles[$rid] ?? '');
+            $row['target_url'] = $rid > 0
+                ? ($mid === 2 ? '/art/'.$rid : '/vod/'.$rid)
+                : '';
+            $row['target_kind'] = $mid === 2 ? 'art' : 'vod';
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['comment_report'] = (int) ($row['comment_report'] ?? 0);
             $row['comment_up'] = (int) ($row['comment_up'] ?? 0);
@@ -4616,6 +4726,25 @@ class SiteModuleService
         unset($row);
 
         return $rows;
+    }
+
+    private function applyCommentMid($query, int $mid): void
+    {
+        if (! Schema::hasColumn('video_comments', 'mid')) {
+            if ($mid === 2) {
+                $query->whereRaw('0 = 1');
+            }
+
+            return;
+        }
+        if ($mid === 2) {
+            $query->where('mid', 2);
+
+            return;
+        }
+        $query->where(function ($inner) {
+            $inner->where('mid', 1)->orWhereNull('mid')->orWhere('mid', 0);
+        });
     }
 
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
@@ -5441,7 +5570,11 @@ class SiteModuleService
             } elseif ($mid !== 1) {
                 return [];
             }
-            $rows = $q->get(['id', 'name', 'parent_id']);
+            $cols = ['id', 'name', 'parent_id'];
+            if (Schema::hasColumn('video_types', 'kind')) {
+                $cols[] = 'kind';
+            }
+            $rows = $q->get($cols);
             $counts = [];
             if ($mid === 2 && Schema::hasTable('video_arts')) {
                 try {
@@ -5472,12 +5605,15 @@ class SiteModuleService
                     $id = (int) $row->id;
                     $raw = (string) $row->name;
                     $pad = $depth > 0 ? str_repeat('└ ', $depth) : '';
+                    $kind = VideoTypeModel::normalizeKind($row->kind ?? 'list');
                     $out[] = [
                         'id' => $id,
                         'name' => $pad.$raw,
                         'title' => $raw,
                         'parent_id' => (int) ($row->parent_id ?? 0),
                         'depth' => $depth,
+                        'kind' => $kind,
+                        'kind_label' => VideoTypeModel::kindLabel($kind),
                         'art_count' => (int) ($counts[$id] ?? $counts[(string) $id] ?? 0),
                     ];
                     $walk($id, $depth + 1);

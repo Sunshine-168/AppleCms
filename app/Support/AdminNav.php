@@ -27,7 +27,18 @@ class AdminNav
 
     public static function currentModule(?string $path = null): string
     {
+        $fromRequest = $path === null;
+        $raw = $path;
+        if ($fromRequest && app()->bound('request')) {
+            $raw = (string) request()->getRequestUri();
+        }
         $path = self::normPath($path);
+        if ($fromRequest) {
+            self::rememberPluginStay($path, $raw ?? '');
+        }
+        if (self::wantsPluginStay($path, $raw ?? '', $fromRequest)) {
+            return 'plugin';
+        }
         $best = '';
         $module = 'work';
         foreach (self::modulePrefixes() as $prefix => $id) {
@@ -62,7 +73,7 @@ class AdminNav
         if ($module === 'plugin') {
             $groups[0]['items'] = array_merge(
                 $groups[0]['items'] ?? [],
-                $host->allSidebarFoldItems()
+                self::withPluginStayQuery($host->allSidebarFoldItems())
             );
 
             return self::flattenNavGroups(self::hideCoreWhenPlugin($groups));
@@ -359,6 +370,9 @@ class AdminNav
                     self::cat('/admin/video/arts', 'item.arts', 'hint.arts'),
                     self::cat('/admin/video/art-types', 'item.art_types', 'hint.art_types'),
                     self::cat('/admin/video/art-tags', 'item.art_tags', 'hint.art_tags'),
+                    self::cat('/admin/video/art-media', 'item.art_media', 'hint.art_media'),
+                    self::cat('/admin/video/art-comments', 'item.art_comments', 'hint.art_comments'),
+                    self::cat('/admin/video/art-flags', 'item.art_flags', 'hint.art_flags'),
                     self::cat('/admin/video/art-recycle', 'item.art_recycle', 'hint.art_recycle'),
                     self::cat('/admin/video/searchwords', 'item.searchwords', 'hint.searchwords'),
                     self::cat('/admin/video/tools/images', 'item.images', 'hint.images'),
@@ -399,7 +413,7 @@ class AdminNav
                 'hint' => 'more.site_hint',
                 'items' => [
                     self::cat('/admin/video/settings', 'nav.settings', 'hint.settings', '', 'hint.settings_keys'),
-                    self::cat('/admin/video/theme', 'item.theme_config', 'hint.theme_config'),
+                    self::cat('/admin/video/templates', 'nav.templates', 'hint.theme_config'),
                     self::cat('/admin/video/rewrite', 'item.rewrite', 'hint.rewrite'),
                     self::cat('/admin/video/domains', 'item.domains', 'hint.domains'),
                     self::cat('/admin/video/push', 'item.push', 'hint.push'),
@@ -517,7 +531,15 @@ class AdminNav
                     ['url' => '/admin/video/arts', 'icon' => 'file-alt', 'label' => 'nav.arts'],
                     ['url' => '/admin/video/art-types', 'icon' => 'sitemap', 'label' => 'nav.art_types'],
                     ['url' => '/admin/video/art-tags', 'icon' => 'tags', 'label' => 'nav.art_tags'],
-                    ['url' => '/admin/video/art-recycle', 'icon' => 'trash-alt', 'label' => 'nav.art_recycle'],
+                    ['url' => '/admin/video/art-media', 'icon' => 'photo-video', 'label' => 'nav.art_media'],
+                    ['url' => '/admin/video/art-comments', 'icon' => 'comments', 'label' => 'nav.art_comments'],
+                ],
+                'fold' => [
+                    'label' => 'nav.more',
+                    'items' => [
+                        ['url' => '/admin/video/art-flags', 'icon' => 'flag', 'label' => 'nav.art_flags'],
+                        ['url' => '/admin/video/art-recycle', 'icon' => 'trash-alt', 'label' => 'nav.art_recycle'],
+                    ],
                 ],
             ]],
             'vod' => [[
@@ -584,7 +606,6 @@ class AdminNav
             'site' => [[
                 'items' => [
                     ['url' => '/admin/video/settings', 'icon' => 'cog', 'label' => 'nav.settings'],
-                    ['url' => '/admin/video/theme', 'icon' => 'paint-brush', 'label' => 'nav.theme_config'],
                     ['url' => '/admin/video/templates', 'icon' => 'palette', 'label' => 'nav.templates'],
                     ['url' => '/admin/video/ads', 'icon' => 'bullhorn', 'label' => 'nav.ads'],
                     ['url' => '/admin/video/players', 'icon' => 'play-circle', 'label' => 'nav.players'],
@@ -654,6 +675,9 @@ class AdminNav
             '/admin/video/audits' => 'collect',
             '/admin/video/cj' => 'collect',
             '/admin/video/art-recycle' => 'art',
+            '/admin/video/art-flags' => 'art',
+            '/admin/video/art-comments' => 'art',
+            '/admin/video/art-media' => 'art',
             '/admin/video/art-tags' => 'art',
             '/admin/video/art-types' => 'art',
             '/admin/video/arts' => 'art',
@@ -679,8 +703,10 @@ class AdminNav
             '/admin/video/publish_pages' => 'site',
             '/admin/video/mall_goods' => 'member',
             '/admin/video/mall_orders' => 'member',
-            '/admin/video/mangas' => 'vod',
-            '/admin/video/manga_chapters' => 'vod',
+            '/admin/video/mangas' => 'plugin',
+            '/admin/video/manga_chapters' => 'plugin',
+            '/admin/video/manga_types' => 'plugin',
+            '/admin/video/manga_pics' => 'plugin',
             '/admin/video/ads' => 'site',
             '/admin/video/players' => 'site',
             '/admin/video/links' => 'site',
@@ -714,7 +740,131 @@ class AdminNav
     }
 
     /**
-     * 插件台面跟它的侧栏分组走，不要被顶栏「插件」抢走。
+     * 插件侧栏带上 nav=plugin，点进去仍留在插件工作区。
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private static function withPluginStayQuery(array $items): array
+    {
+        $out = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $url = (string) ($item['url'] ?? '');
+            if ($url !== '') {
+                $item['url'] = self::appendQuery($url, 'nav', 'plugin');
+            }
+            if (! empty($item['children']) && is_array($item['children'])) {
+                $item['children'] = self::withPluginStayQuery($item['children']);
+            }
+            $out[] = $item;
+        }
+
+        return $out;
+    }
+
+    private static function appendQuery(string $url, string $key, string $value): string
+    {
+        $url = explode('#', $url)[0];
+        $parts = explode('?', $url, 2);
+        $path = $parts[0];
+        $query = [];
+        if (isset($parts[1]) && $parts[1] !== '') {
+            parse_str($parts[1], $query);
+        }
+        $query[$key] = $value;
+
+        return $path.'?'.http_build_query($query);
+    }
+
+    private static function uriHasPluginNav(string $uri): bool
+    {
+        $uri = explode('#', $uri)[0];
+        $parts = explode('?', $uri, 2);
+        if (! isset($parts[1]) || $parts[1] === '') {
+            return false;
+        }
+        $query = [];
+        parse_str($parts[1], $query);
+
+        return ($query['nav'] ?? '') === 'plugin';
+    }
+
+    private static function wantsPluginStay(string $path, string $raw, bool $fromRequest): bool
+    {
+        if (! self::isPluginBoardPath($path)) {
+            return false;
+        }
+        if (self::uriHasPluginNav($raw)) {
+            return true;
+        }
+
+        return $fromRequest && (int) session('admin_nav_plugin', 0) === 1;
+    }
+
+    private static function rememberPluginStay(string $path, string $raw): void
+    {
+        if (! app()->bound('session')) {
+            return;
+        }
+        if (self::uriHasPluginNav($raw) && self::isPluginBoardPath($path)) {
+            session(['admin_nav_plugin' => 1]);
+
+            return;
+        }
+        if (! self::isPluginBoardPath($path)) {
+            session()->forget('admin_nav_plugin');
+        }
+    }
+
+    private static function isPluginBoardPath(string $path): bool
+    {
+        $path = rtrim($path, '/') ?: '/';
+        foreach (self::pluginBoardHrefs() as $href) {
+            if ($path === $href || str_starts_with($path, $href.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function pluginBoardHrefs(): array
+    {
+        $hrefs = [];
+        $walk = static function (array $item) use (&$hrefs, &$walk): void {
+            $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
+            $href = rtrim($href, '/');
+            if ($href === '') {
+                return;
+            }
+            if ($href[0] !== '/') {
+                $href = '/'.$href;
+            }
+            $hrefs[$href] = true;
+            foreach ($item['children'] ?? [] as $child) {
+                if (is_array($child)) {
+                    $walk($child);
+                }
+            }
+        };
+        foreach (self::host()->allSidebarFoldItems() as $item) {
+            if (is_array($item)) {
+                $walk($item);
+            }
+        }
+
+        return array_keys($hrefs);
+    }
+
+    /**
+     * 站点/会员里的插件入口不带 nav=plugin，不会被顶栏「插件」抢走。
+     * 插件侧栏带上 nav=plugin，点进去仍留在插件工作区。
      *
      * @param  array<string, string>  $core
      * @return array<string, string>
@@ -727,6 +877,7 @@ class AdminNav
             'site' => 'site',
             'system' => 'system',
             'collect' => 'collect',
+            'plugin' => 'plugin',
         ];
         $add = static function (array $item, string $module) use (&$core, &$add): void {
             $href = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
@@ -815,7 +966,7 @@ class AdminNav
     }
 
     /**
-     * 影片栏本身就是片库、评论的位置。漫画启用后排进主列表；聊天室、弹幕进「更多」，不再另开一栏「插件」。
+     * 影片栏本身就是片库、评论的位置。聊天室、弹幕进「更多」。漫画是独立库，进插件工作区，不进影片栏。
      *
      * @param  list<array<string, mixed>>  $groups
      * @param  list<array<string, mixed>>  $pluginItems
@@ -831,17 +982,13 @@ class AdminNav
         }
         $chat = $byPath['/admin/video/chat_messages'] ?? null;
         $danmaku = $byPath['/admin/video/danmaku'] ?? null;
-        $manga = $byPath['/admin/video/mangas'] ?? null;
-        $used = [];
-        $out = [];
-        foreach ($groups[0]['items'] ?? [] as $item) {
-            $path = explode('?', explode('#', (string) ($item['url'] ?? ''))[0])[0];
-            $out[] = $item;
-            if ($path === '/admin/video/actors' && $manga !== null) {
-                $out[] = $manga;
-                $used['/admin/video/mangas'] = true;
-            }
-        }
+        $used = [
+            '/admin/video/mangas' => true,
+            '/admin/video/manga_chapters' => true,
+            '/admin/video/manga_types' => true,
+            '/admin/video/manga_pics' => true,
+        ];
+        $out = $groups[0]['items'] ?? [];
         $foldExtra = [];
         if ($chat !== null) {
             $foldExtra[] = $chat;

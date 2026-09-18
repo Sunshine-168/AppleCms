@@ -31,6 +31,7 @@ class TypeFormPageTest extends TestCase
         $this->assertStringContainsString('顶级（不挂在任何分类下）', $html);
         $this->assertStringNotContainsString('用来放什么', $html);
         $this->assertStringNotContainsString('保存并写文章', $html);
+        $this->assertStringNotContainsString('name="kind"', $html);
         $this->assertStringNotContainsString('ui-dialog', $html);
         $this->assertStringNotContainsString('iframe', $html);
         $this->assertStringNotContainsString('video-type-dialog-tpl', $html);

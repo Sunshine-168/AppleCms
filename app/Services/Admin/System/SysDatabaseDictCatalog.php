@@ -78,7 +78,7 @@ class SysDatabaseDictCatalog
             'member_sign_milestone_logs' => ['group' => 'member', 'label' => '里程碑领取', 'hint' => '谁拿到了哪档连续签到奖励。', 'url' => '/admin/video/activity?desk=milestones'],
             'video_cards' => ['group' => 'member', 'label' => '积分卡密', 'hint' => '一卡换积分，用过就作废。', 'url' => '/admin/video/cards'],
             'video_coupons' => ['group' => 'member', 'label' => '优惠码', 'hint' => '旧的积分兑换码。新优惠券在会员栏优惠券里发，用于现金充值满减。', 'url' => '/admin/video/coupons'],
-            'video_comments' => ['group' => 'site', 'label' => '评论', 'hint' => '片子下的评论，可回复。', 'url' => '/admin/video/comments'],
+            'video_comments' => ['group' => 'site', 'label' => '评论', 'hint' => '影片和文章评论，用 mid 分开：1 影片 2 文章。', 'url' => '/admin/video/comments'],
             'video_reports' => ['group' => 'site', 'label' => '报错', 'hint' => '用户反馈片子不能播或有问题。', 'url' => '/admin/video/reports'],
             'video_play_fails' => ['group' => 'site', 'label' => '播放失败', 'hint' => '前台播不了时记下的地址。', 'url' => '/admin/video/playfails'],
             'video_guestbooks' => ['group' => 'site', 'label' => '留言', 'hint' => '站点留言本，不是评论。', 'url' => '/admin/video/guestbooks'],
@@ -485,6 +485,9 @@ class SysDatabaseDictCatalog
             ],
             'video_types' => [
                 'mid' => '1 影片栏目 2 文章栏目 3 网址栏目',
+                'kind' => '文章栏目形态：list 列表 hub 频道 single 单页 link 外链；影片分类不用',
+                'jump_url' => '外链栏目的跳转地址',
+                'page_size' => '列表栏目前台每页篇数；0 用默认',
                 'status' => '1 显示 0 隐藏',
             ],
             'video_sources' => [
@@ -625,6 +628,8 @@ class SysDatabaseDictCatalog
             'video_comments' => [
                 'status' => '1 显示 0 隐藏待审',
                 'parent_id' => '回复哪条评论；0 表示顶层',
+                'mid' => '1 影片 2 文章。video_id 是对应稿件 ID',
+                'video_id' => '影片或文章编号，由 mid 决定',
             ],
             'video_reports' => [
                 'status' => '0 未处理 1 已处理',

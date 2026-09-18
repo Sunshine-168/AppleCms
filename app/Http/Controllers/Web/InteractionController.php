@@ -16,12 +16,23 @@ class InteractionController extends Controller
 
     public function comment(Request $request, int $id): RedirectResponse
     {
+        return $this->storeComment($request, $id, 1);
+    }
+
+    public function artComment(Request $request, int $id): RedirectResponse
+    {
+        return $this->storeComment($request, $id, 2);
+    }
+
+    private function storeComment(Request $request, int $id, int $mid): RedirectResponse
+    {
         $result = $this->interaction->addComment(
             $id,
             (string) $request->input('content', ''),
             Auth::guard('member')->user(),
             (string) $request->input('author_name', ''),
-            (string) $request->ip()
+            (string) $request->ip(),
+            $mid
         );
         if ($result['code'] !== 0) {
             return back()->with('error', $result['msg']);

@@ -250,7 +250,7 @@ class PluginManager
                 continue;
             }
             $out[] = [
-                'url' => '/admin/video/'.$name,
+                'url' => '/admin/video/'.$name.'?nav=plugin',
                 'label' => (string) ($config['title'] ?? $name),
             ];
         }

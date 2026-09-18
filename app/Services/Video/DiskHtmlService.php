@@ -560,6 +560,9 @@ class DiskHtmlService
             }
             $this->constrainWhen($q, 'video_types', $filter['when']);
             $q->limit(self::LIST_CAP)->each(function (VideoTypeModel $type) use (&$urls) {
+                if ($type->kind() === 'link') {
+                    return;
+                }
                 $this->pushUrl($urls, '/art/type/'.$type->id);
             });
         });

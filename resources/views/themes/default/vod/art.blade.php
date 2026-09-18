@@ -67,4 +67,51 @@
             @endforeach
         </ul>
     @endif
+    <h2>评论</h2>
+    @if(session('error'))
+        <p class="muted">{{ session('error') }}</p>
+    @endif
+    @if(session('status'))
+        <p class="muted">{{ session('status') }}</p>
+    @endif
+    <form method="post" action="{{ url('/art/'.$art->id.'/comment') }}">
+        @csrf
+        @guest('member')
+            <p><input name="author_name" placeholder="昵称"></p>
+        @endguest
+        <p><textarea name="content" rows="4" style="width:100%;background:#0b0d12;color:#e8eaed;border:1px solid #2a2f3a;" required></textarea></p>
+        <p><button type="submit">发表评论</button></p>
+    </form>
+    @vodComment(['id' => $art->id, 'mid' => 2])
+        <p><strong>{{ $item->author_name }}</strong> · {{ date('Y-m-d H:i', (int)$item->created_at) }}
+            <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
+            <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
+            <br>{{ $item->content }}
+        </p>
+    @endvodComment
+    <script>
+        document.querySelectorAll('.comment-like').forEach(function(a){
+            a.addEventListener('click', function(){
+                var el = this;
+                fetch('/comment/' + this.dataset.id + '/like', {
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    if (vodResult(res, '点赞失败') && res.data && typeof res.data.comment_up !== 'undefined') {
+                        el.textContent = '赞 ' + res.data.comment_up;
+                    }
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
+            });
+        });
+        document.querySelectorAll('.comment-report').forEach(function(a){
+            a.addEventListener('click', function(){
+                fetch('/comment/' + this.dataset.id + '/report', {
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
+                }).then(function(r){ return r.json().catch(function(){ return null; }); }).then(function(res){
+                    vodResult(res, '举报失败');
+                }).catch(function(){ vodToast('网络异常，请重试', 'err'); });
+            });
+        });
+    </script>
 @endsection

@@ -26,6 +26,11 @@ class ArtTagPageTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('新增标签', $html);
+        $this->assertStringContainsString('<span>标签', $html);
+        $this->assertStringContainsString('只给文章用，不会进影片标签库', $html);
+        $this->assertStringContainsString('影片标签在影片', $html);
+        $this->assertStringContainsString('漫画词写在漫画作品上', $html);
+        $this->assertStringNotContainsString('贺岁、院线', $html);
         $this->assertStringContainsString('未使用', $html);
         $this->assertStringContainsString('打开完整表单', $html);
         $this->assertStringContainsString('/admin/video/art-tags/create', $html);
@@ -220,8 +225,9 @@ class ArtTagPageTest extends TestCase
         $this->assertNotNull(VideoArt::query()->find($art->id));
 
         $urls = array_column(AdminNav::groupsFor('art')[0]['items'] ?? [], 'url');
+        $fold = array_column(AdminNav::groupsFor('art')[0]['fold']['items'] ?? [], 'url');
         $this->assertContains('/admin/video/art-tags', $urls);
-        $this->assertContains('/admin/video/art-recycle', $urls);
+        $this->assertContains('/admin/video/art-recycle', $fold);
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-tags/create'));
         $this->assertSame('art', AdminNav::currentModule('/admin/video/art-recycle'));
     }

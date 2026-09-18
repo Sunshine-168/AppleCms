@@ -528,17 +528,26 @@ class Video extends Controller
             $id = null;
         }
 
+        $isArt = $this->typeScope($request) === 'art';
         $payload = [
             'name' => (string) $request->input('name', ''),
             'slug' => (string) $request->input('slug', ''),
             'parent_id' => (int) $request->input('parent_id', 0),
-            'mid' => $this->typeScope($request) === 'art' ? 2 : 1,
+            'mid' => $isArt ? 2 : 1,
             'sort' => (int) $request->input('sort', 0),
             'status' => (int) $request->input('status', 1),
             'seo_title' => (string) $request->input('seo_title', ''),
             'seo_keywords' => (string) $request->input('seo_keywords', ''),
             'seo_description' => (string) $request->input('seo_description', ''),
         ];
+        if ($isArt) {
+            $payload['kind'] = (string) $request->input('kind', 'list');
+            $payload['jump_url'] = (string) $request->input('jump_url', '');
+            $payload['page_size'] = (int) $request->input('page_size', 0);
+            $payload['pic'] = (string) $request->input('pic', '');
+            $payload['tpl_list'] = (string) $request->input('tpl_list', '');
+            $payload['tpl_detail'] = (string) $request->input('tpl_detail', '');
+        }
 
         $data = $this->videoService->saveVideoType($payload, $id);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
