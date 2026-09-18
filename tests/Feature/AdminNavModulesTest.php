@@ -290,6 +290,7 @@ class AdminNavModulesTest extends TestCase
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_chapters'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_types'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_pics'));
+        $this->assertSame('plugin', AdminNav::currentModule('/admin/video/manga_comments'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/chat_messages'));
         $this->assertSame('plugin', AdminNav::currentModule('/admin/video/chat_messages?nav=plugin'));
         $this->assertSame('vod', AdminNav::currentModule('/admin/video/danmaku'));

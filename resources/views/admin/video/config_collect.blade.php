@@ -20,7 +20,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">片子从资源站进来时按这里处理。改完点保存，<strong>下次采集</strong>才生效，已经进库的片子不会改。</p>
+            <p class="muted recycle-lead">片子从资源站进来时按这里处理。漫画采集源写入插件库，不走待审入库。改完点保存，<strong>下次采集</strong>才生效，已经进库的片子不会改。</p>
         <form class="settings-page collect-config-form" id="site-form">
             <h3>入库方式</h3>
             <input type="hidden" name="collect_to_temp" id="collect_to_temp" value="{{ $toTemp ? '1' : '0' }}">

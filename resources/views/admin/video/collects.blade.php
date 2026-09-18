@@ -14,6 +14,7 @@
             <input type="hidden" name="empty_bind">
             <input type="hidden" name="has_error">
             <input type="hidden" name="status">
+            <input type="hidden" name="mid">
             <input type="text" name="name" placeholder="搜名称或先贴接口" autocomplete="off">
             <button type="button" class="btn btn-sm" id="collect-source-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="collect-source-reset-btn">重置</button>
@@ -21,10 +22,14 @@
         <div class="queue-chips" id="collect-queues">
             <button type="button" class="chip" data-queue="">全部</button>
             <button type="button" class="chip" data-queue="status" data-value="1">启用</button>
+            <button type="button" class="chip" data-queue="mid" data-value="1">影片</button>
+            @if($mangaReady ?? false)
+                <button type="button" class="chip" data-queue="mid" data-value="2">漫画</button>
+            @endif
             <button type="button" class="chip" data-queue="empty_bind" data-value="1">未绑定</button>
             <button type="button" class="chip" data-queue="has_error" data-value="1">有失败</button>
         </div>
-        <p class="muted recycle-lead">苹果 CMS 接口填 <code>api.php/provide/vod/</code>。先绑定分类，再采当天；未绑定的分类会跳过。不确定接口先去「<a href="/admin/video/tools/hub">试试接口</a>」，现成的站从「<a href="/admin/video/unions">推荐资源</a>」接入。</p>
+        <p class="muted recycle-lead">影片接口填 <code>api.php/provide/vod/</code>，漫画接口填 <code>api.php/provide/manga/</code>。先绑定分类，再采当天；未绑定的分类会跳过。漫画章节地址必须是图片 URL，阅读页链接不会再去抓图。不确定接口先去「<a href="/admin/video/tools/hub">试试接口</a>」，现成的站从「<a href="/admin/video/unions">推荐资源</a>」接入。网页列表请用「<a href="/admin/video/cj">网站采集</a>」。</p>
         <div id="collect-source-table" class="desk-table"></div>
     </div>
 </div>
@@ -41,6 +46,14 @@
             <option value="json">JSON</option>
             <option value="xml">XML</option>
         </select>
+        <label>写入到</label>
+        <select name="mid">
+            <option value="1">影片</option>
+            @if($mangaReady ?? false)
+                <option value="2">漫画</option>
+            @endif
+        </select>
+        <p class="muted field-hint">漫画走插件库。关掉漫画插件后这里不能再采漫画。</p>
         <label>附加参数</label>
         <input type="text" name="param" placeholder="一般留空">
         <label>状态</label>
@@ -55,7 +68,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var QUEUE_KEYS = ['empty_bind', 'has_error'];
+    var QUEUE_KEYS = ['empty_bind', 'has_error', 'mid'];
     var form = document.getElementById('collect-source-search');
 
     function cleanWhere(data) {
@@ -68,27 +81,27 @@
     }
     function markChips() {
         var status = form.status.value;
-        var active = '';
-        QUEUE_KEYS.forEach(function (k) {
-            if (form[k] && form[k].value === '1') active = k;
-        });
         U.qa('#collect-queues .chip').forEach(function (chip) {
             var key = chip.getAttribute('data-queue') || '';
             var val = chip.getAttribute('data-value') || '';
             var on = false;
-            if (key === '' && !active && status === '') on = true;
-            else if (key === 'status' && !active && status === val) on = true;
-            else if (key && key !== 'status' && active === key) on = true;
+            if (key === '') {
+                on = status === '' && QUEUE_KEYS.every(function (k) { return !form[k] || form[k].value === ''; });
+            } else if (key === 'status') {
+                on = status === val && QUEUE_KEYS.every(function (k) { return !form[k] || form[k].value === ''; });
+            } else if (form[key]) {
+                on = form[key].value === val && status === '';
+            }
             chip.classList.toggle('active', on);
         });
     }
     function applyQueue(key, value) {
         QUEUE_KEYS.forEach(function (k) { if (form[k]) form[k].value = ''; });
+        form.status.value = '';
         if (key === 'status') {
             form.status.value = value || '';
-        } else {
-            form.status.value = '';
-            if (key && form[key]) form[key].value = value || '1';
+        } else if (key && form[key]) {
+            form[key].value = value || '';
         }
         runSearch();
     }
@@ -98,6 +111,8 @@
     }
     function sourceHtml(d) {
         var badges = [];
+        if (parseInt(d.mid, 10) === 2) badges.push('<span class="badge badge-search">漫画</span>');
+        else badges.push('<span class="badge">影片</span>');
         if (!(parseInt(d.bind_count, 10) > 0)) badges.push('<span class="badge badge-warn">未绑定</span>');
         else badges.push('<span class="badge badge-ok">已绑 ' + U.escape(d.bind_count) + ' 类</span>');
         if (d.has_error) badges.push('<span class="badge badge-off">失败</span>');
@@ -164,6 +179,7 @@
                     name: row.name || '',
                     api_url: row.api_url || '',
                     api_type: row.api_type || 'auto',
+                    mid: row.mid == null ? '1' : String(row.mid),
                     param: row.param || '',
                     status: row.status == null ? '1' : String(row.status),
                     sort: row.sort == null ? 0 : row.sort
@@ -203,7 +219,9 @@
             var types = data.types || [];
             var locals = data.local_types || [];
             if (!types.length) { U.toast('接口没有返回分类', 'err'); return; }
-            var html = '<p class="hint">资源站分类对到本地栏目。未绑定的入库时会跳过。</p>';
+            var html = parseInt(row.mid, 10) === 2
+                ? '<p class="hint">资源站分类对到漫画分类。未绑定的入库时会跳过。章节只要图片地址，不要阅读页链接。</p>'
+                : '<p class="hint">资源站分类对到本地栏目。未绑定的入库时会跳过。</p>';
             html += '<p><button type="button" class="btn btn-muted btn-sm" id="collect-suggest-btn">按同名自动绑定</button></p>';
             html += '<table class="data"><thead><tr><th>资源分类</th><th>本地栏目</th></tr></thead><tbody>';
             types.forEach(function (t) {

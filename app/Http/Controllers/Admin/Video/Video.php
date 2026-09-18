@@ -583,7 +583,10 @@ class Video extends Controller
      */
     public function showCollectSources(): View|Factory
     {
-        return view('admin.video.collects');
+        return view('admin.video.collects', [
+            'mangaReady' => class_exists(\Plugins\Manga\Services\MangaCollectService::class)
+                && app(\Plugins\Manga\Services\MangaCollectService::class)->ready(),
+        ]);
     }
 
     /**
@@ -596,6 +599,7 @@ class Video extends Controller
             'status' => $request->input('status', ''),
             'empty_bind' => $request->input('empty_bind', ''),
             'has_error' => $request->input('has_error', ''),
+            'mid' => $request->input('mid', ''),
             'limit' => (int) $request->input('limit', 100),
         ];
         $data = $this->videoService->getCollectSourceLists($params);
@@ -616,6 +620,7 @@ class Video extends Controller
             'name' => (string)$request->input('name', ''),
             'api_url' => (string)$request->input('api_url', ''),
             'api_type' => (string)$request->input('api_type', 'auto'),
+            'mid' => (int) $request->input('mid', 1),
             'param' => (string)$request->input('param', ''),
             'status' => (int)$request->input('status', 1),
             'sort' => (int)$request->input('sort', 0),

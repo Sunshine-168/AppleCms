@@ -107,6 +107,9 @@ class SiteSetting extends Controller
             return view($views[$page], [
                 'site' => $this->settings->site(),
                 'receiveUrl' => url('/api/receive/vod'),
+                'receiveMangaUrl' => url('/api/receive/manga'),
+                'mangaReady' => class_exists(\Plugins\Manga\Services\MangaCollectService::class)
+                    && app(\Plugins\Manga\Services\MangaCollectService::class)->ready(),
             ]);
         }
         $extra = $this->settings->extraPages();

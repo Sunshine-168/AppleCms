@@ -13,7 +13,7 @@
         "modules": {
             "mangas": {
                 "title": "漫画",
-                "hint": "独立漫画库，不是影片分类。分类、章节、图片都在这页切换。",
+                "hint": "独立漫画库，不是影片分类。分类、章节、图片、评论都在这页切换。",
                 "model": "Plugins\\Manga\\Models\\Manga",
                 "search": "title",
                 "view": "manga::admin.board",
@@ -22,7 +22,8 @@
                     "pending",
                     "types",
                     "chapters",
-                    "pics"
+                    "pics",
+                    "comments"
                 ],
                 "default_desk": "works",
                 "fields": [
@@ -228,6 +229,46 @@
                     "url",
                     "sort"
                 ]
+            },
+            "manga_comments": {
+                "title": "漫画评论",
+                "hint": "前台漫画页发来的评论。存在插件自己的表，不是影片评论。",
+                "model": "Plugins\\Manga\\Models\\MangaComment",
+                "search": "content",
+                "redirect": "/admin/video/mangas?desk=comments",
+                "fields": [
+                    {
+                        "name": "manga_id",
+                        "label": "漫画ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "author_name",
+                        "label": "昵称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "content",
+                        "label": "内容",
+                        "type": "textarea"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "显示",
+                            "0": "待审 / 隐藏"
+                        }
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "manga_id",
+                    "author_name",
+                    "content",
+                    "status"
+                ]
             }
         },
         "sidebar_fold": {
@@ -256,6 +297,10 @@
                         {
                             "url": "/admin/video/mangas?desk=pics",
                             "label": "nav.manga_pics"
+                        },
+                        {
+                            "url": "/admin/video/mangas?desk=comments",
+                            "label": "nav.manga_comments"
                         }
                     ]
                 }

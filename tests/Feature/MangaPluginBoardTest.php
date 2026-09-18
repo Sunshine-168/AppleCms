@@ -35,9 +35,12 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('分类', $html);
         $this->assertStringContainsString('章节', $html);
         $this->assertStringContainsString('图片', $html);
+        $this->assertStringContainsString('评论', $html);
         $this->assertStringNotContainsString('nav-fold-nested', $html);
         $this->assertStringContainsString('/admin/video/mangas?desk=pending', $html);
         $this->assertStringContainsString("title: '名称'", $html);
+        $this->assertStringContainsString('manga-batch', $html);
+        $this->assertStringContainsString("{check: true, width: 36}", $html);
         $this->assertStringContainsString("/admin/video/' + module + '/list'", $html);
         $this->assertStringContainsString("/admin/video/' + module + '/save'", $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
@@ -79,6 +82,9 @@ class MangaPluginBoardTest extends TestCase
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/manga_pics')
             ->assertRedirect('/admin/video/mangas?desk=pics');
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/manga_comments')
+            ->assertRedirect('/admin/video/mangas?desk=comments');
     }
 
     public function test_save_and_list_decorate_manga_modules(): void
@@ -143,6 +149,77 @@ class MangaPluginBoardTest extends TestCase
         $this->assertSame(0, $chapters['code']);
         $this->assertSame('一人之下', $chapters['data']['data'][0]['manga_title'] ?? '');
         $this->assertGreaterThan(0, (int) ($chapters['data']['data'][0]['pic_count'] ?? 0));
+
+        $badType = $svc->save('manga_types', ['name' => '循环', 'parent_id' => $type['data']['id'] ?? 0], null);
+        $this->assertSame(0, $badType['code'] ?? 1);
+        $self = $svc->save('manga_types', ['parent_id' => $type['data']['id'] ?? 0], (int) ($type['data']['id'] ?? 0));
+        $this->assertSame(1, $self['code']);
+
+        $comment = $svc->save('manga_comments', [
+            'manga_id' => $row->id,
+            'author_name' => '审稿',
+            'content' => '后台补的评',
+            'status' => 1,
+        ], null);
+        $this->assertSame(0, $comment['code'], $comment['msg'] ?? '');
+        $comments = $svc->lists('manga_comments', ['limit' => 20, 'q' => '一人']);
+        $this->assertSame(0, $comments['code']);
+        $this->assertSame('一人之下', $comments['data']['data'][0]['manga_title'] ?? '');
+        $this->assertSame('显示', $comments['data']['data'][0]['status_label'] ?? '');
+
+        $types = $svc->lists('manga_types', ['limit' => 20]);
+        $top = collect($types['data']['data'] ?? [])->firstWhere('name', '热血');
+        $this->assertSame('顶级', $top['parent_name'] ?? '');
+    }
+
+    public function test_batch_status_recommend_and_comments(): void
+    {
+        $svc = app(SiteModuleService::class);
+        $a = $svc->save('mangas', ['title' => '批量甲', 'status' => 1, 'yid' => 1, 'recommend' => 0], null);
+        $b = $svc->save('mangas', ['title' => '批量乙', 'status' => 1, 'yid' => 0, 'recommend' => 0], null);
+        $this->assertSame(0, $a['code'] ?? 1, $a['msg'] ?? '');
+        $this->assertSame(0, $b['code'] ?? 1, $b['msg'] ?? '');
+        $idA = (int) ($a['data']['id'] ?? 0);
+        $idB = (int) ($b['data']['id'] ?? 0);
+
+        $off = $svc->batch('mangas', [$idA, $idB], 'status', 0);
+        $this->assertSame(0, $off['code'] ?? 1, $off['msg'] ?? '');
+        $this->assertSame(0, (int) Manga::query()->find($idA)?->status);
+        $this->assertSame(0, (int) Manga::query()->find($idB)?->status);
+
+        $rec = $svc->batch('mangas', [$idB], 'recommend', 1);
+        $this->assertSame(0, $rec['code'] ?? 1, $rec['msg'] ?? '');
+        $this->assertSame(1, (int) Manga::query()->find($idB)?->recommend);
+
+        $pass = $svc->batch('mangas', [$idA], 'yid', 0);
+        $this->assertSame(0, $pass['code'] ?? 1, $pass['msg'] ?? '');
+        $this->assertSame(0, (int) Manga::query()->find($idA)?->yid);
+
+        $on = $svc->batch('mangas', [$idB], 'status', 1);
+        $this->assertSame(0, $on['code'] ?? 1, $on['msg'] ?? '');
+        $comment = $svc->save('manga_comments', [
+            'manga_id' => $idB,
+            'author_name' => '审',
+            'content' => '先过再藏',
+            'status' => 1,
+        ], null);
+        $this->assertSame(0, $comment['code'] ?? 1, $comment['msg'] ?? '');
+        $cid = (int) ($comment['data']['id'] ?? 0);
+        $hide = $svc->batch('manga_comments', [$cid], 'status', 0);
+        $this->assertSame(0, $hide['code'] ?? 1, $hide['msg'] ?? '');
+        $this->assertSame(0, (int) \Plugins\Manga\Models\MangaComment::query()->find($cid)?->status);
+
+        $del = $svc->batch('manga_comments', [$cid], 'delete', '');
+        $this->assertSame(0, $del['code'] ?? 1, $del['msg'] ?? '');
+        $this->assertNull(\Plugins\Manga\Models\MangaComment::query()->find($cid));
+
+        $commentsDesk = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?desk=comments')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('manga-batch-on', $commentsDesk);
+        $this->assertStringContainsString('通过', $commentsDesk);
+        $this->assertStringContainsString('隐藏', $commentsDesk);
     }
 }
 
@@ -164,6 +241,7 @@ class MangaPluginDisabledTest extends TestCase
             ->get('/admin/video/mangas')
             ->assertNotFound();
         $this->get('/manga')->assertNotFound();
+        $this->get('/manga/history')->assertNotFound();
     }
 
     private function restoreMangaPlugin(): void

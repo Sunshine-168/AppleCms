@@ -20,15 +20,22 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">给别的程序 POST 片子进本站。去资源站拉片用「<a href="/admin/video/collects">采集源</a>」。是否先待审，在「<a href="/admin/video/config/collect">内容接入</a>」改。</p>
+            <p class="muted recycle-lead">给别的程序 POST 片子或漫画进本站。去资源站拉片用「<a href="/admin/video/collects">采集源</a>」。影片是否先待审，在「<a href="/admin/video/config/collect">内容接入</a>」改。</p>
         <form class="settings-page interface-config-form" id="site-form">
             <h3>接收地址</h3>
-            <p class="muted field-hint">只接受 POST。地址是 Laravel 路由 <code>/api/receive/vod</code>。</p>
-            <label for="inbound_receive_url">接口地址</label>
+            <p class="muted field-hint">只接受 POST。影片 <code>/api/receive/vod</code>@if($mangaReady ?? false)，漫画 <code>/api/receive/manga</code>@endif。密钥共用。</p>
+            <label for="inbound_receive_url">影片地址</label>
             <div class="field-inline">
                 <input id="inbound_receive_url" type="text" value="{{ $receiveUrl }}" readonly>
                 <button type="button" class="btn btn-muted" id="inbound-copy-url">复制</button>
             </div>
+            @if($mangaReady ?? false)
+                <label for="inbound_receive_manga_url">漫画地址</label>
+                <div class="field-inline">
+                    <input id="inbound_receive_manga_url" type="text" value="{{ $receiveMangaUrl ?? url('/api/receive/manga') }}" readonly>
+                    <button type="button" class="btn btn-muted" id="inbound-copy-manga-url">复制</button>
+                </div>
+            @endif
 
             <h3>入库密钥</h3>
             @if($hasKey)
@@ -53,7 +60,18 @@
                     <li><code>type_id</code> 本站分类 ID</li>
                     <li>也可把整条片子放在 <code>data</code> 里</li>
                 </ul>
-                <p class="muted">成功返回 <code>code: 0</code>。缺片名或密钥不对会失败。是否先停在待审入库，跟内容接入的开关相同。</p>
+                @if($mangaReady ?? false)
+                    <p>漫画 POST 到漫画地址，至少带作品名。章节图片用换行或 <code>###</code>，阅读页链接不会再抓。</p>
+                    <ul>
+                        <li><code>manga_name</code> 作品名（必填）</li>
+                        <li><code>manga_id</code> 对方站作品 ID（可选，用来续更）</li>
+                        <li><code>type_id</code> 本站漫画分类 ID</li>
+                        <li><code>manga_pic</code> / <code>manga_author</code> / <code>manga_content</code></li>
+                        <li><code>chapters</code> 数组：<code>name</code>、<code>pics</code></li>
+                        <li>或 <code>chapter_name</code> + <code>images</code>（HTML 里的 img 也可）</li>
+                    </ul>
+                @endif
+                <p class="muted">成功返回 <code>code: 0</code>。缺片名或密钥不对会失败。影片是否先停在待审入库，跟内容接入的开关相同。漫画直接进插件库。</p>
             </div>
 
             <div class="form-actions settings-save">
@@ -95,6 +113,7 @@
         btn.addEventListener('click', function () { copyText(input.value, msg); });
     }
     bindCopy('inbound-copy-url', 'inbound_receive_url', '已复制地址');
+    bindCopy('inbound-copy-manga-url', 'inbound_receive_manga_url', '已复制地址');
     var genBtn = document.getElementById('inbound-gen-key');
     var keyInput = document.getElementById('inbound_key');
     if (genBtn && keyInput) {

@@ -33,6 +33,8 @@
         @endvod
     </div>
 
+    @includeIf('manga::home')
+
     <div class="type-block">
         <h2>资讯 <a class="more" href="{{ vod_url('arts') }}">更多</a></h2>
         <div class="art-list">

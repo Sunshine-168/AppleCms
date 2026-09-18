@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Plugins\Manga\Services\MangaCollectService;
 
 class CollectIngestService
 {
@@ -31,6 +32,9 @@ class CollectIngestService
         $source = CollectSourceModel::query()->find($sourceId);
         if (! $source) {
             return Result::fail('采集源不存在');
+        }
+        if ($this->isMangaSource($source) && ! $this->mangaCollect()->ready()) {
+            return Result::fail('漫画插件未启用');
         }
         $fetched = $this->client->fetch((string) $source->api_url, [
             'ac' => 'list',
@@ -54,7 +58,10 @@ class CollectIngestService
         return Result::success([
             'types' => $types,
             'page' => $fetched['page'],
-            'local_types' => VideoTypeModel::query()->orderByDesc('sort')->orderBy('id')->get(['id', 'name', 'parent_id']),
+            'local_types' => $this->isMangaSource($source)
+                ? $this->mangaCollect()->localTypes()
+                : VideoTypeModel::query()->orderByDesc('sort')->orderBy('id')->get(['id', 'name', 'parent_id']),
+            'mid' => $this->isMangaSource($source) ? MangaCollectService::MID : 1,
         ]);
     }
 
@@ -155,6 +162,9 @@ class CollectIngestService
         if (! $source) {
             return Result::fail('采集源不存在');
         }
+        if ($this->isMangaSource($source) && ! $this->mangaCollect()->ready()) {
+            return Result::fail('漫画插件未启用');
+        }
         $start = max(1, (int) ($params['page'] ?? 1));
         $pages = max(1, (int) ($params['pages'] ?? 1));
         $hours = (int) ($params['hours'] ?? $params['h'] ?? 0);
@@ -173,7 +183,7 @@ class CollectIngestService
 
         for ($page = $start; $page < $start + $pages; $page++) {
             $query = [
-                'ac' => $ids !== '' ? 'detail' : 'videolist',
+                'ac' => $ids !== '' ? 'detail' : ($this->isMangaSource($source) ? 'detail' : 'videolist'),
                 'pg' => $page,
             ];
             if ($hours > 0) {
@@ -289,6 +299,9 @@ class CollectIngestService
     /** @param  array<string, mixed>  $item */
     private function upsert(CollectSourceModel $source, array $item, bool $allowTemp = true): array
     {
+        if ($this->isMangaSource($source)) {
+            return $this->mangaCollect()->upsert($source, $item, true);
+        }
         $title = app(SynonymService::class)->expand(trim((string) ($item['vod_name'] ?? '')));
         if ($title === '') {
             return ['action' => 'skipped', 'msg' => '无标题', 'title' => ''];
@@ -601,6 +614,16 @@ class CollectIngestService
         }
 
         return $value;
+    }
+
+    private function isMangaSource(CollectSourceModel $source): bool
+    {
+        return class_exists(MangaCollectService::class) && (int) ($source->mid ?? 1) === MangaCollectService::MID;
+    }
+
+    private function mangaCollect(): MangaCollectService
+    {
+        return app(MangaCollectService::class);
     }
 
     /** @return array<string, int> */

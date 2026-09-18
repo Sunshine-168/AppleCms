@@ -20,10 +20,11 @@
                 <tr><td><code>&amp;t=分类ID &amp;wd=关键词 &amp;pg=页码 &amp;h=小时</code></td><td>筛选参数</td></tr>
                 <tr><td><code>&amp;at=xml</code></td><td>输出 XML，默认 JSON</td></tr>
                 <tr><td><code>GET /api/app/vod</code></td><td>APP 列表，可另设密钥</td></tr>
-                <tr><td><code>POST /api/receive/vod</code></td><td>站外入库，在入库接口里配密钥</td></tr>
+                <tr><td><code>POST /api/receive/vod</code></td><td>站外入库影片，在入库接口里配密钥</td></tr>
+                <tr><td><code>POST /api/receive/manga</code></td><td>站外入库漫画（插件开启时），密钥同上</td></tr>
             </tbody>
         </table>
-        <p class="muted field-hint">对方后台采集源填本站 provide 地址。没有文章 / 演员单独接口。</p>
+        <p class="muted field-hint">对方后台采集源填本站 provide 地址。漫画采集走采集源写入到「漫画」，或 POST 入库接口。没有演员单独接口。</p>
     </div>
 </div>
 @endsection

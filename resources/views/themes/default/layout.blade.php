@@ -15,6 +15,7 @@
     {!! $site['theme_head_code'] !!}
     @endif
     <link rel="stylesheet" href="{{ asset('css/vod.css') }}">
+    @stack('head')
     @if(!empty($site['theme_primary']))
     <style>:root{--vod-primary: {{ $site['theme_primary'] }};}</style>
     @endif
@@ -31,6 +32,7 @@
             @endif
         </a>
         <nav class="main">
+            @includeIf('manga::nav')
             @vodType(['type' => 'top'])
                 <a href="{{ $item->url }}">{{ $item->name }}</a>
             @endvodType
@@ -64,7 +66,6 @@
                     <a href="{{ $navUrl }}">{{ $navName }}</a>
                 @endif
             @endfor
-            @includeIf('manga::nav')
             @includeIf('mall::nav')
             @unless(View::exists('advert::top'))
             @vodAd(['slot' => 'header'])
@@ -72,9 +73,15 @@
             @endvodAd
             @endunless
         </nav>
+        @if(request()->is('manga*'))
+        <form class="search" action="{{ url('/manga') }}" method="get">
+            <input type="search" name="wd" value="{{ request('wd') }}" placeholder="搜漫画">
+        </form>
+        @else
         <form class="search" action="{{ vod_url('search') }}" method="get">
             <input type="search" name="wd" value="{{ request('wd', request('q')) }}" placeholder="搜影片">
         </form>
+        @endif
         <nav class="main">
             @auth('member')
                 <a href="{{ url('/member') }}">{{ auth('member')->user()->name }}</a>
@@ -143,5 +150,6 @@ window.vodResult = function (res, fallback) {
     return ok;
 };
 </script>
+@stack('scripts')
 </body>
 </html>

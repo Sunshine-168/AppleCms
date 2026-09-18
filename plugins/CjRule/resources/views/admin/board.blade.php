@@ -42,7 +42,7 @@
     </div>
     <div class="card-body">
         @if($desk !== 'form')
-            <p class="muted recycle-lead">从网页、RSS 或 JSON 把内容采进影片、文章或漫画。不是资源站接口；日常接苹果 CMS 请用<a href="/admin/video/collects">采集源</a>。先试抓，标题对了再启用。漫画只会建作品条目，不会编造章节和图片。</p>
+            <p class="muted recycle-lead">从网页、RSS 或 JSON 把内容采进影片、文章或漫画。不是资源站接口；日常接苹果 CMS 请用<a href="/admin/video/collects">采集源</a>。先试抓，标题对了再启用。漫画列表页只建作品，章节和图片请走采集源（漫画接口）或入库接口。</p>
             <div class="queue-chips">
                 <a class="chip{{ $desk === 'rules' ? ' active' : '' }}" href="/admin/video/cj">任务</a>
                 <a class="chip{{ $desk === 'logs' ? ' active' : '' }}" href="/admin/video/cj?desk=logs">运行日志</a>
@@ -78,7 +78,7 @@
                     @foreach([
                         'vod' => ['影片', '进片库。有 m3u8 / mp4 才能当真播'],
                         'art' => ['文章', '进文章库，列表简介当正文'],
-                        'manga' => ['漫画', $mangaReady ? '进漫画库，只建作品，不编造章节' : '漫画插件未启用'],
+                        'manga' => ['漫画', $mangaReady ? '进漫画库，只建作品。章节请用采集源或入库接口' : '漫画插件未启用'],
                     ] as $value => $meta)
                         <label class="collector-type{{ $into === $value ? ' is-on' : '' }}">
                             <input type="radio" name="into" value="{{ $value }}" @checked($into === $value) @disabled($value === 'manga' && ! $mangaReady)>

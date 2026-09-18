@@ -111,6 +111,7 @@ class PluginAdminTest extends TestCase
             $this->assertStringContainsString('/admin/video/mangas?desk=types', $html);
             $this->assertStringContainsString('/admin/video/mangas?desk=chapters', $html);
             $this->assertStringContainsString('/admin/video/mangas?desk=pics', $html);
+            $this->assertStringContainsString('/admin/video/mangas?desk=comments', $html);
             $this->assertStringNotContainsString('mod-refresh', $html);
             $this->assertStringNotContainsString('>刷新<', $html);
             $this->assertStringNotContainsString('placeholder="host"', $html);

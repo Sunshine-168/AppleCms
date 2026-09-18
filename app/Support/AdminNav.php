@@ -707,6 +707,7 @@ class AdminNav
             '/admin/video/manga_chapters' => 'plugin',
             '/admin/video/manga_types' => 'plugin',
             '/admin/video/manga_pics' => 'plugin',
+            '/admin/video/manga_comments' => 'plugin',
             '/admin/video/ads' => 'site',
             '/admin/video/players' => 'site',
             '/admin/video/links' => 'site',
@@ -987,6 +988,7 @@ class AdminNav
             '/admin/video/manga_chapters' => true,
             '/admin/video/manga_types' => true,
             '/admin/video/manga_pics' => true,
+            '/admin/video/manga_comments' => true,
         ];
         $out = $groups[0]['items'] ?? [];
         $foldExtra = [];

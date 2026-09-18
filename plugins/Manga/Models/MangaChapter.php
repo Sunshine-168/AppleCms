@@ -18,6 +18,10 @@ class MangaChapter extends Model
     protected static function booted(): void
     {
         static::saved(function (MangaChapter $chapter): void {
+            $mangaId = (int) $chapter->manga_id;
+            if ($mangaId > 0 && Schema::hasTable('plugin_mangas')) {
+                Manga::query()->where('id', $mangaId)->update(['updated_at' => time()]);
+            }
             if (! Schema::hasTable('plugin_manga_pics')) {
                 return;
             }

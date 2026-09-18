@@ -1141,6 +1141,9 @@ class VideoService
         if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
             $where[] = ['status', '=', (int) $params['status']];
         }
+        if (array_key_exists('mid', $params) && $params['mid'] !== '' && $params['mid'] !== null) {
+            $where[] = ['mid', '=', (int) $params['mid']];
+        }
 
         $data = $this->collectSourceModel->paginates($where, '*', $limit, ['sort' => 'desc', 'id' => 'desc']);
         $rows = $data['data'] ?? [];
@@ -1164,6 +1167,8 @@ class VideoService
             $item['has_error'] = $err !== '';
             $item['has_break'] = (int) ($item['last_page'] ?? 0) > 0;
             $item['last_error'] = $err;
+            $item['mid'] = (int) ($item['mid'] ?? 1);
+            $item['mid_label'] = $item['mid'] === 2 ? '漫画' : '影片';
             $item['last_collect_at_text'] = $lastAt > 0 ? date('Y-m-d H:i', $lastAt) : '';
             $item['api_host'] = is_string($host) && $host !== '' ? $host : $url;
             $item['created_at_text'] = ! empty($item['created_at']) ? date('Y-m-d H:i:s', (int) $item['created_at']) : '';
@@ -1205,12 +1210,22 @@ class VideoService
         if ($apiUrl === '') {
             return Result::fail('请填写接口地址');
         }
+        $mid = (int) ($data['mid'] ?? 1) === 2 ? 2 : 1;
+        if ($mid === 2) {
+            $manga = class_exists(\Plugins\Manga\Services\MangaCollectService::class)
+                ? app(\Plugins\Manga\Services\MangaCollectService::class)
+                : null;
+            if (! $manga || ! $manga->ready()) {
+                return Result::fail('漫画插件未启用');
+            }
+        }
 
         $now = time();
         $candidate = [
             'name' => $name,
             'api_url' => $apiUrl,
             'api_type' => (string)($data['api_type'] ?? 'auto'),
+            'mid' => $mid,
             'param' => (string)($data['param'] ?? ''),
             'status' => (int)($data['status'] ?? 1),
             'sort' => (int)($data['sort'] ?? 0),
@@ -1251,6 +1266,11 @@ class VideoService
         if ($useCount > 0)
         {
             return Result::fail('该采集源已被视频使用，无法删除');
+        }
+        if (class_exists(\Plugins\Manga\Models\Manga::class) && Schema::hasTable('plugin_mangas') && Schema::hasColumn('plugin_mangas', 'collect_source_id')) {
+            if (\Plugins\Manga\Models\Manga::query()->where('collect_source_id', $id)->exists()) {
+                return Result::fail('该采集源已被漫画使用，无法删除');
+            }
         }
 
         $ok = $this->collectSourceModel->deleteById($id);
