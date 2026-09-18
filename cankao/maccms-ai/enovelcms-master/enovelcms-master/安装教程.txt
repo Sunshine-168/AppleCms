@@ -1,0 +1,39 @@
+================EnovelCms 技术栈介绍==================
+
+EnovelCms v 1.5.5 技术架构：
+
+后端：PHP 8.0+（兼容至 8.4），MySQL 5.7+。
+前端：原生 HTML5 + CSS3 + JavaScript（FontAwesome 图标）。
+依赖库：PHPMailer（邮件发送）、ZipArchive（主题/规则导入导出）。
+设计模式：面向对象，PDO/MySQLi 双驱动数据库类。
+编码标准：UTF-8，响应式设计。
+
+================EnovelCms 安装教程==================
+
+1、请将本目录所有文件上传到网站根目录
+2、将将PHP版本控制到PHP8.0-8.4，推荐使用PHP8.2，并支持PDO或者MySQLI
+3、请保持MySQL版本为5.6-5.7，其他数据库版本请自行测试
+4、需要的PHP扩展：fileinfo，（宝塔PHP已默认安装：mbstring、json、session、zip、gd、curl、PDO、Mysqli）
+5、运行http(s)://你的域名/install/install.php
+
+================Nginx伪静态规则==================
+
+location / {
+    try_files $uri $uri/ /index.php?$args;
+}
+location /novel/ {
+    rewrite ^/novel/(\d+)/?$ /index.php?action=novel&id=$1 last;
+}
+location /read/ {
+    rewrite ^/read/(\d+)/(\d+)/?$ /index.php?action=read&novel_id=$1&chapter_id=$2 last;
+}
+location /user/ {
+    rewrite ^/user/?$ /index.php?user=index last;
+    rewrite ^/user/([a-z]+)/?$ /index.php?user=$1 last;
+}
+================EnovelCms 帮助介绍==================
+
+官网：https://www.enovelcms.cn/
+技术社区：https://www.wslogs.cn/
+官方 QQ 群：162244086
+提供免费的基础使用指导，商业授权及定制开发请联系作者。

@@ -313,18 +313,32 @@ class MangaCollectService
         if ($url === '') {
             return [];
         }
-        $url = str_replace('###', "\n", $url);
+        // ### 是多图分隔；# 是分话分隔。先把 ### 换成换行，避免被 explode('#') 拆碎。
+        $url = str_replace(['||', '###'], ['//', "\n"], $url);
         if ($from === '') {
             $from = 'default';
         }
         $out = [];
         foreach ($this->parser->parse($from, $url) as $group) {
             foreach ($group['episodes'] as $ep) {
-                $out[] = [
-                    'name' => (string) ($ep['name'] ?? ''),
-                    'pics' => (string) ($ep['url'] ?? ''),
-                    'sort' => (int) ($ep['num'] ?? (count($out) + 1)),
-                ];
+                $name = trim((string) ($ep['name'] ?? ''));
+                $pics = trim((string) ($ep['url'] ?? ''));
+                if ($name === '' && $pics === '') {
+                    continue;
+                }
+                // 纯图片行（无话名）并入上一话
+                if ($name !== '' && ! str_contains($name, '/') && ! preg_match('#^https?://#i', $name)) {
+                    $out[] = [
+                        'name' => $name,
+                        'pics' => $pics,
+                        'sort' => (int) ($ep['num'] ?? (count($out) + 1)),
+                    ];
+                    continue;
+                }
+                if ($out !== []) {
+                    $last = count($out) - 1;
+                    $out[$last]['pics'] = trim($out[$last]['pics']."\n".$name.($pics !== '' ? "\n".$pics : ''));
+                }
             }
         }
 
@@ -334,11 +348,11 @@ class MangaCollectService
     private function looksLikeImage(string $url): bool
     {
         $path = strtolower((string) (parse_url($url, PHP_URL_PATH) ?: $url));
-        if (preg_match('/\.(jpe?g|png|webp|gif|bmp|avif)(\?|$)/i', $path) === 1) {
-            return true;
+        if (preg_match('/\.(html?|php|asp|aspx|jsp)(\?|$)/i', $path) === 1) {
+            return false;
         }
 
-        return (bool) preg_match('#/(img|image|images|pic|pics|upload|uploads|cover|covers)/#i', $path);
+        return true;
     }
 
     private function findExisting(CollectSourceModel $source, string $collectId, string $title): ?Manga

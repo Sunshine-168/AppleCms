@@ -25,6 +25,8 @@ class CollectIndexPageTest extends TestCase
         $this->assertStringContainsString('新增采集源', $html);
         $this->assertStringContainsString('js-today', $html);
         $this->assertStringContainsString('未绑定', $html);
+        $this->assertStringContainsString('写入到', $html);
+        $this->assertStringContainsString('name="mid"', $html);
         $this->assertStringContainsString('/admin/video/tools/hub', $html);
         $this->assertStringContainsString('/admin/video/unions', $html);
         $this->assertStringNotContainsString('collect-source-refresh-btn', $html);

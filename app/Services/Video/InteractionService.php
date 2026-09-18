@@ -460,7 +460,7 @@ class InteractionService
 
     private function memberGroup(?Member $member): ?MemberGroup
     {
-        $gid = (int) ($member?->group_id ?? 0);
+        $gid = $member ? $member->effectiveGroupId() : 0;
         if ($gid < 1 || ! Schema::hasTable('member_groups')) {
             return null;
         }

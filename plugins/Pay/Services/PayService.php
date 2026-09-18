@@ -19,6 +19,7 @@ class PayService
     public function __construct(
         private readonly VideoSettingService $settings,
         private readonly MemberOrderService $orders,
+        private readonly PayChannelService $channels,
     ) {}
 
     public function wechatReady(): bool
@@ -33,6 +34,28 @@ class PayService
         return $this->opt('pay_alipay_appid') !== '' && $this->opt('pay_alipay_key') !== '';
     }
 
+    /** @return list<array<string, mixed>> */
+    public function checkoutChannels(): array
+    {
+        $list = [];
+        if ($this->wechatReady()) {
+            $list[] = ['value' => 'wechat', 'title' => '微信支付', 'driver' => 'wechat'];
+        }
+        if ($this->alipayReady()) {
+            $list[] = ['value' => 'alipay', 'title' => '支付宝', 'driver' => 'alipay'];
+        }
+        foreach ($this->channels->enabledForCheckout() as $row) {
+            $list[] = [
+                'value' => 'ch:'.$row['id'],
+                'title' => $row['title'],
+                'driver' => $row['driver'],
+                'hint' => $row['hint'],
+            ];
+        }
+
+        return $list;
+    }
+
     /** @return array{code:int,msg:string,data:array<string,mixed>} */
     public function create(Member $member, string $channel, float $yuan, int $couponUserId = 0): array
     {
@@ -40,12 +63,31 @@ class PayService
         if ($yuan < 0.01) {
             return Result::fail('金额无效');
         }
-        $channel = $channel === 'alipay' ? 'alipay' : 'wechat';
-        if ($channel === 'wechat' && ! $this->wechatReady()) {
+        $channel = trim($channel);
+        $payChannel = null;
+        $driverName = $channel;
+        if (str_starts_with($channel, 'ch:')) {
+            $payChannel = $this->channels->find((int) substr($channel, 3));
+            if (! $payChannel || (int) $payChannel->status !== 1) {
+                return Result::fail('支付通道不存在或已停用');
+            }
+            $driverName = strtolower(trim((string) $payChannel->driver));
+        } elseif ($channel === 'alipay') {
+            $driverName = 'alipay';
+        } elseif ($channel === 'wechat') {
+            $driverName = 'wechat';
+        } else {
+            return Result::fail('请选择支付方式');
+        }
+
+        if ($driverName === 'wechat' && ! $this->wechatReady()) {
             return Result::fail('未配置微信支付参数');
         }
-        if ($channel === 'alipay' && ! $this->alipayReady()) {
+        if ($driverName === 'alipay' && ! $this->alipayReady()) {
             return Result::fail('未配置支付宝参数');
+        }
+        if ($payChannel && ! $this->channels->driverFor($payChannel)) {
+            return Result::fail('未知支付驱动');
         }
         if (! Schema::hasTable('member_orders')) {
             return Result::fail('订单表不存在');
@@ -76,7 +118,7 @@ class PayService
             'amount' => $payFen,
             'points' => $originalFen,
             'status' => 0,
-            'channel' => $channel,
+            'channel' => mb_substr($driverName, 0, 20),
             'trade_no' => '',
             'remark' => $discountFen > 0 ? '在线充值 券抵 '.$discountFen.' 分' : '在线充值',
             'created_at' => $now,
@@ -91,6 +133,9 @@ class PayService
         if (Schema::hasColumn('member_orders', 'coupon_discount')) {
             $payload['coupon_discount'] = $discountFen;
         }
+        if (Schema::hasColumn('member_orders', 'pay_channel_id')) {
+            $payload['pay_channel_id'] = $payChannel ? (int) $payChannel->id : 0;
+        }
         $order = MemberOrder::query()->create($payload);
         if ($couponUserId > 0) {
             $hold = app(\Plugins\Coupon\Services\CouponService::class)->reserve($couponUserId, (int) $member->id, (int) $order->id, (string) $order->order_no);
@@ -104,7 +149,9 @@ class PayService
             }
         }
 
-        if ($channel === 'wechat') {
+        if ($payChannel) {
+            $pay = $this->channels->create($order, $payChannel);
+        } elseif ($driverName === 'wechat') {
             $pay = $this->wechatNative($order);
         } else {
             $pay = $this->alipayPage($order);
@@ -122,6 +169,12 @@ class PayService
         }
 
         return Result::success(array_merge(['id' => $order->id, 'order_no' => $order->order_no], $pay['data'] ?? []), '已下单');
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    public function handleGatewayNotify(string $driver, array $payload): string
+    {
+        return $this->channels->notify($driver, $payload);
     }
 
     /** @return array{code:int,msg:string,data:array<string,mixed>} */

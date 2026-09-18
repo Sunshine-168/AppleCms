@@ -2,8 +2,8 @@
     "id": "cj_rule",
     "name": "网站采集",
     "name_en": "Site collect",
-    "description": "从网页、RSS 或 JSON 把内容采进影片、文章或漫画。先试抓再启用。漫画只建作品，不编造章节。日常接资源站请用采集源。内网地址会拒绝。",
-    "description_en": "Pull films, articles or manga from pages, RSS, or JSON. Preview does not write. Manga creates the work only, no fake chapters. Use collect sources for resource APIs. Private URLs are refused.",
+    "description": "从网页、RSS 或 JSON 把内容采进影片、文章或漫画。先试抓再启用。漫画列表只建作品；章节请用采集源或入库接口。日常接资源站请用采集源。内网地址会拒绝。",
+    "description_en": "Pull films, articles or manga from pages, RSS, or JSON. Preview does not write. Manga list creates the work only; chapters go through collect sources or receive API. Use collect sources for resource APIs. Private URLs are refused.",
     "version": "1.3.0",
     "enabled": true,
     "capability": "ready",
@@ -13,7 +13,7 @@
         "modules": {
             "cj": {
                 "title": "网站采集",
-                "hint": "从网页 / RSS / JSON 采进影片、文章或漫画。先试抓再启用。漫画只建作品。日常接资源站请用采集源。",
+                "hint": "从网页 / RSS / JSON 采进影片、文章或漫画。先试抓再启用。漫画列表只建作品；章节走采集源或入库接口。",
                 "model": "App\\Models\\Video\\VideoCjRule",
                 "search": "name",
                 "view": "cj_rule::admin.board",

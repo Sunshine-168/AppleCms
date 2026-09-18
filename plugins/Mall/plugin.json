@@ -2,9 +2,9 @@
     "id": "mall",
     "name": "积分商城",
     "name_en": "Points mall",
-    "description": "用会员积分兑换。不接微信支付宝。会员组和积分卡密自动发，实物要改订单发货。",
-    "description_en": "Redeem member points. No WeChat/Alipay. VIP group and card codes auto-grant; physical goods wait for ship.",
-    "version": "1.1.0",
+    "description": "用会员积分兑换会员时长、积分卡密或周边。不接微信支付宝。",
+    "description_en": "Redeem points for VIP days, card packs, or merch. No WeChat/Alipay.",
+    "version": "1.2.0",
     "enabled": true,
     "capability": "ready",
     "group": "member",
@@ -13,7 +13,7 @@
         "modules": {
             "mall_goods": {
                 "title": "积分商城",
-                "hint": "用会员积分兑换。不接微信支付宝。苹果那三类里，本站做会员组和积分卡密；实物仍要改订单发货。",
+                "hint": "用会员积分兑换会员时长、积分卡密或周边。不接微信支付宝。",
                 "model": "Plugins\\Mall\\Models\\MallGood",
                 "search": "name",
                 "view": "mall::admin.board",
@@ -30,9 +30,9 @@
                         "label": "类型",
                         "type": "select",
                         "options": {
-                            "goods": "实物发货",
-                            "vip": "会员组",
-                            "card": "积分卡密"
+                            "vip": "会员时长",
+                            "card": "积分卡密",
+                            "goods": "实物周边"
                         }
                     },
                     {
@@ -49,6 +49,15 @@
                         "name": "stock",
                         "label": "库存",
                         "type": "number"
+                    },
+                    {
+                        "name": "is_hot",
+                        "label": "热门",
+                        "type": "select",
+                        "options": {
+                            "0": "否",
+                            "1": "是"
+                        }
                     },
                     {
                         "name": "hint",
@@ -76,13 +85,15 @@
                     "type",
                     "points",
                     "stock",
+                    "sales",
+                    "is_hot",
                     "status",
                     "sort"
                 ]
             },
             "mall_orders": {
                 "title": "商城订单",
-                "hint": "会员兑换记录。实物改成已发货即完成。会员组和卡密兑换当时就完成。",
+                "hint": "会员兑换记录。实物改成已发货即完成。会员时长和卡密兑换当时就完成。",
                 "model": "Plugins\\Mall\\Models\\MallOrder",
                 "search": "goods_name",
                 "redirect": "/admin/video/mall_goods?desk=orders",
@@ -106,6 +117,16 @@
                         "name": "points",
                         "label": "积分",
                         "type": "number"
+                    },
+                    {
+                        "name": "contact",
+                        "label": "联系方式",
+                        "type": "text"
+                    },
+                    {
+                        "name": "address",
+                        "label": "收货备注",
+                        "type": "text"
                     },
                     {
                         "name": "remark",

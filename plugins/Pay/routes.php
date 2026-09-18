@@ -10,4 +10,8 @@ Route::middleware('web')->group(function () {
     Route::post('/pay/notify/wechat', [PayController::class, 'notifyWechat']);
     Route::post('/pay/notify/alipay', [PayController::class, 'notifyAlipay']);
     Route::get('/pay/return/alipay', [PayController::class, 'returnAlipay']);
+    Route::match(['get', 'post'], '/pay/notify/{driver}', [PayController::class, 'notifyGateway'])
+        ->where('driver', 'epay|dfpay');
+    Route::match(['get', 'post'], '/pay/return/{driver}', [PayController::class, 'returnGateway'])
+        ->where('driver', 'epay|dfpay');
 });

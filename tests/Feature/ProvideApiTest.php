@@ -59,5 +59,9 @@ class ProvideApiTest extends TestCase
         $this->postJson('/api/receive/vod', ['vod_name' => '测试片'])
             ->assertOk()
             ->assertJsonPath('code', 1);
+
+        $this->postJson('/api/receive/manga', ['manga_name' => '测试本'])
+            ->assertOk()
+            ->assertJsonPath('code', 1);
     }
 }

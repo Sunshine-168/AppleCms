@@ -170,29 +170,10 @@
     markChips();
 
     function bindLogo(formEl) {
-        var input = formEl.querySelector('input[name=logo]');
-        var btn = formEl.querySelector('.link-logo-upload-btn');
-        var preview = formEl.querySelector('.link-logo-preview');
-        function sync(url) {
-            url = String(url || '').trim();
-            if (url) { preview.src = url; preview.style.display = 'block'; }
-            else { preview.removeAttribute('src'); preview.style.display = 'none'; }
-        }
-        sync(input.value);
-        input.addEventListener('input', function () { sync(input.value); });
-        btn.addEventListener('click', function () {
-            U.pickFile('image/*').then(function (file) {
-                if (!file) return;
-                U.loading(true);
-                return U.upload(file).then(function (res) {
-                    U.loading(false);
-                    if (res && res.code === 0 && res.data && res.data.url) {
-                        input.value = res.data.url;
-                        sync(res.data.url);
-                        U.toast('上传成功', 'ok');
-                    } else U.toast((res && res.msg) || '上传失败', 'err');
-                });
-            });
+        U.bindImageField(formEl, {
+            input: 'input[name=logo]',
+            btn: '.link-logo-upload-btn',
+            preview: '.link-logo-preview'
         });
     }
 

@@ -53,6 +53,11 @@ class CollectConfigPageTest extends TestCase
         $this->assertStringContainsString('inbound-gen-key', $html);
         $this->assertStringContainsString('vod_name', $html);
         $this->assertStringContainsString('怎么推', $html);
+        if (class_exists(\Plugins\Manga\Services\MangaCollectService::class)
+            && app(\Plugins\Manga\Services\MangaCollectService::class)->ready()) {
+            $this->assertStringContainsString('/api/receive/manga', $html);
+            $this->assertStringContainsString('manga_name', $html);
+        }
         $this->assertStringContainsString('/admin/video/config/collect', $html);
         $this->assertStringContainsString('site-save', $html);
         $this->assertStringNotContainsString('>采集先入临时表<', $html);

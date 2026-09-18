@@ -100,6 +100,7 @@
             <input type="text" name="cover" placeholder="图片地址">
             <button type="button" class="btn btn-sm js-cover-pick">上传</button>
         </div>
+        <img class="img-preview js-cover-preview" alt="">
         <label>连载</label>
         <select name="serialize">
             <option value="0">连载</option>
@@ -167,7 +168,11 @@
         <input type="number" name="sort" value="0">
         <label>图片地址</label>
         <textarea name="pics" rows="8" placeholder="每行一条，http(s) 或 / 开头的站内路径"></textarea>
-        <p class="muted field-hint">图片地址每行一条。保存后会写入图片表。javascript: 不会收录。</p>
+        <div class="field-inline" style="margin-top:8px">
+            <button type="button" class="btn btn-sm js-pics-upload">上传并追加</button>
+        </div>
+        <img class="img-preview js-pics-preview" alt="">
+        <p class="muted field-hint">图片地址每行一条。可上传追加。保存后会写入图片表。javascript: 不会收录。</p>
     </form>
 </template>
 
@@ -179,7 +184,11 @@
         <label>章节ID</label>
         <input type="number" name="chapter_id" required>
         <label>图片地址</label>
-        <input type="text" name="url" required placeholder="http(s) 或 / 开头">
+        <div class="field-inline">
+            <input type="text" name="url" required placeholder="http(s) 或 / 开头">
+            <button type="button" class="btn btn-sm js-pic-pick">上传</button>
+        </div>
+        <img class="img-preview js-pic-preview" alt="">
         <label>排序</label>
         <input type="number" name="sort" value="0">
     </form>
@@ -434,19 +443,53 @@
             sort: row.sort == null ? 0 : row.sort
         };
     }
-    function bindCoverPick(body) {
-        var btn = body.querySelector('.js-cover-pick');
-        var input = body.querySelector('[name=cover]');
-        if (!btn || !input) return;
-        btn.addEventListener('click', function () {
+    function bindImageFields(body) {
+        U.bindImageField(body, {
+            input: '[name=cover]',
+            btn: '.js-cover-pick',
+            preview: '.js-cover-preview'
+        });
+        U.bindImageField(body, {
+            input: '[name=url]',
+            btn: '.js-pic-pick',
+            preview: '.js-pic-preview'
+        });
+        var pics = body.querySelector('textarea[name=pics]');
+        var picsBtn = body.querySelector('.js-pics-upload');
+        var picsPreview = body.querySelector('.js-pics-preview');
+        if (!pics || !picsBtn) return;
+        function lastPicUrl() {
+            var lines = String(pics.value || '').split(/\r?\n/);
+            for (var i = lines.length - 1; i >= 0; i--) {
+                var line = String(lines[i] || '').trim();
+                if (line) return line;
+            }
+            return '';
+        }
+        function syncPicsPreview() {
+            var url = lastPicUrl();
+            if (!picsPreview) return;
+            if (url) {
+                picsPreview.src = url;
+                picsPreview.style.display = 'block';
+            } else {
+                picsPreview.removeAttribute('src');
+                picsPreview.style.display = 'none';
+            }
+        }
+        syncPicsPreview();
+        pics.addEventListener('input', syncPicsPreview);
+        picsBtn.addEventListener('click', function () {
             U.pickFile('image/*').then(function (file) {
                 if (!file) return;
                 U.loading(true);
                 return U.upload(file).then(function (res) {
                     U.loading(false);
                     if (res && res.code === 0 && res.data && res.data.url) {
-                        input.value = res.data.url;
-                        U.toast('上传成功', 'ok');
+                        var cur = String(pics.value || '').replace(/\s+$/, '');
+                        pics.value = cur ? (cur + '\n' + res.data.url) : res.data.url;
+                        syncPicsPreview();
+                        U.toast('已追加', 'ok');
                     } else {
                         U.toast((res && res.msg) || '上传失败', 'err');
                     }
@@ -461,7 +504,7 @@
             content: document.getElementById(tplId()).innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), fill(mode, row));
-                bindCoverPick(body);
+                bindImageFields(body);
                 if (desk === 'types' && mode === 'edit' && row.id) {
                     var opt = body.querySelector('select[name=parent_id] option[value="' + row.id + '"]');
                     if (opt) opt.remove();

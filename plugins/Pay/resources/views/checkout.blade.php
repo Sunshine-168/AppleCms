@@ -1,11 +1,14 @@
 @extends('themes.default.layout')
 @section('content')
     <h1>在线充值</h1>
-    <p class="muted">1 元 = 100 积分。没有配密钥会直接失败，不会记成已付。优惠券只减实付现金，积分按套餐原价到账。积分商城不抵。</p>
+    <p class="muted">1 元 = 100 积分。可接微信 / 支付宝官方，或易支付、DfPay 等聚合通道。优惠券只减实付现金，积分按套餐原价到账。</p>
     @if($errors->any())
-        <p class="muted">{{ $errors->first() }}</p>
+        <p class="flash is-err">{{ $errors->first() }}</p>
     @endif
-    @php $coupons = is_array($coupons ?? null) ? $coupons : []; @endphp
+    @php
+        $coupons = is_array($coupons ?? null) ? $coupons : [];
+        $channels = is_array($channels ?? null) ? $channels : [];
+    @endphp
     @if($coupons !== [])
         <p>
             已领可用：
@@ -14,8 +17,8 @@
             @endforeach
         </p>
     @endif
-    @if(! $wechatReady && ! $alipayReady)
-        <p>未配置支付参数。后台「插件 → 在线支付」填微信 / 支付宝密钥后再试。有券也下不了单。</p>
+    @if($channels === [])
+        <p>暂无可用支付方式。后台配置微信 / 支付宝密钥，或在「支付通道」接入易支付 / DfPay。</p>
     @else
         <form method="post" action="{{ url('/member/pay') }}">
             @csrf
@@ -28,14 +31,13 @@
                 </select>
             </p>
             <p>
-                <label>渠道</label>
+                <label>支付方式</label>
                 <select name="channel">
-                    @if($wechatReady)
-                        <option value="wechat" @selected(old('channel', 'wechat') === 'wechat')>微信</option>
-                    @endif
-                    @if($alipayReady)
-                        <option value="alipay" @selected(old('channel') === 'alipay')>支付宝</option>
-                    @endif
+                    @foreach($channels as $ch)
+                        <option value="{{ $ch['value'] }}" @selected(old('channel', $channels[0]['value'] ?? '') === $ch['value'])>
+                            {{ $ch['title'] }}
+                        </option>
+                    @endforeach
                 </select>
             </p>
             @if($coupons !== [])
@@ -50,16 +52,10 @@
                         @endforeach
                     </select>
                 </p>
-                <p class="muted">实付按券算，积分按套餐原价到账。未达门槛或券不对场景会失败。全额抵成 0 元不成单。</p>
+                <p class="muted">实付按券算，积分按套餐原价到账。全额抵成 0 元不成单。</p>
             @endif
             <p><button type="submit">去支付</button></p>
         </form>
-        @if($wechatReady)
-            <p class="muted">微信回调：{{ url('/pay/notify/wechat') }}</p>
-        @endif
-        @if($alipayReady)
-            <p class="muted">支付宝回调：{{ url('/pay/notify/alipay') }}</p>
-        @endif
     @endif
     <p><a href="{{ url('/member') }}">返回会员中心</a></p>
 @endsection

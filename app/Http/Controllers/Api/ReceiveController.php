@@ -8,6 +8,7 @@ use App\Services\Video\VideoSettingService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Plugins\Manga\Services\MangaCollectService;
 
 class ReceiveController extends Controller
 {
@@ -30,6 +31,35 @@ class ReceiveController extends Controller
             ($result['action'] ?? '') === 'skipped' ? 1 : 0,
             (string) ($result['msg'] ?? 'ok'),
             $result
+        );
+    }
+
+    public function manga(Request $request, MangaCollectService $manga, VideoSettingService $settings): JsonResponse
+    {
+        $key = trim((string) $settings->get('inbound_key', ''));
+        if ($key === '' || ! hash_equals($key, (string) $request->input('key', $request->header('X-Inbound-Key', '')))) {
+            return Ajax::message(1, '入库密钥无效', []);
+        }
+        if (! $manga->ready()) {
+            return Ajax::message(1, '漫画插件未启用', []);
+        }
+        $item = $request->input('data', $request->all());
+        if (isset($item['data']) && is_array($item['data'])) {
+            $item = $item['data'];
+        }
+        if (! is_array($item)) {
+            return Ajax::message(1, '缺少 manga_name', []);
+        }
+        unset($item['key'], $item['data']);
+        if (trim((string) ($item['manga_name'] ?? $item['vod_name'] ?? '')) === '') {
+            return Ajax::message(1, '缺少 manga_name', []);
+        }
+        $result = $manga->ingestRemote($item);
+
+        return Ajax::message(
+            (int) ($result['code'] ?? 1),
+            (string) ($result['msg'] ?? 'ok'),
+            is_array($result['data'] ?? null) ? $result['data'] : $result
         );
     }
 }

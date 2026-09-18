@@ -461,6 +461,74 @@
         });
     }
 
+    function resolveEl(root, sel) {
+        if (!sel) return null;
+        if (typeof sel !== 'string') return sel;
+        return (root || document).querySelector(sel);
+    }
+
+    /**
+     * Bind image URL input + upload button + preview <img>.
+     * Creates .img-preview after .field-inline (or the input) when preview is missing.
+     */
+    function bindImageField(root, opts) {
+        opts = opts || {};
+        root = root || document;
+        var input = resolveEl(root, opts.input);
+        if (!input) return null;
+        var btn = resolveEl(root, opts.btn);
+        var preview = resolveEl(root, opts.preview);
+        if (!preview && opts.createPreview !== false) {
+            preview = document.createElement('img');
+            preview.className = 'img-preview' + (opts.previewClass ? ' ' + opts.previewClass : '');
+            preview.alt = '';
+            var after = input.closest('.field-inline') || input;
+            if (after.parentNode) after.parentNode.insertBefore(preview, after.nextSibling);
+        }
+        function sync(url) {
+            url = String(url == null ? input.value : url).trim();
+            if (!preview) return;
+            if (url) {
+                preview.src = url;
+                preview.style.display = 'block';
+                preview.hidden = false;
+            } else {
+                preview.removeAttribute('src');
+                preview.style.display = 'none';
+                preview.hidden = true;
+            }
+        }
+        sync(input.value);
+        if (!input._adminImageBound) {
+            input._adminImageBound = true;
+            input.addEventListener('input', function () { sync(input.value); });
+            input.addEventListener('change', function () { sync(input.value); });
+        }
+        if (btn && !btn._adminImageBound) {
+            btn._adminImageBound = true;
+            btn.addEventListener('click', function () {
+                pickFile(opts.accept || 'image/*').then(function (file) {
+                    if (!file) return;
+                    loading(true);
+                    return upload(file, opts.uploadUrl).then(function (res) {
+                        loading(false);
+                        if (res && res.code === 0 && res.data && res.data.url) {
+                            input.value = res.data.url;
+                            sync(res.data.url);
+                            toast(opts.okMsg || '上传成功', 'ok');
+                        } else {
+                            toast((res && res.msg) || '上传失败', 'err');
+                        }
+                    }).catch(function () {
+                        loading(false);
+                        toast('上传失败', 'err');
+                    });
+                });
+            });
+        }
+        return { sync: sync, input: input, preview: preview, btn: btn };
+    }
+
     global.AdminUi = {
         csrf: csrf,
         escape: escape,
@@ -480,6 +548,7 @@
         cleanWhere: cleanWhere,
         upload: upload,
         pickFile: pickFile,
+        bindImageField: bindImageField,
         on: function (sel, ev, fn) {
             var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
             if (el) el.addEventListener(ev, fn);

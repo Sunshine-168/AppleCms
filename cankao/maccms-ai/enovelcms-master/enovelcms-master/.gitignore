@@ -1,0 +1,27 @@
+# 敏感配置
+
+# 锁定文件
+data/install.lock
+data/upgrade.lock
+
+# 缓存、日志、上传文件
+data/cache/*
+data/admin/*.log
+data/crawler/*
+data/chapters/*
+data/covers/*
+assets/uploads/*
+
+# 备份
+old/
+
+# 临时文件
+*.tmp
+*.log
+*.sql
+*.zip
+
+# IDE
+.idea/
+.vscode/
+.DS_Store

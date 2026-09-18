@@ -2,18 +2,37 @@
     "id": "pay",
     "name": "在线支付",
     "name_en": "Online pay",
-    "description": "会员中心下单，微信 Native / 支付宝电脑网站支付。回调验签后加积分，没配密钥会失败。",
-    "description_en": "Create orders from the member center. WeChat Native and Alipay page pay credit points after a verified notify. Empty keys fail.",
-    "version": "1.1.0",
+    "description": "会员充值：微信 / 支付宝官方，以及可对接的易支付、DfPay 聚合通道。回调验签后加积分。",
+    "description_en": "Member recharge via WeChat/Alipay or pluggable Epay/DfPay gateways. Points credit after verified notify.",
+    "version": "1.2.0",
     "enabled": true,
     "capability": "ready",
     "group": "pay",
     "provider": "Plugins\\Pay\\PayServiceProvider",
     "admin": {
+        "modules": {
+            "pay_channels": {
+                "title": "支付通道",
+                "hint": "易支付 / DfPay 简化对接。填网关、商户号、密钥。官方微信支付宝仍在支付参数页。",
+                "model": "Plugins\\Pay\\Models\\PayChannel",
+                "search": "title",
+                "view": "pay::admin.channels",
+                "handler": "Plugins\\Pay\\Services\\PayChannelAdmin",
+                "fields": [
+                    {"name": "title", "label": "名称", "type": "text"},
+                    {"name": "driver", "label": "驱动", "type": "select", "options": {"epay": "易支付", "dfpay": "DfPay"}},
+                    {"name": "code", "label": "产品码", "type": "text"},
+                    {"name": "api_url", "label": "网关", "type": "text"},
+                    {"name": "mch_id", "label": "商户号", "type": "text"},
+                    {"name": "status", "label": "状态", "type": "select", "options": {"1": "启用", "0": "停用"}}
+                ],
+                "cols": ["id", "title", "driver", "code", "mch_id", "status", "sort"]
+            }
+        },
         "extra_pages": {
             "pay": {
                 "title": "支付参数",
-                "hint": "配齐后会员中心可以付钱。微信走 Native 扫码，支付宝走电脑网站支付。回调地址见会员中心说明。密钥留空会下单失败，后台仍可补录已付。",
+                "hint": "官方微信 Native / 支付宝电脑网站。聚合通道请到「支付通道」。密钥留空会下单失败，后台仍可补录已付。",
                 "fields": [
                     {"name": "pay_wechat_appid", "label": "微信 AppId", "type": "text"},
                     {"name": "pay_wechat_mchid", "label": "微信商户号", "type": "text"},
@@ -24,6 +43,15 @@
                 ]
             }
         },
+        "sidebar_fold": {
+            "users": [
+                {
+                    "url": "/admin/video/pay_channels",
+                    "icon": "credit-card",
+                    "label": "nav.pay_channels"
+                }
+            ]
+        },
         "catalog": {
             "more.member": [
                 {
@@ -31,11 +59,18 @@
                     "label": "item.config_pay",
                     "hint": "hint.config_pay",
                     "tag": "plugin"
+                },
+                {
+                    "url": "/admin/video/pay_channels",
+                    "label": "item.pay_channels",
+                    "hint": "hint.pay_channels",
+                    "tag": "plugin"
                 }
             ]
         },
         "settings_links": [
-            {"url": "/admin/video/config/pay", "label": "item.config_pay"}
+            {"url": "/admin/video/config/pay", "label": "item.config_pay"},
+            {"url": "/admin/video/pay_channels", "label": "item.pay_channels"}
         ]
     }
 }

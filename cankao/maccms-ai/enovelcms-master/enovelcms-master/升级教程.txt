@@ -1,0 +1,13 @@
+=======================升级教程=====================
+
+EnovelCms1.5.x升级到EnovelCms1.5.5
+
+升级前请务必备份网站文件和sql数据！
+
+步骤一：上传upgrade.zip到根目录，并解压
+
+步骤一：删除data/upgrade.lock
+
+步骤三：访问http(s)://你的域名/install/upgrade.php，按照页面提示进行升级！
+
+若有什么困难，请到官网https://www.enovelcms.cn留言或者QQ群：162244086寻求帮助！感谢您对EnovelCms的支持！

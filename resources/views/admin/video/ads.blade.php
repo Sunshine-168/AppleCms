@@ -77,6 +77,7 @@
             <span class="muted">图片或附件会写成标签插进代码。</span>
             <button type="button" class="btn btn-muted btn-sm" id="ad-insert-btn">插入图片</button>
         </div>
+        <img class="img-preview ad-insert-preview" alt="">
         <textarea name="content" class="ad-content" placeholder="HTML / 脚本，例如 &lt;a href=&quot;&quot;&gt;&lt;img src=&quot;&quot;&gt;&lt;/a&gt;"></textarea>
         <label>仅某分类</label>
         <select name="type_id">
@@ -243,6 +244,15 @@
     function bindInsert(formEl) {
         var ta = formEl.querySelector('[name=content]');
         var btn = formEl.querySelector('#ad-insert-btn');
+        var preview = formEl.querySelector('.ad-insert-preview');
+        function syncPreview(url) {
+            url = String(url || '').trim();
+            if (!preview) return;
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.removeAttribute('src'); preview.style.display = 'none'; }
+        }
+        var m = String(ta.value || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+        syncPreview(m ? m[1] : '');
         btn.addEventListener('click', function () {
             U.pickFile('image/*').then(function (file) {
                 if (!file) return;
@@ -251,6 +261,7 @@
                     U.loading(false);
                     if (res && res.code === 0 && res.data && res.data.url) {
                         insertAt(ta, '<a href="" target="_blank" rel="nofollow"><img src="' + res.data.url + '" alt=""></a>');
+                        syncPreview(res.data.url);
                         U.toast('已插入', 'ok');
                     } else U.toast((res && res.msg) || '上传失败', 'err');
                 });

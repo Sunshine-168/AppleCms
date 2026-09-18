@@ -312,7 +312,7 @@ class SiteModuleService
                     ['name' => 'order_no', 'label' => '单号', 'type' => 'text'],
                     ['name' => 'amount', 'label' => '金额分', 'type' => 'number'],
                     ['name' => 'points', 'label' => '积分', 'type' => 'number'],
-                    ['name' => 'channel', 'label' => '渠道', 'type' => 'select', 'options' => ['manual' => '人工', 'wechat' => '微信', 'alipay' => '支付宝']],
+                    ['name' => 'channel', 'label' => '渠道', 'type' => 'select', 'options' => ['manual' => '人工', 'wechat' => '微信', 'alipay' => '支付宝', 'epay' => '易支付', 'dfpay' => 'DfPay']],
                     ['name' => 'trade_no', 'label' => '支付流水', 'type' => 'text'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['0' => '待付', '1' => '已付', '2' => '关闭']],
                     ['name' => 'remark', 'label' => '备注', 'type' => 'text'],
@@ -3667,7 +3667,7 @@ class SiteModuleService
         if ($ids !== [] && Schema::hasTable('members')) {
             $members = Member::query()->whereIn('id', array_values(array_unique($ids)))->get(['id', 'name', 'email'])->keyBy('id');
         }
-        $channels = ['wechat' => '微信', 'alipay' => '支付宝', 'manual' => '人工'];
+        $channels = ['wechat' => '微信', 'alipay' => '支付宝', 'manual' => '人工', 'epay' => '易支付', 'dfpay' => 'DfPay'];
         $statuses = ['0' => '待付', '1' => '已付', '2' => '关闭'];
         foreach ($rows as &$row) {
             $mid = (int) ($row['member_id'] ?? 0);
@@ -7246,6 +7246,9 @@ class SiteModuleService
                 || array_key_exists('card_points', $data)
                 || array_key_exists('card_mode', $data)
                 || array_key_exists('mode', $data)
+                || array_key_exists('vip_days', $data)
+                || array_key_exists('days', $data)
+                || array_key_exists('auto_credit', $data)
                 || array_key_exists('type', $payload);
             if ($touchExt && $this->hasColumn(new \Plugins\Mall\Models\MallGood, 'ext')) {
                 $ext = [];
@@ -7258,8 +7261,15 @@ class SiteModuleService
                 if (array_key_exists('group_id', $data)) {
                     $ext['group_id'] = max(0, (int) $data['group_id']);
                 }
+                if (array_key_exists('vip_days', $data) || array_key_exists('days', $data)) {
+                    $ext['days'] = max(0, (int) ($data['vip_days'] ?? $data['days'] ?? 0));
+                    $ext['vip_days'] = $ext['days'];
+                }
                 if (array_key_exists('card_points', $data)) {
                     $ext['card_points'] = max(0, (int) $data['card_points']);
+                }
+                if (array_key_exists('auto_credit', $data)) {
+                    $ext['auto_credit'] = (int) $data['auto_credit'] === 1 ? 1 : 0;
                 }
                 $mode = strtolower(trim((string) ($data['card_mode'] ?? $data['mode'] ?? ($ext['card_mode'] ?? $ext['mode'] ?? 'generate'))));
                 if (! in_array($mode, ['generate', 'assign'], true)) {
@@ -7276,6 +7286,9 @@ class SiteModuleService
                     $payload['ext'] = json_encode($ext, JSON_UNESCAPED_UNICODE) ?: '';
                 }
             }
+            if (array_key_exists('is_hot', $payload) && $this->hasColumn(new \Plugins\Mall\Models\MallGood, 'is_hot')) {
+                $payload['is_hot'] = (int) $payload['is_hot'] === 1 ? 1 : 0;
+            }
 
             return null;
         }
@@ -7289,6 +7302,9 @@ class SiteModuleService
                 if ($status === 2 && $this->hasColumn(new \Plugins\Mall\Models\MallOrder, 'complete_at')) {
                     $payload['complete_at'] = time();
                 }
+            }
+            if (array_key_exists('remark', $payload)) {
+                $payload['remark'] = mb_substr(trim((string) $payload['remark']), 0, 250);
             }
 
             return null;
@@ -7307,8 +7323,17 @@ class SiteModuleService
             $row['status_label'] = (int) ($row['status'] ?? 0) === 1 ? '上架' : '下架';
             $ext = \Plugins\Mall\Services\MallService::decodeExt($row['ext'] ?? '');
             $row['group_id'] = (int) ($ext['group_id'] ?? 0);
+            $row['vip_days'] = (int) ($ext['days'] ?? $ext['vip_days'] ?? 0);
             $row['card_points'] = (int) ($ext['card_points'] ?? 0);
             $row['card_mode'] = (string) ($ext['card_mode'] ?? $ext['mode'] ?? 'generate');
+            $row['auto_credit'] = (int) ($ext['auto_credit'] ?? 0);
+            $row['is_hot'] = (int) ($row['is_hot'] ?? 0);
+            $row['sales'] = (int) ($row['sales'] ?? 0);
+            $row['pool_remain'] = 0;
+            if ($type === 'card' && $row['card_mode'] === 'assign') {
+                $row['pool_remain'] = app(\Plugins\Mall\Services\MallService::class)->poolRemain($ext);
+            }
+            $row['vip_days_label'] = \Plugins\Mall\Services\MallService::vipDaysLabel((int) $row['vip_days']);
         }
         unset($row);
 
@@ -7330,7 +7355,28 @@ class SiteModuleService
             };
             $delivery = \Plugins\Mall\Services\MallService::decodeExt($row['delivery'] ?? '');
             $code = strtoupper(trim((string) ($delivery['code'] ?? '')));
-            $row['delivery_label'] = $code !== '' ? $code : '';
+            $parts = [];
+            if ($code !== '') {
+                $parts[] = $code;
+                if ((int) ($delivery['auto_credit'] ?? 0) === 1) {
+                    $parts[] = '已到账';
+                }
+            }
+            if ($type === 'vip') {
+                $days = (int) ($delivery['days'] ?? 0);
+                $parts[] = \Plugins\Mall\Services\MallService::vipDaysLabel($days);
+                $exp = (int) ($delivery['expire_at'] ?? 0);
+                if ($exp > 0) {
+                    $parts[] = '至 '.date('Y-m-d', $exp);
+                }
+            }
+            $contact = trim((string) ($row['contact'] ?? ''));
+            if ($contact !== '') {
+                $parts[] = $contact;
+            }
+            $row['delivery_label'] = implode(' · ', $parts);
+            $row['contact'] = $contact;
+            $row['address'] = (string) ($row['address'] ?? '');
         }
         unset($row);
 

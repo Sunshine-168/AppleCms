@@ -40,6 +40,7 @@ class PayController extends Controller
             'member' => $member,
             'packages' => PayService::PACKAGES,
             'coupons' => $coupons,
+            'channels' => $this->pay->checkoutChannels(),
             'wechatReady' => $this->pay->wechatReady(),
             'alipayReady' => $this->pay->alipayReady(),
         ]);
@@ -114,5 +115,34 @@ class PayController extends Controller
         }
 
         return redirect('/member')->with('status', '已返回，到账以回调为准');
+    }
+
+    public function notifyGateway(Request $request, string $driver): Response
+    {
+        $payload = array_merge($request->query(), $request->request->all());
+
+        return response(
+            $this->pay->handleGatewayNotify($driver, is_array($payload) ? $payload : []),
+            200,
+            ['Content-Type' => 'text/plain; charset=UTF-8']
+        );
+    }
+
+    public function returnGateway(Request $request, string $driver): RedirectResponse
+    {
+        $no = trim((string) ($request->input('out_trade_no')
+            ?: $request->input('order_no')
+            ?: $request->input('orderno')
+            ?: ''));
+        // Best-effort settle on return (notify still authoritative).
+        if ($no !== '') {
+            $this->pay->handleGatewayNotify($driver, $request->all());
+        }
+        $order = $this->pay->findOrder($no);
+        if ($order) {
+            return redirect('/member/pay/'.$order->id);
+        }
+
+        return redirect('/member')->with('status', '已返回，到账以异步通知为准');
     }
 }

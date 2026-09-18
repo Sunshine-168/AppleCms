@@ -76,9 +76,17 @@
             </span>
         </div>
         <label>缩略图</label>
-        <input type="text" name="cover_thumb" placeholder="缩略图地址">
+        <div class="field-inline">
+            <input type="text" name="cover_thumb" class="topic-thumb-input" placeholder="缩略图地址">
+            <button type="button" class="btn btn-muted topic-thumb-upload-btn">上传</button>
+        </div>
+        <img class="img-preview topic-thumb-preview" alt="">
         <label>幻灯</label>
-        <input type="text" name="cover_slide" placeholder="幻灯图地址">
+        <div class="field-inline">
+            <input type="text" name="cover_slide" class="topic-slide-input" placeholder="幻灯图地址">
+            <button type="button" class="btn btn-muted topic-slide-upload-btn">上传</button>
+        </div>
+        <img class="img-preview topic-slide-preview" alt="">
         <label>模板</label>
         <input type="text" name="tpl" placeholder="空则用默认详情">
         <label>扩展分类</label>
@@ -195,29 +203,20 @@
     markChips();
 
     function bindCover(formEl) {
-        var input = formEl.querySelector('input[name=cover]');
-        var btn = formEl.querySelector('.topic-cover-upload-btn');
-        var preview = formEl.querySelector('.topic-cover-preview');
-        function sync(url) {
-            url = String(url || '').trim();
-            if (url) { preview.src = url; preview.style.display = 'block'; }
-            else { preview.removeAttribute('src'); preview.style.display = 'none'; }
-        }
-        sync(input.value);
-        input.addEventListener('input', function () { sync(input.value); });
-        btn.addEventListener('click', function () {
-            U.pickFile('image/*').then(function (file) {
-                if (!file) return;
-                U.loading(true);
-                return U.upload(file).then(function (res) {
-                    U.loading(false);
-                    if (res && res.code === 0 && res.data && res.data.url) {
-                        input.value = res.data.url;
-                        sync(res.data.url);
-                        U.toast('上传成功', 'ok');
-                    } else U.toast((res && res.msg) || '上传失败', 'err');
-                });
-            });
+        U.bindImageField(formEl, {
+            input: 'input[name=cover]',
+            btn: '.topic-cover-upload-btn',
+            preview: '.topic-cover-preview'
+        });
+        U.bindImageField(formEl, {
+            input: 'input[name=cover_thumb]',
+            btn: '.topic-thumb-upload-btn',
+            preview: '.topic-thumb-preview'
+        });
+        U.bindImageField(formEl, {
+            input: 'input[name=cover_slide]',
+            btn: '.topic-slide-upload-btn',
+            preview: '.topic-slide-preview'
         });
     }
 

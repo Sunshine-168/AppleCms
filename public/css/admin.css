@@ -4871,7 +4871,17 @@ input[type=datetime-local] {
 .field-inline { display: flex; gap: 8px; align-items: center; max-width: 720px; }
 .field-inline input { flex: 1; max-width: none; }
 .field-inline .btn { flex-shrink: 0; }
-.img-preview { max-width: 160px; max-height: 90px; border-radius: 4px; display: none; margin-top: 8px; }
+.img-preview {
+    display: none;
+    max-width: 180px;
+    max-height: 120px;
+    margin: 8px 0 4px;
+    border: 1px solid var(--border, #e5e6eb);
+    border-radius: 6px;
+    background: #f2f3f5;
+    object-fit: contain;
+    vertical-align: top;
+}
 .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .tpl-board { margin: 0 0 12px; }
 .tpl-board .recycle-lead { margin: 0 0 10px; }
