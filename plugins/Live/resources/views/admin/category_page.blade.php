@@ -30,32 +30,38 @@
         @if($isEdit && $count > 0)
             <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/lives?cate_id='.$id.'">'.e(admin_t('live.channels_n', ['n' => $count])).'</a>', e(admin_t('live.cate_linked'))) !!}</p>
         @endif
-        <form class="tag-form" id="live-category-form" style="max-width:520px">
+        <form class="admin-form tag-form" id="live-category-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <input type="hidden" name="desk" value="categories">
 
-            <label for="cate-name">{{ admin_t('live.category_name') }}</label>
-            <input id="cate-name" class="entry-title" type="text" name="name" value="{{ $name }}" required autofocus placeholder="{{ admin_t('live.ph_category_name') }}">
-            <p class="muted field-hint">{{ admin_t('live.category_hint') }}</p>
-
-            <label for="cate-slug">{{ admin_t('ui.slug') }}</label>
-            <input id="cate-slug" type="text" name="slug" value="{{ $slug }}" placeholder="{{ admin_t('live.ph_slug') }}">
-            <p class="muted field-hint">{{ admin_t('live.slug_hint') }}</p>
-
-            <label for="cate-pic">{{ admin_t('ui.image') }}</label>
-            <div class="field-inline">
-                <input id="cate-pic" type="text" name="pic" value="{{ $pic }}" placeholder="{{ admin_t('live.ph_cover') }}">
-                <button type="button" class="btn btn-sm" id="cate-pic-pick">{{ admin_t('ui.upload') }}</button>
+            <div class="form-field">
+                <label for="cate-name">{{ admin_t('live.category_name') }}</label>
+                <input id="cate-name" class="entry-title" type="text" name="name" value="{{ $name }}" required autofocus placeholder="{{ admin_t('live.ph_category_name') }}">
+                <p class="muted field-hint">{{ admin_t('live.category_hint') }}</p>
             </div>
-            <img class="img-preview" id="cate-pic-preview" alt="" @if($pic === '') style="display:none" @else src="{{ $pic }}" @endif>
-            <p class="muted field-hint">{{ admin_t('live.pic_hint') }}</p>
+
+            <div class="form-field">
+                <label for="cate-slug">{{ admin_t('ui.slug') }}</label>
+                <input id="cate-slug" type="text" name="slug" value="{{ $slug }}" placeholder="{{ admin_t('live.ph_slug') }}">
+                <p class="muted field-hint">{{ admin_t('live.slug_hint') }}</p>
+            </div>
+
+            <div class="form-field">
+                <label for="cate-pic">{{ admin_t('ui.image') }}</label>
+                <div class="field-inline">
+                    <input id="cate-pic" type="text" name="pic" value="{{ $pic }}" placeholder="{{ admin_t('live.ph_cover') }}">
+                    <button type="button" class="btn btn-sm" id="cate-pic-pick">{{ admin_t('ui.upload') }}</button>
+                </div>
+                <img class="img-preview" id="cate-pic-preview" alt="" @if($pic === '') style="display:none" @else src="{{ $pic }}" @endif>
+                <p class="muted field-hint">{{ admin_t('live.pic_hint') }}</p>
+            </div>
 
             <div class="live-dialog-grid">
-                <div>
+                <div class="form-field">
                     <label for="cate-sort">{{ admin_t('ui.sort') }}</label>
                     <input id="cate-sort" type="number" name="sort" value="{{ $sort }}">
                 </div>
-                <div>
+                <div class="form-field">
                     <label for="cate-status">{{ admin_t('ui.status') }}</label>
                     <select id="cate-status" name="status">
                         <option value="1" @selected($status === '1')>{{ admin_t('ui.enabled') }}</option>

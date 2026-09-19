@@ -144,49 +144,61 @@
 </div>
 
 <template id="channel-form">
-    <form class="tag-form live-channel-dialog">
+    <form class="admin-form tag-form live-channel-dialog">
         <input type="hidden" name="desk" value="channels">
         <input type="hidden" name="play_from" value="hls">
         <input type="hidden" name="hits" value="0">
 
         <h3>{{ admin_t('ui.basic') }}</h3>
-        <label for="live-dlg-title">{{ admin_t('live.channel_name') }}</label>
-        <input id="live-dlg-title" class="entry-title" name="title" required placeholder="{{ admin_t('live.ph_channel_title') }}" autofocus>
-        <label for="live-dlg-sub">{{ admin_t('ui.subtitle') }}</label>
-        <input id="live-dlg-sub" name="sub" placeholder="{{ admin_t('live.ph_subtitle') }}">
-        <label for="live-dlg-cate">{{ admin_t('ui.types') }}</label>
-        <select id="live-dlg-cate" name="cate_id">
-            <option value="0">{{ admin_t('ui.uncategorized') }}</option>
-            @foreach($categories as $category)
-                <option value="{{ $category->id }}">{{ $category->name }}</option>
-            @endforeach
-        </select>
-        <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/live-categories/create" target="_blank" rel="noopener">'.e(admin_t('live.new_category')).'</a>', e(admin_t('live.new_category_hint'))) !!}</p>
-
-        <label for="live-dlg-cover">{{ admin_t('ui.cover') }}</label>
-        <div class="field-inline">
-            <input id="live-dlg-cover" type="text" name="cover" placeholder="{{ admin_t('live.ph_cover') }}">
-            <button type="button" class="btn btn-sm live-cover-upload">{{ admin_t('ui.upload') }}</button>
+        <div class="form-field">
+            <label for="live-dlg-title">{{ admin_t('live.channel_name') }}</label>
+            <input id="live-dlg-title" class="entry-title" name="title" required placeholder="{{ admin_t('live.ph_channel_title') }}" autofocus>
         </div>
-        <img class="img-preview live-cover-preview" alt="" hidden>
+        <div class="form-field">
+            <label for="live-dlg-sub">{{ admin_t('ui.subtitle') }}</label>
+            <input id="live-dlg-sub" name="sub" placeholder="{{ admin_t('live.ph_subtitle') }}">
+        </div>
+        <div class="form-field">
+            <label for="live-dlg-cate">{{ admin_t('ui.types') }}</label>
+            <select id="live-dlg-cate" name="cate_id">
+                <option value="0">{{ admin_t('ui.uncategorized') }}</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+            </select>
+            <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/live-categories/create" target="_blank" rel="noopener">'.e(admin_t('live.new_category')).'</a>', e(admin_t('live.new_category_hint'))) !!}</p>
+        </div>
+
+        <div class="form-field">
+            <label for="live-dlg-cover">{{ admin_t('ui.cover') }}</label>
+            <div class="field-inline">
+                <input id="live-dlg-cover" type="text" name="cover" placeholder="{{ admin_t('live.ph_cover') }}">
+                <button type="button" class="btn btn-sm live-cover-upload">{{ admin_t('ui.upload') }}</button>
+            </div>
+            <img class="img-preview live-cover-preview" alt="" hidden>
+        </div>
 
         <h3>{{ admin_t('ui.playback') }}</h3>
-        <label for="live-dlg-urls">{{ admin_t('live.play_urls') }}</label>
-        <textarea id="live-dlg-urls" name="urls" rows="5" placeholder="{{ admin_t('live.ph_urls_example') }}"></textarea>
-        <p class="muted field-hint">{{ admin_t('live.play_urls_hint') }}</p>
+        <div class="form-field">
+            <label for="live-dlg-urls">{{ admin_t('live.play_urls') }}</label>
+            <textarea id="live-dlg-urls" name="urls" rows="5" placeholder="{{ admin_t('live.ph_urls_example') }}"></textarea>
+            <p class="muted field-hint">{{ admin_t('live.play_urls_hint') }}</p>
+        </div>
 
         <h3>{{ admin_t('ui.display') }}</h3>
         @if($hasRecommend)
-            <label for="live-dlg-rec">{{ admin_t('ui.recommend_level') }}</label>
-            <input id="live-dlg-rec" type="number" name="recommend" min="0" max="9" value="0">
-            <p class="muted field-hint">{{ admin_t('live.recommend_hint') }}</p>
+            <div class="form-field">
+                <label for="live-dlg-rec">{{ admin_t('ui.recommend_level') }}</label>
+                <input id="live-dlg-rec" type="number" name="recommend" min="0" max="9" value="0">
+                <p class="muted field-hint">{{ admin_t('live.recommend_hint') }}</p>
+            </div>
         @endif
         <div class="live-dialog-grid">
-            <div>
+            <div class="form-field">
                 <label for="live-dlg-sort">{{ admin_t('ui.sort') }}</label>
                 <input id="live-dlg-sort" type="number" name="sort" value="0">
             </div>
-            <div>
+            <div class="form-field">
                 <label for="live-dlg-status">{{ admin_t('ui.status') }}</label>
                 <select id="live-dlg-status" name="status">
                     <option value="1">{{ admin_t('ui.on') }}</option>
@@ -196,33 +208,43 @@
         </div>
         <p class="muted field-hint">{{ admin_t('live.sort_hint') }}</p>
 
-        <label for="live-dlg-remarks">{{ admin_t('ui.remarks') }}</label>
-        <input id="live-dlg-remarks" name="remarks" placeholder="{{ admin_t('live.ph_remarks') }}">
-        <label for="live-dlg-content">{{ admin_t('ui.intro') }}</label>
-        <textarea id="live-dlg-content" name="content" rows="3" placeholder="{{ admin_t('ui.optional') }}"></textarea>
+        <div class="form-field">
+            <label for="live-dlg-remarks">{{ admin_t('ui.remarks') }}</label>
+            <input id="live-dlg-remarks" name="remarks" placeholder="{{ admin_t('live.ph_remarks') }}">
+        </div>
+        <div class="form-field">
+            <label for="live-dlg-content">{{ admin_t('ui.intro') }}</label>
+            <textarea id="live-dlg-content" name="content" rows="3" placeholder="{{ admin_t('ui.optional') }}"></textarea>
+        </div>
     </form>
 </template>
 
 <template id="category-form">
-    <form class="tag-form live-category-dialog">
+    <form class="admin-form tag-form live-category-dialog">
         <input type="hidden" name="desk" value="categories">
-        <label for="live-cate-dlg-name">{{ admin_t('live.category_name') }}</label>
-        <input id="live-cate-dlg-name" class="entry-title" name="name" required placeholder="{{ admin_t('live.ph_category_name') }}" autofocus>
-        <p class="muted field-hint">{{ admin_t('live.category_hint') }}</p>
-        <label for="live-cate-dlg-slug">{{ admin_t('ui.slug') }}</label>
-        <input id="live-cate-dlg-slug" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
-        <label for="live-cate-dlg-pic">{{ admin_t('ui.image') }}</label>
-        <div class="field-inline">
-            <input id="live-cate-dlg-pic" type="text" name="pic" placeholder="{{ admin_t('live.ph_cover') }}">
-            <button type="button" class="btn btn-sm live-cate-pic-upload">{{ admin_t('ui.upload') }}</button>
+        <div class="form-field">
+            <label for="live-cate-dlg-name">{{ admin_t('live.category_name') }}</label>
+            <input id="live-cate-dlg-name" class="entry-title" name="name" required placeholder="{{ admin_t('live.ph_category_name') }}" autofocus>
+            <p class="muted field-hint">{{ admin_t('live.category_hint') }}</p>
         </div>
-        <img class="img-preview live-cate-pic-preview" alt="" hidden>
+        <div class="form-field">
+            <label for="live-cate-dlg-slug">{{ admin_t('ui.slug') }}</label>
+            <input id="live-cate-dlg-slug" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
+        </div>
+        <div class="form-field">
+            <label for="live-cate-dlg-pic">{{ admin_t('ui.image') }}</label>
+            <div class="field-inline">
+                <input id="live-cate-dlg-pic" type="text" name="pic" placeholder="{{ admin_t('live.ph_cover') }}">
+                <button type="button" class="btn btn-sm live-cate-pic-upload">{{ admin_t('ui.upload') }}</button>
+            </div>
+            <img class="img-preview live-cate-pic-preview" alt="" hidden>
+        </div>
         <div class="live-dialog-grid">
-            <div>
+            <div class="form-field">
                 <label for="live-cate-dlg-sort">{{ admin_t('ui.sort') }}</label>
                 <input id="live-cate-dlg-sort" type="number" name="sort" value="0">
             </div>
-            <div>
+            <div class="form-field">
                 <label for="live-cate-dlg-status">{{ admin_t('ui.status') }}</label>
                 <select id="live-cate-dlg-status" name="status">
                     <option value="1">{{ admin_t('ui.enabled') }}</option>

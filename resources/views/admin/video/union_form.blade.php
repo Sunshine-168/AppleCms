@@ -35,28 +35,38 @@
             @endif
         </p>
 
-        <form class="union-form" id="union-form">
+        <form class="admin-form tag-form union-form" id="union-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($union['id'] ?? 0) : '' }}">
 
             <h3>{{ admin_t('ui.union_section_site') }}</h3>
-            <label for="union-name">{{ admin_t('ui.label_name') }}</label>
-            <input id="union-name" type="text" name="name" value="{{ $name }}" placeholder="{{ admin_t('ui.ph_union_name') }}" required>
-            <label for="union-url">{{ admin_t('ui.label_api_url') }}</label>
-            <input id="union-url" type="text" name="api_url" value="{{ $apiUrl }}" placeholder="https://xxx/api.php/provide/vod/" required>
-            <p class="muted field-hint">{{ admin_t('ui.hint_apple_api') }}</p>
-            <label for="union-note">{{ admin_t('ui.label_note') }}</label>
-            <input id="union-note" type="text" name="note" value="{{ $note }}" placeholder="{{ admin_t('ui.ph_union_note') }}">
+            <div class="form-field">
+                <label for="union-name">{{ admin_t('ui.label_name') }}</label>
+                <input id="union-name" class="entry-title" type="text" name="name" value="{{ $name }}" placeholder="{{ admin_t('ui.ph_union_name') }}" required>
+            </div>
+            <div class="form-field">
+                <label for="union-url">{{ admin_t('ui.label_api_url') }}</label>
+                <input id="union-url" type="text" name="api_url" value="{{ $apiUrl }}" placeholder="https://xxx/api.php/provide/vod/" required>
+                <p class="muted field-hint">{{ admin_t('ui.hint_apple_api') }}</p>
+            </div>
+            <div class="form-field">
+                <label for="union-note">{{ admin_t('ui.label_note') }}</label>
+                <input id="union-note" type="text" name="note" value="{{ $note }}" placeholder="{{ admin_t('ui.ph_union_note') }}">
+            </div>
 
             <h3>{{ admin_t('ui.union_section_display') }}</h3>
-            <label for="union-sort">{{ admin_t('ui.sort') }}</label>
-            <input id="union-sort" type="number" name="sort" value="{{ $union['sort'] ?? 0 }}">
-            <p class="muted field-hint">{{ admin_t('ui.hint_sort_desc') }}</p>
-            <input type="hidden" name="status" value="0">
-            <label class="inline">
-                <input type="checkbox" name="status" value="1" @checked($status === '1')>
-                {{ admin_t('ui.show_in_list') }}
-            </label>
-            <p class="muted field-hint">{{ admin_t('ui.hint_hide_bookmark') }}</p>
+            <div class="form-field">
+                <label for="union-sort">{{ admin_t('ui.sort') }}</label>
+                <input id="union-sort" type="number" name="sort" value="{{ $union['sort'] ?? 0 }}">
+                <p class="muted field-hint">{{ admin_t('ui.hint_sort_desc') }}</p>
+            </div>
+            <div class="form-field">
+                <input type="hidden" name="status" value="0">
+                <label class="inline">
+                    <input type="checkbox" name="status" value="1" @checked($status === '1')>
+                    {{ admin_t('ui.show_in_list') }}
+                </label>
+                <p class="muted field-hint">{{ admin_t('ui.hint_hide_bookmark') }}</p>
+            </div>
 
             <div class="form-actions">
                 <button type="submit" class="btn" id="union-save">{{ admin_t('ui.save') }}</button>

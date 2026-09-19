@@ -41,50 +41,62 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">{{ admin_t('live.channel_page_lead') }}</p>
-        <form class="tag-form" id="live-channel-form" style="max-width:720px">
+        <form class="admin-form tag-form" id="live-channel-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <input type="hidden" name="desk" value="channels">
             <input type="hidden" name="play_from" value="hls">
 
             <h3>{{ admin_t('ui.basic') }}</h3>
-            <label for="ch-title">{{ admin_t('live.channel_name') }}</label>
-            <input id="ch-title" class="entry-title" type="text" name="title" value="{{ $title }}" required autofocus placeholder="{{ admin_t('live.ph_channel_title') }}">
-            <label for="ch-sub">{{ admin_t('ui.subtitle') }}</label>
-            <input id="ch-sub" type="text" name="sub" value="{{ $sub }}" placeholder="{{ admin_t('live.ph_subtitle') }}">
-            <label for="ch-cate">{{ admin_t('ui.types') }}</label>
-            <select id="ch-cate" name="cate_id">
-                <option value="0">{{ admin_t('ui.uncategorized') }}</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" @selected($cateId === (int) $category->id)>{{ $category->name }}</option>
-                @endforeach
-            </select>
-            <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/live-categories/create" target="_blank" rel="noopener">'.e(admin_t('live.new_category')).'</a>', e(admin_t('live.new_category_hint'))) !!}</p>
-
-            <label for="ch-cover">{{ admin_t('ui.cover') }}</label>
-            <div class="field-inline">
-                <input id="ch-cover" type="text" name="cover" value="{{ $cover }}" placeholder="{{ admin_t('live.ph_cover') }}">
-                <button type="button" class="btn btn-sm" id="ch-cover-pick">{{ admin_t('ui.upload') }}</button>
+            <div class="form-field">
+                <label for="ch-title">{{ admin_t('live.channel_name') }}</label>
+                <input id="ch-title" class="entry-title" type="text" name="title" value="{{ $title }}" required autofocus placeholder="{{ admin_t('live.ph_channel_title') }}">
             </div>
-            <img class="img-preview" id="ch-cover-preview" alt="" @if($cover === '') style="display:none" @else src="{{ $cover }}" @endif>
-            <p class="muted field-hint">{{ admin_t('live.cover_hint') }}</p>
+            <div class="form-field">
+                <label for="ch-sub">{{ admin_t('ui.subtitle') }}</label>
+                <input id="ch-sub" type="text" name="sub" value="{{ $sub }}" placeholder="{{ admin_t('live.ph_subtitle') }}">
+            </div>
+            <div class="form-field">
+                <label for="ch-cate">{{ admin_t('ui.types') }}</label>
+                <select id="ch-cate" name="cate_id">
+                    <option value="0">{{ admin_t('ui.uncategorized') }}</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" @selected($cateId === (int) $category->id)>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+                <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/live-categories/create" target="_blank" rel="noopener">'.e(admin_t('live.new_category')).'</a>', e(admin_t('live.new_category_hint'))) !!}</p>
+            </div>
+
+            <div class="form-field">
+                <label for="ch-cover">{{ admin_t('ui.cover') }}</label>
+                <div class="field-inline">
+                    <input id="ch-cover" type="text" name="cover" value="{{ $cover }}" placeholder="{{ admin_t('live.ph_cover') }}">
+                    <button type="button" class="btn btn-sm" id="ch-cover-pick">{{ admin_t('ui.upload') }}</button>
+                </div>
+                <img class="img-preview" id="ch-cover-preview" alt="" @if($cover === '') style="display:none" @else src="{{ $cover }}" @endif>
+                <p class="muted field-hint">{{ admin_t('live.cover_hint') }}</p>
+            </div>
 
             <h3>{{ admin_t('ui.playback') }}</h3>
-            <label for="ch-urls">{{ admin_t('live.play_urls') }}</label>
-            <textarea id="ch-urls" name="urls" rows="6" placeholder="{{ admin_t('live.ph_urls_example') }}">{{ $urls }}</textarea>
-            <p class="muted field-hint">{{ admin_t('live.play_urls_hint') }}</p>
+            <div class="form-field">
+                <label for="ch-urls">{{ admin_t('live.play_urls') }}</label>
+                <textarea id="ch-urls" name="urls" rows="6" placeholder="{{ admin_t('live.ph_urls_example') }}">{{ $urls }}</textarea>
+                <p class="muted field-hint">{{ admin_t('live.play_urls_hint') }}</p>
+            </div>
 
             <h3>{{ admin_t('ui.display') }}</h3>
             @if($hasRecommend)
-                <label for="ch-rec">{{ admin_t('ui.recommend_level') }}</label>
-                <input id="ch-rec" type="number" name="recommend" min="0" max="9" value="{{ $recommend }}">
-                <p class="muted field-hint">{{ admin_t('live.recommend_hint') }}</p>
+                <div class="form-field">
+                    <label for="ch-rec">{{ admin_t('ui.recommend_level') }}</label>
+                    <input id="ch-rec" type="number" name="recommend" min="0" max="9" value="{{ $recommend }}">
+                    <p class="muted field-hint">{{ admin_t('live.recommend_hint') }}</p>
+                </div>
             @endif
             <div class="live-dialog-grid">
-                <div>
+                <div class="form-field">
                     <label for="ch-sort">{{ admin_t('ui.sort') }}</label>
                     <input id="ch-sort" type="number" name="sort" value="{{ $sort }}">
                 </div>
-                <div>
+                <div class="form-field">
                     <label for="ch-status">{{ admin_t('ui.status') }}</label>
                     <select id="ch-status" name="status">
                         <option value="1" @selected($status === '1')>{{ admin_t('ui.on') }}</option>
@@ -93,15 +105,23 @@
                 </div>
             </div>
             <p class="muted field-hint">{{ admin_t('live.sort_hint') }}</p>
-            <label for="ch-hits">{{ admin_t('ui.hits') }}</label>
-            <input id="ch-hits" type="number" name="hits" min="0" value="{{ $hits }}">
-            <p class="muted field-hint">{{ admin_t('live.hits_hint') }}</p>
-            <label for="ch-slug">{{ admin_t('live.url_slug') }}</label>
-            <input id="ch-slug" type="text" name="slug" value="{{ $slug }}" placeholder="{{ admin_t('live.ph_slug') }}">
-            <label for="ch-remarks">{{ admin_t('ui.remarks') }}</label>
-            <input id="ch-remarks" type="text" name="remarks" value="{{ $remarks }}" placeholder="{{ admin_t('live.ph_remarks') }}">
-            <label for="ch-content">{{ admin_t('ui.intro') }}</label>
-            <textarea id="ch-content" name="content" rows="4" placeholder="{{ admin_t('ui.optional') }}">{{ $content }}</textarea>
+            <div class="form-field">
+                <label for="ch-hits">{{ admin_t('ui.hits') }}</label>
+                <input id="ch-hits" type="number" name="hits" min="0" value="{{ $hits }}">
+                <p class="muted field-hint">{{ admin_t('live.hits_hint') }}</p>
+            </div>
+            <div class="form-field">
+                <label for="ch-slug">{{ admin_t('live.url_slug') }}</label>
+                <input id="ch-slug" type="text" name="slug" value="{{ $slug }}" placeholder="{{ admin_t('live.ph_slug') }}">
+            </div>
+            <div class="form-field">
+                <label for="ch-remarks">{{ admin_t('ui.remarks') }}</label>
+                <input id="ch-remarks" type="text" name="remarks" value="{{ $remarks }}" placeholder="{{ admin_t('live.ph_remarks') }}">
+            </div>
+            <div class="form-field">
+                <label for="ch-content">{{ admin_t('ui.intro') }}</label>
+                <textarea id="ch-content" name="content" rows="4" placeholder="{{ admin_t('ui.optional') }}">{{ $content }}</textarea>
+            </div>
 
             <div class="form-actions">
                 <button type="submit" class="btn" id="ch-save">{{ admin_t('ui.save') }}</button>
