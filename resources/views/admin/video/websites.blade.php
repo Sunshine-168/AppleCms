@@ -45,8 +45,8 @@
                 <option value="1">显示</option>
                 <option value="0">隐藏</option>
             </select>
-            <button type="button" class="btn btn-sm" id="website-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="website-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="website-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="website-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="website-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
@@ -69,7 +69,7 @@
     <form>
         <input type="hidden" name="id">
         <label>站点名称</label>
-        <input type="text" name="name" placeholder="如 某某资源站" required>
+        <input class="entry-title" type="text" name="name" placeholder="如 某某资源站" required autofocus>
         <p class="muted field-hint">出现在前台「导航」列表里。</p>
         <label>网址</label>
         <input type="text" name="url" placeholder="https://" required>
@@ -88,17 +88,23 @@
         @endif
         <label>Logo</label>
         <div class="field-inline">
-            <input type="text" name="logo" placeholder="可空">
+            <input type="text" name="logo" placeholder="可空，可粘贴或上传">
             <button type="button" class="btn btn-muted website-logo-upload-btn">上传</button>
         </div>
         <img class="img-preview link-logo-preview" alt="">
         <label>简介</label>
         <input type="text" name="blurb" placeholder="一两句，可空">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>人气</label>
-        <input type="number" name="hits" value="0" min="0">
-        <p class="muted field-hint">前台「打开」会累加。也可在这里手改。</p>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>人气</label>
+                <input type="number" name="hits" value="0" min="0">
+            </div>
+        </div>
+        <p class="muted field-hint">前台「打开」会累加人气。排序数字越大越靠前。</p>
         <label>状态</label>
         <select name="status">
             <option value="1">显示</option>
@@ -243,6 +249,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
+            wide: true,
             title: mode === 'edit' ? '编辑站点' : '新增站点',
             content: document.getElementById('website-dialog-tpl').innerHTML,
             onOpen: function (body) {

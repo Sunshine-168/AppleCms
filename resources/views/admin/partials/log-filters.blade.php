@@ -40,7 +40,7 @@
     @else
         <label class="log-mine"><input type="checkbox" name="mine" value="1"> 只看我</label>
     @endif
-    <button type="submit" class="btn btn-sm" id="{{ $prefix }}-log-search-btn">查询</button>
-    <button type="button" class="btn btn-muted btn-sm" id="{{ $prefix }}-log-reset-btn">重置</button>
+    <button type="submit" class="btn btn-sm" id="{{ $prefix }}-log-search-btn">{{ admin_t('ui.search') }}</button>
+    <button type="button" class="btn btn-muted btn-sm" id="{{ $prefix }}-log-reset-btn">{{ admin_t('ui.reset') }}</button>
     <button type="button" class="chip log-ip-chip" id="{{ $ipChipId }}" hidden></button>
 </form>

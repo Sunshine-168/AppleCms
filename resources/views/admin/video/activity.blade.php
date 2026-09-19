@@ -13,7 +13,7 @@
     <div class="card-header">
         <span>用户活动 <em id="activity-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="activity-add-btn">新增</button>
+            <button type="button" class="btn btn-sm" id="activity-add-btn">{{ admin_t('ui.add') }}</button>
         </div>
     </div>
     <div class="card-body">
@@ -52,8 +52,8 @@
                     <option value="0">未启用</option>
                 </select>
             @endif
-            <button type="button" class="btn btn-sm" id="activity-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="activity-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="activity-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="activity-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="activity-table"></div>
     </div>
@@ -63,28 +63,46 @@
     <form>
         <input type="hidden" name="id">
         <label>名称</label>
-        <input type="text" name="name" required maxlength="40">
-        <label>类型</label>
-        <select name="type">
-            <option value="1">每日</option>
-            <option value="2">新手</option>
-        </select>
-        <label>动作</label>
-        <input type="text" name="action" required maxlength="40" placeholder="daily_sign / watch_vod">
+        <input class="entry-title" type="text" name="name" required maxlength="40" autofocus>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>类型</label>
+                <select name="type">
+                    <option value="1">每日</option>
+                    <option value="2">新手</option>
+                </select>
+            </div>
+            <div>
+                <label>动作</label>
+                <input type="text" name="action" required maxlength="40" placeholder="daily_sign / watch_vod">
+            </div>
+        </div>
         <p class="muted field-hint">动作标识唯一。本站接上的：daily_sign、watch_vod、post_comment、share_vod、bind_phone。bind_email 默认关掉。</p>
         <label>说明</label>
-        <input type="text" name="hint" maxlength="255">
-        <label>积分</label>
-        <input type="number" name="points" value="0" min="0">
-        <label>目标次数</label>
-        <input type="number" name="target" value="1" min="1">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">未启用</option>
-        </select>
+        <input type="text" name="hint" maxlength="255" placeholder="前台任务列表旁的一句话">
+        <div class="admin-dialog-grid">
+            <div>
+                <label>积分</label>
+                <input type="number" name="points" value="0" min="0">
+            </div>
+            <div>
+                <label>目标次数</label>
+                <input type="number" name="target" value="1" min="1">
+            </div>
+        </div>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>状态</label>
+                <select name="status">
+                    <option value="1">启用</option>
+                    <option value="0">未启用</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 
@@ -92,19 +110,31 @@
     <form>
         <input type="hidden" name="id">
         <label>名称</label>
-        <input type="text" name="name" required maxlength="40">
-        <label>连续天数</label>
-        <input type="number" name="days" value="3" min="1">
+        <input class="entry-title" type="text" name="name" required maxlength="40" autofocus>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>连续天数</label>
+                <input type="number" name="days" value="3" min="1">
+            </div>
+            <div>
+                <label>积分</label>
+                <input type="number" name="points" value="0" min="0">
+            </div>
+        </div>
         <p class="muted field-hint">达到连续天数当场入账，不用会员再点领取。</p>
-        <label>积分</label>
-        <input type="number" name="points" value="0" min="0">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">未启用</option>
-        </select>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>状态</label>
+                <select name="status">
+                    <option value="1">启用</option>
+                    <option value="0">未启用</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 @endsection
@@ -259,6 +289,7 @@
         row = row || {};
         var isMile = desk === 'milestones';
         U.dialog({
+            wide: true,
             title: mode === 'edit' ? (isMile ? '编辑里程碑' : '编辑任务') : (isMile ? '新增里程碑' : '新增任务'),
             content: document.getElementById(isMile ? 'activity-mile-tpl' : 'activity-task-tpl').innerHTML,
             onOpen: function (body) {

@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', '小说')
+@section('title', admin_t('novel.title'))
 @php
     $desk = in_array(request('desk', 'works'), ['works', 'pending', 'chapters', 'types', 'favors', 'comments', 'stats'], true)
         ? request('desk', 'works')
@@ -13,85 +13,85 @@
 @section('plain')
 <div class="card card-panel desk-board" id="novel-board">
     <div class="card-header">
-        <span>{{ $desk === 'stats' ? '小说统计' : '小说' }} <em id="novel-count"></em></span>
+        <span>{{ $desk === 'stats' ? admin_t('novel.title_stats') : admin_t('novel.title') }} <em id="novel-count"></em></span>
         @if(in_array($desk, ['works', 'pending'], true))
-            <span class="btn-split" role="group" aria-label="添加作品">
-                <a class="btn btn-sm" href="#novel-work-compose-box">新增作品</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+            <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_work_aria') }}">
+                <a class="btn btn-sm" href="#novel-work-compose-box">{{ admin_t('ui.add_work') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
             </span>
         @elseif($desk === 'chapters')
-            <span class="btn-split" role="group" aria-label="添加章节">
-                <a class="btn btn-sm" href="#novel-chapter-compose-box">新增章节</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/novel-chapters/create">完整表单</a>
+            <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_chapter_aria') }}">
+                <a class="btn btn-sm" href="#novel-chapter-compose-box">{{ admin_t('ui.add_chapter') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/novel-chapters/create">{{ admin_t('ui.full_form') }}</a>
             </span>
         @elseif($desk === 'types')
-            <button type="button" class="btn btn-sm" id="add">新增分类</button>
+            <button type="button" class="btn btn-sm" id="add">{{ admin_t('ui.add_type') }}</button>
         @endif
     </div>
     <div class="card-body">
         <div class="queue-chips" id="novel-desks">
-            <a class="chip{{ $desk === 'works' ? ' active' : '' }}" href="/admin/video/novels">作品</a>
-            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="?desk=pending">待审</a>
-            <a class="chip{{ $desk === 'chapters' ? ' active' : '' }}" href="?desk=chapters">章节</a>
-            <a class="chip{{ $desk === 'types' ? ' active' : '' }}" href="?desk=types">分类</a>
-            <a class="chip{{ $desk === 'favors' ? ' active' : '' }}" href="?desk=favors">书架</a>
-            <a class="chip{{ $desk === 'comments' ? ' active' : '' }}" href="?desk=comments">评论</a>
-            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="?desk=stats">统计</a>
+            <a class="chip{{ $desk === 'works' ? ' active' : '' }}" href="/admin/video/novels">{{ admin_t('ui.works') }}</a>
+            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="?desk=pending">{{ admin_t('ui.pending') }}</a>
+            <a class="chip{{ $desk === 'chapters' ? ' active' : '' }}" href="?desk=chapters">{{ admin_t('ui.chapters') }}</a>
+            <a class="chip{{ $desk === 'types' ? ' active' : '' }}" href="?desk=types">{{ admin_t('ui.types') }}</a>
+            <a class="chip{{ $desk === 'favors' ? ' active' : '' }}" href="?desk=favors">{{ admin_t('ui.bookshelf') }}</a>
+            <a class="chip{{ $desk === 'comments' ? ' active' : '' }}" href="?desk=comments">{{ admin_t('ui.comments') }}</a>
+            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="?desk=stats">{{ admin_t('ui.stats') }}</a>
         </div>
 
         @if($desk === 'stats')
-            <p class="muted recycle-lead">阅读来自会员历史，人气为 hits，收藏来自书架。</p>
+            <p class="muted recycle-lead">{{ admin_t('novel.lead_stats') }}</p>
             <div class="stat-grid dash manga-stats-grid">
-                <div class="stat-card"><span>作品</span><strong>{{ (int) ($worksStat['all'] ?? 0) }}</strong><span class="muted">上架 {{ (int) ($worksStat['show'] ?? 0) }} · 待审 {{ (int) ($worksStat['pending'] ?? 0) }}</span></div>
-                <div class="stat-card"><span>今日阅读</span><strong>{{ (int) ($stats['today_reads'] ?? 0) }}</strong><span class="muted">近 7 日 {{ (int) ($stats['week_reads'] ?? 0) }}</span></div>
-                <div class="stat-card"><span>近 7 日新章</span><strong>{{ (int) ($stats['week_chapters'] ?? 0) }}</strong><span class="muted">近 30 日 {{ (int) ($stats['month_chapters'] ?? 0) }}</span></div>
-                <div class="stat-card"><span>书架收藏</span><strong>{{ (int) ($stats['favor_total'] ?? 0) }}</strong></div>
+                <div class="stat-card"><span>{{ admin_t('ui.works') }}</span><strong>{{ (int) ($worksStat['all'] ?? 0) }}</strong><span class="muted">{{ admin_t('ui.on_count', ['n' => (int) ($worksStat['show'] ?? 0)]) }} · {{ admin_t('ui.pending_count', ['n' => (int) ($worksStat['pending'] ?? 0)]) }}</span></div>
+                <div class="stat-card"><span>{{ admin_t('novel.today_reads') }}</span><strong>{{ (int) ($stats['today_reads'] ?? 0) }}</strong><span class="muted">{{ admin_t('ui.week_7') }} {{ (int) ($stats['week_reads'] ?? 0) }}</span></div>
+                <div class="stat-card"><span>{{ admin_t('novel.week_chapters') }}</span><strong>{{ (int) ($stats['week_chapters'] ?? 0) }}</strong><span class="muted">{{ admin_t('ui.month_30') }} {{ (int) ($stats['month_chapters'] ?? 0) }}</span></div>
+                <div class="stat-card"><span>{{ admin_t('novel.bookshelf_total') }}</span><strong>{{ (int) ($stats['favor_total'] ?? 0) }}</strong></div>
             </div>
             <div class="flink-stats-split manga-stats-split">
                 <div>
-                    <h3>人气 TOP</h3>
-                    <ul class="plain-list">@forelse(($stats['top_hits'] ?? []) as $row)<li><a href="/admin/video/novels?desk=works&q={{ urlencode($row['title']) }}">{{ $row['title'] }}</a> <em>{{ $row['hits'] }}</em></li>@empty<li class="muted">暂无</li>@endforelse</ul>
+                    <h3>{{ admin_t('ui.top_hits') }}</h3>
+                    <ul class="plain-list">@forelse(($stats['top_hits'] ?? []) as $row)<li><a href="/admin/video/novels?desk=works&q={{ urlencode($row['title']) }}">{{ $row['title'] }}</a> <em>{{ $row['hits'] }}</em></li>@empty<li class="muted">{{ admin_t('ui.none') }}</li>@endforelse</ul>
                 </div>
                 <div>
-                    <h3>收藏 TOP</h3>
-                    <ul class="plain-list">@forelse(($stats['top_favors'] ?? []) as $row)<li><a href="/admin/video/novels?desk=works&q={{ urlencode($row['title']) }}">{{ $row['title'] }}</a> <em>{{ $row['favors'] }}</em></li>@empty<li class="muted">暂无</li>@endforelse</ul>
+                    <h3>{{ admin_t('novel.top_favors') }}</h3>
+                    <ul class="plain-list">@forelse(($stats['top_favors'] ?? []) as $row)<li><a href="/admin/video/novels?desk=works&q={{ urlencode($row['title']) }}">{{ $row['title'] }}</a> <em>{{ $row['favors'] }}</em></li>@empty<li class="muted">{{ admin_t('ui.none') }}</li>@endforelse</ul>
                 </div>
             </div>
         @else
             @if(in_array($desk, ['works', 'pending'], true))
-                <p class="muted recycle-lead">快捷填名称即可添加；作者、分类、标签、封面请用「完整表单」。</p>
+                <p class="muted recycle-lead">{{ admin_t('novel.compose_work_lead') }}</p>
                 <div class="tag-compose" id="novel-work-compose-box">
                     <form class="tag-compose-form" id="novel-work-compose" onsubmit="return false;">
-                        <label class="tag-compose-label" for="novel-work-quick">新增作品</label>
+                        <label class="tag-compose-label" for="novel-work-quick">{{ admin_t('ui.add_work') }}</label>
                         <div class="tag-compose-row">
-                            <input id="novel-work-quick" type="text" name="title" placeholder="输入作品名" aria-label="新增作品" autofocus>
+                            <input id="novel-work-quick" type="text" name="title" placeholder="{{ admin_t('novel.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}" autofocus>
                             <span class="btn-split" role="group">
-                                <button class="btn" type="submit">添加</button>
-                                <a class="btn btn-muted" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+                                <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
+                                <a class="btn btn-muted" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
                             </span>
                         </div>
-                        <p class="muted field-hint">回车可连续添加。待审台添加的作品会标成待审。</p>
+                        <p class="muted field-hint">{{ admin_t('novel.hint_work') }}</p>
                     </form>
                 </div>
             @elseif($desk === 'chapters')
-                <p class="muted recycle-lead">快捷只填章节名；正文、VIP、排序请用「完整表单」。</p>
+                <p class="muted recycle-lead">{{ admin_t('novel.compose_chapter_lead') }}</p>
                 <div class="tag-compose" id="novel-chapter-compose-box">
                     <form class="tag-compose-form" id="novel-chapter-compose" onsubmit="return false;">
-                        <label class="tag-compose-label" for="novel-chapter-quick">新增章节</label>
+                        <label class="tag-compose-label" for="novel-chapter-quick">{{ admin_t('ui.add_chapter') }}</label>
                         <div class="tag-compose-row">
-                            <select name="novel_id" aria-label="作品" required style="max-width:200px">
-                                <option value="">选择作品</option>
+                            <select name="novel_id" aria-label="{{ admin_t('ui.works') }}" required style="max-width:200px">
+                                <option value="">{{ admin_t('novel.select_work') }}</option>
                                 @foreach($works as $w)
                                     <option value="{{ $w->id }}">{{ $w->title }}</option>
                                 @endforeach
                             </select>
-                            <input id="novel-chapter-quick" type="text" name="name" placeholder="如 第一章" aria-label="新增章节" autofocus>
+                            <input id="novel-chapter-quick" type="text" name="name" placeholder="{{ admin_t('novel.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}" autofocus>
                             <span class="btn-split" role="group">
-                                <button class="btn" type="submit">添加</button>
-                                <a class="btn btn-muted" href="/admin/video/novel-chapters/create">完整表单</a>
+                                <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
+                                <a class="btn btn-muted" href="/admin/video/novel-chapters/create">{{ admin_t('ui.full_form') }}</a>
                             </span>
                         </div>
-                        <p class="muted field-hint">回车可连续添加。先选作品再填章节名。</p>
+                        <p class="muted field-hint">{{ admin_t('novel.hint_chapter') }}</p>
                     </form>
                 </div>
             @elseif($desk === 'types')
@@ -104,9 +104,9 @@
 
             @if($desk === 'comments')
                 <div class="queue-chips" id="novel-comment-queues">
-                    <button type="button" class="chip active" data-status="">全部 {{ (int) ($commentQueues['all'] ?? 0) }}</button>
-                    <button type="button" class="chip" data-status="0">待审 {{ (int) ($commentQueues['pending'] ?? 0) }}</button>
-                    <button type="button" class="chip" data-status="1">显示 {{ (int) ($commentQueues['pass'] ?? 0) }}</button>
+                    <button type="button" class="chip active" data-status="">{{ admin_t('ui.all') }} {{ (int) ($commentQueues['all'] ?? 0) }}</button>
+                    <button type="button" class="chip" data-status="0">{{ admin_t('ui.pending') }} {{ (int) ($commentQueues['pending'] ?? 0) }}</button>
+                    <button type="button" class="chip" data-status="1">{{ admin_t('ui.visible') }} {{ (int) ($commentQueues['pass'] ?? 0) }}</button>
                 </div>
             @endif
 
@@ -120,8 +120,8 @@
                         @endforeach
                     </select>
                 @endif
-                <button type="button" class="btn btn-sm" id="novel-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="novel-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="novel-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="novel-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="novel-table"></div>
         @endif
@@ -129,10 +129,57 @@
 </div>
 <template id="type-form">@include('novel::admin.type_form')</template>
 @endsection
+@php
+    $novelJsLang = [
+        'works' => admin_t('ui.works'),
+        'chapters' => admin_t('ui.chapters'),
+        'types' => admin_t('ui.types'),
+        'actions' => admin_t('ui.actions'),
+        'sort' => admin_t('ui.sort'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'add_type' => admin_t('ui.add_type'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'added' => admin_t('ui.added'),
+        'front' => admin_t('ui.front'),
+        'hits' => admin_t('ui.hits'),
+        'favors' => admin_t('ui.favors'),
+        'status' => admin_t('ui.status'),
+        'on' => admin_t('ui.on'),
+        'off' => admin_t('ui.off'),
+        'pending' => admin_t('ui.pending'),
+        'visible' => admin_t('ui.visible'),
+        'member' => admin_t('ui.member'),
+        'free' => admin_t('ui.free'),
+        'alias' => admin_t('ui.alias'),
+        'time' => admin_t('ui.time'),
+        'content' => admin_t('ui.content'),
+        'nickname' => admin_t('ui.nickname'),
+        'authors' => admin_t('ui.authors'),
+        'tags' => admin_t('ui.tags'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'col_access' => admin_t('novel.col_access'),
+        'cancel_favor' => admin_t('novel.cancel_favor'),
+        'empty_works' => admin_t('novel.empty_works'),
+        'empty_works_hint' => admin_t('novel.empty_works_hint'),
+        'empty_chapters' => admin_t('novel.empty_chapters'),
+        'empty_chapters_hint' => admin_t('novel.empty_chapters_hint'),
+        'empty_types' => admin_t('novel.empty_types'),
+        'empty_favors' => admin_t('novel.empty_favors'),
+        'empty_favors_hint' => admin_t('novel.empty_favors_hint'),
+        'empty_comments' => admin_t('novel.empty_comments'),
+        'empty_comments_hint' => admin_t('novel.empty_comments_hint'),
+        'need_work_title' => admin_t('novel.need_work_title'),
+        'need_chapter_name' => admin_t('novel.need_chapter_name'),
+        'select_work' => admin_t('novel.select_work'),
+    ];
+@endphp
 @push('scripts')
 <script>
 (function () {
-    var U = AdminUi, desk = @json($desk), url = '/admin/video/novels';
+    var U = AdminUi, desk = @json($desk), url = '/admin/video/novels', L = @json($novelJsLang);
     if (desk === 'stats' || !U) return;
     var countEl = document.getElementById('novel-count');
     var search = document.getElementById('novel-search');
@@ -149,59 +196,59 @@
     }
     function emptyHtml(_p, w) {
         if (isFiltered(w)) {
-            return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="novel-empty-reset">清除筛选</button></p></div>';
+            return '<div class="list-empty"><p>' + L.no_match + '</p><p><button type="button" class="btn btn-muted btn-sm" id="novel-empty-reset">' + L.clear_filter + '</button></p></div>';
         }
-        if (desk === 'favors') return '<div class="list-empty"><p>还没有书架记录</p><p class="muted">会员在前台点「加入书架」后出现。</p></div>';
-        if (desk === 'comments') return '<div class="list-empty"><p>还没有评论</p><p class="muted">会员在前台小说详情页提交后出现。</p></div>';
-        if (desk === 'chapters') return '<div class="list-empty"><p>还没有章节</p><p class="muted">上方快捷添加章节名，或打开完整表单写正文。</p></div>';
-        if (desk === 'types') return '<div class="list-empty"><p>还没有分类</p></div>';
-        return '<div class="list-empty"><p>还没有作品</p><p class="muted">上方输入名称回车即可添加。</p></div>';
+        if (desk === 'favors') return '<div class="list-empty"><p>' + L.empty_favors + '</p><p class="muted">' + L.empty_favors_hint + '</p></div>';
+        if (desk === 'comments') return '<div class="list-empty"><p>' + L.empty_comments + '</p><p class="muted">' + L.empty_comments_hint + '</p></div>';
+        if (desk === 'chapters') return '<div class="list-empty"><p>' + L.empty_chapters + '</p><p class="muted">' + L.empty_chapters_hint + '</p></div>';
+        if (desk === 'types') return '<div class="list-empty"><p>' + L.empty_types + '</p></div>';
+        return '<div class="list-empty"><p>' + L.empty_works + '</p><p class="muted">' + L.empty_works_hint + '</p></div>';
     }
 
     var cols = desk === 'chapters'
         ? [
-            { title: '作品', html: function (d) { return U.escape(d.novel_title || d.novel_id); } },
-            { title: '章节', html: function (d) { return '<a class="btn-link" href="/admin/video/novel-chapters/' + d.id + '/edit">' + U.escape(d.name || '') + '</a>'; } },
-            { title: '排序', width: 70, html: function (d) { return U.escape(String(d.sort || 0)); } },
-            { title: '权限', width: 70, html: function (d) { return String(d.vip) === '1' ? '<span class="badge">VIP</span>' : '免费'; } },
-            { title: '操作', cls: 'actions', html: function (d) { return '<a class="btn-link" href="/admin/video/novel-chapters/' + d.id + '/edit">编辑</a> <a href="#" class="btn-link js-del">删除</a>'; } }
+            { title: L.works, html: function (d) { return U.escape(d.novel_title || d.novel_id); } },
+            { title: L.chapters, html: function (d) { return '<a class="btn-link" href="/admin/video/novel-chapters/' + d.id + '/edit">' + U.escape(d.name || '') + '</a>'; } },
+            { title: L.sort, width: 70, html: function (d) { return U.escape(String(d.sort || 0)); } },
+            { title: L.col_access, width: 70, html: function (d) { return String(d.vip) === '1' ? '<span class="badge">VIP</span>' : L.free; } },
+            { title: L.actions, cls: 'actions', html: function (d) { return '<a class="btn-link" href="/admin/video/novel-chapters/' + d.id + '/edit">' + L.edit + '</a> <a href="#" class="btn-link js-del">' + L.delete + '</a>'; } }
         ]
         : desk === 'types'
         ? [
-            { title: '分类', html: function (d) { return '<a href="#" class="btn-link js-edit">' + U.escape(d.name || '') + '</a>'; } },
-            { title: '别名', html: function (d) { return U.escape(d.slug || ''); } },
-            { title: '排序', width: 70, html: function (d) { return U.escape(String(d.sort || 0)); } },
-            { title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-edit">编辑</a> <a href="#" class="btn-link js-del">删除</a>'; } }
+            { title: L.types, html: function (d) { return '<a href="#" class="btn-link js-edit">' + U.escape(d.name || '') + '</a>'; } },
+            { title: L.alias, html: function (d) { return U.escape(d.slug || ''); } },
+            { title: L.sort, width: 70, html: function (d) { return U.escape(String(d.sort || 0)); } },
+            { title: L.actions, cls: 'actions', html: function () { return '<a href="#" class="btn-link js-edit">' + L.edit + '</a> <a href="#" class="btn-link js-del">' + L.delete + '</a>'; } }
         ]
         : desk === 'favors'
         ? [
-            { title: '会员', width: 100, html: function (d) { return U.escape(String(d.member_id)); } },
-            { title: '作品', html: function (d) { return U.escape(d.novel_title || String(d.novel_id)); } },
-            { title: '操作', cls: 'actions', html: function () { return '<a href="#" class="btn-link js-del">取消</a>'; } }
+            { title: L.member, width: 100, html: function (d) { return U.escape(String(d.member_id)); } },
+            { title: L.works, html: function (d) { return U.escape(d.novel_title || String(d.novel_id)); } },
+            { title: L.actions, cls: 'actions', html: function () { return '<a href="#" class="btn-link js-del">' + L.cancel_favor + '</a>'; } }
         ]
         : desk === 'comments'
         ? [
-            { title: '内容', html: function (d) { return U.escape(d.content || ''); } },
-            { title: '作品', html: function (d) { return U.escape(d.novel_title || String(d.novel_id)); } },
-            { title: '昵称', width: 100, html: function (d) { return U.escape(d.author_name || ''); } },
-            { title: '状态', width: 90, html: function (d) { return String(d.status) === '1' ? '显示' : '待审'; } },
-            { title: '时间', width: 140, html: function (d) { return U.escape(d.created_label || ''); } },
-            { title: '操作', cls: 'actions', html: function (d) {
-                return '<a href="/novel/' + encodeURIComponent(d.novel_id || '') + '" class="btn-link" target="_blank" rel="noopener">前台</a> <a href="#" class="btn-link js-del">删除</a>';
+            { title: L.content, html: function (d) { return U.escape(d.content || ''); } },
+            { title: L.works, html: function (d) { return U.escape(d.novel_title || String(d.novel_id)); } },
+            { title: L.nickname, width: 100, html: function (d) { return U.escape(d.author_name || ''); } },
+            { title: L.status, width: 90, html: function (d) { return String(d.status) === '1' ? L.visible : L.pending; } },
+            { title: L.time, width: 140, html: function (d) { return U.escape(d.created_label || ''); } },
+            { title: L.actions, cls: 'actions', html: function (d) {
+                return '<a href="/novel/' + encodeURIComponent(d.novel_id || '') + '" class="btn-link" target="_blank" rel="noopener">' + L.front + '</a> <a href="#" class="btn-link js-del">' + L.delete + '</a>';
             } }
         ]
         : [
-            { title: '作品', html: function (d) { return '<a class="btn-link entry-row-title" href="/admin/video/novels/' + d.id + '/edit">' + U.escape(d.title || '') + '</a>'; } },
-            { title: '作者', width: 120, html: function (d) { return U.escape(d.author || '—'); } },
-            { title: '标签', html: function (d) { return U.escape(d.tags || '—'); } },
-            { title: '人气', width: 70, html: function (d) { return U.escape(String(d.hits || 0)); } },
-            { title: '收藏', width: 70, html: function (d) { return U.escape(String(d.favor_count || 0)); } },
-            { title: '状态', width: 90, html: function (d) {
-                if (String(d.yid) === '1') return '<span class="badge badge-warn">待审</span>';
-                return String(d.status) === '1' ? '上架' : '下架';
+            { title: L.works, html: function (d) { return '<a class="btn-link entry-row-title" href="/admin/video/novels/' + d.id + '/edit">' + U.escape(d.title || '') + '</a>'; } },
+            { title: L.authors, width: 120, html: function (d) { return U.escape(d.author || '—'); } },
+            { title: L.tags, html: function (d) { return U.escape(d.tags || '—'); } },
+            { title: L.hits, width: 70, html: function (d) { return U.escape(String(d.hits || 0)); } },
+            { title: L.favors, width: 70, html: function (d) { return U.escape(String(d.favor_count || 0)); } },
+            { title: L.status, width: 90, html: function (d) {
+                if (String(d.yid) === '1') return '<span class="badge badge-warn">' + L.pending + '</span>';
+                return String(d.status) === '1' ? L.on : L.off;
             } },
-            { title: '操作', cls: 'actions', html: function (d) {
-                return '<a href="/admin/video/novels?desk=chapters" class="btn-link">章节</a> <a class="btn-link" href="/admin/video/novels/' + d.id + '/edit">编辑</a> <a href="/novel/' + d.id + '" class="btn-link" target="_blank" rel="noopener">前台</a> <a href="#" class="btn-link js-del">删除</a>';
+            { title: L.actions, cls: 'actions', html: function (d) {
+                return '<a href="/admin/video/novels?desk=chapters" class="btn-link">' + L.chapters + '</a> <a class="btn-link" href="/admin/video/novels/' + d.id + '/edit">' + L.edit + '</a> <a href="/novel/' + d.id + '" class="btn-link" target="_blank" rel="noopener">' + L.front + '</a> <a href="#" class="btn-link js-del">' + L.delete + '</a>';
             } }
         ];
 
@@ -227,7 +274,7 @@
     function openForm(row) {
         row = row || {};
         U.dialog({
-            title: row.id ? '编辑分类' : '新增分类',
+            title: row.id ? L.edit + ' · ' + L.types : L.add_type,
             content: document.getElementById(formId()).innerHTML,
             onOpen: function (box) { U.fillForm(box.querySelector('form'), row); },
             onSave: function (box) {
@@ -235,9 +282,9 @@
                 d.desk = 'types';
                 if (row.id) d.id = row.id;
                 return U.post(url + '/save', d).then(function (r) {
-                    if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return false; }
+                    if (!r || r.code !== 0) { U.toast((r && r.msg) || L.fail, 'err'); return false; }
                     table.refresh();
-                    U.toast((r && r.msg) || '已保存', 'ok');
+                    U.toast((r && r.msg) || L.saved, 'ok');
                 });
             }
         });
@@ -251,10 +298,10 @@
             d.status = 1;
             if (d.yid == null) d.yid = desk === 'pending' ? 1 : 0;
         }
-        if (!d.title && !d.name) { U.toast(desk === 'chapters' ? '请填写章节名' : '请填写作品名', 'err'); return; }
-        if (desk === 'chapters' && !d.novel_id) { U.toast('请选择作品', 'err'); return; }
+        if (!d.title && !d.name) { U.toast(desk === 'chapters' ? L.need_chapter_name : L.need_work_title, 'err'); return; }
+        if (desk === 'chapters' && !d.novel_id) { U.toast(L.select_work, 'err'); return; }
         U.post(url + '/save', d).then(function (r) {
-            if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return; }
+            if (!r || r.code !== 0) { U.toast((r && r.msg) || L.fail, 'err'); return; }
             var keep = form.querySelector('[name=novel_id]');
             var keepVal = keep ? keep.value : '';
             form.reset();
@@ -262,7 +309,7 @@
             var focus = form.querySelector('input[type=text]');
             if (focus) focus.focus();
             table.refresh();
-            U.toast((r && r.msg) || '已添加', 'ok');
+            U.toast((r && r.msg) || L.added, 'ok');
         });
     }
 

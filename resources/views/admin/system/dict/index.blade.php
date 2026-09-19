@@ -32,7 +32,7 @@
             <input type="hidden" name="status">
             <input type="search" name="q" placeholder="{{ $ui['find'] ?? '搜类型、Key 或显示名' }}" autocomplete="off" aria-label="搜索字典">
             <button type="button" class="btn btn-sm" id="dict-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="dict-reset-btn">重置</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="dict-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="dict-table"></div>
     </div>

@@ -1,47 +1,84 @@
 @extends('admin.layouts.inner')
-@section('title', $title ?? admin_t('page.plots'))
+@section('title', $title ?? admin_t('ui.plots'))
 
 @php
     $queues = $queues ?? ['all' => 0, 'no_content' => 0, 'no_title' => 0, 'no_video' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $videoId = (int) ($videoId ?? 0);
     $videoTitle = (string) ($videoTitle ?? '');
+    $plotJsLang = [
+        'sort' => admin_t('ui.sort'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'add_plot' => admin_t('ui.add_plot'),
+        'edit_plot' => admin_t('ui.edit_plot'),
+        'col_plot' => admin_t('ui.col_plot'),
+        'col_video' => admin_t('ui.col_video'),
+        'col_episode' => admin_t('ui.col_episode'),
+        'col_written' => admin_t('ui.col_written'),
+        'empty_plots' => admin_t('ui.empty_plots'),
+        'empty_plots_hint' => admin_t('ui.empty_plots_hint'),
+        'no_match_plots' => admin_t('ui.no_match_plots'),
+        'no_content_meta' => admin_t('ui.no_content_meta'),
+        'no_video_linked' => admin_t('ui.no_video_linked'),
+        'video_deleted' => admin_t('ui.video_deleted', ['id' => '__ID__']),
+        'video_hash' => admin_t('ui.video_hash', ['id' => '__ID__']),
+        'hint_plot_video' => admin_t('ui.hint_plot_video'),
+        'plot_video_missing' => admin_t('ui.plot_video_missing', ['id' => '__ID__']),
+        'attach_to_video' => admin_t('ui.attach_to_video', ['name' => '__NAME__']),
+        'please_fill_video_id' => admin_t('ui.please_fill_video_id'),
+        'please_fill_episode' => admin_t('ui.please_fill_episode'),
+        'please_fill_plot' => admin_t('ui.please_fill_plot'),
+        'please_select_plots' => admin_t('ui.please_select_plots'),
+        'confirm_batch_del_plots' => admin_t('ui.confirm_batch_del_plots'),
+        'confirm_del_plot' => admin_t('ui.confirm_del_plot', ['name' => '__NAME__']),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel plot-index" id="plot-index">
     <div class="card-header">
-        <span>分集剧情 <em id="plot-count"></em></span>
+        <span>{{ admin_t('ui.plots') }} <em id="plot-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="plot-add-btn">新增剧情</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video">影片</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?has_plot=1">有剧情的片子</a>
+            <button type="button" class="btn btn-sm" id="plot-add-btn">{{ admin_t('ui.add_plot') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.videos') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?has_plot=1">{{ admin_t('ui.videos_with_plot') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">按集写剧情，挂到一部片子。详情页会列出。不会从播放地址自动生成。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.plots_lead') }}</p>
         @if($videoId > 0)
-            <p class="plot-focus">{{ $videoTitle !== '' ? '正在看「'.$videoTitle.'」的分集剧情。' : '影片 #'.$videoId.' 不存在，保存时会失败。' }}</p>
+            <p class="plot-focus">{{ $videoTitle !== '' ? admin_t('ui.plot_focus', ['name' => $videoTitle]) : admin_t('ui.plot_video_missing', ['id' => $videoId]) }}</p>
         @endif
         <form class="filter-bar" id="plot-search" onsubmit="return false;">
             <input type="hidden" name="empty_video">
             <input type="hidden" name="empty_content">
             <input type="hidden" name="empty_title">
             <input type="hidden" name="video_id" value="{{ $videoId > 0 ? $videoId : '' }}">
-            <input type="search" name="q" placeholder="搜剧情、片名或集数" autocomplete="off" aria-label="搜索分集剧情">
-            <button type="button" class="btn btn-sm" id="plot-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="plot-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_plot') }}" autocomplete="off" aria-label="{{ admin_t('ui.plots') }}">
+            <button type="button" class="btn btn-sm" id="plot-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="plot-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="plot-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_content" data-value="1">没写正文@if($q('no_content') > 0)<em>{{ $q('no_content') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_title" data-value="1">没写标题@if($q('no_title') > 0)<em>{{ $q('no_title') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_video" data-value="1">没挂影片@if($q('no_video') > 0)<em>{{ $q('no_video') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_content" data-value="1">{{ admin_t('ui.chip_no_content') }}@if($q('no_content') > 0)<em>{{ $q('no_content') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_title" data-value="1">{{ admin_t('ui.chip_no_title') }}@if($q('no_title') > 0)<em>{{ $q('no_title') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_video" data-value="1">{{ admin_t('ui.chip_no_video') }}@if($q('no_video') > 0)<em>{{ $q('no_video') }}</em>@endif</button>
         </div>
         <div class="batch-bar" id="plot-batch" hidden>
-            <strong id="plot-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="plot-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="plot-batch-clear">取消选择</button>
+            <strong id="plot-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="plot-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="plot-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="plot-table"></div>
     </div>
@@ -49,19 +86,19 @@
 <template id="plot-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>影片 ID</label>
-        <input type="number" name="video_id" min="1" placeholder="这部戏的影片编号" inputmode="numeric" required>
-        <p class="muted field-hint" id="plot-video-hint">必须挂到一部已有的片子。</p>
-        <label>集数</label>
-        <input type="number" name="episode_num" min="1" placeholder="从 1 开始" inputmode="numeric" required>
-        <p class="muted field-hint">同一部片子每一集只能写一条。不必等播放地址齐了再写。</p>
-        <label>标题</label>
-        <input type="text" name="title" placeholder="可空，空着列表会显示第几集">
-        <label>剧情</label>
-        <textarea name="content" rows="8" placeholder="这一集发生了什么，不要整集台词" required></textarea>
-        <label>排序</label>
+        <label>{{ admin_t('ui.label_video_id') }}</label>
+        <input type="number" name="video_id" min="1" placeholder="{{ admin_t('ui.ph_video_id') }}" inputmode="numeric" required>
+        <p class="muted field-hint" id="plot-video-hint">{{ admin_t('ui.hint_plot_video') }}</p>
+        <label>{{ admin_t('ui.label_episode') }}</label>
+        <input type="number" name="episode_num" min="1" placeholder="{{ admin_t('ui.ph_episode') }}" inputmode="numeric" required>
+        <p class="muted field-hint">{{ admin_t('ui.hint_episode') }}</p>
+        <label>{{ admin_t('ui.title_label') }}</label>
+        <input type="text" name="title" placeholder="{{ admin_t('ui.ph_plot_title') }}">
+        <label>{{ admin_t('ui.label_plot') }}</label>
+        <textarea name="content" rows="8" placeholder="{{ admin_t('ui.ph_plot_content') }}" required></textarea>
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <p class="muted field-hint">数字越小越靠前。一般不用改。</p>
+        <p class="muted field-hint">{{ admin_t('ui.hint_sort_asc') }}</p>
     </form>
 </template>
 @endsection
@@ -70,6 +107,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($plotJsLang);
     var QUEUE_KEYS = ['empty_video', 'empty_content', 'empty_title'];
     var form = document.getElementById('plot-search');
     var batchBar = document.getElementById('plot-batch');
@@ -115,16 +153,16 @@
         var title = d.title_text || d.title || '';
         var preview = d.content_preview || '';
         var meta = '#' + U.escape(d.id);
-        if (!d.has_content) meta += ' · 没写正文';
+        if (!d.has_content) meta += ' · ' + L.no_content_meta;
         else if (preview) meta += ' · ' + U.escape(preview);
         return '<div><a class="vod-title js-edit" href="#">' + U.escape(title) + '</a>'
             + '<div class="muted">' + meta + '</div></div>';
     }
     function videoHtml(d) {
         var vid = parseInt(d.video_id, 10) || 0;
-        if (vid < 1) return '<span class="muted">没挂影片</span>';
-        if (d.video_missing) return '<span class="muted">片子已删 #' + vid + '</span>';
-        var title = d.video_title || ('影片 #' + vid);
+        if (vid < 1) return '<span class="muted">' + L.no_video_linked + '</span>';
+        if (d.video_missing) return '<span class="muted">' + String(L.video_deleted || '').replace('__ID__', vid) + '</span>';
+        var title = d.video_title || String(L.video_hash || '').replace('__ID__', vid);
         return '<a href="/admin/video/' + vid + '/edit">' + U.escape(title) + '</a>';
     }
 
@@ -136,9 +174,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的分集剧情</p><p><button type="button" class="btn btn-muted btn-sm" id="plot-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_plots + '</p><p><button type="button" class="btn btn-muted btn-sm" id="plot-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有分集剧情</p><p class="muted">点新增，填影片、集数和这一集发生了什么。不会从播放地址自动生成。</p><p><button type="button" class="btn btn-primary btn-sm" id="plot-empty-add">新增剧情</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_plots + '</p><p class="muted">' + L.empty_plots_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="plot-empty-add">' + L.add_plot + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('plot-empty-add');
@@ -152,20 +190,20 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', ids.length);
         },
         cols: [
             {check: true, width: 36},
-            {title: '剧情', html: plotHtml},
-            {title: '影片', html: videoHtml},
-            {title: '集数', width: 88, html: function (d) { return U.escape(d.episode_label || ''); }},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '写入', width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.col_plot, html: plotHtml},
+            {title: L.col_video, html: videoHtml},
+            {title: L.col_episode, width: 88, html: function (d) { return U.escape(d.episode_label || ''); }},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.col_written, width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/plot/' + encodeURIComponent(d.id));
-                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>'
+                    + '<a href="#" class="btn-link js-edit">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -177,10 +215,10 @@
         function setHint(text) { if (videoHint) videoHint.textContent = text; }
         function showVideo(id, title, missing) {
             id = parseInt(id, 10) || 0;
-            if (id < 1) { setHint('必须挂到一部已有的片子。'); return; }
-            if (missing) { setHint('影片 #' + id + ' 不存在，保存会失败。'); return; }
-            if (title) { setHint('将挂到「' + title + '」。'); return; }
-            setHint('影片 #' + id);
+            if (id < 1) { setHint(L.hint_plot_video); return; }
+            if (missing) { setHint(String(L.plot_video_missing || '').replace('__ID__', id)); return; }
+            if (title) { setHint(String(L.attach_to_video || '').replace('__NAME__', title)); return; }
+            setHint(String(L.video_hash || '').replace('__ID__', id));
         }
         showVideo(videoInput.value, row.video_title || (String(videoInput.value) === String(prefillVideo) ? prefillVideoTitle : ''), row.video_missing);
         videoInput.addEventListener('blur', function () {
@@ -197,7 +235,8 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑剧情' : '新增剧情',
+            wide: true,
+            title: mode === 'edit' ? L.edit_plot : L.add_plot,
             content: document.getElementById('plot-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -217,13 +256,13 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.video_id) { U.toast('请填写影片 ID', 'err'); return false; }
-                if (!data.episode_num || parseInt(data.episode_num, 10) < 1) { U.toast('请填写集数，从 1 开始', 'err'); return false; }
-                if (mode !== 'edit' && !data.content) { U.toast('请填写这一集的剧情', 'err'); return false; }
+                if (!data.video_id) { U.toast(L.please_fill_video_id, 'err'); return false; }
+                if (!data.episode_num || parseInt(data.episode_num, 10) < 1) { U.toast(L.please_fill_episode, 'err'); return false; }
+                if (mode !== 'edit' && !data.content) { U.toast(L.please_fill_plot, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/plots/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -233,12 +272,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选剧情', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_plots, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/plots/batch', {ids: ids.join(','), action: action}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -255,7 +294,7 @@
         if (!chip) return;
         applyQueue(chip.getAttribute('data-queue') || '', chip.getAttribute('data-value') || '');
     });
-    U.on('#plot-batch-del', 'click', function () { batch('delete', '确认删除选中剧情？'); });
+    U.on('#plot-batch-del', 'click', function () { batch('delete', L.confirm_batch_del_plots); });
     U.on('#plot-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#plot-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -267,11 +306,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除「' + (row.title_text || row.episode_label || '') + '」的剧情？')) return;
+            if (!U.confirm(String(L.confirm_del_plot || '').replace('__NAME__', row.title_text || row.episode_label || ''))) return;
             U.post('/admin/video/plots/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

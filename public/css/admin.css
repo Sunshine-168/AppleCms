@@ -5564,10 +5564,40 @@ pre.out, pre.code-block {
     font-weight: 600;
 }
 .ui-dialog-body { padding: 16px; max-height: calc(100vh - 180px); overflow: auto; }
-.ui-dialog-body label { margin-top: 0; }
-.ui-dialog-body label + input,
-.ui-dialog-body label + select,
-.ui-dialog-body label + textarea { margin-bottom: 10px; }
+.ui-dialog-body label {
+    display: block;
+    margin: 12px 0 6px;
+    font-weight: 500;
+}
+.ui-dialog-body label:first-child,
+.ui-dialog-body .field-hint + label,
+.ui-dialog-body input[type=hidden] + label { margin-top: 0; }
+.ui-dialog-body input[type=text],
+.ui-dialog-body input[type=number],
+.ui-dialog-body input[type=search],
+.ui-dialog-body input[type=url],
+.ui-dialog-body input[type=email],
+.ui-dialog-body input:not([type]),
+.ui-dialog-body select,
+.ui-dialog-body textarea {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin-bottom: 0;
+}
+.ui-dialog-body .field-hint { margin: 6px 0 0; }
+.ui-dialog-body .field-inline { max-width: none; margin-bottom: 0; }
+.ui-dialog-body .img-preview,
+.ui-dialog-body .link-logo-preview {
+    display: block;
+    margin-top: 8px;
+    max-width: 200px;
+    max-height: 120px;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+.ui-dialog-body .tag-form { max-width: none; }
 .ui-dialog-foot {
     padding: 12px 16px;
     border-top: 1px solid var(--line);
@@ -6370,4 +6400,37 @@ pre.out, pre.code-block {
     .runtime-charts, .runtime-kpis, .runtime-form-grid, .runtime-snap { grid-template-columns: 1fr; }
 }
 
-
+/* Shared admin dialog form layout */
+.admin-dialog-grid,
+.live-dialog-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    margin-top: 4px;
+}
+.admin-dialog-grid label,
+.live-dialog-grid label,
+.ui-dialog .admin-dialog-grid label,
+.ui-dialog .live-dialog-grid label { margin-top: 0; }
+.ui-dialog-body h3 {
+    margin: 20px 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.ui-dialog-body h3:first-of-type { margin-top: 4px; }
+.ui-dialog-body .form-more {
+    margin: 16px 0 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fafbfc;
+}
+.tag-form .entry-title,
+.ui-dialog input.entry-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+@media (max-width: 640px) {
+    .admin-dialog-grid,
+    .live-dialog-grid { grid-template-columns: 1fr; }
+}

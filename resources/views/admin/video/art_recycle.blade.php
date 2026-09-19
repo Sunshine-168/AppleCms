@@ -22,7 +22,7 @@
             <input type="hidden" name="trash" value="1">
             <input type="search" name="q" placeholder="搜索已删内容的标题或 ID" autocomplete="off" aria-label="搜索回收站">
             <button type="button" class="btn btn-sm" id="art-recycle-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="art-recycle-reset-btn">重置</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="art-recycle-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <p class="muted recycle-lead">还原后回到文章，状态与栏目保持删除前的样子。彻底删除无法恢复。</p>
         <div class="batch-bar" id="art-recycle-batch" hidden>

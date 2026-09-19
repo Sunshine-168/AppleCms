@@ -58,8 +58,8 @@
                     <option value="1">顶部</option>
                     <option value="2">底部</option>
                 </select>
-                <button type="button" class="btn btn-sm" id="dm-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="dm-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="dm-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="dm-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div class="queue-chips" id="dm-queues">
                 <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

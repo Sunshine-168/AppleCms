@@ -44,7 +44,7 @@
 
             <h3>基本</h3>
             <label for="work-title">名称</label>
-            <input id="work-title" type="text" name="title" value="{{ $title }}" required autofocus>
+            <input id="work-title" class="entry-title" type="text" name="title" value="{{ $title }}" required autofocus>
 
             <label>作者 / 模特</label>
             <div class="pick-field" id="work-author-pick"

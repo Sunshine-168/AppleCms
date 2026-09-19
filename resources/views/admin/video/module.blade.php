@@ -6,7 +6,7 @@
         <p class="hint">{{ $hint }}</p>
     @endif
     <div class="toolbar">
-        <button type="button" class="btn btn-sm" id="mod-add">新增</button>
+        <button type="button" class="btn btn-sm" id="mod-add">{{ admin_t('ui.add') }}</button>
         <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">刷新</button>
         @if($module === 'invites')
             <button type="button" class="btn btn-muted btn-sm" id="mod-gen">批量生成</button>
@@ -16,7 +16,7 @@
         @endif
         <form class="filter-bar" id="mod-search-form" onsubmit="return false;">
             <input type="search" id="mod-q" name="{{ $search }}" placeholder="{{ $search }}" autocomplete="off">
-            <button type="submit" class="btn btn-sm" id="mod-search">查询</button>
+            <button type="submit" class="btn btn-sm" id="mod-search">{{ admin_t('ui.search') }}</button>
         </form>
     </div>
     <div id="mod-table"></div>

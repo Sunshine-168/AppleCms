@@ -17,8 +17,8 @@
         <form class="filter-bar menu-find" id="menu-search">
             <input type="search" name="name" placeholder="搜名称" autocomplete="off" aria-label="搜索菜单">
             <input type="search" name="api" placeholder="搜地址" autocomplete="off" aria-label="搜索地址">
-            <button type="submit" class="btn btn-sm" id="menu-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="menu-reset-btn">重置</button>
+            <button type="submit" class="btn btn-sm" id="menu-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="menu-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="menu-table" class="access-table"></div>
     </div>

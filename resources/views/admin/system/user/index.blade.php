@@ -49,8 +49,8 @@
             <input type="hidden" name="kind">
             <input type="hidden" name="role_id">
             <input type="search" name="q" placeholder="搜登录名或邮箱" autocomplete="off" aria-label="搜索管理员">
-            <button type="submit" class="btn btn-sm" id="admin-user-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="admin-user-reset-btn">重置</button>
+            <button type="submit" class="btn btn-sm" id="admin-user-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="admin-user-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="admin-user-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

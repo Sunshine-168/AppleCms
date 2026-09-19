@@ -22,8 +22,8 @@
             <input type="hidden" name="action">
             <input type="hidden" name="scope">
             <input type="search" name="q" placeholder="搜名称或关键词" autocomplete="off" aria-label="搜索审核规则">
-            <button type="button" class="btn btn-sm" id="audit-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="audit-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="audit-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="audit-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="audit-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

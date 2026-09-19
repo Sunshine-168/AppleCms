@@ -12,7 +12,7 @@
         <span>优惠券 <em id="coupon-count"></em></span>
         <div>
             @if($desk === 'campaigns')
-                <button type="button" class="btn btn-sm" id="coupon-add-btn">新增</button>
+                <button type="button" class="btn btn-sm" id="coupon-add-btn">{{ admin_t('ui.add') }}</button>
             @endif
         </div>
     </div>
@@ -48,8 +48,8 @@
                     <option value="0">停用</option>
                 </select>
             @endif
-            <button type="button" class="btn btn-sm" id="coupon-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="coupon-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="coupon-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="coupon-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="coupon-table" class="desk-table"></div>
     </div>
@@ -58,18 +58,26 @@
     <form>
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="campaigns">
+        <h3>基本</h3>
         <label>优惠券名称</label>
-        <input type="text" name="name" required placeholder="例如：新人立减券">
-        <label>类型</label>
-        <select name="type">
-            <option value="amount">满减</option>
-            <option value="discount">折扣</option>
-        </select>
-        <label>面额/折扣</label>
-        <input type="text" name="value" value="0.00" required>
+        <input class="entry-title" type="text" name="name" required placeholder="例如：新人立减券" autofocus>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>类型</label>
+                <select name="type">
+                    <option value="amount">满减</option>
+                    <option value="discount">折扣</option>
+                </select>
+            </div>
+            <div>
+                <label>面额/折扣</label>
+                <input type="text" name="value" value="0.00" required>
+            </div>
+        </div>
         <p class="muted field-hint">满减填元，折扣填 0 到 100 的百分比。全额抵成 0 元下不了单。</p>
         <label>满减门槛</label>
         <input type="text" name="min_price" value="0.00">
+        <p class="muted field-hint">订单金额需达到此门槛才可用。0 表示无门槛。</p>
         <label>适用场景</label>
         <select name="scene">
             <option value="all">通用</option>
@@ -77,10 +85,18 @@
             <option value="vip">会员</option>
         </select>
         <p class="muted field-hint">通用和充值可在现金充值里用。会员要现金买会员组才对得上，本站会员组走积分商城。</p>
-        <label>发放总数</label>
-        <input type="number" name="total" value="10" min="1">
-        <label>每人限额</label>
-        <input type="number" name="per_user" value="1" min="1" max="1" readonly>
+
+        <h3>发放</h3>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>发放总数</label>
+                <input type="number" name="total" value="10" min="1">
+            </div>
+            <div>
+                <label>每人限额</label>
+                <input type="number" name="per_user" value="1" min="1" max="1" readonly>
+            </div>
+        </div>
         <label>适用会员组</label>
         <div class="check-row">
             @forelse($groups as $group)
@@ -89,6 +105,7 @@
                 <span class="muted">还没有会员组</span>
             @endforelse
         </div>
+        <p class="muted field-hint">不勾表示全部会员组可用。</p>
         <label>适用时长</label>
         <div class="check-row">
             <label class="check-inline"><input type="checkbox" name="longs[]" value="day"> 日</label>
@@ -97,10 +114,18 @@
             <label class="check-inline"><input type="checkbox" name="longs[]" value="year"> 年</label>
         </div>
         <p class="muted field-hint">时长只在现金买会员时校验。不勾表示不限。</p>
-        <label>开始时间</label>
-        <input type="datetime-local" name="start_at">
-        <label>结束时间</label>
-        <input type="datetime-local" name="end_at">
+
+        <h3>有效期</h3>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>开始时间</label>
+                <input type="datetime-local" name="start_at">
+            </div>
+            <div>
+                <label>结束时间</label>
+                <input type="datetime-local" name="end_at">
+            </div>
+        </div>
         <p class="muted field-hint">结束留空表示长期有效。</p>
         <label>状态</label>
         <select name="status">

@@ -4,44 +4,76 @@
 @php
     $queues = $queues ?? ['all' => 0, 'on' => 0, 'off' => 0, 'unused' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $extClassJsLang = [
+        'label_ext_class' => admin_t('ui.label_ext_class'),
+        'sort' => admin_t('ui.sort'),
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'videos' => admin_t('nav.videos'),
+        'add_ext_class' => admin_t('ui.add_ext_class'),
+        'edit_ext_class' => admin_t('ui.edit_ext_class'),
+        'go_types' => admin_t('ui.go_types'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'videos_used_n' => admin_t('ui.videos_used_n', ['n' => '__N__']),
+        'ext_class_no_videos' => admin_t('ui.ext_class_no_videos'),
+        'empty_ext_classes' => admin_t('ui.empty_ext_classes'),
+        'empty_ext_classes_hint' => admin_t('ui.empty_ext_classes_hint'),
+        'no_match_ext_classes' => admin_t('ui.no_match_ext_classes'),
+        'please_fill_ext_class' => admin_t('ui.please_fill_ext_class'),
+        'please_one_word' => admin_t('ui.please_one_word'),
+        'please_select_ext_classes' => admin_t('ui.please_select_ext_classes'),
+        'confirm_batch_del_ext_classes' => admin_t('ui.confirm_batch_del_ext_classes'),
+        'confirm_del_ext_class' => admin_t('ui.confirm_del_ext_class', ['name' => '__NAME__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel extclass-index" id="extclass-index">
     <div class="card-header">
-        <span>扩展分类 <em id="extclass-count"></em></span>
+        <span>{{ admin_t('ui.ext_classes') }} <em id="extclass-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="extclass-add-btn">新增类型词</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/types">分类</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tags">标签</a>
+            <button type="button" class="btn btn-sm" id="extclass-add-btn">{{ admin_t('ui.add_ext_class') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/types">{{ admin_t('ui.types') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tags">{{ admin_t('ui.tags') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">分类页的「类型」筛选词，如喜剧、动作。栏目树在「分类」。贺岁、高分去标签。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.ext_classes_lead') }}</p>
         <form class="filter-bar" id="extclass-search" onsubmit="return false;">
             <input type="hidden" name="unused">
-            <input type="search" name="q" placeholder="搜类型词" autocomplete="off" aria-label="搜索扩展分类">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_ext_class') }}" autocomplete="off" aria-label="{{ admin_t('ui.ext_classes') }}">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="extclass-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="extclass-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="extclass-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="extclass-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="extclass-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">启用@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="unused" data-value="1">没片子用@if($q('unused') > 0)<em>{{ $q('unused') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.enabled') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.disabled') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="unused" data-value="1">{{ admin_t('ui.unused_videos') }}@if($q('unused') > 0)<em>{{ $q('unused') }}</em>@endif</button>
         </div>
-        <p class="muted field-hint">词库空着时，分类页会用片子上已有的类型词。这里一旦有启用词，筛选只显示这些。采集写入的是影片上的词，不会自动进这张表。</p>
+        <p class="muted field-hint">{{ admin_t('ui.ext_classes_hint') }}</p>
         <div class="batch-bar" id="extclass-batch" hidden>
-            <strong id="extclass-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="extclass-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="extclass-batch-off">停用</button>
-            <button type="button" class="btn btn-danger btn-sm" id="extclass-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="extclass-batch-clear">取消选择</button>
+            <strong id="extclass-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="extclass-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="extclass-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="extclass-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="extclass-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="extclass-table"></div>
     </div>
@@ -49,15 +81,15 @@
 <template id="extclass-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>类型词</label>
-        <input type="text" name="name" placeholder="如 喜剧" required>
-        <p class="muted field-hint">一次一个词。会出现在分类页「类型」。不要写成电影、电视剧，那是分类。</p>
-        <label>排序</label>
+        <label>{{ admin_t('ui.label_ext_class') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_ext_class_name') }}" required>
+        <p class="muted field-hint">{{ admin_t('ui.hint_ext_class_name') }}</p>
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <label>状态</label>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.enabled') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
     </form>
 </template>
@@ -67,6 +99,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($extClassJsLang);
     var QUEUE_KEYS = ['unused'];
     var form = document.getElementById('extclass-search');
     var batchBar = document.getElementById('extclass-batch');
@@ -109,9 +142,11 @@
         markChips();
     }
     function nameHtml(d) {
-        var badge = d.is_on ? '' : '<span class="badge badge-off">停用</span>';
+        var badge = d.is_on ? '' : '<span class="badge badge-off">' + L.disabled + '</span>';
         var used = parseInt(d.used_count, 10) || 0;
-        var meta = used > 0 ? (used + ' 部片子') : '还没片子用';
+        var meta = used > 0
+            ? String(L.videos_used_n || '').replace('__N__', String(used))
+            : L.ext_class_no_videos;
         return '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '') + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div></div>';
     }
@@ -124,9 +159,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的类型词</p><p><button type="button" class="btn btn-muted btn-sm" id="extclass-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_ext_classes + '</p><p><button type="button" class="btn btn-muted btn-sm" id="extclass-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有扩展分类</p><p class="muted">点新增，填喜剧、动作这种筛选词。栏目树请去分类，不要在这里建电影、电视剧。</p><p><button type="button" class="btn btn-primary btn-sm" id="extclass-empty-add">新增类型词</button> <a class="btn btn-muted btn-sm" href="/admin/video/types">去分类</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_ext_classes + '</p><p class="muted">' + L.empty_ext_classes_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="extclass-empty-add">' + L.add_ext_class + '</button> <a class="btn btn-muted btn-sm" href="/admin/video/types">' + L.go_types + '</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('extclass-empty-add');
@@ -136,21 +171,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '类型词', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return d.is_on ? U.status(true, '启用') : U.status(false, '停用');
+            {title: L.label_ext_class, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                return d.is_on ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var used = parseInt(d.used_count, 10) || 0;
                 var html = '';
-                if (used > 0) html += '<a href="/admin/video" class="btn-link">影片</a>';
-                html += '<a href="#" class="btn-link js-edit">编辑</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                if (used > 0) html += '<a href="/admin/video" class="btn-link">' + L.videos + '</a>';
+                html += '<a href="#" class="btn-link js-edit">' + L.edit + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -160,7 +195,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑类型词' : '新增类型词',
+            title: mode === 'edit' ? L.edit_ext_class : L.add_ext_class,
             content: document.getElementById('extclass-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
@@ -172,12 +207,12 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写类型词', 'err'); return false; }
-                if (/[,，]/.test(data.name)) { U.toast('一次只写一个词，不要逗号', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_ext_class, 'err'); return false; }
+                if (/[,，]/.test(data.name)) { U.toast(L.please_one_word, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/classes/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -187,12 +222,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选类型词', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_ext_classes, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/classes/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -206,7 +241,7 @@
     });
     U.on('#extclass-batch-on', 'click', function () { batch('status', 1); });
     U.on('#extclass-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#extclass-batch-del', 'click', function () { batch('delete', '', '确认删除选中类型词？片子上的词还在，只是词库少了。'); });
+    U.on('#extclass-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_ext_classes); });
     U.on('#extclass-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#extclass-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -218,11 +253,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除类型词「' + (row.name || '') + '」？片子上的词还在。')) return;
+            if (!U.confirm(String(L.confirm_del_ext_class || '').replace('__NAME__', row.name || ''))) return;
             U.post('/admin/video/classes/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

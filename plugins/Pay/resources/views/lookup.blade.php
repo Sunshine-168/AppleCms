@@ -18,7 +18,7 @@
                     <input type="text" name="order_no" value="{{ $order_no }}" required placeholder="例如 P20260918120000ABCDEF" autocomplete="off">
                 </label>
                 <div class="auth-actions">
-                    <button type="submit" class="btn-play btn-sm">查询</button>
+                    <button type="submit" class="btn-play btn-sm">{{ admin_t('ui.search') }}</button>
                     <a class="btn-ghost" href="{{ url('/member/pay') }}">去充值</a>
                 </div>
             </form>

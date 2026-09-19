@@ -132,8 +132,8 @@
                     <option value="1">启用</option>
                     <option value="0">停用</option>
                 </select>
-                <button type="button" class="btn btn-sm" id="pay-ch-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="pay-ch-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="pay-ch-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="pay-ch-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="pay-ch-table"></div>
         @endif
@@ -144,8 +144,9 @@
 <template id="pay-ch-tpl">
     <form>
         <input type="hidden" name="id">
+        <h3>通道</h3>
         <label>名称</label>
-        <input type="text" name="title" required placeholder="如 支付宝通道 / 微信H5">
+        <input class="entry-title" type="text" name="title" required placeholder="如 支付宝通道 / 微信H5" autofocus>
         <label>驱动</label>
         <select name="driver">
             @foreach($drivers as $k => $label)
@@ -155,26 +156,44 @@
         <p class="muted field-hint">易支付：api_url 填到域名根（会拼 submit.php）。DfPay：api_url 填下单接口完整地址，产品码必填。</p>
         <label>产品码</label>
         <input type="text" name="code" placeholder="易支付：alipay / wxpay；DfPay：对方给的 payType">
+        <p class="muted field-hint">对应第三方支付方式编码，不是本站订单号。</p>
+
+        <h3>网关凭证</h3>
         <label>网关地址</label>
         <input type="text" name="api_url" required placeholder="https://pay.example.com/">
         <label>商户号</label>
         <input type="text" name="mch_id" required placeholder="pid / partnerid">
         <label>密钥</label>
         <input type="text" name="app_key" required placeholder="appkey / sign key">
-        <label>最低金额（元）</label>
-        <input type="number" name="min_yuan" value="0" min="0" step="0.01">
-        <label>最高金额（元）</label>
-        <input type="number" name="max_yuan" value="0" min="0" step="0.01">
-        <p class="muted field-hint">填 0 表示不限。</p>
+        <p class="muted field-hint">密钥只保存在本站，前台不会展示。改密钥后新单立即生效。</p>
+
+        <h3>限额与展示</h3>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>最低金额（元）</label>
+                <input type="number" name="min_yuan" value="0" min="0" step="0.01">
+            </div>
+            <div>
+                <label>最高金额（元）</label>
+                <input type="number" name="max_yuan" value="0" min="0" step="0.01">
+            </div>
+        </div>
+        <p class="muted field-hint">填 0 表示不限。前台充值会校验区间。</p>
         <label>说明</label>
         <input type="text" name="hint" placeholder="前台可选备注">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
-        </select>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>状态</label>
+                <select name="status">
+                    <option value="1">启用</option>
+                    <option value="0">停用</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 @endif
@@ -257,6 +276,7 @@
         row = row || {};
         U.dialog({
             title: mode === 'edit' ? '编辑通道' : '新增通道',
+            wide: true,
             content: document.getElementById('pay-ch-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), fill(mode, row));

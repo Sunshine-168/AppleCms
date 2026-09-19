@@ -20,8 +20,8 @@
     <input type="hidden" name="visitor">
     <input type="hidden" name="ip" value="{{ $access_ip }}">
     <input type="search" name="q" placeholder="搜 IP、地址或标识" autocomplete="off" aria-label="搜索访问流水">
-    <button type="button" class="btn btn-sm" id="accesslog-search-btn">查询</button>
-    <button type="reset" class="btn btn-muted btn-sm" id="accesslog-reset-btn">重置</button>
+    <button type="button" class="btn btn-sm" id="accesslog-search-btn">{{ admin_t('ui.search') }}</button>
+    <button type="reset" class="btn btn-muted btn-sm" id="accesslog-reset-btn">{{ admin_t('ui.reset') }}</button>
 </form>
 <div class="queue-chips" id="accesslog-queues">
     <button type="button" class="chip" data-chip="all">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

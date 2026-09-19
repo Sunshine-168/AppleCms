@@ -5,16 +5,50 @@
     $queues = $queues ?? ['all' => 0, 'all_members' => 0, 'one' => 0, 'unread' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $memberId = (int) ($memberId ?? 0);
+    $notifyJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'members' => admin_t('ui.members'),
+        'view' => admin_t('ui.view'),
+        'is_read' => admin_t('ui.is_read'),
+        'unread' => admin_t('ui.unread'),
+        'col_notify' => admin_t('ui.col_notify'),
+        'no_title' => admin_t('ui.no_title'),
+        'sitewide' => admin_t('ui.sitewide'),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'empty_notifies' => admin_t('ui.empty_notifies'),
+        'empty_notifies_hint' => admin_t('ui.empty_notifies_hint'),
+        'no_match_notifies' => admin_t('ui.no_match_notifies'),
+        'send_notify' => admin_t('ui.send_notify'),
+        'send' => admin_t('ui.send'),
+        'please_fill_title' => admin_t('ui.please_fill_title'),
+        'please_fill_content' => admin_t('ui.please_fill_content'),
+        'please_fill_target_member_id' => admin_t('ui.please_fill_target_member_id'),
+        'please_select_notifies' => admin_t('ui.please_select_notifies'),
+        'sent' => admin_t('ui.sent'),
+        'view_notify' => admin_t('ui.view_notify'),
+        'close' => admin_t('ui.close'),
+        'marked_read' => admin_t('ui.marked_read'),
+        'confirm_batch_del_notifies' => admin_t('ui.confirm_batch_del_notifies'),
+        'confirm_del_notify' => admin_t('ui.confirm_del_notify'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel notify-index">
     <div class="card-header">
-        <span>会员通知@if($q('unread') > 0) <em>· {{ $q('unread') }} 未读</em>@endif</span>
+        <span>{{ admin_t('ui.notifies') }}@if($q('unread') > 0) <em>{{ admin_t('ui.unread_n', ['n' => $q('unread')]) }}</em>@endif</span>
         <div>
-            <button type="button" class="btn btn-sm" id="notify-add-btn">发通知</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/pms">站内信</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
+            <button type="button" class="btn btn-sm" id="notify-add-btn">{{ admin_t('ui.send_notify') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/pms">{{ admin_t('ui.pms') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
         </div>
     </div>
     <div class="card-body">
@@ -22,23 +56,23 @@
             <input type="hidden" name="is_read">
             <input type="hidden" name="today">
             <input type="hidden" name="audience">
-            <input type="search" name="q" placeholder="搜标题、内容或会员" autocomplete="off" aria-label="搜索会员通知">
-            <button type="button" class="btn btn-sm" id="notify-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="notify-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_notify') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_notifies') }}">
+            <button type="button" class="btn btn-sm" id="notify-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="notify-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="notify-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="audience" data-value="all">全站@if($q('all_members') > 0)<em>{{ $q('all_members') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="audience" data-value="one">指定会员@if($q('one') > 0)<em>{{ $q('one') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="is_read" data-value="0">未读@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="audience" data-value="all">{{ admin_t('ui.sitewide') }}@if($q('all_members') > 0)<em>{{ $q('all_members') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="audience" data-value="one">{{ admin_t('ui.chip_one_member') }}@if($q('one') > 0)<em>{{ $q('one') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="is_read" data-value="0">{{ admin_t('ui.unread') }}@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">会员 ID 为 0（或不填）发给全部会员；填指定 ID 只给那一个人。一对一用「站内信」。这里可标已读；删掉后记录就没了。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.notifies_lead') }}</p>
         <div class="batch-bar" id="notify-batch" hidden>
-            <strong id="notify-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="notify-batch-read">标为已读</button>
-            <button type="button" class="btn btn-danger btn-sm" id="notify-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="notify-batch-clear">取消选择</button>
+            <strong id="notify-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="notify-batch-read">{{ admin_t('ui.mark_as_read') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="notify-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="notify-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="notify-table"></div>
     </div>
@@ -46,27 +80,27 @@
 <template id="notify-compose-tpl">
     <form>
         <input type="hidden" name="is_read" value="0">
-        <label for="notify-scope">范围</label>
+        <label for="notify-scope">{{ admin_t('ui.label_scope') }}</label>
         <select id="notify-scope" name="scope">
-            <option value="0">全部会员</option>
-            <option value="1">指定会员</option>
+            <option value="0">{{ admin_t('ui.scope_all_members') }}</option>
+            <option value="1">{{ admin_t('ui.scope_one_member') }}</option>
         </select>
-        <label for="notify-member">指定会员 ID</label>
-        <input id="notify-member" type="number" name="member_id" min="1" placeholder="会员 ID" autocomplete="off">
-        <p class="muted field-hint">默认发给全部会员。只给一个人填 ID；一对一更适合用「站内信」。</p>
-        <label for="notify-title">标题</label>
+        <label for="notify-member">{{ admin_t('ui.label_target_member_id') }}</label>
+        <input id="notify-member" type="number" name="member_id" min="1" placeholder="{{ admin_t('ui.ph_member_id_short') }}" autocomplete="off">
+        <p class="muted field-hint">{{ admin_t('ui.hint_notify_compose') }}</p>
+        <label for="notify-title">{{ admin_t('ui.label_title') }}</label>
         <input id="notify-title" type="text" name="title" maxlength="120" autocomplete="off">
-        <label for="notify-content">内容</label>
+        <label for="notify-content">{{ admin_t('ui.label_content') }}</label>
         <textarea id="notify-content" name="content" rows="8"></textarea>
     </form>
 </template>
 <template id="notify-view-tpl">
     <form>
-        <label>范围</label>
+        <label>{{ admin_t('ui.label_scope') }}</label>
         <input type="text" name="audience_label" readonly>
-        <label>标题</label>
+        <label>{{ admin_t('ui.label_title') }}</label>
         <input type="text" name="title" readonly>
-        <label>内容</label>
+        <label>{{ admin_t('ui.label_content') }}</label>
         <textarea name="content" rows="8" readonly></textarea>
         <p class="muted field-hint" data-role="meta"></p>
     </form>
@@ -77,6 +111,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($notifyJsLang);
     var form = document.getElementById('notify-search');
     var batchBar = document.getElementById('notify-batch');
     var batchCount = document.getElementById('notify-batch-count');
@@ -121,12 +156,16 @@
         table.reload(queryWhere());
         markChips();
     }
+    function audienceLabel(d) {
+        if (d.audience_label) return d.audience_label;
+        if (parseInt(d.member_id, 10) > 0) return String(L.member_hash || '').replace('__ID__', String(d.member_id));
+        return L.sitewide;
+    }
     function noticeHtml(d) {
-        var audience = d.audience_label || (parseInt(d.member_id, 10) > 0 ? ('会员 #' + d.member_id) : '全站');
-        var meta = U.escape(audience);
+        var meta = U.escape(audienceLabel(d));
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         var preview = d.content_preview || '';
-        return '<div class="comment-cell"><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || '（无标题）') + '</span></div>'
+        return '<div class="comment-cell"><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || L.no_title) + '</span></div>'
             + (preview ? '<div class="muted">' + U.escape(preview) + '</div>' : '')
             + '<div class="muted">' + meta + '</div></div>';
     }
@@ -138,9 +177,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的通知</p><p><button type="button" class="btn btn-muted btn-sm" id="notify-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_notifies + '</p><p><button type="button" class="btn btn-muted btn-sm" id="notify-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有通知</p><p class="muted">点右上角「发通知」。默认发给全部会员；只要一个人用「站内信」。</p><p><button type="button" class="btn btn-primary btn-sm" id="notify-empty-add">发通知</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_notifies + '</p><p class="muted">' + U.escape(L.empty_notifies_hint) + '</p><p><button type="button" class="btn btn-primary btn-sm" id="notify-empty-add">' + L.send_notify + '</button></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -159,21 +198,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '通知', html: noticeHtml},
-            {title: '状态', width: 88, html: function (d) {
-                return parseInt(d.is_read, 10) === 1 ? U.status(true, '已读') : U.status(false, '未读');
+            {title: L.col_notify, html: noticeHtml},
+            {title: L.status, width: 88, html: function (d) {
+                return parseInt(d.is_read, 10) === 1 ? U.status(true, L.is_read) : U.status(false, L.unread);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-view">查看</a>';
-                if (parseInt(d.is_read, 10) !== 1) html += '<a href="#" class="btn-link js-read">已读</a>';
+            {title: L.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-view">' + L.view + '</a>';
+                if (parseInt(d.is_read, 10) !== 1) html += '<a href="#" class="btn-link js-read">' + L.is_read + '</a>';
                 if (parseInt(d.member_id, 10) > 0) {
-                    html += '<a class="btn-link" href="/admin/video/members">会员</a>';
+                    html += '<a class="btn-link" href="/admin/video/members">' + L.members + '</a>';
                 }
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -183,8 +222,8 @@
     function openCompose(row) {
         row = row || {};
         U.dialog({
-            title: '发通知',
-            okText: '发送',
+            title: L.send_notify,
+            okText: L.send,
             content: document.getElementById('notify-compose-tpl').innerHTML,
             onOpen: function (body) {
                 var memberId = row.member_id != null && parseInt(row.member_id, 10) > 0
@@ -206,18 +245,18 @@
                 var data = U.formData(body.querySelector('form'));
                 var mid = parseInt(data.member_id, 10) || 0;
                 if (String(data.scope) === '1') {
-                    if (mid < 1) { U.toast('请填写指定会员 ID', 'err'); return false; }
+                    if (mid < 1) { U.toast(L.please_fill_target_member_id, 'err'); return false; }
                 } else {
                     mid = 0;
                 }
-                if (!String(data.title || '').trim()) { U.toast('请填写标题', 'err'); return false; }
-                if (!String(data.content || '').trim()) { U.toast('请填写内容', 'err'); return false; }
+                if (!String(data.title || '').trim()) { U.toast(L.please_fill_title, 'err'); return false; }
+                if (!String(data.content || '').trim()) { U.toast(L.please_fill_content, 'err'); return false; }
                 data.member_id = mid;
                 data.is_read = 0;
                 delete data.scope;
                 return U.post('/admin/video/notifies/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已发送', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.sent, 'ok');
                     table.refresh();
                 });
             }
@@ -225,20 +264,19 @@
     }
     function openView(row) {
         U.dialog({
-            title: '查看通知',
+            title: L.view_notify,
             hideOk: true,
-            cancelText: '关闭',
+            cancelText: L.close,
             content: document.getElementById('notify-view-tpl').innerHTML,
             onOpen: function (body) {
-                var audience = row.audience_label || (parseInt(row.member_id, 10) > 0 ? ('会员 #' + row.member_id) : '全站');
                 U.fillForm(body.querySelector('form'), {
-                    audience_label: audience,
+                    audience_label: audienceLabel(row),
                     title: row.title || '',
                     content: row.content || ''
                 });
                 var meta = body.querySelector('[data-role=meta]');
                 if (meta) {
-                    var status = parseInt(row.is_read, 10) === 1 ? '已读' : '未读';
+                    var status = parseInt(row.is_read, 10) === 1 ? L.is_read : L.unread;
                     meta.textContent = status + (row.created_at_text ? (' · ' + row.created_at_text) : '');
                 }
             }
@@ -247,19 +285,19 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选通知', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_notifies, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/notifies/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function markRead(row) {
         U.post('/admin/video/notifies/save', {id: row.id, is_read: 1}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast('已标为已读', 'ok');
+            U.toast(L.marked_read, 'ok');
         });
     }
 
@@ -278,7 +316,7 @@
     });
     U.on('#notify-add-btn', 'click', function () { openCompose({}); });
     U.on('#notify-batch-read', 'click', function () { batch('read', 1); });
-    U.on('#notify-batch-del', 'click', function () { batch('delete', '', '删除选中通知？删掉后会员也看不到。'); });
+    U.on('#notify-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_notifies); });
     U.on('#notify-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#notify-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -292,11 +330,11 @@
         if (a.classList.contains('js-view')) openView(row);
         if (a.classList.contains('js-read')) markRead(row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条通知？删掉后会员也看不到。')) return;
+            if (!U.confirm(L.confirm_del_notify)) return;
             U.post('/admin/video/notifies/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

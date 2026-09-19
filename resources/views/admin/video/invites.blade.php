@@ -4,56 +4,104 @@
 @php
     $queues = $queues ?? ['all' => 0, 'unused' => 0, 'used' => 0, 'void' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $inviteJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'close' => admin_t('ui.close'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'card_unused' => admin_t('ui.card_unused'),
+        'invite_used' => admin_t('ui.invite_used'),
+        'card_void' => admin_t('ui.card_void'),
+        'gen_cards' => admin_t('ui.gen_cards'),
+        'generate' => admin_t('ui.generate'),
+        'copy' => admin_t('ui.copy'),
+        'restore' => admin_t('ui.restore'),
+        'members' => admin_t('ui.members'),
+        'col_invite' => admin_t('ui.col_invite'),
+        'copy_invites' => admin_t('ui.copy_invites'),
+        'points_n' => admin_t('ui.points_n', ['n' => '__N__']),
+        'empty_invites' => admin_t('ui.empty_invites'),
+        'empty_invites_hint' => admin_t('ui.empty_invites_hint'),
+        'no_match_invites' => admin_t('ui.no_match_invites'),
+        'please_select_invites' => admin_t('ui.please_select_invites'),
+        'please_fill_qty' => admin_t('ui.please_fill_qty'),
+        'generated_ok' => admin_t('ui.generated_ok'),
+        'generated_invites_n' => admin_t('ui.generated_invites_n', ['n' => '__N__']),
+        'generated_invite_hint' => admin_t('ui.generated_invite_hint'),
+        'invite_codes_copy_lead' => admin_t('ui.invite_codes_copy_lead'),
+        'copy_all' => admin_t('ui.copy_all'),
+        'copied' => admin_t('ui.copied'),
+        'copied_invites_n' => admin_t('ui.copied_invites_n', ['n' => '__N__']),
+        'copied_invite' => admin_t('ui.copied_invite'),
+        'nothing_to_copy' => admin_t('ui.nothing_to_copy'),
+        'copy_fail' => admin_t('ui.copy_fail'),
+        'card_restored' => admin_t('ui.card_restored'),
+        'card_voided' => admin_t('ui.card_voided'),
+        'confirm_batch_void_invites' => admin_t('ui.confirm_batch_void_invites'),
+        'confirm_batch_del_invites' => admin_t('ui.confirm_batch_del_invites'),
+        'confirm_void_invite' => admin_t('ui.confirm_void_invite', ['code' => '__CODE__']),
+        'confirm_del_invite' => admin_t('ui.confirm_del_invite', ['code' => '__CODE__']),
+        'inviter_meta' => admin_t('ui.inviter_meta', ['name' => '__NAME__']),
+        'registrant_meta' => admin_t('ui.registrant_meta', ['name' => '__NAME__']),
+        'system_owner' => admin_t('ui.system_owner'),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel invite-index">
     <div class="card-header">
-        <span>邀请码 <em id="invite-count"></em></span>
+        <span>{{ admin_t('ui.invites') }} <em id="invite-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=interact">注册设置</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/cards">积分卡密</a>
-            <button type="button" class="btn btn-sm" id="invite-gen-btn">批量生成</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=interact">{{ admin_t('ui.register_settings') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/cards">{{ admin_t('ui.cards') }}</a>
+            <button type="button" class="btn btn-sm" id="invite-gen-btn">{{ admin_t('ui.gen_cards') }}</button>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="invite-search" onsubmit="return false;">
             <input type="hidden" name="queue">
             <input type="hidden" name="today">
-            <input type="search" name="q" placeholder="搜邀请码或会员" autocomplete="off" aria-label="搜索邀请码">
-            <button type="button" class="btn btn-sm" id="invite-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="invite-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_invite') }}" autocomplete="off" aria-label="{{ admin_t('ui.invites') }}">
+            <button type="button" class="btn btn-sm" id="invite-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="invite-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="invite-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="queue" data-value="unused">未用@if($q('unused') > 0)<em>{{ $q('unused') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="queue" data-value="used">已用@if($q('used') > 0)<em>{{ $q('used') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="queue" data-value="void">作废@if($q('void') > 0)<em>{{ $q('void') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="queue" data-value="unused">{{ admin_t('ui.card_unused') }}@if($q('unused') > 0)<em>{{ $q('unused') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="queue" data-value="used">{{ admin_t('ui.invite_used') }}@if($q('used') > 0)<em>{{ $q('used') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="queue" data-value="void">{{ admin_t('ui.card_void') }}@if($q('void') > 0)<em>{{ $q('void') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">注册码，一码一次。批量生成可带邀请人会员 ID 和积分：注册成功后新会员加这份积分；邀请人 ID 大于 0 时，邀请人也加同样积分。已用的不能删。卡密兑积分，邀请码管注册。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.invites_lead') }}</p>
         <div class="batch-bar" id="invite-batch" hidden>
-            <strong id="invite-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="invite-batch-copy">复制邀请码</button>
-            <button type="button" class="btn btn-muted btn-sm" id="invite-batch-void">作废</button>
-            <button type="button" class="btn btn-danger btn-sm" id="invite-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="invite-batch-clear">取消选择</button>
+            <strong id="invite-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="invite-batch-copy">{{ admin_t('ui.copy_invites') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="invite-batch-void">{{ admin_t('ui.card_void') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="invite-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="invite-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="invite-table"></div>
     </div>
 </div>
 <template id="invite-gen-tpl">
     <form>
-        <label>数量</label>
+        <label>{{ admin_t('ui.label_invite_count') }}</label>
         <input type="number" name="count" value="10" min="1" max="200">
-        <p class="muted field-hint">一次最多 200 个。生成后会弹出号码，方便复制发给要注册的人。</p>
-        <label>积分</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_invite_count') }}</p>
+        <label>{{ admin_t('ui.label_points') }}</label>
         <input type="number" name="points" value="0" min="0">
-        <p class="muted field-hint">注册成功后新会员加这份积分；邀请人会员 ID 大于 0 时，邀请人也加同样积分。填 0 则不加。</p>
-        <label>邀请人会员 ID</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_invite_points') }}</p>
+        <label>{{ admin_t('ui.label_inviter_id') }}</label>
         <input type="number" name="member_id" value="0" min="0">
-        <p class="muted field-hint">0 = 系统/无归属。填会员 ID 则这批码归该会员，用掉后邀请人也加积分。</p>
+        <p class="muted field-hint">{{ admin_t('ui.hint_inviter_id') }}</p>
     </form>
 </template>
 @endsection
@@ -62,6 +110,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($inviteJsLang);
     var form = document.getElementById('invite-search');
     var batchBar = document.getElementById('invite-batch');
     var batchCount = document.getElementById('invite-batch-count');
@@ -105,9 +154,9 @@
     }
     function copyText(text, okMsg) {
         text = String(text || '').trim();
-        if (!text) { U.toast('没有可复制的内容', 'err'); return; }
-        function ok() { U.toast(okMsg || '已复制', 'ok'); }
-        function fail() { U.toast('复制失败，请手动选择', 'err'); }
+        if (!text) { U.toast(L.nothing_to_copy, 'err'); return; }
+        function ok() { U.toast(okMsg || L.copied, 'ok'); }
+        function fail() { U.toast(L.copy_fail, 'err'); }
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(ok).catch(function () {
                 fallback();
@@ -132,30 +181,38 @@
         }
     }
     function badgeHtml(state) {
-        if (state === 'used') return '<span class="badge badge-ok">已用</span>';
-        if (state === 'void') return '<span class="badge badge-off">作废</span>';
-        return '<span class="badge badge-warn">未用</span>';
+        if (state === 'used') return '<span class="badge badge-ok">' + L.invite_used + '</span>';
+        if (state === 'void') return '<span class="badge badge-off">' + L.card_void + '</span>';
+        return '<span class="badge badge-warn">' + L.card_unused + '</span>';
     }
     function memberHref(id) {
         id = parseInt(id, 10) || 0;
         if (id > 0) return '/admin/video/members?q=' + encodeURIComponent(id);
         return '/admin/video/members';
     }
-    function titleHtml(d) {
-        var owner = d.owner_name || (parseInt(d.member_id, 10) > 0 ? ('会员 #' + d.member_id) : '系统');
-        var meta = ['邀请人 ' + owner];
-        if (d.state === 'used') {
-            meta.push('注册人 ' + (d.used_name || ('会员 #' + d.used_by)));
+    function ownerName(d) {
+        if (d.owner_name) return d.owner_name;
+        if (parseInt(d.member_id, 10) > 0) {
+            return String(L.member_hash || '').replace('__ID__', String(d.member_id));
         }
-        meta.push((parseInt(d.points, 10) || 0) + ' 积分');
+        return L.system_owner;
+    }
+    function titleHtml(d) {
+        var owner = ownerName(d);
+        var meta = [String(L.inviter_meta || '').replace('__NAME__', owner)];
+        if (d.state === 'used') {
+            var regName = d.used_name || String(L.member_hash || '').replace('__ID__', String(d.used_by));
+            meta.push(String(L.registrant_meta || '').replace('__NAME__', regName));
+        }
+        meta.push(String(L.points_n || '').replace('__N__', String(parseInt(d.points, 10) || 0)));
         if (d.created_at_text) meta.push(d.created_at_text);
         return '<div class="entry-row-title-line"><a class="entry-row-title invite-code js-copy" href="#">' + U.escape(d.code || '') + '</a> ' + badgeHtml(d.state) + '</div>'
             + '<div class="entry-row-meta">' + U.escape(meta.join(' · ')) + '</div>';
     }
     function statusHtml(d) {
-        if (d.state === 'used') return U.status(true, '已用');
-        if (d.state === 'void') return U.status(false, '作废');
-        return '<span class="status status-warn">未用</span>';
+        if (d.state === 'used') return U.status(true, L.invite_used);
+        if (d.state === 'void') return U.status(false, L.card_void);
+        return '<span class="status status-warn">' + L.card_unused + '</span>';
     }
     function memberLinkId(d) {
         if (parseInt(d.used_by, 10) > 0) return d.used_by;
@@ -171,9 +228,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的邀请码。</p><p><button type="button" class="btn btn-muted btn-sm" id="invite-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_invites + '</p><p><button type="button" class="btn btn-muted btn-sm" id="invite-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有邀请码</p><p class="muted">点「批量生成」。发给要注册的人。注册时填了有效码才会加积分。</p><p><button type="button" class="btn btn-primary btn-sm" id="invite-empty-gen">批量生成</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_invites + '</p><p class="muted">' + L.empty_invites_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="invite-empty-gen">' + L.gen_cards + '</button></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -192,20 +249,20 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '邀请码', html: titleHtml},
-            {title: '状态', width: 72, html: statusHtml},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-copy">复制</a>';
+            {title: L.col_invite, html: titleHtml},
+            {title: L.status, width: 72, html: statusHtml},
+            {title: L.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-copy">' + L.copy + '</a>';
                 if (d.state === 'unused') {
-                    html += '<a href="#" class="btn-link js-void">作废</a><a href="#" class="btn-link js-del">删除</a>';
+                    html += '<a href="#" class="btn-link js-void">' + L.card_void + '</a><a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 } else if (d.state === 'void') {
-                    html += '<a href="#" class="btn-link js-on">恢复</a><a href="#" class="btn-link js-del">删除</a>';
+                    html += '<a href="#" class="btn-link js-on">' + L.restore + '</a><a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 }
-                html += '<a class="btn-link" href="' + memberHref(memberLinkId(d)) + '">会员</a>';
+                html += '<a class="btn-link" href="' + memberHref(memberLinkId(d)) + '">' + L.members + '</a>';
                 return html;
             }}
         ]
@@ -214,35 +271,35 @@
 
     function openGenerate() {
         U.dialog({
-            title: '批量生成',
+            title: L.gen_cards,
             content: document.getElementById('invite-gen-tpl').innerHTML,
-            okText: '生成',
+            okText: L.generate,
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
                 var count = parseInt(data.count, 10) || 0;
                 var points = parseInt(data.points, 10);
                 if (isNaN(points) || points < 0) points = 0;
                 var memberId = parseInt(data.member_id, 10) || 0;
-                if (count < 1) { U.toast('请填写数量', 'err'); return false; }
+                if (count < 1) { U.toast(L.please_fill_qty, 'err'); return false; }
                 return U.post('/admin/video/invites/generate', {count: count, points: points, member_id: memberId}).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
                     table.refresh();
-                    showCodes((res.data && res.data.codes) || [], (res.msg || '已生成') + '，复制后发给要注册的人');
+                    showCodes((res.data && res.data.codes) || [], (res.msg || L.generated_ok) + L.generated_invite_hint);
                 });
             }
         });
     }
     function showCodes(codes, title) {
         codes = Array.isArray(codes) ? codes : [];
-        if (!codes.length) { U.toast(title || '已生成', 'ok'); return; }
+        if (!codes.length) { U.toast(title || L.generated_ok, 'ok'); return; }
         var text = codes.join('\n');
         U.dialog({
-            title: title || ('已生成 ' + codes.length + ' 个'),
-            content: '<p class="muted field-hint">未用邀请码，发出去前先复制。关闭后仍可在列表里勾选再复制。</p><textarea class="invite-codes" readonly>' + U.escape(text) + '</textarea>',
-            okText: '复制全部',
-            cancelText: '关闭',
+            title: title || String(L.generated_invites_n || '').replace('__N__', String(codes.length)),
+            content: '<p class="muted field-hint">' + L.invite_codes_copy_lead + '</p><textarea class="invite-codes" readonly>' + U.escape(text) + '</textarea>',
+            okText: L.copy_all,
+            cancelText: L.close,
             onSave: function () {
-                copyText(text, '已复制 ' + codes.length + ' 个');
+                copyText(text, String(L.copied_invites_n || '').replace('__N__', String(codes.length)));
                 return false;
             }
         });
@@ -261,19 +318,19 @@
     }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选邀请码', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_invites, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/invites/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status) {
         U.post('/admin/video/invites/save', {id: row.id, status: status}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已恢复' : '已作废', 'ok');
+            U.toast(status === 1 ? L.card_restored : L.card_voided, 'ok');
         });
     }
 
@@ -287,11 +344,11 @@
     });
     U.on('#invite-batch-copy', 'click', function () {
         var codes = selectedCodes();
-        if (!codes.length) { U.toast('请先勾选邀请码', 'err'); return; }
-        copyText(codes.join('\n'), '已复制 ' + codes.length + ' 个');
+        if (!codes.length) { U.toast(L.please_select_invites, 'err'); return; }
+        copyText(codes.join('\n'), String(L.copied_invites_n || '').replace('__N__', String(codes.length)));
     });
-    U.on('#invite-batch-void', 'click', function () { batch('status', 0, '作废选中邀请码？已用的不会动。'); });
-    U.on('#invite-batch-del', 'click', function () { batch('delete', '', '删除选中邀请码？已用的不会删。'); });
+    U.on('#invite-batch-void', 'click', function () { batch('status', 0, L.confirm_batch_void_invites); });
+    U.on('#invite-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_invites); });
     U.on('#invite-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#invite-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -301,18 +358,18 @@
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
         e.preventDefault();
-        if (a.classList.contains('js-copy')) copyText(row.code, '已复制邀请码');
+        if (a.classList.contains('js-copy')) copyText(row.code, L.copied_invite);
         if (a.classList.contains('js-void')) {
-            if (!U.confirm('作废「' + (row.code || '') + '」？作废后不能再用来注册。')) return;
+            if (!U.confirm(String(L.confirm_void_invite || '').replace('__CODE__', row.code || ''))) return;
             setStatus(row, 0);
         }
         if (a.classList.contains('js-on')) setStatus(row, 1);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确定删除「' + (row.code || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_invite || '').replace('__CODE__', row.code || ''))) return;
             U.post('/admin/video/invites/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

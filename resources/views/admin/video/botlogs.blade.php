@@ -23,8 +23,8 @@
             <input type="hidden" name="today">
             <input type="hidden" name="engine">
             <input type="search" name="q" placeholder="搜 IP、地址或标识" autocomplete="off" aria-label="搜索爬虫日志">
-            <button type="button" class="btn btn-sm" id="botlog-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="botlog-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="botlog-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="botlog-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="botlog-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

@@ -8,16 +8,46 @@
     $videoId = (int) ($videoId ?? 0);
     $memberName = (string) ($memberName ?? '');
     $videoTitle = (string) ($videoTitle ?? '');
+    $favJsLang = [
+        'actions' => admin_t('ui.actions'),
+        'fail' => admin_t('ui.fail'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'members' => admin_t('ui.members'),
+        'videos' => admin_t('ui.videos'),
+        'front' => admin_t('ui.front'),
+        'col_video' => admin_t('ui.col_video'),
+        'col_member' => admin_t('ui.col_member'),
+        'favor_time' => admin_t('ui.favor_time'),
+        'film_deleted' => admin_t('ui.film_deleted'),
+        'film_deleted_id' => admin_t('ui.film_deleted_id', ['id' => '__ID__']),
+        'member_deleted' => admin_t('ui.member_deleted'),
+        'member_deleted_id' => admin_t('ui.member_deleted_id', ['id' => '__ID__']),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'video_hash' => admin_t('ui.video_hash', ['id' => '__ID__']),
+        'unfavor' => admin_t('ui.unfavor'),
+        'empty_favorites' => admin_t('ui.empty_favorites'),
+        'empty_favorites_hint' => admin_t('ui.empty_favorites_hint'),
+        'no_match_favorites' => admin_t('ui.no_match_favorites'),
+        'please_select_favorites' => admin_t('ui.please_select_favorites'),
+        'confirm_batch_unfavor' => admin_t('ui.confirm_batch_unfavor', ['n' => '__N__']),
+        'confirm_unfavor' => admin_t('ui.confirm_unfavor', ['name' => '__NAME__']),
+        'unfavor_ok' => admin_t('ui.unfavor_ok'),
+        'canceled' => admin_t('ui.canceled'),
+        'favorites_lead' => admin_t('ui.favorites_lead'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel fav-index">
     <div class="card-header">
-        <span>收藏 <em id="fav-count"></em></span>
+        <span>{{ admin_t('ui.favorites') }} <em id="fav-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video">影片</a>
-            <a class="btn btn-muted btn-sm" href="/member/favorites" target="_blank" rel="noopener">前台收藏</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.videos') }}</a>
+            <a class="btn btn-muted btn-sm" href="/member/favorites" target="_blank" rel="noopener">{{ admin_t('ui.front_favorites') }}</a>
         </div>
     </div>
     <div class="card-body">
@@ -26,32 +56,32 @@
             <input type="hidden" name="missing">
             <input type="hidden" name="member_id" value="{{ $memberId > 0 ? $memberId : '' }}">
             <input type="hidden" name="video_id" value="{{ $videoId > 0 ? $videoId : '' }}">
-            <input type="search" name="q" placeholder="搜会员、片名或 ID" autocomplete="off" aria-label="搜索收藏">
-            <button type="button" class="btn btn-sm" id="fav-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="fav-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_favorite') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_favorites') }}">
+            <button type="button" class="btn btn-sm" id="fav-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="fav-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="fav-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="missing" data-value="1">影片已删@if($q('missing') > 0)<em>{{ $q('missing') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="missing" data-value="1">{{ admin_t('ui.film_deleted') }}@if($q('missing') > 0)<em>{{ $q('missing') }}</em>@endif</button>
         </div>
         @if($memberId > 0 || $videoId > 0)
             <p class="muted recycle-lead" id="fav-focus">
                 @if($memberId > 0)
-                    正在看会员 {{ $memberName !== '' ? $memberName : ('#'.$memberId) }} 的收藏。
+                    {{ admin_t('ui.fav_focus_member', ['name' => $memberName !== '' ? $memberName : ('#'.$memberId)]) }}
                 @endif
                 @if($videoId > 0)
-                    正在看影片 {{ $videoTitle !== '' ? $videoTitle : ('#'.$videoId) }} 被谁收藏。
+                    {{ admin_t('ui.fav_focus_video', ['name' => $videoTitle !== '' ? $videoTitle : ('#'.$videoId)]) }}
                 @endif
-                <button type="button" class="btn-link" id="fav-clear-focus">看全部</button>
+                <button type="button" class="btn-link" id="fav-clear-focus">{{ admin_t('ui.view_all') }}</button>
             </p>
         @else
-            <p class="muted recycle-lead">会员在影片页点收藏后出现。后台不能代收藏。删除只影响此人的收藏夹，不删影片。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.favorites_lead') }}</p>
         @endif
         <div class="batch-bar" id="fav-batch" hidden>
-            <strong id="fav-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="fav-batch-del">取消收藏</button>
-            <button type="button" class="btn btn-muted btn-sm" id="fav-batch-clear">取消选择</button>
+            <strong id="fav-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="fav-batch-del">{{ admin_t('ui.unfavor') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="fav-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="fav-table"></div>
     </div>
@@ -62,6 +92,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($favJsLang);
     var form = document.getElementById('fav-search');
     var batchBar = document.getElementById('fav-batch');
     var batchCount = document.getElementById('fav-batch-count');
@@ -104,16 +135,20 @@
     function filmHtml(d) {
         var title = d.video_title || '';
         if (parseInt(d.video_missing, 10) === 1 || !title) {
-            return '<span class="muted">影片已删' + (d.video_id ? ' · #' + U.escape(d.video_id) : '') + '</span>';
+            return '<span class="muted">' + U.escape(d.video_id
+                ? String(L.film_deleted_id || '').replace('__ID__', String(d.video_id))
+                : L.film_deleted) + '</span>';
         }
         return '<a href="/vod/' + encodeURIComponent(d.video_id) + '" target="_blank" rel="noopener">' + U.escape(title) + '</a>';
     }
     function memberHtml(d) {
         var name = d.member_name || '';
         if (parseInt(d.member_missing, 10) === 1 || (!name && !d.member_id)) {
-            return '<span class="muted">会员已删' + (d.member_id ? ' · #' + U.escape(d.member_id) : '') + '</span>';
+            return '<span class="muted">' + U.escape(d.member_id
+                ? String(L.member_deleted_id || '').replace('__ID__', String(d.member_id))
+                : L.member_deleted) + '</span>';
         }
-        var label = name || ('会员 #' + d.member_id);
+        var label = name || String(L.member_hash || '').replace('__ID__', String(d.member_id));
         var html = '<a href="/admin/video/members?q=' + encodeURIComponent(d.member_id) + '">' + U.escape(label) + '</a>';
         if (d.member_email) html += '<div class="muted">' + U.escape(d.member_email) + '</div>';
         return html;
@@ -127,9 +162,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的收藏</p><p><button type="button" class="btn btn-muted btn-sm" id="fav-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_favorites + '</p><p><button type="button" class="btn btn-muted btn-sm" id="fav-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有收藏</p><p class="muted">会员登录后在影片页点收藏，记录会出现在这里。后台不能代收藏。</p></div>';
+            return '<div class="list-empty"><p>' + L.empty_favorites + '</p><p class="muted">' + U.escape(L.empty_favorites_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             var reset = document.getElementById('fav-empty-reset');
@@ -143,23 +178,23 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '影片', html: filmHtml},
-            {title: '会员', html: memberHtml},
-            {title: '收藏时间', width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.col_video, html: filmHtml},
+            {title: L.col_member, html: memberHtml},
+            {title: L.favor_time, width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var html = '';
                 if (d.video_id && parseInt(d.video_missing, 10) !== 1) {
-                    html += '<a class="btn-link" href="/vod/' + encodeURIComponent(d.video_id) + '" target="_blank" rel="noopener">前台</a>';
-                    html += '<a class="btn-link" href="/admin/video?q=' + encodeURIComponent(d.video_id) + '">影片</a>';
+                    html += '<a class="btn-link" href="/vod/' + encodeURIComponent(d.video_id) + '" target="_blank" rel="noopener">' + L.front + '</a>';
+                    html += '<a class="btn-link" href="/admin/video?q=' + encodeURIComponent(d.video_id) + '">' + L.videos + '</a>';
                 }
                 if (d.member_id && parseInt(d.member_missing, 10) !== 1) {
-                    html += '<a class="btn-link" href="/admin/video/members?q=' + encodeURIComponent(d.member_id) + '">会员</a>';
+                    html += '<a class="btn-link" href="/admin/video/members?q=' + encodeURIComponent(d.member_id) + '">' + L.members + '</a>';
                 }
-                html += '<a href="#" class="btn-link js-del">取消收藏</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.unfavor + '</a>';
                 return html;
             }}
         ]
@@ -169,12 +204,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batchDel() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选收藏', 'err'); return; }
-        if (!U.confirm('取消这 ' + ids.length + ' 条收藏？不会删影片。')) return;
+        if (!ids.length) { U.toast(L.please_select_favorites, 'err'); return; }
+        if (!U.confirm(String(L.confirm_batch_unfavor || '').replace('__N__', String(ids.length)))) return;
         U.post('/admin/video/favorites/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已取消', 'ok');
+            U.toast((res && res.msg) || L.canceled, 'ok');
         });
     }
 
@@ -188,7 +223,7 @@
         if (form.video_id) form.video_id.value = '';
         if (history.replaceState) history.replaceState({}, '', '/admin/video/favorites');
         var lead = document.getElementById('fav-focus');
-        if (lead) lead.innerHTML = '会员在影片页点收藏才会出现。后台不能代收藏，删掉只影响这个人的收藏夹，不会删影片。';
+        if (lead) lead.textContent = L.favorites_lead;
         runSearch();
     });
     document.getElementById('fav-queues').addEventListener('click', function (e) {
@@ -208,12 +243,12 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-del')) {
-            var label = row.video_title || ('影片 #' + (row.video_id || ''));
-            if (!U.confirm('取消「' + label + '」的这条收藏？不会删影片。')) return;
+            var label = row.video_title || String(L.video_hash || '').replace('__ID__', String(row.video_id || ''));
+            if (!U.confirm(String(L.confirm_unfavor || '').replace('__NAME__', label))) return;
             U.post('/admin/video/favorites/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已取消收藏', 'ok');
+                U.toast(L.unfavor_ok, 'ok');
             });
         }
     });

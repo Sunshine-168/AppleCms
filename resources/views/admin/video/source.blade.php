@@ -14,7 +14,8 @@
             <input type="hidden" name="id">
             <input type="hidden" name="video_id" value="{{ (int)($videoId ?? 0) }}">
             <label>线路名</label>
-            <input type="text" name="name">
+            <input class="entry-title" type="text" name="name" placeholder="如 高清线路 / 线路1" autofocus>
+            <p class="muted field-hint">播放页上切换线路时显示的名字。</p>
             <label>类型</label>
             <select name="type">
                 <option value="m3u8">m3u8</option>
@@ -22,8 +23,10 @@
                 <option value="parse">parse</option>
                 <option value="down">下载</option>
             </select>
+            <p class="muted field-hint">m3u8 / mp4 走直链播放器；parse 走解析接口；down 进下载页。</p>
             <label>播放器标识</label>
             <input type="text" name="player" placeholder="要和「播放器」里的标识一致">
+            <p class="muted field-hint">须与「播放器」台的标识一致，如 artplayer、dplayer。空则用默认。</p>
             <label>下载器标识</label>
             <select name="downer">
                 <option value="">不指定</option>
@@ -31,7 +34,7 @@
                     <option value="{{ $d['code'] ?? '' }}">{{ $d['name'] ?? '' }} ({{ $d['code'] ?? '' }})</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">下载页用模板替换 {url}/{id}，不是后台任务队列。</p>
+            <p class="muted field-hint">仅类型为下载时有用。下载页用模板替换 {url}/{id}，不是后台任务队列。</p>
             <label>服务器组</label>
             <select name="server_id">
                 <option value="0">不拼接前缀</option>
@@ -39,9 +42,10 @@
                     <option value="{{ (int) ($s['id'] ?? 0) }}">{{ $s['name'] ?? '' }}</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">相对路径会拼上该组的地址前缀。已经是 http 或 // 开头的不会改。停用或前缀空着也原样。</p>
+            <p class="muted field-hint">相对路径会拼上该组的地址前缀。已经是 http 或 // 开头的不会改。</p>
             <label>排序</label>
             <input type="number" name="sort" value="0">
+            <p class="muted field-hint">数字越大越靠前。保存后可进「剧集」填各集播放地址。</p>
         </form>
     </template>
 @endsection
@@ -90,6 +94,7 @@
         row = row || {};
         U.dialog({
             title: mode === 'edit' ? '编辑线路' : '新增线路',
+            wide: true,
             content: document.getElementById('source-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {

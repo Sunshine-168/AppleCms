@@ -6,41 +6,78 @@
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $sourceId = (int) ($sourceId ?? 0);
     $sourceName = trim((string) ($sourceName ?? ''));
-    $sourceChip = $sourceName !== '' ? $sourceName : ($sourceId > 0 ? ('采集源 #'.$sourceId) : '');
+    $sourceChip = $sourceName !== '' ? $sourceName : ($sourceId > 0 ? admin_t('ui.collect_source_n', ['id' => $sourceId]) : '');
     $toTemp = (bool) ($toTemp ?? false);
+    $ctempJsLang = [
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'clear_selection' => admin_t('ui.clear_selection'),
+        'selected_videos' => admin_t('ui.selected_videos', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'no_cover' => admin_t('ui.no_cover'),
+        'collect_source_n' => admin_t('ui.collect_source_n', ['id' => '__ID__']),
+        'source_id_n' => admin_t('ui.source_id_n', ['id' => '__ID__']),
+        'untitled_title' => admin_t('ui.untitled_title'),
+        'chip_pending_promote' => admin_t('ui.chip_pending_promote'),
+        'col_vod' => admin_t('ui.col_vod'),
+        'col_time' => admin_t('ui.col_time'),
+        'actions' => admin_t('ui.actions'),
+        'promote' => admin_t('ui.promote'),
+        'today_at' => admin_t('ui.today_at', ['time' => '__TIME__']),
+        'yesterday_at' => admin_t('ui.yesterday_at', ['time' => '__TIME__']),
+        'empty_collect_temps' => admin_t('ui.empty_collect_temps'),
+        'empty_collect_temps_hint' => admin_t('ui.empty_collect_temps_hint'),
+        'empty_collect_temps_direct' => admin_t('ui.empty_collect_temps_direct'),
+        'empty_collect_temps_direct_hint' => admin_t('ui.empty_collect_temps_direct_hint'),
+        'no_match_collect_temps' => admin_t('ui.no_match_collect_temps'),
+        'go_collects' => admin_t('ui.go_collects'),
+        'go_content_access' => admin_t('ui.go_content_access'),
+        'please_select_temps' => admin_t('ui.please_select_temps'),
+        'promote_fail' => admin_t('ui.promote_fail'),
+        'promoted' => admin_t('ui.promoted'),
+        'promoted_library' => admin_t('ui.promoted_library'),
+        'confirm_batch_promote' => admin_t('ui.confirm_batch_promote'),
+        'confirm_batch_del_temps' => admin_t('ui.confirm_batch_del_temps'),
+        'confirm_del_collect_temp' => admin_t('ui.confirm_del_collect_temp'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel collect-temp-index desk-board">
     <div class="card-header">
-        <span>待审入库 <em id="ctemp-count"></em></span>
+        <span>{{ admin_t('ui.collect_temps') }} <em id="ctemp-count"></em></span>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="ctemp-search" onsubmit="return false;">
             <input type="hidden" name="status">
             <input type="hidden" name="failed">
             <input type="hidden" name="collect_source_id" value="{{ $sourceId > 0 ? $sourceId : '' }}">
-            <input type="search" name="q" placeholder="搜片名或采集源" autocomplete="off" aria-label="搜索待审入库">
-            <button type="button" class="btn btn-sm" id="ctemp-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="ctemp-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_collect_temp') }}" autocomplete="off" aria-label="{{ admin_t('ui.collect_temps') }}">
+            <button type="button" class="btn btn-sm" id="ctemp-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="ctemp-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="ctemp-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">待转入@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="failed" data-value="1">转入失败@if($q('failed') > 0)<em>{{ $q('failed') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">已入库@if($q('done') > 0)<em>{{ $q('done') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.chip_pending_promote') }}@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="failed" data-value="1">{{ admin_t('ui.chip_promote_fail') }}@if($q('failed') > 0)<em>{{ $q('failed') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.chip_promoted') }}@if($q('done') > 0)<em>{{ $q('done') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="source" id="ctemp-source-chip" @if($sourceId < 1) hidden @endif>{{ $sourceChip }}</button>
         </div>
         @if($toTemp)
-            <p class="muted recycle-lead">新片会先停在这里。核对封面和分类后再转入片库。删记录不会动已经入库的片子。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.collect_temps_lead_on') }}</p>
         @else
-            <p class="muted recycle-lead">现在采集是直接进片库的，所以这里通常是空的。若要先审再入库，到「<a href="/admin/video/config/collect">内容接入</a>」改成先待审再转入。</p>
+            <p class="muted recycle-lead">
+                {{ admin_t('ui.collect_temps_lead_off_before') }}<a href="/admin/video/config/collect">{{ admin_t('ui.content_access') }}</a>{{ admin_t('ui.collect_temps_lead_off_after') }}
+            </p>
         @endif
         <div class="batch-bar" id="ctemp-batch" hidden>
-            <strong id="ctemp-batch-count">已选 0 部</strong>
-            <button type="button" class="btn btn-sm" id="ctemp-batch-promote">转入选中</button>
-            <button type="button" class="btn btn-danger btn-sm" id="ctemp-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="ctemp-batch-clear">取消选择</button>
+            <strong id="ctemp-batch-count">{{ admin_t('ui.selected_videos', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="ctemp-batch-promote">{{ admin_t('ui.batch_promote') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="ctemp-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ctemp-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="ctemp-table" class="desk-table"></div>
     </div>
@@ -51,6 +88,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($ctempJsLang);
     var form = document.getElementById('ctemp-search');
     var batchBar = document.getElementById('ctemp-batch');
     var batchCount = document.getElementById('ctemp-batch-count');
@@ -72,7 +110,7 @@
     function setSource(id, name) {
         form.collect_source_id.value = id ? String(id) : '';
         if (!sourceChip) return;
-        sourceChip.textContent = name || (id ? ('采集源 #' + id) : '');
+        sourceChip.textContent = name || (id ? String(L.collect_source_n || '').replace('__ID__', id) : '');
         sourceChip.hidden = !form.collect_source_id.value;
     }
     function markChips() {
@@ -112,10 +150,10 @@
         var now = new Date();
         var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
         var hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-        if (d.toDateString() === now.toDateString()) return '今天 ' + hm;
+        if (d.toDateString() === now.toDateString()) return String(L.today_at || '').replace('__TIME__', hm);
         var y = new Date(now);
         y.setDate(now.getDate() - 1);
-        if (d.toDateString() === y.toDateString()) return '昨天 ' + hm;
+        if (d.toDateString() === y.toDateString()) return String(L.yesterday_at || '').replace('__TIME__', hm);
         if (d.getFullYear() === now.getFullYear()) return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + hm;
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
     }
@@ -128,20 +166,20 @@
         var cover = (d.cover || '').trim();
         var thumb = cover
             ? '<img class="vod-thumb" src="' + U.escape(cover) + '" alt="">'
-            : '<span class="vod-thumb is-empty">无图</span>';
-        var badge = '<span class="badge ' + badgeClass(d) + '">' + U.escape(d.status_label || '待转入') + '</span>';
+            : '<span class="vod-thumb is-empty">' + U.escape(L.no_cover) + '</span>';
+        var badge = '<span class="badge ' + badgeClass(d) + '">' + U.escape(d.status_label || L.chip_pending_promote) + '</span>';
         var meta = [];
         if (d.source_name) meta.push('<a class="btn-link js-source" href="#">' + U.escape(d.source_name) + '</a>');
         if (d.type_name) meta.push(U.escape(d.type_name));
-        if (d.collect_id) meta.push('源ID ' + U.escape(String(d.collect_id)));
+        if (d.collect_id) meta.push(U.escape(String(L.source_id_n || '').replace('__ID__', String(d.collect_id))));
         if (d.msg && parseInt(d.status, 10) !== 1) meta.push(U.escape(d.msg));
-        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || '无标题') + '</span> ' + badge + '</div>'
+        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || L.untitled_title) + '</span> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + (meta.join(' · ') || '—') + '</div></div></div>';
     }
     function opsHtml(d) {
         var html = '';
-        if (parseInt(d.status, 10) !== 1) html += '<a href="#" class="btn-link js-promote">转入</a>';
-        html += '<a href="#" class="btn-link js-del">删除</a>';
+        if (parseInt(d.status, 10) !== 1) html += '<a href="#" class="btn-link js-promote">' + L.promote + '</a>';
+        html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
         return html;
     }
 
@@ -152,12 +190,12 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的待审片子。</p><p><button type="button" class="btn btn-muted btn-sm" id="ctemp-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_collect_temps + '</p><p><button type="button" class="btn btn-muted btn-sm" id="ctemp-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
             if (!toTemp) {
-                return '<div class="list-empty"><p>采集是直接入库的，这里通常没有片子。</p><p class="muted">若要先审再进片库，改成写入临时表。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/config/collect">去内容接入</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
+                return '<div class="list-empty"><p>' + L.empty_collect_temps_direct + '</p><p class="muted">' + L.empty_collect_temps_direct_hint + '</p><p><a class="btn btn-primary btn-sm" href="/admin/video/config/collect">' + L.go_content_access + '</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">' + L.go_collects + '</a></p></div>';
             }
-            return '<div class="list-empty"><p>还没有待审片子。</p><p class="muted">在采集源里点「当天」就会出现在这里。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_collect_temps + '</p><p class="muted">' + L.empty_collect_temps_hint + '</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collects">' + L.go_collects + '</a></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -177,45 +215,45 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 部';
+            batchCount.textContent = String(L.selected_videos || '').replace('__N__', ids.length);
         },
         cols: [
             {check: true, width: 36},
-            {title: '片子', html: titleHtml},
-            {title: '时间', width: 120, html: function (d) { return fmtTime(d.created_at); }},
-            {title: '操作', cls: 'actions', html: opsHtml}
+            {title: L.col_vod, html: titleHtml},
+            {title: L.col_time, width: 120, html: function (d) { return fmtTime(d.created_at); }},
+            {title: L.actions, cls: 'actions', html: opsHtml}
         ]
     });
     markChips();
 
     function selectedIds() { return table.selectedIds(); }
     function promoteIds(ids, doneMsg) {
-        if (!ids.length) { U.toast('请先勾选片子', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_temps, 'err'); return; }
         U.loading(true);
         U.post('/admin/video/collect_temps/promote', {ids: ids.join(',')}).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '转入失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.promote_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || doneMsg || '已转入', 'ok');
+            U.toast((res && res.msg) || doneMsg || L.promoted, 'ok');
         }).catch(function () {
             U.loading(false);
-            U.toast('转入失败', 'err');
+            U.toast(L.promote_fail, 'err');
         });
     }
     function batchPromote() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选片子', 'err'); return; }
-        if (!U.confirm('转入选中片子到片库？')) return;
-        promoteIds(ids, '已转入');
+        if (!ids.length) { U.toast(L.please_select_temps, 'err'); return; }
+        if (!U.confirm(L.confirm_batch_promote)) return;
+        promoteIds(ids, L.promoted);
     }
     function batchDel() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选片子', 'err'); return; }
-        if (!U.confirm('删除选中记录？已经入库的片子不会被删。')) return;
+        if (!ids.length) { U.toast(L.please_select_temps, 'err'); return; }
+        if (!U.confirm(L.confirm_batch_del_temps)) return;
         U.post('/admin/video/collect_temps/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -251,15 +289,15 @@
         }
         if (!row) return;
         if (a.classList.contains('js-promote')) {
-            promoteIds([row.id], '已转入正式库');
+            promoteIds([row.id], L.promoted_library);
             return;
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条待审记录？已经入库的片子不会被删。')) return;
+            if (!U.confirm(L.confirm_del_collect_temp)) return;
             U.post('/admin/video/collect_temps/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

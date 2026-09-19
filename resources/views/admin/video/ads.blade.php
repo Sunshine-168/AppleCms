@@ -5,49 +5,89 @@
     $queues = $queues ?? ['all' => 0, 'header' => 0, 'footer' => 0, 'play' => 0, 'expired' => 0, 'off' => 0];
     $types = $types ?? [];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $adJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'copy' => admin_t('ui.copy'),
+        'copied' => admin_t('ui.copied'),
+        'sort' => admin_t('ui.sort'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'all_categories' => admin_t('ui.all_categories'),
+        'ad_expired' => admin_t('ui.ad_expired'),
+        'no_expire' => admin_t('ui.no_expire'),
+        'thumb_code' => admin_t('ui.thumb_code'),
+        'copy_call' => admin_t('ui.copy_call'),
+        'col_ad' => admin_t('ui.col_ad'),
+        'add_ad' => admin_t('ui.add_ad'),
+        'edit_ad' => admin_t('ui.edit_ad'),
+        'empty_ads' => admin_t('ui.empty_ads'),
+        'empty_ads_hint' => admin_t('ui.empty_ads_hint'),
+        'no_match_ads' => admin_t('ui.no_match_ads'),
+        'please_select_ads' => admin_t('ui.please_select_ads'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'please_fill_slot' => admin_t('ui.please_fill_slot'),
+        'please_pick_slot' => admin_t('ui.please_pick_slot'),
+        'confirm_batch_del_ads' => admin_t('ui.confirm_batch_del_ads'),
+        'confirm_del_ad' => admin_t('ui.confirm_del_ad', ['name' => '__NAME__']),
+        'inserted_ok' => admin_t('ui.inserted_ok'),
+        'upload_fail' => admin_t('ui.upload_fail'),
+        'copied_call' => admin_t('ui.copied_call'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel ad-index">
     <div class="card-header">
-        <span>广告位 <em id="ad-count"></em></span>
-        <button type="button" class="btn btn-sm" id="ad-add-btn">新增广告</button>
+        <span>{{ admin_t('ui.ads') }} <em id="ad-count"></em></span>
+        <button type="button" class="btn btn-sm" id="ad-add-btn">{{ admin_t('ui.add_ad') }}</button>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="ad-search" onsubmit="return false;">
             <input type="hidden" name="slot">
             <input type="hidden" name="expired">
-            <input type="text" name="name" placeholder="搜名称或位置" autocomplete="off">
-            <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_ad') }}" autocomplete="off" aria-label="{{ admin_t('ui.ads') }}">
+            <select name="status" aria-label="{{ admin_t('ui.status') }}">
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="ad-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="ad-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="ad-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="ad-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="ad-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="slot" data-value="header">页头@if($q('header') > 0)<em>{{ $q('header') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="slot" data-value="footer">页脚@if($q('footer') > 0)<em>{{ $q('footer') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="slot" data-value="play">播放页@if($q('play') > 0)<em>{{ $q('play') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="expired" data-value="1">已到期@if($q('expired') > 0)<em>{{ $q('expired') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="slot" data-value="header">{{ admin_t('ui.slot_header') }}@if($q('header') > 0)<em>{{ $q('header') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="slot" data-value="footer">{{ admin_t('ui.slot_footer') }}@if($q('footer') > 0)<em>{{ $q('footer') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="slot" data-value="play">{{ admin_t('ui.slot_play') }}@if($q('play') > 0)<em>{{ $q('play') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="expired" data-value="1">{{ admin_t('ui.ad_expired') }}@if($q('expired') > 0)<em>{{ $q('expired') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.deactivated') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">页头、页脚、播放器下插入的 HTML。主题按位置调用，例如 <code>@@vodAd(['slot' => 'header'])</code>。过期或停用后前台不再输出。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.ads_lead') }}</p>
         <div class="batch-bar" id="ad-batch" hidden>
-            <strong id="ad-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="ad-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-off">停用</button>
-            <select id="ad-batch-slot" class="batch-select" aria-label="目标位置">
-                <option value="">改到位置</option>
-                <option value="header">页头</option>
-                <option value="footer">页脚</option>
-                <option value="play">播放页</option>
+            <strong id="ad-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="ad-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <select id="ad-batch-slot" class="batch-select" aria-label="{{ admin_t('ui.target_slot') }}">
+                <option value="">{{ admin_t('ui.move_to_slot') }}</option>
+                <option value="header">{{ admin_t('ui.slot_header') }}</option>
+                <option value="footer">{{ admin_t('ui.slot_footer') }}</option>
+                <option value="play">{{ admin_t('ui.slot_play') }}</option>
             </select>
-            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-move">移动</button>
-            <button type="button" class="btn btn-danger btn-sm" id="ad-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-clear">取消选择</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-move">{{ admin_t('ui.move') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="ad-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ad-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="ad-table"></div>
     </div>
@@ -55,47 +95,47 @@
 <template id="ad-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="如 页头联盟、播放页横幅">
-        <p class="muted field-hint">后台列表里看到的名字，前台不显示。</p>
-        <label>位置</label>
+        <label>{{ admin_t('ui.label_name') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_ad_name') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_ad_name') }}</p>
+        <label>{{ admin_t('ui.label_slot') }}</label>
         <select name="slot_pick">
-            <option value="header">页头</option>
-            <option value="footer">页脚</option>
-            <option value="play">播放页</option>
-            <option value="custom">自定义</option>
+            <option value="header">{{ admin_t('ui.slot_header') }}</option>
+            <option value="footer">{{ admin_t('ui.slot_footer') }}</option>
+            <option value="play">{{ admin_t('ui.slot_play') }}</option>
+            <option value="custom">{{ admin_t('ui.slot_custom') }}</option>
         </select>
-        <input type="text" name="slot_custom" placeholder="英文字母开头，如 list" hidden autocomplete="off">
-        <p class="muted field-hint ad-call-hint">默认主题：页头在导航旁，页脚在版权上，播放页在播放器下。</p>
-        <label>调用</label>
+        <input type="text" name="slot_custom" placeholder="{{ admin_t('ui.ph_slot_custom') }}" hidden autocomplete="off">
+        <p class="muted field-hint ad-call-hint">{{ admin_t('ui.hint_ad_slot') }}</p>
+        <label>{{ admin_t('ui.label_call') }}</label>
         <div class="ad-call">
             <input type="text" id="ad-call-code" readonly>
-            <button type="button" class="btn btn-muted btn-sm" id="ad-call-copy">复制</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ad-call-copy">{{ admin_t('ui.copy') }}</button>
         </div>
-        <label>代码</label>
+        <label>{{ admin_t('ui.label_code') }}</label>
         <div class="field-inline">
-            <span class="muted">图片或附件会写成标签插进代码。</span>
-            <button type="button" class="btn btn-muted btn-sm" id="ad-insert-btn">插入图片</button>
+            <span class="muted">{{ admin_t('ui.hint_ad_insert') }}</span>
+            <button type="button" class="btn btn-muted btn-sm" id="ad-insert-btn">{{ admin_t('ui.insert_image') }}</button>
         </div>
         <img class="img-preview ad-insert-preview" alt="">
-        <textarea name="content" class="ad-content" placeholder="HTML / 脚本，例如 &lt;a href=&quot;&quot;&gt;&lt;img src=&quot;&quot;&gt;&lt;/a&gt;"></textarea>
-        <label>仅某分类</label>
+        <textarea name="content" class="ad-content" placeholder="{{ admin_t('ui.ph_ad_content') }}"></textarea>
+        <label>{{ admin_t('ui.label_type_only') }}</label>
         <select name="type_id">
-            <option value="0">全部分类</option>
+            <option value="0">{{ admin_t('ui.all_categories') }}</option>
             @foreach($types as $t)
                 <option value="{{ $t['id'] }}">{{ $t['name'] }}</option>
             @endforeach
         </select>
-        <p class="muted field-hint">默认主题只按位置输出。主题调用时传入 type_id 才按分类过滤。</p>
-        <label>到期</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_ad_type') }}</p>
+        <label>{{ admin_t('ui.label_expire') }}</label>
         <input type="datetime-local" name="expire_at">
-        <p class="muted field-hint">留空表示不过期。到期后前台不再输出，后台仍能改。</p>
-        <label>排序</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_ad_expire') }}</p>
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <label>状态</label>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.enabled') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
     </form>
 </template>
@@ -105,6 +145,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($adJsLang);
     var QUEUE_KEYS = ['slot', 'expired'];
     var KNOWN = {header: 1, footer: 1, play: 1};
     var form = document.getElementById('ad-search');
@@ -170,13 +211,13 @@
         var pic = String(d.preview_img || '').trim();
         var thumb = pic
             ? '<img class="ad-thumb" src="' + U.escape(pic) + '" alt="">'
-            : '<span class="ad-thumb is-empty">代码</span>';
+            : '<span class="ad-thumb is-empty">' + U.escape(L.thumb_code) + '</span>';
         var badges = '';
-        if (String(d.status) !== '1') badges += '<span class="badge badge-off">停用</span>';
-        if (d.is_expired) badges += '<span class="badge badge-off">已到期</span>';
-        var meta = [U.escape(d.slot_label || d.slot || ''), U.escape(d.type_name || '全部分类'), U.escape(d.expire_text || '不过期')].join(' · ');
+        if (String(d.status) !== '1') badges += '<span class="badge badge-off">' + U.escape(L.disabled) + '</span>';
+        if (d.is_expired) badges += '<span class="badge badge-off">' + U.escape(L.ad_expired) + '</span>';
+        var meta = [U.escape(d.slot_label || d.slot || ''), U.escape(d.type_name || L.all_categories), U.escape(d.expire_text || L.no_expire)].join(' · ');
         var snip = d.preview_text ? '<div class="ad-snippet">' + U.escape(d.preview_text) + '</div>' : '';
-        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badges + '</div>'
+        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || L.unnamed) + '</a> ' + badges + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div>' + snip + '</div></div>';
     }
 
@@ -189,9 +230,9 @@
         pager: false,
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的广告</p><p><button type="button" class="btn btn-muted btn-sm" id="ad-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match_ads) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="ad-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有广告</p><p class="muted">广告是页头、页脚、播放页插入的 HTML。建好后主题用位置调用。</p><p><button type="button" class="btn btn-primary btn-sm" id="ad-empty-add">新增广告</button></p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_ads) + '</p><p class="muted">' + U.escape(L.empty_ads_hint) + '</p><p><button type="button" class="btn btn-primary btn-sm" id="ad-empty-add">' + U.escape(L.add_ad) + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('ad-empty-add');
@@ -201,18 +242,18 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '广告', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                if (d.is_expired) return U.status(false, '已到期');
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '停用');
+            {title: L.col_ad, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                if (d.is_expired) return U.status(false, L.ad_expired);
+                return String(d.status) === '1' ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-copy">复制调用</a><a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: L.actions, cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-copy">' + U.escape(L.copy_call) + '</a><a href="#" class="btn-link js-edit">' + U.escape(L.edit) + '</a><a href="#" class="btn-link js-del">' + U.escape(L.delete) + '</a>';
             }}
         ]
     });
@@ -263,8 +304,8 @@
                     if (res && res.code === 0 && res.data && res.data.url) {
                         insertAt(ta, '<a href="" target="_blank" rel="nofollow"><img src="' + res.data.url + '" alt=""></a>');
                         syncPreview(res.data.url);
-                        U.toast('已插入', 'ok');
-                    } else U.toast((res && res.msg) || '上传失败', 'err');
+                        U.toast(L.inserted_ok, 'ok');
+                    } else U.toast((res && res.msg) || L.upload_fail, 'err');
                 });
             });
         });
@@ -273,7 +314,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑广告' : '新增广告',
+            title: mode === 'edit' ? L.edit_ad : L.add_ad,
             wide: true,
             content: document.getElementById('ad-dialog-tpl').innerHTML,
             onOpen: function (body) {
@@ -294,22 +335,22 @@
                 bindSlot(formEl);
                 bindInsert(formEl);
                 body.querySelector('#ad-call-copy').addEventListener('click', function () {
-                    copyText(body.querySelector('#ad-call-code').value).then(function () { U.toast('已复制', 'ok'); });
+                    copyText(body.querySelector('#ad-call-code').value).then(function () { U.toast(L.copied, 'ok'); });
                 });
             },
             onSave: function (body) {
                 var formEl = body.querySelector('form');
                 var data = U.formData(formEl);
                 var slot = formEl._adSlot ? formEl._adSlot() : data.slot_pick;
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
-                if (!slot) { U.toast('请填写位置', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
+                if (!slot) { U.toast(L.please_fill_slot, 'err'); return false; }
                 data.slot = slot;
                 delete data.slot_pick;
                 delete data.slot_custom;
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/ads/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -319,12 +360,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选广告', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_ads, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/ads/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -340,10 +381,10 @@
     U.on('#ad-batch-off', 'click', function () { batch('status', 0); });
     U.on('#ad-batch-move', 'click', function () {
         var val = document.getElementById('ad-batch-slot').value;
-        if (!val) { U.toast('请先选择位置，再点「移动」', 'err'); return; }
+        if (!val) { U.toast(L.please_pick_slot, 'err'); return; }
         batch('slot', val);
     });
-    U.on('#ad-batch-del', 'click', function () { batch('delete', '', '确认删除选中广告？主题将取不到这些代码。'); });
+    U.on('#ad-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_ads); });
     U.on('#ad-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#ad-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -353,15 +394,15 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-copy')) {
-            copyText(callCode(row.slot)).then(function () { U.toast('已复制调用代码', 'ok'); });
+            copyText(callCode(row.slot)).then(function () { U.toast(L.copied_call, 'ok'); });
         }
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除广告「' + (row.name || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_ad || '').replace('__NAME__', row.name || ''))) return;
             U.post('/admin/video/ads/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

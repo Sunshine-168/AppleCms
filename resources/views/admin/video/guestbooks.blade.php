@@ -5,16 +5,46 @@
     $queues = $queues ?? ['all' => 0, 'pending' => 0, 'shown' => 0, 'noreply' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $audit = (bool) ($audit ?? false);
+    $gbookJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'hide' => admin_t('ui.hide'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'approve' => admin_t('ui.approve'),
+        'pending_review' => admin_t('ui.pending_review'),
+        'status_show' => admin_t('ui.status_show'),
+        'guest' => admin_t('ui.guest'),
+        'reply' => admin_t('ui.reply'),
+        'noreply' => admin_t('ui.noreply'),
+        'col_guestbook' => admin_t('ui.col_guestbook'),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'empty_guestbooks' => admin_t('ui.empty_guestbooks'),
+        'empty_guestbooks_hint' => admin_t('ui.empty_guestbooks_hint'),
+        'no_match_guestbooks' => admin_t('ui.no_match_guestbooks'),
+        'reply_gbook' => admin_t('ui.reply_gbook'),
+        'please_select_guestbooks' => admin_t('ui.please_select_guestbooks'),
+        'confirm_batch_del_guestbooks' => admin_t('ui.confirm_batch_del_guestbooks'),
+        'confirm_del_guestbook' => admin_t('ui.confirm_del_guestbook'),
+        'comment_approved' => admin_t('ui.comment_approved'),
+        'comment_hidden' => admin_t('ui.comment_hidden'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel gbook-index">
     <div class="card-header">
-        <span>留言@if($q('pending') > 0) <em>· {{ $q('pending') }} 待审</em>@endif</span>
+        <span>{{ admin_t('ui.guestbooks') }}@if($q('pending') > 0) <em>{{ admin_t('ui.pending_n', ['n' => $q('pending')]) }}</em>@endif</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/gbook" target="_blank" rel="noopener">前台留言板</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/comments">评论</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">审核设置</a>
+            <a class="btn btn-muted btn-sm" href="/gbook" target="_blank" rel="noopener">{{ admin_t('ui.front_guestbook') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/comments">{{ admin_t('ui.comments') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('ui.comment_audit') }}</a>
         </div>
     </div>
     <div class="card-body">
@@ -22,28 +52,28 @@
             <input type="hidden" name="status">
             <input type="hidden" name="noreply">
             <input type="hidden" name="today">
-            <input type="search" name="q" placeholder="搜内容、昵称或回复" autocomplete="off" aria-label="搜索留言">
-            <button type="button" class="btn btn-sm" id="gbook-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="gbook-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_guestbook') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_guestbooks') }}">
+            <button type="button" class="btn btn-sm" id="gbook-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="gbook-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="gbook-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">待审@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">已显示@if($q('shown') > 0)<em>{{ $q('shown') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="noreply" data-value="1">未回复@if($q('noreply') > 0)<em>{{ $q('noreply') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.pending_review') }}@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.shown') }}@if($q('shown') > 0)<em>{{ $q('shown') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="noreply" data-value="1">{{ admin_t('ui.noreply') }}@if($q('noreply') > 0)<em>{{ $q('noreply') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
         @if($audit)
-            <p class="muted recycle-lead">新留言先进待审，通过后才出现在前台留言板。回复显示在访客那条下面。影片评论在「评论」。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.guestbooks_lead_audit') }}</p>
         @else
-            <p class="muted recycle-lead">新留言会直接显示在前台。要先审再上，打开「审核设置」里的「留言要先审再显示」。回复显示在访客那条下面。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.guestbooks_lead_open') }}</p>
         @endif
         <div class="batch-bar" id="gbook-batch" hidden>
-            <strong id="gbook-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="gbook-batch-on">通过</button>
-            <button type="button" class="btn btn-muted btn-sm" id="gbook-batch-off">隐藏</button>
-            <button type="button" class="btn btn-danger btn-sm" id="gbook-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="gbook-batch-clear">取消选择</button>
+            <strong id="gbook-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="gbook-batch-on">{{ admin_t('ui.approve') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="gbook-batch-off">{{ admin_t('ui.hide') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="gbook-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="gbook-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="gbook-table"></div>
     </div>
@@ -51,17 +81,19 @@
 <template id="gbook-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>昵称</label>
+        <label>{{ admin_t('ui.label_nickname') }}</label>
         <input type="text" name="author_name" readonly>
-        <label>内容</label>
+        <label>{{ admin_t('ui.label_gbook_content') }}</label>
         <textarea name="content" rows="4" readonly></textarea>
-        <label>回复</label>
-        <textarea name="reply" rows="4" placeholder="写给访客看的回复"></textarea>
-        <label>状态</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_gbook_readonly') }}</p>
+        <label>{{ admin_t('ui.reply') }}</label>
+        <textarea name="reply" rows="4" placeholder="{{ admin_t('ui.ph_gbook_reply') }}"></textarea>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">显示</option>
-            <option value="0">待审 / 隐藏</option>
+            <option value="1">{{ admin_t('ui.status_show') }}</option>
+            <option value="0">{{ admin_t('ui.status_pending_hide') }}</option>
         </select>
+        <p class="muted field-hint">{{ admin_t('ui.hint_gbook_status') }}</p>
     </form>
 </template>
 @endsection
@@ -70,6 +102,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($gbookJsLang);
     var form = document.getElementById('gbook-search');
     var batchBar = document.getElementById('gbook-batch');
     var batchCount = document.getElementById('gbook-batch-count');
@@ -113,14 +146,16 @@
         markChips();
     }
     function contentHtml(d) {
-        var who = U.escape(d.author_name || d.member_name || (parseInt(d.member_id, 10) > 0 ? ('会员 #' + d.member_id) : '游客'));
+        var who = U.escape(d.author_name || d.member_name || (parseInt(d.member_id, 10) > 0
+            ? String(L.member_hash || '').replace('__ID__', String(d.member_id))
+            : L.guest));
         var meta = who;
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         if (d.ip) meta += ' · ' + U.escape(d.ip);
         var html = '<div class="comment-cell"><div class="comment-body">' + U.escape(d.content || '') + '</div>'
             + '<div class="muted">' + meta + '</div>';
         if (d.reply) {
-            html += '<div class="gbook-reply"><span class="muted">回复</span> ' + U.escape(d.reply) + '</div>';
+            html += '<div class="gbook-reply"><span class="muted">' + U.escape(L.reply) + '</span> ' + U.escape(d.reply) + '</div>';
         }
         html += '</div>';
         return html;
@@ -133,9 +168,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的留言</p><p><button type="button" class="btn btn-muted btn-sm" id="gbook-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_guestbooks + '</p><p><button type="button" class="btn btn-muted btn-sm" id="gbook-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有留言</p><p class="muted">访客在前台留言板提交后会出现在这里。需要先审再显示时，打开右上角「审核设置」。</p></div>';
+            return '<div class="list-empty"><p>' + L.empty_guestbooks + '</p><p class="muted">' + U.escape(L.empty_guestbooks_hint) + '</p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('gbook-empty-reset');
@@ -148,21 +183,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '留言', html: contentHtml},
-            {title: '状态', width: 88, html: function (d) {
-                var html = parseInt(d.status, 10) === 1 ? U.status(true, '显示') : U.status(false, '待审');
-                if (!parseInt(d.has_reply, 10)) html += '<div class="muted">未回复</div>';
+            {title: L.col_guestbook, html: contentHtml},
+            {title: L.status, width: 88, html: function (d) {
+                var html = parseInt(d.status, 10) === 1 ? U.status(true, L.status_show) : U.status(false, L.pending_review);
+                if (!parseInt(d.has_reply, 10)) html += '<div class="muted">' + U.escape(L.noreply) + '</div>';
                 return html;
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-reply">回复</a>';
-                if (parseInt(d.status, 10) !== 1) html += '<a href="#" class="btn-link js-pass">通过</a>';
-                else html += '<a href="#" class="btn-link js-hide">隐藏</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+            {title: L.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-reply">' + L.reply + '</a>';
+                if (parseInt(d.status, 10) !== 1) html += '<a href="#" class="btn-link js-pass">' + L.approve + '</a>';
+                else html += '<a href="#" class="btn-link js-hide">' + L.hide + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -171,7 +206,8 @@
 
     function openReply(row) {
         U.dialog({
-            title: '回复留言',
+            title: L.reply_gbook,
+            wide: true,
             content: document.getElementById('gbook-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
@@ -187,8 +223,8 @@
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
                 return U.post('/admin/video/guestbooks/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已保存', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -197,19 +233,19 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选留言', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_guestbooks, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/guestbooks/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status) {
         U.post('/admin/video/guestbooks/save', {id: row.id, status: status}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已通过' : '已隐藏', 'ok');
+            U.toast(status === 1 ? L.comment_approved : L.comment_hidden, 'ok');
         });
     }
 
@@ -228,7 +264,7 @@
     });
     U.on('#gbook-batch-on', 'click', function () { batch('status', 1); });
     U.on('#gbook-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#gbook-batch-del', 'click', function () { batch('delete', '', '确认删除选中留言？'); });
+    U.on('#gbook-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_guestbooks); });
     U.on('#gbook-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#gbook-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -242,11 +278,11 @@
         if (a.classList.contains('js-pass')) setStatus(row, 1);
         if (a.classList.contains('js-hide')) setStatus(row, 0);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条留言？')) return;
+            if (!U.confirm(L.confirm_del_guestbook)) return;
             U.post('/admin/video/guestbooks/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

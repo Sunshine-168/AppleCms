@@ -36,8 +36,8 @@
         <form class="filter-bar" id="file-search" onsubmit="return false;">
             <input type="hidden" name="kind" value="">
             <input type="search" name="keyword" placeholder="{{ $ui['find'] ?? '搜名称、类型或地址' }}" autocomplete="off" aria-label="搜索附件">
-            <button type="button" class="btn btn-sm" id="file-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="file-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="file-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="file-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="file-kinds">
             <button type="button" class="chip active" data-kind="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

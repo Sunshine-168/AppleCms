@@ -51,8 +51,8 @@
                     <option value="1">显示</option>
                     <option value="0">隐藏</option>
                 </select>
-                <button type="button" class="btn btn-sm" id="chat-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="chat-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="chat-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="chat-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div class="queue-chips" id="chat-queues">
                 <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

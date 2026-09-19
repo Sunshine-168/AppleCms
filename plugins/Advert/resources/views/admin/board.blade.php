@@ -13,7 +13,7 @@
     <div class="card-header">
         <span>广告 <em id="advert-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="advert-add-btn" @if($desk !== 'ads') hidden @endif>新增</button>
+            <button type="button" class="btn btn-sm" id="advert-add-btn" @if($desk !== 'ads') hidden @endif>{{ admin_t('ui.add') }}</button>
         </div>
     </div>
     <div class="card-body">
@@ -43,8 +43,8 @@
                 <option value="month" @selected($period === 'month')>按月</option>
                 <option value="year" @selected($period === 'year')>按年</option>
             </select>
-            <button type="button" class="btn btn-sm" id="advert-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="advert-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="advert-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="advert-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="advert-table" class="desk-table"></div>
     </div>
@@ -54,7 +54,7 @@
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="ads">
         <label>名称</label>
-        <input type="text" name="name" required>
+        <input type="text" name="name" required placeholder="如 顶栏横幅">
         <label>类型</label>
         <select name="type">
             <option value="text">文字</option>
@@ -68,12 +68,16 @@
             <option value="content">正文</option>
         </select>
         <label>标题</label>
-        <input type="text" name="title">
+        <input type="text" name="title" placeholder="可选">
         <label>网址</label>
         <input type="text" name="url" placeholder="https://">
         <p class="muted field-hint">只接受 http 或 https。空则前台跳转 404。javascript: 会拒绝。</p>
         <label>图片</label>
-        <input type="text" name="image" placeholder="图片地址">
+        <div class="field-inline">
+            <input type="text" name="image" placeholder="图片地址，类型为图片时填写">
+            <button type="button" class="btn btn-sm advert-image-upload">上传</button>
+        </div>
+        <img class="img-preview advert-image-preview" alt="">
         <label>开始时间戳</label>
         <input type="number" name="start_at" value="0">
         <label>结束时间戳</label>
@@ -165,7 +169,8 @@
             title: mode === 'edit' ? '编辑广告' : '新增广告',
             content: document.getElementById('advert-ad-tpl').innerHTML,
             onOpen: function (body) {
-                U.fillForm(body.querySelector('form'), {
+                var formEl = body.querySelector('form');
+                U.fillForm(formEl, {
                     id: mode === 'edit' ? (row.id || '') : '',
                     name: row.name || '',
                     type: row.type || 'text',
@@ -177,6 +182,11 @@
                     expire_at: row.expire_at == null ? 0 : row.expire_at,
                     sort: row.sort == null ? 0 : row.sort,
                     status: row.status == null ? '1' : String(row.status)
+                });
+                U.bindImageField(formEl, {
+                    input: 'input[name=image]',
+                    btn: '.advert-image-upload',
+                    preview: '.advert-image-preview'
                 });
             },
             onSave: function (body) {

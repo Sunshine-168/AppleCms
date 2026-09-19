@@ -1,20 +1,52 @@
 @extends('admin.layouts.inner')
-@section('title', $title)
+@section('title', $title ?? admin_t('ui.plogs'))
 
 @php
     $queues = $queues ?? ['all' => 0, 'in' => 0, 'out' => 0, 'play' => 0, 'order' => 0, 'card' => 0, 'admin' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $plogJsLang = [
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'members' => admin_t('ui.members'),
+        'adjust_points' => admin_t('ui.adjust_points'),
+        'col_member' => admin_t('ui.col_member'),
+        'col_delta' => admin_t('ui.col_delta'),
+        'col_balance' => admin_t('ui.col_balance'),
+        'col_type' => admin_t('ui.col_type'),
+        'col_time' => admin_t('ui.col_time'),
+        'today_at' => admin_t('ui.today_at', ['time' => '__TIME__']),
+        'yesterday_at' => admin_t('ui.yesterday_at', ['time' => '__TIME__']),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'id_n' => admin_t('ui.id_n', ['id' => '__ID__']),
+        'empty_plogs' => admin_t('ui.empty_plogs'),
+        'empty_plogs_hint' => admin_t('ui.empty_plogs_hint'),
+        'no_match_plogs' => admin_t('ui.no_match_plogs'),
+        'go_members' => admin_t('ui.go_members'),
+        'please_fill_member_id' => admin_t('ui.please_fill_member_id'),
+        'please_points_change_nonzero' => admin_t('ui.please_points_change_nonzero'),
+        'please_select_plogs' => admin_t('ui.please_select_plogs'),
+        'btn_credit' => admin_t('ui.btn_credit'),
+        'order_credited' => admin_t('ui.order_credited'),
+        'confirm_batch_del_plogs' => admin_t('ui.confirm_batch_del_plogs'),
+        'confirm_del_plog' => admin_t('ui.confirm_del_plog'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel plog-index">
     <div class="card-header">
-        <span>积分流水 <em id="plog-count"></em></span>
+        <span>{{ admin_t('ui.plogs') }} <em id="plog-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/orders">订单</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/cards">卡密</a>
-            <button type="button" class="btn btn-sm" id="plog-add-btn">调积分</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/orders">{{ admin_t('ui.orders') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/cards">{{ admin_t('ui.cards') }}</a>
+            <button type="button" class="btn btn-sm" id="plog-add-btn">{{ admin_t('ui.adjust_points') }}</button>
         </div>
     </div>
     <div class="card-body">
@@ -22,38 +54,38 @@
             <input type="hidden" name="dir">
             <input type="hidden" name="type">
             <input type="hidden" name="member_id">
-            <input type="search" name="q" placeholder="搜备注、会员名或 ID" autocomplete="off" aria-label="搜索流水">
-            <button type="button" class="btn btn-sm" id="plog-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="plog-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_plog') }}" autocomplete="off" aria-label="{{ admin_t('ui.plogs') }}">
+            <button type="button" class="btn btn-sm" id="plog-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="plog-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="plog-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="dir" data-value="in">收入@if($q('in') > 0)<em>{{ $q('in') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="dir" data-value="out">支出@if($q('out') > 0)<em>{{ $q('out') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="type" data-value="play">点播@if($q('play') > 0)<em>{{ $q('play') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="type" data-value="order">订单@if($q('order') > 0)<em>{{ $q('order') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="type" data-value="card">卡密@if($q('card') > 0)<em>{{ $q('card') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="type" data-value="admin">后台@if($q('admin') > 0)<em>{{ $q('admin') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="dir" data-value="in">{{ admin_t('ui.chip_income') }}@if($q('in') > 0)<em>{{ $q('in') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="dir" data-value="out">{{ admin_t('ui.chip_expense') }}@if($q('out') > 0)<em>{{ $q('out') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="type" data-value="play">{{ admin_t('ui.chip_play') }}@if($q('play') > 0)<em>{{ $q('play') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="type" data-value="order">{{ admin_t('ui.orders') }}@if($q('order') > 0)<em>{{ $q('order') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="type" data-value="card">{{ admin_t('ui.cards') }}@if($q('card') > 0)<em>{{ $q('card') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="type" data-value="admin">{{ admin_t('ui.chip_admin') }}@if($q('admin') > 0)<em>{{ $q('admin') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">积分对账单。点播扣分、充值、卡密兑换、后台调积分都会记。删掉一行不会改会员积分。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.plogs_lead') }}</p>
         <div class="batch-bar" id="plog-batch" hidden>
-            <strong id="plog-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="plog-batch-del">删除记录</button>
-            <button type="button" class="btn btn-muted btn-sm" id="plog-batch-clear">取消选择</button>
+            <strong id="plog-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="plog-batch-del">{{ admin_t('ui.delete_records') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="plog-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="plog-table"></div>
     </div>
 </div>
 <template id="plog-dialog-tpl">
     <form>
-        <label>会员 ID</label>
-        <input type="number" name="member_id" placeholder="前台会员的数字 ID" min="1">
-        <p class="muted field-hint">在「会员」列表里看 ID。会同时改余额并记一笔流水。</p>
-        <label>变动</label>
+        <label>{{ admin_t('ui.label_member_id') }}</label>
+        <input type="number" name="member_id" placeholder="{{ admin_t('ui.ph_member_id') }}" min="1">
+        <p class="muted field-hint">{{ admin_t('ui.hint_plog_member') }}</p>
+        <label>{{ admin_t('ui.label_points_change') }}</label>
         <input type="number" name="points" value="0">
-        <p class="muted field-hint">正数加积分，负数扣积分。不能填 0。</p>
-        <label>备注</label>
-        <input type="text" name="remark" placeholder="如 线下补分、纠错" maxlength="250">
+        <p class="muted field-hint">{{ admin_t('ui.hint_points_change') }}</p>
+        <label>{{ admin_t('ui.label_remark') }}</label>
+        <input type="text" name="remark" placeholder="{{ admin_t('ui.ph_plog_remark') }}" maxlength="250">
     </form>
 </template>
 @endsection
@@ -62,6 +94,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($plogJsLang);
     var form = document.getElementById('plog-search');
     var qs = new URLSearchParams(location.search);
     if (qs.get('member_id') && form.member_id) form.member_id.value = qs.get('member_id');
@@ -110,16 +143,16 @@
         var now = new Date();
         var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
         var hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-        if (d.toDateString() === now.toDateString()) return '今天 ' + hm;
+        if (d.toDateString() === now.toDateString()) return String(L.today_at || '').replace('__TIME__', hm);
         var y = new Date(now);
         y.setDate(now.getDate() - 1);
-        if (d.toDateString() === y.toDateString()) return '昨天 ' + hm;
+        if (d.toDateString() === y.toDateString()) return String(L.yesterday_at || '').replace('__TIME__', hm);
         if (d.getFullYear() === now.getFullYear()) return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + hm;
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
     }
     function titleHtml(d) {
-        var who = d.member_name ? U.escape(d.member_name) : ('会员 #' + U.escape(d.member_id || 0));
-        var meta = d.member_email ? U.escape(d.member_email) : ('ID ' + U.escape(d.member_id || 0));
+        var who = d.member_name ? U.escape(d.member_name) : String(L.member_hash || '').replace('__ID__', U.escape(d.member_id || 0));
+        var meta = d.member_email ? U.escape(d.member_email) : String(L.id_n || '').replace('__ID__', U.escape(d.member_id || 0));
         if (d.remark) meta += ' · ' + U.escape(d.remark);
         return '<div class="entry-row-title-line"><a class="entry-row-title" href="/admin/video/members?q=' + encodeURIComponent(d.member_id || '') + '">' + who + '</a> <span class="badge">' + U.escape(d.type_label || '') + '</span></div>'
             + '<div class="entry-row-meta">' + meta + '</div>';
@@ -138,9 +171,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的流水。</p><p><button type="button" class="btn btn-muted btn-sm" id="plog-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_plogs + '</p><p><button type="button" class="btn btn-muted btn-sm" id="plog-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有流水。</p><p class="muted">点播、充值、卡密兑换、后台调积分会出现在这里。</p><p><button type="button" class="btn btn-primary btn-sm" id="plog-empty-add">调积分</button> <a class="btn btn-muted btn-sm" href="/admin/video/members">去会员</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_plogs + '</p><p class="muted">' + L.empty_plogs_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="plog-empty-add">' + L.adjust_points + '</button> <a class="btn btn-muted btn-sm" href="/admin/video/members">' + L.go_members + '</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('plog-empty-add');
@@ -150,17 +183,17 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', ids.length);
         },
         cols: [
             {check: true, width: 36},
-            {title: '会员', html: titleHtml},
-            {title: '变动', width: 88, html: deltaHtml},
-            {title: '余额', width: 72, html: function (d) { return U.escape(String(d.balance == null ? '' : d.balance)); }},
-            {title: '类型', width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
-            {title: '时间', width: 120, html: function (d) { return fmtTime(d.created_at); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-del">删除</a>';
+            {title: L.col_member, html: titleHtml},
+            {title: L.col_delta, width: 88, html: deltaHtml},
+            {title: L.col_balance, width: 72, html: function (d) { return U.escape(String(d.balance == null ? '' : d.balance)); }},
+            {title: L.col_type, width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
+            {title: L.col_time, width: 120, html: function (d) { return fmtTime(d.created_at); }},
+            {title: L.actions, cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -168,9 +201,9 @@
 
     function openAdjust() {
         U.dialog({
-            title: '调积分',
+            title: L.adjust_points,
             content: document.getElementById('plog-dialog-tpl').innerHTML,
-            okText: '入账',
+            okText: L.btn_credit,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
                     member_id: form.member_id.value || '',
@@ -180,11 +213,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.member_id || parseInt(data.member_id, 10) < 1) { U.toast('请填写会员 ID', 'err'); return false; }
-                if (!data.points || parseInt(data.points, 10) === 0) { U.toast('变动不能为 0', 'err'); return false; }
+                if (!data.member_id || parseInt(data.member_id, 10) < 1) { U.toast(L.please_fill_member_id, 'err'); return false; }
+                if (!data.points || parseInt(data.points, 10) === 0) { U.toast(L.please_points_change_nonzero, 'err'); return false; }
                 return U.post('/admin/video/plogs/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已入账', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.order_credited, 'ok');
                     table.refresh();
                 });
             }
@@ -194,12 +227,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batchDel() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选流水', 'err'); return; }
-        if (!U.confirm('删除选中记录？会员积分不会变，只是少了这些对账行。')) return;
+        if (!ids.length) { U.toast(L.please_select_plogs, 'err'); return; }
+        if (!U.confirm(L.confirm_batch_del_plogs)) return;
         U.post('/admin/video/plogs/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -222,11 +255,11 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条流水？会员积分不会变。')) return;
+            if (!U.confirm(L.confirm_del_plog)) return;
             U.post('/admin/video/plogs/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

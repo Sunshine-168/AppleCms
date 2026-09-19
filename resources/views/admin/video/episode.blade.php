@@ -14,17 +14,26 @@
             <input type="hidden" name="id">
             <input type="hidden" name="source_id" value="{{ (int)($sourceId ?? 0) }}">
             <label>集序号</label>
-            <input type="number" name="episode_num" value="1">
+            <input type="number" name="episode_num" value="1" min="1">
+            <p class="muted field-hint">播放页按集序号排序。同一线路内不要重复。</p>
             <label>标题</label>
-            <input type="text" name="episode_name">
-            <label>地址</label>
-            <input type="text" name="url">
-            <label>时长</label>
-            <input type="number" name="duration" value="0">
+            <input type="text" name="episode_name" placeholder="如 第1集 / 正片">
+            <label>播放地址</label>
+            <input type="text" name="url" placeholder="https://…m3u8 或直链" required>
+            <p class="muted field-hint">填完整播放 URL。相对地址会拼服务器组前缀（在线路里配置）。</p>
+            <div class="admin-dialog-grid">
+                <div>
+                    <label>时长（秒）</label>
+                    <input type="number" name="duration" value="0" min="0">
+                </div>
+                <div>
+                    <label>排序</label>
+                    <input type="number" name="sort" value="0">
+                </div>
+            </div>
             <label>状态</label>
             <select name="status"><option value="1">可用</option><option value="0">不可用</option></select>
-            <label>排序</label>
-            <input type="number" name="sort" value="0">
+            <p class="muted field-hint">不可用时前台不显示这一集，线路本身仍保留。</p>
         </form>
     </template>
 @endsection

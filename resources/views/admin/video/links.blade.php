@@ -4,42 +4,74 @@
 @php
     $queues = $queues ?? ['all' => 0, 'on' => 0, 'off' => 0, 'logo' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $linkJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'sort' => admin_t('ui.sort'),
+        'show' => admin_t('ui.show'),
+        'hide' => admin_t('ui.hide'),
+        'hidden' => admin_t('ui.hidden'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'col_link' => admin_t('ui.col_link'),
+        'kind_text' => admin_t('ui.kind_text'),
+        'open_link' => admin_t('ui.open_link'),
+        'add_friend_link' => admin_t('ui.add_friend_link'),
+        'edit_friend_link' => admin_t('ui.edit_friend_link'),
+        'empty_links' => admin_t('ui.empty_links'),
+        'empty_links_hint' => admin_t('ui.empty_links_hint'),
+        'no_match_links' => admin_t('ui.no_match_links'),
+        'please_fill_site_name' => admin_t('ui.please_fill_site_name'),
+        'please_fill_url' => admin_t('ui.please_fill_url'),
+        'please_select_links' => admin_t('ui.please_select_links'),
+        'confirm_batch_del_links' => admin_t('ui.confirm_batch_del_links'),
+        'confirm_del_link' => admin_t('ui.confirm_del_link', ['name' => '__NAME__']),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel link-index">
     <div class="card-header">
-        <span>友情链接 <em id="link-count"></em></span>
+        <span>{{ admin_t('ui.friend_links') }} <em id="link-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="link-add-btn">新增友链</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/websites">网址导航</a>
+            <button type="button" class="btn btn-sm" id="link-add-btn">{{ admin_t('ui.add_friend_link') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/websites">{{ admin_t('ui.websites_nav') }}</a>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="link-search" onsubmit="return false;">
             <input type="hidden" name="logo">
-            <input type="text" name="name" placeholder="搜名称或网址" autocomplete="off">
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_link') }}" autocomplete="off">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">显示</option>
-                <option value="0">隐藏</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.show') }}</option>
+                <option value="0">{{ admin_t('ui.hide') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="link-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="link-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="link-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="link-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="link-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">显示中@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">已隐藏@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="logo" data-value="1">有图@if($q('logo') > 0)<em>{{ $q('logo') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.showing') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.hidden') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="logo" data-value="1">{{ admin_t('ui.has_logo') }}@if($q('logo') > 0)<em>{{ $q('logo') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">友链出现在页脚。默认主题显示文字，写法 <code>@@vodLink</code>。隐藏后前台不再输出。顶栏导航请去网址导航。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.links_lead') }}</p>
         <div class="batch-bar" id="link-batch" hidden>
-            <strong id="link-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="link-batch-on">显示</button>
-            <button type="button" class="btn btn-muted btn-sm" id="link-batch-off">隐藏</button>
-            <button type="button" class="btn btn-danger btn-sm" id="link-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="link-batch-clear">取消选择</button>
+            <strong id="link-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="link-batch-on">{{ admin_t('ui.show') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="link-batch-off">{{ admin_t('ui.hide') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="link-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="link-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="link-table"></div>
     </div>
@@ -47,26 +79,32 @@
 <template id="link-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>网站名称</label>
-        <input type="text" name="name" placeholder="如 某某影视">
-        <p class="muted field-hint">页脚上显示的文字。</p>
-        <label>网址</label>
-        <input type="text" name="url" placeholder="https://">
-        <p class="muted field-hint">没写协议会自动加上 https://。点开会在新窗口。</p>
+        <label>{{ admin_t('ui.label_site_name') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_link_name') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_link_name') }}</p>
+        <label>{{ admin_t('ui.label_url') }}</label>
+        <input type="text" name="url" placeholder="{{ admin_t('ui.ph_https') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_link_url') }}</p>
         <label>Logo</label>
         <div class="field-inline">
-            <input type="text" name="logo" placeholder="可空，图链才需要">
-            <button type="button" class="btn btn-muted link-logo-upload-btn">上传</button>
+            <input type="text" name="logo" placeholder="{{ admin_t('ui.ph_link_logo') }}">
+            <button type="button" class="btn btn-muted link-logo-upload-btn">{{ admin_t('ui.upload') }}</button>
         </div>
         <img class="img-preview link-logo-preview" alt="">
-        <p class="muted field-hint">默认主题不用 Logo。清空则按文字链接显示。</p>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">显示</option>
-            <option value="0">隐藏</option>
-        </select>
+        <p class="muted field-hint">{{ admin_t('ui.hint_link_logo') }}</p>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>{{ admin_t('ui.sort') }}</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>{{ admin_t('ui.status') }}</label>
+                <select name="status">
+                    <option value="1">{{ admin_t('ui.show') }}</option>
+                    <option value="0">{{ admin_t('ui.hide') }}</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 @endsection
@@ -75,6 +113,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($linkJsLang);
     var QUEUE_KEYS = ['logo'];
     var form = document.getElementById('link-search');
     var batchBar = document.getElementById('link-batch');
@@ -122,10 +161,10 @@
         var thumb = logo
             ? '<img class="link-thumb" src="' + U.escape(logo) + '" alt="">'
             : '<span class="link-thumb is-empty">' + U.escape(letter) + '</span>';
-        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">隐藏</span>';
-        var kind = U.escape(d.kind_label || '文字');
+        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">' + U.escape(L.hidden) + '</span>';
+        var kind = U.escape(d.kind_label || L.kind_text);
         var url = String(d.url || '');
-        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badge + '</div>'
+        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || L.unnamed) + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + kind + (url ? ' · ' + U.escape(url) : '') + '</div></div></div>';
     }
 
@@ -138,9 +177,9 @@
         pager: false,
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的友链</p><p><button type="button" class="btn btn-muted btn-sm" id="link-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_links + '</p><p><button type="button" class="btn btn-muted btn-sm" id="link-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有友情链接</p><p class="muted">友链出现在页脚。填名称和网址就能显示，Logo 可选。</p><p><button type="button" class="btn btn-primary btn-sm" id="link-empty-add">新增友链</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_links + '</p><p class="muted">' + L.empty_links_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="link-empty-add">' + L.add_friend_link + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('link-empty-add');
@@ -150,20 +189,20 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '友链', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '隐藏');
+            {title: L.col_link, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.show) : U.status(false, L.hide);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var html = '';
-                if (d.url) html += '<a href="' + U.escape(d.url) + '" target="_blank" rel="noopener noreferrer" class="btn-link">打开</a>';
-                html += '<a href="#" class="btn-link js-edit">编辑</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                if (d.url) html += '<a href="' + U.escape(d.url) + '" target="_blank" rel="noopener noreferrer" class="btn-link">' + L.open_link + '</a>';
+                html += '<a href="#" class="btn-link js-edit">' + L.edit + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -181,7 +220,8 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑友链' : '新增友链',
+            wide: true,
+            title: mode === 'edit' ? L.edit_friend_link : L.add_friend_link,
             content: document.getElementById('link-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -197,12 +237,12 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写网站名称', 'err'); return false; }
-                if (!data.url) { U.toast('请填写网址', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_site_name, 'err'); return false; }
+                if (!data.url) { U.toast(L.please_fill_url, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/links/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -212,12 +252,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选友链', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_links, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/links/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -231,7 +271,7 @@
     });
     U.on('#link-batch-on', 'click', function () { batch('status', 1); });
     U.on('#link-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#link-batch-del', 'click', function () { batch('delete', '', '确认删除选中友链？页脚将不再显示。'); });
+    U.on('#link-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_links); });
     U.on('#link-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#link-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -243,11 +283,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除友链「' + (row.name || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_link || '').replace('__NAME__', row.name || ''))) return;
             U.post('/admin/video/links/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

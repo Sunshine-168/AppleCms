@@ -10,8 +10,8 @@
     <div class="card-body">
         <form class="filter-bar" id="manga-type-search" onsubmit="return false;">
             <input type="text" name="name" placeholder="搜分类名" autocomplete="off">
-            <button type="button" class="btn btn-sm" id="manga-type-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="manga-type-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="manga-type-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="manga-type-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <p class="muted recycle-lead">
             这是漫画自己的分类，不是影片分类。下级会缩进。点「添加下级」挂到这一栏下面；有作品时请先移走再删。关掉插件后前台 /manga 一起消失。

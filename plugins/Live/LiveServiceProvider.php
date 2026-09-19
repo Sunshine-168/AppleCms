@@ -13,6 +13,7 @@ class LiveServiceProvider extends ServiceProvider
         $file = __DIR__.'/database/migrations/2026_09_19_120000_create_plugin_live.php';
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
         PluginBoot::migrateFile($file);
+        PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_19_150000_add_recommend_to_plugin_live_channels.php');
         $this->loadViewsFrom(__DIR__.'/resources/views', 'live');
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');

@@ -26,8 +26,8 @@
         <form class="filter-bar role-find" id="role-search">
             <input type="hidden" name="kind">
             <input type="search" name="q" placeholder="搜名称或备注" autocomplete="off" aria-label="搜索角色">
-            <button type="submit" class="btn btn-sm" id="role-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">重置</button>
+            <button type="submit" class="btn btn-sm" id="role-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="role-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>

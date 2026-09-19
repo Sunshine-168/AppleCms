@@ -20,6 +20,7 @@ class LiveAdmin
     public function boardPayload(array $payload): array
     {
         $payload['categories'] = LiveCategory::query()->orderByDesc('sort')->orderBy('id')->get();
+        $payload['hasRecommend'] = Schema::hasColumn('plugin_live_channels', 'recommend');
         $desk = (string) ($payload['desk'] ?? request('desk', 'channels'));
         if ($desk === 'stats') {
             $payload['stats'] = $this->stats->summary();

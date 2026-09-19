@@ -40,8 +40,8 @@
                 <option value="1">启用</option>
                 <option value="0">停用</option>
             </select>
-            <button type="button" class="btn btn-sm" id="role-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="role-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="role-queues">
             <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
@@ -65,26 +65,39 @@
     <form>
         <input type="hidden" name="id">
         <label>角色名</label>
-        <input type="text" name="name" placeholder="如 周星星" required>
-        <label>影片 ID</label>
-        <input type="number" name="video_id" min="0" placeholder="这部戏的影片编号" inputmode="numeric">
-        <p class="muted field-hint" id="role-video-hint">不填影片，详情页不会列出这个角色。</p>
-        <label>演员 ID</label>
-        <input type="number" name="actor_id" min="0" placeholder="可空，对应演员库" inputmode="numeric">
-        <p class="muted field-hint" id="role-actor-hint">可空。填了必须是演员库里已有的人。</p>
+        <input class="entry-title" type="text" name="name" placeholder="如 周星星" required autofocus>
+        <p class="muted field-hint">影片角色名，不是后台管理员角色。</p>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>影片 ID</label>
+                <input type="number" name="video_id" min="0" placeholder="这部戏的影片编号" inputmode="numeric">
+                <p class="muted field-hint" id="role-video-hint">不填影片，详情页不会列出这个角色。</p>
+            </div>
+            <div>
+                <label>演员 ID</label>
+                <input type="number" name="actor_id" min="0" placeholder="可空，对应演员库" inputmode="numeric">
+                <p class="muted field-hint" id="role-actor-hint">可空。填了必须是演员库里已有的人。</p>
+            </div>
+        </div>
         <label>封面</label>
         <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址">
+            <input type="text" name="cover" placeholder="图片地址，可空">
             <button type="button" class="btn btn-muted role-cover-upload-btn">上传</button>
         </div>
         <img class="img-preview role-cover-preview" alt="">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
-        </select>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>状态</label>
+                <select name="status">
+                    <option value="1">启用</option>
+                    <option value="0">停用</option>
+                </select>
+            </div>
+        </div>
         <details class="form-more">
             <summary>简介和详情</summary>
             <label>别名</label>
@@ -92,7 +105,7 @@
             <label>简介</label>
             <input type="text" name="blurb" placeholder="一两句">
             <label>详情</label>
-            <textarea name="content"></textarea>
+            <textarea name="content" rows="4" placeholder="可选"></textarea>
         </details>
     </form>
 </template>
@@ -275,6 +288,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
+            wide: true,
             title: mode === 'edit' ? '编辑角色' : '新增角色',
             content: document.getElementById('role-dialog-tpl').innerHTML,
             onOpen: function (body) {

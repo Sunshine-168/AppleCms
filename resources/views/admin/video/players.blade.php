@@ -4,70 +4,107 @@
 @php
     $queues = $queues ?? ['all' => 0, 'artplayer' => 0, 'dplayer' => 0, 'videojs' => 0, 'iframe' => 0, 'off' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $playerJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'players' => admin_t('ui.players'),
+        'sort' => admin_t('ui.sort'),
+        'slug' => admin_t('ui.slug'),
+        'add_player' => admin_t('ui.add_player'),
+        'edit_player' => admin_t('ui.edit_player'),
+        'ensure_builtin' => admin_t('ui.ensure_builtin'),
+        'sources_n' => admin_t('ui.sources_n', ['n' => '__N__']),
+        'has_parse' => admin_t('ui.has_parse'),
+        'empty_players' => admin_t('ui.empty_players'),
+        'empty_players_hint' => admin_t('ui.empty_players_hint'),
+        'no_match_players' => admin_t('ui.no_match_players'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'please_fill_code' => admin_t('ui.please_fill_code'),
+        'please_select_players' => admin_t('ui.please_select_players'),
+        'please_pick_engine' => admin_t('ui.please_pick_engine'),
+        'confirm_batch_del_players' => admin_t('ui.confirm_batch_del_players'),
+        'confirm_del_player' => admin_t('ui.confirm_del_player', ['name' => '__NAME__']),
+        'copy_code' => admin_t('ui.copy_code'),
+        'code_copied' => admin_t('ui.code_copied'),
+        'finished' => admin_t('ui.finished'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel player-index list-desk">
     <div class="card-header">
-        <span>播放器 <em id="player-count"></em></span>
+        <span>{{ admin_t('ui.players') }} <em id="player-count"></em></span>
         <div>
-            <button type="button" class="btn btn-muted btn-sm" id="player-ensure-btn">补齐内置</button>
-            <button type="button" class="btn btn-sm" id="player-add-btn">新增播放器</button>
+            <button type="button" class="btn btn-muted btn-sm" id="player-ensure-btn">{{ admin_t('ui.ensure_builtin') }}</button>
+            <button type="button" class="btn btn-sm" id="player-add-btn">{{ admin_t('ui.add_player') }}</button>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="player-search" onsubmit="return false;">
             <input type="hidden" name="engine">
-            <input type="text" name="name" placeholder="搜名称或标识" autocomplete="off">
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_player') }}" autocomplete="off">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="player-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="player-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="player-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="player-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="player-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="artplayer">ArtPlayer @if($q('artplayer') > 0)<em>{{ $q('artplayer') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="dplayer">DPlayer @if($q('dplayer') > 0)<em>{{ $q('dplayer') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="videojs">Video.js @if($q('videojs') > 0)<em>{{ $q('videojs') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="engine" data-value="iframe">解析 @if($q('iframe') > 0)<em>{{ $q('iframe') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="engine" data-value="iframe">{{ admin_t('ui.engine_parse') }} @if($q('iframe') > 0)<em>{{ $q('iframe') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.deactivated') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">线路上的「播放器」字段要对上这里的标识。直链 m3u8 / mp4 / flv 用开源内核；加密地址才填解析。批量换线路在「<a href="/admin/video/tools/players">批量播放器</a>」。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.players_lead') }}</p>
         <div class="player-engines">
             <article>
                 <strong>ArtPlayer</strong>
-                <p>默认推荐。MIT，维护活跃，直链 HLS / FLV / MP4，界面好改。</p>
+                <p>{{ admin_t('ui.engine_artplayer_lead') }}</p>
             </article>
             <article>
                 <strong>DPlayer</strong>
-                <p>苹果 CMS 常用。自带弹幕，适合已有 DPlayer 线路。</p>
+                <p>{{ admin_t('ui.engine_dplayer_lead') }}</p>
             </article>
             <article>
                 <strong>Video.js</strong>
-                <p>兼容性最好，内置 HLS。体积更大，适合稳妥直链。</p>
+                <p>{{ admin_t('ui.engine_videojs_lead') }}</p>
             </article>
             <article>
-                <strong>解析接口</strong>
-                <p>iframe 打开解析页。地址里可用 <code>{url}</code> <code>{id}</code>。</p>
+                <strong>{{ admin_t('ui.engine_parse_title') }}</strong>
+                <p>{{ admin_t('ui.engine_parse_lead') }}</p>
             </article>
         </div>
         <div class="batch-bar" id="player-batch" hidden>
-            <strong id="player-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="player-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="player-batch-off">停用</button>
-            <select id="player-batch-engine" class="batch-select" aria-label="目标内核">
-                <option value="">改到内核</option>
+            <strong id="player-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="player-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="player-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <select id="player-batch-engine" class="batch-select" aria-label="{{ admin_t('ui.move') }}">
+                <option value="">{{ admin_t('ui.move') }}</option>
                 <option value="artplayer">ArtPlayer</option>
                 <option value="dplayer">DPlayer</option>
                 <option value="videojs">Video.js</option>
-                <option value="iframe">解析接口</option>
+                <option value="iframe">{{ admin_t('ui.engine_parse') }}</option>
             </select>
-            <button type="button" class="btn btn-muted btn-sm" id="player-batch-move">更换</button>
-            <button type="button" class="btn btn-danger btn-sm" id="player-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="player-batch-clear">取消选择</button>
+            <button type="button" class="btn btn-muted btn-sm" id="player-batch-move">{{ admin_t('ui.move') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="player-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="player-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="player-table"></div>
     </div>
@@ -75,31 +112,37 @@
 <template id="player-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="如 ArtPlayer 直链">
-        <p class="muted field-hint">后台列表里看到的名字。</p>
-        <label>标识</label>
-        <input type="text" name="code" placeholder="artplayer">
-        <p class="muted field-hint">要和影片线路上的播放器字段一致，采集来的常见 dplayer、parse。</p>
-        <label>内核</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_player_name') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_player_name') }}</p>
+        <label>{{ admin_t('ui.slug') }}</label>
+        <input type="text" name="code" placeholder="{{ admin_t('ui.ph_player_code') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_player_code') }}</p>
+        <label>{{ admin_t('ui.label_engine') }}</label>
         <select name="engine">
-            <option value="artplayer">ArtPlayer 直链</option>
-            <option value="dplayer">DPlayer 直链</option>
-            <option value="videojs">Video.js 直链</option>
-            <option value="iframe">解析接口 / iframe</option>
+            <option value="artplayer">{{ admin_t('ui.engine_artplayer_opt') }}</option>
+            <option value="dplayer">{{ admin_t('ui.engine_dplayer_opt') }}</option>
+            <option value="videojs">{{ admin_t('ui.engine_videojs_opt') }}</option>
+            <option value="iframe">{{ admin_t('ui.engine_parse_opt') }}</option>
         </select>
         <div id="player-parse-wrap">
-            <label>解析地址</label>
-            <textarea name="parse" class="player-parse" placeholder="https://jx.example.com/?url={url}"></textarea>
-            <p class="muted field-hint">仅解析内核需要。可用 <code>{url}</code>、<code>{id}</code>。直链内核请留空。</p>
+            <label>{{ admin_t('ui.label_parse_url') }}</label>
+            <textarea name="parse" class="player-parse" placeholder="{{ admin_t('ui.ph_player_parse') }}"></textarea>
+            <p class="muted field-hint">{{ admin_t('ui.hint_player_parse') }}</p>
         </div>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
-        </select>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>{{ admin_t('ui.sort') }}</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>{{ admin_t('ui.status') }}</label>
+                <select name="status">
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 @endsection
@@ -108,6 +151,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($playerJsLang);
     var QUEUE_KEYS = ['engine'];
     var form = document.getElementById('player-search');
     var batchBar = document.getElementById('player-batch');
@@ -150,11 +194,11 @@
         markChips();
     }
     function nameHtml(d) {
-        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">停用</span>';
-        var meta = [U.escape(d.engine_label || d.engine || ''), '标识 ' + U.escape(d.code || '')];
-        if (d.source_count) meta.push(d.source_count + ' 条线路');
-        if (d.parse) meta.push('有解析');
-        return '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badge + '</div>'
+        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">' + L.disabled + '</span>';
+        var meta = [U.escape(d.engine_label || d.engine || ''), L.slug + ' ' + U.escape(d.code || '')];
+        if (d.source_count) meta.push(String(L.sources_n || '').replace('__N__', String(d.source_count)));
+        if (d.parse) meta.push(L.has_parse);
+        return '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || L.unnamed) + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + meta.join(' · ') + '</div></div>';
     }
 
@@ -167,9 +211,9 @@
         pager: false,
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的播放器</p><p><button type="button" class="btn btn-muted btn-sm" id="player-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_players + '</p><p><button type="button" class="btn btn-muted btn-sm" id="player-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有播放器</p><p class="muted">先补齐 ArtPlayer、DPlayer、Video.js 和解析接口。</p><p><button type="button" class="btn btn-primary btn-sm" id="player-empty-ensure">补齐内置</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_players + '</p><p class="muted">' + L.empty_players_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="player-empty-ensure">' + L.ensure_builtin + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var ensure = document.getElementById('player-empty-ensure');
@@ -179,17 +223,17 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '播放器', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '停用');
+            {title: L.players, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-copy">复制标识</a><a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: L.actions, cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-copy">' + L.copy_code + '</a><a href="#" class="btn-link js-edit">' + L.edit + '</a><a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -218,7 +262,8 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑播放器' : '新增播放器',
+            wide: true,
+            title: mode === 'edit' ? L.edit_player : L.add_player,
             content: document.getElementById('player-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -235,13 +280,13 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
-                if (!data.code) { U.toast('请填写标识', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
+                if (!data.code) { U.toast(L.please_fill_code, 'err'); return false; }
                 if (data.engine !== 'iframe') data.parse = data.parse || '';
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/players/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -249,19 +294,19 @@
     }
     function ensurePlayers() {
         U.post('/admin/video/players/ensure', {}).then(function (res) {
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
             if (res && res.code === 0) table.refresh();
         });
     }
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选播放器', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_players, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/players/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -278,10 +323,10 @@
     U.on('#player-batch-off', 'click', function () { batch('status', 0); });
     U.on('#player-batch-move', 'click', function () {
         var val = document.getElementById('player-batch-engine').value;
-        if (!val) { U.toast('请先选择内核，再点「更换」', 'err'); return; }
+        if (!val) { U.toast(L.please_pick_engine, 'err'); return; }
         batch('engine', val);
     });
-    U.on('#player-batch-del', 'click', function () { batch('delete', '', '确认删除选中播放器？仍被线路使用的不会删。'); });
+    U.on('#player-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_players); });
     U.on('#player-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#player-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -291,15 +336,15 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-copy')) {
-            copyText(row.code || '').then(function () { U.toast('已复制标识', 'ok'); });
+            copyText(row.code || '').then(function () { U.toast(L.code_copied, 'ok'); });
         }
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除播放器「' + (row.name || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_player || '').replace('__NAME__', row.name || ''))) return;
             U.post('/admin/video/players/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

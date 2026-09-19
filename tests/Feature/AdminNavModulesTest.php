@@ -39,7 +39,20 @@ class AdminNavModulesTest extends TestCase
         } else {
             $this->assertStringNotContainsString('>漫画<', $html);
         }
-        $this->assertStringNotContainsString('直播', $html);
+        if (app(PluginManager::class)->isEnabled('novel')) {
+            $this->assertStringContainsString('>小说<', $html);
+            $this->assertStringContainsString('href="/admin/video/novels"', $html);
+        }
+        if (app(PluginManager::class)->isEnabled('gallery')) {
+            $this->assertStringContainsString('>图集<', $html);
+            $this->assertStringContainsString('href="/admin/video/galleries"', $html);
+        }
+        if (app(PluginManager::class)->isEnabled('live')) {
+            $this->assertStringContainsString('>直播<', $html);
+            $this->assertStringContainsString('href="/admin/video/lives"', $html);
+        } else {
+            $this->assertStringNotContainsString('>直播<', $html);
+        }
         $this->assertStringNotContainsString('入金', $html);
         $this->assertStringNotContainsString('监控告警', $html);
     }

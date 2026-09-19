@@ -5,50 +5,94 @@
     $groups = $groups ?? [];
     $queues = $queues ?? ['all' => 0, 'off' => 0, 'none' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $memberJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_people' => admin_t('ui.selected_people', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'ungrouped' => admin_t('ui.ungrouped'),
+        'add_member' => admin_t('ui.add_member'),
+        'edit_member' => admin_t('ui.edit_member'),
+        'col_member' => admin_t('ui.col_member'),
+        'col_group' => admin_t('ui.col_group'),
+        'col_points' => admin_t('ui.col_points'),
+        'status_normal' => admin_t('ui.status_normal'),
+        'joined_at' => admin_t('ui.joined_at', ['time' => '__TIME__']),
+        'plog_link' => admin_t('ui.plog_link'),
+        'favor_link' => admin_t('ui.favor_link'),
+        'pm_link' => admin_t('ui.pm_link'),
+        'notify_link' => admin_t('ui.notify_link'),
+        'empty_members' => admin_t('ui.empty_members'),
+        'empty_members_hint' => admin_t('ui.empty_members_hint'),
+        'no_match_members' => admin_t('ui.no_match_members'),
+        'please_fill_nickname' => admin_t('ui.please_fill_nickname'),
+        'please_fill_email' => admin_t('ui.please_fill_email'),
+        'please_fill_password' => admin_t('ui.please_fill_password'),
+        'please_select_members' => admin_t('ui.please_select_members'),
+        'please_pick_group' => admin_t('ui.please_pick_group'),
+        'please_points_nonzero' => admin_t('ui.please_points_nonzero'),
+        'confirm_adjust_points' => admin_t('ui.confirm_adjust_points', ['n' => '__N__']),
+        'confirm_batch_del_members' => admin_t('ui.confirm_batch_del_members'),
+        'confirm_disable_member' => admin_t('ui.confirm_disable_member', ['name' => '__NAME__']),
+        'confirm_del_member' => admin_t('ui.confirm_del_member', ['name' => '__NAME__']),
+        'member_enabled' => admin_t('ui.member_enabled'),
+        'member_disabled' => admin_t('ui.member_disabled'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel member-index list-desk">
     <div class="card-header">
-        <span>会员 <em id="member-count"></em></span>
+        <span>{{ admin_t('ui.members') }} <em id="member-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/groups">会员组</a>
-            <button type="button" class="btn btn-sm" id="member-add-btn">新建会员</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/groups">{{ admin_t('ui.member_groups') }}</a>
+            <button type="button" class="btn btn-sm" id="member-add-btn">{{ admin_t('ui.add_member') }}</button>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="member-search" onsubmit="return false;">
             <input type="hidden" name="group_id">
             <input type="hidden" name="status">
-            <input type="search" name="q" placeholder="搜索昵称、邮箱或 ID" autocomplete="off" aria-label="搜索会员">
-            <button type="button" class="btn btn-sm" id="member-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="member-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_member') }}" autocomplete="off" aria-label="{{ admin_t('ui.members') }}">
+            <button type="button" class="btn btn-sm" id="member-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="member-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="member-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
             @foreach($groups as $group)
                 <button type="button" class="chip" data-queue="group_id" data-value="{{ $group['id'] }}">{{ $group['name'] }}@if(($group['count'] ?? 0) > 0)<em>{{ $group['count'] }}</em>@endif</button>
             @endforeach
-            <button type="button" class="chip" data-queue="group_id" data-value="0">未分组@if($q('none') > 0)<em>{{ $q('none') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="group_id" data-value="0">{{ admin_t('ui.ungrouped') }}@if($q('none') > 0)<em>{{ $q('none') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.deactivated') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">会员登录的是网站，不是后台。积分点播，分组决定试看和门槛。点姓名改资料，勾选后可停用、换组或调积分。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.members_lead') }}</p>
         <div class="batch-bar" id="member-batch" hidden>
-            <strong id="member-batch-count">已选 0 人</strong>
-            <button type="button" class="btn btn-sm" id="member-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="member-batch-off">停用</button>
-            <select id="member-batch-group" class="batch-select" aria-label="目标分组">
-                <option value="">改到分组</option>
-                <option value="0">未分组</option>
+            <strong id="member-batch-count">{{ admin_t('ui.selected_people', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="member-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="member-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <select id="member-batch-group" class="batch-select" aria-label="{{ admin_t('ui.move_group') }}">
+                <option value="">{{ admin_t('ui.move_group') }}</option>
+                <option value="0">{{ admin_t('ui.ungrouped') }}</option>
                 @foreach($groups as $group)
                     <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
                 @endforeach
             </select>
-            <button type="button" class="btn btn-muted btn-sm" id="member-batch-move">移动</button>
-            <input type="number" id="member-batch-points" class="batch-points" placeholder="积分±" aria-label="调整积分">
-            <button type="button" class="btn btn-muted btn-sm" id="member-batch-points-go">调整积分</button>
-            <button type="button" class="btn btn-danger btn-sm" id="member-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="member-batch-clear">取消选择</button>
+            <button type="button" class="btn btn-muted btn-sm" id="member-batch-move">{{ admin_t('ui.move') }}</button>
+            <input type="number" id="member-batch-points" class="batch-points" placeholder="{{ admin_t('ui.points_delta') }}" aria-label="{{ admin_t('ui.adjust_points') }}">
+            <button type="button" class="btn btn-muted btn-sm" id="member-batch-points-go">{{ admin_t('ui.adjust_points') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="member-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="member-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="member-table"></div>
     </div>
@@ -56,29 +100,29 @@
 <template id="member-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>昵称</label>
-        <input type="text" name="name" placeholder="前台看到的名字">
-        <p class="muted field-hint">评论和个人中心里显示的名字。</p>
-        <label>登录邮箱</label>
-        <input type="email" name="email" placeholder="用来登录网站">
-        <p class="muted field-hint">这是前台账号，进不了后台。</p>
-        <label>密码</label>
-        <input type="password" name="password" autocomplete="new-password" placeholder="新建必填，编辑留空不改">
-        <label>会员组</label>
+        <label>{{ admin_t('ui.label_nickname') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_member_name') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_member_name') }}</p>
+        <label>{{ admin_t('ui.label_login_email') }}</label>
+        <input type="email" name="email" placeholder="{{ admin_t('ui.ph_member_email') }}">
+        <p class="muted field-hint">{{ admin_t('ui.hint_member_email') }}</p>
+        <label>{{ admin_t('ui.label_password') }}</label>
+        <input type="password" name="password" autocomplete="new-password" placeholder="{{ admin_t('ui.ph_member_password') }}">
+        <label>{{ admin_t('ui.label_member_group') }}</label>
         <select name="group_id">
-            <option value="0">未分组</option>
+            <option value="0">{{ admin_t('ui.ungrouped') }}</option>
             @foreach($groups as $group)
-                <option value="{{ $group['id'] }}">{{ $group['name'] }}{{ (int) ($group['status'] ?? 1) === 1 ? '' : '（停用）' }}</option>
+                <option value="{{ $group['id'] }}">{{ $group['name'] }}{{ (int) ($group['status'] ?? 1) === 1 ? '' : admin_t('ui.group_disabled_suffix') }}</option>
             @endforeach
         </select>
-        <p class="muted field-hint">决定试看秒数和积分门槛。组权限在「会员组」里改。</p>
-        <label>积分</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_member_group') }}</p>
+        <label>{{ admin_t('ui.label_points') }}</label>
         <input type="number" name="points" value="0">
-        <p class="muted field-hint">点播扣分用。改这里会记进积分流水。</p>
-        <label>状态</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_member_points') }}</p>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">正常</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.status_normal') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
     </form>
 </template>
@@ -88,6 +132,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($memberJsLang);
     var QUEUE_KEYS = ['group_id'];
     var form = document.getElementById('member-search');
     var qs = new URLSearchParams(location.search);
@@ -134,11 +179,11 @@
         markChips();
     }
     function nameHtml(d) {
-        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">停用</span>';
+        var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">' + L.disabled + '</span>';
         var meta = U.escape(d.email || '');
-        if (d.joined_text) meta += (meta ? ' · ' : '') + '加入 ' + U.escape(d.joined_text);
+        if (d.joined_text) meta += (meta ? ' · ' : '') + String(L.joined_at || '').replace('__TIME__', U.escape(d.joined_text));
         meta += (meta ? ' · ' : '') + '#' + U.escape(d.id);
-        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badge + '</div>'
+        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || L.unnamed) + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div>';
     }
 
@@ -150,9 +195,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的会员。</p><p><button type="button" class="btn btn-muted btn-sm" id="member-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_members + '</p><p><button type="button" class="btn btn-muted btn-sm" id="member-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有会员。</p><p class="muted">前台注册或这里添加。他们登录的是网站，不是后台。</p><p><button type="button" class="btn btn-primary btn-sm" id="member-empty-add">新建会员</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_members + '</p><p class="muted">' + L.empty_members_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="member-empty-add">' + L.add_member + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('member-empty-add');
@@ -162,26 +207,26 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 人';
+            batchCount.textContent = String(L.selected_people || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '会员', html: nameHtml},
-            {title: '分组', width: 120, html: function (d) { return U.escape(d.group_name || '未分组'); }},
-            {key: 'points', title: '积分', width: 72},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '正常') : U.status(false, '停用');
+            {title: L.col_member, html: nameHtml},
+            {title: L.col_group, width: 120, html: function (d) { return U.escape(d.group_name || L.ungrouped); }},
+            {key: 'points', title: L.col_points, width: 72},
+            {title: L.status, width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.status_normal) : U.status(false, L.disabled);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var html = String(d.status) === '1'
-                    ? '<a href="#" class="btn-link js-off">停用</a>'
-                    : '<a href="#" class="btn-link js-on">启用</a>';
-                html += '<a href="#" class="btn-link js-edit">编辑</a>';
-                html += '<a href="/admin/video/plogs?member_id=' + encodeURIComponent(d.id) + '">流水</a>';
-                html += '<a class="btn-link" href="/admin/video/favorites?member_id=' + encodeURIComponent(d.id) + '">收藏</a>';
-                html += '<a class="btn-link" href="/admin/video/pms?to=' + encodeURIComponent(d.id) + '">写信</a>';
-                html += '<a class="btn-link" href="/admin/video/notifies?member=' + encodeURIComponent(d.id) + '">通知</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                    ? '<a href="#" class="btn-link js-off">' + L.disabled + '</a>'
+                    : '<a href="#" class="btn-link js-on">' + L.enabled + '</a>';
+                html += '<a href="#" class="btn-link js-edit">' + L.edit + '</a>';
+                html += '<a href="/admin/video/plogs?member_id=' + encodeURIComponent(d.id) + '">' + L.plog_link + '</a>';
+                html += '<a class="btn-link" href="/admin/video/favorites?member_id=' + encodeURIComponent(d.id) + '">' + L.favor_link + '</a>';
+                html += '<a class="btn-link" href="/admin/video/pms?to=' + encodeURIComponent(d.id) + '">' + L.pm_link + '</a>';
+                html += '<a class="btn-link" href="/admin/video/notifies?member=' + encodeURIComponent(d.id) + '">' + L.notify_link + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -191,7 +236,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑会员' : '新建会员',
+            title: mode === 'edit' ? L.edit_member : L.add_member,
             content: document.getElementById('member-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -207,14 +252,14 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写昵称', 'err'); return false; }
-                if (!data.email) { U.toast('请填写邮箱', 'err'); return false; }
-                if (mode !== 'edit' && !data.password) { U.toast('请填写密码', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_nickname, 'err'); return false; }
+                if (!data.email) { U.toast(L.please_fill_email, 'err'); return false; }
+                if (mode !== 'edit' && !data.password) { U.toast(L.please_fill_password, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 if (!data.password) delete data.password;
                 return U.post('/admin/video/members/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -224,19 +269,19 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选会员', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_members, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/members/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status) {
         U.post('/admin/video/members/save', {id: row.id, status: status}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已启用' : '已停用', 'ok');
+            U.toast(status === 1 ? L.member_enabled : L.member_disabled, 'ok');
         });
     }
 
@@ -252,15 +297,15 @@
     U.on('#member-batch-off', 'click', function () { batch('status', 0); });
     U.on('#member-batch-move', 'click', function () {
         var sel = document.getElementById('member-batch-group');
-        if (sel.value === '') { U.toast('请先选择分组，再点「移动」', 'err'); return; }
+        if (sel.value === '') { U.toast(L.please_pick_group, 'err'); return; }
         batch('group', sel.value);
     });
     U.on('#member-batch-points-go', 'click', function () {
         var val = parseInt(document.getElementById('member-batch-points').value, 10);
-        if (!val) { U.toast('请填写不为 0 的积分，例如 100 或 -50', 'err'); return; }
-        batch('points', val, '给已选会员调整 ' + val + ' 积分？会记进流水。');
+        if (!val) { U.toast(L.please_points_nonzero, 'err'); return; }
+        batch('points', val, String(L.confirm_adjust_points || '').replace('__N__', String(val)));
     });
-    U.on('#member-batch-del', 'click', function () { batch('delete', '', '确定删除选中会员？不能再登录，评论还在。'); });
+    U.on('#member-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_members); });
     U.on('#member-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#member-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -273,15 +318,15 @@
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-on')) setStatus(row, 1);
         if (a.classList.contains('js-off')) {
-            if (!U.confirm('停用「' + (row.name || '') + '」？不能登录前台，评论还在。')) return;
+            if (!U.confirm(String(L.confirm_disable_member || '').replace('__NAME__', row.name || ''))) return;
             setStatus(row, 0);
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确定删除「' + (row.name || row.email || '') + '」？不能再登录，评论还在。')) return;
+            if (!U.confirm(String(L.confirm_del_member || '').replace('__NAME__', row.name || row.email || ''))) return;
             U.post('/admin/video/members/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

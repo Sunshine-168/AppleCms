@@ -5,48 +5,87 @@
     $isWebsite = $scope === 'website';
     $base = $isArt ? '/admin/video/art-types' : ($isWebsite ? '/admin/video/website-types' : '/admin/video/types');
     $contentUrl = $isArt ? '/admin/video/arts' : ($isWebsite ? '/admin/video/websites' : '/admin/video');
-    $noun = $isArt ? '栏目' : '分类';
-    $unit = $isArt ? '篇' : ($isWebsite ? '个' : '部');
-    $contentLabel = $isArt ? '文章' : ($isWebsite ? '站点' : '影片');
-    $pageTitle = $isArt ? '栏目' : ($isWebsite ? '导航分类' : admin_t('page.types'));
-    $createLabel = $isArt ? '新建栏目' : ($isWebsite ? '新建导航分类' : '新增分类');
+    $noun = $isArt ? admin_t('ui.column') : admin_t('ui.types');
+    $unit = $isArt ? admin_t('ui.articles') : ($isWebsite ? admin_t('ui.sites') : admin_t('nav.videos'));
+    $contentLabel = $isArt ? admin_t('ui.articles') : ($isWebsite ? admin_t('ui.sites') : admin_t('nav.videos'));
+    $pageTitle = $isArt ? admin_t('ui.column') : ($isWebsite ? admin_t('ui.nav_types') : admin_t('page.types'));
+    $createLabel = $isArt ? admin_t('ui.add_column') : ($isWebsite ? admin_t('ui.add_nav_type') : admin_t('ui.add_type'));
+    $typeJsLang = [
+        'noun' => $noun,
+        'unit' => $unit,
+        'content_label' => $contentLabel,
+        'create_label' => $createLabel,
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'sort' => admin_t('ui.sort'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'front' => admin_t('ui.front'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'top_level' => admin_t('ui.top_level'),
+        'move_parent' => admin_t('ui.move_parent'),
+        'add_child' => admin_t('ui.add_child'),
+        'child' => admin_t('ui.child'),
+        'kind' => admin_t('ui.kind'),
+        'write_art' => admin_t('ui.write_art'),
+        'go_websites' => admin_t('ui.go_websites'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'children_n' => admin_t('ui.children_n', ['n' => '__N__']),
+        'empty_types' => admin_t('ui.empty_types'),
+        'empty_types_hint' => admin_t('ui.empty_types_hint'),
+        'empty_art_types' => admin_t('ui.empty_art_types'),
+        'empty_art_types_hint' => admin_t('ui.empty_art_types_hint'),
+        'empty_nav_types' => admin_t('ui.empty_nav_types'),
+        'empty_nav_types_hint' => admin_t('ui.empty_nav_types_hint'),
+        'no_match_noun' => admin_t('ui.no_match_noun', ['name' => $noun]),
+        'please_select_noun' => admin_t('ui.please_select_noun', ['name' => $noun]),
+        'please_pick_parent' => admin_t('ui.please_pick_parent'),
+        'confirm_batch_del_types' => admin_t('ui.confirm_batch_del_types', ['name' => $noun, 'content' => $contentLabel]),
+        'confirm_del_type' => admin_t('ui.confirm_del_type', ['name' => '__NAME__', 'content' => $contentLabel]),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+    ];
 @endphp
 @section('title', $pageTitle)
 
 @section('plain')
 <div class="card card-panel type-index list-desk">
     <div class="card-header">
-        <span>{{ $isWebsite ? '导航分类' : $noun }} <em id="type-count"></em></span>
+        <span>{{ $isWebsite ? admin_t('ui.nav_types') : $noun }} <em id="type-count"></em></span>
         <div>
             <a class="btn btn-sm" href="{{ $base }}/create">{{ $createLabel }}</a>
             @if($isWebsite)
-                <a class="btn btn-muted btn-sm" href="/admin/video/websites">网址导航</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/websites">{{ admin_t('ui.websites_nav') }}</a>
             @endif
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="video-type-search" onsubmit="return false;">
-            <input type="text" name="name" placeholder="搜{{ $noun }}名" autocomplete="off">
-            <button type="button" class="btn btn-sm" id="video-type-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="video-type-reset-btn">重置</button>
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_search_noun', ['name' => $noun]) }}" autocomplete="off">
+            <button type="button" class="btn btn-sm" id="video-type-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="video-type-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <p class="muted recycle-lead">
             @if($isArt)
-                这是文章自己的栏目，不是影片分类。类型可以是列表、频道、单页或外链。下级会缩进。点「添加下级」挂到这一栏下面；有文章时请先移走再删。
+                {{ admin_t('ui.types_lead_art') }}
             @elseif($isWebsite)
-                这是网址导航自己的分类（mid=3），不是影片或文章分类。下级缩进显示。先建一级，再点「下级」做分组。有站点时请先移走再删。
+                {{ admin_t('ui.types_lead_website') }}
             @else
-                下级缩进显示。先建电影 / 剧集这种一级，再在下面加动作片、国产剧。文章栏目请去「文章 → 栏目」。
+                {{ admin_t('ui.types_lead_vod') }}
             @endif
         </p>
         <div class="batch-bar" id="type-batch" hidden>
-            <strong id="type-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="type-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="type-batch-off">禁用</button>
-            <select id="type-batch-parent" class="batch-select"><option value="">改到上级</option></select>
-            <button type="button" class="btn btn-muted btn-sm" id="type-batch-move">移动</button>
-            <button type="button" class="btn btn-danger btn-sm" id="type-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="type-batch-clear">取消选择</button>
+            <strong id="type-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="type-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="type-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <select id="type-batch-parent" class="batch-select"><option value="">{{ admin_t('ui.move_parent') }}</option></select>
+            <button type="button" class="btn btn-muted btn-sm" id="type-batch-move">{{ admin_t('ui.move') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="type-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="type-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="video-type-table"></div>
     </div>
@@ -57,6 +96,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($typeJsLang);
     var form = document.getElementById('video-type-search');
     var batchBar = document.getElementById('type-batch');
     var batchCount = document.getElementById('type-batch-count');
@@ -65,9 +105,6 @@
     var isWebsite = @json($isWebsite);
     var base = @json($base);
     var contentUrl = @json($contentUrl);
-    var noun = @json($noun);
-    var unit = @json($unit);
-    var contentLabel = @json($contentLabel);
     var countKey = isArt ? 'art_count' : (isWebsite ? 'website_count' : 'video_count');
 
     function isFiltered(where) {
@@ -85,7 +122,7 @@
             if (skip[pid]) skip[id] = true;
         });
         var html = placeholder ? '<option value="">' + U.escape(placeholder) + '</option>' : '';
-        html += '<option value="0">顶级</option>';
+        html += '<option value="0">' + U.escape(L.top_level) + '</option>';
         rows.forEach(function (r) {
             var id = parseInt(r.id, 10) || 0;
             if (skip[id]) return;
@@ -102,7 +139,7 @@
         sel.value = selected == null || selected === '' ? '0' : String(selected);
     }
     function fillBatchParent() {
-        fillParentSelect(document.getElementById('type-batch-parent'), 0, '', '改到上级');
+        fillParentSelect(document.getElementById('type-batch-parent'), 0, '', L.move_parent);
     }
     function nameHtml(d) {
         var depth = parseInt(d.depth, 10) || 0;
@@ -111,14 +148,14 @@
         var meta = '#' + U.escape(d.id);
         if (d.slug) meta += ' · /' + U.escape(d.slug);
         if (n > 0) {
-            meta += ' · <a href="' + contentUrl + '?type_id=' + encodeURIComponent(d.id) + '">' + U.escape(String(n)) + ' ' + unit + '</a>';
+            meta += ' · <a href="' + contentUrl + '?type_id=' + encodeURIComponent(d.id) + '">' + U.escape(String(n)) + ' ' + L.unit + '</a>';
         } else {
-            meta += ' · 0 ' + unit;
+            meta += ' · 0 ' + L.unit;
         }
         if (isArt && d.kind_label && d.kind && d.kind !== 'list') {
             meta += ' · ' + U.escape(d.kind_label);
         }
-        if (parseInt(d.child_count, 10) > 0) meta += ' · ' + U.escape(d.child_count) + ' 个子类';
+        if (parseInt(d.child_count, 10) > 0) meta += ' · ' + String(L.children_n || '').replace('__N__', U.escape(String(d.child_count)));
         return '<div class="cat-cell" style="padding-left:' + (depth * 22) + 'px">' + branch
             + '<div><a class="vod-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || '') + '</a>'
             + '<div class="muted">' + meta + '</div></div></div>';
@@ -131,15 +168,15 @@
         pager: false,
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合名称的' + noun + '</p><p><button type="button" class="btn btn-muted btn-sm" id="type-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_noun + '</p><p><button type="button" class="btn btn-muted btn-sm" id="type-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
             if (isArt) {
-                return '<div class="list-empty"><p>还没有栏目。</p><p class="muted">栏目是文章的目录。先建一级栏目，再在它下面「添加下级」做多级频道。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新建栏目</a></p></div>';
+                return '<div class="list-empty"><p>' + L.empty_art_types + '</p><p class="muted">' + L.empty_art_types_hint + '</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">' + L.create_label + '</a></p></div>';
             }
             if (isWebsite) {
-                return '<div class="list-empty"><p>还没有导航分类</p><p class="muted">先建工具、资源这种一级，再在下面加二级。建好后回网址导航给站点分组。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新建导航分类</a> <a class="btn btn-muted btn-sm" href="/admin/video/websites">回网址导航</a></p></div>';
+                return '<div class="list-empty"><p>' + L.empty_nav_types + '</p><p class="muted">' + L.empty_nav_types_hint + '</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">' + L.create_label + '</a> <a class="btn btn-muted btn-sm" href="/admin/video/websites">' + L.go_websites + '</a></p></div>';
             }
-            return '<div class="list-empty"><p>还没有分类</p><p class="muted">栏目是片库的目录。先建一级，再点「下级」挂动作片、国产剧。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新增分类</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_types + '</p><p class="muted">' + L.empty_types_hint + '</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">' + L.create_label + '</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             fillBatchParent();
@@ -148,41 +185,41 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: (function () {
             var cols = [
                 {check: true, width: 36},
-                {title: noun, html: nameHtml}
+                {title: L.noun, html: nameHtml}
             ];
             if (isArt) {
-                cols.push({title: '类型', width: 72, html: function (d) {
+                cols.push({title: L.kind, width: 72, html: function (d) {
                     return d.kind_label ? '<span class="badge">' + U.escape(d.kind_label) + '</span>' : '—';
                 }});
             }
             cols.push(
-                {key: 'sort', title: '排序', width: 64},
-                {title: '状态', width: 72, html: function (d) {
-                    return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
+                {key: 'sort', title: L.sort, width: 64},
+                {title: L.status, width: 72, html: function (d) {
+                    return String(d.status) === '1' ? U.status(true, L.enabled) : U.status(false, L.disabled);
                 }},
-                {title: '操作', cls: 'actions', html: function (d) {
+                {title: L.actions, cls: 'actions', html: function (d) {
                     var id = encodeURIComponent(d.id);
                     var html = '';
                     var kind = String(d.kind || 'list');
                     if (isArt && String(d.status) === '1') {
                         var front = (kind === 'link' && d.jump_url) ? String(d.jump_url) : ('/art/type/' + id);
-                        html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
+                        html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>';
                     }
                     if (isWebsite && String(d.status) === '1') {
-                        html += '<a href="/website?type_id=' + id + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
+                        html += '<a href="/website?type_id=' + id + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>';
                     }
-                    html += '<a class="btn-link js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
-                    html += '<a href="' + contentUrl + '?type_id=' + id + '" class="btn-link">' + contentLabel + '</a>';
+                    html += '<a class="btn-link js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? L.add_child : L.child) + '</a>';
+                    html += '<a href="' + contentUrl + '?type_id=' + id + '" class="btn-link">' + L.content_label + '</a>';
                     if (isArt && kind !== 'hub' && kind !== 'link') {
-                        html += '<a href="/admin/video/arts/create?type_id=' + id + '" class="btn-link">写文章</a>';
+                        html += '<a href="/admin/video/arts/create?type_id=' + id + '" class="btn-link">' + L.write_art + '</a>';
                     }
-                    html += '<a href="' + base + '/' + id + '/edit" class="btn-link">编辑</a>';
-                    html += '<a href="#" class="btn-link js-del">删除</a>';
+                    html += '<a href="' + base + '/' + id + '/edit" class="btn-link">' + L.edit + '</a>';
+                    html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                     return html;
                 }}
             );
@@ -193,12 +230,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选' + noun, 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_noun, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post(base + '/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -215,10 +252,10 @@
     U.on('#type-batch-off', 'click', function () { batch('status', 0); });
     U.on('#type-batch-move', 'click', function () {
         var val = document.getElementById('type-batch-parent').value;
-        if (val === '') { U.toast('请选择目标上级', 'err'); return; }
+        if (val === '') { U.toast(L.please_pick_parent, 'err'); return; }
         batch('parent', val);
     });
-    U.on('#type-batch-del', 'click', function () { batch('delete', '', '确认删除选中' + noun + '？有下级或' + contentLabel + '的会跳过。'); });
+    U.on('#type-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_types); });
     U.on('#type-batch-clear', 'click', function () { table.clearSelection(); });
 
     U.on('#video-type-table', 'click', function (e) {
@@ -228,11 +265,11 @@
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
-        if (!U.confirm('删除「' + (row.name || '') + '」？有下级或' + contentLabel + '时无法删除。')) return;
+        if (!U.confirm(String(L.confirm_del_type || '').replace('__NAME__', row.name || ''))) return;
         U.post(base + '/delete', {id: row.id}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast('删除成功', 'ok');
+            U.toast(L.deleted, 'ok');
         });
     });
 })();

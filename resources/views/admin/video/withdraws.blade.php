@@ -4,40 +4,76 @@
 @php
     $queues = $queues ?? ['all' => 0, 'pending' => 0, 'paid' => 0, 'rejected' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $withdrawJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'members' => admin_t('ui.members'),
+        'pending_review' => admin_t('ui.pending_review'),
+        'withdraw_paid' => admin_t('ui.withdraw_paid'),
+        'withdraw_rejected' => admin_t('ui.withdraw_rejected'),
+        'mark_paid' => admin_t('ui.mark_paid'),
+        'col_withdraw' => admin_t('ui.col_withdraw'),
+        'amount_yuan' => admin_t('ui.amount_yuan', ['n' => '__YUAN__']),
+        'amount_fen' => admin_t('ui.amount_fen', ['n' => '__FEN__']),
+        'points_now' => admin_t('ui.points_now', ['n' => '__N__']),
+        'label_remark' => admin_t('ui.label_remark'),
+        'empty_withdraws' => admin_t('ui.empty_withdraws'),
+        'empty_withdraws_hint' => admin_t('ui.empty_withdraws_hint'),
+        'no_match_withdraws' => admin_t('ui.no_match_withdraws'),
+        'please_select_withdraws' => admin_t('ui.please_select_withdraws'),
+        'withdraw_paid_ok' => admin_t('ui.withdraw_paid_ok'),
+        'withdraw_rejected_ok' => admin_t('ui.withdraw_rejected_ok'),
+        'confirm_batch_pay_withdraws' => admin_t('ui.confirm_batch_pay_withdraws'),
+        'confirm_batch_reject_withdraws' => admin_t('ui.confirm_batch_reject_withdraws'),
+        'confirm_batch_del_withdraws' => admin_t('ui.confirm_batch_del_withdraws'),
+        'confirm_pay_withdraw' => admin_t('ui.confirm_pay_withdraw', ['name' => '__NAME__', 'yuan' => '__YUAN__', 'fen' => '__FEN__']),
+        'confirm_reject_withdraw' => admin_t('ui.confirm_reject_withdraw'),
+        'confirm_del_withdraw' => admin_t('ui.confirm_del_withdraw'),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'go_members' => admin_t('ui.go_members'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel withdraw-index list-desk">
     <div class="card-header">
-        <span>提现@if($q('pending') > 0) <em>· {{ $q('pending') }} 待审</em>@endif</span>
+        <span>{{ admin_t('ui.withdraws') }}@if($q('pending') > 0) <em>{{ admin_t('ui.header_pending_n', ['n' => $q('pending')]) }}</em>@endif</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/orders">订单</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/plogs">积分流水</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/orders">{{ admin_t('ui.orders') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/plogs">{{ admin_t('ui.plogs') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="withdraw-search" onsubmit="return false;">
             <input type="hidden" name="status">
             <input type="hidden" name="today">
-            <input type="search" name="q" placeholder="搜账号、备注或会员" autocomplete="off" aria-label="搜索提现">
-            <button type="button" class="btn btn-sm" id="withdraw-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="withdraw-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_withdraw') }}" autocomplete="off" aria-label="{{ admin_t('ui.withdraws') }}">
+            <button type="button" class="btn btn-sm" id="withdraw-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="withdraw-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="withdraw-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">待审@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">已打款@if($q('paid') > 0)<em>{{ $q('paid') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="2">拒绝@if($q('rejected') > 0)<em>{{ $q('rejected') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.pending_review') }}@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.withdraw_paid') }}@if($q('paid') > 0)<em>{{ $q('paid') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="2">{{ admin_t('ui.withdraw_rejected') }}@if($q('rejected') > 0)<em>{{ $q('rejected') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">积分兑现金。待审优先。标已打款按金额扣一次积分，拒绝不扣；已打过款的不会再扣。删除只去记录，不退积分。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.withdraws_lead') }}</p>
         <div class="batch-bar" id="withdraw-batch" hidden>
-            <strong id="withdraw-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="withdraw-batch-pay">标为已打款</button>
-            <button type="button" class="btn btn-muted btn-sm" id="withdraw-batch-reject">拒绝</button>
-            <button type="button" class="btn btn-danger btn-sm" id="withdraw-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="withdraw-batch-clear">取消选择</button>
+            <strong id="withdraw-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="withdraw-batch-pay">{{ admin_t('ui.mark_paid') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="withdraw-batch-reject">{{ admin_t('ui.withdraw_rejected') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="withdraw-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="withdraw-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="withdraw-table"></div>
     </div>
@@ -45,9 +81,9 @@
 <template id="withdraw-remark-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>备注</label>
-        <input type="text" name="remark" maxlength="255" placeholder="可空" autocomplete="off">
-        <p class="muted field-hint">只改备注，不改状态、不扣积分。</p>
+        <label>{{ admin_t('ui.label_remark') }}</label>
+        <input type="text" name="remark" maxlength="255" placeholder="{{ admin_t('ui.ph_optional') }}" autocomplete="off">
+        <p class="muted field-hint">{{ admin_t('ui.hint_withdraw_remark') }}</p>
     </form>
 </template>
 @endsection
@@ -56,6 +92,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($withdrawJsLang);
     var form = document.getElementById('withdraw-search');
     var batchBar = document.getElementById('withdraw-batch');
     var batchCount = document.getElementById('withdraw-batch-count');
@@ -96,25 +133,33 @@
         table.reload(queryWhere());
         markChips();
     }
+    function memberLabel(d) {
+        if (d.member_name) return d.member_name;
+        return String(L.member_hash || '').replace('__ID__', String(d.member_id || 0));
+    }
     function applyHtml(d) {
-        var who = d.member_name ? U.escape(d.member_name) : ('会员 #' + U.escape(d.member_id || 0));
+        var who = U.escape(memberLabel(d));
         var st = parseInt(d.status, 10);
-        var badge = st === 1 ? '<span class="badge badge-ok">已打款</span>' : (st === 2 ? '<span class="badge badge-off">拒绝</span>' : '<span class="badge badge-warn">待审</span>');
-        var yuan = U.escape((d.amount_yuan || '0.00') + ' 元');
-        var fen = U.escape(String(d.amount == null ? 0 : d.amount) + ' 分');
+        var badge = st === 1 ? '<span class="badge badge-ok">' + L.withdraw_paid + '</span>' : (st === 2 ? '<span class="badge badge-off">' + L.withdraw_rejected + '</span>' : '<span class="badge badge-warn">' + L.pending_review + '</span>');
+        var yuanVal = d.amount_yuan || '0.00';
+        var fenVal = d.amount == null ? 0 : d.amount;
+        var yuan = U.escape(String(L.amount_yuan || '').replace('__YUAN__', yuanVal));
+        var fen = U.escape(String(L.amount_fen || '').replace('__FEN__', String(fenVal)));
         var meta = [];
         if (d.account) meta.push(U.escape(d.account));
         if (d.remark) meta.push(U.escape(d.remark));
         if (d.created_at_text) meta.push(U.escape(d.created_at_text));
-        if (d.member_points != null && d.member_points !== '') meta.push('现有积分 ' + U.escape(d.member_points));
+        if (d.member_points != null && d.member_points !== '') {
+            meta.push(U.escape(String(L.points_now || '').replace('__N__', String(d.member_points))));
+        }
         return '<div class="entry-row-title-line"><span class="entry-row-title">' + who + '</span> <strong>' + yuan + '</strong> <span class="muted">' + fen + '</span> ' + badge + '</div>'
             + (meta.length ? '<div class="entry-row-meta">' + meta.join(' · ') + '</div>' : '');
     }
     function statusHtml(d) {
         var st = parseInt(d.status, 10);
-        if (st === 1) return U.status(true, '已打款');
-        if (st === 2) return U.status(false, '拒绝');
-        return '<span class="status status-warn">待审</span>';
+        if (st === 1) return U.status(true, L.withdraw_paid);
+        if (st === 2) return U.status(false, L.withdraw_rejected);
+        return '<span class="status status-warn">' + L.pending_review + '</span>';
     }
 
     var table = U.table({
@@ -124,9 +169,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的提现</p><p><button type="button" class="btn btn-muted btn-sm" id="withdraw-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_withdraws + '</p><p><button type="button" class="btn btn-muted btn-sm" id="withdraw-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有提现申请</p><p class="muted">会员提交后会出现在这里。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/members">去会员</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_withdraws + '</p><p class="muted">' + L.empty_withdraws_hint + '</p><p><a class="btn btn-muted btn-sm" href="/admin/video/members">' + L.go_members + '</a></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -143,23 +188,23 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '申请', html: applyHtml},
-            {title: '状态', width: 88, html: statusHtml},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.col_withdraw, html: applyHtml},
+            {title: L.status, width: 88, html: statusHtml},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var st = parseInt(d.status, 10);
                 var html = '';
                 if (st === 0) {
-                    html += '<a href="#" class="btn-link js-pay">已打款</a><a href="#" class="btn-link js-reject">拒绝</a>';
+                    html += '<a href="#" class="btn-link js-pay">' + L.withdraw_paid + '</a><a href="#" class="btn-link js-reject">' + L.withdraw_rejected + '</a>';
                 }
-                html += '<a href="#" class="btn-link js-remark">备注</a>';
+                html += '<a href="#" class="btn-link js-remark">' + L.label_remark + '</a>';
                 if (parseInt(d.member_id, 10) > 0) {
-                    html += '<a class="btn-link" href="/admin/video/members">会员</a>';
+                    html += '<a class="btn-link" href="/admin/video/members">' + L.members + '</a>';
                 }
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -169,25 +214,25 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选提现', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_withdraws, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/withdraws/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status, confirmText) {
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/withdraws/save', {id: row.id, status: status}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已打款' : '已拒绝', 'ok');
+            U.toast(status === 1 ? L.withdraw_paid_ok : L.withdraw_rejected_ok, 'ok');
         });
     }
     function openRemark(row) {
         U.dialog({
-            title: '备注',
+            title: L.label_remark,
             content: document.getElementById('withdraw-remark-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
@@ -201,8 +246,8 @@
                 var data = U.formData(body.querySelector('form'));
                 data.id = row.id;
                 return U.post('/admin/video/withdraws/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已保存', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -223,12 +268,12 @@
         applyQueue(chip.getAttribute('data-queue') || '', chip.getAttribute('data-value') || '');
     });
     U.on('#withdraw-batch-pay', 'click', function () {
-        batch('status', 1, '标为已打款会按金额分扣一次积分。已经打过款的不会再扣。确定打款？');
+        batch('status', 1, L.confirm_batch_pay_withdraws);
     });
     U.on('#withdraw-batch-reject', 'click', function () {
-        batch('status', 2, '拒绝后不扣积分。确定拒绝？');
+        batch('status', 2, L.confirm_batch_reject_withdraws);
     });
-    U.on('#withdraw-batch-del', 'click', function () { batch('delete', '', '删除选中提现？只去记录，不退积分。'); });
+    U.on('#withdraw-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_withdraws); });
     U.on('#withdraw-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#withdraw-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -239,16 +284,20 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-pay')) {
-            setStatus(row, 1, '标「' + (row.member_name || ('会员 #' + (row.member_id || ''))) + '」已打款？将按 ' + (row.amount_yuan || '0.00') + ' 元（' + (row.amount || 0) + ' 分）扣一次积分。');
+            var payMsg = String(L.confirm_pay_withdraw || '')
+                .replace('__NAME__', memberLabel(row))
+                .replace('__YUAN__', row.amount_yuan || '0.00')
+                .replace('__FEN__', String(row.amount == null ? 0 : row.amount));
+            setStatus(row, 1, payMsg);
         }
-        if (a.classList.contains('js-reject')) setStatus(row, 2, '拒绝这条提现？不扣积分。');
+        if (a.classList.contains('js-reject')) setStatus(row, 2, L.confirm_reject_withdraw);
         if (a.classList.contains('js-remark')) openRemark(row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条提现？只去记录，不退积分。')) return;
+            if (!U.confirm(L.confirm_del_withdraw)) return;
             U.post('/admin/video/withdraws/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

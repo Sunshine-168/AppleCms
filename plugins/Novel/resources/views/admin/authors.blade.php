@@ -3,40 +3,66 @@
 
 @php
     $ready = (bool) ($ready ?? false);
+    $authorJsLang = [
+        'authors' => admin_t('ui.authors'),
+        'works' => admin_t('ui.works'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'added' => admin_t('ui.added'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'unused' => admin_t('ui.unused'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'works_n' => admin_t('ui.works_n', ['n' => '__N__']),
+        'empty_authors' => admin_t('ui.empty_authors'),
+        'empty_authors_hint' => admin_t('ui.empty_authors_hint'),
+        'no_match_authors' => admin_t('ui.no_match_authors'),
+        'run_migrate_first' => admin_t('ui.run_migrate_first'),
+        'please_fill_author_name' => admin_t('ui.please_fill_author_name'),
+        'please_select_authors' => admin_t('ui.please_select_authors'),
+        'confirm_batch_del_authors' => admin_t('ui.confirm_batch_del_authors'),
+        'confirm_del_author' => admin_t('ui.confirm_del_author', ['name' => '__NAME__']),
+        'confirm_del_author_used' => admin_t('ui.confirm_del_author_used', ['name' => '__NAME__', 'n' => '__N__']),
+        'add_fail' => admin_t('manga.add_fail'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel tag-index">
     <div class="card-header">
-        <span>作者 <em id="novel-author-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/video/novel-authors/create">完整表单</a>
+        <span>{{ admin_t('ui.authors') }} <em id="novel-author-count"></em></span>
+        <a class="btn btn-muted btn-sm" href="/admin/video/novel-authors/create">{{ admin_t('ui.full_form') }}</a>
     </div>
     <div class="card-body">
         <div class="tag-compose">
             <form class="tag-compose-form" id="novel-author-compose" onsubmit="return false;">
-                <label class="tag-compose-label" for="novel-author-quick">新增作者</label>
+                <label class="tag-compose-label" for="novel-author-quick">{{ admin_t('ui.add_author') }}</label>
                 <div class="tag-compose-row">
-                    <input id="novel-author-quick" type="text" name="name" value="" placeholder="输入名称，如 尾田荣一郎" aria-label="新增作者" @if($ready) autofocus @endif>
-                    <button class="btn" type="submit" id="novel-author-add">添加</button>
+                    <input id="novel-author-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_author_name') }}" aria-label="{{ admin_t('ui.add_author') }}" @if($ready) autofocus @endif>
+                    <button class="btn" type="submit" id="novel-author-add">{{ admin_t('ui.add') }}</button>
                 </div>
-                <p class="muted field-hint">回车可连续添加。需要改网址时，<a href="/admin/video/novel-authors/create">打开完整表单</a>。只给小说用，不是会员或影人库。</p>
+                <p class="muted field-hint">{{ admin_t('ui.tag_compose_lead') }}<a href="/admin/video/novel-authors/create">{{ admin_t('ui.open_full_form') }}</a>{{ admin_t('novel.author_compose_tail') }}</p>
             </form>
         </div>
         <form class="filter-bar" id="novel-author-search" onsubmit="return false;">
             <input type="hidden" name="unused" value="">
-            <input type="search" name="q" placeholder="搜索作者名或网址标识" autocomplete="off" aria-label="搜索作者">
-            <button type="button" class="btn btn-sm" id="novel-author-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="novel-author-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_author') }}" autocomplete="off" aria-label="{{ admin_t('ui.authors') }}">
+            <button type="button" class="btn btn-sm" id="novel-author-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="novel-author-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="novel-author-queues">
-            <button type="button" class="chip" data-unused="">全部</button>
-            <button type="button" class="chip" data-unused="1">未使用</button>
+            <button type="button" class="chip" data-unused="">{{ admin_t('ui.all') }}</button>
+            <button type="button" class="chip" data-unused="1">{{ admin_t('ui.unused') }}</button>
         </div>
-        <p class="muted recycle-lead">小说作者库。删作者只拿掉关联，作品还在。作品上也可直接填逗号作者，会自动进这个库。</p>
+        <p class="muted recycle-lead">{{ admin_t('novel.authors_lead') }}</p>
         <div class="batch-bar" id="novel-author-batch" hidden>
-            <strong id="novel-author-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="novel-author-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="novel-author-batch-clear">取消选择</button>
+            <strong id="novel-author-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="novel-author-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="novel-author-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="novel-author-table"></div>
     </div>
@@ -47,6 +73,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($authorJsLang);
     var form = document.getElementById('novel-author-search');
     var compose = document.getElementById('novel-author-compose');
     var batchBar = document.getElementById('novel-author-batch');
@@ -83,12 +110,12 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (!ready) {
-                return '<div class="list-empty"><p>请先执行数据库迁移</p></div>';
+                return '<div class="list-empty"><p>' + L.run_migrate_first + '</p></div>';
             }
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的作者。</p><p><button type="button" class="btn btn-muted btn-sm" id="novel-author-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_authors + '</p><p><button type="button" class="btn btn-muted btn-sm" id="novel-author-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有作者。</p><p class="muted">在上方输入名称即可添加。</p></div>';
+            return '<div class="list-empty"><p>' + L.empty_authors + '</p><p class="muted">' + L.empty_authors_hint + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
@@ -97,25 +124,25 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '作者', html: function (d) {
+            {title: L.authors, html: function (d) {
                 var slug = String(d.slug || '').trim();
-                return '<a class="entry-row-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || '无标题') + '</a>'
+                return '<a class="entry-row-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || L.unnamed) + '</a>'
                     + '<div class="entry-row-meta">/novel?author=' + U.escape(slug || d.name || d.id) + ' · #' + U.escape(d.id) + '</div>';
             }},
-            {title: '作品', width: 120, html: function (d) {
+            {title: L.works, width: 120, html: function (d) {
                 var n = parseInt(d.novel_count, 10) || 0;
-                if (n > 0) return '<a href="/admin/video/mangas?author_id=' + encodeURIComponent(d.id) + '">' + n + ' 部</a>';
-                return '<span class="muted">未使用</span>';
+                if (n > 0) return '<a href="/admin/video/mangas?author_id=' + encodeURIComponent(d.id) + '">' + String(L.works_n || '').replace('__N__', String(n)) + '</a>';
+                return '<span class="muted">' + L.unused + '</span>';
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/novel?author=' + encodeURIComponent(d.slug || d.name || d.id));
-                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="' + base + '/' + encodeURIComponent(d.id) + '/edit" class="btn-link">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>'
+                    + '<a href="' + base + '/' + encodeURIComponent(d.id) + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -132,25 +159,25 @@
     compose.addEventListener('submit', function (e) {
         e.preventDefault();
         var name = String((compose.name && compose.name.value) || '').trim();
-        if (!name) { U.toast('请填写作者名称', 'err'); compose.name.focus(); return; }
+        if (!name) { U.toast(L.please_fill_author_name, 'err'); compose.name.focus(); return; }
         U.loading(true);
         U.post(base + '/save', {name: name, status: 1}).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.add_fail, 'err'); return; }
             compose.name.value = '';
             compose.name.focus();
             table.refresh();
-            U.toast('已添加', 'ok');
-        }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+            U.toast(L.added, 'ok');
+        }).catch(function () { U.loading(false); U.toast(L.add_fail, 'err'); });
     });
     U.on('#novel-author-batch-del', 'click', function () {
         var ids = table.selectedIds();
-        if (!ids.length) { U.toast('请先勾选作者', 'err'); return; }
-        if (!U.confirm('删除已选作者？作品还在，只去掉关联。')) return;
+        if (!ids.length) { U.toast(L.please_select_authors, 'err'); return; }
+        if (!U.confirm(L.confirm_batch_del_authors)) return;
         U.post(base + '/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted, 'ok');
         });
     });
     U.on('#novel-author-batch-clear', 'click', function () { table.clearSelection(); });
@@ -165,13 +192,13 @@
         e.preventDefault();
         var n = parseInt(row.novel_count, 10) || 0;
         var msg = n > 0
-            ? ('「' + (row.name || '') + '」用在 ' + n + ' 部上，删除后只去掉关联，作品还在。确定？')
-            : ('确定删除「' + (row.name || '') + '」？');
+            ? String(L.confirm_del_author_used || '').replace('__NAME__', row.name || '').replace('__N__', String(n))
+            : String(L.confirm_del_author || '').replace('__NAME__', row.name || '');
         if (!U.confirm(msg)) return;
         U.post(base + '/delete', {id: row.id}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted, 'ok');
         });
     });
 })();

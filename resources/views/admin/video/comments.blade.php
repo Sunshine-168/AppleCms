@@ -19,51 +19,83 @@
             'delete' => '/admin/video/comments/delete',
             'batch' => '/admin/video/comments/batch',
         ];
-    $lead = $scope === 'art'
-        ? '文章页发来的评论。不是影片评论。打开「审核设置」后，新评论会先进入待审。'
-        : '待审优先处理。勾选后可批量通过或删除。打开「审核设置」后，新评论会先进入待审。';
-    $emptyHint = $scope === 'art'
-        ? '用户在文章页发的评论会出现在这里。需要先审再显示时，打开右上角「审核设置」。'
-        : '用户在播放页发的评论会出现在这里。需要先审再显示时，打开右上角「审核设置」。';
+    $lead = $scope === 'art' ? admin_t('ui.comments_lead_art') : admin_t('ui.comments_lead_vod');
+    $emptyHint = $scope === 'art' ? admin_t('ui.empty_comments_hint_art') : admin_t('ui.empty_comments_hint_vod');
+    $commentJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'hide' => admin_t('ui.hide'),
+        'show' => admin_t('ui.show'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'col_comment' => admin_t('ui.col_comment'),
+        'approve' => admin_t('ui.approve'),
+        'pending_review' => admin_t('ui.pending_review'),
+        'empty_comments' => admin_t('ui.empty_comments'),
+        'no_match_comments' => admin_t('ui.no_match_comments'),
+        'edit_comment' => admin_t('ui.edit_comment'),
+        'please_fill_content' => admin_t('ui.please_fill_content'),
+        'please_select_comments' => admin_t('ui.please_select_comments'),
+        'confirm_del_comment' => admin_t('ui.confirm_del_comment'),
+        'confirm_batch_del_comments' => admin_t('ui.confirm_batch_del_comments'),
+        'comment_approved' => admin_t('ui.comment_approved'),
+        'comment_hidden' => admin_t('ui.comment_hidden'),
+        'guest' => admin_t('ui.guest'),
+        'kind_art' => admin_t('ui.kind_art'),
+        'kind_vod' => admin_t('ui.kind_vod'),
+        'kind_deleted' => admin_t('ui.kind_deleted', ['kind' => '__KIND__']),
+        'report_n' => admin_t('ui.report_n', ['n' => '__N__']),
+        'like_n' => admin_t('ui.like_n', ['n' => '__N__']),
+        'go_arts' => admin_t('ui.go_arts'),
+        'go_videos' => admin_t('ui.go_videos'),
+        'empty_hint' => $emptyHint,
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel comment-index list-desk">
     <div class="card-header">
-        <span>评论 <em id="comment-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">审核设置</a>
+        <span>{{ admin_t('ui.comments') }} <em id="comment-count"></em></span>
+        <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('ui.comment_audit') }}</a>
     </div>
     <div class="card-body">
         @if($scope === 'art' && ! $ready)
-            <p class="muted recycle-lead">请先执行数据库迁移，文章评论才能和影片评论分开。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.comments_migrate') }}</p>
         @else
         <form class="filter-bar" id="comment-search" onsubmit="return false;">
             <input type="hidden" name="report">
             @if($scope === 'art')
                 <input type="hidden" name="comment_mid" value="2">
             @endif
-            <input type="text" name="q" placeholder="搜内容或昵称" autocomplete="off">
+            <input type="text" name="q" placeholder="{{ admin_t('ui.ph_comment') }}" autocomplete="off">
             <select name="status">
-                <option value="">状态</option>
-                <option value="0">待审</option>
-                <option value="1">已通过</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="0">{{ admin_t('ui.pending_review') }}</option>
+                <option value="1">{{ admin_t('ui.approved') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="comment-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="comment-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="comment-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="comment-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="comment-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">待审@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">已通过@if($q('pass') > 0)<em>{{ $q('pass') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="report" data-value="1">被举报@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.pending_review') }}@if($q('pending') > 0)<em>{{ $q('pending') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.approved') }}@if($q('pass') > 0)<em>{{ $q('pass') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="report" data-value="1">{{ admin_t('ui.reported') }}@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
         </div>
         <p class="muted recycle-lead">{{ $lead }}</p>
         <div class="batch-bar" id="comment-batch" hidden>
-            <strong id="comment-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="comment-batch-on">通过</button>
-            <button type="button" class="btn btn-muted btn-sm" id="comment-batch-off">隐藏</button>
-            <button type="button" class="btn btn-danger btn-sm" id="comment-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="comment-batch-clear">取消选择</button>
+            <strong id="comment-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="comment-batch-on">{{ admin_t('ui.approve') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="comment-batch-off">{{ admin_t('ui.hide') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="comment-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="comment-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="comment-table"></div>
         @endif
@@ -76,15 +108,16 @@
         @if($scope === 'art')
             <input type="hidden" name="mid" value="2">
         @endif
-        <label>昵称</label>
-        <input type="text" name="author_name">
-        <label>内容</label>
-        <textarea name="content"></textarea>
-        <label>状态</label>
+        <label>{{ admin_t('ui.label_nickname') }}</label>
+        <input type="text" name="author_name" placeholder="{{ admin_t('ui.ph_nickname') }}">
+        <label>{{ admin_t('ui.label_content') }}</label>
+        <textarea name="content" rows="5" placeholder="{{ admin_t('ui.ph_comment_body') }}"></textarea>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">显示</option>
-            <option value="0">待审 / 隐藏</option>
+            <option value="1">{{ admin_t('ui.status_show') }}</option>
+            <option value="0">{{ admin_t('ui.status_pending_hide') }}</option>
         </select>
+        <p class="muted field-hint">{{ admin_t('ui.comment_status_hint') }}</p>
     </form>
 </template>
 @endsection
@@ -94,10 +127,10 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($commentJsLang);
     var QUEUE_KEYS = ['report'];
     var SCOPE = {!! json_encode($scope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var API = {!! json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
-    var EMPTY_HINT = {!! json_encode($emptyHint, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var form = document.getElementById('comment-search');
     var batchBar = document.getElementById('comment-batch');
     var batchCount = document.getElementById('comment-batch-count');
@@ -141,20 +174,20 @@
         markChips();
     }
     function contentHtml(d) {
-        var who = U.escape(d.author_name || '游客');
+        var who = U.escape(d.author_name || L.guest);
         var meta = who;
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         if (d.ip) meta += ' · ' + U.escape(d.ip);
         var href = d.target_url || '';
-        var kind = d.target_kind === 'art' || SCOPE === 'art' ? '文章' : '影片';
+        var kind = d.target_kind === 'art' || SCOPE === 'art' ? L.kind_art : L.kind_vod;
         var film = d.video_title
             ? (href
                 ? '<a href="' + U.escape(href) + '" target="_blank" rel="noopener">' + U.escape(d.video_title) + '</a>'
                 : U.escape(d.video_title))
-            : (d.video_id ? kind + ' #' + U.escape(d.video_id) : kind + '已删');
+            : (d.video_id ? kind + ' #' + U.escape(d.video_id) : String(L.kind_deleted || '').replace('__KIND__', kind));
         var badges = [];
-        if (parseInt(d.comment_report, 10) > 0) badges.push('<span class="badge badge-off">举报 ' + U.escape(d.comment_report) + '</span>');
-        if (parseInt(d.comment_up, 10) > 0) badges.push('<span class="badge badge-ok">赞 ' + U.escape(d.comment_up) + '</span>');
+        if (parseInt(d.comment_report, 10) > 0) badges.push('<span class="badge badge-off">' + String(L.report_n || '').replace('__N__', String(d.comment_report)) + '</span>');
+        if (parseInt(d.comment_up, 10) > 0) badges.push('<span class="badge badge-ok">' + String(L.like_n || '').replace('__N__', String(d.comment_up)) + '</span>');
         return '<div class="comment-cell"><div class="comment-body">' + U.escape(d.content || '') + '</div>'
             + '<div class="muted">' + meta + ' · ' + film + '</div>'
             + (badges.length ? '<div class="vod-badges">' + badges.join('') + '</div>' : '')
@@ -169,9 +202,11 @@
         where: cleanWhere(U.formData(form)),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的评论</p><p><button type="button" class="btn btn-muted btn-sm" id="comment-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_comments + '</p><p><button type="button" class="btn btn-muted btn-sm" id="comment-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有评论</p><p class="muted">' + U.escape(EMPTY_HINT) + '</p><p><a class="btn btn-muted btn-sm" href="' + (SCOPE === 'art' ? '/admin/video/arts' : '/admin/video') + '">去' + (SCOPE === 'art' ? '文章' : '影片') + '列表</a></p></div>';
+            var go = SCOPE === 'art' ? L.go_arts : L.go_videos;
+            var href = SCOPE === 'art' ? '/admin/video/arts' : '/admin/video';
+            return '<div class="list-empty"><p>' + L.empty_comments + '</p><p class="muted">' + U.escape(L.empty_hint) + '</p><p><a class="btn btn-muted btn-sm" href="' + href + '">' + go + '</a></p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('comment-empty-reset');
@@ -184,19 +219,19 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '评论', html: contentHtml},
-            {title: '状态', width: 80, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '待审');
+            {title: L.col_comment, html: contentHtml},
+            {title: L.status, width: 80, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.show) : U.status(false, L.pending_review);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var html = '';
-                if (String(d.status) !== '1') html += '<a href="#" class="btn-link js-pass">通过</a>';
-                else html += '<a href="#" class="btn-link js-hide">隐藏</a>';
-                html += '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+                if (String(d.status) !== '1') html += '<a href="#" class="btn-link js-pass">' + L.approve + '</a>';
+                else html += '<a href="#" class="btn-link js-hide">' + L.hide + '</a>';
+                html += '<a href="#" class="btn-link js-edit">' + L.edit + '</a><a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -205,7 +240,8 @@
 
     function openEdit(row) {
         U.dialog({
-            title: '编辑评论',
+            title: L.edit_comment,
+            wide: true,
             content: document.getElementById('comment-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
@@ -218,11 +254,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.content) { U.toast('请填写内容', 'err'); return false; }
+                if (!data.content) { U.toast(L.please_fill_content, 'err'); return false; }
                 if (SCOPE === 'art') data.mid = 2;
                 return U.post(API.save, data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已保存', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -231,21 +267,21 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选评论', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_comments, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post(API.batch, {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status) {
         var payload = {id: row.id, status: status};
         if (SCOPE === 'art') payload.mid = 2;
         U.post(API.save, payload).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已通过' : '已隐藏', 'ok');
+            U.toast(status === 1 ? L.comment_approved : L.comment_hidden, 'ok');
         });
     }
 
@@ -264,7 +300,7 @@
     });
     U.on('#comment-batch-on', 'click', function () { batch('status', 1); });
     U.on('#comment-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#comment-batch-del', 'click', function () { batch('delete', '', '确认删除选中评论？'); });
+    U.on('#comment-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_comments); });
     U.on('#comment-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#comment-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -278,11 +314,11 @@
         if (a.classList.contains('js-pass')) setStatus(row, 1);
         if (a.classList.contains('js-hide')) setStatus(row, 0);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条评论？')) return;
+            if (!U.confirm(L.confirm_del_comment)) return;
             U.post(API.delete, {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

@@ -154,6 +154,17 @@
         });
     }
 
+    var lang = {};
+
+    function setLang(map) {
+        lang = map && typeof map === 'object' ? map : {};
+    }
+
+    function _(key, fallback) {
+        var v = lang[key];
+        return v != null && String(v) !== '' ? String(v) : (fallback == null ? key : fallback);
+    }
+
     function dialog(opts) {
         opts = opts || {};
         var mask = document.createElement('div');
@@ -168,7 +179,7 @@
         var closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'btn btn-muted btn-sm';
-        closeBtn.textContent = '关闭';
+        closeBtn.textContent = opts.closeText || _('close', '关闭');
         head.appendChild(title);
         head.appendChild(closeBtn);
         var body = document.createElement('div');
@@ -180,11 +191,11 @@
         var cancel = document.createElement('button');
         cancel.type = 'button';
         cancel.className = 'btn btn-muted';
-        cancel.textContent = opts.cancelText || '取消';
+        cancel.textContent = opts.cancelText || _('cancel', '取消');
         var save = document.createElement('button');
         save.type = 'button';
         save.className = 'btn';
-        save.textContent = opts.okText || '保存';
+        save.textContent = opts.okText || _('save', '保存');
         if (opts.hideOk) save.style.display = 'none';
         foot.appendChild(cancel);
         if (!opts.hideOk) foot.appendChild(save);
@@ -786,9 +797,11 @@
         post: function (url, data) { return request('POST', url, data); },
         toast: toast,
         loading: loading,
-        confirm: function (msg) { return global.confirm(msg || '确认？'); },
+        confirm: function (msg) { return global.confirm(msg || _('confirm', '确认？')); },
         prompt: function (title, value) { return global.prompt(title || '', value == null ? '' : String(value)); },
         dialog: dialog,
+        setLang: setLang,
+        t: _,
         formData: formData,
         fillForm: fillForm,
         table: table,

@@ -6,16 +6,53 @@
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $sourceId = (int) ($sourceId ?? 0);
     $sourceName = trim((string) ($sourceName ?? ''));
-    $sourceChip = $sourceName !== '' ? $sourceName : ($sourceId > 0 ? ('采集源 #'.$sourceId) : '');
+    $sourceChip = $sourceName !== '' ? $sourceName : ($sourceId > 0 ? admin_t('ui.collect_source_n', ['id' => $sourceId]) : '');
+    $ctaskJsLang = [
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'actions' => admin_t('ui.actions'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'clear_selection' => admin_t('ui.clear_selection'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'collect_done' => admin_t('ui.collect_done'),
+        'add_collect_task' => admin_t('ui.add_collect_task'),
+        'chip_never_run' => admin_t('ui.chip_never_run'),
+        'chip_last_fail' => admin_t('ui.chip_last_fail'),
+        'collect_source_n' => admin_t('ui.collect_source_n', ['id' => '__ID__']),
+        'unnamed_task' => admin_t('ui.unnamed_task'),
+        'source_deleted' => admin_t('ui.source_deleted'),
+        'source_off' => admin_t('ui.source_off'),
+        'pages_n' => admin_t('ui.pages_n', ['n' => '__N__']),
+        'next_run' => admin_t('ui.next_run', ['time' => '__TIME__']),
+        'col_task' => admin_t('ui.col_task'),
+        'col_last_run' => admin_t('ui.col_last_run'),
+        'run_now' => admin_t('ui.run_now'),
+        'today_at' => admin_t('ui.today_at', ['time' => '__TIME__']),
+        'yesterday_at' => admin_t('ui.yesterday_at', ['time' => '__TIME__']),
+        'empty_collect_tasks' => admin_t('ui.empty_collect_tasks'),
+        'empty_collect_tasks_hint' => admin_t('ui.empty_collect_tasks_hint'),
+        'no_match_collect_tasks' => admin_t('ui.no_match_collect_tasks'),
+        'please_select_tasks' => admin_t('ui.please_select_tasks'),
+        'confirm_batch_del_tasks' => admin_t('ui.confirm_batch_del_tasks'),
+        'confirm_del_collect_task' => admin_t('ui.confirm_del_collect_task'),
+        'due_checked' => admin_t('ui.due_checked'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel collect-task-index desk-board">
     <div class="card-header">
-        <span>定时采集 <em id="ctask-count"></em></span>
+        <span>{{ admin_t('ui.collect_tasks') }} <em id="ctask-count"></em></span>
         <div>
-            <a class="btn btn-sm" href="/admin/video/collect_tasks/create">新增定时采集</a>
-            <button type="button" class="btn btn-muted btn-sm" id="ctask-due-btn" hidden>跑到期任务</button>
+            <a class="btn btn-sm" href="/admin/video/collect_tasks/create">{{ admin_t('ui.add_collect_task') }}</a>
+            <button type="button" class="btn btn-muted btn-sm" id="ctask-due-btn" hidden>{{ admin_t('ui.run_due_tasks') }}</button>
         </div>
     </div>
     <div class="card-body">
@@ -25,25 +62,27 @@
             <input type="hidden" name="never">
             <input type="hidden" name="failed">
             <input type="hidden" name="collect_source_id" value="{{ $sourceId > 0 ? $sourceId : '' }}">
-            <input type="search" name="q" placeholder="搜任务或采集源" autocomplete="off" aria-label="搜索定时采集">
-            <button type="button" class="btn btn-sm" id="ctask-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="ctask-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_collect_task') }}" autocomplete="off" aria-label="{{ admin_t('ui.collect_tasks') }}">
+            <button type="button" class="btn btn-sm" id="ctask-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="ctask-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="ctask-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">启用@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="never" data-value="1">从未跑@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="failed" data-value="1">上次失败@if($q('fail') > 0)<em>{{ $q('fail') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.enabled') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.disabled') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="never" data-value="1">{{ admin_t('ui.chip_never_run') }}@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="failed" data-value="1">{{ admin_t('ui.chip_last_fail') }}@if($q('fail') > 0)<em>{{ $q('fail') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="source" id="ctask-source-chip" @if($sourceId < 1) hidden @endif>{{ $sourceChip }}</button>
         </div>
-        <p class="muted recycle-lead">到点会自动采资源站。没有采集源时先去「<a href="/admin/video/collects">采集源</a>」加接口。备份、推送、插件任务在「备份 / 推送 / 插件」。服务器要每分钟跑 <code>php artisan schedule:run</code>。有任务后可点「跑到期任务」立刻检查。删任务不会改片库。</p>
+        <p class="muted recycle-lead">
+            {{ admin_t('ui.collect_tasks_lead_before') }}<a href="/admin/video/collects">{{ admin_t('ui.collect_tasks_lead_mid') }}</a>{{ admin_t('ui.collect_tasks_lead_after') }}
+        </p>
         <div class="batch-bar" id="ctask-batch" hidden>
-            <strong id="ctask-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="ctask-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="ctask-batch-off">停用</button>
-            <button type="button" class="btn btn-danger btn-sm" id="ctask-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="ctask-batch-clear">取消选择</button>
+            <strong id="ctask-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="ctask-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ctask-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="ctask-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="ctask-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="ctask-table" class="desk-table"></div>
     </div>
@@ -54,6 +93,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($ctaskJsLang);
     var form = document.getElementById('ctask-search');
     var batchBar = document.getElementById('ctask-batch');
     var batchCount = document.getElementById('ctask-batch-count');
@@ -74,7 +114,7 @@
     function setSource(id, name) {
         form.collect_source_id.value = id ? String(id) : '';
         if (!sourceChip) return;
-        sourceChip.textContent = name || (id ? ('采集源 #' + id) : '');
+        sourceChip.textContent = name || (id ? String(L.collect_source_n || '').replace('__ID__', id) : '');
         sourceChip.hidden = !form.collect_source_id.value;
     }
     function markChips() {
@@ -113,33 +153,33 @@
     }
     function fmtTime(ts) {
         ts = parseInt(ts, 10) || 0;
-        if (!ts) return '从未跑';
+        if (!ts) return L.chip_never_run || '';
         var d = new Date(ts * 1000);
         var now = new Date();
         var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
         var hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-        if (d.toDateString() === now.toDateString()) return '今天 ' + hm;
+        if (d.toDateString() === now.toDateString()) return String(L.today_at || '').replace('__TIME__', hm);
         var y = new Date(now);
         y.setDate(now.getDate() - 1);
-        if (d.toDateString() === y.toDateString()) return '昨天 ' + hm;
+        if (d.toDateString() === y.toDateString()) return String(L.yesterday_at || '').replace('__TIME__', hm);
         if (d.getFullYear() === now.getFullYear()) return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + hm;
         return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
     }
     function titleHtml(d) {
-        var name = d.name || '未命名任务';
+        var name = d.name || L.unnamed_task;
         var badges = [];
-        if (parseInt(d.status, 10) !== 1) badges.push('<span class="badge badge-off">停用</span>');
-        else badges.push('<span class="badge badge-ok">启用</span>');
-        if (parseInt(d.source_missing, 10) === 1) badges.push('<span class="badge badge-warn">采集源已删</span>');
-        else if (parseInt(d.source_off, 10) === 1) badges.push('<span class="badge badge-off">源已停</span>');
-        if (parseInt(d.never, 10) === 1) badges.push('<span class="badge badge-search">从未跑</span>');
-        else if (parseInt(d.last_ok, 10) !== 1) badges.push('<span class="badge badge-warn">上次失败</span>');
+        if (parseInt(d.status, 10) !== 1) badges.push('<span class="badge badge-off">' + U.escape(L.disabled) + '</span>');
+        else badges.push('<span class="badge badge-ok">' + U.escape(L.enabled) + '</span>');
+        if (parseInt(d.source_missing, 10) === 1) badges.push('<span class="badge badge-warn">' + U.escape(L.source_deleted) + '</span>');
+        else if (parseInt(d.source_off, 10) === 1) badges.push('<span class="badge badge-off">' + U.escape(L.source_off) + '</span>');
+        if (parseInt(d.never, 10) === 1) badges.push('<span class="badge badge-search">' + U.escape(L.chip_never_run) + '</span>');
+        else if (parseInt(d.last_ok, 10) !== 1) badges.push('<span class="badge badge-warn">' + U.escape(L.chip_last_fail) + '</span>');
         var meta = [];
         if (d.source_name) meta.push('<a href="#" class="js-source">' + U.escape(d.source_name) + '</a>');
         if (d.cron_label) meta.push(U.escape(d.cron_label));
         if (d.hours_label) meta.push(U.escape(d.hours_label));
-        meta.push(U.escape(String(d.pages || 1)) + ' 页');
-        if (d.next_run_text && parseInt(d.status, 10) === 1) meta.push('下次 ' + U.escape(d.next_run_text));
+        meta.push(U.escape(String(L.pages_n || '').replace('__N__', String(d.pages || 1))));
+        if (d.next_run_text && parseInt(d.status, 10) === 1) meta.push(U.escape(String(L.next_run || '').replace('__TIME__', d.next_run_text)));
         if (d.last_msg) meta.push(U.escape(d.last_msg));
         return '<div class="entry-row-title-line"><a class="entry-row-title" href="/admin/video/collect_tasks/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(name) + '</a> ' + badges.join(' ') + '</div>'
             + '<div class="entry-row-meta">' + (meta.join(' · ') || '—') + '</div>';
@@ -152,9 +192,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的定时采集。</p><p><button type="button" class="btn btn-muted btn-sm" id="ctask-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_collect_tasks + '</p><p><button type="button" class="btn btn-muted btn-sm" id="ctask-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有定时采集。</p><p class="muted">先有采集源，再设到点自动采当天更新。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collect_tasks/create">新增定时采集</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_collect_tasks + '</p><p class="muted">' + L.empty_collect_tasks_hint + '</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collect_tasks/create">' + L.add_collect_task + '</a></p></div>';
         },
         onDraw: function (wrap, list) {
             var dueBtn = document.getElementById('ctask-due-btn');
@@ -177,16 +217,16 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', ids.length);
         },
         cols: [
             {check: true, width: 36},
-            {title: '任务', html: titleHtml},
-            {title: '上次', width: 120, html: function (d) { return fmtTime(d.last_run_at); }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                return '<a href="#" class="btn-link js-run">立刻采</a>'
-                    + '<a class="btn-link" href="/admin/video/collect_tasks/' + encodeURIComponent(d.id || '') + '/edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+            {title: L.col_task, html: titleHtml},
+            {title: L.col_last_run, width: 120, html: function (d) { return fmtTime(d.last_run_at); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
+                return '<a href="#" class="btn-link js-run">' + L.run_now + '</a>'
+                    + '<a class="btn-link" href="/admin/video/collect_tasks/' + encodeURIComponent(d.id || '') + '/edit">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -195,12 +235,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选任务', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_tasks, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/collect_tasks/batch', {ids: ids.join(','), action: action, value: value || ''}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -219,7 +259,7 @@
         U.post('/admin/video/collect-due', {}).then(function (res) {
             U.loading(false);
             table.refresh();
-            U.toast((res && res.msg) || '已检查到期任务', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.due_checked, res && res.code === 0 ? 'ok' : 'err');
         });
     });
     document.getElementById('ctask-queues').addEventListener('click', function (e) {
@@ -229,7 +269,7 @@
     });
     U.on('#ctask-batch-on', 'click', function () { batch('status', 1); });
     U.on('#ctask-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#ctask-batch-del', 'click', function () { batch('delete', '', '删除选中任务？片库不会变。'); });
+    U.on('#ctask-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_tasks); });
     U.on('#ctask-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#ctask-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -251,16 +291,16 @@
             U.post('/admin/video/collect_tasks/run', {id: row.id}).then(function (res) {
                 U.loading(false);
                 table.refresh();
-                U.toast((res && res.msg) || '采集完成', res && res.code === 0 ? 'ok' : 'err');
+                U.toast((res && res.msg) || L.collect_done, res && res.code === 0 ? 'ok' : 'err');
             });
             return;
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条定时采集？片库不会变。')) return;
+            if (!U.confirm(L.confirm_del_collect_task)) return;
             U.post('/admin/video/collect_tasks/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

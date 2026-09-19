@@ -34,7 +34,7 @@
         </span>
         <div>
             @if($desk === 'rules')
-                <a class="btn btn-sm" href="/admin/video/cj?desk=form">新增</a>
+                <a class="btn btn-sm" href="/admin/video/cj?desk=form">{{ admin_t('ui.add') }}</a>
             @elseif($desk === 'form')
                 <a class="btn btn-muted btn-sm" href="/admin/video/cj">返回列表</a>
             @endif
@@ -248,8 +248,8 @@
                         <option value="0">停用</option>
                     </select>
                 @endif
-                <button type="button" class="btn btn-sm" id="cj-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="cj-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="cj-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="cj-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="cj-table" class="desk-table"></div>
         @endif

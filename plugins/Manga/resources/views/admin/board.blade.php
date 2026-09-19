@@ -39,34 +39,33 @@
 @section('plain')
 <div class="card card-panel manga-board desk-board" id="manga-board">
     <div class="card-header">
-        <span>{{ $desk === 'stats' ? '漫画统计' : ($desk === 'work' ? '作品工作台' : ($desk === 'chapters' ? '章节' : ($desk === 'pics' ? '图片' : ($desk === 'comments' ? '评论' : ($desk === 'favors' ? '书架' : '漫画'))))) }} <em id="manga-count"></em></span>
+        <span>{{ $desk === 'stats' ? admin_t('manga.title_stats') : ($desk === 'work' ? admin_t('manga.title_workbench') : ($desk === 'chapters' ? admin_t('ui.chapters') : ($desk === 'pics' ? admin_t('ui.pics') : ($desk === 'comments' ? admin_t('ui.comments') : ($desk === 'favors' ? admin_t('ui.bookshelf') : admin_t('manga.title')))))) }} <em id="manga-count"></em></span>
         <div>
             @if(in_array($desk, ['works', 'pending'], true))
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-tags">标签</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-authors">作者</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=chapters">章节</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics">图片</a>
-                <span class="btn-split" role="group" aria-label="添加作品">
-                    <a class="btn btn-sm" href="#manga-work-compose-box">新增作品</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-tags">{{ admin_t('ui.tags') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-authors">{{ admin_t('ui.authors') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=chapters">{{ admin_t('ui.chapters') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics">{{ admin_t('ui.pics') }}</a>
+                <span class="btn-split" role="group" aria-label="{{ admin_t('manga.add_work_aria') }}">
+                    <a class="btn btn-sm" href="#manga-work-compose-box">{{ admin_t('ui.add_work') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
                 </span>
             @elseif(in_array($desk, ['chapters', 'work'], true))
-                <span class="btn-split" role="group" aria-label="添加章节">
-                    <a class="btn btn-sm" href="#manga-chapter-compose-box">新增章节</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">完整表单</a>
+                <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_chapter_aria') }}">
+                    <a class="btn btn-sm" href="#manga-chapter-compose-box">{{ admin_t('ui.add_chapter') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">{{ admin_t('ui.full_form') }}</a>
                 </span>
             @elseif($desk === 'pics')
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-pics/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-pics/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">{{ admin_t('ui.full_form') }}</a>
             @elseif($desk === 'comments')
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-comments/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-comments/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">{{ admin_t('ui.full_form') }}</a>
             @elseif($desk === 'favors')
-                <a class="btn btn-muted btn-sm" href="/manga/shelf" target="_blank" rel="noopener">前台书架</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/favorites">影片收藏</a>
+                <a class="btn btn-muted btn-sm" href="/manga/shelf" target="_blank" rel="noopener">{{ admin_t('ui.view_front') }}</a>
             @endif
             @if($desk === 'work' && $work)
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">编辑作品</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas">返回作品</a>
-                <a class="btn btn-muted btn-sm" href="{{ $work['front_url'] }}" target="_blank" rel="noopener">前台预览</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">{{ admin_t('ui.edit') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas">{{ admin_t('ui.works') }}</a>
+                <a class="btn btn-muted btn-sm" href="{{ $work['front_url'] }}" target="_blank" rel="noopener">{{ admin_t('ui.front') }}</a>
             @endif
         </div>
     </div>
@@ -225,25 +224,25 @@
             @if(in_array($desk, ['works', 'pending'], true))
                 <div class="tag-compose" id="manga-work-compose-box">
                     <form class="tag-compose-form" id="manga-work-compose" onsubmit="return false;">
-                        <label class="tag-compose-label" for="manga-work-quick">新增作品</label>
+                        <label class="tag-compose-label" for="manga-work-quick">{{ admin_t('ui.add_work') }}</label>
                         <div class="tag-compose-row">
-                            <input id="manga-work-quick" type="text" name="title" value="" placeholder="输入名称" aria-label="新增作品" autofocus>
+                            <input id="manga-work-quick" type="text" name="title" value="" placeholder="{{ admin_t('manga.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}" autofocus>
                             <span class="btn-split" role="group">
-                                <button class="btn" type="submit">添加</button>
-                                <a class="btn btn-muted" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+                                <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
+                                <a class="btn btn-muted" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
                             </span>
                         </div>
-                        <p class="muted field-hint">回车可连续添加。分类、标签、封面等请用右侧「完整表单」。</p>
+                        <p class="muted field-hint">{{ admin_t('manga.hint_work') }}</p>
                     </form>
                 </div>
             @elseif(in_array($desk, ['chapters', 'work'], true))
                 <div class="tag-compose" id="manga-chapter-compose-box">
                     <form class="tag-compose-form" id="manga-chapter-compose" onsubmit="return false;">
-                        <label class="tag-compose-label" for="manga-chapter-quick">新增章节</label>
+                        <label class="tag-compose-label" for="manga-chapter-quick">{{ admin_t('ui.add_chapter') }}</label>
                         <div class="tag-compose-row">
                             @if($desk === 'chapters' && ! ($desk === 'work' && $work) && $filterMangaId < 1)
-                                <select name="manga_id" aria-label="作品" required style="max-width:180px">
-                                    <option value="">选择作品</option>
+                                <select name="manga_id" aria-label="{{ admin_t('ui.works') }}" required style="max-width:180px">
+                                    <option value="">{{ admin_t('manga.select_work') }}</option>
                                     @foreach($works as $w)
                                         <option value="{{ $w['id'] }}">{{ $w['title'] }}</option>
                                     @endforeach
@@ -251,22 +250,22 @@
                             @else
                                 <input type="hidden" name="manga_id" value="{{ $desk === 'work' && $work ? (int) $work['id'] : $filterMangaId }}">
                             @endif
-                            <input id="manga-chapter-quick" type="text" name="name" value="" placeholder="输入话名，如 第1话" aria-label="新增章节" autofocus>
+                            <input id="manga-chapter-quick" type="text" name="name" value="" placeholder="{{ admin_t('manga.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}" autofocus>
                             <span class="btn-split" role="group">
-                                <button class="btn" type="submit">添加</button>
-                                <a class="btn btn-muted" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">完整表单</a>
+                                <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
+                                <a class="btn btn-muted" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">{{ admin_t('ui.full_form') }}</a>
                             </span>
                         </div>
-                        <p class="muted field-hint">回车可连续添加。贴图、VIP 请用右侧「完整表单」。</p>
+                        <p class="muted field-hint">{{ admin_t('manga.hint_chapter') }}</p>
                     </form>
                 </div>
             @elseif($desk === 'pics')
                 <div class="tag-compose">
-                    <p class="muted field-hint" style="margin:0">图片字段较多，请用<a href="/admin/video/manga-pics/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>添加；或在章节完整表单里一次贴多行。</p>
+                    <p class="muted field-hint" style="margin:0">{!! str_replace(':link', '<a href="/admin/video/manga-pics/create'.($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '').'">'.e(admin_t('ui.full_form')).'</a>', e(admin_t('manga.pics_form_hint'))) !!}</p>
                 </div>
             @elseif($desk === 'comments')
                 <div class="tag-compose">
-                    <p class="muted field-hint" style="margin:0">评论请用<a href="/admin/video/manga-comments/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>添加或编辑。</p>
+                    <p class="muted field-hint" style="margin:0">{!! str_replace(':link', '<a href="/admin/video/manga-comments/create'.($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '').'">'.e(admin_t('ui.full_form')).'</a>', e(admin_t('manga.comments_form_hint'))) !!}</p>
                 </div>
             @endif
             @if($desk !== 'stats')
@@ -311,8 +310,8 @@
                     <option value="0">待审</option>
                 </select>
             @endif
-            <button type="button" class="btn btn-sm" id="manga-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="manga-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="manga-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="manga-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         @if($desk === 'comments')
             <div class="queue-chips" id="manga-comment-queues">
@@ -358,8 +357,8 @@
                     <select id="manga-batch-parent" class="batch-select"><option value="">改到上级</option></select>
                     <button type="button" class="btn btn-muted btn-sm" id="manga-batch-move">移动</button>
                 @endif
-                <button type="button" class="btn btn-danger btn-sm" id="manga-batch-del">{{ $desk === 'favors' ? '取消收藏' : '删除' }}</button>
-                <button type="button" class="btn btn-muted btn-sm" id="manga-batch-clear">取消选择</button>
+                <button type="button" class="btn btn-danger btn-sm" id="manga-batch-del">{{ $desk === 'favors' ? admin_t('manga.unfavor') : admin_t('ui.delete') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="manga-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
             </div>
         @endif
         <div id="manga-table"></div>
@@ -370,10 +369,81 @@
 
 @endsection
 
+@php
+    $mangaJsLang = [
+        'add_work' => admin_t('ui.add_work'),
+        'full_form' => admin_t('ui.full_form'),
+        'name' => admin_t('ui.name'),
+        'types' => admin_t('ui.types'),
+        'authors' => admin_t('ui.authors'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'works' => admin_t('ui.works'),
+        'chapters' => admin_t('ui.chapters'),
+        'pics' => admin_t('ui.pics'),
+        'favors' => admin_t('ui.favors'),
+        'status' => admin_t('ui.status'),
+        'sort' => admin_t('ui.sort'),
+        'on' => admin_t('ui.on'),
+        'off' => admin_t('ui.off'),
+        'pending' => admin_t('ui.pending'),
+        'visible' => admin_t('ui.visible'),
+        'member' => admin_t('ui.member'),
+        'content' => admin_t('ui.content'),
+        'nickname' => admin_t('ui.nickname'),
+        'time' => admin_t('ui.time'),
+        'free' => admin_t('ui.free'),
+        'recommend' => admin_t('ui.recommend'),
+        'uncategorized' => admin_t('ui.uncategorized'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'please_select' => admin_t('ui.please_select'),
+        'added' => admin_t('ui.added'),
+        'deleted' => admin_t('ui.deleted'),
+        'fail' => admin_t('ui.fail'),
+        'select_work' => admin_t('manga.select_work'),
+        'empty_works' => admin_t('manga.empty_works'),
+        'empty_pending' => admin_t('manga.empty_pending'),
+        'empty_chapters' => admin_t('manga.empty_chapters'),
+        'empty_work_chapters' => admin_t('manga.empty_work_chapters'),
+        'empty_pics' => admin_t('manga.empty_pics'),
+        'empty_comments' => admin_t('manga.empty_comments'),
+        'empty_favors' => admin_t('manga.empty_favors'),
+        'empty_none' => admin_t('manga.empty_none'),
+        'empty_favors_hint' => admin_t('manga.empty_favors_hint'),
+        'empty_compose_hint' => admin_t('manga.empty_compose_hint'),
+        'open_front' => admin_t('manga.open_front'),
+        'col_serialize' => admin_t('manga.col_serialize'),
+        'col_status_audit' => admin_t('manga.col_status_audit'),
+        'col_chapters' => admin_t('manga.col_chapters'),
+        'col_views' => admin_t('manga.col_views'),
+        'col_pics' => admin_t('manga.col_pics'),
+        'manage' => admin_t('manga.manage'),
+        'read' => admin_t('manga.read'),
+        'audited' => admin_t('manga.audited'),
+        'blank' => admin_t('manga.blank'),
+        'removed' => admin_t('manga.removed'),
+        'need_title' => admin_t('manga.need_title'),
+        'need_chapter' => admin_t('manga.need_chapter'),
+        'add_fail' => admin_t('manga.add_fail'),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'canceled' => admin_t('manga.canceled'),
+        'cancel_favor' => admin_t('gallery.cancel_favor'),
+        'selected_rows' => admin_t('manga.selected_rows', ['n' => '__N__']),
+        'confirm_batch_del' => admin_t('manga.confirm_batch_del'),
+        'confirm_batch_unfavor' => admin_t('manga.confirm_batch_unfavor'),
+        'confirm_del' => admin_t('manga.confirm_del'),
+        'confirm_unfavor' => admin_t('manga.confirm_unfavor'),
+    ];
+@endphp
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($mangaJsLang);
     var desk = @json($desk);
     var filterMangaId = @json($filterMangaId);
     var workPayload = @json($work);
@@ -421,22 +491,22 @@
     }
     function emptyHtml(_parsed, where) {
         if (isFiltered(where)) {
-            return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="manga-empty-reset">清除筛选</button></p></div>';
+            return '<div class="list-empty"><p>' + L.no_match + '</p><p><button type="button" class="btn btn-muted btn-sm" id="manga-empty-reset">' + L.clear_filter + '</button></p></div>';
         }
         var href = fullCreate[desk] || '';
-        var label = {works:'新增作品',pending:'新增作品',chapters:'完整表单',work:'完整表单',pics:'完整表单',comments:'完整表单'}[desk] || '完整表单';
-        var tip = {works:'还没有漫画作品',pending:'没有待审作品',chapters:'还没有章节',work:'这部还没有章节',pics:'还没有图片',comments:'还没有评论',favors:'还没有书架收藏'}[desk] || '还没有记录';
+        var label = {works: L.add_work, pending: L.add_work, chapters: L.full_form, work: L.full_form, pics: L.full_form, comments: L.full_form}[desk] || L.full_form;
+        var tip = {works: L.empty_works, pending: L.empty_pending, chapters: L.empty_chapters, work: L.empty_work_chapters, pics: L.empty_pics, comments: L.empty_comments, favors: L.empty_favors}[desk] || L.empty_none;
         if (desk === 'favors') {
-            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">会员在漫画详情点「加入书架」后会出现。</p><p><a class="btn btn-muted btn-sm" href="/manga" target="_blank" rel="noopener">打开前台漫画</a></p></div>';
+            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">' + L.empty_favors_hint + '</p><p><a class="btn btn-muted btn-sm" href="/manga" target="_blank" rel="noopener">' + L.open_front + '</a></p></div>';
         }
         if (href) {
-            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">上方快捷添加，或打开完整表单。</p><p><a class="btn btn-primary btn-sm" href="' + href + '">' + label + '</a></p></div>';
+            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">' + L.empty_compose_hint + '</p><p><a class="btn btn-primary btn-sm" href="' + href + '">' + label + '</a></p></div>';
         }
         return '<div class="list-empty"><p>' + tip + '</p></div>';
     }
     function workStatus(d) {
-        var st = String(d.status) === '1' ? '上架' : '下架';
-        var yid = d.yid_label || (String(d.yid) === '1' ? '待审' : '已审');
+        var st = String(d.status) === '1' ? L.on : L.off;
+        var yid = d.yid_label || (String(d.yid) === '1' ? L.pending : L.audited);
         return U.escape(st + ' / ' + yid);
     }
 
@@ -444,93 +514,93 @@
     if (desk === 'works' || desk === 'pending') {
         cols = [
             {check: true, width: 36},
-            {title: '名称', html: function (d) {
-                var badge = parseInt(d.recommend, 10) === 1 ? '<span class="badge">推荐</span> ' : '';
-                return badge + '<a class="entry-row-title" href="/admin/video/mangas/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.title || '未填写') + '</a>';
+            {title: L.name, html: function (d) {
+                var badge = parseInt(d.recommend, 10) === 1 ? '<span class="badge">' + L.recommend + '</span> ' : '';
+                return badge + '<a class="entry-row-title" href="/admin/video/mangas/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.title || L.blank) + '</a>';
             }},
-            {title: '分类', html: function (d) { return U.escape(d.type_name || '未分类'); }},
-            {title: '作者', html: function (d) { return U.escape(d.author_label || d.author || ''); }},
-            {title: '连载', width: 72, html: function (d) { return U.escape(d.serialize_label || ''); }},
-            {title: '状态/待审', width: 110, html: workStatus},
-            {title: '章节数', width: 72, html: function (d) { return U.escape(String(d.chapter_count == null ? 0 : d.chapter_count)); }},
-            {title: '浏览', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
-            {title: '收藏', width: 64, html: function (d) { return U.escape(String(d.favor_count == null ? 0 : d.favor_count)); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.types, html: function (d) { return U.escape(d.type_name || L.uncategorized); }},
+            {title: L.authors, html: function (d) { return U.escape(d.author_label || d.author || ''); }},
+            {title: L.col_serialize, width: 72, html: function (d) { return U.escape(d.serialize_label || ''); }},
+            {title: L.col_status_audit, width: 110, html: workStatus},
+            {title: L.col_chapters, width: 72, html: function (d) { return U.escape(String(d.chapter_count == null ? 0 : d.chapter_count)); }},
+            {title: L.col_views, width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
+            {title: L.favors, width: 64, html: function (d) { return U.escape(String(d.favor_count == null ? 0 : d.favor_count)); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var id = encodeURIComponent(d.id || '');
-                return '<a href="/admin/video/mangas?desk=work&manga_id=' + id + '" class="btn-link">管理</a>'
-                    + '<a href="/admin/video/mangas/' + id + '/edit" class="btn-link">编辑</a>'
-                    + '<a href="' + U.escape(d.front_url || ('/manga/' + id)) + '" class="btn-link" target="_blank" rel="noopener">前台</a>';
+                return '<a href="/admin/video/mangas?desk=work&manga_id=' + id + '" class="btn-link">' + L.manage + '</a>'
+                    + '<a href="/admin/video/mangas/' + id + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + '<a href="' + U.escape(d.front_url || ('/manga/' + id)) + '" class="btn-link" target="_blank" rel="noopener">' + L.front + '</a>';
             }}
         ];
     } else if (desk === 'comments') {
         cols = [
             {check: true, width: 36},
-            {title: '内容', html: function (d) {
-                return '<a class="entry-row-title" href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.content || '未填写') + '</a>';
+            {title: L.content, html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.content || L.blank) + '</a>';
             }},
-            {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
-            {title: '昵称', width: 100, html: function (d) { return U.escape(d.author_name || ''); }},
-            {title: '状态', width: 90, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '待审');
+            {title: L.works, html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
+            {title: L.nickname, width: 100, html: function (d) { return U.escape(d.author_name || ''); }},
+            {title: L.status, width: 90, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.visible) : U.status(false, L.pending);
             }},
-            {title: '时间', width: 140, html: function (d) { return U.escape(d.created_label || ''); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.time, width: 140, html: function (d) { return U.escape(d.created_label || ''); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var mid = encodeURIComponent(d.manga_id || '');
-                return '<a href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">编辑</a>'
-                    + (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">前台</a>' : '')
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">' + L.front + '</a>' : '')
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ];
     } else if (desk === 'favors') {
         cols = [
             {check: true, width: 36},
-            {title: '会员', html: function (d) {
+            {title: L.member, html: function (d) {
                 var name = d.member_name || ('#' + (d.member_id || ''));
-                var miss = String(d.member_missing) === '1' ? ' <span class="muted">已删</span>' : '';
+                var miss = String(d.member_missing) === '1' ? ' <span class="muted">' + L.removed + '</span>' : '';
                 return '<a class="entry-row-title" href="/admin/video/mangas?desk=favors&member_id=' + encodeURIComponent(d.member_id || '') + '">' + U.escape(name) + '</a>' + miss;
             }},
-            {title: '作品', html: function (d) {
+            {title: L.works, html: function (d) {
                 var title = d.manga_title || ('#' + (d.manga_id || ''));
-                var miss = String(d.manga_missing) === '1' ? ' <span class="muted">已删</span>' : '';
+                var miss = String(d.manga_missing) === '1' ? ' <span class="muted">' + L.removed + '</span>' : '';
                 return '<a href="/admin/video/mangas?desk=favors&manga_id=' + encodeURIComponent(d.manga_id || '') + '">' + U.escape(title) + '</a>' + miss;
             }},
-            {title: '时间', width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.time, width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var mid = encodeURIComponent(d.manga_id || '');
-                return (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">前台</a>' : '')
-                    + '<a href="#" class="btn-link js-del">取消</a>';
+                return (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">' + L.front + '</a>' : '')
+                    + '<a href="#" class="btn-link js-del">' + L.cancel_favor + '</a>';
             }}
         ];
     } else if (desk === 'chapters' || desk === 'work') {
         cols = [
             {check: true, width: 36},
-            {title: '章节', html: function (d) {
-                return '<a class="entry-row-title" href="/admin/video/manga-chapters/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.name || '未填写') + '</a>';
+            {title: L.chapters, html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-chapters/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.name || L.blank) + '</a>';
             }},
-            {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
-            {title: 'VIP', width: 64, html: function (d) { return String(d.vip) === '1' ? U.status(true, 'VIP') : U.status(false, '免费'); }},
-            {title: '图片数', width: 72, html: function (d) { return U.escape(String(d.pic_count == null ? 0 : d.pic_count)); }},
-            {title: '排序', width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.works, html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
+            {title: 'VIP', width: 64, html: function (d) { return String(d.vip) === '1' ? U.status(true, 'VIP') : U.status(false, L.free); }},
+            {title: L.col_pics, width: 72, html: function (d) { return U.escape(String(d.pic_count == null ? 0 : d.pic_count)); }},
+            {title: L.sort, width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var mid = encodeURIComponent(d.manga_id || filterMangaId || '');
                 var cid = encodeURIComponent(d.id || '');
-                return '<a href="/admin/video/manga-chapters/' + cid + '/edit" class="btn-link">编辑</a>'
-                    + (mid && cid ? '<a href="/manga/' + mid + '/' + cid + '" class="btn-link" target="_blank" rel="noopener">阅读</a>' : '')
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="/admin/video/manga-chapters/' + cid + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + (mid && cid ? '<a href="/manga/' + mid + '/' + cid + '" class="btn-link" target="_blank" rel="noopener">' + L.read + '</a>' : '')
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ];
     } else if (desk === 'pics') {
         cols = [
             {check: true, width: 36},
-            {title: '图片', html: function (d) {
-                return '<a class="entry-row-title" href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.url || '未填写') + '</a>';
+            {title: L.pics, html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.url || L.blank) + '</a>';
             }},
-            {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
-            {title: '章节', html: function (d) { return U.escape(d.chapter_name || ('#' + (d.chapter_id || ''))); }},
-            {title: '排序', width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                return '<a href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+            {title: L.works, html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
+            {title: L.chapters, html: function (d) { return U.escape(d.chapter_name || ('#' + (d.chapter_id || ''))); }},
+            {title: L.sort, width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
+            {title: L.actions, cls: 'actions', html: function (d) {
+                return '<a href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ];
     }
@@ -552,7 +622,7 @@
             var count = document.getElementById('manga-batch-count');
             if (!bar) return;
             bar.hidden = !ids.length;
-            if (count) count.textContent = '已选 ' + ids.length + ' 条';
+            if (count) count.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: cols
     });
@@ -560,12 +630,12 @@
     function runSearch() { table.reload(queryWhere()); }
     function batch(action, value, confirmText) {
         var ids = table.selectedIds();
-        if (!ids.length) { U.toast('请先勾选记录', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/' + module + '/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -574,7 +644,7 @@
         workCompose.addEventListener('submit', function (e) {
             e.preventDefault();
             var title = String((workCompose.title && workCompose.title.value) || '').trim();
-            if (!title) { U.toast('请填写名称', 'err'); workCompose.title.focus(); return; }
+            if (!title) { U.toast(L.need_title, 'err'); workCompose.title.focus(); return; }
             U.loading(true);
             U.post('/admin/video/mangas/save', {
                 title: title,
@@ -589,12 +659,12 @@
                 author_extra: ''
             }).then(function (res) {
                 U.loading(false);
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.add_fail, 'err'); return; }
                 workCompose.title.value = '';
                 workCompose.title.focus();
                 table.refresh();
-                U.toast('已添加', 'ok');
-            }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+                U.toast(L.added, 'ok');
+            }).catch(function () { U.loading(false); U.toast(L.add_fail, 'err'); });
         });
     }
     var chapterCompose = document.getElementById('manga-chapter-compose');
@@ -604,17 +674,17 @@
             var data = U.formData(chapterCompose);
             var mid = parseInt(data.manga_id, 10) || 0;
             var name = String(data.name || '').trim();
-            if (!mid) { U.toast('请选择作品', 'err'); return; }
-            if (!name) { U.toast('请填写章节名', 'err'); chapterCompose.name.focus(); return; }
+            if (!mid) { U.toast(L.select_work, 'err'); return; }
+            if (!name) { U.toast(L.need_chapter, 'err'); chapterCompose.name.focus(); return; }
             U.loading(true);
             U.post('/admin/video/manga_chapters/save', {manga_id: mid, name: name, sort: 0, vip: 0, pics: ''}).then(function (res) {
                 U.loading(false);
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.add_fail, 'err'); return; }
                 chapterCompose.name.value = '';
                 chapterCompose.name.focus();
                 table.refresh();
-                U.toast('已添加', 'ok');
-            }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+                U.toast(L.added, 'ok');
+            }).catch(function () { U.loading(false); U.toast(L.add_fail, 'err'); });
         });
     }
 
@@ -650,7 +720,7 @@
     U.on('#manga-batch-rec', 'click', function () { batch('recommend', 1); });
     U.on('#manga-batch-unrec', 'click', function () { batch('recommend', 0); });
     U.on('#manga-batch-del', 'click', function () {
-        batch('delete', '', desk === 'favors' ? '确认取消选中的书架收藏？' : '确认删除选中记录？');
+        batch('delete', '', desk === 'favors' ? L.confirm_batch_unfavor : L.confirm_batch_del);
     });
     U.on('#manga-batch-clear', 'click', function () { table.clearSelection(); });
     var favorQueues = document.getElementById('manga-favor-queues');
@@ -692,11 +762,11 @@
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
-        if (!U.confirm(desk === 'favors' ? '确认取消这条书架？' : '确认删除？')) return;
+        if (!U.confirm(desk === 'favors' ? L.confirm_unfavor : L.confirm_del)) return;
         U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(desk === 'favors' ? '已取消' : '已删除', 'ok');
+            U.toast(desk === 'favors' ? L.canceled : L.deleted, 'ok');
         });
     });
 })();

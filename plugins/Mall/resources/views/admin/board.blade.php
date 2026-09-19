@@ -14,7 +14,7 @@
     <div class="card-header">
         <span>积分商城 <em id="mall-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="mall-add-btn">新增</button>
+            <button type="button" class="btn btn-sm" id="mall-add-btn">{{ admin_t('ui.add') }}</button>
         </div>
     </div>
     <div class="card-body">
@@ -52,8 +52,8 @@
                     <option value="2">已完成</option>
                 </select>
             @endif
-            <button type="button" class="btn btn-sm" id="mall-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="mall-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="mall-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="mall-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="mall-table"></div>
     </div>
@@ -62,8 +62,9 @@
 <template id="mall-goods-tpl">
     <form>
         <input type="hidden" name="id">
+        <h3>基本</h3>
         <label>名称</label>
-        <input type="text" name="name" required>
+        <input class="entry-title" type="text" name="name" required placeholder="如 月卡 VIP / 500 积分礼包" autofocus>
         <label>类型</label>
         <select name="type" id="mall-type">
             <option value="vip">会员时长</option>
@@ -100,28 +101,41 @@
         </div>
         <label>封面</label>
         <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址">
+            <input type="text" name="cover" placeholder="图片地址，可空">
             <button type="button" class="btn btn-sm js-cover-pick">上传</button>
         </div>
         <img class="img-preview js-cover-preview" alt="">
-        <label>积分</label>
-        <input type="number" name="points" value="0" min="0">
-        <label>库存</label>
-        <input type="number" name="stock" value="0" min="0">
+        <h3>兑换</h3>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>积分</label>
+                <input type="number" name="points" value="0" min="0">
+            </div>
+            <div>
+                <label>库存</label>
+                <input type="number" name="stock" value="0" min="0">
+            </div>
+        </div>
         <label>热门</label>
         <select name="is_hot">
             <option value="0">否</option>
             <option value="1">是（首页「大家都在换」）</option>
         </select>
         <label>说明</label>
-        <textarea name="hint"></textarea>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">上架</option>
-            <option value="0">下架</option>
-        </select>
+        <textarea name="hint" rows="3" placeholder="前台商品说明，可空"></textarea>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>排序</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>状态</label>
+                <select name="status">
+                    <option value="1">上架</option>
+                    <option value="0">下架</option>
+                </select>
+            </div>
+        </div>
     </form>
 </template>
 @endsection
@@ -265,6 +279,7 @@
         row = row || {};
         U.dialog({
             title: mode === 'edit' ? '编辑商品' : '新增商品',
+            wide: true,
             content: document.getElementById('mall-goods-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), fill(mode, row));

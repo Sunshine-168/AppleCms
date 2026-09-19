@@ -4,34 +4,34 @@
 @section('plain')
 <div class="card card-panel tag-index list-desk">
     <div class="card-header">
-        <span>标签 <em id="tag-count"></em></span>
-        <button type="button" class="btn btn-sm" id="video-tag-add-btn">新增标签</button>
+        <span>{{ admin_t('ui.tags') }} <em id="tag-count"></em></span>
+        <button type="button" class="btn btn-sm" id="video-tag-add-btn">{{ admin_t('ui.add_tag') }}</button>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="video-tag-search" onsubmit="return false;">
             <input type="hidden" name="unused">
-            <input type="text" name="name" placeholder="搜标签名" autocomplete="off">
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_tag') }}" autocomplete="off">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">禁用</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="video-tag-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="video-tag-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="video-tag-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="video-tag-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="tag-queues">
-            <button type="button" class="chip" data-queue="">全部</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">启用</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">禁用</button>
-            <button type="button" class="chip" data-queue="unused" data-value="1">未使用</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="chip" data-queue="unused" data-value="1">{{ admin_t('ui.unused') }}</button>
         </div>
-        <p class="muted recycle-lead">贺岁、高分这类聚合词，不是分类。影片保存时填的标签会自动建档。没用过的可以清掉。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.tags_lead') }}</p>
         <div class="batch-bar" id="tag-batch" hidden>
-            <strong id="tag-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="tag-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="tag-batch-off">禁用</button>
-            <button type="button" class="btn btn-danger btn-sm" id="tag-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="tag-batch-clear">取消选择</button>
+            <strong id="tag-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="tag-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="tag-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="tag-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="tag-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="video-tag-table"></div>
     </div>
@@ -39,25 +39,67 @@
 <template id="video-tag-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="如 高分">
-        <label>别名</label>
-        <input type="text" name="slug" placeholder="前台网址用，可空">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">禁用</option>
-        </select>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_tag') }}" required autofocus>
+        <p class="muted field-hint">{{ admin_t('ui.tags_lead') }}</p>
+        <label>{{ admin_t('ui.alias') }}</label>
+        <input type="text" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
+        <p class="muted field-hint">{{ admin_t('live.slug_hint') }}</p>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>{{ admin_t('ui.sort') }}</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>{{ admin_t('ui.status') }}</label>
+                <select name="status">
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
+                </select>
+            </div>
+        </div>
+        <p class="muted field-hint">{{ admin_t('ui.tag_disabled_hint') }}</p>
     </form>
 </template>
 @endsection
-
+@php
+    $tagJsLang = [
+        'tags' => admin_t('ui.tags'),
+        'sort' => admin_t('ui.sort'),
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'enabled' => admin_t('ui.enabled'),
+        'disabled' => admin_t('ui.disabled'),
+        'add_tag' => admin_t('ui.add_tag'),
+        'edit_tag' => admin_t('ui.edit_tag'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_tags' => admin_t('ui.empty_tags'),
+        'empty_tags_hint' => admin_t('ui.empty_tags_hint'),
+        'no_match_tags' => admin_t('ui.no_match_tags'),
+        'tag_videos_n' => admin_t('ui.tag_videos_n', ['n' => '__N__']),
+        'tag_no_videos' => admin_t('ui.tag_no_videos'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'videos' => admin_t('nav.videos'),
+        'need_name' => admin_t('manga.need_title'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'please_select' => admin_t('ui.please_select'),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'confirm_batch_del' => admin_t('manga.confirm_batch_del'),
+        'confirm_del_named' => admin_t('live.confirm_del'),
+    ];
+@endphp
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($tagJsLang);
     var QUEUE_KEYS = ['unused'];
     var form = document.getElementById('video-tag-search');
     var batchBar = document.getElementById('tag-batch');
@@ -105,7 +147,7 @@
         var meta = '#' + U.escape(d.id);
         if (d.slug) meta += ' · /' + U.escape(d.slug);
         var n = parseInt(d.video_count, 10) || 0;
-        meta += n > 0 ? ' · ' + n + ' 部' : ' · 还没挂片';
+        meta += n > 0 ? ' · ' + String(L.tag_videos_n || '').replace('__N__', String(n)) : ' · ' + L.tag_no_videos;
         return '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'
             + '<div class="muted">' + meta + '</div></div>';
     }
@@ -118,9 +160,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的标签</p><p><button type="button" class="btn btn-muted btn-sm" id="tag-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_tags + '</p><p><button type="button" class="btn btn-muted btn-sm" id="tag-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有标签</p><p class="muted">标签给前台做聚合，不是栏目。也可以先在影片里填标签，名字会自动建档。</p><p><button type="button" class="btn btn-primary btn-sm" id="tag-empty-add">新增标签</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_tags + '</p><p class="muted">' + L.empty_tags_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="tag-empty-add">' + L.add_tag + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('tag-empty-add');
@@ -130,21 +172,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '标签', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
+            {title: L.tags, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/tag/' + encodeURIComponent(d.slug || d.id));
-                return '<a href="/admin/video?tag_id=' + encodeURIComponent(d.id) + '" class="btn-link">影片</a>'
-                    + '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="/admin/video?tag_id=' + encodeURIComponent(d.id) + '" class="btn-link">' + L.videos + '</a>'
+                    + '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>'
+                    + '<a href="#" class="btn-link js-edit">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -153,7 +195,8 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑标签' : '新增标签',
+            title: mode === 'edit' ? L.edit_tag : L.add_tag,
+            wide: true,
             content: document.getElementById('video-tag-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), {
@@ -166,11 +209,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.need_name, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/tags/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -180,12 +223,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选标签', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/tags/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -199,7 +242,7 @@
     });
     U.on('#tag-batch-on', 'click', function () { batch('status', 1); });
     U.on('#tag-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#tag-batch-del', 'click', function () { batch('delete', '', '确认删除选中标签？与影片的关联会一起去掉。'); });
+    U.on('#tag-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del); });
     U.on('#tag-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#video-tag-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -211,11 +254,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除标签「' + (row.name || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_named || '').replace(':name', row.name || ''))) return;
             U.post('/admin/video/tags/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

@@ -26,7 +26,7 @@
             <input type="hidden" name="unused" value="">
             <input type="search" name="q" placeholder="搜索标签名或网址标识" autocomplete="off" aria-label="搜索标签">
             <button type="button" class="btn btn-sm" id="gallery-tag-search-btn">搜索</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="gallery-tag-reset-btn">重置</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="gallery-tag-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="gallery-tag-queues">
             <button type="button" class="chip" data-unused="">全部</button>

@@ -12,7 +12,7 @@
         <span>发布页 <em id="publish-count"></em></span>
         <div>
             @if($desk === 'groups')
-                <button type="button" class="btn btn-sm" id="publish-add-btn">新增</button>
+                <button type="button" class="btn btn-sm" id="publish-add-btn">{{ admin_t('ui.add') }}</button>
             @endif
         </div>
     </div>
@@ -49,8 +49,8 @@
             <form class="filter-bar" id="publish-search" onsubmit="return false;">
                 <input type="hidden" name="desk" value="groups">
                 <input type="search" name="q" placeholder="搜线路组" autocomplete="off">
-                <button type="button" class="btn btn-sm" id="publish-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="publish-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="publish-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="publish-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="publish-table"></div>
         @endif
@@ -61,12 +61,12 @@
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="groups">
         <label>名称</label>
-        <input type="text" name="title" required>
+        <input class="entry-title" type="text" name="title" required placeholder="如 线路一" autofocus>
         <label>说明</label>
-        <input type="text" name="hint">
+        <input type="text" name="hint" placeholder="给访客看的一行说明，可空">
         <label>地址</label>
         <textarea name="urls_text" rows="6" placeholder="每行：名称 https://example.com"></textarea>
-        <p class="muted field-hint">每行一条。javascript: 不会收录。进入本站不会在这页写入 Cookie。</p>
+        <p class="muted field-hint">每行一条，空格分隔名称和网址。javascript: 不会收录。进入本站不会在这页写入 Cookie。</p>
     </form>
 </template>
 @endsection
@@ -119,6 +119,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
+            wide: true,
             title: mode === 'edit' ? '编辑线路组' : '新增线路组',
             content: document.getElementById('publish-group-tpl').innerHTML,
             onOpen: function (body) {

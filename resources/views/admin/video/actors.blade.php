@@ -4,36 +4,36 @@
 @section('plain')
 <div class="card card-panel actor-index list-desk">
     <div class="card-header">
-        <span>演员 <em id="actor-count"></em></span>
-        <button type="button" class="btn btn-sm" id="actor-add-btn">新增演员</button>
+        <span>{{ admin_t('ui.actors') }} <em id="actor-count"></em></span>
+        <button type="button" class="btn btn-sm" id="actor-add-btn">{{ admin_t('ui.add_actor') }}</button>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="actor-search" onsubmit="return false;">
             <input type="hidden" name="empty_pic">
             <input type="hidden" name="repeat">
-            <input type="text" name="name" placeholder="搜演员名" autocomplete="off">
+            <input type="text" name="name" placeholder="{{ admin_t('ui.ph_actor') }}" autocomplete="off">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">上架</option>
-                <option value="0">下架</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.on') }}</option>
+                <option value="0">{{ admin_t('ui.off') }}</option>
             </select>
-            <button type="button" class="btn btn-sm" id="actor-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="actor-reset-btn">重置</button>
+            <button type="button" class="btn btn-sm" id="actor-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="actor-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="actor-queues">
-            <button type="button" class="chip" data-queue="">全部</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">上架</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">下架</button>
-            <button type="button" class="chip" data-queue="empty_pic" data-value="1">无头像</button>
-            <button type="button" class="chip" data-queue="repeat" data-value="1">重名</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.on') }}</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.off') }}</button>
+            <button type="button" class="chip" data-queue="empty_pic" data-value="1">{{ admin_t('ui.no_avatar') }}</button>
+            <button type="button" class="chip" data-queue="repeat" data-value="1">{{ admin_t('ui.duplicate') }}</button>
         </div>
-        <p class="muted recycle-lead">演员是人物库。影片里填主演名会自动建档；这里补头像和简介。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.actors_lead') }}</p>
         <div class="batch-bar" id="actor-batch" hidden>
-            <strong id="actor-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="actor-batch-on">上架</button>
-            <button type="button" class="btn btn-muted btn-sm" id="actor-batch-off">下架</button>
-            <button type="button" class="btn btn-danger btn-sm" id="actor-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="actor-batch-clear">取消选择</button>
+            <strong id="actor-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="actor-batch-on">{{ admin_t('ui.on') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="actor-batch-off">{{ admin_t('ui.off') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="actor-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="actor-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="actor-table"></div>
     </div>
@@ -41,46 +41,89 @@
 <template id="actor-dialog-tpl">
     <form>
         <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="如 梁朝伟">
-        <label>别名</label>
-        <input type="text" name="slug" placeholder="前台网址用，可空">
-        <label>头像</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_actor') }}" required autofocus>
+        <p class="muted field-hint">{{ admin_t('ui.actor_dialog_hint') }}</p>
+        <label>{{ admin_t('ui.alias') }}</label>
+        <input type="text" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
+        <p class="muted field-hint">{{ admin_t('live.slug_hint') }}</p>
+        <label>{{ admin_t('ui.avatar') }}</label>
         <div class="field-inline">
-            <input type="text" name="avatar" placeholder="图片 URL">
-            <button type="button" class="btn btn-muted actor-avatar-upload-btn">上传</button>
+            <input type="text" name="avatar" placeholder="{{ admin_t('ui.ph_cover_upload') }}">
+            <button type="button" class="btn btn-muted actor-avatar-upload-btn">{{ admin_t('ui.upload') }}</button>
         </div>
         <img class="img-preview actor-avatar-preview" alt="">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">上架</option>
-            <option value="0">下架</option>
-        </select>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
+        <p class="muted field-hint">{{ admin_t('ui.actor_avatar_hint') }}</p>
+        <div class="admin-dialog-grid">
+            <div>
+                <label>{{ admin_t('ui.sort') }}</label>
+                <input type="number" name="sort" value="0">
+            </div>
+            <div>
+                <label>{{ admin_t('ui.status') }}</label>
+                <select name="status">
+                    <option value="1">{{ admin_t('ui.on') }}</option>
+                    <option value="0">{{ admin_t('ui.off') }}</option>
+                </select>
+            </div>
+        </div>
+        <p class="muted field-hint">{{ admin_t('ui.actor_off_hint') }}</p>
         <details class="form-more">
-            <summary>资料</summary>
-            <label>性别</label>
+            <summary>{{ admin_t('ui.profile') }}</summary>
+            <label>{{ admin_t('ui.gender') }}</label>
             <select name="sex">
-                <option value="">未知</option>
-                <option value="男">男</option>
-                <option value="女">女</option>
+                <option value="">{{ admin_t('ui.gender_unknown') }}</option>
+                <option value="男">{{ admin_t('ui.gender_m') }}</option>
+                <option value="女">{{ admin_t('ui.gender_f') }}</option>
             </select>
-            <label>地区</label>
-            <input type="text" name="area" placeholder="如 中国香港">
-            <label>生日</label>
-            <input type="text" name="birthday" placeholder="如 1962-06-27">
-            <label>简介</label>
-            <textarea name="content"></textarea>
+            <label>{{ admin_t('ui.area') }}</label>
+            <input type="text" name="area" placeholder="{{ admin_t('ui.optional') }}">
+            <label>{{ admin_t('ui.birthday') }}</label>
+            <input type="text" name="birthday" placeholder="{{ admin_t('ui.optional') }}">
+            <label>{{ admin_t('ui.intro') }}</label>
+            <textarea name="content" rows="4" placeholder="{{ admin_t('ui.optional') }}"></textarea>
         </details>
     </form>
 </template>
 @endsection
-
+@php
+    $actorJsLang = [
+        'actors' => admin_t('ui.actors'),
+        'add_actor' => admin_t('ui.add_actor'),
+        'edit_actor' => admin_t('ui.edit_actor'),
+        'sort' => admin_t('ui.sort'),
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'on' => admin_t('ui.on'),
+        'off' => admin_t('ui.off'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'no_match' => admin_t('ui.no_match'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'please_select' => admin_t('ui.please_select'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'need_name' => admin_t('manga.need_title'),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'confirm_batch_del' => admin_t('manga.confirm_batch_del'),
+        'confirm_del_named' => admin_t('live.confirm_del'),
+        'empty_actors' => admin_t('ui.none'),
+        'empty_actors_title' => admin_t('ui.empty_actors'),
+        'empty_actors_hint' => admin_t('ui.empty_actors_hint'),
+        'no_match_actors' => admin_t('ui.no_match_actors'),
+        'videos' => admin_t('nav.videos'),
+    ];
+@endphp
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($actorJsLang);
     var QUEUE_KEYS = ['empty_pic', 'repeat'];
     var form = document.getElementById('actor-search');
     var batchBar = document.getElementById('actor-batch');
@@ -149,9 +192,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的演员</p><p><button type="button" class="btn btn-muted btn-sm" id="actor-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_actors + '</p><p><button type="button" class="btn btn-muted btn-sm" id="actor-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有演员</p><p class="muted">人物库给前台演员页用。也可以先在影片里填主演，名字会自动建档，再回来补头像。</p><p><button type="button" class="btn btn-primary btn-sm" id="actor-empty-add">新增演员</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_actors_title + '</p><p class="muted">' + L.empty_actors_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="actor-empty-add">' + L.add_actor + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('actor-empty-add');
@@ -161,21 +204,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '演员', html: nameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '上架') : U.status(false, '下架');
+            {title: L.actors, html: nameHtml},
+            {key: 'sort', title: L.sort, width: 64},
+            {title: L.status, width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.on) : U.status(false, L.off);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/actor/' + encodeURIComponent(d.id));
-                return '<a href="/admin/video?actor_id=' + encodeURIComponent(d.id) + '" class="btn-link">影片</a>'
-                    + '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="/admin/video?actor_id=' + encodeURIComponent(d.id) + '" class="btn-link">' + L.videos + '</a>'
+                    + '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>'
+                    + '<a href="#" class="btn-link js-edit">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -192,7 +235,8 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑演员' : '新增演员',
+            title: mode === 'edit' ? L.edit_actor : L.add_actor,
+            wide: true,
             content: document.getElementById('actor-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -216,11 +260,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.need_name, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/actors/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -230,12 +274,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选演员', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/actors/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -249,7 +293,7 @@
     });
     U.on('#actor-batch-on', 'click', function () { batch('status', 1); });
     U.on('#actor-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#actor-batch-del', 'click', function () { batch('delete', '', '确认删除选中演员？与影片的关联会一起去掉。'); });
+    U.on('#actor-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del); });
     U.on('#actor-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#actor-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -261,11 +305,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除演员「' + (row.name || '') + '」？')) return;
+            if (!U.confirm(String(L.confirm_del_named || '').replace(':name', row.name || ''))) return;
             U.post('/admin/video/actors/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

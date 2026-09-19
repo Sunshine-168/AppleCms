@@ -5,37 +5,71 @@
     $queues = $queues ?? ['all' => 0, 'unread' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $toId = (int) ($toId ?? 0);
+    $pmJsLang = [
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'selected_rows' => admin_t('ui.selected_rows', ['n' => '__N__']),
+        'op_fail' => admin_t('manga.op_fail'),
+        'op_ok' => admin_t('manga.op_ok'),
+        'members' => admin_t('ui.members'),
+        'view' => admin_t('ui.view'),
+        'is_read' => admin_t('ui.is_read'),
+        'unread' => admin_t('ui.unread'),
+        'col_letter' => admin_t('ui.col_letter'),
+        'no_title' => admin_t('ui.no_title'),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'pm_system' => admin_t('ui.pm_system'),
+        'empty_pms' => admin_t('ui.empty_pms'),
+        'empty_pms_hint' => admin_t('ui.empty_pms_hint'),
+        'no_match_pms' => admin_t('ui.no_match_pms'),
+        'write_to_member' => admin_t('ui.write_to_member'),
+        'send' => admin_t('ui.send'),
+        'please_fill_title' => admin_t('ui.please_fill_title'),
+        'please_fill_content' => admin_t('ui.please_fill_content'),
+        'please_fill_to_member_id' => admin_t('ui.please_fill_to_member_id'),
+        'please_select_pms' => admin_t('ui.please_select_pms'),
+        'sent' => admin_t('ui.sent'),
+        'view_pm' => admin_t('ui.view_pm'),
+        'close' => admin_t('ui.close'),
+        'marked_read' => admin_t('ui.marked_read'),
+        'confirm_batch_del_pms' => admin_t('ui.confirm_batch_del_pms'),
+        'confirm_del_pm' => admin_t('ui.confirm_del_pm'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel pm-index">
     <div class="card-header">
-        <span>站内信@if($q('unread') > 0) <em>· {{ $q('unread') }} 未读</em>@endif</span>
+        <span>{{ admin_t('ui.pms') }}@if($q('unread') > 0) <em>{{ admin_t('ui.unread_n', ['n' => $q('unread')]) }}</em>@endif</span>
         <div>
-            <button type="button" class="btn btn-sm" id="pm-add-btn">写给会员</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">会员</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/notifies">会员通知</a>
+            <button type="button" class="btn btn-sm" id="pm-add-btn">{{ admin_t('ui.write_to_member') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/notifies">{{ admin_t('ui.notifies') }}</a>
         </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="pm-search" onsubmit="return false;">
             <input type="hidden" name="is_read">
             <input type="hidden" name="today">
-            <input type="search" name="q" placeholder="搜标题、内容或会员" autocomplete="off" aria-label="搜索站内信">
-            <button type="button" class="btn btn-sm" id="pm-search-btn">查询</button>
-            <button type="reset" class="btn btn-muted btn-sm" id="pm-reset-btn">重置</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_pm') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_pms') }}">
+            <button type="button" class="btn btn-sm" id="pm-search-btn">{{ admin_t('ui.search') }}</button>
+            <button type="reset" class="btn btn-muted btn-sm" id="pm-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="pm-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="is_read" data-value="0">未读@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="is_read" data-value="0">{{ admin_t('ui.unread') }}@if($q('unread') > 0)<em>{{ $q('unread') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">发给指定会员，登录后在「站内信」里看。打开信箱会全部标已读。通知所有人用「会员通知」。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.pms_lead') }}</p>
         <div class="batch-bar" id="pm-batch" hidden>
-            <strong id="pm-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="pm-batch-read">标为已读</button>
-            <button type="button" class="btn btn-danger btn-sm" id="pm-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="pm-batch-clear">取消选择</button>
+            <strong id="pm-batch-count">{{ admin_t('ui.selected_rows', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="pm-batch-read">{{ admin_t('ui.mark_as_read') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="pm-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="pm-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="pm-table"></div>
     </div>
@@ -44,22 +78,22 @@
     <form>
         <input type="hidden" name="from_id" value="0">
         <input type="hidden" name="is_read" value="0">
-        <label for="pm-to">收件会员 ID</label>
-        <input id="pm-to" type="number" name="to_id" min="1" placeholder="会员 ID" autocomplete="off">
-        <p class="muted field-hint">发给指定的人。不知道 ID 去「会员」里查。</p>
-        <label for="pm-title">标题</label>
+        <label for="pm-to">{{ admin_t('ui.label_to_member_id') }}</label>
+        <input id="pm-to" type="number" name="to_id" min="1" placeholder="{{ admin_t('ui.ph_member_id_short') }}" autocomplete="off">
+        <p class="muted field-hint">{{ admin_t('ui.hint_pm_compose') }}</p>
+        <label for="pm-title">{{ admin_t('ui.label_title') }}</label>
         <input id="pm-title" type="text" name="title" maxlength="120" autocomplete="off">
-        <label for="pm-content">内容</label>
+        <label for="pm-content">{{ admin_t('ui.label_content') }}</label>
         <textarea id="pm-content" name="content" rows="8"></textarea>
     </form>
 </template>
 <template id="pm-view-tpl">
     <form>
-        <label>收件人</label>
+        <label>{{ admin_t('ui.label_recipient') }}</label>
         <input type="text" name="to_label" readonly>
-        <label>标题</label>
+        <label>{{ admin_t('ui.label_title') }}</label>
         <input type="text" name="title" readonly>
-        <label>内容</label>
+        <label>{{ admin_t('ui.label_content') }}</label>
         <textarea name="content" rows="8" readonly></textarea>
         <p class="muted field-hint" data-role="meta"></p>
     </form>
@@ -70,6 +104,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($pmJsLang);
     var form = document.getElementById('pm-search');
     var batchBar = document.getElementById('pm-batch');
     var batchCount = document.getElementById('pm-batch-count');
@@ -111,13 +146,18 @@
         table.reload(queryWhere());
         markChips();
     }
+    function memberLabel(id, name, fallback) {
+        if (name) return name;
+        if (parseInt(id, 10) > 0) return String(L.member_hash || '').replace('__ID__', String(id));
+        return fallback;
+    }
     function letterHtml(d) {
-        var fromName = d.from_name || (parseInt(d.from_id, 10) > 0 ? ('会员 #' + d.from_id) : '系统');
-        var toName = d.to_name || (parseInt(d.to_id, 10) > 0 ? ('会员 #' + d.to_id) : '—');
+        var fromName = memberLabel(d.from_id, d.from_name, L.pm_system);
+        var toName = memberLabel(d.to_id, d.to_name, '—');
         var meta = U.escape(fromName) + ' → ' + U.escape(toName);
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         var preview = d.content_preview || '';
-        return '<div class="comment-cell"><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || '（无标题）') + '</span></div>'
+        return '<div class="comment-cell"><div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(d.title || L.no_title) + '</span></div>'
             + (preview ? '<div class="muted">' + U.escape(preview) + '</div>' : '')
             + '<div class="muted">' + meta + '</div></div>';
     }
@@ -129,9 +169,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的站内信</p><p><button type="button" class="btn btn-muted btn-sm" id="pm-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_pms + '</p><p><button type="button" class="btn btn-muted btn-sm" id="pm-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有站内信</p><p class="muted">点右上角「写给会员」发给指定的人。全站公告在「会员通知」。</p><p><button type="button" class="btn btn-primary btn-sm" id="pm-empty-add">写给会员</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_pms + '</p><p class="muted">' + U.escape(L.empty_pms_hint) + '</p><p><button type="button" class="btn btn-primary btn-sm" id="pm-empty-add">' + L.write_to_member + '</button></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -150,21 +190,21 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_rows || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '信件', html: letterHtml},
-            {title: '状态', width: 88, html: function (d) {
-                return parseInt(d.is_read, 10) === 1 ? U.status(true, '已读') : U.status(false, '未读');
+            {title: L.col_letter, html: letterHtml},
+            {title: L.status, width: 88, html: function (d) {
+                return parseInt(d.is_read, 10) === 1 ? U.status(true, L.is_read) : U.status(false, L.unread);
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-view">查看</a>';
-                if (parseInt(d.is_read, 10) !== 1) html += '<a href="#" class="btn-link js-read">已读</a>';
+            {title: L.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-view">' + L.view + '</a>';
+                if (parseInt(d.is_read, 10) !== 1) html += '<a href="#" class="btn-link js-read">' + L.is_read + '</a>';
                 if (parseInt(d.to_id, 10) > 0) {
-                    html += '<a class="btn-link" href="/admin/video/members">会员</a>';
+                    html += '<a class="btn-link" href="/admin/video/members">' + L.members + '</a>';
                 }
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                html += '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 return html;
             }}
         ]
@@ -174,8 +214,8 @@
     function openCompose(row) {
         row = row || {};
         U.dialog({
-            title: '写给会员',
-            okText: '发送',
+            title: L.write_to_member,
+            okText: L.send,
             content: document.getElementById('pm-compose-tpl').innerHTML,
             onOpen: function (body) {
                 var toId = row.to_id != null && row.to_id !== '' ? row.to_id : (toPrefill > 0 ? toPrefill : '');
@@ -191,14 +231,14 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!parseInt(data.to_id, 10)) { U.toast('请填写收件会员 ID', 'err'); return false; }
-                if (!String(data.title || '').trim()) { U.toast('请填写标题', 'err'); return false; }
-                if (!String(data.content || '').trim()) { U.toast('请填写内容', 'err'); return false; }
+                if (!parseInt(data.to_id, 10)) { U.toast(L.please_fill_to_member_id, 'err'); return false; }
+                if (!String(data.title || '').trim()) { U.toast(L.please_fill_title, 'err'); return false; }
+                if (!String(data.content || '').trim()) { U.toast(L.please_fill_content, 'err'); return false; }
                 data.from_id = 0;
                 data.is_read = 0;
                 return U.post('/admin/video/pms/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('已发送', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.sent, 'ok');
                     table.refresh();
                 });
             }
@@ -206,20 +246,19 @@
     }
     function openView(row) {
         U.dialog({
-            title: '查看站内信',
+            title: L.view_pm,
             hideOk: true,
-            cancelText: '关闭',
+            cancelText: L.close,
             content: document.getElementById('pm-view-tpl').innerHTML,
             onOpen: function (body) {
-                var toName = row.to_name || (parseInt(row.to_id, 10) > 0 ? ('会员 #' + row.to_id) : '—');
                 U.fillForm(body.querySelector('form'), {
-                    to_label: toName,
+                    to_label: memberLabel(row.to_id, row.to_name, '—'),
                     title: row.title || '',
                     content: row.content || ''
                 });
                 var meta = body.querySelector('[data-role=meta]');
                 if (meta) {
-                    var fromName = row.from_name || (parseInt(row.from_id, 10) > 0 ? ('会员 #' + row.from_id) : '系统');
+                    var fromName = memberLabel(row.from_id, row.from_name, L.pm_system);
                     meta.textContent = fromName + (row.created_at_text ? (' · ' + row.created_at_text) : '');
                 }
             }
@@ -228,19 +267,19 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选站内信', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_pms, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/pms/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function markRead(row) {
         U.post('/admin/video/pms/save', {id: row.id, is_read: 1}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast('已标为已读', 'ok');
+            U.toast(L.marked_read, 'ok');
         });
     }
 
@@ -259,7 +298,7 @@
     });
     U.on('#pm-add-btn', 'click', function () { openCompose({}); });
     U.on('#pm-batch-read', 'click', function () { batch('read', 1); });
-    U.on('#pm-batch-del', 'click', function () { batch('delete', '', '删除选中站内信？会员那边也会看不到。'); });
+    U.on('#pm-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_pms); });
     U.on('#pm-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#pm-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -273,11 +312,11 @@
         if (a.classList.contains('js-view')) openView(row);
         if (a.classList.contains('js-read')) markRead(row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这封站内信？会员那边也会看不到。')) return;
+            if (!U.confirm(L.confirm_del_pm)) return;
             U.post('/admin/video/pms/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

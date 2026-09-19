@@ -25,26 +25,26 @@
 @section('plain')
 <div class="card card-panel flink-board desk-board" id="flink-board">
     <div class="card-header">
-        <span>{{ $desk === 'stats' ? '友链统计' : '友情链接' }} <em id="flink-count"></em></span>
+        <span>{{ $desk === 'stats' ? admin_t('ui.flink_stats') : admin_t('ui.friend_links') }} <em id="flink-count"></em></span>
         <div>
             @if(! in_array($desk, ['clicks', 'hits', 'stats', 'settings'], true))
-                <button type="button" class="btn btn-sm" id="flink-add-btn">新增</button>
+                <button type="button" class="btn btn-sm" id="flink-add-btn">{{ admin_t('ui.add') }}</button>
             @endif
             @if($desk === 'stats')
-                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=hits">来路明细</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=clicks">出站明细</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=hits">{{ admin_t('ui.flink_hits') }}</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/flinks?desk=clicks">{{ admin_t('ui.flink_clicks') }}</a>
             @endif
         </div>
     </div>
     <div class="card-body">
         <div class="queue-chips" id="flink-desks">
-            <a class="chip{{ $desk === 'links' ? ' active' : '' }}" href="/admin/video/flinks">链接</a>
-            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="/admin/video/flinks?desk=pending">待审</a>
-            <a class="chip{{ $desk === 'cates' ? ' active' : '' }}" href="/admin/video/flinks?desk=cates">分类</a>
-            <a class="chip{{ $desk === 'clicks' ? ' active' : '' }}" href="/admin/video/flinks?desk=clicks">出站</a>
-            <a class="chip{{ $desk === 'hits' ? ' active' : '' }}" href="/admin/video/flinks?desk=hits">来路</a>
-            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/flinks?desk=stats">统计</a>
-            <a class="chip{{ $desk === 'settings' ? ' active' : '' }}" href="/admin/video/flinks?desk=settings">设置</a>
+            <a class="chip{{ $desk === 'links' ? ' active' : '' }}" href="/admin/video/flinks">{{ admin_t('ui.links_short') }}</a>
+            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="/admin/video/flinks?desk=pending">{{ admin_t('ui.pending') }}</a>
+            <a class="chip{{ $desk === 'cates' ? ' active' : '' }}" href="/admin/video/flinks?desk=cates">{{ admin_t('ui.types') }}</a>
+            <a class="chip{{ $desk === 'clicks' ? ' active' : '' }}" href="/admin/video/flinks?desk=clicks">{{ admin_t('ui.outbound') }}</a>
+            <a class="chip{{ $desk === 'hits' ? ' active' : '' }}" href="/admin/video/flinks?desk=hits">{{ admin_t('ui.referrer') }}</a>
+            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/flinks?desk=stats">{{ admin_t('ui.stats') }}</a>
+            <a class="chip{{ $desk === 'settings' ? ' active' : '' }}" href="/admin/video/flinks?desk=settings">{{ admin_t('ui.settings') }}</a>
         </div>
 
         @if($desk === 'stats')
@@ -192,8 +192,8 @@
                     <option value="month" @selected($period === 'month')>按月</option>
                     <option value="year" @selected($period === 'year')>按年</option>
                 </select>
-                <button type="button" class="btn btn-sm" id="flink-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="flink-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="flink-table"></div>
         @elseif($desk === 'settings')
@@ -234,8 +234,8 @@
                         <option value="0">待审</option>
                     </select>
                 @endif
-                <button type="button" class="btn btn-sm" id="flink-search-btn">查询</button>
-                <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">重置</button>
+                <button type="button" class="btn btn-sm" id="flink-search-btn">{{ admin_t('ui.search') }}</button>
+                <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="flink-table"></div>
         @endif
@@ -247,7 +247,8 @@
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="links">
         <label>名称</label>
-        <input type="text" name="name" required>
+        <input type="text" name="name" required placeholder="如 某某资源站">
+        <p class="muted field-hint">出现在页脚友链列表。</p>
         <label>网址</label>
         <input type="text" name="url" required placeholder="https://">
         <p class="muted field-hint">只接受 http 或 https。javascript: 会拒绝。前台出站走 /links/go/编号。</p>
@@ -259,11 +260,12 @@
             @endforeach
         </select>
         <label>邮箱</label>
-        <input type="text" name="email">
+        <input type="text" name="email" placeholder="可选">
         <label>备注</label>
-        <input type="text" name="remark">
+        <input type="text" name="remark" placeholder="可选">
         <label>排序</label>
         <input type="number" name="sort" value="0">
+        <p class="muted field-hint">数字越大越靠前（普通模式）。</p>
         <label>状态</label>
         <select name="status">
             <option value="0">待审</option>
@@ -278,9 +280,11 @@
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="cates">
         <label>名称</label>
-        <input type="text" name="name" required>
+        <input type="text" name="name" required placeholder="如 合作站点" autofocus>
+        <p class="muted field-hint">友链分组名，只用于后台筛选和前台分组展示。</p>
         <label>排序</label>
         <input type="number" name="sort" value="0">
+        <p class="muted field-hint">数字越大越靠前。</p>
         <label>状态</label>
         <select name="status">
             <option value="1">显示</option>

@@ -247,8 +247,23 @@
 })();
 </script>
 <script src="{{ asset('js/admin-ui.js') }}?v={{ @filemtime(public_path('js/admin-ui.js')) ?: '1' }}"></script>
+@php
+    $adminUiLang = [
+        'close' => admin_t('ui.close'),
+        'cancel' => admin_t('ui.cancel'),
+        'save' => admin_t('ui.save'),
+        'confirm' => admin_t('ui.confirm'),
+        'delete' => admin_t('ui.delete'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'ok' => admin_t('ui.ok'),
+    ];
+@endphp
 <script>
 (function () {
+    if (window.AdminUi && AdminUi.setLang) {
+        AdminUi.setLang(@json($adminUiLang));
+    }
     if (!window.AdminUi) return;
     @if(session('error'))
     AdminUi.toast(@json(session('error')), 'err');

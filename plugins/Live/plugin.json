@@ -3,7 +3,7 @@
     "name": "直播",
     "name_en": "Live",
     "description": "IPTV 频道目录与多线路播放。",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "enabled": true,
     "capability": "ready",
     "group": "play",
@@ -17,17 +17,18 @@
                 "search": "title",
                 "view": "live::admin.board",
                 "handler": "Plugins\\Live\\Services\\LiveAdmin",
-                "desks": ["channels", "pending", "categories"],
+                "desks": ["channels", "pending", "categories", "stats"],
                 "default_desk": "channels",
                 "fields": [{"name":"title","label":"频道名","type":"text"}],
-                "cols": ["id", "title", "cate_id", "hits", "status", "sort"]
+                "cols": ["id", "title", "cate_id", "recommend", "hits", "status", "sort"]
             }
         },
         "sidebar_fold": {
             "live": [
                 {"url":"/admin/video/lives","icon":"broadcast-tower","label":"nav.live_channels"},
                 {"url":"/admin/video/lives?desk=pending","icon":"clock","label":"nav.live_pending"},
-                {"url":"/admin/video/lives?desk=categories","icon":"sitemap","label":"nav.live_categories"}
+                {"url":"/admin/video/lives?desk=categories","icon":"sitemap","label":"nav.live_categories"},
+                {"url":"/admin/video/lives?desk=stats","icon":"chart-bar","label":"nav.live_stats"}
             ]
         },
         "catalog": {

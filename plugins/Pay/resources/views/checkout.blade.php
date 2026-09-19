@@ -35,7 +35,7 @@
                         <input type="text" name="order_no" placeholder="粘贴订单号，如 P2026…" autocomplete="off">
                     </label>
                     <div class="auth-actions">
-                        <button type="submit" class="btn-ghost">查询</button>
+                        <button type="submit" class="btn-ghost">{{ admin_t('ui.search') }}</button>
                     </div>
                 </form>
             </section>

@@ -39,7 +39,7 @@
         <p class="muted quality-note" id="quality-note">点一项看片子。要批量合并重名、改分类，到影片列表勾选后再操作。</p>
         <div class="filter-bar quality-toolbar">
             <input type="search" id="quality-q" placeholder="在这项里搜标题" autocomplete="off" aria-label="搜标题">
-            <button type="button" class="btn btn-sm" id="quality-search-btn">查询</button>
+            <button type="button" class="btn btn-sm" id="quality-search-btn">{{ admin_t('ui.search') }}</button>
             <a class="btn btn-muted btn-sm" id="quality-list-link" href="/admin/video?{{ $issues[$focus]['query'] ?? 'empty_url=1' }}">在影片列表打开</a>
         </div>
         <div id="quality-table"></div>
