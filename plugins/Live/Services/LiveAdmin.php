@@ -4,18 +4,26 @@ namespace Plugins\Live\Services;
 
 use App\Support\AdminPage;
 use App\Support\Utils\Result;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Plugins\Live\Models\LiveCategory;
 use Plugins\Live\Models\LiveChannel;
 
 class LiveAdmin
 {
-    public function __construct(private readonly LiveService $service) {}
+    public function __construct(
+        private readonly LiveService $service,
+        private readonly LiveStatsService $stats,
+    ) {}
 
     /** 组装直播后台工作台数据。 */
     public function boardPayload(array $payload): array
     {
         $payload['categories'] = LiveCategory::query()->orderByDesc('sort')->orderBy('id')->get();
+        $desk = (string) ($payload['desk'] ?? request('desk', 'channels'));
+        if ($desk === 'stats') {
+            $payload['stats'] = $this->stats->summary();
+        }
 
         return $payload;
     }
@@ -27,18 +35,32 @@ class LiveAdmin
             return Result::fail('请先执行数据库迁移');
         }
         $desk = $this->desk($params);
+        if ($desk === 'stats') {
+            return Result::success(['list' => [], 'count' => 0]);
+        }
         $query = $desk === 'categories'
             ? LiveCategory::query()
             : LiveChannel::query()->with('category')->when($desk === 'pending', fn ($q) => $q->where('status', 0));
-        $keyword = trim((string) ($params['q'] ?? ''));
+        $keyword = trim((string) ($params['q'] ?? $params['title'] ?? ''));
         if ($keyword !== '') {
             $query->where($desk === 'categories' ? 'name' : 'title', 'like', '%'.$keyword.'%');
         }
+        if ($desk !== 'categories' && (int) ($params['cate_id'] ?? 0) > 0) {
+            $query->where('cate_id', (int) $params['cate_id']);
+        }
         $page = $query->orderByDesc('sort')->orderByDesc('id')->paginate(max(1, (int) ($params['limit'] ?? 20)));
-        $rows = collect($page->items())->map(function ($row) use ($desk) {
+        $hasRecommend = Schema::hasColumn('plugin_live_channels', 'recommend');
+        $rows = collect($page->items())->map(function ($row) use ($desk, $hasRecommend) {
             $data = $row->toArray();
             if ($desk !== 'categories') {
                 $data['cate_name'] = (string) ($row->category?->name ?? '未分类');
+                $data['recommend'] = $hasRecommend ? (int) ($row->recommend ?? 0) : 0;
+                $data['hits'] = (int) ($row->hits ?? 0);
+                $data['front_url'] = url('/live/'.$row->id);
+                $data['edit_url'] = '/admin/video/live-channels/'.$row->id.'/edit';
+            } else {
+                $data['edit_url'] = '/admin/video/live-categories/'.$row->id.'/edit';
+                $data['channel_count'] = (int) LiveChannel::query()->where('cate_id', $row->id)->count();
             }
 
             return $data;
@@ -51,6 +73,9 @@ class LiveAdmin
     public function save(array $data, ?int $id = null): array
     {
         $desk = $this->desk($data);
+        if ($desk === 'stats') {
+            return Result::fail('统计只读');
+        }
         $isCategory = $desk === 'categories';
         $class = $isCategory ? LiveCategory::class : LiveChannel::class;
         $row = $id ? $class::query()->find($id) : new $class;
@@ -73,14 +98,20 @@ class LiveAdmin
                     $row->{$field} = max(0, (int) ($data[$field] ?? ($field === 'status' ? 1 : 0)));
                 }
             }
-            if (! $id && empty($row->slug)) {
-                $row->slug = Str::slug($title);
+            if (array_key_exists('status', $data)) {
+                $row->status = (int) $data['status'] === 1 ? 1 : 0;
+            }
+            if (! $id && empty($row->slug) && $title !== '') {
+                $row->slug = Str::slug($title) ?: 'cate-'.time();
             }
         } else {
-            foreach (['title', 'sub', 'slug', 'cover', 'urls', 'play_from', 'remarks', 'content'] as $field) {
+            foreach (['title', 'sub', 'slug', 'cover', 'urls', 'remarks', 'content'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $row->{$field} = trim((string) $data[$field]);
                 }
+            }
+            if (array_key_exists('play_from', $data) || ! $id) {
+                $row->play_from = 'hls';
             }
             if (! $id && ! array_key_exists('urls', $data)) {
                 $row->urls = '';
@@ -90,11 +121,15 @@ class LiveAdmin
                     $row->{$field} = max(0, (int) ($data[$field] ?? ($field === 'status' ? 1 : 0)));
                 }
             }
-            if (! $id && empty($row->play_from)) {
-                $row->play_from = 'hls';
+            if (array_key_exists('status', $data)) {
+                $row->status = (int) $data['status'] === 1 ? 1 : 0;
             }
-            if (! $id && empty($row->slug)) {
-                $row->slug = Str::slug($title);
+            if (Schema::hasColumn('plugin_live_channels', 'recommend')
+                && (array_key_exists('recommend', $data) || ! $id)) {
+                $row->recommend = min(9, max(0, (int) ($data['recommend'] ?? 0)));
+            }
+            if (! $id && empty($row->slug) && $title !== '') {
+                $row->slug = Str::slug($title) ?: 'live-'.time();
             }
         }
         $row->updated_at = $now;
@@ -130,11 +165,15 @@ class LiveAdmin
         if ($ids === []) {
             return Result::fail('请选择数据');
         }
-        $class = $this->desk(request()->all()) === 'categories' ? LiveCategory::class : LiveChannel::class;
+        $isCategory = $this->desk(request()->all()) === 'categories';
+        $class = $isCategory ? LiveCategory::class : LiveChannel::class;
         if ($action === 'delete') {
+            if ($isCategory) {
+                LiveChannel::query()->whereIn('cate_id', $ids)->update(['cate_id' => 0]);
+            }
             $class::query()->whereIn('id', $ids)->delete();
         } elseif ($action === 'status') {
-            $class::query()->whereIn('id', $ids)->update(['status' => (int) $value]);
+            $class::query()->whereIn('id', $ids)->update(['status' => (int) $value === 1 ? 1 : 0]);
         } else {
             return Result::fail('不支持的操作');
         }
@@ -147,6 +186,6 @@ class LiveAdmin
     {
         $desk = (string) ($data['desk'] ?? request()->input('desk', 'channels'));
 
-        return in_array($desk, ['channels', 'pending', 'categories'], true) ? $desk : 'channels';
+        return in_array($desk, ['channels', 'pending', 'categories', 'stats'], true) ? $desk : 'channels';
     }
 }

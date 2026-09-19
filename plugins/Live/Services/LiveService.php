@@ -2,6 +2,7 @@
 
 namespace Plugins\Live\Services;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Schema;
 use Plugins\Live\Models\LiveCategory;
@@ -50,11 +51,67 @@ class LiveService
         return LiveCategory::query()->published()->orderByDesc('sort')->orderBy('id')->get();
     }
 
-    /** 获取上线频道列表。 */
+    /** 分页获取上线频道（支持分类与搜索）。 */
+    public function paginateChannels(?int $cateId = null, string $q = '', int $perPage = 24): LengthAwarePaginator
+    {
+        $q = trim($q);
+        $page = LiveChannel::query()->published()->with('category')
+            ->when($cateId && $cateId > 0, fn ($query) => $query->where('cate_id', $cateId))
+            ->when($q !== '', fn ($query) => $query->where(function ($inner) use ($q) {
+                $inner->where('title', 'like', '%'.$q.'%')
+                    ->orWhere('sub', 'like', '%'.$q.'%')
+                    ->orWhere('remarks', 'like', '%'.$q.'%');
+            }))
+            ->when(Schema::hasColumn('plugin_live_channels', 'recommend'), fn ($query) => $query->orderByDesc('recommend'))
+            ->orderByDesc('sort')
+            ->orderByDesc('id')
+            ->paginate(max(1, $perPage))
+            ->withQueryString();
+
+        $page->getCollection()->transform(fn (LiveChannel $channel) => $this->decorate($channel));
+
+        return $page;
+    }
+
+    /** 推荐频道（recommend > 0）。 */
+    public function recommendedChannels(int $limit = 8): Collection
+    {
+        if (! $this->ready() || ! Schema::hasColumn('plugin_live_channels', 'recommend')) {
+            return new Collection;
+        }
+        $rows = LiveChannel::query()->published()->with('category')
+            ->where('recommend', '>', 0)
+            ->orderByDesc('recommend')
+            ->orderByDesc('sort')
+            ->orderByDesc('id')
+            ->limit(max(1, $limit))
+            ->get();
+
+        return $rows->each(fn (LiveChannel $channel) => $this->decorate($channel));
+    }
+
+    /** 同分类相关频道。 */
+    public function relatedChannels(LiveChannel $channel, int $limit = 12): Collection
+    {
+        $cateId = (int) ($channel->cate_id ?? 0);
+        $rows = LiveChannel::query()->published()->with('category')
+            ->where('id', '!=', (int) $channel->id)
+            ->when($cateId > 0, fn ($query) => $query->where('cate_id', $cateId))
+            ->when(Schema::hasColumn('plugin_live_channels', 'recommend'), fn ($query) => $query->orderByDesc('recommend'))
+            ->orderByDesc('sort')
+            ->orderByDesc('id')
+            ->limit(max(1, $limit))
+            ->get();
+
+        return $rows->each(fn (LiveChannel $row) => $this->decorate($row));
+    }
+
+    /** @deprecated 兼容旧调用，返回全量上线频道 */
     public function publishedChannels(?int $cateId = null): Collection
     {
         $rows = LiveChannel::query()->published()->with('category')
             ->when($cateId, fn ($query) => $query->where('cate_id', $cateId))
+            ->when(Schema::hasColumn('plugin_live_channels', 'recommend'), fn ($query) => $query->orderByDesc('recommend'))
             ->orderByDesc('sort')->orderBy('id')->get();
 
         return $rows->each(fn (LiveChannel $channel) => $this->decorate($channel));
