@@ -1277,6 +1277,39 @@ class SiteModuleService
                         }
                     }
                 });
+            } elseif ($module === 'manga_favors') {
+                $q->where(function ($inner) use ($kw) {
+                    if (ctype_digit($kw)) {
+                        $inner->where('id', (int) $kw)
+                            ->orWhere('member_id', (int) $kw)
+                            ->orWhere('manga_id', (int) $kw);
+                    } else {
+                        $inner->whereRaw('1 = 0');
+                    }
+                    if (Schema::hasTable('members')) {
+                        $memberIds = Member::query()
+                            ->where(function ($m) use ($kw) {
+                                $m->where('name', 'like', '%'.$kw.'%')
+                                    ->orWhere('email', 'like', '%'.$kw.'%');
+                            })
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($memberIds !== []) {
+                            $inner->orWhereIn('member_id', $memberIds);
+                        }
+                    }
+                    if (Schema::hasTable('plugin_mangas')) {
+                        $mangaIds = \Plugins\Manga\Models\Manga::query()
+                            ->where('title', 'like', '%'.$kw.'%')
+                            ->limit(50)
+                            ->pluck('id')
+                            ->all();
+                        if ($mangaIds !== []) {
+                            $inner->orWhereIn('manga_id', $mangaIds);
+                        }
+                    }
+                });
             } elseif ($module === 'activity') {
                 $q->where(function ($inner) use ($kw) {
                     $inner->where('name', 'like', '%'.$kw.'%')
@@ -1629,6 +1662,7 @@ class SiteModuleService
                 $q->where('recommend', (int) $params['recommend']);
             }
             $this->applyMangaTagFilter($q, $params);
+            $this->applyMangaAuthorFilter($q, $params);
         }
         if ($module === 'manga_types') {
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
@@ -1649,6 +1683,20 @@ class SiteModuleService
             }
             if (array_key_exists('status', $params) && $params['status'] !== '' && $params['status'] !== null) {
                 $q->where('status', (int) $params['status']);
+            }
+        }
+        if ($module === 'manga_favors') {
+            if (array_key_exists('member_id', $params) && $params['member_id'] !== '' && $params['member_id'] !== null) {
+                $q->where('member_id', (int) $params['member_id']);
+            }
+            if (array_key_exists('manga_id', $params) && $params['manga_id'] !== '' && $params['manga_id'] !== null) {
+                $q->where('manga_id', (int) $params['manga_id']);
+            }
+            if ((string) ($params['today'] ?? '') === '1') {
+                $q->where('created_at', '>=', strtotime('today'));
+            }
+            if ((string) ($params['missing'] ?? '') === '1' && Schema::hasTable('plugin_mangas')) {
+                $q->whereNotIn('manga_id', \Plugins\Manga\Models\Manga::query()->select('id'));
             }
         }
         if ($module === 'mall_goods') {
@@ -1953,6 +2001,9 @@ class SiteModuleService
         if ($module === 'manga_comments') {
             $rows = $this->decorateMangaComments($rows);
         }
+        if ($module === 'manga_favors') {
+            $rows = $this->decorateMangaFavors($rows);
+        }
         if ($module === 'manga_types') {
             $rows = $this->decorateMangaTypes($rows);
         }
@@ -2039,6 +2090,9 @@ class SiteModuleService
         }
         if ($module === 'favorites') {
             return Result::fail('收藏由会员在影片页点出来。后台只查看和删除。');
+        }
+        if ($module === 'manga_favors') {
+            return Result::fail('书架由会员在漫画页点出来。后台只查看和取消。');
         }
         if ($module === 'task_logs') {
             return Result::fail('任务记录由前台完成产生，不能手添或改。');
@@ -3073,6 +3127,7 @@ class SiteModuleService
             $this->afterMoneySave($module, $row, $oldStatus);
             $this->syncArtTagsIfPresent($id, $data, $module);
             $this->syncMangaTagsIfPresent($id, $data, $module);
+            $this->syncMangaAuthorsIfPresent($id, $data, $module);
 
             return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, true, AdminOpLog::subjectFrom($payload, $row), $id), $id, Result::success(['id' => $id]));
         }
@@ -3088,6 +3143,7 @@ class SiteModuleService
         $newId = (int) $row->id;
         $this->syncArtTagsIfPresent($newId, $data, $module);
         $this->syncMangaTagsIfPresent($newId, $data, $module);
+        $this->syncMangaAuthorsIfPresent($newId, $data, $module);
 
         return $this->loggedModule($module, 'save', AdminOpLog::moduleSaveSummary($module, false, AdminOpLog::subjectFrom($payload, $row), $newId), $newId, Result::success(['id' => $newId]));
     }
@@ -3472,7 +3528,7 @@ class SiteModuleService
         if ($handled !== null) {
             return $handled;
         }
-        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs', 'mangas', 'manga_comments', 'manga_chapters', 'manga_pics', 'manga_types'], true)) {
+        if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs', 'mangas', 'manga_comments', 'manga_favors', 'manga_chapters', 'manga_pics', 'manga_types'], true)) {
             return Result::fail('不支持的操作');
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
@@ -3514,6 +3570,7 @@ class SiteModuleService
                 'audits' => '请先勾选规则',
                 'mangas' => '请先勾选作品',
                 'manga_comments' => '请先勾选评论',
+                'manga_favors' => '请先勾选书架记录',
                 'manga_chapters' => '请先勾选章节',
                 'manga_pics' => '请先勾选图片',
                 'manga_types' => '请先勾选分类',
@@ -5499,6 +5556,29 @@ class SiteModuleService
         }
     }
 
+    private function syncMangaAuthorsIfPresent(int $id, array $data, string $module): void
+    {
+        if ($module !== 'mangas' || $id < 1) {
+            return;
+        }
+        if (
+            ! array_key_exists('author', $data)
+            && ! array_key_exists('authors', $data)
+            && ! array_key_exists('author_ids', $data)
+            && ! array_key_exists('author_ids[]', $data)
+            && ! array_key_exists('author_extra', $data)
+        ) {
+            return;
+        }
+        if (! isset($data['author_ids']) && isset($data['author_ids[]'])) {
+            $data['author_ids'] = $data['author_ids[]'];
+        }
+        try {
+            app(\Plugins\Manga\Services\MangaAuthorService::class)->syncManga($id, $data);
+        } catch (\Throwable) {
+        }
+    }
+
     private function applyMangaTagFilter(\Illuminate\Database\Eloquent\Builder $q, array $params): void
     {
         $tagId = (int) ($params['tag_id'] ?? 0);
@@ -5520,6 +5600,31 @@ class SiteModuleService
                     ->orWhere('tags', 'like', $name.',%')
                     ->orWhere('tags', 'like', '%,'.$name)
                     ->orWhere('tags', 'like', '%,'.$name.',%');
+            });
+        }
+    }
+
+    private function applyMangaAuthorFilter(\Illuminate\Database\Eloquent\Builder $q, array $params): void
+    {
+        $authorId = (int) ($params['author_id'] ?? 0);
+        if ($authorId < 1) {
+            return;
+        }
+        if (Schema::hasTable('plugin_manga_author_rel') && Schema::hasTable('plugin_manga_authors')) {
+            $q->whereHas('authorRels', fn ($inner) => $inner->where('plugin_manga_authors.id', $authorId));
+
+            return;
+        }
+        $name = '';
+        if (Schema::hasTable('plugin_manga_authors')) {
+            $name = trim((string) (\Plugins\Manga\Models\MangaAuthor::query()->find($authorId)?->name ?? ''));
+        }
+        if ($name !== '' && Schema::hasColumn('plugin_mangas', 'author')) {
+            $q->where(function ($inner) use ($name) {
+                $inner->where('author', $name)
+                    ->orWhere('author', 'like', $name.',%')
+                    ->orWhere('author', 'like', '%,'.$name)
+                    ->orWhere('author', 'like', '%,'.$name.',%');
             });
         }
     }
@@ -7590,11 +7695,68 @@ class SiteModuleService
                 ->pluck('c', 'manga_id')
                 ->all();
         }
+        $tagMap = [];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_tag_rel') && Schema::hasTable('plugin_manga_tags')) {
+            $rels = DB::table('plugin_manga_tag_rel')
+                ->whereIn('manga_id', $ids)
+                ->orderBy('tag_id')
+                ->get(['manga_id', 'tag_id']);
+            foreach ($rels as $rel) {
+                $mangaId = (int) $rel->manga_id;
+                $tagMap[$mangaId][] = (int) $rel->tag_id;
+            }
+        }
+        $authorMap = [];
+        $authorNames = [];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_author_rel') && Schema::hasTable('plugin_manga_authors')) {
+            $rels = DB::table('plugin_manga_author_rel')
+                ->whereIn('manga_id', $ids)
+                ->orderBy('author_id')
+                ->get(['manga_id', 'author_id']);
+            $authorIds = [];
+            foreach ($rels as $rel) {
+                $mangaId = (int) $rel->manga_id;
+                $aid = (int) $rel->author_id;
+                $authorMap[$mangaId][] = $aid;
+                if ($aid > 0) {
+                    $authorIds[] = $aid;
+                }
+            }
+            $authorIds = array_values(array_unique($authorIds));
+            if ($authorIds !== []) {
+                $authorNames = \Plugins\Manga\Models\MangaAuthor::query()
+                    ->whereIn('id', $authorIds)
+                    ->pluck('name', 'id')
+                    ->all();
+            }
+        }
+        $favorCounts = [];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_favors')) {
+            $favorCounts = \Plugins\Manga\Models\MangaFavor::query()
+                ->selectRaw('manga_id, COUNT(*) as c')
+                ->whereIn('manga_id', $ids)
+                ->groupBy('manga_id')
+                ->pluck('c', 'manga_id')
+                ->all();
+        }
         foreach ($rows as &$row) {
             $id = (int) ($row['id'] ?? 0);
             $typeId = (int) ($row['type_id'] ?? 0);
             $row['type_name'] = (string) ($typeNames[$typeId] ?? '');
             $row['chapter_count'] = (int) ($chapterCounts[$id] ?? 0);
+            $row['favor_count'] = (int) ($favorCounts[$id] ?? 0);
+            $row['tag_ids'] = array_values($tagMap[$id] ?? []);
+            $aids = array_values($authorMap[$id] ?? []);
+            $row['author_ids'] = $aids;
+            $labels = [];
+            foreach ($aids as $aid) {
+                $n = trim((string) ($authorNames[$aid] ?? ''));
+                if ($n !== '') {
+                    $labels[] = $n;
+                }
+            }
+            $fallback = trim((string) ($row['author'] ?? ''));
+            $row['author_label'] = $labels !== [] ? implode('、', $labels) : $fallback;
             $row['serialize'] = (int) ($row['serialize'] ?? 0);
             $row['serialize_label'] = $row['serialize'] === 1 ? '完结' : '连载';
             $row['yid'] = (int) ($row['yid'] ?? 0);
@@ -7855,11 +8017,68 @@ class SiteModuleService
             $titles = \Plugins\Manga\Models\Manga::query()->whereIn('id', $mangaIds)->pluck('title', 'id')->all();
         }
         foreach ($rows as &$row) {
-            $row['manga_title'] = (string) ($titles[(int) ($row['manga_id'] ?? 0)] ?? '');
+            $mangaId = (int) ($row['manga_id'] ?? 0);
+            $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
             $row['status'] = (int) ($row['status'] ?? 0);
             $row['status_label'] = $row['status'] === 1 ? '显示' : '待审';
             $ts = (int) ($row['created_at'] ?? 0);
             $row['created_label'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
+            $row['front_url'] = $mangaId > 0 ? '/manga/'.$mangaId : '';
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
+    private function decorateMangaFavors(array $rows): array
+    {
+        $mangaIds = [];
+        $memberIds = [];
+        foreach ($rows as $row) {
+            $mid = (int) ($row['manga_id'] ?? 0);
+            if ($mid > 0) {
+                $mangaIds[] = $mid;
+            }
+            $uid = (int) ($row['member_id'] ?? 0);
+            if ($uid > 0) {
+                $memberIds[] = $uid;
+            }
+        }
+        $titles = [];
+        if ($mangaIds !== [] && Schema::hasTable('plugin_mangas')) {
+            try {
+                $titles = \Plugins\Manga\Models\Manga::query()
+                    ->whereIn('id', array_values(array_unique($mangaIds)))
+                    ->pluck('title', 'id')
+                    ->all();
+            } catch (\Throwable) {
+                $titles = [];
+            }
+        }
+        $members = [];
+        if ($memberIds !== [] && Schema::hasTable('members')) {
+            try {
+                $members = Member::query()
+                    ->whereIn('id', array_values(array_unique($memberIds)))
+                    ->get(['id', 'name', 'email'])
+                    ->keyBy('id')
+                    ->all();
+            } catch (\Throwable) {
+                $members = [];
+            }
+        }
+        foreach ($rows as &$row) {
+            $mangaId = (int) ($row['manga_id'] ?? 0);
+            $memberId = (int) ($row['member_id'] ?? 0);
+            $ts = (int) ($row['created_at'] ?? 0);
+            $member = $members[$memberId] ?? null;
+            $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
+            $row['manga_missing'] = $mangaId > 0 && ! array_key_exists($mangaId, $titles) ? 1 : 0;
+            $row['member_name'] = $member ? (string) $member->name : '';
+            $row['member_email'] = $member ? (string) $member->email : '';
+            $row['member_missing'] = $memberId > 0 && ! $member ? 1 : 0;
+            $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
         }
         unset($row);
 

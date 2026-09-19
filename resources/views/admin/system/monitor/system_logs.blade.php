@@ -136,6 +136,7 @@
 
     var table = U.table({
         el: '#system-log-table',
+        countEl: countEl,
         url: '/admin/system/monitor/system-logs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -145,7 +146,6 @@
             return '<div class="list-empty"><p>还没有程序报错。</p><p class="muted">前台或后台一旦抛错会出现在这里。打开本页不会记。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             markExtra();
             var reset = document.getElementById('system-log-empty-reset');
             if (reset) reset.addEventListener('click', resetAll);

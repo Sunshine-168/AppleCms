@@ -14,6 +14,7 @@
         $catalogUrl = url('/manga/'.$manga->id);
         $gate = is_array($gate ?? null) ? $gate : ['locked' => false, 'vip' => false, 'total' => $picCount, 'trysee' => 0, 'need_login' => false, 'need_vip' => false];
         $totalPics = (int) ($gate['total'] ?? $picCount);
+        $favored = (bool) ($favored ?? false);
     @endphp
     <p class="breadcrumb">
         <a href="{{ url('/manga') }}">漫画</a> /
@@ -21,25 +22,35 @@
         {{ $epName }}
         @if(!empty($gate['vip'])) <span class="manga-badge">VIP</span>@endif
     </p>
-    <h1>{{ $manga->title }} · {{ $epName }}</h1>
-    <p class="manga-read-nav is-sticky" id="manga-toolbar">
-        @if($prev)
-            <a id="manga-prev" href="{{ url('/manga/'.$manga->id.'/'.$prev->id) }}">上一话</a>
-        @else
-            <span class="muted">没有上一话</span>
-        @endif
-        <span class="manga-read-tools">
-            <a href="{{ $catalogUrl }}" id="manga-catalog">目录</a>
-            <button type="button" class="btn-link" id="manga-mode" aria-pressed="false">页漫</button>
-            <button type="button" class="btn-link" id="manga-night">夜间</button>
-            <span class="muted" id="manga-progress">{{ $picCount > 0 ? '1 / '.$picCount : '0 / 0' }}@if(!empty($gate['locked']) && $totalPics > $picCount) · 共 {{ $totalPics }} 页@endif</span>
-        </span>
-        @if($next)
-            <a id="manga-next" href="{{ url('/manga/'.$manga->id.'/'.$next->id) }}">下一话</a>
-        @else
-            <span class="muted">没有下一话</span>
-        @endif
-    </p>
+    <div class="manga-read-bar">
+        <h1 class="manga-read-title">{{ $manga->title }} <span class="muted">· {{ $epName }}</span></h1>
+        <nav class="manga-read-nav is-sticky" id="manga-toolbar" aria-label="阅读工具">
+            @if($prev)
+                <a class="btn-ghost" id="manga-prev" href="{{ url('/manga/'.$manga->id.'/'.$prev->id) }}">上一话</a>
+            @else
+                <span class="muted manga-read-edge">没有上一话</span>
+            @endif
+            <span class="manga-read-tools">
+                <a class="btn-ghost" href="{{ $catalogUrl }}" id="manga-catalog">目录</a>
+                @auth('member')
+                    <form method="post" action="{{ url('/manga/'.$manga->id.'/favor') }}" class="inline-form">
+                        @csrf
+                        <button type="submit" class="btn-ghost">{{ $favored ? '移出书架' : '加入书架' }}</button>
+                    </form>
+                @else
+                    <a class="btn-ghost" href="{{ url('/member/login') }}">登录收藏</a>
+                @endauth
+                <button type="button" class="btn-ghost" id="manga-mode" aria-pressed="false">页漫</button>
+                <button type="button" class="btn-ghost" id="manga-night">夜间</button>
+                <span class="muted manga-read-prog" id="manga-progress">{{ $picCount > 0 ? '1 / '.$picCount : '0 / 0' }}@if(!empty($gate['locked']) && $totalPics > $picCount) · 共 {{ $totalPics }} 页@endif</span>
+            </span>
+            @if($next)
+                <a class="btn-ghost" id="manga-next" href="{{ url('/manga/'.$manga->id.'/'.$next->id) }}">下一话</a>
+            @else
+                <span class="muted manga-read-edge">没有下一话</span>
+            @endif
+        </nav>
+    </div>
     @if(!empty($gate['locked']))
         <div class="flash" style="margin:0 0 16px">
             @if(!empty($gate['need_login']))
@@ -57,7 +68,7 @@
             <summary>本话目录</summary>
             <div class="eps">
                 @foreach($manga->chapters as $ep)
-                    <a href="{{ url('/manga/'.$manga->id.'/'.$ep->id) }}"@if((int) $ep->id === (int) $chapter->id) class="on"@endif>{{ $ep->name ?: ('第'.$ep->id.'话') }}</a>
+                    <a href="{{ url('/manga/'.$manga->id.'/'.$ep->id) }}"@if((int) $ep->id === (int) $chapter->id) class="on"@endif>{{ $ep->name ?: ('第'.$ep->id.'话') }}{{ (int) ($ep->vip ?? 0) === 1 ? ' ·VIP' : '' }}</a>
                 @endforeach
             </div>
         </details>

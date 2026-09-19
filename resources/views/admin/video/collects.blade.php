@@ -136,6 +136,7 @@
 
     var table = U.table({
         el: '#collect-source-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/collects/list',
         where: cleanWhere(U.formData(form)),
         pager: false,

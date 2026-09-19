@@ -5,7 +5,7 @@
 <div class="card card-panel type-index">
     <div class="card-header">
         <span>分类 <em id="type-count"></em></span>
-        <a class="btn btn-sm" href="/admin/video/manga-types/create">新增分类</a>
+        <a class="btn btn-muted btn-sm" href="/admin/video/manga-types/create">完整表单</a>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="manga-type-search" onsubmit="return false;">

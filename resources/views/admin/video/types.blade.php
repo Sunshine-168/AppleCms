@@ -12,7 +12,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel type-index">
+<div class="card card-panel type-index list-desk">
     <div class="card-header">
         <span>{{ $noun }} <em id="type-count"></em></span>
             <a class="btn btn-sm" href="{{ $base }}/create">{{ $isArt ? '新建栏目' : '新增分类' }}</a>
@@ -116,6 +116,7 @@
 
     var table = U.table({
         el: '#video-type-table',
+        countEl: countEl,
         url: base + '/list',
         pager: false,
         emptyHtml: function (_parsed, where) {
@@ -128,7 +129,6 @@
             return '<div class="list-empty"><p>还没有分类</p><p class="muted">栏目是片库的目录。先建一级，再点「下级」挂动作片、国产剧。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新增分类</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             fillBatchParent();
             var reset = document.getElementById('type-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); table.reload({}); });
@@ -158,15 +158,15 @@
                     var kind = String(d.kind || 'list');
                     if (isArt && String(d.status) === '1') {
                         var front = (kind === 'link' && d.jump_url) ? String(d.jump_url) : ('/art/type/' + id);
-                        html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener">前台</a>';
+                        html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
                     }
-                    html += '<a class="js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
-                    html += '<a href="' + contentUrl + '?type_id=' + id + '">' + contentLabel + '</a>';
+                    html += '<a class="btn-link js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
+                    html += '<a href="' + contentUrl + '?type_id=' + id + '" class="btn-link">' + contentLabel + '</a>';
                     if (isArt && kind !== 'hub' && kind !== 'link') {
-                        html += '<a href="/admin/video/arts/create?type_id=' + id + '">写文章</a>';
+                        html += '<a href="/admin/video/arts/create?type_id=' + id + '" class="btn-link">写文章</a>';
                     }
-                    html += '<a href="' + base + '/' + id + '/edit">编辑</a>';
-                    html += '<a href="#" class="js-del">删除</a>';
+                    html += '<a href="' + base + '/' + id + '/edit" class="btn-link">编辑</a>';
+                    html += '<a href="#" class="btn-link js-del">删除</a>';
                     return html;
                 }}
             );

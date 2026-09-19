@@ -6,7 +6,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel tag-index">
+<div class="card card-panel tag-index list-desk">
     <div class="card-header">
         <span>标签 <em id="art-tag-count"></em></span>
         <a class="btn btn-muted btn-sm" href="/admin/video/art-tags/create">完整表单</a>
@@ -78,6 +78,7 @@
 
     var table = U.table({
         el: '#art-tag-table',
+        countEl: countEl,
         url: '/admin/video/art-tags/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -87,10 +88,9 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的标签。</p><p><button type="button" class="btn btn-muted btn-sm" id="art-tag-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有标签。</p><p class="muted">在上方输入名称即可添加，用来给文章归类。</p></div>';
+            return '<div class="list-empty"><p>还没有标签。</p><p class="muted">在上方输入名称即可添加，用来给文章归类。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/arts">去文章列表</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('art-tag-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); if (form.unused) form.unused.value = ''; runSearch(); });
         },

@@ -24,10 +24,8 @@
                     {"name": "cate_id", "label": "分类", "type": "number"},
                     {"name": "name", "label": "名称", "type": "text"},
                     {"name": "url", "label": "网址", "type": "text"},
-                    {"name": "logo", "label": "Logo", "type": "text"},
                     {"name": "email", "label": "邮箱", "type": "text"},
                     {"name": "remark", "label": "备注", "type": "text"},
-                    {"name": "type", "label": "类型", "type": "select", "options": {"text": "文字", "image": "图片"}},
                     {"name": "sort", "label": "排序", "type": "number"},
                     {"name": "status", "label": "状态", "type": "select", "options": {"0": "待审", "1": "显示", "2": "拒绝", "3": "冻结"}}
                 ],

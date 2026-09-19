@@ -36,6 +36,25 @@ class Manga extends Model
         return array_values($out);
     }
 
+    /** @return list<string> */
+    public function authorNames(): array
+    {
+        $raw = trim((string) ($this->author ?? ''));
+        if ($raw === '') {
+            return [];
+        }
+        $parts = preg_split('/[,，|｜\/、]+/u', $raw) ?: [];
+        $out = [];
+        foreach ($parts as $part) {
+            $name = trim((string) $part);
+            if ($name !== '') {
+                $out[$name] = $name;
+            }
+        }
+
+        return array_values($out);
+    }
+
     public function serializeLabel(): string
     {
         return ((int) ($this->serialize ?? 0) === 1) ? '完结' : '连载';
@@ -49,6 +68,11 @@ class Manga extends Model
     public function tagRels(): BelongsToMany
     {
         return $this->belongsToMany(MangaTag::class, 'plugin_manga_tag_rel', 'manga_id', 'tag_id');
+    }
+
+    public function authorRels(): BelongsToMany
+    {
+        return $this->belongsToMany(MangaAuthor::class, 'plugin_manga_author_rel', 'manga_id', 'author_id');
     }
 
     public function chapters(): HasMany

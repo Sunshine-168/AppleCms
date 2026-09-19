@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel withdraw-index">
+<div class="card card-panel withdraw-index list-desk">
     <div class="card-header">
         <span>提现@if($q('pending') > 0) <em>· {{ $q('pending') }} 待审</em>@endif</span>
         <div>
@@ -119,13 +119,14 @@
 
     var table = U.table({
         el: '#withdraw-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/withdraws/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的提现</p><p><button type="button" class="btn btn-muted btn-sm" id="withdraw-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有提现申请</p><p class="muted">会员提交后会出现在这里。</p></div>';
+            return '<div class="list-empty"><p>还没有提现申请</p><p class="muted">会员提交后会出现在这里。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/members">去会员</a></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {

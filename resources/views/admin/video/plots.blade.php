@@ -130,6 +130,8 @@
 
     var table = U.table({
         el: '#plot-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/plots/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -139,7 +141,6 @@
             return '<div class="list-empty"><p>还没有分集剧情</p><p class="muted">点新增，填影片、集数和这一集发生了什么。不会从播放地址自动生成。</p><p><button type="button" class="btn btn-primary btn-sm" id="plot-empty-add">新增剧情</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('plot-empty-add');
             var reset = document.getElementById('plot-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

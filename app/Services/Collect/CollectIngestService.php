@@ -6,6 +6,7 @@ use App\Models\Video\CollectSourceModel;
 use App\Models\Video\VideoCollectLog;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTypeModel;
@@ -477,6 +478,7 @@ class CollectIngestService
                 ]);
                 $source->save();
             }
+            $this->ensurePlayerCode((string) $group['name']);
             foreach ($group['episodes'] as $ep) {
                 $exists = VideoEpisodeModel::query()
                     ->where('source_id', $source->id)
@@ -513,6 +515,34 @@ class CollectIngestService
         }
     }
 
+    private function ensurePlayerCode(string $code): void
+    {
+        $code = trim($code);
+        if ($code === '' || ! Schema::hasTable('video_players')) {
+            return;
+        }
+        if (VideoPlayerModel::query()->where('code', $code)->exists()) {
+            return;
+        }
+        $row = [
+            'code' => $code,
+            'name' => $code,
+            'parse' => '',
+            'sort' => 0,
+            'status' => 1,
+        ];
+        $engine = VideoPlayerModel::inferEngine($code, '');
+        if (str_contains(strtolower($code), 'yun')) {
+            $engine = 'iframe';
+        } elseif (str_contains(strtolower($code), 'm3u8')) {
+            $engine = 'artplayer';
+        }
+        if (Schema::hasColumn('video_players', 'engine')) {
+            $row['engine'] = $engine;
+        }
+        VideoPlayerModel::query()->create($row);
+    }
+
     /** @param  array<string, mixed>  $item */
     private function syncPeople(\App\Models\Video\VideoModel $video, array $item): void
     {
@@ -535,10 +565,16 @@ class CollectIngestService
                 ['name' => $name],
                 ['avatar' => '', 'status' => 1, 'sort' => 0, 'created_at' => $now, 'updated_at' => $now]
             );
-            \App\Models\Video\VideoActorRelModel::query()->firstOrCreate(
-                ['video_id' => $video->id, 'actor_id' => $actor->id, 'role_type' => 1],
-                ['sort' => $sort--, 'role_name' => '']
-            );
+            $rel = [
+                'video_id' => $video->id,
+                'actor_id' => $actor->id,
+                'role_type' => 1,
+            ];
+            $extra = ['sort' => $sort--];
+            if (Schema::hasColumn('video_actor_rel', 'role_name')) {
+                $extra['role_name'] = '';
+            }
+            \App\Models\Video\VideoActorRelModel::query()->firstOrCreate($rel, $extra);
         }
     }
 

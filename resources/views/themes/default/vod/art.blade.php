@@ -38,19 +38,28 @@
         @endif
         / <span>{{ $art->title }}</span>
     </nav>
-    <h1>{{ $art->title }}</h1>
-    @if(trim((string) $art->cover) !== '')
-        <p class="art-cover"><img src="{{ $art->cover }}" alt=""></p>
-    @endif
-    <p class="muted">{{ implode(' · ', $bits) }}</p>
-    <article class="desc">{!! $art->content !!}</article>
-    @if($tags !== [])
-        <p class="art-tags">
-            @foreach($tags as $tag)
-                <a href="{{ $tag['url'] }}">{{ $tag['name'] }}</a>
-            @endforeach
-        </p>
-    @endif
+
+    <article class="art-detail">
+        <header class="art-detail-head">
+            <h1>{{ $art->title }}</h1>
+            <p class="muted">{{ implode(' · ', $bits) }}</p>
+        </header>
+        @if(trim((string) $art->cover) !== '')
+            <p class="art-cover"><img src="{{ $art->cover }}" alt=""></p>
+        @endif
+        @if(trim((string) ($art->blurb ?? '')) !== '')
+            <p class="art-lead">{{ $art->blurb }}</p>
+        @endif
+        <div class="art-body desc">{!! $art->content !!}</div>
+        @if($tags !== [])
+            <p class="art-tags">
+                @foreach($tags as $tag)
+                    <a href="{{ $tag['url'] }}">{{ $tag['name'] }}</a>
+                @endforeach
+            </p>
+        @endif
+    </article>
+
     <p class="art-near">
         @if($prev)
             <a href="{{ $prev->url }}">上一篇：{{ $prev->title }}</a>
@@ -60,35 +69,52 @@
         @endif
     </p>
     @if($related && count($related))
-        <h2>相关阅读</h2>
-        <ul class="list-plain">
-            @foreach($related as $item)
-                <li><a href="{{ $item->url }}">{{ $item->title }}</a></li>
-            @endforeach
-        </ul>
+        <section class="home-sec">
+            <div class="sec-head"><h2>相关阅读</h2></div>
+            <ul class="list-plain">
+                @foreach($related as $item)
+                    <li><a href="{{ $item->url }}">{{ $item->title }}</a></li>
+                @endforeach
+            </ul>
+        </section>
     @endif
-    <h2>评论</h2>
-    @if(session('error'))
-        <p class="muted">{{ session('error') }}</p>
-    @endif
-    @if(session('status'))
-        <p class="muted">{{ session('status') }}</p>
-    @endif
-    <form method="post" action="{{ url('/art/'.$art->id.'/comment') }}">
-        @csrf
-        @guest('member')
-            <p><input name="author_name" placeholder="昵称"></p>
-        @endguest
-        <p><textarea name="content" rows="4" style="width:100%;background:#0b0d12;color:#e8eaed;border:1px solid #2a2f3a;" required></textarea></p>
-        <p><button type="submit">发表评论</button></p>
-    </form>
-    @vodComment(['id' => $art->id, 'mid' => 2])
-        <p><strong>{{ $item->author_name }}</strong> · {{ date('Y-m-d H:i', (int)$item->created_at) }}
-            <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
-            <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
-            <br>{{ $item->content }}
-        </p>
-    @endvodComment
+
+    <section class="home-sec detail-engage">
+        <div class="sec-head"><h2>评论</h2></div>
+        <div class="detail-comment-box">
+            <form class="comment-form" method="post" action="{{ url('/art/'.$art->id.'/comment') }}">
+                @csrf
+                @guest('member')
+                    <label class="auth-field">
+                        <span>昵称</span>
+                        <input name="author_name" placeholder="怎么称呼你" maxlength="40">
+                    </label>
+                @endguest
+                <label class="auth-field">
+                    <span>内容</span>
+                    <textarea name="content" rows="4" required placeholder="说点什么…" maxlength="1000"></textarea>
+                </label>
+                <div class="auth-actions">
+                    <button type="submit" class="btn-play btn-sm">发表评论</button>
+                </div>
+            </form>
+            <div class="comment-list">
+                @vodComment(['id' => $art->id, 'mid' => 2])
+                    <article class="comment-item">
+                        <header class="comment-item-head">
+                            <strong>{{ $item->author_name }}</strong>
+                            <time class="muted">{{ date('Y-m-d H:i', (int)$item->created_at) }}</time>
+                            <span class="comment-item-acts">
+                                <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
+                                <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
+                            </span>
+                        </header>
+                        <p class="comment-item-body">{{ $item->content }}</p>
+                    </article>
+                @endvodComment
+            </div>
+        </div>
+    </section>
     <script>
         document.querySelectorAll('.comment-like').forEach(function(a){
             a.addEventListener('click', function(){

@@ -161,6 +161,8 @@
 
     var table = U.table({
         el: '#server-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/servers/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -170,7 +172,6 @@
             return '<div class="list-empty"><p>还没有服务器组</p><p class="muted">点新增，填名称。前缀可空。下载页模板请去下载器，播内核请去播放器。</p><p><button type="button" class="btn btn-primary btn-sm" id="server-empty-add">新增服务器组</button> <a class="btn btn-muted btn-sm" href="/admin/video/downloaders">去下载器</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             fillTryGroups(list);
             var add = document.getElementById('server-empty-add');
             var reset = document.getElementById('server-empty-reset');

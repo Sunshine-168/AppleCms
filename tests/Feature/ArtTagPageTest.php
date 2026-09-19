@@ -122,9 +122,12 @@ class ArtTagPageTest extends TestCase
             ->get('/admin/video/arts/'.$live->id.'/edit')
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('name="tag_ids[]"', $form);
-        $this->assertStringContainsString('value="'.$tagId.'"', $form);
-        $this->assertStringContainsString('新标签', $form);
+        $this->assertStringContainsString('art-tag-pick', $form);
+        $this->assertStringContainsString('搜标签名', $form);
+        $this->assertStringContainsString('/admin/video/art-tags/list', $form);
+        $this->assertStringContainsString('影讯', $form);
+        $this->assertStringNotContainsString('name="tag_ids[]"', $form);
+        $this->assertStringNotContainsString('新标签', $form);
     }
 
     public function test_harvest_comma_tags_and_front_page(): void

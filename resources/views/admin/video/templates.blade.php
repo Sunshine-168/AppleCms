@@ -18,9 +18,16 @@
 @endif
 
 @section('plain')
-<div class="tpl-board desk-board">
-    <p class="muted recycle-lead">改当前主题的页面文件。Logo、导航、页头代码切到「外观」。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
-    @include('admin.video.partials.theme-desks', ['desk' => 'files'])
+<div class="card card-panel desk-board tpl-board">
+    <div class="card-header">
+        <span>模板</span>
+        <div>
+            @include('admin.video.partials.theme-desks', ['desk' => 'files'])
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="muted recycle-lead">改当前主题的页面文件。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
+    </div>
 </div>
 <div class="split-side tpl-index">
     <div class="card card-panel">

@@ -121,6 +121,8 @@
 
     var table = U.table({
         el: '#fav-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/favorites/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -130,7 +132,6 @@
             return '<div class="list-empty"><p>还没有收藏</p><p class="muted">会员登录后在影片页点收藏，记录会出现在这里。后台不能代收藏。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            if (countEl) countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('fav-empty-reset');
             if (reset) reset.addEventListener('click', function () {
                 form.reset();

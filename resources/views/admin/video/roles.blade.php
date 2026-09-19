@@ -179,6 +179,8 @@
 
     var table = U.table({
         el: '#role-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/roles/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -188,7 +190,6 @@
             return '<div class="list-empty"><p>还没有角色</p><p class="muted">点新增，填角色名并挂到一部片子。启用后详情页才会列出。</p><p><button type="button" class="btn btn-primary btn-sm" id="role-empty-add">新增角色</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('role-empty-add');
             var reset = document.getElementById('role-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

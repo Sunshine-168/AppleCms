@@ -25,7 +25,6 @@ class ThemeConfigPageTest extends TestCase
 
         $this->assertStringContainsString('id="theme-index"', $html);
         $this->assertStringContainsString('id="theme-desks"', $html);
-        $this->assertStringContainsString('theme-look-nav', $html);
         $this->assertStringContainsString('settings-file-preview', $html);
         $this->assertStringContainsString('上传图片', $html);
         $this->assertStringContainsString('name="theme_logo"', $html);
@@ -36,7 +35,17 @@ class ThemeConfigPageTest extends TestCase
         $this->assertStringContainsString('广告位', $html);
         $this->assertStringContainsString('/admin/video/ads', $html);
         $this->assertStringContainsString('没有深浅双套 Lottie', $html);
-        $this->assertStringContainsString('theme-index', $html);
+        $this->assertStringContainsString('改 Logo、导航和页头代码', $html);
+        $this->assertStringNotContainsString('页面文件切到「文件」', $html);
+        $desksPos = strpos($html, 'id="theme-desks"');
+        $leadPos = strpos($html, '改 Logo、导航和页头代码');
+        $tabsPos = strpos($html, 'id="themeTabs"');
+        $this->assertNotFalse($desksPos);
+        $this->assertNotFalse($leadPos);
+        $this->assertNotFalse($tabsPos);
+        $this->assertLessThan($leadPos, $desksPos);
+        $this->assertLessThan($tabsPos, $leadPos);
+        $this->assertStringNotContainsString('theme-look-nav', $html);
         $this->assertStringNotContainsString('theme-asset-grid', $html);
         $this->assertStringNotContainsString('theme-asset-card', $html);
         $this->assertStringNotContainsString('还没有打开文件', $html);

@@ -95,6 +95,7 @@
 
     var table = U.table({
         el: '#recycle-table',
+        countEl: countEl,
         url: '/admin/video/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -104,7 +105,6 @@
             return '<div class="list-empty"><p>回收站是空的。</p><p class="muted">从影片列表删除的片子会先放在这里，可以随时还原。不会自动清空。</p><p><a class="btn btn-muted btn-sm" href="/admin/video">去影片列表</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             emptyBtn.hidden = list.length === 0 && !isFiltered(queryWhere());
             var reset = document.getElementById('recycle-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); if (form.trash) form.trash.value = '1'; runSearch(); });

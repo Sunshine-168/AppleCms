@@ -77,6 +77,10 @@ class MangaFrontTest extends TestCase
         $list->assertSee('人气本')->assertSee('新连载')->assertSee('热血')->assertSee('排行')->assertSee('书架')->assertSee('历史');
         $list->assertSee('全部作品')->assertSee('推荐')->assertSee('热门')->assertSee('最近更新');
         $this->assertStringContainsString('搜漫画', $list->getContent());
+        $this->assertStringContainsString('manga-search', $list->getContent());
+        $this->assertStringContainsString('name="wd"', $list->getContent());
+        $this->assertStringContainsString('/manga?recommend=1', $list->getContent());
+        $this->assertStringContainsString('manga-badge', $list->getContent());
         $this->assertStringNotContainsString('内容折叠菜单', $list->getContent());
 
         $this->get('/manga?serialize=1')->assertOk()->assertSee('人气本')->assertDontSee('新连载')->assertDontSee('全部作品');
@@ -113,9 +117,10 @@ class MangaFrontTest extends TestCase
         ]);
 
         $show = $this->get('/manga/'.$hot->id)->assertOk();
-        $show->assertSee('第1话')->assertSee('第2话')->assertSee('完结')->assertSee('动作')->assertSee('登录后收藏');
+        $show->assertSee('第1话')->assertSee('第2话')->assertSee('完结')->assertSee('动作')->assertSee('登录后加入书架');
         $show->assertSee('相关漫画')->assertSee('同类本')->assertDontSee('新连载');
         $show->assertSee('倒序')->assertSee('条评论')->assertSee('作者甲');
+        $show->assertSee('id="manga-eps"', false);
 
         $this->get('/manga')->assertOk()->assertSee('第2话');
         $this->get('/manga/rank')->assertOk()->assertSee('第2话');
@@ -195,6 +200,10 @@ class MangaFrontTest extends TestCase
         $this->assertStringContainsString('/manga', $map);
         $this->assertStringContainsString('/manga/'.$row->id, $map);
 
+        $listSeo = $this->get('/manga?wd='.urlencode('续看'))->assertOk();
+        $listSeo->assertSee('续看本');
+        $this->assertStringContainsString('<title>搜索 续看', $listSeo->getContent());
+
         $detail = $this->getJson('/api/provide/manga?ac=detail&ids='.$row->id)
             ->assertOk()
             ->json();
@@ -216,7 +225,7 @@ class MangaFrontTest extends TestCase
     {
         $html = $this->get('/')->assertOk()->getContent();
         $this->assertMatchesRegularExpression(
-            '/<nav class="main">\s*<a href="[^"]*\/manga">漫画<\/a>/u',
+            '/<nav class="main"[^>]*>\s*<a href="[^"]*\/manga">漫画<\/a>/u',
             $html
         );
         $mangaPos = strpos($html, '>漫画</a>');
@@ -261,6 +270,39 @@ class MangaFrontTest extends TestCase
             ->get('/manga/shelf')
             ->assertOk()
             ->assertSee('可评本');
+        $this->actingAs($member, 'member')
+            ->get('/manga/'.$row->id)
+            ->assertOk()
+            ->assertSee('收藏 1')
+            ->assertSee('移出书架');
+        $this->get('/manga?order=favor')
+            ->assertOk()
+            ->assertSee('可评本')
+            ->assertSee('收藏 1');
+        $this->get('/manga')
+            ->assertOk()
+            ->assertSee('收藏热门')
+            ->assertSee('可评本');
+        $this->get('/manga/rank?board=favor')
+            ->assertOk()
+            ->assertSee('可评本')
+            ->assertSee('收藏');
+        $ep0 = MangaChapter::query()->create([
+            'manga_id' => $row->id,
+            'name' => '试读',
+            'sort' => 0,
+            'pics' => '/t.jpg',
+            'created_at' => time(),
+        ]);
+        $this->actingAs($member, 'member')
+            ->get('/manga/'.$row->id.'/'.$ep0->id)
+            ->assertOk()
+            ->assertSee('移出书架');
+        $shelfBefore = $this->actingAs($member, 'member')
+            ->get('/manga/shelf')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('移出书架', $shelfBefore);
 
         $ep1 = MangaChapter::query()->create([
             'manga_id' => $row->id,
@@ -287,13 +329,33 @@ class MangaFrontTest extends TestCase
         $this->assertStringContainsString('更新至 第2话', $shelf);
 
         $this->actingAs($member, 'member')
+            ->from('/manga/shelf')
+            ->followingRedirects()
             ->post('/manga/'.$row->id.'/favor')
-            ->assertRedirect()
-            ->assertSessionHas('status', '已移出书架');
-        $this->actingAs($member, 'member')
-            ->get('/manga/shelf')
             ->assertOk()
+            ->assertSee('已移出书架')
             ->assertSee('书架是空的');
+        $this->assertSame(0, MangaFavor::query()->where('member_id', $member->id)->count());
+    }
+
+    public function test_show_chapter_grid_collapses_when_many(): void
+    {
+        $row = $this->manga('多话本', ['author' => '作者甲', 'recommend' => 1]);
+        for ($i = 1; $i <= 16; $i++) {
+            MangaChapter::query()->create([
+                'manga_id' => $row->id,
+                'name' => '第'.$i.'话',
+                'sort' => $i,
+                'pics' => '/img/'.$i.'.jpg',
+                'created_at' => time(),
+            ]);
+        }
+        $html = $this->get('/manga/'.$row->id)->assertOk()->getContent();
+        $this->assertStringContainsString('manga-eps', $html);
+        $this->assertStringContainsString('is-collapsed', $html);
+        $this->assertStringContainsString('展开全部章节', $html);
+        $this->assertStringContainsString('manga-rev', $html);
+        $this->assertStringContainsString('连载', $html);
     }
 
     /** @param array<string, mixed> $over */

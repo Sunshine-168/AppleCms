@@ -131,6 +131,8 @@
 
     var table = U.table({
         el: '#link-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/links/list',
         where: queryWhere(),
         pager: false,
@@ -141,7 +143,6 @@
             return '<div class="list-empty"><p>还没有友情链接</p><p class="muted">友链出现在页脚。填名称和网址就能显示，Logo 可选。</p><p><button type="button" class="btn btn-primary btn-sm" id="link-empty-add">新增友链</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('link-empty-add');
             var reset = document.getElementById('link-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

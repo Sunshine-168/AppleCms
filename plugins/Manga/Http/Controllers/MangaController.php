@@ -29,8 +29,9 @@ class MangaController extends Controller
         $typeId = (int) $filters['type'];
         $rails = $this->manga->typeRails($typeId);
         $filtered = $this->manga->isFiltered($filters);
-        $blocks = $filtered ? ['recommend' => collect(), 'hot' => collect(), 'newest' => collect()] : $this->manga->indexBlocks();
-        $this->seo('漫画', '漫画,连载,完结', '站内漫画库');
+        $blocks = $filtered ? ['recommend' => collect(), 'hot' => collect(), 'favor' => collect(), 'newest' => collect()] : $this->manga->indexBlocks();
+        $seo = $this->manga->listSeo($filters);
+        $this->seo($seo['title'], $seo['keywords'], $seo['description']);
 
         return view('manga::index', $this->page([
             'list' => $this->manga->paginate($this->manga->pageSizeForType($typeId), $filters),
@@ -50,10 +51,18 @@ class MangaController extends Controller
             throw new NotFoundHttpException();
         }
         $filters = $this->manga->frontFilters();
-        $this->seo('漫画排行', '漫画排行,人气漫画', '漫画人气与完结榜');
+        $board = (string) ($filters['board'] ?? 'hits');
+        $titles = [
+            'favor' => ['漫画收藏榜', '漫画收藏,书架排行', '按书架收藏数排序的漫画'],
+            'new' => ['漫画新作榜', '漫画新作,最新上架', '最新上架的漫画'],
+            'end' => ['漫画完结榜', '漫画完结,完结人气', '已完结漫画人气榜'],
+            'hits' => ['漫画排行', '漫画排行,人气漫画', '漫画人气与完结榜'],
+        ];
+        $seo = $titles[$board] ?? $titles['hits'];
+        $this->seo($seo[0], $seo[1], $seo[2]);
 
         return view('manga::rank', $this->page([
-            'list' => $this->manga->rank((string) $filters['board']),
+            'list' => $this->manga->rank($board),
             'filters' => $filters,
             'page' => 'rank',
         ]));
@@ -123,14 +132,17 @@ class MangaController extends Controller
             $desc = $row->title.' · '.$row->serializeLabel();
         }
         $tags = implode(',', $row->tagNames());
+        $sameAuthor = $this->manga->relatedByAuthor($row, 1);
         $this->seo($row->title.' - 漫画', $tags !== '' ? $tags : $row->title, mb_substr($desc, 0, 160));
 
         return view('manga::show', $this->page([
             'manga' => $row,
             'related' => $this->manga->related($row),
+            'relatedTitle' => $sameAuthor->isNotEmpty() ? '同作者' : '相关漫画',
             'comments' => $this->manga->listedComments($row),
             'commentCount' => $this->manga->commentCount($row),
             'favored' => $member ? $this->manga->favored((int) $member->id, (int) $row->id) : false,
+            'favorCount' => $this->manga->favorCount((int) $row->id),
             'continueId' => $member ? $this->manga->continueChapterId((int) $member->id, (int) $row->id) : 0,
             'page' => 'show',
         ]));
@@ -168,6 +180,7 @@ class MangaController extends Controller
             'gate' => $gate,
             'prev' => $near['prev'],
             'next' => $near['next'],
+            'favored' => $member ? $this->manga->favored((int) $member->id, (int) $row->id) : false,
             'page' => 'read',
         ]));
     }

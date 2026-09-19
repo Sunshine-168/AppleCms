@@ -258,13 +258,6 @@
                 <option value="{{ $cate['id'] }}">{{ $cate['name'] }}</option>
             @endforeach
         </select>
-        <label>类型</label>
-        <select name="type">
-            <option value="text">文字</option>
-            <option value="image">图片</option>
-        </select>
-        <label>Logo</label>
-        <input type="text" name="logo" placeholder="图片地址">
         <label>邮箱</label>
         <input type="text" name="email">
         <label>备注</label>
@@ -436,8 +429,6 @@
                     name: row.name || '',
                     url: row.url || '',
                     cate_id: row.cate_id == null ? 0 : row.cate_id,
-                    type: row.type || 'text',
-                    logo: row.logo || '',
                     email: row.email || '',
                     remark: row.remark || '',
                     sort: row.sort == null ? 0 : row.sort,

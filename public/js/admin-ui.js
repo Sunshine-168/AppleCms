@@ -289,6 +289,58 @@
             e.preventDefault();
             api.reload(cleanWhere(formData(form)));
         });
+        form.addEventListener('reset', function () {
+            setTimeout(function () {
+                resetQueueFields(form, opts.queueKeys || []);
+                markQueueChips(form, opts.queueRoot || null);
+                if (typeof opts.afterReset === 'function') {
+                    opts.afterReset(form);
+                }
+                api.reload(cleanWhere(formData(form)));
+            }, 0);
+        });
+    }
+
+    /** Clear hidden queue filter fields on a filter form. */
+    function resetQueueFields(form, keys) {
+        if (!form) return;
+        (keys || []).forEach(function (k) {
+            var el = form.elements && form.elements[k]
+                ? form.elements[k]
+                : form.querySelector('[name="' + k + '"]');
+            if (el && el.tagName) {
+                el.value = '';
+            }
+        });
+    }
+
+    /** Activate the "all" chip (empty data-queue / first chip) after reset. */
+    function markQueueChips(form, root) {
+        var chipsRoot = root
+            ? (typeof root === 'string' ? document.querySelector(root) : root)
+            : (form && form.parentNode ? form.parentNode.querySelector('.queue-chips') : null);
+        if (!chipsRoot) return;
+        var chips = chipsRoot.querySelectorAll('button.chip, a.chip');
+        var all = null;
+        Array.prototype.forEach.call(chips, function (c) {
+            var q = c.getAttribute('data-queue');
+            if (q === '' || q === null) {
+                if (!all) all = c;
+            }
+            c.classList.remove('active');
+        });
+        if (!all && chips.length) all = chips[0];
+        if (all) all.classList.add('active');
+    }
+
+    /** Set header <em> count from list API meta.total. */
+    function headerCount(el, meta) {
+        if (!el) return;
+        var total = 0;
+        if (meta && meta.total != null) {
+            total = parseInt(meta.total, 10) || 0;
+        }
+        el.textContent = total > 0 ? ('· ' + total) : '';
     }
 
     function table(opts) {
@@ -308,6 +360,9 @@
         }
         var limit = parseInt(opts.limit, 10) || 15;
         var state = { page: 1, where: Object.assign({}, opts.where || {}) };
+        var countEl = opts.countEl
+            ? (typeof opts.countEl === 'string' ? document.querySelector(opts.countEl) : opts.countEl)
+            : null;
 
         function rowsFrom(res) {
             var d = res.data || {};
@@ -393,6 +448,7 @@
                 cb.addEventListener('change', fireCheck);
             });
             fireCheck();
+            if (countEl) headerCount(countEl, parsed);
             if (opts.onDraw) opts.onDraw(wrap, parsed.list, parsed);
         }
 
@@ -411,11 +467,13 @@
                 toast(msg, 'err');
                 wrap.innerHTML = failHtml(msg);
                 wrap._rows = [];
+                if (countEl) headerCount(countEl, { total: 0 });
                 if (opts.onDraw) opts.onDraw(wrap, [], { list: [], total: 0, page: 1, last: 1 });
                 return res;
             }).catch(function () {
                 wrap.innerHTML = failHtml('加载失败');
                 wrap._rows = [];
+                if (countEl) headerCount(countEl, { total: 0 });
             });
         }
 
@@ -529,6 +587,197 @@
         return { sync: sync, input: input, preview: preview, btn: btn };
     }
 
+    /**
+     * Searchable multi-select for large catalogs (tags/authors).
+     * root[data-search], data-create, data-selected JSON, data-ready, data-placeholder, data-empty
+     * data-browse="1" → focus with empty query loads a short list (no full dump).
+     */
+    function bindPickField(root) {
+        if (!root) return { ids: function () { return []; } };
+        var ready = root.getAttribute('data-ready') === '1';
+        var searchUrl = root.getAttribute('data-search') || '';
+        var createUrl = root.getAttribute('data-create') || '';
+        var placeholder = root.getAttribute('data-placeholder') || '搜索';
+        var emptyHint = root.getAttribute('data-empty') || '';
+        var browse = root.getAttribute('data-browse') !== '0';
+        var selected = [];
+        try { selected = JSON.parse(root.getAttribute('data-selected') || '[]') || []; } catch (e) { selected = []; }
+        selected = selected.map(function (r) {
+            return { id: parseInt(r.id, 10) || 0, name: String(r.name || '') };
+        }).filter(function (r) { return r.id > 0 && r.name; });
+
+        root.innerHTML = '';
+        if (!ready) {
+            root.innerHTML = '<p class="muted field-hint">相关表还没建，可先保存，迁移后再挂。</p>';
+            return { ids: function () { return []; } };
+        }
+
+        var chips = document.createElement('div');
+        chips.className = 'pick-chips';
+        var wrap = document.createElement('div');
+        wrap.className = 'pick-search-wrap';
+        var input = document.createElement('input');
+        input.type = 'search';
+        input.setAttribute('autocomplete', 'off');
+        input.placeholder = placeholder;
+        input.setAttribute('aria-label', placeholder);
+        var suggest = document.createElement('ul');
+        suggest.className = 'pick-suggest';
+        suggest.hidden = true;
+        wrap.appendChild(input);
+        wrap.appendChild(suggest);
+        root.appendChild(chips);
+        root.appendChild(wrap);
+        if (selected.length === 0 && emptyHint) {
+            var hint = document.createElement('p');
+            hint.className = 'muted field-hint js-pick-empty';
+            hint.innerHTML = emptyHint;
+            root.appendChild(hint);
+        }
+
+        var timer = null;
+        var active = -1;
+        var rows = [];
+
+        function hasId(id) {
+            return selected.some(function (r) { return r.id === id; });
+        }
+        function renderChips() {
+            chips.innerHTML = '';
+            selected.forEach(function (r) {
+                var chip = document.createElement('span');
+                chip.className = 'pick-chip';
+                chip.innerHTML = escape(r.name) + ' <button type="button" aria-label="移除">&times;</button>';
+                chip.querySelector('button').addEventListener('click', function () {
+                    selected = selected.filter(function (x) { return x.id !== r.id; });
+                    renderChips();
+                });
+                chips.appendChild(chip);
+            });
+            var empty = root.querySelector('.js-pick-empty');
+            if (empty) empty.hidden = selected.length > 0;
+        }
+        function hideSuggest() {
+            suggest.hidden = true;
+            suggest.innerHTML = '';
+            rows = [];
+            active = -1;
+        }
+        function showSuggest(list, q) {
+            rows = list || [];
+            suggest.innerHTML = '';
+            q = String(q || '').trim();
+            if (!rows.length) {
+                if (q) {
+                    suggest.innerHTML = '<li class="muted">没有匹配，回车可新建「' + escape(q) + '」</li>';
+                    suggest.hidden = false;
+                } else {
+                    hideSuggest();
+                }
+                active = -1;
+                return;
+            }
+            rows.forEach(function (r) {
+                var li = document.createElement('li');
+                li.textContent = r.name;
+                if (hasId(r.id)) li.className = 'muted';
+                li.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    pick(r);
+                });
+                suggest.appendChild(li);
+            });
+            suggest.hidden = false;
+            active = 0;
+            markActive();
+        }
+        function markActive() {
+            Array.prototype.forEach.call(suggest.children, function (li, i) {
+                li.classList.toggle('is-on', i === active);
+            });
+        }
+        function pick(row) {
+            if (!row || !row.id || hasId(row.id)) { hideSuggest(); input.value = ''; return; }
+            selected.push({ id: row.id, name: row.name });
+            renderChips();
+            input.value = '';
+            hideSuggest();
+            input.focus();
+        }
+        function search(q, fromFocus) {
+            q = String(q || '').trim();
+            if (!q && !fromFocus) { hideSuggest(); return; }
+            if (!q && !browse) { hideSuggest(); return; }
+            request('GET', searchUrl, { q: q, limit: 12, status: 1 }).then(function (res) {
+                if (!res || res.code !== 0) { hideSuggest(); return; }
+                var list = (res.data && res.data.data) || res.data || [];
+                if (!Array.isArray(list)) list = [];
+                showSuggest(list.map(function (r) {
+                    return { id: parseInt(r.id, 10) || 0, name: String(r.name || '') };
+                }).filter(function (r) { return r.id > 0 && r.name; }), q);
+            }).catch(function () { hideSuggest(); });
+        }
+        function createName(name) {
+            name = String(name || '').trim();
+            if (!name || !createUrl) return;
+            var exist = selected.find(function (r) { return r.name === name; });
+            if (exist) { input.value = ''; hideSuggest(); return; }
+            loading(true);
+            request('POST', createUrl, { name: name, status: 1 }).then(function (res) {
+                loading(false);
+                if (!res || res.code !== 0) {
+                    toast((res && res.msg) || '新建失败', 'err');
+                    return;
+                }
+                var id = parseInt((res.data && res.data.id) || 0, 10) || 0;
+                if (id < 1) { toast('新建失败', 'err'); return; }
+                pick({ id: id, name: (res.data && res.data.name) || name });
+            }).catch(function () { loading(false); toast('新建失败', 'err'); });
+        }
+
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            var q = input.value;
+            timer = setTimeout(function () { search(q, false); }, 180);
+        });
+        input.addEventListener('focus', function () {
+            if (!String(input.value || '').trim() && browse) {
+                search('', true);
+            }
+        });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown') {
+                if (suggest.hidden) return;
+                e.preventDefault();
+                active = Math.min(active + 1, Math.max(rows.length - 1, 0));
+                markActive();
+            } else if (e.key === 'ArrowUp') {
+                if (suggest.hidden) return;
+                e.preventDefault();
+                active = Math.max(active - 1, 0);
+                markActive();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!suggest.hidden && active >= 0 && rows[active] && !hasId(rows[active].id)) {
+                    pick(rows[active]);
+                } else {
+                    createName(input.value);
+                }
+            } else if (e.key === 'Escape') {
+                hideSuggest();
+            }
+        });
+        input.addEventListener('blur', function () {
+            setTimeout(hideSuggest, 120);
+        });
+
+        renderChips();
+        return {
+            ids: function () { return selected.map(function (r) { return r.id; }); },
+            selected: function () { return selected.slice(); }
+        };
+    }
+
     global.AdminUi = {
         csrf: csrf,
         escape: escape,
@@ -549,6 +798,10 @@
         upload: upload,
         pickFile: pickFile,
         bindImageField: bindImageField,
+        bindPickField: bindPickField,
+        headerCount: headerCount,
+        resetQueueFields: resetQueueFields,
+        markQueueChips: markQueueChips,
         on: function (sel, ev, fn) {
             var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
             if (el) el.addEventListener(ev, fn);

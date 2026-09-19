@@ -2,7 +2,7 @@
 @section('title', admin_t('page.actors'))
 
 @section('plain')
-<div class="card card-panel actor-index">
+<div class="card card-panel actor-index list-desk">
     <div class="card-header">
         <span>演员 <em id="actor-count"></em></span>
         <button type="button" class="btn btn-sm" id="actor-add-btn">新增演员</button>
@@ -143,6 +143,8 @@
 
     var table = U.table({
         el: '#actor-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/actors/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -152,7 +154,6 @@
             return '<div class="list-empty"><p>还没有演员</p><p class="muted">人物库给前台演员页用。也可以先在影片里填主演，名字会自动建档，再回来补头像。</p><p><button type="button" class="btn btn-primary btn-sm" id="actor-empty-add">新增演员</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('actor-empty-add');
             var reset = document.getElementById('actor-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

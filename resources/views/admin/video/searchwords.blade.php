@@ -120,6 +120,8 @@
 
     var table = U.table({
         el: '#sword-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/searchwords/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -129,7 +131,6 @@
             return '<div class="list-empty"><p>还没有人搜过。</p><p class="muted">去前台搜一次就会出现在这里。也可先加一条热搜。</p><p><a class="btn btn-muted btn-sm" href="/search" target="_blank" rel="noopener">去前台搜索</a> <button type="button" class="btn btn-primary btn-sm" id="sword-empty-add">加一条</button></p></div>';
         },
         onDraw: function (wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
                 var d = list[parseInt(tr.getAttribute('data-idx'), 10)];
                 if (d && parseInt(d.hot, 10) === 1) tr.classList.add('is-hot');

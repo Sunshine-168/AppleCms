@@ -1,32 +1,30 @@
 @extends('themes.default.layout')
 
 @section('content')
-    @php
-        $currentType = $currentType ?? null;
-        $currentTag = $currentTag ?? null;
-        $typeTitle = $currentTag ? (string) $currentTag->name : ($currentType ? (string) $currentType->name : '资讯');
-    @endphp
+@php
+    $currentType = $currentType ?? null;
+    $currentTag = $currentTag ?? null;
+    $typeTitle = $currentTag ? (string) $currentTag->name : ($currentType ? (string) $currentType->name : '资讯');
+    $artTypes = $artTypes ?? collect();
+    $typeId = (int) ($typeId ?? 0);
+@endphp
     @vodBreadcrumb(['last' => $typeTitle])
-    <h1>{{ $typeTitle }}</h1>
-    @if($currentType && trim((string) ($currentType->pic ?? '')) !== '')
-        <p class="art-cover"><img src="{{ $currentType->pic }}" alt=""></p>
-    @endif
-    @if($currentTag)
-        <p class="muted">标签 · {{ $currentTag->name }}</p>
-    @endif
-    <form class="search" method="get" action="{{ vod_url('arts') }}">
-        @if(!empty($typeId))
-            <input type="hidden" name="type_id" value="{{ (int) $typeId }}">
+
+    <div class="list-head">
+        <h1>{{ $typeTitle }}</h1>
+        <p class="muted">影讯、剧评与行业观察，了解片单背后的故事。</p>
+    </div>
+
+    <form class="search list-search" method="get" action="{{ vod_url('arts') }}">
+        @if($typeId > 0)
+            <input type="hidden" name="type_id" value="{{ $typeId }}">
         @endif
-        <input type="search" name="wd" value="{{ request('wd') }}" placeholder="搜资讯">
-        <button type="submit">搜索</button>
+        <input type="search" name="wd" value="{{ request('wd') }}" placeholder="搜标题 / 摘要 / 标签" aria-label="搜资讯">
+        <button type="submit" class="btn-ghost">搜索</button>
     </form>
-    @php
-        $artTypes = $artTypes ?? collect();
-        $typeId = (int) ($typeId ?? 0);
-    @endphp
+
     @if($artTypes->isNotEmpty())
-        <nav class="art-nav">
+        <nav class="art-tabs" aria-label="资讯分类">
             <a href="{{ vod_url('arts') }}" class="{{ $typeId === 0 ? 'on' : '' }}">全部</a>
             @foreach($artTypes as $type)
                 <a href="{{ $type->url }}" class="{{ $typeId === (int) $type->id ? 'on' : '' }}">{{ $type->name }}</a>
@@ -36,30 +34,52 @@
             @endforeach
         </nav>
     @endif
-    <div class="art-list">
-        @foreach($arts as $item)
-            @php
-                $excerpt = trim((string) ($item->blurb ?? ''));
-                if ($excerpt === '') {
-                    $excerpt = mb_substr(strip_tags((string) $item->content), 0, 80);
-                }
-                $when = (int) ($item->published_at ?? 0) > 0 ? (int) $item->published_at : (int) $item->created_at;
-            @endphp
-            <article class="art-card">
-                <a href="{{ $item->url }}">
-                    @if(trim((string) $item->cover) !== '')
-                        <img src="{{ $item->cover }}" alt="">
-                    @endif
-                    <div class="meta">
-                        <h3>{{ $item->title }}</h3>
-                        @if($excerpt !== '')
-                            <p class="muted">{{ $excerpt }}</p>
-                        @endif
-                        <p class="muted">{{ $when > 0 ? date('Y-m-d', $when) : '' }}</p>
-                    </div>
-                </a>
-            </article>
-        @endforeach
-    </div>
-    @vodPaginate
+
+    @if($arts->isEmpty())
+        <div class="list-empty">
+            <p>还没有资讯</p>
+            <p class="muted">后台添加文章后会出现在这里。</p>
+            <p><a class="btn-link" href="{{ url('/') }}">去逛逛</a></p>
+        </div>
+    @else
+        <div class="art-list">
+            @foreach($arts as $item)
+                @php
+                    $excerpt = trim((string) ($item->blurb ?? ''));
+                    if ($excerpt === '') {
+                        $excerpt = mb_substr(strip_tags((string) $item->content), 0, 90);
+                    }
+                    $when = (int) ($item->published_at ?? 0) > 0 ? (int) $item->published_at : (int) $item->created_at;
+                    $cover = trim((string) ($item->cover ?? ''));
+                @endphp
+                <article class="art-card">
+                    <a href="{{ $item->url }}">
+                        <div class="art-card-cover{{ $cover === '' ? ' is-empty' : '' }}">
+                            @if($cover !== '')
+                                <img src="{{ $cover }}" alt="" loading="lazy"
+                                     onerror="var p=this.parentElement;this.remove();if(p)p.classList.add('is-empty');">
+                            @endif
+                            <span class="art-card-empty">资讯</span>
+                        </div>
+                        <div class="meta">
+                            <h3>{{ $item->title }}</h3>
+                            @if($excerpt !== '')
+                                <p class="muted art-excerpt">{{ $excerpt }}</p>
+                            @endif
+                            <p class="muted art-meta-line">
+                                @if($when > 0){{ date('Y-m-d', $when) }}@endif
+                                @if(trim((string) ($item->author ?? '')) !== '')
+                                    · {{ $item->author }}
+                                @endif
+                                @if((int) ($item->hits ?? 0) > 0)
+                                    · {{ (int) $item->hits }} 阅读
+                                @endif
+                            </p>
+                        </div>
+                    </a>
+                </article>
+            @endforeach
+        </div>
+        @vodPaginate
+    @endif
 @endsection

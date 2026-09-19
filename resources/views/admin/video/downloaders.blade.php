@@ -136,6 +136,8 @@
 
     var table = U.table({
         el: '#downer-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/downloaders/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -145,7 +147,6 @@
             return '<div class="list-empty"><p>还没有下载器</p><p class="muted">点新增，填标识和模板。直链可以模板留空。播放内核请去播放器。</p><p><button type="button" class="btn btn-primary btn-sm" id="downer-empty-add">新增下载器</button> <a class="btn btn-muted btn-sm" href="/admin/video/players">去播放器</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('downer-empty-add');
             var reset = document.getElementById('downer-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

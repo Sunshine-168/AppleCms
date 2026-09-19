@@ -150,10 +150,7 @@ class FriendLinkService
         if ($url === null) {
             return Result::fail('网址只接受 http 或 https');
         }
-        $type = strtolower(trim((string) ($data['type'] ?? 'text')));
-        if (! in_array($type, ['text', 'image'], true)) {
-            $type = 'text';
-        }
+        $type = 'text';
         $now = time();
         $token = bin2hex(random_bytes(16));
         $memberId = 0;
@@ -168,7 +165,7 @@ class FriendLinkService
             'cate_id' => max(0, (int) ($data['cate_id'] ?? 0)),
             'name' => $name,
             'url' => $url,
-            'logo' => mb_substr(trim((string) ($data['logo'] ?? '')), 0, 500),
+            'logo' => '',
             'email' => mb_substr(trim((string) ($data['email'] ?? '')), 0, 120),
             'remark' => mb_substr(trim((string) ($data['remark'] ?? '')), 0, 255),
             'type' => $type,
@@ -217,15 +214,10 @@ class FriendLinkService
         if ($url === null) {
             return Result::fail('网址只接受 http 或 https');
         }
-        $type = strtolower(trim((string) ($data['type'] ?? $row->type)));
-        if (! in_array($type, ['text', 'image'], true)) {
-            $type = 'text';
-        }
         $row->name = $name;
         $row->url = $url;
-        $row->logo = mb_substr(trim((string) ($data['logo'] ?? $row->logo)), 0, 500);
         $row->email = mb_substr(trim((string) ($data['email'] ?? $row->email)), 0, 120);
-        $row->type = $type;
+        $row->type = 'text';
         if (array_key_exists('cate_id', $data)) {
             $row->cate_id = max(0, (int) $data['cate_id']);
         }

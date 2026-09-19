@@ -215,11 +215,11 @@
 
     var table = U.table({
         el: '#activity-table',
+        countEl: countEl,
         url: '/admin/video/' + module + '/list',
         where: queryWhere(),
         emptyHtml: emptyHtml,
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('activity-empty-add');
             var reset = document.getElementById('activity-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

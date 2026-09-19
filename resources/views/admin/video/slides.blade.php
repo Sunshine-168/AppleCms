@@ -139,6 +139,8 @@
 
     var table = U.table({
         el: '#slide-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/slides/list',
         where: queryWhere(),
         pager: false,
@@ -149,7 +151,6 @@
             return '<div class="list-empty"><p>还没有幻灯片</p><p class="muted">幻灯是首页轮播、播放页贴片。建好后主题用位置调用。</p><p><button type="button" class="btn btn-primary btn-sm" id="slide-empty-add">新增幻灯</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('slide-empty-add');
             var reset = document.getElementById('slide-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

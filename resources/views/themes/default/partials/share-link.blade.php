@@ -1,4 +1,4 @@
-<button type="button" id="share-link-btn" data-copy="{{ url()->current() }}" data-share="{{ url('/vod/'.$video->id.'/share') }}" data-auth="{{ auth('member')->check() ? '1' : '0' }}">复制链接</button>
+<button type="button" class="btn-ghost" id="share-link-btn" data-copy="{{ url()->current() }}" data-share="{{ url('/vod/'.$video->id.'/share') }}" data-auth="{{ auth('member')->check() ? '1' : '0' }}">复制链接</button>
 <script>
 (function () {
     var btn = document.getElementById('share-link-btn');

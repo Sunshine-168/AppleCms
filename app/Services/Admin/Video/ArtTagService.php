@@ -217,6 +217,30 @@ class ArtTagService
             ->all();
     }
 
+    /**
+     * @param  list<int>  $ids
+     * @return list<array{id:int,name:string}>
+     */
+    public function labels(array $ids): array
+    {
+        if (! $this->ready() || $ids === []) {
+            return [];
+        }
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $map = VideoArtTag::query()->whereIn('id', $ids)->pluck('name', 'id')->all();
+        $out = [];
+        foreach ($ids as $id) {
+            if (isset($map[$id])) {
+                $out[] = ['id' => $id, 'name' => (string) $map[$id]];
+            }
+        }
+
+        return $out;
+    }
+
     public function syncArt(int $artId, array $data): void
     {
         if ($artId < 1 || ! Schema::hasTable('video_arts')) {

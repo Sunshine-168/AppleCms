@@ -17,8 +17,7 @@
     $source = (string) ($art['source'] ?? '');
     $tag = (string) ($art['tag'] ?? '');
     $tagExtra = (string) ($art['tag_extra'] ?? '');
-    $tagIds = array_map('intval', is_array($art['tag_ids'] ?? null) ? $art['tag_ids'] : []);
-    $tags = is_array($tags ?? null) ? $tags : [];
+    $selectedTags = is_array($selectedTags ?? null) ? $selectedTags : [];
     $tagsReady = (bool) ($tagsReady ?? false);
     $seoTitle = (string) ($art['seo_title'] ?? '');
     $seoKey = (string) ($art['seo_key'] ?? '');
@@ -117,23 +116,15 @@
                     <label for="art-source">来源</label>
                     <input id="art-source" type="text" name="source" value="{{ $source }}" placeholder="转载出处，可空">
                     <label>标签</label>
-                    @if($tags !== [])
-                        <div class="choice-grid">
-                            @foreach($tags as $opt)
-                                <label class="inline">
-                                    <input type="checkbox" class="js-art-tag" name="tag_ids[]" value="{{ (int) $opt['id'] }}" @checked(in_array((int) $opt['id'], $tagIds, true))>
-                                    {{ $opt['name'] }}
-                                </label>
-                            @endforeach
-                        </div>
-                    @elseif(! $tagsReady)
-                        <p class="muted field-hint">标签表还没建。可先在下面填词，迁移后再进标签台归档。</p>
-                    @else
-                        <p class="muted field-hint">还没有标签。<a href="/admin/video/art-tags">去标签台添加</a>，也可以在下面直接填新词。</p>
-                    @endif
-                    <label for="art-tag-extra">新标签</label>
-                    <input id="art-tag-extra" type="text" name="tag_extra" value="{{ $tagExtra !== '' ? $tagExtra : ($tags === [] ? $tag : '') }}" placeholder="逗号分隔，没有的会新建">
-                    <p class="muted field-hint">勾选已有的，或在这里填新词。和影片标签不是同一套。</p>
+                    <div class="pick-field" id="art-tag-pick"
+                         data-ready="{{ $tagsReady ? '1' : '0' }}"
+                         data-search="/admin/video/art-tags/list"
+                         data-create="/admin/video/art-tags/save"
+                         data-browse="1"
+                         data-placeholder="搜标签名，点一下可看近期；回车可新建"
+                         data-empty="还没有标签。输入词回车即可新建，或去<a href=&quot;/admin/video/art-tags&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>标签台</a>。"
+                         data-selected='@json($selectedTags, JSON_UNESCAPED_UNICODE)'></div>
+                    <p class="muted field-hint">不铺全表。和影片标签不是同一套；几千个也只搜不铺。</p>
                 </div>
             </div>
             <details class="card card-panel entry-aside-more">
@@ -165,6 +156,7 @@
     var idInput = form.querySelector('input[name="id"]');
     var isEdit = !!String(idInput && idInput.value || '').trim();
     var coverInput = document.getElementById('art-cover');
+    var tagPick = U.bindPickField(document.getElementById('art-tag-pick'));
 
     function syncCover(url) {
         var img = document.getElementById('art-cover-img');
@@ -216,11 +208,8 @@
         });
         data.flags = flags.join(',');
         delete data['flag_list[]'];
-        var tagIds = [];
-        form.querySelectorAll('.js-art-tag:checked').forEach(function (el) {
-            tagIds.push(el.value);
-        });
-        data.tag_ids = tagIds;
+        data.tag_ids = tagPick.ids();
+        data.tag_extra = '';
         delete data['tag_ids[]'];
         if (!String(data.published_at || '').trim()) {
             data.published_at = 0;

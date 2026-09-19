@@ -147,6 +147,7 @@
 
     var table = U.table({
         el: '#ctemp-table',
+        countEl: countEl,
         url: '/admin/video/collect_temps/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -159,7 +160,6 @@
             return '<div class="list-empty"><p>还没有待审片子。</p><p class="muted">在采集源里点「当天」就会出现在这里。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
         },
         onDraw: function (wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
                 var d = list[parseInt(tr.getAttribute('data-idx'), 10)];
                 if (!d) return;

@@ -34,9 +34,13 @@ class ArtFormPageTest extends TestCase
         $this->assertStringContainsString('datetime-local', $html);
         $this->assertStringContainsString('name="author"', $html);
         $this->assertStringContainsString('name="source"', $html);
-        $this->assertStringContainsString('name="tag_extra"', $html);
-        $this->assertStringContainsString('新标签', $html);
+        $this->assertStringContainsString('art-tag-pick', $html);
+        $this->assertStringContainsString('搜标签名', $html);
+        $this->assertStringContainsString('/admin/video/art-tags/list', $html);
         $this->assertStringContainsString('/admin/video/art-tags', $html);
+        $this->assertStringNotContainsString('新标签', $html);
+        $this->assertStringNotContainsString('js-art-tag', $html);
+        $this->assertStringNotContainsString('name="tag_extra"', $html);
         $this->assertStringContainsString('js-art-flag', $html);
         $this->assertStringContainsString('置顶', $html);
         $this->assertStringContainsString('推荐', $html);

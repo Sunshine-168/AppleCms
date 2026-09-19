@@ -172,6 +172,7 @@
 
     var table = U.table({
         el: '#card-table',
+        countEl: countEl,
         url: '/admin/video/cards/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -181,7 +182,6 @@
             return '<div class="list-empty"><p>还没有卡密。</p><p class="muted">批量生成后发给会员，他们在会员中心兑换加积分。</p><p><button type="button" class="btn btn-primary btn-sm" id="card-empty-gen">批量生成</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var gen = document.getElementById('card-empty-gen');
             var reset = document.getElementById('card-empty-reset');
             if (gen) gen.addEventListener('click', openGenerate);

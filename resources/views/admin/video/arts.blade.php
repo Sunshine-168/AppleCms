@@ -215,6 +215,7 @@
 
     var table = U.table({
         el: '#art-table',
+        countEl: countEl,
         url: '/admin/video/arts/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -231,7 +232,6 @@
             return '<div class="list-empty"><p>还没有内容。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/arts/create">写文章</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('art-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },

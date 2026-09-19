@@ -52,9 +52,13 @@ class MacResourceClient
 
     private function httpGet(string $url): string
     {
-        $response = Http::timeout(30)
-            ->withHeaders(['User-Agent' => 'LaraVideo-Collector/1.0'])
-            ->get($url);
+        $verify = filter_var(env('COLLECT_VERIFY_SSL', false), FILTER_VALIDATE_BOOLEAN);
+        $request = Http::timeout(30)
+            ->withHeaders(['User-Agent' => 'LaraVideo-Collector/1.0']);
+        if (! $verify) {
+            $request = $request->withoutVerifying();
+        }
+        $response = $request->get($url);
         if (! $response->successful()) {
             return '';
         }

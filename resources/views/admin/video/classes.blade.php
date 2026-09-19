@@ -118,6 +118,8 @@
 
     var table = U.table({
         el: '#extclass-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/classes/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -127,7 +129,6 @@
             return '<div class="list-empty"><p>还没有扩展分类</p><p class="muted">点新增，填喜剧、动作这种筛选词。栏目树请去分类，不要在这里建电影、电视剧。</p><p><button type="button" class="btn btn-primary btn-sm" id="extclass-empty-add">新增类型词</button> <a class="btn btn-muted btn-sm" href="/admin/video/types">去分类</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('extclass-empty-add');
             var reset = document.getElementById('extclass-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

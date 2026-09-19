@@ -25,7 +25,13 @@ class TemplateIndexPageTest extends TestCase
         $this->assertStringContainsString('还没有打开文件', $html);
         $this->assertStringContainsString('首页', $html);
         $this->assertStringContainsString('整站头尾', $html);
-        $this->assertStringContainsString('切到「外观」', $html);
+        $this->assertStringContainsString('改当前主题的页面文件', $html);
+        $this->assertStringNotContainsString('切到「外观」', $html);
+        $desksPos = strpos($html, 'id="theme-desks"');
+        $leadPos = strpos($html, '改当前主题的页面文件');
+        $this->assertNotFalse($desksPos);
+        $this->assertNotFalse($leadPos);
+        $this->assertLessThan($leadPos, $desksPos);
         $this->assertStringContainsString('搜页面', $html);
         $this->assertStringContainsString('tpl-group', $html);
         $this->assertStringContainsString('data-fold', $html);

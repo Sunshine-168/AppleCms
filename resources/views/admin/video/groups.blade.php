@@ -130,6 +130,7 @@
 
     var table = U.table({
         el: '#group-table',
+        countEl: countEl,
         url: '/admin/video/groups/list',
         where: queryWhere(),
         pager: false,
@@ -140,7 +141,6 @@
             return '<div class="list-empty"><p>还没有会员组。</p><p class="muted">先建「普通会员」「VIP」这种档位，再把人分进去。</p><p><button type="button" class="btn btn-primary btn-sm" id="group-empty-add">新增分组</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('group-empty-add');
             var reset = document.getElementById('group-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

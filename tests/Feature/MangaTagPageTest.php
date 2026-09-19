@@ -100,7 +100,8 @@ class MangaTagPageTest extends TestCase
             ->post('/admin/video/mangas/save', [
                 'id' => $live->id,
                 'title' => '打了标签',
-                'tags' => '热血',
+                'tag_ids' => [$tagId],
+                'tag_extra' => '',
             ])
             ->assertOk()
             ->assertJsonPath('code', 0);
@@ -116,6 +117,8 @@ class MangaTagPageTest extends TestCase
         $titles = array_column($list['data']['data'] ?? [], 'title');
         $this->assertContains('打了标签', $titles);
         $this->assertNotContains('没打标签', $titles);
+        $tagged = collect($list['data']['data'] ?? [])->firstWhere('title', '打了标签');
+        $this->assertContains($tagId, array_map('intval', $tagged['tag_ids'] ?? []));
 
         $board = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/mangas?tag_id='.$tagId)
@@ -124,6 +127,22 @@ class MangaTagPageTest extends TestCase
         $this->assertStringContainsString('标签 热血', $board);
         $this->assertStringContainsString('name="tag_id"', $board);
         $this->assertStringContainsString('/admin/video/manga-tags', $board);
+        $this->assertStringContainsString('/admin/video/mangas/create', $board);
+        $this->assertStringNotContainsString('manga-work-tpl', $board);
+
+        $form = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas/'.$live->id.'/edit')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('work-tag-pick', $form);
+        $this->assertStringContainsString('搜标签名', $form);
+        $this->assertStringContainsString('data-browse="1"', $form);
+        $this->assertStringContainsString('/admin/video/manga-tags/list', $form);
+        $this->assertStringContainsString('bindPickField', $form);
+        $this->assertStringContainsString('热血', $form);
+        $this->assertStringNotContainsString('choice-grid', $form);
+        $this->assertStringNotContainsString('js-manga-tag', $form);
+        $this->assertStringNotContainsString('name="tags" placeholder="多个用逗号分隔"', $form);
     }
 
     public function test_harvest_comma_tags_and_front_filter(): void

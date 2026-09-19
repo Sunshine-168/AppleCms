@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel player-index">
+<div class="card card-panel player-index list-desk">
     <div class="card-header">
         <span>播放器 <em id="player-count"></em></span>
         <div>
@@ -160,6 +160,8 @@
 
     var table = U.table({
         el: '#player-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/players/list',
         where: queryWhere(),
         pager: false,
@@ -170,7 +172,6 @@
             return '<div class="list-empty"><p>还没有播放器</p><p class="muted">先补齐 ArtPlayer、DPlayer、Video.js 和解析接口。</p><p><button type="button" class="btn btn-primary btn-sm" id="player-empty-ensure">补齐内置</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var ensure = document.getElementById('player-empty-ensure');
             var reset = document.getElementById('player-empty-reset');
             if (ensure) ensure.addEventListener('click', ensurePlayers);

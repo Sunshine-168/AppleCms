@@ -125,6 +125,8 @@
 
     var table = U.table({
         el: '#syn-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/synonyms/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -134,7 +136,6 @@
             return '<div class="list-empty"><p>还没有同义词</p><p class="muted">点新增，把访客常搜的错名、别名换成片库里的词。不会改已经入库的片名。</p><p><button type="button" class="btn btn-primary btn-sm" id="syn-empty-add">新增规则</button> <a class="btn btn-muted btn-sm" href="/admin/video/searchwords">去搜索词</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('syn-empty-add');
             var reset = document.getElementById('syn-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

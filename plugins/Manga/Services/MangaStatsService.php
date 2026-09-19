@@ -31,6 +31,7 @@ class MangaStatsService
             'month_chapters' => $this->chapterCount($monthStart, null),
             'top_hits' => $this->topHits(10),
             'top_favors' => $this->topFavors(10),
+            'favor_total' => $this->favorTotal(),
             'daily' => $this->dailyTrend(14),
         ];
     }
@@ -47,6 +48,7 @@ class MangaStatsService
             'month_chapters' => 0,
             'top_hits' => [],
             'top_favors' => [],
+            'favor_total' => 0,
             'daily' => [],
         ];
     }
@@ -146,6 +148,15 @@ class MangaStatsService
         }
 
         return $out;
+    }
+
+    private function favorTotal(): int
+    {
+        if (! Schema::hasTable('plugin_manga_favors')) {
+            return 0;
+        }
+
+        return (int) MangaFavor::query()->count();
     }
 
     /** @return list<array{day:string,reads:int,chapters:int}> */

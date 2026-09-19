@@ -124,6 +124,7 @@
 
     var table = U.table({
         el: '#pm-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/pms/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {

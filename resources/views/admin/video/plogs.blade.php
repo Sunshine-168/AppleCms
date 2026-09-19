@@ -133,6 +133,7 @@
 
     var table = U.table({
         el: '#plog-table',
+        countEl: countEl,
         url: '/admin/video/plogs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -142,7 +143,6 @@
             return '<div class="list-empty"><p>还没有流水。</p><p class="muted">点播、充值、卡密兑换、后台调积分会出现在这里。</p><p><button type="button" class="btn btn-primary btn-sm" id="plog-empty-add">调积分</button> <a class="btn btn-muted btn-sm" href="/admin/video/members">去会员</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('plog-empty-add');
             var reset = document.getElementById('plog-empty-reset');
             if (add) add.addEventListener('click', openAdjust);

@@ -121,14 +121,14 @@ class MangaTagService
             }
             AdminOpLog::write('save', '改了漫画标签「'.$name.'」', ['id' => $id]);
 
-            return Result::success(['id' => $id]);
+            return Result::success(['id' => $id, 'name' => $name]);
         }
         $payload['created_at'] = $now;
         $row = MangaTag::query()->create($payload);
         $newId = (int) $row->id;
         AdminOpLog::write('save', '加了漫画标签「'.$name.'」', ['id' => $newId]);
 
-        return Result::success(['id' => $newId]);
+        return Result::success(['id' => $newId, 'name' => $name]);
     }
 
     public function delete(int $id): array
@@ -203,6 +203,20 @@ class MangaTagService
         return $q->where(function ($inner) use ($key) {
             $inner->where('slug', $key)->orWhere('name', $key);
         })->first();
+    }
+
+    /** @return list<int> */
+    public function idsForManga(int $mangaId): array
+    {
+        if ($mangaId < 1 || ! $this->ready()) {
+            return [];
+        }
+        $manga = Manga::query()->find($mangaId);
+        if (! $manga) {
+            return [];
+        }
+
+        return $manga->tagRels()->pluck('plugin_manga_tags.id')->map(fn ($id) => (int) $id)->all();
     }
 
     public function syncManga(int $mangaId, array $data): void

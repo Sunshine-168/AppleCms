@@ -8,7 +8,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel member-index">
+<div class="card card-panel member-index list-desk">
     <div class="card-header">
         <span>会员 <em id="member-count"></em></span>
         <div>
@@ -144,6 +144,8 @@
 
     var table = U.table({
         el: '#member-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/members/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -153,7 +155,6 @@
             return '<div class="list-empty"><p>还没有会员。</p><p class="muted">前台注册或这里添加。他们登录的是网站，不是后台。</p><p><button type="button" class="btn btn-primary btn-sm" id="member-empty-add">新建会员</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('member-empty-add');
             var reset = document.getElementById('member-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

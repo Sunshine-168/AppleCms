@@ -150,6 +150,7 @@
 
     var table = U.table({
         el: '#admin-user-table',
+        countEl: countEl,
         url: '/admin/user/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -159,7 +160,6 @@
             return '<div class="list-empty"><p>还没有管理员。</p><p class="muted">在上方填写登录名和密码即可添加。他们登录的是后台，不是网站。不能删自己，创始人不能删。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('admin-user-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },

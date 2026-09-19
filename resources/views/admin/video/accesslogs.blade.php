@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel accesslog-index">
+<div class="card card-panel accesslog-index list-desk">
     <div class="card-header">
         <span>访问风控 <em id="accesslog-count"></em></span>
         <div>
@@ -130,16 +130,16 @@
 
     var table = U.table({
         el: '#accesslog-table',
+        countEl: countEl,
         url: '/admin/video/accesslogs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="accesslog-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有前台访问</p><p class="muted">本机只开后台不会记。打开前台任意页才会出现。</p></div>';
+            return '<div class="list-empty"><p>还没有前台访问</p><p class="muted">本机只开后台不会记。打开前台任意页才会出现。</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">打开前台</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            if (countEl) countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('accesslog-empty-reset');
             if (reset) reset.addEventListener('click', function () {
                 form.reset();

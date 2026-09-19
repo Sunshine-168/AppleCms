@@ -6,11 +6,7 @@
 @if($listed->isNotEmpty() || $allowApply)
 <div class="flink">
     @foreach($listed as $item)
-        @if((string) $item->type === 'image' && trim((string) $item->logo) !== '')
-            <a href="{{ url('/links/go/'.$item->id) }}" target="_blank" rel="nofollow"><img src="{{ $item->logo }}" alt="{{ $item->name }}"></a>
-        @else
-            <a href="{{ url('/links/go/'.$item->id) }}" target="_blank" rel="nofollow">{{ $item->name }}</a>
-        @endif
+        <a href="{{ url('/links/go/'.$item->id) }}" target="_blank" rel="nofollow">{{ $item->name }}</a>
     @endforeach
     @if($allowApply)
         <a href="{{ url('/links/apply') }}">申请友链</a>

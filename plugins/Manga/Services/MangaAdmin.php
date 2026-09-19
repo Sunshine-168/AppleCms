@@ -41,6 +41,18 @@ class MangaAdmin
     {
         $rows = collect([$work]);
         $this->manga->decorateFrontRows($rows);
+        $tagIds = [];
+        try {
+            $tagIds = app(MangaTagService::class)->idsForManga((int) $work->id);
+        } catch (\Throwable) {
+            $tagIds = [];
+        }
+        $authorIds = [];
+        try {
+            $authorIds = app(MangaAuthorService::class)->idsForManga((int) $work->id);
+        } catch (\Throwable) {
+            $authorIds = [];
+        }
 
         return [
             'id' => (int) $work->id,
@@ -51,11 +63,18 @@ class MangaAdmin
             'yid' => (int) ($work->yid ?? 0),
             'serialize' => (int) ($work->serialize ?? 0),
             'serialize_label' => $work->serializeLabel(),
+            'type_id' => (int) ($work->type_id ?? 0),
+            'tags' => (string) ($work->tags ?? ''),
+            'tag_ids' => $tagIds,
+            'author_ids' => $authorIds,
+            'recommend' => (int) ($work->recommend ?? 0),
+            'remarks' => (string) ($work->remarks ?? ''),
+            'content' => (string) ($work->content ?? ''),
+            'hits' => (int) ($work->hits ?? 0),
+            'sort' => (int) ($work->sort ?? 0),
             'chapter_count' => (int) ($work->chapter_count ?? 0),
             'latest_chapter' => $work->latest_chapter ?? null,
             'front_url' => url('/manga/'.$work->id),
-            'hits' => (int) ($work->hits ?? 0),
-            'remarks' => (string) ($work->remarks ?? ''),
         ];
     }
 }

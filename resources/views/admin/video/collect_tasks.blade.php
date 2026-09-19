@@ -147,6 +147,7 @@
 
     var table = U.table({
         el: '#ctask-table',
+        countEl: countEl,
         url: '/admin/video/collect_tasks/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -156,7 +157,6 @@
             return '<div class="list-empty"><p>还没有定时采集。</p><p class="muted">先有采集源，再设到点自动采当天更新。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/collect_tasks/create">新增定时采集</a></p></div>';
         },
         onDraw: function (wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var dueBtn = document.getElementById('ctask-due-btn');
             if (dueBtn) dueBtn.hidden = !list.length;
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {

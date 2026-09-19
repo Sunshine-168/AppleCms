@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel playfail-index">
+<div class="card card-panel playfail-index list-desk">
     <div class="card-header">
         <span>播放失败@if($q('open') > 0) <em>· {{ $q('open') }} 未处理</em>@endif</span>
         <div>
@@ -124,13 +124,14 @@
 
     var table = U.table({
         el: '#fail-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/playfails/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的播放失败</p><p><button type="button" class="btn btn-muted btn-sm" id="fail-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有播放失败</p><p class="muted">访客在播放页点「播放报错」后会出现在这里。确认线路坏了可以下线；删掉只去掉记录。</p></div>';
+            return '<div class="list-empty"><p>还没有播放失败</p><p class="muted">访客在播放页点「播放报错」后会出现在这里。确认线路坏了可以下线；删掉只去掉记录。</p><p><a class="btn btn-muted btn-sm" href="/admin/video/players">去播放器</a></p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('fail-empty-reset');

@@ -140,6 +140,8 @@
 
     var table = U.table({
         el: '#domain-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/domains/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -149,7 +151,6 @@
             return '<div class="list-empty"><p>还没有绑定域名</p><p class="muted">点新增绑定，填访问域名。同一套片库，只换站名和模板。没绑的走站点设置。</p><p><button type="button" class="btn btn-primary btn-sm" id="domain-empty-add">新增绑定</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('domain-empty-add');
             var reset = document.getElementById('domain-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

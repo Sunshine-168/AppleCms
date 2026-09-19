@@ -4,31 +4,27 @@
     $needLogin = (int) $settings->get('chatroom_login', '0') === 1;
     $loggedIn = \Illuminate\Support\Facades\Auth::guard('member')->check();
     $videoId = (int) ($video->id ?? 0);
+    $nick = $loggedIn ? (string) (\Illuminate\Support\Facades\Auth::guard('member')->user()->name ?? '会员') : '游客';
 @endphp
 @if($chatOn && $videoId > 0)
 <div class="play-chat" id="play-chat" data-id="{{ $videoId }}" data-login="{{ $loggedIn ? '1' : '0' }}">
-    <h2>本片讨论</h2>
-    <div class="play-chat-list" id="play-chat-list"></div>
+    <div class="play-chat-head">
+        <h2>本片讨论</h2>
+        <span class="muted play-chat-hint">边看边聊，文明发言</span>
+    </div>
+    <div class="play-chat-list" id="play-chat-list">
+        <p class="play-chat-empty muted" id="play-chat-empty">还没有人发言，来抢沙发</p>
+    </div>
     @if($needLogin && ! $loggedIn)
-        <p class="muted">请<a href="{{ url('/member/login') }}">登录</a>后再发言</p>
+        <p class="play-chat-login muted">请<a href="{{ url('/member/login') }}">登录</a>后再发言</p>
     @else
-        <form id="play-chat-form" autocomplete="off">
-            <input id="play-chat-text" maxlength="500" placeholder="说两句，回车发送">
-            <button type="submit">发送</button>
+        <form class="play-chat-form" id="play-chat-form" autocomplete="off">
+            <span class="play-chat-who muted" title="{{ $nick }}">{{ $nick }}</span>
+            <input id="play-chat-text" maxlength="500" placeholder="说两句，回车发送" aria-label="讨论内容">
+            <button type="submit" class="btn-play btn-sm">发送</button>
         </form>
     @endif
 </div>
-<style>
-.play-chat { margin: 20px 0; padding: 14px 16px; background: var(--card); border-radius: 8px; }
-.play-chat h2 { margin: 0 0 10px; }
-.play-chat-list { max-height: 240px; overflow: auto; margin-bottom: 10px; }
-.play-chat-row { padding: 6px 0; border-bottom: 1px solid #222; font-size: 14px; display: flex; gap: 8px; align-items: flex-start; }
-.play-chat-row b { color: var(--muted); font-weight: 600; flex: none; }
-.play-chat-row span { flex: 1; }
-.play-chat-row .chat-report { flex: none; font-size: 12px; color: var(--muted); }
-.play-chat form { display: flex; gap: 8px; }
-.play-chat input { flex: 1; }
-</style>
 <script>
 (function () {
     var box = document.getElementById('play-chat');
@@ -36,6 +32,7 @@
     var id = box.getAttribute('data-id');
     var canReport = box.getAttribute('data-login') === '1';
     var listEl = document.getElementById('play-chat-list');
+    var emptyEl = document.getElementById('play-chat-empty');
     var form = document.getElementById('play-chat-form');
     var input = document.getElementById('play-chat-text');
     var csrf = document.querySelector('meta[name="csrf-token"]');
@@ -44,7 +41,11 @@
     var seen = {};
     function toast(msg, kind) {
         if (window.vodToast) window.vodToast(msg, kind || 'err');
-        else alert(msg);
+    }
+    function syncEmpty() {
+        if (!emptyEl) return;
+        var has = listEl.querySelector('.play-chat-row');
+        emptyEl.hidden = !!has;
     }
     function row(d) {
         var el = document.createElement('div');
@@ -77,7 +78,7 @@
     }
     function append(rows, replace) {
         if (replace) {
-            listEl.innerHTML = '';
+            listEl.querySelectorAll('.play-chat-row').forEach(function (n) { n.remove(); });
             seen = {};
         }
         (rows || []).forEach(function (d) {
@@ -87,6 +88,7 @@
             if (rid > lastId) lastId = rid;
             listEl.appendChild(row(d));
         });
+        syncEmpty();
         if (rows && rows.length) listEl.scrollTop = listEl.scrollHeight;
     }
     function load(initial) {
@@ -105,7 +107,12 @@
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var text = (input.value || '').trim();
-            if (!text) return;
+            if (!text) {
+                toast('先写点内容再发送');
+                return;
+            }
+            var btn = form.querySelector('button[type=submit]');
+            if (btn) btn.disabled = true;
             fetch(@json(url('/chatroom')) + '/' + id, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
@@ -118,7 +125,8 @@
                 }
                 input.value = '';
                 append([res.data || { name: '我', text: text }], false);
-            }).catch(function () { toast('发送失败'); });
+            }).catch(function () { toast('发送失败'); })
+            .finally(function () { if (btn) btn.disabled = false; });
         });
     }
     load(true);

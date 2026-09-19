@@ -10,12 +10,18 @@
         $typeId = (int) ($typeId ?? 0);
     @endphp
     @vodBreadcrumb(['last' => $typeTitle])
-    <h1>{{ $typeTitle }}</h1>
+
+    <div class="list-head">
+        <h1>{{ $typeTitle }}</h1>
+        <p class="muted">浏览下级栏目，或直接看最新文章。</p>
+    </div>
+
     @if($currentType && trim((string) ($currentType->pic ?? '')) !== '')
         <p class="art-cover"><img src="{{ $currentType->pic }}" alt=""></p>
     @endif
+
     @if($artTypes->isNotEmpty())
-        <nav class="art-nav">
+        <nav class="art-tabs" aria-label="资讯分类">
             <a href="{{ vod_url('arts') }}" class="{{ $typeId === 0 ? 'on' : '' }}">全部</a>
             @foreach($artTypes as $type)
                 <a href="{{ $type->url }}" class="{{ $typeId === (int) $type->id ? 'on' : '' }}">{{ $type->name }}</a>
@@ -25,6 +31,7 @@
             @endforeach
         </nav>
     @endif
+
     @if($children->isNotEmpty())
         <div class="art-hub">
             @foreach($children as $child)
@@ -37,21 +44,29 @@
             @endforeach
         </div>
     @else
-        <p class="muted">还没有下级栏目。</p>
-    @endif
-    @if($arts && count($arts))
-        <h2>最新</h2>
-        <div class="art-list">
-            @foreach($arts as $item)
-                <article class="art-card">
-                    <a href="{{ $item->url }}">
-                        <div class="meta">
-                            <h3>{{ $item->title }}</h3>
-                        </div>
-                    </a>
-                </article>
-            @endforeach
+        <div class="list-empty" style="margin:12px 0 20px">
+            <p>还没有下级栏目</p>
         </div>
-        @vodPaginate
+    @endif
+
+    @if($arts && count($arts))
+        <section class="home-sec">
+            <div class="sec-head"><h2>最新</h2></div>
+            <div class="art-list">
+                @foreach($arts as $item)
+                    <article class="art-card">
+                        <a href="{{ $item->url }}">
+                            @if(trim((string) ($item->cover ?? '')) !== '')
+                                <img src="{{ $item->cover }}" alt="" loading="lazy">
+                            @endif
+                            <div class="meta">
+                                <h3>{{ $item->title }}</h3>
+                            </div>
+                        </a>
+                    </article>
+                @endforeach
+            </div>
+            @vodPaginate
+        </section>
     @endif
 @endsection

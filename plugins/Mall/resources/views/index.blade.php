@@ -9,70 +9,63 @@
         'goods' => '实物周边',
     ];
 @endphp
-<div class="mall-head">
-    <div>
-        <h1>积分商城</h1>
-        <p class="muted">用观影积分兑换会员时长、卡密礼包或周边。没有在线支付。</p>
+
+<div class="mall-page">
+    <div class="mall-head">
+        <div>
+            <h1>积分商城</h1>
+            <p class="muted">用观影积分兑换会员时长、卡密礼包或周边。没有在线支付。</p>
+        </div>
+        <div class="mall-balance">
+            @auth('member')
+                <div class="mall-balance-label">我的积分</div>
+                <strong>{{ (int) ($points ?? 0) }}</strong>
+                <a href="{{ url('/mall/orders') }}">我的兑换</a>
+            @else
+                <div class="mall-balance-label">积分兑换</div>
+                <a class="btn-play btn-sm" href="{{ url('/member/login') }}">登录查看</a>
+            @endauth
+        </div>
     </div>
-    <div class="mall-balance">
-        @auth('member')
-            <div>我的积分 <strong>{{ (int) ($points ?? 0) }}</strong></div>
-            <a href="{{ url('/mall/orders') }}">我的兑换</a>
+
+    <div class="mall-tabs" role="tablist">
+        @foreach($tabs as $key => $label)
+            <a href="{{ $key === '' ? url('/mall') : url('/mall?type='.$key) }}" class="mall-tab{{ $filterType === $key ? ' on' : '' }}">{{ $label }}</a>
+        @endforeach
+    </div>
+
+    @if(!empty($hot) && $filterType === '')
+        <section class="home-sec">
+            <div class="sec-head"><h2>大家都在换</h2></div>
+            <div class="grid mall-grid">
+                @foreach($hot as $row)
+                    @include('mall::partials.card', ['row' => $row, 'forceHot' => true])
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <section class="home-sec">
+        <div class="sec-head">
+            <h2>{{ $filterType === '' ? '全部商品' : ($tabs[$filterType] ?? '商品') }}</h2>
+            @if(! $list->isEmpty())
+                <span class="muted">{{ $list->total() }} 件</span>
+            @endif
+        </div>
+
+        @if($list->isEmpty())
+            <div class="list-empty">
+                <p>还没有上架商品</p>
+                <p class="muted">后台「积分商城」添加商品后会出现在这里。</p>
+            </div>
         @else
-            <a href="{{ url('/member/login') }}">登录查看积分</a>
-        @endauth
-    </div>
+            <div class="grid mall-grid">
+                @foreach($list as $row)
+                    @include('mall::partials.card', ['row' => $row])
+                @endforeach
+            </div>
+            <div class="pager">{{ $list->withQueryString()->links() }}</div>
+        @endif
+    </section>
 </div>
-
-<div class="filter-row mall-tabs">
-    @foreach($tabs as $key => $label)
-        <a href="{{ $key === '' ? url('/mall') : url('/mall?type='.$key) }}" class="{{ $filterType === $key ? 'active' : '' }}">{{ $label }}</a>
-    @endforeach
-</div>
-
-@if(!empty($hot) && $filterType === '')
-    <h2 class="mall-sec">大家都在换</h2>
-    <div class="grid mall-grid">
-        @foreach($hot as $row)
-            <a class="card" href="{{ url('/mall/'.$row->id) }}">
-                @if($row->cover)
-                    <img src="{{ $row->cover }}" alt="{{ $row->name }}">
-                @endif
-                <div class="meta">
-                    <h3>{{ $row->name }}</h3>
-                    <div class="muted">
-                        <span class="mall-tag">热门</span>
-                        {{ \Plugins\Mall\Services\MallService::typeLabel($row->type ?? '') }}
-                        · {{ (int) $row->points }} 积分
-                    </div>
-                </div>
-            </a>
-        @endforeach
-    </div>
-@endif
-
-<h2 class="mall-sec">{{ $filterType === '' ? '全部商品' : ($tabs[$filterType] ?? '商品') }}</h2>
-@if($list->isEmpty())
-    <p class="muted">还没有上架商品。</p>
-@else
-    <div class="grid mall-grid">
-        @foreach($list as $row)
-            <a class="card" href="{{ url('/mall/'.$row->id) }}">
-                @if($row->cover)
-                    <img src="{{ $row->cover }}" alt="{{ $row->name }}">
-                @endif
-                <div class="meta">
-                    <h3>{{ $row->name }}</h3>
-                    <div class="muted">
-                        @if((int) ($row->is_hot ?? 0) === 1)<span class="mall-tag">热门</span>@endif
-                        {{ \Plugins\Mall\Services\MallService::typeLabel($row->type ?? '') }}
-                        · {{ (int) $row->points }} 积分
-                        · 剩 {{ (int) $row->stock }}
-                    </div>
-                </div>
-            </a>
-        @endforeach
-    </div>
-    <div class="pager">{{ $list->withQueryString()->links() }}</div>
-@endif
 @endsection

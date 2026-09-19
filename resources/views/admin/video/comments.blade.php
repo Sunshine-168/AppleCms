@@ -28,9 +28,9 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel comment-index">
+<div class="card card-panel comment-index list-desk">
     <div class="card-header">
-        <span>评论</span>
+        <span>评论 <em id="comment-count"></em></span>
         <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">审核设置</a>
     </div>
     <div class="card-body">
@@ -163,13 +163,15 @@
 
     var table = U.table({
         el: '#comment-table',
+        countEl: document.getElementById('comment-count'),
+        queueKeys: QUEUE_KEYS,
         url: API.list,
         where: cleanWhere(U.formData(form)),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的评论</p><p><button type="button" class="btn btn-muted btn-sm" id="comment-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有评论</p><p class="muted">' + U.escape(EMPTY_HINT) + '</p></div>';
+            return '<div class="list-empty"><p>还没有评论</p><p class="muted">' + U.escape(EMPTY_HINT) + '</p><p><a class="btn btn-muted btn-sm" href="' + (SCOPE === 'art' ? '/admin/video/arts' : '/admin/video') + '">去' + (SCOPE === 'art' ? '文章' : '影片') + '列表</a></p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('comment-empty-reset');

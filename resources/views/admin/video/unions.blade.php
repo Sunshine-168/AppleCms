@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel union-index">
+<div class="card card-panel union-index list-desk">
     <div class="card-header">
         <span>推荐资源 <em id="union-count"></em></span>
         <div>
@@ -106,6 +106,8 @@
 
     var table = U.table({
         el: '#union-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/unions/list',
         where: queryWhere(),
         pager: false,
@@ -116,7 +118,6 @@
             return '<div class="list-empty"><p>还没有收藏的资源站</p><p class="muted">把别人给的苹果接口先记在这里。也可以先去探测，通了再收藏。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/unions/create">新增资源</a> <a class="btn btn-muted btn-sm" href="/admin/video/tools/hub">试试接口</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('union-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },

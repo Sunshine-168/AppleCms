@@ -22,8 +22,8 @@
 </head>
 <body>
 @includeIf('advert::top')
-<header class="site">
-    <div class="wrap">
+<header class="site" id="site-header">
+    <div class="wrap header-inner">
         <a class="logo" href="{{ vod_url('home') }}">
             @if(!empty($site['theme_logo']))
                 <img src="{{ $site['theme_logo'] }}" alt="{{ $site['title'] ?? config('app.name') }}">
@@ -31,14 +31,25 @@
                 {{ $site['title'] ?? config('app.name') }}
             @endif
         </a>
-        <nav class="main">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="打开菜单">
+            <span class="nav-toggle-bars" aria-hidden="true"></span>
+        </button>
+        <nav class="main" id="site-nav" aria-label="主导航">
             @includeIf('manga::nav')
             @vodType(['type' => 'top'])
-                <a href="{{ $item->url }}">{{ $item->name }}</a>
+                @php
+                    $navTypeIds = method_exists($item, 'descendantIds') ? $item->descendantIds() : [(int) $item->id];
+                    $navHasVod = \App\Models\Video\VideoModel::query()
+                        ->published()
+                        ->where(function ($q) use ($navTypeIds) {
+                            $q->whereIn('type_id', $navTypeIds)->orWhereIn('type_pid', $navTypeIds);
+                        })
+                        ->exists();
+                @endphp
+                @if($navHasVod)
+                    <a href="{{ $item->url }}">{{ $item->name }}</a>
+                @endif
             @endvodType
-            @vodTopic(['num' => 6])
-                <a href="{{ $item->url }}">{{ $item->name }}</a>
-            @endvodTopic
             @if((string) ($site['theme_nav_latest'] ?? '1') === '1')
                 <a href="{{ vod_url('latest') }}">最新</a>
             @endif
@@ -73,23 +84,27 @@
             @endvodAd
             @endunless
         </nav>
-        @if(request()->is('manga*'))
-        <form class="search" action="{{ url('/manga') }}" method="get">
-            <input type="search" name="wd" value="{{ request('wd') }}" placeholder="搜漫画">
-        </form>
-        @else
-        <form class="search" action="{{ vod_url('search') }}" method="get">
-            <input type="search" name="wd" value="{{ request('wd', request('q')) }}" placeholder="搜影片">
-        </form>
-        @endif
-        <nav class="main">
-            @auth('member')
-                <a href="{{ url('/member') }}">{{ auth('member')->user()->name }}</a>
+        <div class="header-tools">
+            @if(request()->is('manga*'))
+            <form class="search" action="{{ url('/manga') }}" method="get">
+                <input type="search" name="wd" value="{{ request('wd') }}" placeholder="搜漫画" aria-label="搜漫画">
+                <button type="submit" aria-label="搜索">搜索</button>
+            </form>
             @else
-                <a href="{{ url('/member/login') }}">登录</a>
-                <a href="{{ url('/member/register') }}">注册</a>
-            @endauth
-        </nav>
+            <form class="search" action="{{ vod_url('search') }}" method="get">
+                <input type="search" name="wd" value="{{ request('wd', request('q')) }}" placeholder="搜影片" aria-label="搜影片">
+                <button type="submit" aria-label="搜索">搜索</button>
+            </form>
+            @endif
+            <nav class="user-nav" aria-label="用户">
+                @auth('member')
+                    <a class="btn-user" href="{{ url('/member') }}">{{ auth('member')->user()->name }}</a>
+                @else
+                    <a href="{{ url('/member/login') }}">登录</a>
+                    <a class="btn-reg" href="{{ url('/member/register') }}">注册</a>
+                @endauth
+            </nav>
+        </div>
     </div>
 </header>
 <main class="wrap page">
@@ -106,23 +121,32 @@
     @yield('content')
 </main>
 <footer class="site">
-    <div class="wrap">
+    <div class="wrap foot-inner">
         @if(!empty($site['theme_logo_foot']))
             <div class="foot-logo"><img src="{{ $site['theme_logo_foot'] }}" alt="{{ $site['title'] ?? config('app.name') }}"></div>
         @endif
         @if(\Illuminate\Support\Facades\View::exists('friendlink::footer'))
             @include('friendlink::footer')
         @else
+        <div class="flink">
         @vodLink
             <a href="{{ $item->url }}" target="_blank" rel="nofollow">{{ $item->name }}</a>
         @endvodLink
+        </div>
         @endif
         @unless(View::exists('advert::bottom'))
         @vodAd(['slot' => 'footer'])
             {!! $item->content !!}
         @endvodAd
         @endunless
-        <div>{{ $site['title'] ?? config('app.name') }} · LaraVideo · <a href="{{ url('/gbook') }}">留言</a></div>
+        <div class="foot-meta">
+            <span>{{ $site['title'] ?? config('app.name') }} · LaraVideo</span>
+            <span class="foot-links">
+                <a href="{{ url('/gbook') }}">留言</a>
+                <a href="{{ url('/links/apply') }}">友链申请</a>
+                <a href="{{ url('/member') }}">会员</a>
+            </span>
+        </div>
         @if(!empty($site['theme_foot_code']))
             <div class="foot-code">{!! $site['theme_foot_code'] !!}</div>
         @endif
@@ -132,6 +156,7 @@
 @if(!empty($site['analytics_code']))
 {!! $site['analytics_code'] !!}
 @endif
+<button type="button" class="site-gotop" id="site-gotop" aria-label="回到顶部" hidden>↑</button>
 <script>
 window.vodToast = function (text, type) {
     var old = document.querySelector('.vod-toast');
@@ -149,6 +174,30 @@ window.vodResult = function (res, fallback) {
     window.vodToast(msg, ok ? 'ok' : 'err');
     return ok;
 };
+(function () {
+    var header = document.getElementById('site-header');
+    var btn = document.getElementById('nav-toggle');
+    if (header && btn) {
+        btn.addEventListener('click', function () {
+            var open = header.classList.toggle('is-nav-open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+        });
+    }
+    var topBtn = document.getElementById('site-gotop');
+    if (topBtn) {
+        var sync = function () {
+            var show = window.scrollY > 480;
+            topBtn.hidden = !show;
+            topBtn.classList.toggle('is-on', show);
+        };
+        window.addEventListener('scroll', sync, { passive: true });
+        sync();
+        topBtn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+})();
 </script>
 @stack('scripts')
 </body>

@@ -108,7 +108,7 @@ class SysDatabaseDictCatalog
             'plugin_manga_types' => ['group' => 'plugin', 'label' => '漫画分类', 'hint' => '漫画插件自己的分类，不是影片分类。', 'url' => '/admin/plugins'],
             'plugin_manga_pics' => ['group' => 'plugin', 'label' => '漫画图片', 'hint' => '章节里每一张图一行。属于漫画插件。', 'url' => '/admin/plugins'],
             'plugin_manga_comments' => ['group' => 'plugin', 'label' => '漫画评论', 'hint' => '漫画详情页发来的评论。属于漫画插件，不是影片评论。', 'url' => '/admin/plugins'],
-            'plugin_manga_favors' => ['group' => 'plugin', 'label' => '漫画书架', 'hint' => '会员收藏的漫画。属于漫画插件，不是影片收藏。', 'url' => '/admin/plugins'],
+            'plugin_manga_favors' => ['group' => 'plugin', 'label' => '漫画书架', 'hint' => '会员收藏的漫画。属于漫画插件，不是影片收藏。', 'url' => '/admin/video/mangas?desk=favors'],
             'plugin_mall_goods' => ['group' => 'plugin', 'label' => '积分商品', 'hint' => '商城插件。积分兑换，不接微信支付宝。', 'url' => '/admin/plugins'],
             'plugin_mall_orders' => ['group' => 'plugin', 'label' => '兑换订单', 'hint' => '谁用积分换了哪个商品。属于商城插件。', 'url' => '/admin/plugins'],
             'plugin_friend_links' => ['group' => 'plugin', 'label' => '友情链接', 'hint' => '友链插件。普通按排序，强化按来路；申请先待审。关掉插件后台入口会消失，表还在。', 'url' => '/admin/plugins'],

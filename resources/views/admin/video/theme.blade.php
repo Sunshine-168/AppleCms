@@ -38,16 +38,18 @@
 
 @section('plain')
 <div class="card card-panel desk-board" id="theme-index">
-    <div class="card-header"><span>模板</span></div>
-    <div class="card-body">
-        <p class="muted recycle-lead">改当前主题会用到的 Logo、导航和页头代码。页面文件切到「文件」。广告位、标签向导仍是独立入口。</p>
-        <div class="theme-look-nav">
+    <div class="card-header">
+        <span>模板</span>
+        <div>
             @include('admin.video.partials.theme-desks', ['desk' => 'look'])
-            <div class="tabs settings-tabs" id="themeTabs">
-                @foreach($tabs as $key => $label)
-                    <button type="button" class="{{ $tab === $key ? 'active' : '' }}" data-tab="{{ $key }}">{{ $label }}</button>
-                @endforeach
-            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="muted recycle-lead">改 Logo、导航和页头代码。广告位、标签向导仍是独立入口。</p>
+        <div class="tabs settings-tabs" id="themeTabs">
+            @foreach($tabs as $key => $label)
+                <button type="button" class="{{ $tab === $key ? 'active' : '' }}" data-tab="{{ $key }}">{{ $label }}</button>
+            @endforeach
         </div>
         <form class="settings-page" id="theme-form">
             <input type="hidden" name="tab" value="theme">

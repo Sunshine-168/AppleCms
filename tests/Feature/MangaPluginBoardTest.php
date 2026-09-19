@@ -36,14 +36,24 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('/admin/video/mangas?desk=stats', $html);
         $this->assertStringContainsString('/admin/video/config/manga', $html);
         $this->assertStringContainsString('/admin/video/manga-tags', $html);
+        $this->assertStringContainsString('/admin/video/mangas?desk=chapters', $html);
+        $this->assertStringContainsString('/admin/video/mangas?desk=pics', $html);
+        $this->assertStringContainsString('/admin/video/mangas?desk=favors', $html);
         $this->assertStringNotContainsString('nav-fold-nested', $html);
         $this->assertStringContainsString('/admin/video/mangas?desk=pending', $html);
         $this->assertStringContainsString("title: '名称'", $html);
         $this->assertStringContainsString('manga-batch', $html);
         $this->assertStringContainsString("{check: true, width: 36}", $html);
         $this->assertStringContainsString("/admin/video/' + module + '/list'", $html);
-        $this->assertStringContainsString("/admin/video/' + saveModule + '/save'", $html);
+        $this->assertStringContainsString("/admin/video/mangas/save", $html);
+        $this->assertStringContainsString('parsed.total', $html);
         $this->assertStringContainsString('desk=work&manga_id=', $html);
+        $this->assertStringContainsString('/admin/video/mangas/create', $html);
+        $this->assertStringContainsString('完整表单', $html);
+        $this->assertStringContainsString('manga-work-compose', $html);
+        $this->assertStringNotContainsString('manga-work-tpl', $html);
+        $this->assertStringNotContainsString('U.dialog', $html);
+        $this->assertStringNotContainsString('openDialog', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('placeholder="host"', $html);
@@ -319,6 +329,18 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('manga-batch-on', $commentsDesk);
         $this->assertStringContainsString('通过', $commentsDesk);
         $this->assertStringContainsString('隐藏', $commentsDesk);
+        $this->assertStringContainsString('manga-comment-queues', $commentsDesk);
+        $this->assertStringContainsString('待审', $commentsDesk);
+        $this->assertStringContainsString('已通过', $commentsDesk);
+        $this->assertStringContainsString('前台', $commentsDesk);
+
+        $filtered = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/mangas?serialize=1&recommend=1&q='.rawurlencode('人气筛选'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('value="人气筛选"', $filtered);
+        $this->assertMatchesRegularExpression('/name="serialize"[\s\S]*?<option value="1"[^>]*selected/u', $filtered);
+        $this->assertMatchesRegularExpression('/name="recommend"[\s\S]*?<option value="1"[^>]*selected/u', $filtered);
     }
 
     public function test_delete_cascades_and_work_filter_banner(): void
@@ -343,7 +365,10 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('级联本', $html);
         $this->assertStringContainsString('/manga/'.$id, $html);
         $this->assertStringContainsString('作品工作台', $html);
-        $this->assertStringContainsString('<select name="manga_id"', $html);
+        $this->assertStringContainsString('manga-chapter-compose', $html);
+        $this->assertStringContainsString('name="manga_id"', $html);
+        $this->assertStringContainsString('完整表单', $html);
+        $this->assertStringNotContainsString('U.dialog', $html);
 
         $work = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/mangas?desk=work&manga_id='.$id)
@@ -353,6 +378,12 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('级联本', $work);
         $this->assertStringContainsString('新增章节', $work);
         $this->assertStringContainsString('manga_chapters', $work);
+        $this->assertStringContainsString('/admin/video/mangas/'.$id.'/edit', $work);
+        $this->assertStringContainsString('manga-chapter-compose', $work);
+        $this->assertStringContainsString('/admin/video/manga-chapters/create', $work);
+        $this->assertStringContainsString('完整表单', $work);
+        $this->assertStringNotContainsString('U.dialog', $work);
+        $this->assertStringNotContainsString('manga-edit-work', $work);
 
         $stats = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/mangas?desk=stats')
@@ -362,7 +393,11 @@ class MangaPluginBoardTest extends TestCase
         $this->assertStringContainsString('今日阅读', $stats);
         $this->assertStringContainsString('近 14 日趋势', $stats);
         $this->assertStringContainsString('人气 TOP', $stats);
+        $this->assertStringContainsString('manga-stats-split', $stats);
+        $this->assertStringContainsString('manga-stats-grid', $stats);
         $this->assertStringContainsString('stat-grid', $stats);
+        $this->assertStringContainsString('打开书架台', $stats);
+        $this->assertStringNotContainsString('阅读次数来自会员阅读历史', $stats);
 
         $del = $svc->delete('mangas', $id);
         $this->assertSame(0, $del['code'] ?? 1, $del['msg'] ?? '');

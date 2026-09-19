@@ -8,6 +8,7 @@ use App\Support\Utils\Result;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Plugins\Manga\Models\Manga;
 use Plugins\Manga\Models\MangaChapter;
@@ -16,6 +17,8 @@ use Plugins\Manga\Models\MangaFavor;
 use Plugins\Manga\Models\MangaHistory;
 use Plugins\Manga\Models\MangaPic;
 use Plugins\Manga\Models\MangaType;
+use Plugins\Manga\Services\MangaAuthorService;
+use Plugins\Manga\Services\MangaTagService;
 
 class MangaService
 {
@@ -43,6 +46,32 @@ class MangaService
             $q->where('serialize', 1)->orderByDesc('hits')->orderByDesc('id');
         } elseif ($board === 'new') {
             $q->orderByDesc('id');
+        } elseif ($board === 'favor') {
+            if (! Schema::hasTable('plugin_manga_favors')) {
+                return collect();
+            }
+            $ids = MangaFavor::query()
+                ->select('manga_id', DB::raw('COUNT(*) as c'))
+                ->groupBy('manga_id')
+                ->orderByDesc('c')
+                ->limit($limit)
+                ->pluck('manga_id')
+                ->map(static fn ($id) => (int) $id)
+                ->all();
+            if ($ids === []) {
+                return collect();
+            }
+            $rows = Manga::query()->published()->whereIn('id', $ids)->get()->keyBy('id');
+            $ordered = collect();
+            foreach ($ids as $id) {
+                $row = $rows->get($id);
+                if ($row) {
+                    $ordered->push($row);
+                }
+            }
+            $this->decorateFrontRows($ordered);
+
+            return $ordered;
         } else {
             $q->orderByDesc('hits')->orderByDesc('id');
         }
@@ -52,7 +81,7 @@ class MangaService
         return $rows;
     }
 
-    /** @return array{recommend: Collection<int, Manga>, hot: Collection<int, Manga>, newest: Collection<int, Manga>} */
+    /** @return array{recommend: Collection<int, Manga>, hot: Collection<int, Manga>, favor: Collection<int, Manga>, newest: Collection<int, Manga>} */
     public function indexBlocks(int $limit = 6): array
     {
         $recommend = collect();
@@ -61,10 +90,11 @@ class MangaService
                 ->orderByDesc('sort')->orderByDesc('id')->limit($limit)->get();
         }
         $hot = Manga::query()->published()->orderByDesc('hits')->orderByDesc('id')->limit($limit)->get();
+        $favor = $this->rank('favor', $limit);
         $newest = Manga::query()->published()->orderByDesc('updated_at')->orderByDesc('id')->limit($limit)->get();
-        $this->decorateFrontRows($recommend->concat($hot)->concat($newest)->unique('id')->values());
+        $this->decorateFrontRows($recommend->concat($hot)->concat($favor)->concat($newest)->unique('id')->values());
 
-        return compact('recommend', 'hot', 'newest');
+        return compact('recommend', 'hot', 'favor', 'newest');
     }
 
     /** @return Collection<int, Manga> */
@@ -176,11 +206,19 @@ class MangaService
     /** @return Collection<int, Manga> */
     public function related(Manga $manga, int $limit = 6): Collection
     {
+        $sameAuthor = $this->relatedByAuthor($manga, $limit);
+        if ($sameAuthor->count() >= $limit) {
+            return $sameAuthor;
+        }
+
         $q = Manga::query()->published()->where('id', '!=', $manga->id);
+        if ($sameAuthor->isNotEmpty()) {
+            $q->whereNotIn('id', $sameAuthor->pluck('id')->all());
+        }
         $tags = $manga->tagNames();
         $typeId = (int) ($manga->type_id ?? 0);
         if ($tags === [] && $typeId < 1) {
-            return collect();
+            return $sameAuthor;
         }
         $q->where(function (Builder $inner) use ($tags, $typeId): void {
             foreach ($tags as $tag) {
@@ -190,6 +228,42 @@ class MangaService
                 $inner->orWhere('type_id', $typeId);
             }
         });
+
+        $rows = $q->orderByDesc('hits')->orderByDesc('id')->limit($limit - $sameAuthor->count())->get();
+        $this->decorateFrontRows($rows);
+        $merged = $sameAuthor->concat($rows)->unique('id')->values();
+
+        return $merged;
+    }
+
+    /** @return Collection<int, Manga> */
+    public function relatedByAuthor(Manga $manga, int $limit = 6): Collection
+    {
+        $q = Manga::query()->published()->where('id', '!=', $manga->id);
+        $authorIds = [];
+        try {
+            if (app(MangaAuthorService::class)->ready()) {
+                $authorIds = app(MangaAuthorService::class)->idsForManga((int) $manga->id);
+            }
+        } catch (\Throwable) {
+            $authorIds = [];
+        }
+        if ($authorIds !== [] && Schema::hasTable('plugin_manga_author_rel')) {
+            $q->whereHas('authorRels', fn (Builder $inner) => $inner->whereIn('plugin_manga_authors.id', $authorIds));
+        } else {
+            $names = $manga->authorNames();
+            if ($names === []) {
+                return collect();
+            }
+            $q->where(function (Builder $inner) use ($names): void {
+                foreach ($names as $name) {
+                    $inner->orWhere('author', $name)
+                        ->orWhere('author', 'like', $name.',%')
+                        ->orWhere('author', 'like', '%,'.$name)
+                        ->orWhere('author', 'like', '%,'.$name.',%');
+                }
+            });
+        }
 
         $rows = $q->orderByDesc('hits')->orderByDesc('id')->limit($limit)->get();
         $this->decorateFrontRows($rows);
@@ -405,6 +479,10 @@ class MangaService
             app(MangaTagService::class)->detachManga($mangaId);
         } catch (\Throwable) {
         }
+        try {
+            app(MangaAuthorService::class)->detachManga($mangaId);
+        } catch (\Throwable) {
+        }
     }
 
     public function purgeChapter(int $chapterId): void
@@ -424,11 +502,11 @@ class MangaService
     public function frontFilters(): array
     {
         $order = (string) request()->query('order', 'new');
-        if (! in_array($order, ['new', 'hits', 'update'], true)) {
+        if (! in_array($order, ['new', 'hits', 'update', 'favor'], true)) {
             $order = 'new';
         }
         $board = (string) request()->query('board', 'hits');
-        if (! in_array($board, ['hits', 'new', 'end'], true)) {
+        if (! in_array($board, ['hits', 'new', 'end', 'favor'], true)) {
             $board = 'hits';
         }
         $typeRaw = trim((string) request()->query('type', ''));
@@ -499,6 +577,55 @@ class MangaService
         return url('/manga'.($q !== [] ? '?'.http_build_query($q) : ''));
     }
 
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array{title:string,keywords:string,description:string}
+     */
+    public function listSeo(array $filters): array
+    {
+        $title = '漫画';
+        $keywords = '漫画,连载,完结';
+        $description = '站内漫画库';
+        $typeId = (int) ($filters['type'] ?? 0);
+        if ($typeId > 0 && Schema::hasTable('plugin_manga_types')) {
+            $type = MangaType::query()->where('id', $typeId)->where('status', 1)->first();
+            if ($type) {
+                $name = (string) $type->name;
+                $seoTitle = trim((string) ($type->seo_title ?? ''));
+                $seoKw = trim((string) ($type->seo_keywords ?? ''));
+                $seoDesc = trim((string) ($type->seo_description ?? ''));
+                $title = $seoTitle !== '' ? $seoTitle : ($name.' - 漫画');
+                $keywords = $seoKw !== '' ? $seoKw : ($name.',漫画');
+                $description = $seoDesc !== '' ? $seoDesc : ('浏览分类「'.$name.'」下的漫画');
+            }
+        }
+        $author = trim((string) ($filters['author'] ?? ''));
+        if ($author !== '') {
+            $title = '作者 '.$author.' - 漫画';
+            $keywords = $author.',漫画作者';
+            $description = '作者「'.$author.'」的漫画作品';
+        }
+        $tag = trim((string) ($filters['tag'] ?? ''));
+        if ($tag !== '') {
+            $title = '标签 '.$tag.' - 漫画';
+            $keywords = $tag.',漫画标签';
+            $description = '标签「'.$tag.'」下的漫画';
+        }
+        if ((string) ($filters['recommend'] ?? '') === '1') {
+            $title = '推荐漫画';
+            $keywords = '推荐漫画,精选';
+            $description = '站内推荐漫画';
+        }
+        $wd = trim((string) ($filters['wd'] ?? ''));
+        if ($wd !== '') {
+            $title = '搜索 '.$wd.' - 漫画';
+            $keywords = $wd.',漫画搜索';
+            $description = '搜索「'.$wd.'」的漫画结果';
+        }
+
+        return compact('title', 'keywords', 'description');
+    }
+
     /** @return Collection<int, MangaComment> */
     public function listedComments(Manga $manga): Collection
     {
@@ -565,6 +692,43 @@ class MangaService
         $msg = (int) $row->status === 1 ? '评论已发布' : '评论已提交，等待审核';
 
         return Result::success(['id' => (int) $row->id], $msg);
+    }
+
+    public function favorCount(int $mangaId): int
+    {
+        if ($mangaId < 1 || ! Schema::hasTable('plugin_manga_favors')) {
+            return 0;
+        }
+
+        return (int) MangaFavor::query()->where('manga_id', $mangaId)->count();
+    }
+
+    /**
+     * @param  Collection<int, Manga>  $rows
+     */
+    public function decorateFavorCounts(Collection $rows): void
+    {
+        if ($rows->isEmpty() || ! Schema::hasTable('plugin_manga_favors')) {
+            foreach ($rows as $row) {
+                $row->favor_count = (int) ($row->favor_count ?? 0);
+            }
+
+            return;
+        }
+        $ids = $rows->pluck('id')->map(static fn ($id): int => (int) $id)->filter()->unique()->values()->all();
+        $map = [];
+        if ($ids !== []) {
+            foreach (MangaFavor::query()
+                ->select('manga_id', DB::raw('COUNT(*) as c'))
+                ->whereIn('manga_id', $ids)
+                ->groupBy('manga_id')
+                ->get() as $row) {
+                $map[(int) $row->manga_id] = (int) ($row->c ?? 0);
+            }
+        }
+        foreach ($rows as $row) {
+            $row->favor_count = (int) ($map[(int) $row->id] ?? 0);
+        }
     }
 
     public function favored(int $memberId, int $mangaId): bool
@@ -678,31 +842,31 @@ class MangaService
     public function decorateFrontRows(Collection $rows): void
     {
         $ids = $rows->pluck('id')->map(static fn ($id): int => (int) $id)->filter()->unique()->values()->all();
-        if ($ids === [] || ! Schema::hasTable('plugin_manga_chapters')) {
-            return;
-        }
-        $latest = [];
-        $counts = [];
-        $all = MangaChapter::query()
-            ->whereIn('manga_id', $ids)
-            ->orderByDesc('sort')
-            ->orderByDesc('id')
-            ->get(['id', 'manga_id', 'name']);
-        foreach ($all as $chapter) {
-            $mangaId = (int) $chapter->manga_id;
-            $counts[$mangaId] = ($counts[$mangaId] ?? 0) + 1;
-            if (! isset($latest[$mangaId])) {
-                $latest[$mangaId] = [
-                    'id' => (int) $chapter->id,
-                    'name' => (string) ($chapter->name ?: ('第'.$chapter->id.'话')),
-                ];
+        if ($ids !== [] && Schema::hasTable('plugin_manga_chapters')) {
+            $latest = [];
+            $counts = [];
+            $all = MangaChapter::query()
+                ->whereIn('manga_id', $ids)
+                ->orderByDesc('sort')
+                ->orderByDesc('id')
+                ->get(['id', 'manga_id', 'name']);
+            foreach ($all as $chapter) {
+                $mangaId = (int) $chapter->manga_id;
+                $counts[$mangaId] = ($counts[$mangaId] ?? 0) + 1;
+                if (! isset($latest[$mangaId])) {
+                    $latest[$mangaId] = [
+                        'id' => (int) $chapter->id,
+                        'name' => (string) ($chapter->name ?: ('第'.$chapter->id.'话')),
+                    ];
+                }
+            }
+            foreach ($rows as $row) {
+                $id = (int) $row->id;
+                $row->setAttribute('latest_chapter', $latest[$id] ?? null);
+                $row->setAttribute('chapter_count', (int) ($counts[$id] ?? 0));
             }
         }
-        foreach ($rows as $row) {
-            $id = (int) $row->id;
-            $row->setAttribute('latest_chapter', $latest[$id] ?? null);
-            $row->setAttribute('chapter_count', (int) ($counts[$id] ?? 0));
-        }
+        $this->decorateFavorCounts($rows);
     }
 
     /** @return list<array{label:string,value:string}> */
@@ -745,7 +909,26 @@ class MangaService
         }
         $author = trim((string) ($filters['author'] ?? ''));
         if ($author !== '') {
-            $q->where('author', $author);
+            $authorName = $author;
+            $authorId = 0;
+            try {
+                $row = app(MangaAuthorService::class)->findPublic($author);
+                if ($row) {
+                    $authorId = (int) $row->id;
+                    $authorName = (string) $row->name;
+                }
+            } catch (\Throwable) {
+            }
+            if ($authorId > 0 && Schema::hasTable('plugin_manga_author_rel')) {
+                $q->whereHas('authorRels', fn (Builder $inner) => $inner->where('plugin_manga_authors.id', $authorId));
+            } elseif (Schema::hasColumn('plugin_mangas', 'author')) {
+                $q->where(function (Builder $inner) use ($authorName): void {
+                    $inner->where('author', $authorName)
+                        ->orWhere('author', 'like', $authorName.',%')
+                        ->orWhere('author', 'like', '%,'.$authorName)
+                        ->orWhere('author', 'like', '%,'.$authorName.',%');
+                });
+            }
         }
         $tag = trim((string) ($filters['tag'] ?? ''));
         if ($tag !== '') {
@@ -793,6 +976,11 @@ class MangaService
             $q->orderByDesc('hits')->orderByDesc('id');
         } elseif ($order === 'update') {
             $q->orderByDesc('updated_at')->orderByDesc('id');
+        } elseif ($order === 'favor' && Schema::hasTable('plugin_manga_favors')) {
+            $q->orderByDesc(MangaFavor::query()
+                ->selectRaw('COUNT(*)')
+                ->whereColumn('plugin_manga_favors.manga_id', 'plugin_mangas.id'))
+                ->orderByDesc('id');
         } else {
             $q->orderByDesc('sort')->orderByDesc('id');
         }

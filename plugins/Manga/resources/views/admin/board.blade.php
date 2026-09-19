@@ -2,17 +2,27 @@
 @section('title', $title ?? admin_t('nav.manga'))
 
 @php
-    $desk = in_array((string) ($desk ?? ''), ['pending', 'types', 'chapters', 'pics', 'comments', 'works', 'work', 'stats'], true)
+    $desk = in_array((string) ($desk ?? ''), ['pending', 'types', 'chapters', 'pics', 'comments', 'favors', 'works', 'work', 'stats'], true)
         ? (string) $desk
         : 'works';
     $types = is_array($types ?? null) ? $types : [];
     $works = is_array($works ?? null) ? $works : [];
     $filterMangaId = (int) ($filterMangaId ?? 0);
     $filterMangaTitle = (string) ($filterMangaTitle ?? '');
+    $filterMemberId = (int) ($filterMemberId ?? 0);
+    $filterMemberName = (string) ($filterMemberName ?? '');
     $filterTypeId = (int) ($filterTypeId ?? 0);
     $filterTagId = (int) ($filterTagId ?? 0);
+    $filterAuthorId = (int) ($filterAuthorId ?? 0);
     $tags = is_array($tags ?? null) ? $tags : [];
+    $tagsReady = (bool) ($tagsReady ?? true);
+    $authors = is_array($authors ?? null) ? $authors : [];
+    $authorsReady = (bool) ($authorsReady ?? true);
     $filterTag = is_array($filterTag ?? null) ? $filterTag : null;
+    $filterAuthor = is_array($filterAuthor ?? null) ? $filterAuthor : null;
+    $filterQ = (string) ($filterQ ?? '');
+    $filterSerialize = (string) ($filterSerialize ?? '');
+    $filterRecommend = (string) ($filterRecommend ?? '');
     $hint = (string) ($hint ?? '');
     $work = is_array($work ?? null) ? $work : null;
     $stats = is_array($stats ?? null) ? $stats : [];
@@ -20,37 +30,66 @@
     $topHits = is_array($stats['top_hits'] ?? null) ? $stats['top_hits'] : [];
     $topFavors = is_array($stats['top_favors'] ?? null) ? $stats['top_favors'] : [];
     $daily = is_array($stats['daily'] ?? null) ? $stats['daily'] : [];
+    $favorQueues = is_array($favorQueues ?? null) ? $favorQueues : ['all' => 0, 'today' => 0, 'missing' => 0];
+    $fq = fn (string $k) => (int) ($favorQueues[$k] ?? 0);
+    $commentQueues = is_array($commentQueues ?? null) ? $commentQueues : ['all' => 0, 'pending' => 0, 'pass' => 0];
+    $cq = fn (string $k) => (int) ($commentQueues[$k] ?? 0);
 @endphp
 
 @section('plain')
 <div class="card card-panel manga-board desk-board" id="manga-board">
     <div class="card-header">
-        <span>{{ $desk === 'stats' ? '漫画统计' : ($desk === 'work' ? '作品工作台' : '漫画') }} <em id="manga-count"></em></span>
+        <span>{{ $desk === 'stats' ? '漫画统计' : ($desk === 'work' ? '作品工作台' : ($desk === 'chapters' ? '章节' : ($desk === 'pics' ? '图片' : ($desk === 'comments' ? '评论' : ($desk === 'favors' ? '书架' : '漫画'))))) }} <em id="manga-count"></em></span>
         <div>
             @if(in_array($desk, ['works', 'pending'], true))
                 <a class="btn btn-muted btn-sm" href="/admin/video/manga-tags">标签</a>
-            @endif
-            @if(! in_array($desk, ['stats'], true))
-                <button type="button" class="btn btn-sm" id="manga-add-btn">新增</button>
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-authors">作者</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=chapters">章节</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics">图片</a>
+                <span class="btn-split" role="group" aria-label="添加作品">
+                    <a class="btn btn-sm" href="#manga-work-compose-box">新增作品</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+                </span>
+            @elseif(in_array($desk, ['chapters', 'work'], true))
+                <span class="btn-split" role="group" aria-label="添加章节">
+                    <a class="btn btn-sm" href="#manga-chapter-compose-box">新增章节</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">完整表单</a>
+                </span>
+            @elseif($desk === 'pics')
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-pics/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>
+            @elseif($desk === 'comments')
+                <a class="btn btn-muted btn-sm" href="/admin/video/manga-comments/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>
+            @elseif($desk === 'favors')
+                <a class="btn btn-muted btn-sm" href="/manga/shelf" target="_blank" rel="noopener">前台书架</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/favorites">影片收藏</a>
             @endif
             @if($desk === 'work' && $work)
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">编辑作品</a>
                 <a class="btn btn-muted btn-sm" href="/admin/video/mangas">返回作品</a>
                 <a class="btn btn-muted btn-sm" href="{{ $work['front_url'] }}" target="_blank" rel="noopener">前台预览</a>
             @endif
         </div>
     </div>
     <div class="card-body">
+        @if($desk !== 'stats')
         <p class="muted recycle-lead">
-            @if($desk === 'types')
-                这是漫画自己的分类，不是影片分类。下级会缩进。点「添加下级」挂到这一栏下面；有作品时请先移走再删。关掉插件后前台 /manga 一起消失。
+            @if($desk === 'work')
+                下方管本章节。快捷填话名即可添加；贴图、VIP 请点「完整表单」。
+            @elseif(in_array($desk, ['chapters', 'pics', 'comments'], true))
+                列表页只做快捷添加与浏览。复杂字段进「完整表单」。
+            @elseif($desk === 'favors')
+                会员在漫画页点「加入书架」后出现。后台不能代收藏。删除只取消此人的书架，不删作品。
+            @elseif(in_array($desk, ['works', 'pending'], true))
+                独立漫画库，不是影片分类。快捷填名称即可添加；分类、标签、封面等进「完整表单」。点「管理」进工作台管章节。
             @else
-                独立漫画库，不是影片分类。点作品「管理」进工作台管章节和图片。关掉插件后前台 /manga 一起消失。采集待审等见「参数」。资源接口：<code>/api/provide/manga</code>。
+                独立漫画库，不是影片分类。
             @endif
         </p>
+        @endif
 
         @if($desk === 'stats')
-            <p class="muted recycle-lead">阅读次数来自会员阅读历史；章节更新来自章节创建时间。人气为作品 hits。</p>
-            <div class="stat-grid dash" style="margin:12px 0 20px">
+            <p class="muted recycle-lead manga-stats-lead">独立漫画库 · 阅读来自会员历史，新章来自章节创建，人气为 hits，收藏来自书架。</p>
+            <div class="stat-grid dash manga-stats-grid">
                 <div class="stat-card">
                     <em>今日阅读</em>
                     <strong>{{ (int) ($stats['today_reads'] ?? 0) }}</strong>
@@ -69,24 +108,20 @@
                 <div class="stat-card">
                     <em>上架作品</em>
                     <strong>{{ (int) ($worksStat['show'] ?? 0) }}</strong>
-                    <span class="muted">共 {{ (int) ($worksStat['all'] ?? 0) }} · 待审 {{ (int) ($worksStat['pending'] ?? 0) }}</span>
-                </div>
-            </div>
-            <div class="stat-grid dash" style="margin:0 0 20px">
-                <div class="stat-card">
-                    <em>待审</em>
-                    <strong>{{ (int) ($worksStat['pending'] ?? 0) }}</strong>
+                    <span class="muted">共 {{ (int) ($worksStat['all'] ?? 0) }} · 待审 {{ (int) ($worksStat['pending'] ?? 0) }} · 下架 {{ (int) ($worksStat['off'] ?? 0) }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>下架</em>
-                    <strong>{{ (int) ($worksStat['off'] ?? 0) }}</strong>
+                    <em>书架收藏</em>
+                    <strong>{{ (int) ($stats['favor_total'] ?? 0) }}</strong>
+                    <span class="muted"><a href="/admin/video/mangas?desk=favors">打开书架台</a></span>
                 </div>
             </div>
-            <div class="flink-stats-split" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:8px">
+            <div class="flink-stats-split manga-stats-split">
                 <div>
                     <h3 style="font-size:15px;margin:0 0 10px">人气 TOP</h3>
                     @if($topHits === [])
                         <p class="muted">还没有作品。</p>
+                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas">去作品台</a></p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
@@ -106,7 +141,8 @@
                 <div>
                     <h3 style="font-size:15px;margin:0 0 10px">收藏 TOP</h3>
                     @if($topFavors === [])
-                        <p class="muted">还没有书架收藏。</p>
+                        <p class="muted">还没有书架收藏。会员前台点「加入书架」后会出现在这里。</p>
+                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors">打开书架台</a></p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
@@ -114,8 +150,8 @@
                                 <tbody>
                                 @foreach($topFavors as $row)
                                     <tr>
-                                        <td><a href="/admin/video/mangas?desk=work&manga_id={{ (int) $row['id'] }}">{{ $row['title'] }}</a></td>
-                                        <td>{{ (int) $row['favors'] }}</td>
+                                        <td><a href="/admin/video/mangas?desk=favors&manga_id={{ (int) $row['id'] }}">{{ $row['title'] }}</a></td>
+                                        <td>{{ (int) ($row['favors'] ?? $row['favor_count'] ?? 0) }}</td>
                                     </tr>
                                 @endforeach
                                 </tbody>
@@ -144,6 +180,16 @@
                 </div>
             @endif
         @else
+            @if(in_array($desk, ['works', 'pending'], true) && (! $tagsReady || ! $authorsReady))
+                <div class="flash" style="margin:0 0 12px">
+                    @if(! $tagsReady)
+                        <p class="muted" style="margin:0">标签表还没建，完整表单里暂不能挂标签。<a href="/admin/video/manga-tags">打开标签台</a>查看迁移说明。</p>
+                    @endif
+                    @if(! $authorsReady)
+                        <p class="muted" style="margin:{{ $tagsReady ? '0' : '6px 0 0' }}">作者表还没建，完整表单里暂不能挂作者库。<a href="/admin/video/manga-authors">打开作者台</a>查看迁移说明。</p>
+                    @endif
+                </div>
+            @endif
             @if($desk === 'work' && $work)
                 <div class="flash is-ok" style="margin:10px 0;display:flex;flex-wrap:wrap;gap:12px;align-items:center">
                     <strong>{{ $work['title'] }}</strong>
@@ -153,13 +199,13 @@
                     @if(! empty($work['author']))
                         <span class="muted">作者 {{ $work['author'] }}</span>
                     @endif
-                    <button type="button" class="btn btn-sm" id="manga-edit-work">编辑作品</button>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">编辑作品</a>
                     <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics&manga_id={{ $work['id'] }}">图片明细</a>
                     <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=comments&manga_id={{ $work['id'] }}">评论</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors&manga_id={{ $work['id'] }}">书架</a>
                 </div>
-                <p class="muted" style="margin:0 0 12px">下方管理本章节。新增时可粘贴多行图片地址；保存后写入图片表。</p>
             @endif
-            @if($filterMangaId > 0 && in_array($desk, ['chapters', 'pics', 'comments'], true))
+            @if($filterMangaId > 0 && in_array($desk, ['chapters', 'pics', 'comments', 'favors'], true))
                 <div class="flash is-ok" style="margin:10px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
                     <span>正在看作品</span>
                     <strong>{{ $filterMangaTitle !== '' ? $filterMangaTitle : ('#'.$filterMangaId) }}</strong>
@@ -169,11 +215,70 @@
                     <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk={{ $desk }}">清除作品筛选</a>
                 </div>
             @endif
+            @if($desk === 'favors' && $filterMemberId > 0)
+                <div class="flash is-ok" style="margin:10px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                    <span>正在看会员</span>
+                    <strong>{{ $filterMemberName !== '' ? $filterMemberName : ('#'.$filterMemberId) }}</strong>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors{{ $filterMangaId > 0 ? '&manga_id='.$filterMangaId : '' }}">清除会员筛选</a>
+                </div>
+            @endif
+            @if(in_array($desk, ['works', 'pending'], true))
+                <div class="tag-compose" id="manga-work-compose-box">
+                    <form class="tag-compose-form" id="manga-work-compose" onsubmit="return false;">
+                        <label class="tag-compose-label" for="manga-work-quick">新增作品</label>
+                        <div class="tag-compose-row">
+                            <input id="manga-work-quick" type="text" name="title" value="" placeholder="输入名称" aria-label="新增作品" autofocus>
+                            <span class="btn-split" role="group">
+                                <button class="btn" type="submit">添加</button>
+                                <a class="btn btn-muted" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">完整表单</a>
+                            </span>
+                        </div>
+                        <p class="muted field-hint">回车可连续添加。分类、标签、封面等请用右侧「完整表单」。</p>
+                    </form>
+                </div>
+            @elseif(in_array($desk, ['chapters', 'work'], true))
+                <div class="tag-compose" id="manga-chapter-compose-box">
+                    <form class="tag-compose-form" id="manga-chapter-compose" onsubmit="return false;">
+                        <label class="tag-compose-label" for="manga-chapter-quick">新增章节</label>
+                        <div class="tag-compose-row">
+                            @if($desk === 'chapters' && ! ($desk === 'work' && $work) && $filterMangaId < 1)
+                                <select name="manga_id" aria-label="作品" required style="max-width:180px">
+                                    <option value="">选择作品</option>
+                                    @foreach($works as $w)
+                                        <option value="{{ $w['id'] }}">{{ $w['title'] }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input type="hidden" name="manga_id" value="{{ $desk === 'work' && $work ? (int) $work['id'] : $filterMangaId }}">
+                            @endif
+                            <input id="manga-chapter-quick" type="text" name="name" value="" placeholder="输入话名，如 第1话" aria-label="新增章节" autofocus>
+                            <span class="btn-split" role="group">
+                                <button class="btn" type="submit">添加</button>
+                                <a class="btn btn-muted" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">完整表单</a>
+                            </span>
+                        </div>
+                        <p class="muted field-hint">回车可连续添加。贴图、VIP 请用右侧「完整表单」。</p>
+                    </form>
+                </div>
+            @elseif($desk === 'pics')
+                <div class="tag-compose">
+                    <p class="muted field-hint" style="margin:0">图片字段较多，请用<a href="/admin/video/manga-pics/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>添加；或在章节完整表单里一次贴多行。</p>
+                </div>
+            @elseif($desk === 'comments')
+                <div class="tag-compose">
+                    <p class="muted field-hint" style="margin:0">评论请用<a href="/admin/video/manga-comments/create{{ $filterMangaId > 0 ? '?manga_id='.$filterMangaId : '' }}">完整表单</a>添加或编辑。</p>
+                </div>
+            @endif
             @if($desk !== 'stats')
         <form class="filter-bar" id="manga-search" onsubmit="return false;">
             <input type="hidden" name="yid" value="{{ $desk === 'pending' ? '1' : ($desk === 'works' ? '0' : '') }}">
             <input type="hidden" name="manga_id" value="{{ ($desk === 'work' || $filterMangaId > 0) ? ($desk === 'work' && $work ? (int) $work['id'] : $filterMangaId) : '' }}">
-            <input type="search" name="q" placeholder="{{ $desk === 'types' ? '搜分类名' : (in_array($desk, ['chapters', 'work'], true) ? '搜章节' : ($desk === 'pics' ? '搜图片地址' : ($desk === 'comments' ? '搜评论、作品' : '搜名称、作者、标签'))) }}" autocomplete="off">
+            @if($desk === 'favors')
+                <input type="hidden" name="member_id" value="{{ $filterMemberId > 0 ? $filterMemberId : '' }}">
+                <input type="hidden" name="today" value="">
+                <input type="hidden" name="missing" value="">
+            @endif
+            <input type="search" name="q" value="{{ $filterQ }}" placeholder="{{ $desk === 'types' ? '搜分类名' : (in_array($desk, ['chapters', 'work'], true) ? '搜章节' : ($desk === 'pics' ? '搜图片地址' : ($desk === 'comments' ? '搜评论、作品' : ($desk === 'favors' ? '搜会员、作品或 ID' : '搜名称、作者、标签')))) }}" autocomplete="off">
             @if(in_array($desk, ['works', 'pending'], true) && $types !== [])
                 <select name="type_id" aria-label="分类">
                     <option value="">全部分类</option>
@@ -182,27 +287,25 @@
                     @endforeach
                 </select>
             @endif
-            @if(in_array($desk, ['works', 'pending'], true) && $tags !== [])
-                <select name="tag_id" aria-label="标签">
-                    <option value="">全部标签</option>
-                    @foreach($tags as $tag)
-                        <option value="{{ $tag['id'] }}" @selected($filterTagId === (int) $tag['id'])>{{ $tag['name'] }}</option>
-                    @endforeach
-                </select>
+            @if(in_array($desk, ['works', 'pending'], true) && $filterTagId > 0)
+                <input type="hidden" name="tag_id" value="{{ $filterTagId }}">
+            @endif
+            @if(in_array($desk, ['works', 'pending'], true) && $filterAuthorId > 0)
+                <input type="hidden" name="author_id" value="{{ $filterAuthorId }}">
             @endif
             @if(in_array($desk, ['works', 'pending'], true))
                 <select name="serialize" aria-label="连载">
                     <option value="">全部状态</option>
-                    <option value="0">连载</option>
-                    <option value="1">完结</option>
+                    <option value="0" @selected($filterSerialize === '0')>连载</option>
+                    <option value="1" @selected($filterSerialize === '1')>完结</option>
                 </select>
                 <select name="recommend" aria-label="推荐">
                     <option value="">全部</option>
-                    <option value="1">推荐</option>
+                    <option value="1" @selected($filterRecommend === '1')>推荐</option>
                 </select>
             @endif
             @if($desk === 'comments')
-                <select name="status" aria-label="状态">
+                <select name="status" aria-label="状态" hidden>
                     <option value="">全部状态</option>
                     <option value="1">显示</option>
                     <option value="0">待审</option>
@@ -211,12 +314,31 @@
             <button type="button" class="btn btn-sm" id="manga-search-btn">查询</button>
             <button type="reset" class="btn btn-muted btn-sm" id="manga-reset-btn">重置</button>
         </form>
+        @if($desk === 'comments')
+            <div class="queue-chips" id="manga-comment-queues">
+                <button type="button" class="chip" data-queue="" data-value="">全部@if($cq('all') > 0)<em>{{ $cq('all') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="0">待审@if($cq('pending') > 0)<em>{{ $cq('pending') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="1">已通过@if($cq('pass') > 0)<em>{{ $cq('pass') }}</em>@endif</button>
+            </div>
+        @endif
         @if($filterTag && in_array($desk, ['works', 'pending'], true))
-            <div class="queue-chips" style="margin:8px 0 0">
+            <div class="queue-chips">
                 <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">标签 {{ $filterTag['name'] }} ×</a>
             </div>
         @endif
-        @if(in_array($desk, ['works', 'pending', 'comments', 'chapters', 'pics', 'work', 'types'], true))
+        @if($filterAuthor && in_array($desk, ['works', 'pending'], true))
+            <div class="queue-chips">
+                <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">作者 {{ $filterAuthor['name'] }} ×</a>
+            </div>
+        @endif
+        @if($desk === 'favors')
+            <div class="queue-chips" id="manga-favor-queues">
+                <button type="button" class="chip" data-queue="">全部@if($fq('all') > 0)<em>{{ $fq('all') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="today" data-value="1">今天@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="missing" data-value="1">作品已删@if($fq('missing') > 0)<em>{{ $fq('missing') }}</em>@endif</button>
+            </div>
+        @endif
+        @if(in_array($desk, ['works', 'pending', 'comments', 'chapters', 'pics', 'work', 'types', 'favors'], true))
             <div class="batch-bar" id="manga-batch" hidden>
                 <strong id="manga-batch-count">已选 0 条</strong>
                 @if(in_array($desk, ['works', 'pending'], true))
@@ -236,7 +358,7 @@
                     <select id="manga-batch-parent" class="batch-select"><option value="">改到上级</option></select>
                     <button type="button" class="btn btn-muted btn-sm" id="manga-batch-move">移动</button>
                 @endif
-                <button type="button" class="btn btn-danger btn-sm" id="manga-batch-del">删除</button>
+                <button type="button" class="btn btn-danger btn-sm" id="manga-batch-del">{{ $desk === 'favors' ? '取消收藏' : '删除' }}</button>
                 <button type="button" class="btn btn-muted btn-sm" id="manga-batch-clear">取消选择</button>
             </div>
         @endif
@@ -246,153 +368,6 @@
     </div>
 </div>
 
-<template id="manga-work-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="title" required>
-        <label>分类</label>
-        <select name="type_id">
-            <option value="0">未分类</option>
-            @foreach($types as $type)
-                <option value="{{ $type['id'] }}">{{ $type['label'] ?? $type['name'] }}</option>
-            @endforeach
-        </select>
-        <label>作者</label>
-        <input type="text" name="author">
-        <label>封面</label>
-        <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址">
-            <button type="button" class="btn btn-sm js-cover-pick">上传</button>
-        </div>
-        <img class="img-preview js-cover-preview" alt="">
-        <label>连载</label>
-        <select name="serialize">
-            <option value="0">连载</option>
-            <option value="1">完结</option>
-        </select>
-        <label>标签</label>
-        <input type="text" name="tags" placeholder="多个用逗号分隔">
-        <label>推荐</label>
-        <select name="recommend">
-            <option value="0">否</option>
-            <option value="1">是</option>
-        </select>
-        <label>审核</label>
-        <select name="yid">
-            <option value="0">已审</option>
-            <option value="1">待审</option>
-        </select>
-        <label>状态</label>
-        <select name="status">
-            <option value="1">上架</option>
-            <option value="0">下架</option>
-        </select>
-        <label>备注</label>
-        <input type="text" name="remarks">
-        <label>简介</label>
-        <textarea name="content"></textarea>
-        <label>人气</label>
-        <input type="number" name="hits" value="0">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-    </form>
-</template>
-
-<template id="manga-type-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>名称</label>
-        <input type="text" name="name" required>
-        <label>上级</label>
-        <select name="parent_id">
-            <option value="0">顶级</option>
-        </select>
-        <p class="muted field-hint">选已有分类作上级。下级会缩进显示。不要选自己或自己的下级。</p>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>状态</label>
-        <select name="status">
-            <option value="1">启用</option>
-            <option value="0">禁用</option>
-        </select>
-    </form>
-</template>
-
-<template id="manga-chapter-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>作品</label>
-        <select name="manga_id" required>
-            <option value="">选择作品</option>
-            @foreach($works as $work)
-                <option value="{{ $work['id'] }}">{{ $work['title'] }} (#{{ $work['id'] }})</option>
-            @endforeach
-        </select>
-        <label>章节名</label>
-        <input type="text" name="name" required>
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-        <label>VIP 锁章</label>
-        <select name="vip">
-            <option value="0">免费</option>
-            <option value="1">VIP 可读</option>
-        </select>
-        <p class="muted field-hint">VIP 章节按站点设置 <code>manga_vip_group_ids</code> / 试看页数 <code>manga_trysee_pages</code> 控制。</p>
-        <label>图片地址</label>
-        <textarea name="pics" rows="8" placeholder="每行一条，http(s) 或 / 开头的站内路径"></textarea>
-        <div class="field-inline" style="margin-top:8px">
-            <button type="button" class="btn btn-sm js-pics-upload">上传并追加</button>
-        </div>
-        <img class="img-preview js-pics-preview" alt="">
-        <p class="muted field-hint">图片地址每行一条。可上传追加。保存后会写入图片表。javascript: 不会收录。</p>
-    </form>
-</template>
-
-<template id="manga-pic-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>作品</label>
-        <select name="manga_id" required>
-            <option value="">选择作品</option>
-            @foreach($works as $work)
-                <option value="{{ $work['id'] }}">{{ $work['title'] }} (#{{ $work['id'] }})</option>
-            @endforeach
-        </select>
-        <label>章节ID</label>
-        <input type="number" name="chapter_id" required>
-        <label>图片地址</label>
-        <div class="field-inline">
-            <input type="text" name="url" required placeholder="http(s) 或 / 开头">
-            <button type="button" class="btn btn-sm js-pic-pick">上传</button>
-        </div>
-        <img class="img-preview js-pic-preview" alt="">
-        <label>排序</label>
-        <input type="number" name="sort" value="0">
-    </form>
-</template>
-
-<template id="manga-comment-tpl">
-    <form>
-        <input type="hidden" name="id">
-        <label>作品</label>
-        <select name="manga_id" required>
-            <option value="">选择作品</option>
-            @foreach($works as $work)
-                <option value="{{ $work['id'] }}">{{ $work['title'] }} (#{{ $work['id'] }})</option>
-            @endforeach
-        </select>
-        <label>昵称</label>
-        <input type="text" name="author_name">
-        <label>内容</label>
-        <textarea name="content" rows="4" required></textarea>
-        <label>状态</label>
-        <select name="status">
-            <option value="1">显示</option>
-            <option value="0">待审 / 隐藏</option>
-        </select>
-    </form>
-</template>
 @endsection
 
 @push('scripts')
@@ -402,36 +377,26 @@
     var desk = @json($desk);
     var filterMangaId = @json($filterMangaId);
     var workPayload = @json($work);
-    if (desk === 'stats') {
-        return;
-    }
+    if (desk === 'stats') return;
     var form = document.getElementById('manga-search');
     var countEl = document.getElementById('manga-count');
-    var addBtn = document.getElementById('manga-add-btn');
     if (desk === 'work' && workPayload && workPayload.id) {
         filterMangaId = Number(workPayload.id) || filterMangaId;
     }
-
     var modules = {
-        works: 'mangas',
-        pending: 'mangas',
-        types: 'manga_types',
-        chapters: 'manga_chapters',
-        work: 'manga_chapters',
-        pics: 'manga_pics',
-        comments: 'manga_comments'
+        works: 'mangas', pending: 'mangas', types: 'manga_types',
+        chapters: 'manga_chapters', work: 'manga_chapters',
+        pics: 'manga_pics', comments: 'manga_comments', favors: 'manga_favors'
     };
     var module = modules[desk] || 'mangas';
-    var addLabels = {
-        works: '新增作品',
-        pending: '新增作品',
-        types: '新增分类',
-        chapters: '新增章节',
-        work: '新增章节',
-        pics: '新增图片',
-        comments: '新增评论'
+    var fullCreate = {
+        works: '/admin/video/mangas/create',
+        pending: '/admin/video/mangas/create?desk=pending',
+        chapters: '/admin/video/manga-chapters/create' + (filterMangaId ? ('?manga_id=' + filterMangaId) : ''),
+        work: '/admin/video/manga-chapters/create' + (filterMangaId ? ('?manga_id=' + filterMangaId) : ''),
+        pics: '/admin/video/manga-pics/create' + (filterMangaId ? ('?manga_id=' + filterMangaId) : ''),
+        comments: '/admin/video/manga-comments/create' + (filterMangaId ? ('?manga_id=' + filterMangaId) : '')
     };
-    if (addBtn) addBtn.textContent = addLabels[desk] || '新增';
 
     function cleanWhere(data) {
         var out = {};
@@ -442,7 +407,7 @@
     }
     function queryWhere() {
         var data = cleanWhere(U.formData(form));
-        data.limit = desk === 'types' ? 500 : 20;
+        data.limit = 20;
         if (desk === 'pending') data.yid = 1;
         if (desk === 'works') data.yid = 0;
         if (desk === 'work' && filterMangaId) data.manga_id = filterMangaId;
@@ -456,70 +421,19 @@
     }
     function emptyHtml(_parsed, where) {
         if (isFiltered(where)) {
-            var miss = desk === 'types' ? '没有符合名称的分类' : '没有符合条件的记录';
-            return '<div class="list-empty"><p>' + miss + '</p><p><button type="button" class="btn btn-muted btn-sm" id="manga-empty-reset">清除筛选</button></p></div>';
+            return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="manga-empty-reset">清除筛选</button></p></div>';
         }
-        if (desk === 'types') {
-            return '<div class="list-empty"><p>还没有分类。</p><p class="muted">分类是漫画的目录。先建一级，再在它下面「添加下级」做多级。</p><p><button type="button" class="btn btn-primary btn-sm" id="manga-empty-add">新增分类</button></p></div>';
+        var href = fullCreate[desk] || '';
+        var label = {works:'新增作品',pending:'新增作品',chapters:'完整表单',work:'完整表单',pics:'完整表单',comments:'完整表单'}[desk] || '完整表单';
+        var tip = {works:'还没有漫画作品',pending:'没有待审作品',chapters:'还没有章节',work:'这部还没有章节',pics:'还没有图片',comments:'还没有评论',favors:'还没有书架收藏'}[desk] || '还没有记录';
+        if (desk === 'favors') {
+            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">会员在漫画详情点「加入书架」后会出现。</p><p><a class="btn btn-muted btn-sm" href="/manga" target="_blank" rel="noopener">打开前台漫画</a></p></div>';
         }
-        var copy = {
-            works: ['还没有漫画作品', '新增作品'],
-            pending: ['没有待审作品', '新增作品'],
-            chapters: ['还没有章节', '新增章节'],
-            work: ['这部还没有章节', '新增章节'],
-            pics: ['还没有图片', '新增图片'],
-            comments: ['还没有评论', '新增评论']
-        }[desk] || ['还没有记录', '新增'];
-        return '<div class="list-empty"><p>' + copy[0] + '</p><p><button type="button" class="btn btn-primary btn-sm" id="manga-empty-add">' + copy[1] + '</button></p></div>';
-    }
-
-    function fillParentSelect(sel, excludeId, selected, placeholder) {
-        if (!sel) return;
-        excludeId = parseInt(excludeId, 10) || 0;
-        var skip = {};
-        if (excludeId) skip[excludeId] = true;
-        var rows = table.rows() || [];
-        rows.forEach(function (r) {
-            var id = parseInt(r.id, 10) || 0;
-            var pid = parseInt(r.parent_id, 10) || 0;
-            if (skip[pid]) skip[id] = true;
-        });
-        var html = placeholder ? '<option value="">' + U.escape(placeholder) + '</option>' : '';
-        html += '<option value="0">顶级</option>';
-        rows.forEach(function (r) {
-            var id = parseInt(r.id, 10) || 0;
-            if (skip[id]) return;
-            var pad = '';
-            var d = parseInt(r.depth, 10) || 0;
-            while (d-- > 0) pad += '└ ';
-            html += '<option value="' + U.escape(r.id) + '">' + pad + U.escape(r.name || '') + '</option>';
-        });
-        sel.innerHTML = html;
-        if (placeholder && (selected === '' || selected == null)) {
-            sel.value = '';
-            return;
+        if (href) {
+            return '<div class="list-empty"><p>' + tip + '</p><p class="muted">上方快捷添加，或打开完整表单。</p><p><a class="btn btn-primary btn-sm" href="' + href + '">' + label + '</a></p></div>';
         }
-        sel.value = selected == null || selected === '' ? '0' : String(selected);
+        return '<div class="list-empty"><p>' + tip + '</p></div>';
     }
-    function fillBatchParent() {
-        fillParentSelect(document.getElementById('manga-batch-parent'), 0, '', '改到上级');
-    }
-    function typeNameHtml(d) {
-        var depth = parseInt(d.depth, 10) || 0;
-        var branch = depth > 0 ? '<span class="cat-branch">└</span>' : '';
-        var n = parseInt(d.manga_count, 10) || 0;
-        var meta = '#' + U.escape(d.id);
-        if (n > 0) {
-            meta += ' · <a href="/admin/video/mangas?type_id=' + encodeURIComponent(d.id) + '">' + U.escape(String(n)) + ' 部</a>';
-        } else {
-            meta += ' · 0 部';
-        }
-        if (parseInt(d.child_count, 10) > 0) meta += ' · ' + U.escape(d.child_count) + ' 个子类';
-        return '<div class="cat-cell" style="padding-left:' + (depth * 22) + 'px">' + branch
-            + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'
-            + '<div class="muted">' + meta + '</div></div></div>';
-    }
-
     function workStatus(d) {
         var st = String(d.status) === '1' ? '上架' : '下架';
         var yid = d.yid_label || (String(d.yid) === '1' ? '待审' : '已审');
@@ -531,54 +445,68 @@
         cols = [
             {check: true, width: 36},
             {title: '名称', html: function (d) {
-                return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.title || '未填写') + '</a>';
+                var badge = parseInt(d.recommend, 10) === 1 ? '<span class="badge">推荐</span> ' : '';
+                return badge + '<a class="entry-row-title" href="/admin/video/mangas/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.title || '未填写') + '</a>';
             }},
             {title: '分类', html: function (d) { return U.escape(d.type_name || '未分类'); }},
-            {title: '作者', html: function (d) { return U.escape(d.author || ''); }},
+            {title: '作者', html: function (d) { return U.escape(d.author_label || d.author || ''); }},
             {title: '连载', width: 72, html: function (d) { return U.escape(d.serialize_label || ''); }},
             {title: '状态/待审', width: 110, html: workStatus},
             {title: '章节数', width: 72, html: function (d) { return U.escape(String(d.chapter_count == null ? 0 : d.chapter_count)); }},
+            {title: '浏览', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
+            {title: '收藏', width: 64, html: function (d) { return U.escape(String(d.favor_count == null ? 0 : d.favor_count)); }},
             {title: '操作', cls: 'actions', html: function (d) {
                 var id = encodeURIComponent(d.id || '');
                 return '<a href="/admin/video/mangas?desk=work&manga_id=' + id + '" class="btn-link">管理</a>'
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
+                    + '<a href="/admin/video/mangas/' + id + '/edit" class="btn-link">编辑</a>'
                     + '<a href="' + U.escape(d.front_url || ('/manga/' + id)) + '" class="btn-link" target="_blank" rel="noopener">前台</a>';
             }}
         ];
     } else if (desk === 'comments') {
         cols = [
             {check: true, width: 36},
-            {title: '内容', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.content || '未填写') + '</a>'; }},
+            {title: '内容', html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.content || '未填写') + '</a>';
+            }},
             {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
             {title: '昵称', width: 100, html: function (d) { return U.escape(d.author_name || ''); }},
             {title: '状态', width: 90, html: function (d) {
                 return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '待审');
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: '时间', width: 140, html: function (d) { return U.escape(d.created_label || ''); }},
+            {title: '操作', cls: 'actions', html: function (d) {
+                var mid = encodeURIComponent(d.manga_id || '');
+                return '<a href="/admin/video/manga-comments/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">编辑</a>'
+                    + (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">前台</a>' : '')
+                    + '<a href="#" class="btn-link js-del">删除</a>';
             }}
         ];
-    } else if (desk === 'types') {
+    } else if (desk === 'favors') {
         cols = [
             {check: true, width: 36},
-            {title: '分类', html: typeNameHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '禁用');
+            {title: '会员', html: function (d) {
+                var name = d.member_name || ('#' + (d.member_id || ''));
+                var miss = String(d.member_missing) === '1' ? ' <span class="muted">已删</span>' : '';
+                return '<a class="entry-row-title" href="/admin/video/mangas?desk=favors&member_id=' + encodeURIComponent(d.member_id || '') + '">' + U.escape(name) + '</a>' + miss;
             }},
+            {title: '作品', html: function (d) {
+                var title = d.manga_title || ('#' + (d.manga_id || ''));
+                var miss = String(d.manga_missing) === '1' ? ' <span class="muted">已删</span>' : '';
+                return '<a href="/admin/video/mangas?desk=favors&manga_id=' + encodeURIComponent(d.manga_id || '') + '">' + U.escape(title) + '</a>' + miss;
+            }},
+            {title: '时间', width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
             {title: '操作', cls: 'actions', html: function (d) {
-                var id = encodeURIComponent(d.id || '');
-                return '<a href="#" class="btn-link js-child">添加下级</a>'
-                    + '<a href="/admin/video/mangas?type_id=' + id + '" class="btn-link">作品</a>'
-                    + (String(d.status) === '1' ? '<a href="/manga?type=' + id + '" class="btn-link" target="_blank" rel="noopener">前台</a>' : '')
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                var mid = encodeURIComponent(d.manga_id || '');
+                return (mid ? '<a href="/manga/' + mid + '" class="btn-link" target="_blank" rel="noopener">前台</a>' : '')
+                    + '<a href="#" class="btn-link js-del">取消</a>';
             }}
         ];
     } else if (desk === 'chapters' || desk === 'work') {
         cols = [
             {check: true, width: 36},
-            {title: '章节', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>'; }},
+            {title: '章节', html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-chapters/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.name || '未填写') + '</a>';
+            }},
             {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
             {title: 'VIP', width: 64, html: function (d) { return String(d.vip) === '1' ? U.status(true, 'VIP') : U.status(false, '免费'); }},
             {title: '图片数', width: 72, html: function (d) { return U.escape(String(d.pic_count == null ? 0 : d.pic_count)); }},
@@ -586,7 +514,7 @@
             {title: '操作', cls: 'actions', html: function (d) {
                 var mid = encodeURIComponent(d.manga_id || filterMangaId || '');
                 var cid = encodeURIComponent(d.id || '');
-                return '<a href="#" class="btn-link js-edit">编辑</a>'
+                return '<a href="/admin/video/manga-chapters/' + cid + '/edit" class="btn-link">编辑</a>'
                     + (mid && cid ? '<a href="/manga/' + mid + '/' + cid + '" class="btn-link" target="_blank" rel="noopener">阅读</a>' : '')
                     + '<a href="#" class="btn-link js-del">删除</a>';
             }}
@@ -594,12 +522,15 @@
     } else if (desk === 'pics') {
         cols = [
             {check: true, width: 36},
-            {title: '图片', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.url || '未填写') + '</a>'; }},
+            {title: '图片', html: function (d) {
+                return '<a class="entry-row-title" href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.url || '未填写') + '</a>';
+            }},
             {title: '作品', html: function (d) { return U.escape(d.manga_title || ('#' + (d.manga_id || ''))); }},
             {title: '章节', html: function (d) { return U.escape(d.chapter_name || ('#' + (d.chapter_id || ''))); }},
             {title: '排序', width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: '操作', cls: 'actions', html: function (d) {
+                return '<a href="/admin/video/manga-pics/' + encodeURIComponent(d.id || '') + '/edit" class="btn-link">编辑</a>'
+                    + '<a href="#" class="btn-link js-del">删除</a>';
             }}
         ];
     }
@@ -608,14 +539,12 @@
         el: '#manga-table',
         url: '/admin/video/' + module + '/list',
         where: queryWhere(),
-        pager: desk !== 'types',
+        pager: true,
         emptyHtml: emptyHtml,
-        onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
-            if (desk === 'types') fillBatchParent();
-            var add = document.getElementById('manga-empty-add');
+        onDraw: function (_wrap, list, parsed) {
+            var total = parsed && parsed.total != null ? parseInt(parsed.total, 10) : list.length;
+            countEl.textContent = total > 0 ? '· ' + total : '';
             var reset = document.getElementById('manga-empty-reset');
-            if (add) add.addEventListener('click', function () { openDialog('add'); });
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },
         onCheck: function (ids) {
@@ -623,197 +552,15 @@
             var count = document.getElementById('manga-batch-count');
             if (!bar) return;
             bar.hidden = !ids.length;
-            if (count) count.textContent = '已选 ' + ids.length + (desk === 'types' ? ' 个' : ' 条');
+            if (count) count.textContent = '已选 ' + ids.length + ' 条';
         },
         cols: cols
     });
 
     function runSearch() { table.reload(queryWhere()); }
-    function tplId() {
-        if (desk === 'types') return 'manga-type-tpl';
-        if (desk === 'chapters' || desk === 'work') return 'manga-chapter-tpl';
-        if (desk === 'pics') return 'manga-pic-tpl';
-        if (desk === 'comments') return 'manga-comment-tpl';
-        return 'manga-work-tpl';
-    }
-    function titles(mode) {
-        var map = {
-            works: ['新增作品', '编辑作品'],
-            pending: ['新增作品', '编辑作品'],
-            types: ['新增分类', '编辑分类'],
-            chapters: ['新增章节', '编辑章节'],
-            work: ['新增章节', '编辑章节'],
-            pics: ['新增图片', '编辑图片'],
-            comments: ['新增评论', '编辑评论']
-        }[desk] || ['新增', '编辑'];
-        return mode === 'edit' ? map[1] : map[0];
-    }
-    function fill(mode, row) {
-        row = row || {};
-        if (desk === 'types') {
-            return {
-                id: mode === 'edit' ? (row.id || '') : '',
-                name: row.name || '',
-                parent_id: row.parent_id == null ? 0 : row.parent_id,
-                sort: row.sort == null ? 0 : row.sort,
-                status: row.status == null ? '1' : String(row.status)
-            };
-        }
-        if (desk === 'chapters' || desk === 'work') {
-            return {
-                id: mode === 'edit' ? (row.id || '') : '',
-                manga_id: row.manga_id || (filterMangaId || ''),
-                name: row.name || '',
-                sort: row.sort == null ? 0 : row.sort,
-                vip: row.vip == null ? '0' : String(row.vip),
-                pics: row.pics || ''
-            };
-        }
-        if (desk === 'pics') {
-            return {
-                id: mode === 'edit' ? (row.id || '') : '',
-                manga_id: row.manga_id || (filterMangaId || ''),
-                chapter_id: row.chapter_id || '',
-                url: row.url || '',
-                sort: row.sort == null ? 0 : row.sort
-            };
-        }
-        if (desk === 'comments') {
-            return {
-                id: mode === 'edit' ? (row.id || '') : '',
-                manga_id: row.manga_id || (filterMangaId || ''),
-                author_name: row.author_name || '',
-                content: row.content || '',
-                status: row.status == null ? '1' : String(row.status)
-            };
-        }
-        return {
-            id: mode === 'edit' ? (row.id || '') : '',
-            title: row.title || '',
-            type_id: row.type_id == null ? 0 : row.type_id,
-            author: row.author || '',
-            cover: row.cover || '',
-            serialize: row.serialize == null ? '0' : String(row.serialize),
-            tags: row.tags || '',
-            recommend: row.recommend == null ? '0' : String(row.recommend),
-            yid: desk === 'pending' && mode !== 'edit' ? '1' : (row.yid == null ? '0' : String(row.yid)),
-            status: row.status == null ? '1' : String(row.status),
-            remarks: row.remarks || '',
-            content: row.content || '',
-            hits: row.hits == null ? 0 : row.hits,
-            sort: row.sort == null ? 0 : row.sort
-        };
-    }
-    function bindImageFields(body) {
-        U.bindImageField(body, {
-            input: '[name=cover]',
-            btn: '.js-cover-pick',
-            preview: '.js-cover-preview'
-        });
-        U.bindImageField(body, {
-            input: '[name=url]',
-            btn: '.js-pic-pick',
-            preview: '.js-pic-preview'
-        });
-        var pics = body.querySelector('textarea[name=pics]');
-        var picsBtn = body.querySelector('.js-pics-upload');
-        var picsPreview = body.querySelector('.js-pics-preview');
-        if (!pics || !picsBtn) return;
-        function lastPicUrl() {
-            var lines = String(pics.value || '').split(/\r?\n/);
-            for (var i = lines.length - 1; i >= 0; i--) {
-                var line = String(lines[i] || '').trim();
-                if (line) return line;
-            }
-            return '';
-        }
-        function syncPicsPreview() {
-            var url = lastPicUrl();
-            if (!picsPreview) return;
-            if (url) {
-                picsPreview.src = url;
-                picsPreview.style.display = 'block';
-            } else {
-                picsPreview.removeAttribute('src');
-                picsPreview.style.display = 'none';
-            }
-        }
-        syncPicsPreview();
-        pics.addEventListener('input', syncPicsPreview);
-        picsBtn.addEventListener('click', function () {
-            U.pickFile('image/*').then(function (file) {
-                if (!file) return;
-                U.loading(true);
-                return U.upload(file).then(function (res) {
-                    U.loading(false);
-                    if (res && res.code === 0 && res.data && res.data.url) {
-                        var cur = String(pics.value || '').replace(/\s+$/, '');
-                        pics.value = cur ? (cur + '\n' + res.data.url) : res.data.url;
-                        syncPicsPreview();
-                        U.toast('已追加', 'ok');
-                    } else {
-                        U.toast((res && res.msg) || '上传失败', 'err');
-                    }
-                }).catch(function () { U.loading(false); });
-            });
-        });
-    }
-    function openDialog(mode, row, forceModule) {
-        row = row || {};
-        var saveModule = forceModule || module;
-        var useWorkTpl = forceModule === 'mangas';
-        U.dialog({
-            title: useWorkTpl ? (mode === 'edit' ? '编辑作品' : '新增作品') : titles(mode),
-            content: document.getElementById(useWorkTpl ? 'manga-work-tpl' : tplId()).innerHTML,
-            onOpen: function (body) {
-                var data = useWorkTpl ? {
-                    id: mode === 'edit' ? (row.id || '') : '',
-                    title: row.title || '',
-                    type_id: row.type_id == null ? 0 : row.type_id,
-                    author: row.author || '',
-                    cover: row.cover || '',
-                    serialize: row.serialize == null ? '0' : String(row.serialize),
-                    tags: row.tags || '',
-                    recommend: row.recommend == null ? '0' : String(row.recommend),
-                    yid: row.yid == null ? '0' : String(row.yid),
-                    status: row.status == null ? '1' : String(row.status),
-                    remarks: row.remarks || '',
-                    content: row.content || '',
-                    hits: row.hits == null ? 0 : row.hits,
-                    sort: row.sort == null ? 0 : row.sort
-                } : fill(mode, row);
-                if (desk === 'types' && !useWorkTpl) {
-                    var parentSel = body.querySelector('select[name=parent_id]');
-                    fillParentSelect(parentSel, mode === 'edit' ? (row.id || 0) : 0, data.parent_id);
-                }
-                U.fillForm(body.querySelector('form'), data);
-                bindImageFields(body);
-            },
-            onSave: function (body) {
-                var data = U.formData(body.querySelector('form'));
-                if (useWorkTpl && !data.title) { U.toast('请填写名称', 'err'); return false; }
-                if (desk === 'types' && !data.name) { U.toast('请填写名称', 'err'); return false; }
-                if ((desk === 'works' || desk === 'pending') && !data.title) { U.toast('请填写名称', 'err'); return false; }
-                if ((desk === 'chapters' || desk === 'work') && !useWorkTpl && !data.name) { U.toast('请填写章节名', 'err'); return false; }
-                if (desk === 'pics' && !data.url) { U.toast('请填写图片地址', 'err'); return false; }
-                if (desk === 'comments' && !data.content) { U.toast('请填写评论', 'err'); return false; }
-                if (mode !== 'edit') delete data.id; else data.id = row.id;
-                return U.post('/admin/video/' + saveModule + '/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
-                    if (useWorkTpl && desk === 'work') {
-                        location.reload();
-                        return;
-                    }
-                    table.refresh();
-                });
-            }
-        });
-    }
-
     function batch(action, value, confirmText) {
         var ids = table.selectedIds();
-        if (!ids.length) { U.toast(desk === 'types' ? '请先勾选分类' : '请先勾选记录', 'err'); return; }
+        if (!ids.length) { U.toast('请先勾选记录', 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/' + module + '/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
             if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
@@ -821,66 +568,136 @@
             U.toast((res && res.msg) || '操作成功', 'ok');
         });
     }
+
+    var workCompose = document.getElementById('manga-work-compose');
+    if (workCompose) {
+        workCompose.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var title = String((workCompose.title && workCompose.title.value) || '').trim();
+            if (!title) { U.toast('请填写名称', 'err'); workCompose.title.focus(); return; }
+            U.loading(true);
+            U.post('/admin/video/mangas/save', {
+                title: title,
+                status: 1,
+                yid: desk === 'pending' ? 1 : 0,
+                serialize: 0,
+                recommend: 0,
+                type_id: 0,
+                tag_ids: [],
+                tag_extra: '',
+                author_ids: [],
+                author_extra: ''
+            }).then(function (res) {
+                U.loading(false);
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+                workCompose.title.value = '';
+                workCompose.title.focus();
+                table.refresh();
+                U.toast('已添加', 'ok');
+            }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+        });
+    }
+    var chapterCompose = document.getElementById('manga-chapter-compose');
+    if (chapterCompose) {
+        chapterCompose.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var data = U.formData(chapterCompose);
+            var mid = parseInt(data.manga_id, 10) || 0;
+            var name = String(data.name || '').trim();
+            if (!mid) { U.toast('请选择作品', 'err'); return; }
+            if (!name) { U.toast('请填写章节名', 'err'); chapterCompose.name.focus(); return; }
+            U.loading(true);
+            U.post('/admin/video/manga_chapters/save', {manga_id: mid, name: name, sort: 0, vip: 0, pics: ''}).then(function (res) {
+                U.loading(false);
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+                chapterCompose.name.value = '';
+                chapterCompose.name.focus();
+                table.refresh();
+                U.toast('已添加', 'ok');
+            }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+        });
+    }
+
     U.on('#manga-search-btn', 'click', runSearch);
-    U.on('#manga-reset-btn', 'click', function () { setTimeout(runSearch, 0); });
-    U.on('#manga-add-btn', 'click', function () { openDialog('add'); });
-    U.on('#manga-edit-work', 'click', function () {
-        if (!workPayload) return;
-        openDialog('edit', workPayload, 'mangas');
+    U.on('#manga-reset-btn', 'click', function () {
+        setTimeout(function () {
+            if (desk === 'favors') {
+                var today = form.querySelector('[name=today]');
+                var missing = form.querySelector('[name=missing]');
+                if (today) today.value = '';
+                if (missing) missing.value = '';
+                if (favorQueues) {
+                    Array.prototype.forEach.call(favorQueues.querySelectorAll('.chip'), function (c, i) {
+                        c.classList.toggle('active', i === 0);
+                    });
+                }
+            }
+            if (desk === 'comments') {
+                var statusSelReset = form.querySelector('[name=status]');
+                if (statusSelReset) statusSelReset.value = '';
+                if (commentQueues) {
+                    Array.prototype.forEach.call(commentQueues.querySelectorAll('.chip'), function (c, i) {
+                        c.classList.toggle('active', i === 0);
+                    });
+                }
+            }
+            runSearch();
+        }, 0);
     });
     U.on('#manga-batch-on', 'click', function () { batch('status', 1); });
     U.on('#manga-batch-off', 'click', function () { batch('status', 0); });
     U.on('#manga-batch-pass', 'click', function () { batch('yid', 0); });
     U.on('#manga-batch-rec', 'click', function () { batch('recommend', 1); });
     U.on('#manga-batch-unrec', 'click', function () { batch('recommend', 0); });
-    U.on('#manga-batch-move', 'click', function () {
-        var val = document.getElementById('manga-batch-parent').value;
-        if (val === '') { U.toast('请选择目标上级', 'err'); return; }
-        batch('parent', val);
-    });
     U.on('#manga-batch-del', 'click', function () {
-        batch('delete', '', desk === 'types'
-            ? '确认删除选中分类？有下级或作品的会跳过。'
-            : '确认删除选中记录？');
+        batch('delete', '', desk === 'favors' ? '确认取消选中的书架收藏？' : '确认删除选中记录？');
     });
     U.on('#manga-batch-clear', 'click', function () { table.clearSelection(); });
+    var favorQueues = document.getElementById('manga-favor-queues');
+    if (favorQueues) {
+        favorQueues.addEventListener('click', function (e) {
+            var btn = e.target.closest('button.chip');
+            if (!btn) return;
+            var key = btn.getAttribute('data-queue') || '';
+            form.querySelector('[name=today]').value = '';
+            form.querySelector('[name=missing]').value = '';
+            if (key) form.querySelector('[name=' + key + ']').value = btn.getAttribute('data-value') || '1';
+            Array.prototype.forEach.call(favorQueues.querySelectorAll('.chip'), function (c) {
+                c.classList.toggle('active', c === btn);
+            });
+            runSearch();
+        });
+        var first = favorQueues.querySelector('.chip');
+        if (first) first.classList.add('active');
+    }
+    var commentQueues = document.getElementById('manga-comment-queues');
+    if (commentQueues) {
+        var statusSel = form.querySelector('[name=status]');
+        commentQueues.addEventListener('click', function (e) {
+            var btn = e.target.closest('button.chip');
+            if (!btn || !statusSel) return;
+            statusSel.value = btn.getAttribute('data-value') || '';
+            Array.prototype.forEach.call(commentQueues.querySelectorAll('.chip'), function (c) {
+                c.classList.toggle('active', c === btn);
+            });
+            runSearch();
+        });
+        var cFirst = commentQueues.querySelector('.chip');
+        if (cFirst) cFirst.classList.add('active');
+    }
     U.on('#manga-table', 'click', function (e) {
         var a = e.target.closest('a');
-        if (!a) return;
-        if (a.getAttribute('target') === '_blank' || (a.getAttribute('href') || '').indexOf('/admin/video/mangas?desk=work') === 0) {
-            return;
-        }
-        if ((a.getAttribute('href') || '').indexOf('/admin/video/mangas?type_id=') === 0) {
-            return;
-        }
-        if ((a.getAttribute('href') || '').indexOf('/manga/') === 0 && a.getAttribute('target') === '_blank') {
-            return;
-        }
-        if ((a.getAttribute('href') || '').indexOf('/manga?type=') === 0) {
-            return;
-        }
+        if (!a || !a.classList.contains('js-del')) return;
+        e.preventDefault();
         var tr = e.target.closest('tr');
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
-        if (a.classList.contains('js-edit') || a.classList.contains('js-del') || a.classList.contains('js-child')) {
-            e.preventDefault();
-        }
-        if (a.classList.contains('js-child')) {
-            openDialog('add', {parent_id: row.id, status: 1, sort: 0});
-            return;
-        }
-        if (a.classList.contains('js-edit')) openDialog('edit', row);
-        if (a.classList.contains('js-del')) {
-            var tip = desk === 'types'
-                ? ('删除「' + (row.name || '') + '」？有下级或作品时无法删除。')
-                : '确认删除？';
-            if (!U.confirm(tip)) return;
-            U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
-                table.refresh();
-                U.toast('已删除', 'ok');
-            });
-        }
+        if (!U.confirm(desk === 'favors' ? '确认取消这条书架？' : '确认删除？')) return;
+        U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            table.refresh();
+            U.toast(desk === 'favors' ? '已取消' : '已删除', 'ok');
+        });
     });
 })();
 </script>

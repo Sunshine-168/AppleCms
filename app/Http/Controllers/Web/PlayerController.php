@@ -58,6 +58,15 @@ class PlayerController extends Controller
             $playUrl = str_replace(['{url}', '{id}'], [rawurlencode($rawUrl), (string) $id], (string) $parser->parse);
         }
         $engine = VideoPlayerModel::resolveEngine($parser, $playUrl, $rawUrl);
+
+        // Cloud mirrors often ship HEVC in m3u8; Chromium plays audio only.
+        // Their /play/{id} HTML player handles that better via iframe.
+        if (preg_match('#^(https?://[^\s]+/play/[A-Za-z0-9_-]+)/index\.m3u8(?:\?.*)?$#i', $rawUrl, $m)) {
+            $playUrl = $m[1];
+            $rawUrl = $m[1];
+            $engine = 'iframe';
+        }
+
         $settings = app(\App\Services\Video\VideoSettingService::class);
         $playEncrypt = (int) $settings->get('play_encrypt', '0');
         $playBuffer = (int) $settings->get('play_buffer', '5');

@@ -111,6 +111,7 @@
 
     var table = U.table({
         el: '#audit-table',
+        countEl: countEl,
         url: '/admin/video/audits/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -120,7 +121,6 @@
             return '<div class="list-empty"><p>还没有审核规则。</p><p class="muted">采集时可以按标题、简介、演员里的词决定跳过、下架或抠词。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/audits/create">新增规则</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
         },
         onDraw: function (wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
                 var d = list[parseInt(tr.getAttribute('data-idx'), 10)];
                 if (d && parseInt(d.status, 10) !== 1) tr.classList.add('is-off');

@@ -119,6 +119,7 @@
 
     var table = U.table({
         el: '#role-table',
+        countEl: countEl,
         url: '/admin/system/roles/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -128,7 +129,6 @@
             return '<div class="list-empty"><p>还没有角色。</p><p class="muted">在上方填写名称即可添加。点名称去勾能进哪些页，再给管理员套上。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('role-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },

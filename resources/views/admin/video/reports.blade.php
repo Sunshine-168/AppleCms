@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel report-index">
+<div class="card card-panel report-index list-desk">
     <div class="card-header">
         <span>报错@if($q('open') > 0) <em>· {{ $q('open') }} 未处理</em>@endif</span>
         <div>
@@ -103,13 +103,14 @@
 
     var table = U.table({
         el: '#report-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/reports/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的报错</p><p><button type="button" class="btn btn-muted btn-sm" id="report-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有报错</p><p class="muted">访客在影片详情页提交「无法播放 / 地址失效」后会出现在这里。处理完打标，不会自动改线路。</p></div>';
+            return '<div class="list-empty"><p>还没有报错</p><p class="muted">访客在影片详情页提交「无法播放 / 地址失效」后会出现在这里。处理完打标，不会自动改线路。</p><p><a class="btn btn-muted btn-sm" href="/admin/video">去影片列表</a></p></div>';
         },
         onDraw: function (_wrap, rows) {
             var reset = document.getElementById('report-empty-reset');

@@ -1,31 +1,65 @@
 @extends('themes.default.layout')
 
 @section('content')
+@php
+    $cover = trim((string) ($topic->cover ?? ''));
+    $total = $videos instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator ? $videos->total() : $videos->count();
+@endphp
     @vodBreadcrumb(['last' => $topic->name])
-    @if($topic->cover)
-        <p><img src="{{ $topic->cover }}" alt="{{ $topic->name }}"></p>
-    @endif
-    <h1>{{ $topic->name }}</h1>
-    @if($topic->sub)
-        <p class="muted">{{ $topic->sub }}</p>
-    @endif
-    <p class="desc">{{ $topic->blurb }}</p>
-    @if($topic->content)
-        <div class="content">{!! $topic->content !!}</div>
-    @endif
-    <p>本专题共 {{ $videos instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator ? $videos->total() : $videos->count() }} 部影片</p>
-    <div class="grid">
-        @foreach($videos as $item)
-            @include('themes.default.partials.vod-card')
-        @endforeach
+
+    <div class="topic-hero{{ $cover === '' ? ' is-empty' : '' }}">
+        @if($cover !== '')
+            <img src="{{ $cover }}" alt="" class="topic-hero-bg" aria-hidden="true">
+        @endif
+        <div class="topic-hero-body">
+            <h1>{{ $topic->name }}</h1>
+            @if(trim((string) ($topic->sub ?? '')) !== '')
+                <p class="topic-sub">{{ $topic->sub }}</p>
+            @endif
+            @if(trim((string) ($topic->blurb ?? '')) !== '')
+                <p class="muted">{{ $topic->blurb }}</p>
+            @endif
+            <p class="topic-stat">本专题共 <strong>{{ $total }}</strong> 部影片</p>
+        </div>
     </div>
-    @vodPaginate
+
+    @if(trim(strip_tags((string) ($topic->content ?? ''))) !== '')
+        <div class="desc detail-desc topic-content">{!! $topic->content !!}</div>
+    @endif
+
+    <section class="home-sec">
+        <div class="sec-head"><h2>专题影片</h2></div>
+        @if($total < 1)
+            <div class="list-empty">
+                <p>这个专题还没有影片</p>
+            </div>
+        @else
+            <div class="grid">
+                @foreach($videos as $item)
+                    @include('themes.default.partials.vod-card')
+                @endforeach
+            </div>
+            @vodPaginate
+        @endif
+    </section>
+
     @if(isset($arts) && count($arts))
-        <h2>相关文章</h2>
-        <ul class="list-plain">
-            @foreach($arts as $art)
-                <li><a href="{{ $art->url }}">{{ $art->title }}</a></li>
-            @endforeach
-        </ul>
+        <section class="home-sec">
+            <div class="sec-head"><h2>相关文章</h2></div>
+            <div class="art-list">
+                @foreach($arts as $art)
+                    <article class="art-card">
+                        <a href="{{ $art->url }}">
+                            @if(trim((string) ($art->cover ?? '')) !== '')
+                                <img src="{{ $art->cover }}" alt="" loading="lazy">
+                            @endif
+                            <div class="meta">
+                                <h3>{{ $art->title }}</h3>
+                            </div>
+                        </a>
+                    </article>
+                @endforeach
+            </div>
+        </section>
     @endif
 @endsection

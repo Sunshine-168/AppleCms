@@ -10,9 +10,30 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.css">
     @endif
     <style>
-        html, body { margin:0; height:100%; background:#000; }
-        #player-shell { width:100%; height:100%; position:relative; }
-        video, iframe, .video-js, .dplayer, .artplayer-app { width:100%; height:100%; border:0; display:block; }
+        html, body { margin:0; height:100%; background:#000; overflow:hidden; }
+        #player-shell { width:100%; height:100%; position:relative; overflow:hidden; }
+        #vod-player {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #vod-player video,
+        #vod-player iframe,
+        #vod-player .video-js,
+        #vod-player .dplayer,
+        #vod-player .artplayer-app,
+        .artplayer-video-player,
+        video, iframe, .video-js, .dplayer, .artplayer-app {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100%;
+            max-height: 100%;
+            border: 0;
+            display: block;
+            object-fit: contain;
+            background: #000;
+        }
         .video-js { position:absolute; inset:0; }
         .muted { color:#999; padding:20px; }
     </style>
@@ -23,14 +44,16 @@
     $engine = (string) ($engine ?? 'artplayer');
     $raw = (string) ($rawUrl ?? $episode?->url ?? '');
     $parsed = (string) ($playUrl ?? '');
-    $media = $engine === 'iframe' ? $parsed : $raw;
+    $media = $engine === 'iframe'
+        ? ($parsed !== '' ? $parsed : $raw)
+        : ($raw !== '' ? $raw : $parsed);
     $encrypt = (int) ($playEncrypt ?? 0) === 1;
     $buffer = (int) ($playBuffer ?? 5);
 @endphp
 @if($payError)
     <p class="muted">{{ $payError }}</p>
-@elseif($engine === 'iframe' && $parsed)
-    <iframe id="vod-player" data-buffer="{{ $buffer }}" @if(!$encrypt) src="{{ $parsed }}" @endif allowfullscreen allow="autoplay"></iframe>
+@elseif($engine === 'iframe' && ($parsed || $raw))
+    <iframe id="vod-player" data-buffer="{{ $buffer }}" @if(!$encrypt) src="{{ $parsed !== '' ? $parsed : $raw }}" @endif allowfullscreen allow="autoplay"></iframe>
 @elseif($media)
     <div id="vod-player" data-buffer="{{ $buffer }}"></div>
 @else
@@ -64,10 +87,26 @@
 
     function customHls(video, url) {
         if (window.Hls && Hls.isSupported()) {
-            var hls = new Hls();
+            var hls = new Hls({
+                enableWorker: true,
+                xhrSetup: function (xhr) {
+                    try { xhr.withCredentials = false; } catch (e) {}
+                }
+            });
+            hls.on(Hls.Events.ERROR, function (_e, data) {
+                if (!data || !data.fatal) return;
+                var tip = document.createElement('p');
+                tip.className = 'muted';
+                tip.textContent = '线路加载失败，请切换到其它线路重试';
+                el.innerHTML = '';
+                el.appendChild(tip);
+                try { hls.destroy(); } catch (err) {}
+            });
             hls.loadSource(url);
             hls.attachMedia(video);
             video._hls = hls;
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
         } else {
             video.src = url;
         }
@@ -118,9 +157,15 @@
             autoplay: true,
             mutex: true,
             fullscreen: true,
+            fullscreenWeb: true,
             playbackRate: true,
             theme: '#10b981',
             type: kind === 'mp4' ? '' : kind,
+            moreVideoAttr: {
+                playsInline: true,
+                'webkit-playsinline': true,
+                preload: 'auto'
+            },
             customType: {
                 m3u8: function (video, url) { customHls(video, url); },
                 hls: function (video, url) { customHls(video, url); },

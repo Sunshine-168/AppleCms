@@ -37,12 +37,12 @@
             <p class="muted field-hint ingest-temp-hint" id="ingest-temp-hint" @if(! $toTemp) hidden @endif>打开后去「<a href="/admin/video/collect_temps">待审入库</a>」处理停住的片子。现在采集是直接进库的话，那里通常是空的。</p>
 
             <h3>进库以后</h3>
+            <div class="theme-nav-toggles">
             <input type="hidden" name="collect_in_status" value="0">
             <label class="inline">
                 <input type="checkbox" name="collect_in_status" value="1" @checked($on('collect_in_status', '1'))>
                 采集后直接上架
             </label>
-            <p class="muted field-hint">关掉则新片是待审状态，要在影片列表里再上架。</p>
             <input type="hidden" name="collect_sync_pic" value="0">
             <label class="inline">
                 <input type="checkbox" name="collect_sync_pic" value="1" @checked($on('collect_sync_pic', '1'))>
@@ -53,7 +53,8 @@
                 <input type="checkbox" name="collect_pic_local" value="1" @checked($on('collect_pic_local'))>
                 把封面下载到本站
             </label>
-            <p class="muted field-hint">下载封面会占磁盘，适合资源站图床不稳定的情况。也可事后在「<a href="/admin/video/tools/images">远程图片</a>」里补。</p>
+            </div>
+            <p class="muted field-hint">关掉「采集后直接上架」则新片是待审状态，要在影片列表里再上架。下载封面会占磁盘，适合资源站图床不稳定的情况。也可事后在「<a href="/admin/video/tools/images">远程图片</a>」里补。</p>
             <div class="settings-two">
                 <div>
                     <label for="collect_hits_min">随机人气下限</label>

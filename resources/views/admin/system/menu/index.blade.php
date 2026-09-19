@@ -85,6 +85,7 @@
     }
     var table = U.table({
         el: '#menu-table',
+        countEl: countEl,
         url: '/admin/system/menus/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -94,7 +95,6 @@
             return '<div class="list-empty"><p>还没有可授权的页。</p><p class="muted">点「对齐当前工作区」把侧栏页写进来，再到角色里勾。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            if (countEl) countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('menu-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); table.reload({}); });
         },

@@ -158,6 +158,12 @@ class MangaCollectService
             } catch (\Throwable) {
             }
         }
+        if (array_key_exists('author', $payload)) {
+            try {
+                app(MangaAuthorService::class)->syncManga((int) $manga->id, ['author' => (string) ($payload['author'] ?? '')]);
+            } catch (\Throwable) {
+            }
+        }
 
         $chapters = $this->mergeChapters($manga, $item);
         $msg = $chapters > 0

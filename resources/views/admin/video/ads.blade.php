@@ -182,6 +182,8 @@
 
     var table = U.table({
         el: '#ad-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/ads/list',
         where: queryWhere(),
         pager: false,
@@ -192,7 +194,6 @@
             return '<div class="list-empty"><p>还没有广告</p><p class="muted">广告是页头、页脚、播放页插入的 HTML。建好后主题用位置调用。</p><p><button type="button" class="btn btn-primary btn-sm" id="ad-empty-add">新增广告</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('ad-empty-add');
             var reset = document.getElementById('ad-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

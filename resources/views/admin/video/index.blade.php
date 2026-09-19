@@ -7,9 +7,9 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel video-index">
+<div class="card card-panel video-index list-desk">
     <div class="card-header">
-        <span>影片列表</span>
+        <span>影片列表 <em id="video-count"></em></span>
         <div>
             <a class="btn btn-sm" href="/admin/video/create">新增影片</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/tools/recycle">回收站@if($q('recycle') > 0) ({{ $q('recycle') }})@endif</a>
@@ -230,6 +230,8 @@
 
     var table = U.table({
         el: '#video-table',
+        countEl: document.getElementById('video-count'),
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/list',
         where: cleanWhere(U.formData(form)),
         emptyHtml: function (_parsed, where) {
@@ -254,10 +256,10 @@
             {key: 'updated_at_text', title: '更新', width: 160},
             {title: '操作', cls: 'actions', html: function (d) {
                 var id = encodeURIComponent(d.id);
-                return '<a href="/admin/video/' + id + '/edit">编辑</a>'
-                    + '<a href="/admin/video/sources?video_id=' + id + '">线路</a>'
-                    + '<a href="/admin/video/sources?video_id=' + id + '&open_episode=1">剧集</a>'
-                    + '<a href="#" class="js-del">删除</a>';
+                return '<a href="/admin/video/' + id + '/edit" class="btn-link">编辑</a>'
+                    + '<a href="/admin/video/sources?video_id=' + id + '" class="btn-link">线路</a>'
+                    + '<a href="/admin/video/sources?video_id=' + id + '&open_episode=1" class="btn-link">剧集</a>'
+                    + '<a href="#" class="btn-link js-del">删除</a>';
             }}
         ]
     });

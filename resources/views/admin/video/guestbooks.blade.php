@@ -128,6 +128,7 @@
 
     var table = U.table({
         el: '#gbook-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/guestbooks/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {

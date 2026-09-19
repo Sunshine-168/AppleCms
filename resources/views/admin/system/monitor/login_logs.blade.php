@@ -117,6 +117,7 @@
 
     var table = U.table({
         el: '#login-log-table',
+        countEl: countEl,
         url: '/admin/system/monitor/login-logs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -126,7 +127,6 @@
             return '<div class="list-empty"><p>还没有登录记录。</p><p class="muted">登录后台会出现在这里，并写清是谁、从哪、用什么设备。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             markExtra();
             var reset = document.getElementById('login-log-empty-reset');
             if (reset) reset.addEventListener('click', resetAll);

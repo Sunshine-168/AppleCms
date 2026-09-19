@@ -147,6 +147,35 @@ class FriendLinkPluginTest extends TestCase
         $this->assertTrue(app(PluginManager::class)->isEnabled('friendlink'));
     }
 
+    public function test_friend_links_are_text_only(): void
+    {
+        $apply = $this->get('/links/apply')->assertOk()->getContent();
+        $this->assertStringNotContainsString('name="type"', $apply);
+        $this->assertStringNotContainsString('>图片<', $apply);
+        $this->assertStringNotContainsString('name="logo"', $apply);
+
+        $admin = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/flinks')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('<option value="image">图片</option>', $admin);
+
+        $svc = app(SiteModuleService::class);
+        $ok = $svc->save('flinks', [
+            'desk' => 'links',
+            'name' => '只文字',
+            'url' => 'https://text-only.example',
+            'type' => 'image',
+            'logo' => 'https://evil.example/x.png',
+            'status' => 1,
+        ], null);
+        $this->assertSame(0, $ok['code'], $ok['msg'] ?? '');
+        $row = FriendLink::query()->where('name', '只文字')->first();
+        $this->assertNotNull($row);
+        $this->assertSame('text', (string) $row->type);
+        $this->assertSame('', (string) $row->logo);
+    }
+
     public function test_captcha_route_is_an_image(): void
     {
         $res = $this->get('/links/captcha')->assertOk();

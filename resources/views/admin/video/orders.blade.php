@@ -153,6 +153,7 @@
 
     var table = U.table({
         el: '#order-table',
+        countEl: countEl,
         url: '/admin/video/orders/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -162,7 +163,6 @@
             return '<div class="list-empty"><p>还没有订单。</p><p class="muted">会员充值会出现在这里。线下到账可以补录，确认已付才会加积分。</p><p><button type="button" class="btn btn-primary btn-sm" id="order-empty-add">补录订单</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('order-empty-add');
             var reset = document.getElementById('order-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

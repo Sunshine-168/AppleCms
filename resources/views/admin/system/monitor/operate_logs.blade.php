@@ -121,6 +121,7 @@
 
     var table = U.table({
         el: '#operate-log-table',
+        countEl: countEl,
         url: '/admin/system/monitor/operate-logs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -130,7 +131,6 @@
             return '<div class="list-empty"><p>还没有操作记录。</p><p class="muted">后台改数据会记一行，写清谁改了什么。打开页面不会记。</p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             markExtra();
             var reset = document.getElementById('operate-log-empty-reset');
             if (reset) reset.addEventListener('click', resetAll);

@@ -46,8 +46,14 @@ class SiteModule extends Controller
                 $payload['filterMangaTitle'] = '';
                 $payload['filterTypeId'] = (int) request()->query('type_id', 0);
                 $payload['filterTagId'] = (int) request()->query('tag_id', 0);
+                $payload['filterAuthorId'] = (int) request()->query('author_id', 0);
+                $payload['filterQ'] = trim((string) request()->query('q', ''));
+                $payload['filterSerialize'] = (string) request()->query('serialize', '');
+                $payload['filterRecommend'] = (string) request()->query('recommend', '');
                 $payload['tags'] = [];
+                $payload['authors'] = [];
                 $payload['filterTag'] = null;
+                $payload['filterAuthor'] = null;
                 try {
                     $svc = app(\Plugins\Manga\Services\MangaService::class);
                     $payload['types'] = $svc->adminTypes();
@@ -57,17 +63,55 @@ class SiteModule extends Controller
                         $payload['filterMangaTitle'] = $filter ? (string) $filter->title : '';
                     }
                     $tagSvc = app(\Plugins\Manga\Services\MangaTagService::class);
-                    $payload['tags'] = $tagSvc->options();
-                    foreach ($payload['tags'] as $tag) {
-                        if ((int) ($tag['id'] ?? 0) === $payload['filterTagId']) {
-                            $payload['filterTag'] = $tag;
-                            break;
+                    $payload['tagsReady'] = $tagSvc->ready();
+                    // 列表筛选用 chip，不在此拉全量标签（量大会拖垮页）。
+                    $payload['tags'] = [];
+                    if ($payload['filterTagId'] > 0) {
+                        $tag = $tagSvc->find($payload['filterTagId']);
+                        if ($tag) {
+                            $payload['filterTag'] = [
+                                'id' => (int) $tag->id,
+                                'name' => (string) $tag->name,
+                                'slug' => (string) ($tag->slug ?? ''),
+                            ];
                         }
+                    }
+                    $authorSvc = app(\Plugins\Manga\Services\MangaAuthorService::class);
+                    $payload['authorsReady'] = $authorSvc->ready();
+                    $payload['authors'] = [];
+                    if ($payload['filterAuthorId'] > 0) {
+                        $author = $authorSvc->find($payload['filterAuthorId']);
+                        if ($author) {
+                            $payload['filterAuthor'] = [
+                                'id' => (int) $author->id,
+                                'name' => (string) $author->name,
+                                'slug' => (string) ($author->slug ?? ''),
+                            ];
+                        }
+                    }
+                    $payload['filterMemberId'] = (int) request()->query('member_id', 0);
+                    $payload['filterMemberName'] = '';
+                    $payload['favorQueues'] = ['all' => 0, 'today' => 0, 'missing' => 0];
+                    $payload['commentQueues'] = ['all' => 0, 'pending' => 0, 'pass' => 0];
+                    if ($desk === 'favors' || $payload['filterMemberId'] > 0) {
+                        $favorSvc = app(\Plugins\Manga\Services\MangaFavorAdminService::class);
+                        $payload['favorQueues'] = $favorSvc->queues();
+                        $focus = $favorSvc->focus($payload['filterMemberId'], $payload['filterMangaId']);
+                        $payload['filterMemberName'] = $focus['member_name'];
+                        if ($payload['filterMangaId'] > 0 && $payload['filterMangaTitle'] === '') {
+                            $payload['filterMangaTitle'] = $focus['manga_title'];
+                        }
+                    }
+                    if ($desk === 'comments') {
+                        $payload['commentQueues'] = app(\Plugins\Manga\Services\MangaCommentAdminService::class)->queues();
                     }
                 } catch (\Throwable) {
                     $payload['types'] = [];
                     $payload['works'] = [];
                     $payload['tags'] = [];
+                    $payload['tagsReady'] = false;
+                    $payload['authors'] = [];
+                    $payload['authorsReady'] = false;
                 }
             }
             if ($module === 'mall_goods') {
@@ -513,7 +557,7 @@ class SiteModule extends Controller
             ],
             'isEdit' => false,
             'types' => $this->modules->artTypeOptions(),
-            'tags' => app(\App\Services\Admin\Video\ArtTagService::class)->options(),
+            'selectedTags' => [],
             'tagsReady' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
         ]);
     }
@@ -524,13 +568,15 @@ class SiteModule extends Controller
         if ($art === null) {
             abort(404);
         }
+        $tagSvc = app(\App\Services\Admin\Video\ArtTagService::class);
+        $tagIds = array_map('intval', is_array($art['tag_ids'] ?? null) ? $art['tag_ids'] : []);
 
         return view('admin.video.art_form', [
             'art' => $art,
             'isEdit' => true,
             'types' => $this->modules->artTypeOptions(),
-            'tags' => app(\App\Services\Admin\Video\ArtTagService::class)->options(),
-            'tagsReady' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
+            'selectedTags' => $tagSvc->labels($tagIds),
+            'tagsReady' => $tagSvc->ready(),
         ]);
     }
 

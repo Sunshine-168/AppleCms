@@ -4,7 +4,7 @@
     "name_en": "Manga",
     "description": "独立漫画库和阅读页。关掉后 /manga 和后台入口一起消失。不是影片分类。",
     "description_en": "Standalone manga library and reader. /manga and admin entries leave when you turn it off. Not a video category.",
-    "version": "1.4.0",
+    "version": "1.6.5",
     "enabled": true,
     "capability": "ready",
     "group": "content",
@@ -64,6 +64,7 @@
                     "chapters",
                     "pics",
                     "comments",
+                    "favors",
                     "stats"
                 ],
                 "default_desk": "works",
@@ -158,6 +159,46 @@
                     "hits",
                     "status",
                     "sort"
+                ]
+            },
+            "manga_authors": {
+                "title": "漫画作者",
+                "hint": "漫画作者库，不是会员或影人。",
+                "model": "Plugins\\Manga\\Models\\MangaAuthor",
+                "search": "name",
+                "redirect": "/admin/video/manga-authors",
+                "fields": [
+                    {
+                        "name": "name",
+                        "label": "名称",
+                        "type": "text"
+                    },
+                    {
+                        "name": "slug",
+                        "label": "别名",
+                        "type": "text"
+                    },
+                    {
+                        "name": "sort",
+                        "label": "排序",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "label": "状态",
+                        "type": "select",
+                        "options": {
+                            "1": "启用",
+                            "0": "停用"
+                        }
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "name",
+                    "slug",
+                    "sort",
+                    "status"
                 ]
             },
             "manga_types": {
@@ -351,6 +392,31 @@
                     "content",
                     "status"
                 ]
+            },
+            "manga_favors": {
+                "title": "漫画书架",
+                "hint": "会员在漫画页点的书架收藏。后台只查看和取消，不能代收藏。",
+                "model": "Plugins\\Manga\\Models\\MangaFavor",
+                "search": "id",
+                "redirect": "/admin/video/mangas?desk=favors",
+                "fields": [
+                    {
+                        "name": "member_id",
+                        "label": "会员ID",
+                        "type": "number"
+                    },
+                    {
+                        "name": "manga_id",
+                        "label": "漫画ID",
+                        "type": "number"
+                    }
+                ],
+                "cols": [
+                    "id",
+                    "member_id",
+                    "manga_id",
+                    "created_at"
+                ]
             }
         },
         "sidebar_fold": {
@@ -376,9 +442,19 @@
                     "label": "nav.manga_tags"
                 },
                 {
+                    "url": "/admin/video/manga-authors",
+                    "icon": "user",
+                    "label": "nav.manga_authors"
+                },
+                {
                     "url": "/admin/video/mangas?desk=comments",
                     "icon": "comments",
                     "label": "nav.manga_comments"
+                },
+                {
+                    "url": "/admin/video/mangas?desk=favors",
+                    "icon": "star",
+                    "label": "nav.manga_favors"
                 },
                 {
                     "url": "/admin/video/mangas?desk=stats",

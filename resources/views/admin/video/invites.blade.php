@@ -165,6 +165,8 @@
 
     var table = U.table({
         el: '#invite-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/invites/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -174,7 +176,6 @@
             return '<div class="list-empty"><p>还没有邀请码</p><p class="muted">点「批量生成」。发给要注册的人。注册时填了有效码才会加积分。</p><p><button type="button" class="btn btn-primary btn-sm" id="invite-empty-gen">批量生成</button></p></div>';
         },
         onDraw: function (wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
                 var d = list[parseInt(tr.getAttribute('data-idx'), 10)];
                 if (d && d.state === 'void') tr.classList.add('is-off');

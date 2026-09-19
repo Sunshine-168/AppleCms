@@ -75,6 +75,7 @@
             </div>
 
             <div class="settings-pane{{ $tab === 'interact' ? ' active' : '' }}" data-pane="interact">
+                <div class="theme-nav-toggles">
                 <input type="hidden" name="member_register" value="0">
                 <label class="inline">
                     <input type="checkbox" name="member_register" value="1" @checked($on('member_register', '1'))>
@@ -100,6 +101,7 @@
                     <input type="checkbox" name="gbook_audit" value="1" @checked($on('gbook_audit'))>
                     留言要先审再显示
                 </label>
+                </div>
 
                 <label for="trysee_seconds">试看秒数</label>
                 <input id="trysee_seconds" type="number" name="trysee_seconds" min="0" value="{{ $s['trysee_seconds'] ?? 0 }}">

@@ -2,7 +2,7 @@
 @section('title', admin_t('page.tags'))
 
 @section('plain')
-<div class="card card-panel tag-index">
+<div class="card card-panel tag-index list-desk">
     <div class="card-header">
         <span>标签 <em id="tag-count"></em></span>
         <button type="button" class="btn btn-sm" id="video-tag-add-btn">新增标签</button>
@@ -112,6 +112,8 @@
 
     var table = U.table({
         el: '#video-tag-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/tags/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -121,7 +123,6 @@
             return '<div class="list-empty"><p>还没有标签</p><p class="muted">标签给前台做聚合，不是栏目。也可以先在影片里填标签，名字会自动建档。</p><p><button type="button" class="btn btn-primary btn-sm" id="tag-empty-add">新增标签</button></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('tag-empty-add');
             var reset = document.getElementById('tag-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

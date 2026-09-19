@@ -1,90 +1,183 @@
 @extends('themes.default.layout')
 
 @section('content')
+@php
+    $cover = trim((string) ($video->cover ?? ''));
+    $score = $video->stat->score ?? $video->score ?? 0;
+    $desc = trim(strip_tags((string) ($video->description ?? '')));
+    $actors = $video->actors ?? collect();
+    $tags = $video->tags ?? collect();
+@endphp
     @vodBreadcrumb
-    <h1>{{ $video->title }}</h1>
-    <p class="muted">{{ $video->year }} / {{ $video->area }} / {{ $video->lang }} @if($video->remarks) · {{ $video->remarks }} @endif · 评分 {{ $video->stat->score ?? $video->score }}@if((int)($video->points ?? 0) > 0) · 点播 {{ $video->points }} 积分 @endif</p>
-    <p>
-        <a href="{{ $video->play_url }}">立即播放</a>
-        <a href="{{ vod_url('down', ['id' => $video->id]) }}">下载</a>
-        @auth('member')
-            <button type="button" id="fav-btn" data-on="{{ $favorited ? '1' : '0' }}">{{ $favorited ? '取消收藏' : '收藏' }}</button>
-        @else
-            <a href="{{ url('/member/login') }}">登录后收藏</a>
-        @endauth
-        @include('themes.default.partials.share-link')
-    </p>
-    <div class="desc">@vodSubstr(['name' => $video->description, 'len' => 400])</div>
+    <div class="detail-layout">
+        <div class="detail-cover{{ $cover === '' ? ' is-empty' : '' }}">
+            @if($cover !== '')
+                <img src="{{ $cover }}" alt="{{ $video->title }}"
+                     onerror="var p=this.parentElement;this.remove();if(p)p.classList.add('is-empty');">
+            @endif
+            <div class="detail-cover-empty">暂无封面</div>
+        </div>
+        <div class="detail-main">
+            <h1 class="detail-title">{{ $video->title }}</h1>
+            <ul class="detail-tags">
+                @if($video->type)<li><a href="{{ $video->type->url }}">{{ $video->type->name }}</a></li>@endif
+                @if($video->year)<li>{{ $video->year }}</li>@endif
+                @if($video->area)<li>{{ $video->area }}</li>@endif
+                @if($video->lang)<li>{{ $video->lang }}</li>@endif
+                @if($video->remarks)<li class="is-hi">{{ $video->remarks }}</li>@endif
+                @if((float) $score > 0)<li class="is-score">{{ $score }} 分</li>@endif
+                @if((int) ($video->points ?? 0) > 0)<li>点播 {{ $video->points }} 积分</li>@endif
+            </ul>
+
+            @if($actors->isNotEmpty())
+                <p class="detail-actors">
+                    <span class="muted">主演</span>
+                    @foreach($actors->take(8) as $actor)
+                        <a href="{{ $actor->url }}">{{ $actor->name }}</a>@if(! $loop->last)<span class="muted"> / </span>@endif
+                    @endforeach
+                </p>
+            @endif
+
+            @if($tags->isNotEmpty())
+                <p class="detail-actors">
+                    <span class="muted">标签</span>
+                    @foreach($tags->take(10) as $tag)
+                        <a href="{{ $tag->url ?? vod_url('tag', ['slug' => $tag->slug ?? $tag->id]) }}">{{ $tag->name }}</a>@if(! $loop->last)<span class="muted"> · </span>@endif
+                    @endforeach
+                </p>
+            @endif
+
+            <div class="detail-actions">
+                <a class="btn-play" href="{{ $video->play_url }}">立即播放</a>
+                <a class="btn-ghost" href="{{ vod_url('down', ['id' => $video->id]) }}">下载</a>
+                @auth('member')
+                    <button type="button" class="btn-ghost" id="fav-btn" data-on="{{ $favorited ? '1' : '0' }}">{{ $favorited ? '取消收藏' : '收藏' }}</button>
+                @else
+                    <a class="btn-ghost" href="{{ url('/member/login') }}">登录后收藏</a>
+                @endauth
+                @include('themes.default.partials.share-link')
+            </div>
+
+            @if($desc !== '' && $desc !== '暂无简介')
+                <div class="desc detail-desc">{{ \Illuminate\Support\Str::limit($desc, 400) }}</div>
+            @endif
+        </div>
+    </div>
+
     @php $roleList = $roles ?? collect(); @endphp
     @if($roleList && count($roleList))
-        <h2>角色</h2>
-        <ul>
-            @foreach($roleList as $role)
-                <li><a href="{{ $role->url ?? vod_url('role', ['id' => $role->id]) }}">{{ $role->name }}</a></li>
-            @endforeach
-        </ul>
-        <p><a href="{{ vod_url('roles') }}">全部角色</a></p>
+        <section class="home-sec">
+            <div class="sec-head"><h2>角色</h2><a class="more" href="{{ vod_url('roles') }}">全部</a></div>
+            <ul class="chip-list">
+                @foreach($roleList as $role)
+                    <li><a href="{{ $role->url ?? vod_url('role', ['id' => $role->id]) }}">{{ $role->name }}</a></li>
+                @endforeach
+            </ul>
+        </section>
     @endif
+
     @php $plotList = $plots ?? $video->plots ?? collect(); @endphp
     @if($plotList && count($plotList))
-        <h2>分集剧情</h2>
-        <ul>
-            @foreach($plotList as $plot)
-                <li><a href="{{ vod_url('plot', ['id' => $plot->id]) }}">第{{ $plot->episode_num }}集 {{ $plot->title }}</a></li>
-            @endforeach
-        </ul>
-        <p><a href="{{ vod_url('plots') }}?video_id={{ $video->id }}">全部剧情</a></p>
+        <section class="home-sec">
+            <div class="sec-head"><h2>分集剧情</h2><a class="more" href="{{ vod_url('plots') }}?video_id={{ $video->id }}">全部</a></div>
+            <ul class="list-plain">
+                @foreach($plotList as $plot)
+                    <li><a href="{{ vod_url('plot', ['id' => $plot->id]) }}">第{{ $plot->episode_num }}集 {{ $plot->title }}</a></li>
+                @endforeach
+            </ul>
+        </section>
     @endif
 
-    <h2>线路</h2>
-    @vodSource(['type' => 'play'])
-        <h3>{{ $item->name }}</h3>
-        <div class="eps">
-            @foreach($item->episodes as $ep)
-                <a href="{{ $ep->play_url }}">{{ $ep->display_name }}</a>
-            @endforeach
-        </div>
-    @endvodSource
-    @vodSource(['type' => 'down'])
-        <h3>{{ $item->name }}</h3>
-        <div class="eps">
-            @foreach($item->episodes as $ep)
-                <a href="{{ $ep->url }}" target="_blank" rel="nofollow">下载 {{ $ep->display_name }}</a>
-            @endforeach
-        </div>
-    @endvodSource
+    <section class="home-sec">
+        <div class="sec-head"><h2>播放线路</h2></div>
+        @vodSource(['type' => 'play'])
+            <div class="source-block play-panel">
+                <h3 class="source-name">{{ $item->name }}</h3>
+                <div class="eps">
+                    @foreach($item->episodes as $ep)
+                        <a href="{{ $ep->play_url }}">{{ $ep->display_name }}</a>
+                    @endforeach
+                </div>
+            </div>
+        @endvodSource
+        @vodSource(['type' => 'down'])
+            <div class="source-block play-panel">
+                <h3 class="source-name">下载 · {{ $item->name }}</h3>
+                <div class="eps">
+                    @foreach($item->episodes as $ep)
+                        <a href="{{ $ep->url }}" target="_blank" rel="nofollow">{{ $ep->display_name }}</a>
+                    @endforeach
+                </div>
+            </div>
+        @endvodSource
+    </section>
 
-    <p>评分：
+    <section class="home-sec">
+        <div class="sec-head"><h2>猜你喜欢</h2></div>
+        <div class="grid">
+            @vod(['typeid' => $video->type_id, 'num' => 12, 'order' => 'hits'])
+                @if((int) $item->id !== (int) $video->id)
+                    @include('themes.default.partials.vod-card')
+                @endif
+            @endvod
+        </div>
+    </section>
+
+    <p class="score-row muted">给这部片打分：
         @for($i=8; $i<=10; $i++)
             <a href="javascript:;" class="score-link" data-score="{{ $i }}">{{ $i }}分</a>
         @endfor
     </p>
 
-    <h2>评论</h2>
-    <form method="post" action="{{ url('/vod/'.$video->id.'/comment') }}">
-        @csrf
-        @guest('member')
-            <p><input name="author_name" placeholder="昵称"></p>
-        @endguest
-        <p><textarea name="content" rows="4" style="width:100%;background:#0b0d12;color:#e8eaed;border:1px solid #2a2f3a;" required></textarea></p>
-        <p><button type="submit">发表评论</button></p>
-    </form>
-    @vodComment
-        <p><strong>{{ $item->author_name }}</strong> · {{ date('Y-m-d H:i', (int)$item->created_at) }}
-            <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
-            <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
-            <br>{{ $item->content }}
-        </p>
-    @endvodComment
+    <section class="home-sec detail-engage">
+        <div class="sec-head"><h2>评论</h2></div>
+        <div class="detail-comment-box">
+            <form class="comment-form" method="post" action="{{ url('/vod/'.$video->id.'/comment') }}">
+                @csrf
+                @guest('member')
+                    <label class="auth-field">
+                        <span>昵称</span>
+                        <input name="author_name" placeholder="怎么称呼你" maxlength="40">
+                    </label>
+                @endguest
+                <label class="auth-field">
+                    <span>内容</span>
+                    <textarea name="content" rows="4" required placeholder="说点什么…" maxlength="1000"></textarea>
+                </label>
+                <div class="auth-actions">
+                    <button type="submit" class="btn-play btn-sm">发表评论</button>
+                </div>
+            </form>
+            <div class="comment-list">
+                @vodComment
+                    <article class="comment-item">
+                        <header class="comment-item-head">
+                            <strong>{{ $item->author_name }}</strong>
+                            <time class="muted">{{ date('Y-m-d H:i', (int)$item->created_at) }}</time>
+                            <span class="comment-item-acts">
+                                <a href="javascript:;" class="comment-like" data-id="{{ $item->id }}">赞{{ (int)($item->comment_up ?? 0) > 0 ? ' '.$item->comment_up : '' }}</a>
+                                <a href="javascript:;" class="comment-report" data-id="{{ $item->id }}">举报</a>
+                            </span>
+                        </header>
+                        <p class="comment-item-body">{{ $item->content }}</p>
+                    </article>
+                @endvodComment
+            </div>
+        </div>
+    </section>
 
-    <h2>报错</h2>
-    <form method="post" action="{{ url('/vod/'.$video->id.'/report') }}">
-        @csrf
-        <p><input name="content" placeholder="无法播放 / 地址失效…" style="width:70%"></p>
-        <p><button type="submit">提交报错</button></p>
-    </form>
+    <section class="home-sec detail-engage">
+        <div class="sec-head"><h2>报错</h2></div>
+        <form class="report-form detail-comment-box" method="post" action="{{ url('/vod/'.$video->id.'/report') }}">
+            @csrf
+            <div class="field-inline">
+                <input name="content" placeholder="无法播放 / 地址失效…" required>
+                <button type="submit" class="btn-ghost">提交</button>
+            </div>
+        </form>
+    </section>
 
-    <p>@vodPrev  @vodNext</p>
+    <p class="near-nav">@vodPrev  @vodNext</p>
     <script>
         document.querySelectorAll('.score-link').forEach(function(a){
             a.addEventListener('click', function(){

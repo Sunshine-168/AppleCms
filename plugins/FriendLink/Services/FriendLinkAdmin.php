@@ -166,7 +166,7 @@ class FriendLinkAdmin
                 3 => '冻结',
                 default => '待审',
             };
-            $arr['type_label'] = (string) $row->type === 'image' ? '图片' : '文字';
+            $arr['type_label'] = '文字';
             $arr['go_url'] = '/links/go/'.(int) $row->id;
 
             return $arr;
@@ -314,14 +314,14 @@ class FriendLinkAdmin
         if ($url !== null) {
             $row->url = $url;
         }
-        foreach (['logo' => 500, 'email' => 120, 'remark' => 255] as $field => $max) {
+        foreach (['email' => 120, 'remark' => 255] as $field => $max) {
             if (array_key_exists($field, $data) || $id === null) {
                 $row->{$field} = mb_substr(trim((string) ($data[$field] ?? '')), 0, $max);
             }
         }
-        if (array_key_exists('type', $data) || $id === null) {
-            $type = strtolower(trim((string) ($data['type'] ?? 'text')));
-            $row->type = in_array($type, ['text', 'image'], true) ? $type : 'text';
+        $row->type = 'text';
+        if ($id === null) {
+            $row->logo = '';
         }
         if (array_key_exists('cate_id', $data) || $id === null) {
             $row->cate_id = max(0, (int) ($data['cate_id'] ?? 0));

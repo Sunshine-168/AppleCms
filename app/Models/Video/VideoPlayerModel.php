@@ -59,17 +59,23 @@ class VideoPlayerModel extends Model
             'dplayer', 'dp' => 'dplayer',
             'videojs', 'video.js', 'vjs' => 'videojs',
             'parse', 'jiexi', 'iframe' => 'iframe',
-            default => 'artplayer',
+            default => (str_contains($code, 'yun') || str_ends_with($code, 'cloud'))
+                ? 'iframe'
+                : 'artplayer',
         };
     }
 
     public static function resolveEngine(?self $row, string $playUrl = '', string $rawUrl = ''): string
     {
         if (! $row) {
-            return 'artplayer';
+            return self::guessEngineFromUrl($rawUrl !== '' ? $rawUrl : $playUrl);
         }
         $parse = trim((string) ($row->parse ?? ''));
         if ($parse !== '' && $playUrl !== '' && $playUrl !== $rawUrl) {
+            return 'iframe';
+        }
+        $url = $rawUrl !== '' ? $rawUrl : $playUrl;
+        if (self::looksLikeHtmlPlayPage($url)) {
             return 'iframe';
         }
         $col = '';
@@ -81,9 +87,43 @@ class VideoPlayerModel extends Model
             $col = '';
         }
         if (in_array($col, self::engines(), true)) {
+            // Collected *yun lines were wrongly saved as artplayer; force iframe for HTML pages.
+            if ($col === 'artplayer' && self::looksLikeHtmlPlayPage($url)) {
+                return 'iframe';
+            }
+
             return $col;
         }
 
         return self::inferEngine((string) ($row->code ?? ''), $parse);
+    }
+
+    public static function looksLikeHtmlPlayPage(string $url): bool
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return false;
+        }
+        if (preg_match('/\.(m3u8|mp4|webm|ogg|flv|ts)(\?|$)/i', $url)) {
+            return false;
+        }
+        if (preg_match('#/play/[A-Za-z0-9]+/?$#', $url)) {
+            return true;
+        }
+
+        return (bool) preg_match('#^https?://[^/]*(yun|play\.)#i', $url)
+            && ! preg_match('/\.(m3u8|mp4)(\?|$)/i', $url);
+    }
+
+    public static function guessEngineFromUrl(string $url): string
+    {
+        if (self::looksLikeHtmlPlayPage($url)) {
+            return 'iframe';
+        }
+        if (preg_match('/\.m3u8(\?|$)/i', $url)) {
+            return 'artplayer';
+        }
+
+        return 'artplayer';
     }
 }

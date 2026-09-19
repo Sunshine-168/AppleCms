@@ -312,6 +312,7 @@
 
     var table = U.table({
         el: '#dict-table',
+        countEl: countEl,
         url: '/admin/system/dicts/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -324,7 +325,6 @@
             return '<div class="list-empty"><p>还没有选项。</p><p class="muted">点「添加」，选一个类型再填。</p></div>';
         },
         onDraw: function (_wrap, list, parsed) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             if (parsed && parsed.groups && parsed.groups.length) GROUPS = parsed.groups;
             renderGroups(parsed && parsed.queues ? parsed.queues : {});
             var reset = document.getElementById('dict-empty-reset');

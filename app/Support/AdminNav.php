@@ -285,8 +285,12 @@ class AdminNav
         if (in_array($hrefDesk, ['works', 'tasks'], true)) {
             $hrefDesk = '';
         }
-        if (in_array($curDesk, ['works', 'tasks', 'work'], true)) {
+        if (in_array($curDesk, ['works', 'tasks'], true)) {
             $curDesk = '';
+        }
+        // 作品工作台管的是章节，侧栏高亮「章节」而不是「作品」。
+        if ($curDesk === 'work') {
+            $curDesk = 'chapters';
         }
         if ($hrefDesk !== '') {
             return $hrefDesk === $curDesk;
@@ -723,6 +727,10 @@ class AdminNav
             '/admin/video/mangas' => 'manga',
             '/admin/video/manga-types' => 'manga',
             '/admin/video/manga-tags' => 'manga',
+            '/admin/video/manga-authors' => 'manga',
+            '/admin/video/manga-chapters' => 'manga',
+            '/admin/video/manga-pics' => 'manga',
+            '/admin/video/manga-comments' => 'manga',
             '/admin/video/manga_chapters' => 'manga',
             '/admin/video/manga_types' => 'manga',
             '/admin/video/manga_pics' => 'manga',

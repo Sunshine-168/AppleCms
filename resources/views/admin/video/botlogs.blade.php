@@ -7,7 +7,7 @@
 @endphp
 
 @section('plain')
-<div class="card card-panel botlog-index">
+<div class="card card-panel botlog-index list-desk">
     <div class="card-header">
         <span>爬虫日志 <em id="botlog-count"></em></span>
         <div>
@@ -103,16 +103,17 @@
 
     var table = U.table({
         el: '#botlog-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/botlogs/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="botlog-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有爬虫进来</p><p class="muted">本机只开后台不会记。站点放到公网、等搜索引擎来抓，或前台被带爬虫标识的访问打到，才会出现。</p></div>';
+            return '<div class="list-empty"><p>还没有爬虫进来</p><p class="muted">本机只开后台不会记。站点放到公网、等搜索引擎来抓，或前台被带爬虫标识的访问打到，才会出现。</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">打开前台</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            if (countEl) countEl.textContent = list.length ? '· ' + list.length : '';
             var reset = document.getElementById('botlog-empty-reset');
             if (reset) reset.addEventListener('click', function () {
                 form.reset();

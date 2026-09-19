@@ -180,6 +180,8 @@
 
     var table = U.table({
         el: '#website-table',
+        queueKeys: QUEUE_KEYS,
+        countEl: countEl,
         url: '/admin/video/websites/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
@@ -189,7 +191,6 @@
             return '<div class="list-empty"><p>还没有网址导航</p><p class="muted">点新增，填名称和网址。会出现在前台顶栏「导航」，不会进页脚。页脚交换请去友情链接。</p><p><button type="button" class="btn btn-primary btn-sm" id="website-empty-add">新增站点</button> <a class="btn btn-muted btn-sm" href="/admin/video/links">去友情链接</a></p></div>';
         },
         onDraw: function (_wrap, list) {
-            countEl.textContent = list.length ? '· ' + list.length : '';
             var add = document.getElementById('website-empty-add');
             var reset = document.getElementById('website-empty-reset');
             if (add) add.addEventListener('click', function () { openDialog('add'); });

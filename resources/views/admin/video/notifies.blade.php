@@ -133,6 +133,7 @@
 
     var table = U.table({
         el: '#notify-table',
+        queueKeys: QUEUE_KEYS,
         url: '/admin/video/notifies/list',
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {

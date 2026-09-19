@@ -247,7 +247,7 @@ class SiteFrontService
         }
         $source = $sid
             ? $video->sources->firstWhere('id', $sid)
-            : $sources->first();
+            : $this->preferPlayableSource($sources);
         if (! $source instanceof VideoSourceModel) {
             return [null, null];
         }
@@ -284,6 +284,41 @@ class SiteFrontService
         }
 
         return $prefix.'/'.ltrim($url, '/');
+    }
+
+    /**
+     * Prefer direct media lines (m3u8/mp4) over cloud HTML pages when picking the default source.
+     *
+     * @param  \Illuminate\Support\Collection<int, VideoSourceModel>  $sources
+     */
+    private function preferPlayableSource($sources): ?VideoSourceModel
+    {
+        if ($sources->isEmpty()) {
+            return null;
+        }
+        $ranked = $sources->sortBy(function (VideoSourceModel $source) {
+            $player = strtolower(trim((string) ($source->player ?: $source->name ?: '')));
+            $ep = $source->episodes->where('status', 1)->sortBy('episode_num')->first()
+                ?: $source->episodes->first();
+            $url = strtolower(trim((string) ($ep?->url ?? '')));
+            $score = 50;
+            if (str_contains($player, 'yun') || str_contains($player, 'iframe') || str_contains($player, 'parse')) {
+                // HTML/cloud players decode HEVC better in Chromium than raw m3u8.
+                $score = 0;
+            } elseif (str_contains($player, 'm3u8') || preg_match('/\.m3u8(\?|$)/', $url)) {
+                $score = 20;
+            } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/', $url)) {
+                $score = 10;
+            } elseif ($url !== '' && ! preg_match('/\.(m3u8|mp4|webm|ogg|flv)(\?|$)/', $url)) {
+                $score = 5;
+            }
+
+            return [$score, (int) ($source->sort ?? 0) * -1, (int) $source->id];
+        })->values();
+
+        $first = $ranked->first();
+
+        return $first instanceof VideoSourceModel ? $first : null;
     }
 
     public function bumpHits(VideoModel $video): void

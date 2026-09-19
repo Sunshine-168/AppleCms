@@ -1,16 +1,25 @@
 @extends('themes.default.layout')
 @section('content')
-<div class="mall-head">
-    <div>
-        <h1>我的兑换</h1>
-        <p class="muted"><a href="{{ url('/mall') }}">← 返回商城</a> · 当前积分 {{ (int) ($points ?? 0) }}</p>
+<div class="mall-page">
+    <div class="mall-head">
+        <div>
+            <h1>我的兑换</h1>
+            <p class="muted"><a href="{{ url('/mall') }}">返回商城</a> · 当前积分 {{ (int) ($points ?? 0) }}</p>
+        </div>
+        <div class="mall-balance">
+            <div class="mall-balance-label">可用积分</div>
+            <strong>{{ (int) ($points ?? 0) }}</strong>
+        </div>
     </div>
-</div>
 
 @if($list->isEmpty())
-    <p class="muted">还没有兑换记录。<a href="{{ url('/mall') }}">去逛逛</a></p>
+    <div class="list-empty">
+        <p>还没有兑换记录</p>
+        <p class="muted">去商城挑一件喜欢的吧。</p>
+        <p><a class="btn-link" href="{{ url('/mall') }}">去逛逛</a></p>
+    </div>
 @else
-    <ul class="list-plain mall-orders">
+    <ul class="mall-orders">
         @foreach($list as $row)
             @php
                 $type = \Plugins\Mall\Services\MallService::normalizeType((string) ($row->goods_type ?? ''));
@@ -19,15 +28,15 @@
                 $statusLabel = $status === 2 ? '已完成' : ($status === 1 ? '待发货' : '已关闭');
                 $code = strtoupper(trim((string) ($delivery['code'] ?? '')));
             @endphp
-            <li>
+            <li class="mall-order-card">
                 <div class="mall-order-row">
                     <strong>{{ $row->goods_name }}</strong>
-                    <span class="muted">{{ date('Y-m-d H:i', (int) $row->created_at) }}</span>
+                    <span class="mall-order-status status-{{ $status }}">{{ $statusLabel }}</span>
                 </div>
                 <div class="muted">
                     {{ \Plugins\Mall\Services\MallService::typeLabel($type) }}
                     · {{ (int) $row->points }} 积分
-                    · {{ $statusLabel }}
+                    · {{ date('Y-m-d H:i', (int) $row->created_at) }}
                 </div>
                 @if($type === 'vip')
                     <div class="muted">
@@ -65,4 +74,5 @@
     </ul>
     <div class="pager">{{ $list->links() }}</div>
 @endif
+</div>
 @endsection

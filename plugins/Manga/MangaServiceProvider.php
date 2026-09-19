@@ -18,6 +18,7 @@ class MangaServiceProvider extends ServiceProvider
         PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_18_300000_manga_chapter_vip.php');
         PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_18_310000_manga_type_form_fields.php');
         PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_18_320000_create_plugin_manga_tags.php');
+        PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_18_330000_create_plugin_manga_authors.php');
         $this->loadViewsFrom(__DIR__.'/resources/views', 'manga');
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');

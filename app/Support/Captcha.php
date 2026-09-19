@@ -86,10 +86,10 @@ class Captcha
             return '';
         }
 
-        $bg = imagecolorallocate($im, 0xec, 0xfb, 0xf4);
-        $ink = imagecolorallocate($im, 0x12, 0x7a, 0x4a);
-        $noise = imagecolorallocate($im, 0x9d, 0xd2, 0xb8);
-        $curve = imagecolorallocate($im, 0x7e, 0xc9, 0xa4);
+        $bg = imagecolorallocate($im, 0x17, 0x1b, 0x24);
+        $ink = imagecolorallocate($im, 0xee, 0xf0, 0xf4);
+        $noise = imagecolorallocate($im, 0x3a, 0x45, 0x58);
+        $curve = imagecolorallocate($im, 0x3d, 0x8b, 0xfd);
         if ($bg === false || $ink === false || $noise === false || $curve === false) {
             imagedestroy($im);
 
@@ -170,24 +170,24 @@ class Captcha
     {
         $parts = [
             '<svg xmlns="http://www.w3.org/2000/svg" width="'.self::WIDTH.'" height="'.self::HEIGHT.'" viewBox="0 0 '.self::WIDTH.' '.self::HEIGHT.'">',
-            '<rect width="'.self::WIDTH.'" height="'.self::HEIGHT.'" fill="#ecfbf4"/>',
+            '<rect width="'.self::WIDTH.'" height="'.self::HEIGHT.'" fill="#171b24"/>',
         ];
 
         $circles = random_int(40, 70);
         for ($i = 0; $i < $circles; $i++) {
-            $parts[] = '<circle cx="'.random_int(1, self::WIDTH - 1).'" cy="'.random_int(1, self::HEIGHT - 1).'" r="'.random_int(1, 2).'" fill="#9dd2b8"/>';
+            $parts[] = '<circle cx="'.random_int(1, self::WIDTH - 1).'" cy="'.random_int(1, self::HEIGHT - 1).'" r="'.random_int(1, 2).'" fill="#3a4558"/>';
         }
 
         $lines = random_int(2, 3);
         for ($i = 0; $i < $lines; $i++) {
-            $parts[] = '<line x1="'.random_int(0, 30).'" y1="'.random_int(4, 44).'" x2="'.random_int(130, 159).'" y2="'.random_int(4, 44).'" stroke="#7ec9a4" stroke-width="1"/>';
+            $parts[] = '<line x1="'.random_int(0, 30).'" y1="'.random_int(4, 44).'" x2="'.random_int(130, 159).'" y2="'.random_int(4, 44).'" stroke="#3d8bfd" stroke-width="1"/>';
         }
 
         for ($i = 0; $i < 2; $i++) {
             $parts[] = '<path d="M '.random_int(2, 18).' '.random_int(8, 40)
                 .' Q '.random_int(50, 110).' '.random_int(0, 47)
                 .' '.random_int(140, 158).' '.random_int(8, 40)
-                .'" fill="none" stroke="#7ec9a4" stroke-width="1"/>';
+                .'" fill="none" stroke="#3d8bfd" stroke-width="1"/>';
         }
 
         $cell = 2;
@@ -212,7 +212,7 @@ class Captcha
                     if ($bits[$col] !== '1') {
                         continue;
                     }
-                    $parts[] = '<rect x="'.($gx + $col * $cell).'" y="'.($gy + $row * $cell).'" width="'.$cell.'" height="'.$cell.'" fill="#127a4a"/>';
+                    $parts[] = '<rect x="'.($gx + $col * $cell).'" y="'.($gy + $row * $cell).'" width="'.$cell.'" height="'.$cell.'" fill="#eef0f4"/>';
                 }
             }
             $x += 5 * $cell + 4 + random_int(0, 2);
