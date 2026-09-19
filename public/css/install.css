@@ -1,12 +1,12 @@
 :root {
-    --bg: #f4faf8;
+    --bg: #f2f3f5;
     --panel: #fff;
     --text: #1d2129;
     --muted: #4e5969;
     --muted2: #86909c;
     --line: #e5e6eb;
-    --primary: #40cc92;
-    --primary-hover: #32b981;
+    --primary: #007bff;
+    --primary-hover: #0069d9;
     --ok: #2e7d32;
     --bad: #c62828;
     --radius: 12px;
@@ -16,7 +16,7 @@
 html, body { margin: 0; min-height: 100%; }
 body {
     font-family: var(--font);
-    background: radial-gradient(1200px 400px at 10% -10%, #d8f3e8 0%, transparent 50%), var(--bg);
+    background: radial-gradient(1200px 400px at 10% -10%, #d6e8ff 0%, transparent 50%), var(--bg);
     color: var(--text);
     font-size: 14px;
 }

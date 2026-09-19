@@ -62,7 +62,7 @@
     </div>
 </div>
 <template id="role-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>角色名</label>
         <input class="entry-title" type="text" name="name" placeholder="如 周星星" required autofocus>

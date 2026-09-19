@@ -153,6 +153,7 @@ return [
         'roles' => '角色库',
         'plots' => '分集剧情',
         'websites' => '网址导航',
+        'website_types' => '导航分类',
         'classes' => '扩展分类',
         'synonyms' => '同义词',
         'searchwords' => '搜索词',

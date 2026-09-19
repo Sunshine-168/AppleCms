@@ -33,7 +33,7 @@
 @endphp
 
 @section('plain')
-<form class="entry-form art-form-page" id="art-form">
+<form class="admin-form entry-form art-form-page" id="art-form">
     <input type="hidden" name="id" value="{{ $isEdit ? (int) ($art['id'] ?? 0) : '' }}">
     <div class="entry-layout">
         <div class="entry-main">

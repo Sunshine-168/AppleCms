@@ -21,7 +21,7 @@
     </div>
     <div id="mod-table"></div>
     <template id="mod-dialog-tpl">
-        <form id="mod-form">
+        <form class="admin-form" id="mod-form">
             <input type="hidden" name="id">
             @foreach($fields as $field)
                 <label>{{ $field['label'] }}</label>

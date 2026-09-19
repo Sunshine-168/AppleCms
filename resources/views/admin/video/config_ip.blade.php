@@ -54,7 +54,7 @@
             <button type="button" class="btn" id="ip-add-current" @disabled($currentIp === '')>加入当前 IP</button>
         </div>
 
-        <form class="settings-page ip-config-form" id="site-form">
+        <form class="admin-form settings-page ip-config-form" id="site-form">
             <h3>限制方式</h3>
             <div class="ingest-modes" id="ip-modes">
                 <button type="button" class="ingest-mode{{ $enabled ? '' : ' is-on' }}" data-mode="off">

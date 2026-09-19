@@ -77,7 +77,7 @@
     </div>
 </div>
 <template id="group-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_name') }}</label>
         <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_group_name') }}" autofocus>

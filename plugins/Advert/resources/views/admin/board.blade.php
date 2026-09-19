@@ -50,7 +50,7 @@
     </div>
 </div>
 <template id="advert-ad-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="ads">
         <label>名称</label>

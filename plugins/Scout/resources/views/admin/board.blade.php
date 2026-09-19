@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <form class="settings-page" id="scout-form" style="max-width:560px">
+        <form class="admin-form settings-page" id="scout-form" style="max-width:560px">
             <input type="hidden" name="desk" value="settings">
             <label>启用 Scout 搜影片</label>
             <select name="scout_search_enabled">

@@ -2,7 +2,7 @@
 @section('title', admin_t('page.config_email'))
 
 @section('content')
-    <form id="site-form">
+    <form class="admin-form" id="site-form">
         <label>SMTP 主机</label>
         <input type="text" name="smtp_host" value="{{ $site['smtp_host'] ?? '' }}">
         <label>SMTP 端口</label>

@@ -91,7 +91,7 @@
     </div>
 </div>
 <template id="order-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_member_id') }}</label>
         <input type="number" name="member_id" placeholder="{{ admin_t('ui.ph_member_id') }}">

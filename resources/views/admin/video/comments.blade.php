@@ -102,7 +102,7 @@
     </div>
 </div>
 <template id="comment-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="video_id">
         @if($scope === 'art')

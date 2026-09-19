@@ -1,12 +1,12 @@
-<form class="tag-form" data-desk="works">
+<form class="admin-form tag-form" data-desk="works">
     <input type="hidden" name="desk" value="works">
     <h3>基本</h3>
     <label>名称</label>
-    <input name="title" required autofocus>
+    <input type="text" name="title" required autofocus>
     <label>作者</label>
-    <input name="author" placeholder="作者 / 笔名">
+    <input type="text" name="author" placeholder="作者 / 笔名">
     <label>标签</label>
-    <input name="tags" placeholder="逗号分隔，如 都市,穿越">
+    <input type="text" name="tags" placeholder="逗号分隔，如 都市,穿越">
     <p class="muted field-hint">多个标签用逗号隔开，前台可按标签筛选。</p>
     <label>分类</label>
     <select name="type_id">
@@ -16,9 +16,9 @@
         @endforeach
     </select>
     <label>封面</label>
-    <input name="cover" placeholder="图片地址">
+    <input type="text" name="cover" placeholder="图片地址">
     <label>备注</label>
-    <input name="remarks">
+    <input type="text" name="remarks">
     <label>简介</label>
     <textarea name="content" rows="5"></textarea>
 

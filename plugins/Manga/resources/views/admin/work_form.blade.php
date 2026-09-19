@@ -38,7 +38,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">章节和贴图请到作品「管理」工作台操作，这里只改作品信息。</p>
-        <form class="tag-form" id="manga-work-form">
+        <form class="admin-form tag-form" id="manga-work-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $workId : '' }}">
 
             <h3>基本</h3>

@@ -39,7 +39,7 @@
             @endif
         </div>
 
-        <form class="settings-page ai-config-form" id="site-form">
+        <form class="admin-form settings-page ai-config-form" id="site-form">
             <h3>服务商</h3>
             <input type="hidden" name="ai_provider" id="ai_provider" value="{{ $provider }}">
             <div class="ingest-modes ai-providers" id="ai-providers">

@@ -21,7 +21,7 @@
     </div>
     <div class="card-body">
             <p class="muted recycle-lead">给别的程序 POST 片子或漫画进本站。去资源站拉片用「<a href="/admin/video/collects">采集源</a>」。影片是否先待审，在「<a href="/admin/video/config/collect">内容接入</a>」改。</p>
-        <form class="settings-page interface-config-form" id="site-form">
+        <form class="admin-form settings-page interface-config-form" id="site-form">
             <h3>接收地址</h3>
             <p class="muted field-hint">只接受 POST。影片 <code>/api/receive/vod</code>@if($mangaReady ?? false)，漫画 <code>/api/receive/manga</code>@endif。密钥共用。</p>
             <label for="inbound_receive_url">影片地址</label>

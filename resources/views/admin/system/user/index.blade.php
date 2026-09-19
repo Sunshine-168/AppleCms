@@ -63,7 +63,7 @@
     </div>
 </div>
 <template id="admin-user-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>登录名</label>
         <input type="text" name="username" placeholder="用来登录后台">

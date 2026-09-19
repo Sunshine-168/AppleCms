@@ -5,7 +5,7 @@
     @if(! empty($hint))
         <p class="hint">{{ $hint }}</p>
     @endif
-    <form id="site-form">
+    <form class="admin-form" id="site-form">
         @foreach($fields as $field)
             <label>{{ $field['label'] }}</label>
             @if(($field['type'] ?? 'text') === 'textarea')

@@ -151,6 +151,7 @@ return [
         'roles' => 'Role library',
         'plots' => 'Episode plots',
         'websites' => 'Site directory',
+        'website_types' => 'Nav categories',
         'classes' => 'Extra categories',
         'synonyms' => 'Synonyms',
         'searchwords' => 'Search words',

@@ -30,7 +30,7 @@
             @endif
         </p>
 
-        <form class="type-form" id="manga-type-form">
+        <form class="admin-form type-form" id="manga-type-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($type['id'] ?? 0) : '' }}">
 
             <h3>这个分类</h3>

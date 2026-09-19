@@ -88,7 +88,7 @@
     </div>
 </div>
 <template id="syn-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_from_word') }}</label>
         <input type="text" name="from_word" maxlength="80" placeholder="{{ admin_t('ui.ph_from_word') }}" required>

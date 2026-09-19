@@ -6,7 +6,6 @@
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $types = is_array($types ?? null) ? $types : [];
     $typeId = (int) ($typeId ?? 0);
-    $flinkUrl = trim((string) ($flinkUrl ?? '/admin/video/links')) ?: '/admin/video/links';
     $typeUrl = '/admin/video/website-types';
 @endphp
 
@@ -15,10 +14,8 @@
     <div class="card-header">
         <span>网址导航 <em id="website-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="website-add-btn">新增站点</button>
-            <a class="btn btn-muted btn-sm" href="{{ $flinkUrl }}">友情链接</a>
+            <button type="button" class="btn btn-sm" id="website-add-btn">新建导航</button>
             <a class="btn btn-muted btn-sm" href="{{ $typeUrl }}">分类</a>
-            <a class="btn btn-muted btn-sm" href="/website" target="_blank" rel="noopener">看前台</a>
         </div>
     </div>
     <div class="card-body">
@@ -66,7 +63,7 @@
     </div>
 </div>
 <template id="website-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>站点名称</label>
         <input class="entry-title" type="text" name="name" placeholder="如 某某资源站" required autofocus>
@@ -124,7 +121,6 @@
     var batchCount = document.getElementById('website-batch-count');
     var countEl = document.getElementById('website-count');
     var prefillType = @json($typeId > 0 ? $typeId : 0);
-    var flinkUrl = @json($flinkUrl);
     var typeUrl = @json($typeUrl);
 
     function cleanWhere(data) {
@@ -201,7 +197,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的站点</p><p><button type="button" class="btn btn-muted btn-sm" id="website-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有网址导航</p><p class="muted">点新增，填名称和网址。会出现在前台顶栏「导航」，不会进页脚。页脚交换请去友情链接。</p><p><button type="button" class="btn btn-primary btn-sm" id="website-empty-add">新增站点</button> <a class="btn btn-muted btn-sm" href="' + typeUrl + '/create">新建导航分类</a> <a class="btn btn-muted btn-sm" href="' + flinkUrl + '">去友情链接</a></p></div>';
+            return '<div class="list-empty"><p>还没有网址导航</p><p class="muted">点新建导航，填名称和网址。会出现在前台顶栏「导航」，不会进页脚。</p><p><button type="button" class="btn btn-primary btn-sm" id="website-empty-add">新建导航</button> <a class="btn btn-muted btn-sm" href="' + typeUrl + '/create">新建导航分类</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('website-empty-add');
@@ -250,7 +246,7 @@
         row = row || {};
         U.dialog({
             wide: true,
-            title: mode === 'edit' ? '编辑站点' : '新增站点',
+            title: mode === 'edit' ? '编辑导航' : '新建导航',
             content: document.getElementById('website-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');

@@ -1,4 +1,4 @@
-<form class="tag-form" data-desk="chapters">
+<form class="admin-form tag-form" data-desk="chapters">
     <input type="hidden" name="desk" value="chapters">
     <h3>基本</h3>
     <label>作品</label>
@@ -9,7 +9,7 @@
         @endforeach
     </select>
     <label>章节名</label>
-    <input name="name" required placeholder="如 第一章">
+    <input type="text" name="name" required placeholder="如 第一章">
     <label>正文</label>
     <textarea name="content" rows="12" placeholder="章节正文（可选）"></textarea>
     <p class="muted field-hint">快捷添加只填章节名；正文、VIP 请在这里改。</p>

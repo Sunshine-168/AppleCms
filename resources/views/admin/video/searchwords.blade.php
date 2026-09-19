@@ -72,7 +72,7 @@
     </div>
 </div>
 <template id="sword-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label for="sword-word">{{ admin_t('ui.keyword') }}</label>
         <input id="sword-word" type="text" name="word" maxlength="80" autocomplete="off">

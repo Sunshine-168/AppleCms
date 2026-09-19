@@ -229,7 +229,7 @@
         data: {
             labels: trend.map(r => String(r.day).slice(5)),
             datasets: [
-                { label: '搜索引擎', data: trend.map(r => r.search), borderColor: '#40cc92', backgroundColor: 'rgba(64,204,146,.10)', fill: true, tension: .3, pointRadius: 2 },
+                { label: '搜索引擎', data: trend.map(r => r.search), borderColor: '#007bff', backgroundColor: 'rgba(0,123,255,.10)', fill: true, tension: .3, pointRadius: 2 },
                 { label: 'SEO 工具', data: trend.map(r => r.tool), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: .3, pointRadius: 2 },
                 { label: 'AI 爬虫', data: trend.map(r => r.ai), borderColor: '#6f42c1', backgroundColor: 'transparent', tension: .3, pointRadius: 2, borderDash: [4, 3] },
                 { label: '其他', data: trend.map(r => r.other), borderColor: '#6c757d', backgroundColor: 'transparent', tension: .3, pointRadius: 2 }
@@ -242,7 +242,7 @@
         type: 'doughnut',
         data: {
             labels: hasMix ? mix.map(r => r.name) : ['暂无数据'],
-            datasets: [{ data: hasMix ? mix.map(r => r.hits) : [1], backgroundColor: hasMix ? ['#40cc92', '#fd7e14', '#6f42c1', '#6c757d'] : ['#e5e6eb'], borderWidth: 0 }]
+            datasets: [{ data: hasMix ? mix.map(r => r.hits) : [1], backgroundColor: hasMix ? ['#007bff', '#fd7e14', '#6f42c1', '#6c757d'] : ['#e5e6eb'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend }, cutout: '62%' }
     });

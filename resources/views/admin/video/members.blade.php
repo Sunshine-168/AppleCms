@@ -98,7 +98,7 @@
     </div>
 </div>
 <template id="member-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_nickname') }}</label>
         <input type="text" name="name" placeholder="{{ admin_t('ui.ph_member_name') }}">

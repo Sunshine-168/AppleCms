@@ -29,16 +29,6 @@
         @endif
     </div>
     <div class="card-body">
-        <div class="queue-chips" id="gallery-desks">
-            <a class="chip{{ $desk === 'works' ? ' active' : '' }}" href="/admin/video/galleries">{{ admin_t('gallery.title') }}</a>
-            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="?desk=pending">{{ admin_t('ui.pending') }}</a>
-            <a class="chip{{ $desk === 'pics' ? ' active' : '' }}" href="?desk=pics">{{ admin_t('ui.pics') }}</a>
-            <a class="chip{{ $desk === 'types' ? ' active' : '' }}" href="?desk=types">{{ admin_t('ui.types') }}</a>
-            <a class="chip{{ $desk === 'favors' ? ' active' : '' }}" href="?desk=favors">{{ admin_t('ui.favors') }}</a>
-            <a class="chip{{ $desk === 'comments' ? ' active' : '' }}" href="?desk=comments">{{ admin_t('ui.comments') }}</a>
-            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="?desk=stats">{{ admin_t('ui.stats') }}</a>
-        </div>
-
         @if($desk === 'stats')
             <p class="muted recycle-lead">{{ admin_t('gallery.lead_stats') }}</p>
             <div class="stat-grid dash manga-stats-grid">

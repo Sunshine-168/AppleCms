@@ -77,7 +77,7 @@
     </div>
 </div>
 <template id="link-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_site_name') }}</label>
         <input type="text" name="name" placeholder="{{ admin_t('ui.ph_link_name') }}">

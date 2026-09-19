@@ -30,8 +30,11 @@ class DbDictIndexPageTest extends TestCase
         $this->assertStringContainsString('class="is-on">字段</a>', $html);
         $this->assertStringContainsString('片库', $html);
         $this->assertStringContainsString('影片', $html);
-        $this->assertStringContainsString('插件', $html);
         $this->assertStringContainsString('漫画', $html);
+        $this->assertStringContainsString('小说', $html);
+        $this->assertStringContainsString('图集', $html);
+        $this->assertStringContainsString('直播', $html);
+        $this->assertStringContainsString('插件', $html);
         $this->assertStringContainsString('片名', $html);
         $this->assertStringContainsString('每一列干什么', $html);
         $this->assertStringContainsString('搜表名、中文用途或字段', $html);

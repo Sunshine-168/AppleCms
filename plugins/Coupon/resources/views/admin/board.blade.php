@@ -55,7 +55,7 @@
     </div>
 </div>
 <template id="coupon-form-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="campaigns">
         <h3>基本</h3>

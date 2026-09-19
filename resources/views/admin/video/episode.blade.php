@@ -10,7 +10,7 @@
 @section('content')
     <div id="episode-table"></div>
     <template id="episode-dialog-tpl">
-        <form>
+        <form class="admin-form">
             <input type="hidden" name="id">
             <input type="hidden" name="source_id" value="{{ (int)($sourceId ?? 0) }}">
             <label>集序号</label>

@@ -28,7 +28,7 @@ class VideoWebsiteIndexPageTest extends TestCase
 
         $this->assertStringContainsString('website-index', $html);
         $this->assertStringContainsString('还没有网址导航', $html);
-        $this->assertStringContainsString('新增站点', $html);
+        $this->assertStringContainsString('新建导航', $html);
         $this->assertStringContainsString('搜名称、网址或简介', $html);
         $this->assertStringContainsString('友情链接只出现在页脚', $html);
         $flink = app(PluginManager::class)->isEnabled('friendlink')

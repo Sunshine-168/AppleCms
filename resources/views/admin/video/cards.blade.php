@@ -97,7 +97,7 @@
     </div>
 </div>
 <template id="card-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_card_code') }}</label>
         <input type="text" name="code" placeholder="{{ admin_t('ui.ph_card_code') }}" maxlength="40" autocomplete="off">
@@ -108,7 +108,7 @@
     </form>
 </template>
 <template id="card-gen-tpl">
-    <form>
+    <form class="admin-form">
         <label>{{ admin_t('ui.label_card_count') }}</label>
         <input type="number" name="count" value="10" min="1" max="200">
         <p class="muted field-hint">{{ admin_t('ui.hint_card_count') }}</p>

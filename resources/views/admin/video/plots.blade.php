@@ -84,7 +84,7 @@
     </div>
 </div>
 <template id="plot-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_video_id') }}</label>
         <input type="number" name="video_id" min="1" placeholder="{{ admin_t('ui.ph_video_id') }}" inputmode="numeric" required>

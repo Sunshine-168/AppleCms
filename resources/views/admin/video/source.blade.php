@@ -10,7 +10,7 @@
 @section('content')
     <div id="source-table"></div>
     <template id="source-dialog-tpl">
-        <form>
+        <form class="admin-form">
             <input type="hidden" name="id">
             <input type="hidden" name="video_id" value="{{ (int)($videoId ?? 0) }}">
             <label>线路名</label>

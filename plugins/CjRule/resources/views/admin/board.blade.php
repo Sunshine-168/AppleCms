@@ -50,7 +50,7 @@
         @endif
 
         @if($desk === 'form')
-            <form class="collector-form" id="cj-form">
+            <form class="admin-form collector-form" id="cj-form">
                 <input type="hidden" name="id" value="{{ $editId > 0 ? $editId : '' }}">
                 <input type="hidden" name="desk" value="form">
 

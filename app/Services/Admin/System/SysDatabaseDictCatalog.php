@@ -12,6 +12,10 @@ class SysDatabaseDictCatalog
     {
         return [
             'catalog' => '片库',
+            'manga' => '漫画',
+            'novel' => '小说',
+            'gallery' => '图集',
+            'live' => '直播',
             'member' => '会员',
             'collect' => '采集',
             'site' => '站点',
@@ -86,14 +90,6 @@ class SysDatabaseDictCatalog
             'video_ads' => ['group' => 'site', 'label' => '广告', 'hint' => '投放位上的广告代码或内容。', 'url' => '/admin/video/ads'],
             'video_slides' => ['group' => 'site', 'label' => '幻灯', 'hint' => '首页等位置的轮播图。', 'url' => '/admin/video/slides'],
             'friend_links' => ['group' => 'site', 'label' => '友情链接', 'hint' => '页脚交换链接，不是网址导航。', 'url' => '/admin/video/links'],
-            'video_domains' => [
-                'host' => '访问主机名，不含协议和路径',
-                'theme' => '覆盖站点模板；空则跟站点设置',
-                'site_name' => '覆盖站点名；空则跟站点设置',
-                'site_keyword' => '覆盖关键词；空则跟站点设置',
-                'site_description' => '覆盖描述；空则跟站点设置',
-                'status' => '1 启用 0 停用；停用不换站名和模板',
-            ],
             'video_websites' => ['group' => 'site', 'label' => '网址导航', 'hint' => '顶栏「导航」目录，可挂分类。不是页脚友链。', 'url' => '/admin/video/websites'],
             'video_domains' => ['group' => 'site', 'label' => '绑定域名', 'hint' => '同一套片库，按域名换站名和模板。', 'url' => '/admin/video/domains'],
             'video_options' => ['group' => 'site', 'label' => '站点键值', 'hint' => '站点设置存成 k/v，不是影片字段。', 'url' => '/admin/video/settings'],
@@ -103,12 +99,32 @@ class SysDatabaseDictCatalog
             'video_visit_items' => ['group' => 'stats', 'label' => '按片访问', 'hint' => '某天某部片子或某分类的浏览量。', 'url' => '/admin/stats'],
             'video_access_logs' => ['group' => 'stats', 'label' => '访问流水', 'hint' => '前台 GET 流水。爬虫会标出来，完整图表在统计。', 'url' => '/admin/system/runtime?desk=access&view=logs'],
             'stat_hits' => ['group' => 'stats', 'label' => '点击明细', 'hint' => '带蜘蛛识别的访问明细，图表用这张。', 'url' => '/admin/stats'],
-            'plugin_mangas' => ['group' => 'plugin', 'label' => '漫画', 'hint' => '漫画插件的作品表，不是影片分类。关掉插件后台入口会消失，表还在。', 'url' => '/admin/plugins'],
-            'plugin_manga_chapters' => ['group' => 'plugin', 'label' => '漫画章节', 'hint' => '一话对应一组图片地址。属于漫画插件。', 'url' => '/admin/plugins'],
-            'plugin_manga_types' => ['group' => 'plugin', 'label' => '漫画分类', 'hint' => '漫画插件自己的分类，不是影片分类。', 'url' => '/admin/plugins'],
-            'plugin_manga_pics' => ['group' => 'plugin', 'label' => '漫画图片', 'hint' => '章节里每一张图一行。属于漫画插件。', 'url' => '/admin/plugins'],
-            'plugin_manga_comments' => ['group' => 'plugin', 'label' => '漫画评论', 'hint' => '漫画详情页发来的评论。属于漫画插件，不是影片评论。', 'url' => '/admin/plugins'],
-            'plugin_manga_favors' => ['group' => 'plugin', 'label' => '漫画书架', 'hint' => '会员收藏的漫画。属于漫画插件，不是影片收藏。', 'url' => '/admin/video/mangas?desk=favors'],
+            'plugin_mangas' => ['group' => 'manga', 'label' => '漫画作品', 'hint' => '独立漫画库，不是影片分类。关掉插件后台入口会消失，表还在。', 'url' => '/admin/video/mangas'],
+            'plugin_manga_chapters' => ['group' => 'manga', 'label' => '漫画章节', 'hint' => '一话对应一组图片地址。', 'url' => '/admin/video/mangas?desk=chapters'],
+            'plugin_manga_types' => ['group' => 'manga', 'label' => '漫画分类', 'hint' => '漫画自己的分类，不是影片分类。', 'url' => '/admin/video/manga-types'],
+            'plugin_manga_tags' => ['group' => 'manga', 'label' => '漫画标签', 'hint' => '漫画聚合词，不是影片标签。', 'url' => '/admin/video/manga-tags'],
+            'plugin_manga_authors' => ['group' => 'manga', 'label' => '漫画作者', 'hint' => '漫画作者库。', 'url' => '/admin/video/manga-authors'],
+            'plugin_manga_pics' => ['group' => 'manga', 'label' => '漫画图片', 'hint' => '章节里每一张图一行。', 'url' => '/admin/video/mangas?desk=pics'],
+            'plugin_manga_comments' => ['group' => 'manga', 'label' => '漫画评论', 'hint' => '漫画详情页评论，不是影片评论。', 'url' => '/admin/video/mangas?desk=comments'],
+            'plugin_manga_favors' => ['group' => 'manga', 'label' => '漫画书架', 'hint' => '会员收藏的漫画，不是影片收藏。', 'url' => '/admin/video/mangas?desk=favors'],
+            'plugin_manga_histories' => ['group' => 'manga', 'label' => '漫画阅读记录', 'hint' => '会员读到哪一话。', 'url' => '/admin/video/mangas'],
+            'plugin_novels' => ['group' => 'novel', 'label' => '小说作品', 'hint' => '独立小说库，不是影片。', 'url' => '/admin/video/novels'],
+            'plugin_novel_chapters' => ['group' => 'novel', 'label' => '小说章节', 'hint' => '一章正文一行。', 'url' => '/admin/video/novels?desk=chapters'],
+            'plugin_novel_types' => ['group' => 'novel', 'label' => '小说分类', 'hint' => '小说自己的分类。', 'url' => '/admin/video/novels?desk=types'],
+            'plugin_novel_tags' => ['group' => 'novel', 'label' => '小说标签', 'hint' => '小说聚合词。', 'url' => '/admin/video/novel-tags'],
+            'plugin_novel_authors' => ['group' => 'novel', 'label' => '小说作者', 'hint' => '小说作者库。', 'url' => '/admin/video/novel-authors'],
+            'plugin_novel_comments' => ['group' => 'novel', 'label' => '小说评论', 'hint' => '小说详情页评论。', 'url' => '/admin/video/novels?desk=comments'],
+            'plugin_novel_favors' => ['group' => 'novel', 'label' => '小说书架', 'hint' => '会员收藏的小说。', 'url' => '/admin/video/novels?desk=favors'],
+            'plugin_novel_histories' => ['group' => 'novel', 'label' => '小说阅读记录', 'hint' => '会员读到哪一章。', 'url' => '/admin/video/novels'],
+            'plugin_galleries' => ['group' => 'gallery', 'label' => '图集', 'hint' => '独立图集，不是影片分类。', 'url' => '/admin/video/galleries'],
+            'plugin_gallery_pics' => ['group' => 'gallery', 'label' => '图集图片', 'hint' => '图集里每一张图一行。', 'url' => '/admin/video/galleries?desk=pics'],
+            'plugin_gallery_types' => ['group' => 'gallery', 'label' => '图集分类', 'hint' => '图集自己的分类。', 'url' => '/admin/video/galleries?desk=types'],
+            'plugin_gallery_tags' => ['group' => 'gallery', 'label' => '图集标签', 'hint' => '图集聚合词。', 'url' => '/admin/video/gallery-tags'],
+            'plugin_gallery_authors' => ['group' => 'gallery', 'label' => '图集作者', 'hint' => '图集作者 / 模特库。', 'url' => '/admin/video/gallery-authors'],
+            'plugin_gallery_comments' => ['group' => 'gallery', 'label' => '图集评论', 'hint' => '图集详情页评论。', 'url' => '/admin/video/galleries?desk=comments'],
+            'plugin_gallery_favors' => ['group' => 'gallery', 'label' => '图集收藏', 'hint' => '会员收藏的图集。', 'url' => '/admin/video/galleries?desk=favors'],
+            'plugin_live_channels' => ['group' => 'live', 'label' => '直播频道', 'hint' => '直播流地址和封面。', 'url' => '/admin/video/lives'],
+            'plugin_live_categories' => ['group' => 'live', 'label' => '直播分类', 'hint' => '直播频道分类。', 'url' => '/admin/video/lives?desk=categories'],
             'plugin_mall_goods' => ['group' => 'plugin', 'label' => '积分商品', 'hint' => '商城插件。积分兑换，不接微信支付宝。', 'url' => '/admin/plugins'],
             'plugin_mall_orders' => ['group' => 'plugin', 'label' => '兑换订单', 'hint' => '谁用积分换了哪个商品。属于商城插件。', 'url' => '/admin/plugins'],
             'plugin_friend_links' => ['group' => 'plugin', 'label' => '友情链接', 'hint' => '友链插件。普通按排序，强化按来路；申请先待审。关掉插件后台入口会消失，表还在。', 'url' => '/admin/plugins'],
@@ -156,6 +172,25 @@ class SysDatabaseDictCatalog
     {
         $known = $this->tables()[$name] ?? null;
         if ($known === null) {
+            $auto = $this->guessPluginContentGroup($name);
+            if ($auto !== null) {
+                $groups = $this->groups();
+
+                return [
+                    'group' => $auto,
+                    'group_label' => $groups[$auto] ?? $auto,
+                    'label' => $name,
+                    'hint' => '内容插件建的表，目录里还没写死字段说明。关掉插件后表可能还在。',
+                    'url' => match ($auto) {
+                        'manga' => '/admin/video/mangas',
+                        'novel' => '/admin/video/novels',
+                        'gallery' => '/admin/video/galleries',
+                        'live' => '/admin/video/lives',
+                        default => '/admin/plugins',
+                    },
+                    'known' => false,
+                ];
+            }
             $plugin = str_starts_with($name, 'plugin_');
 
             return [
@@ -179,6 +214,17 @@ class SysDatabaseDictCatalog
             'url' => $known['url'],
             'known' => true,
         ];
+    }
+
+    private function guessPluginContentGroup(string $name): ?string
+    {
+        return match (true) {
+            str_starts_with($name, 'plugin_manga') => 'manga',
+            str_starts_with($name, 'plugin_novel') => 'novel',
+            str_starts_with($name, 'plugin_gallery') => 'gallery',
+            str_starts_with($name, 'plugin_live') => 'live',
+            default => null,
+        };
     }
 
     public function fieldPurpose(string $table, string $field): string
@@ -798,6 +844,106 @@ class SysDatabaseDictCatalog
             'plugin_manga_favors' => [
                 'member_id' => '收藏的会员',
                 'manga_id' => '收藏的漫画作品编号',
+            ],
+            'plugin_manga_tags' => [
+                'name' => '标签名',
+                'slug' => '网址标识',
+                'status' => '1 显示 0 隐藏',
+            ],
+            'plugin_manga_authors' => [
+                'name' => '作者名',
+                'slug' => '网址标识',
+                'status' => '1 显示 0 隐藏',
+            ],
+            'plugin_manga_histories' => [
+                'member_id' => '阅读的会员',
+                'manga_id' => '漫画作品编号',
+                'chapter_id' => '读到的章节编号',
+            ],
+            'plugin_novels' => [
+                'title' => '小说名',
+                'status' => '1 上架 0 下架',
+                'type_id' => '小说分类编号',
+                'serialize' => '0 连载 1 完结',
+                'yid' => '0 已审 1 待审',
+            ],
+            'plugin_novel_chapters' => [
+                'name' => '章节名',
+                'novel_id' => '所属小说编号',
+                'content' => '章节正文',
+                'vip' => '0 免费 1 VIP',
+            ],
+            'plugin_novel_types' => [
+                'name' => '分类名',
+                'status' => '1 显示 0 隐藏',
+            ],
+            'plugin_novel_tags' => [
+                'name' => '标签名',
+                'slug' => '网址标识',
+            ],
+            'plugin_novel_authors' => [
+                'name' => '作者名',
+                'slug' => '网址标识',
+            ],
+            'plugin_novel_comments' => [
+                'novel_id' => '所属小说编号',
+                'member_id' => '发评论的会员，0 是游客',
+                'content' => '评论内容',
+                'status' => '1 显示 0 待审',
+            ],
+            'plugin_novel_favors' => [
+                'member_id' => '收藏的会员',
+                'novel_id' => '收藏的小说编号',
+            ],
+            'plugin_novel_histories' => [
+                'member_id' => '阅读的会员',
+                'novel_id' => '小说编号',
+                'chapter_id' => '读到的章节编号',
+            ],
+            'plugin_galleries' => [
+                'title' => '图集名',
+                'status' => '1 上架 0 下架',
+                'type_id' => '图集分类编号',
+                'yid' => '0 已审 1 待审',
+            ],
+            'plugin_gallery_pics' => [
+                'gallery_id' => '所属图集编号',
+                'url' => '图片地址',
+                'sort' => '同一图集里的顺序',
+            ],
+            'plugin_gallery_types' => [
+                'name' => '分类名',
+                'status' => '1 显示 0 隐藏',
+            ],
+            'plugin_gallery_tags' => [
+                'name' => '标签名',
+                'slug' => '网址标识',
+            ],
+            'plugin_gallery_authors' => [
+                'name' => '作者 / 模特名',
+                'slug' => '网址标识',
+            ],
+            'plugin_gallery_comments' => [
+                'gallery_id' => '所属图集编号',
+                'member_id' => '发评论的会员，0 是游客',
+                'content' => '评论内容',
+                'status' => '1 显示 0 待审',
+            ],
+            'plugin_gallery_favors' => [
+                'member_id' => '收藏的会员',
+                'gallery_id' => '收藏的图集编号',
+            ],
+            'plugin_live_channels' => [
+                'title' => '频道名',
+                'urls' => '播放地址，可多行',
+                'cate_id' => '直播分类编号',
+                'status' => '1 上架 0 待审 / 下架',
+                'recommend' => '推荐等级 0-9',
+            ],
+            'plugin_live_categories' => [
+                'name' => '分类名',
+                'slug' => '网址标识',
+                'status' => '1 启用 0 停用',
             ],
             'plugin_mall_goods' => [
                 'points' => '兑换所需积分',

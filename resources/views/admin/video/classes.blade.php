@@ -79,7 +79,7 @@
     </div>
 </div>
 <template id="extclass-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_ext_class') }}</label>
         <input type="text" name="name" placeholder="{{ admin_t('ui.ph_ext_class_name') }}" required>

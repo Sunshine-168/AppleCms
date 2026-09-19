@@ -57,7 +57,7 @@
     </div>
 </div>
 <template id="publish-group-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="groups">
         <label>名称</label>

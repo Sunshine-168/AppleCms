@@ -22,7 +22,7 @@
         <a class="btn btn-muted btn-sm" href="{{ $back }}">返回</a>
     </div>
     <div class="card-body">
-        <form class="tag-form" id="manga-pic-form">
+        <form class="admin-form tag-form" id="manga-pic-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <label for="pic-manga">作品</label>
             <select id="pic-manga" name="manga_id" required>

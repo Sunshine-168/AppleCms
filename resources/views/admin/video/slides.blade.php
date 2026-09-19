@@ -81,7 +81,7 @@
     </div>
 </div>
 <template id="slide-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.name') }}</label>
         <input type="text" name="name" placeholder="{{ admin_t('ui.ph_slide_name') }}">

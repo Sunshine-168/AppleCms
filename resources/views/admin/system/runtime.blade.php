@@ -176,7 +176,7 @@
                 </table>
             </div>
             <template id="runtime-rule-tpl">
-                <form>
+                <form class="admin-form">
                     <label>阈值</label>
                     <input type="number" name="threshold" step="any">
                 </form>

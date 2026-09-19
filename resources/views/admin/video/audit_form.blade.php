@@ -25,7 +25,7 @@
     <div class="card-body">
         <p class="muted recycle-lead">采集进库时会拿这些词去扫。命中第一条规则就停：可以整部跳过、先下架，或把词抠掉再入库。</p>
 
-        <form class="audit-form" id="audit-form">
+        <form class="admin-form audit-form" id="audit-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($rule['id'] ?? 0) : '' }}">
 
             <h3>拦什么</h3>

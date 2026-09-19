@@ -38,7 +38,7 @@
             @endif
         </p>
 
-        <form class="video-form" id="video-form">
+        <form class="admin-form video-form" id="video-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($video['id'] ?? 0) : '' }}">
 
             <h3>这部片子</h3>

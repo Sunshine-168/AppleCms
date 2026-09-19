@@ -78,7 +78,7 @@
     </div>
 </div>
 <template id="notify-compose-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="is_read" value="0">
         <label for="notify-scope">{{ admin_t('ui.label_scope') }}</label>
         <select id="notify-scope" name="scope">
@@ -95,7 +95,7 @@
     </form>
 </template>
 <template id="notify-view-tpl">
-    <form>
+    <form class="admin-form">
         <label>{{ admin_t('ui.label_scope') }}</label>
         <input type="text" name="audience_label" readonly>
         <label>{{ admin_t('ui.label_title') }}</label>

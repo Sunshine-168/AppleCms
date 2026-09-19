@@ -21,7 +21,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">批量多行地址请回图片台快捷添加；本页改单张地址、标题与排序。</p>
-        <form class="tag-form" id="gallery-pic-form">
+        <form class="admin-form tag-form" id="gallery-pic-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <input type="hidden" name="desk" value="pics">
             <label for="pic-gallery">图集</label>

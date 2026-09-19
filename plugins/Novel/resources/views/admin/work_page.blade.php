@@ -46,7 +46,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">{{ admin_t('novel.work_form_lead') }}</p>
-        <form class="tag-form" id="novel-work-form">
+        <form class="admin-form tag-form" id="novel-work-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $workId : '' }}">
             <input type="hidden" name="desk" value="works">
 

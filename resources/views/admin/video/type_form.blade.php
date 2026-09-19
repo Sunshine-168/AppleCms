@@ -49,7 +49,7 @@
             @endif
         </p>
 
-        <form class="type-form" id="type-form">
+        <form class="admin-form type-form" id="type-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($type['id'] ?? 0) : '' }}">
             <input type="hidden" name="mid" value="{{ $mid }}">
 

@@ -43,7 +43,7 @@
             <p class="hint">{{ admin_t('ui.no_sources_yet_before') }}<a href="/admin/video/collects">{{ admin_t('ui.no_sources_yet_link') }}</a>{{ admin_t('ui.no_sources_yet_after') }}</p>
         @endif
 
-        <form class="collect-task-form" id="ctask-form">
+        <form class="admin-form collect-task-form" id="ctask-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($task['id'] ?? 0) : '' }}">
 
             <h3>{{ admin_t('ui.section_which_source') }}</h3>

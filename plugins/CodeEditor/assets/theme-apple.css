@@ -1,4 +1,4 @@
-/* CodeMirror 5 — mint theme aligned with 苹果v12 admin */
+/* CodeMirror 5 — admin editor chrome aligned with LaraCMS blue */
 .cm-s-apple.CodeMirror {
     font-family: ui-monospace, Consolas, "SF Mono", "Segoe UI Mono", monospace;
     font-size: 13px;
@@ -14,24 +14,24 @@
 .cm-s-apple.CodeMirror.is-open { display: block; }
 .cm-s-apple .CodeMirror-scroll { min-height: 320px; }
 .cm-s-apple .CodeMirror-gutters {
-    background: #f4faf8;
+    background: #f2f3f5;
     border-right: 1px solid #e5e6eb;
 }
 .cm-s-apple .CodeMirror-linenumber {
     color: #86909c;
     min-width: 36px;
 }
-.cm-s-apple .CodeMirror-cursor { border-left: 2px solid #1f9e6e; }
+.cm-s-apple .CodeMirror-cursor { border-left: 2px solid #0a58ca; }
 .cm-s-apple .CodeMirror-selected,
-.cm-s-apple .CodeMirror-focused .CodeMirror-selected { background: #d8f3e8; }
+.cm-s-apple .CodeMirror-focused .CodeMirror-selected { background: #d6e8ff; }
 .cm-s-apple .CodeMirror-line::selection,
-.cm-s-apple .CodeMirror-line > span::selection { background: #d8f3e8; }
-.cm-s-apple .CodeMirror-activeline-background { background: #f4faf8; }
+.cm-s-apple .CodeMirror-line > span::selection { background: #d6e8ff; }
+.cm-s-apple .CodeMirror-activeline-background { background: #f2f3f5; }
 .cm-s-apple .CodeMirror-matchingbracket {
-    color: #1f9e6e !important;
+    color: #0a58ca !important;
     font-weight: 700;
 }
-.cm-s-apple .cm-keyword { color: #15803d; font-weight: 700; }
+.cm-s-apple .cm-keyword { color: #0a58ca; font-weight: 700; }
 .cm-s-apple .cm-atom { color: #c2410c; font-weight: 700; }
 .cm-s-apple .cm-tag { color: #0f766e; font-weight: 600; }
 .cm-s-apple .cm-attribute { color: #3b6d11; }
@@ -41,19 +41,19 @@
 .cm-s-apple .cm-def { color: #7c3aed; font-weight: 700; }
 .cm-s-apple .cm-operator,
 .cm-s-apple .cm-punctuation { color: #4e5969; }
-.cm-s-apple .cm-meta { color: #15803d; font-weight: 700; }
+.cm-s-apple .cm-meta { color: #0a58ca; font-weight: 700; }
 .cm-s-apple .cm-variable { color: #1d2129; }
 .cm-s-apple .cm-variable-2 { color: #0369a1; font-weight: 600; }
 .cm-s-apple .cm-property { color: #0b6e4f; }
 .cm-s-apple .cm-qualifier { color: #c45c26; }
-.cm-s-apple .cm-builtin { color: #1f9e6e; font-weight: 600; }
+.cm-s-apple .cm-builtin { color: #0a58ca; font-weight: 600; }
 .cm-s-apple .cm-searching {
     background: #fff3bf;
     border-radius: 2px;
 }
 .cm-s-apple .CodeMirror-dialog {
-    background: #e8f8f2;
-    border-bottom: 1px solid #8ee0c4;
+    background: #e7f1ff;
+    border-bottom: 1px solid #9ec5fe;
     color: #1d2129;
     font-size: 13px;
     padding: 8px 12px;
@@ -64,11 +64,11 @@
     top: 0;
     bottom: auto;
     border-top: none;
-    border-bottom: 1px solid #8ee0c4;
+    border-bottom: 1px solid #9ec5fe;
 }
 .cm-s-apple .CodeMirror-dialog-bottom {
     border-bottom: none;
-    border-top: 1px solid #8ee0c4;
+    border-top: 1px solid #9ec5fe;
 }
 .cm-s-apple .CodeMirror-dialog input {
     border: 1px solid #e5e6eb;
@@ -90,7 +90,7 @@
 }
 .tpl-index .CodeMirror { max-width: none; }
 .tpl-index .CodeMirror.is-drag {
-    border-color: #40cc92;
-    background: #e8f8f2;
+    border-color: #007bff;
+    background: #e7f1ff;
 }
 .tpl-file.is-loading { opacity: .55; }

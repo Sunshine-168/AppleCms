@@ -142,7 +142,7 @@
 
 @if($desk === 'channels')
 <template id="pay-ch-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <h3>通道</h3>
         <label>名称</label>

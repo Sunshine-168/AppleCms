@@ -22,7 +22,7 @@
         @if($isEdit && $count > 0)
             <p class="muted recycle-lead">有 <a href="/admin/video/mangas?author_id={{ (int) ($author['id'] ?? 0) }}">{{ $count }} 部</a> 小说使用此作者。改名称不会拆掉已打的关联。</p>
         @endif
-        <form class="tag-form" id="novel-author-form">
+        <form class="admin-form tag-form" id="novel-author-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($author['id'] ?? 0) : '' }}">
             <label for="author-name">名称</label>
             <input id="author-name" type="text" name="name" value="{{ $name }}" placeholder="如 尾田荣一郎" required autofocus>

@@ -243,7 +243,7 @@
 </div>
 
 <template id="flink-link-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="links">
         <label>名称</label>
@@ -276,7 +276,7 @@
     </form>
 </template>
 <template id="flink-cate-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="cates">
         <label>名称</label>

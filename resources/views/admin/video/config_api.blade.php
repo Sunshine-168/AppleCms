@@ -34,7 +34,7 @@
             <span class="muted">已发布 {{ $videoCount }} 部会从接口出去。详情里带播放地址。</span>
         </div>
 
-        <form class="settings-page api-config-form" id="site-form">
+        <form class="admin-form settings-page api-config-form" id="site-form">
             <h3>谁能拉</h3>
             <div class="ingest-modes" id="api-modes">
                 <button type="button" class="ingest-mode{{ $hasKey ? '' : ' is-on' }}" data-mode="open">

@@ -79,7 +79,7 @@
     </div>
 </div>
 <template id="gbook-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_nickname') }}</label>
         <input type="text" name="author_name" readonly>

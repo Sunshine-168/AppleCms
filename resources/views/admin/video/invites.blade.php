@@ -92,7 +92,7 @@
     </div>
 </div>
 <template id="invite-gen-tpl">
-    <form>
+    <form class="admin-form">
         <label>{{ admin_t('ui.label_invite_count') }}</label>
         <input type="number" name="count" value="10" min="1" max="200">
         <p class="muted field-hint">{{ admin_t('ui.hint_invite_count') }}</p>

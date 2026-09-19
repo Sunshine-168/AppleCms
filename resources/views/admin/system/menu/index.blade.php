@@ -24,7 +24,7 @@
     </div>
 </div>
 <template id="menu-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>类型</label>
         <select name="type">

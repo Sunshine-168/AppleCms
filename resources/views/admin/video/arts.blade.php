@@ -83,8 +83,6 @@
     <div class="card-header">
         <span>{{ admin_t('ui.articles') }} <em id="art-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/art-types">{{ admin_t('ui.column') }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/art-tags">{{ admin_t('ui.tags') }}</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/art-recycle">{{ admin_t('ui.recycle') }}@if($recycleCount > 0) {{ $recycleCount }}@endif</a>
             <a class="btn btn-sm" id="art-write" href="{{ $writeHref }}">{{ admin_t('ui.write_art') }}</a>
         </div>

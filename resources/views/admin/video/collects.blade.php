@@ -100,7 +100,7 @@
     </div>
 </div>
 <template id="collect-source-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <h3>{{ admin_t('ui.section_basic') }}</h3>
         <label>{{ admin_t('ui.label_name') }}</label>

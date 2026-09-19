@@ -42,10 +42,6 @@
         <span>{{ $desk === 'stats' ? admin_t('manga.title_stats') : ($desk === 'work' ? admin_t('manga.title_workbench') : ($desk === 'chapters' ? admin_t('ui.chapters') : ($desk === 'pics' ? admin_t('ui.pics') : ($desk === 'comments' ? admin_t('ui.comments') : ($desk === 'favors' ? admin_t('ui.bookshelf') : admin_t('manga.title')))))) }} <em id="manga-count"></em></span>
         <div>
             @if(in_array($desk, ['works', 'pending'], true))
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-tags">{{ admin_t('ui.tags') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/manga-authors">{{ admin_t('ui.authors') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=chapters">{{ admin_t('ui.chapters') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics">{{ admin_t('ui.pics') }}</a>
                 <span class="btn-split" role="group" aria-label="{{ admin_t('manga.add_work_aria') }}">
                     <a class="btn btn-sm" href="#manga-work-compose-box">{{ admin_t('ui.add_work') }}</a>
                     <a class="btn btn-muted btn-sm" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>

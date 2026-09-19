@@ -39,7 +39,7 @@
     </div>
 </div>
 <template id="role-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="code">
         <input type="hidden" name="sort">

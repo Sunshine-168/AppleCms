@@ -79,7 +79,7 @@
     </div>
 </div>
 <template id="withdraw-remark-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_remark') }}</label>
         <input type="text" name="remark" maxlength="255" placeholder="{{ admin_t('ui.ph_optional') }}" autocomplete="off">

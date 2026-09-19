@@ -75,7 +75,7 @@
     </div>
 </div>
 <template id="pm-compose-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="from_id" value="0">
         <input type="hidden" name="is_read" value="0">
         <label for="pm-to">{{ admin_t('ui.label_to_member_id') }}</label>
@@ -88,7 +88,7 @@
     </form>
 </template>
 <template id="pm-view-tpl">
-    <form>
+    <form class="admin-form">
         <label>{{ admin_t('ui.label_recipient') }}</label>
         <input type="text" name="to_label" readonly>
         <label>{{ admin_t('ui.label_title') }}</label>

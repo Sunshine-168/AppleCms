@@ -89,7 +89,7 @@
     </div>
 </div>
 <template id="downer-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.name') }}</label>
         <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_downer_name') }}" required autofocus>

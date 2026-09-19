@@ -24,7 +24,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">图片地址每行一条。保存后写入图片表。只改话名时也可在列表快捷添加。</p>
-        <form class="tag-form" id="manga-chapter-form">
+        <form class="admin-form tag-form" id="manga-chapter-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <label for="ch-manga">作品</label>
             <select id="ch-manga" name="manga_id" required>

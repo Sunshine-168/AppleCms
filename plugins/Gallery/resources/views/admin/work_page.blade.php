@@ -38,7 +38,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">图片请到「图片」台批量粘贴。这里改图集信息、封面、模特/作者与标签。</p>
-        <form class="tag-form" id="gallery-work-form">
+        <form class="admin-form tag-form" id="gallery-work-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $workId : '' }}">
             <input type="hidden" name="desk" value="works">
 

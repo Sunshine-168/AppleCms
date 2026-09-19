@@ -22,7 +22,7 @@
         @if($isEdit && $count > 0)
             <p class="muted recycle-lead">有 <a href="/admin/video/mangas?tag_id={{ (int) ($tag['id'] ?? 0) }}">{{ $count }} 部</a> 漫画使用此标签。改名称不会拆掉已打的标。</p>
         @endif
-        <form class="tag-form" id="manga-tag-form">
+        <form class="admin-form tag-form" id="manga-tag-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($tag['id'] ?? 0) : '' }}">
             <label for="tag-name">名称</label>
             <input id="tag-name" type="text" name="name" value="{{ $name }}" placeholder="如 热血" required autofocus>

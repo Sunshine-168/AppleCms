@@ -1,22 +1,22 @@
-/* Admin shell — aligned with AppleCMS 12 login green */
-/* form-chrome:v20260919b — LaraCMS gray-fill controls */
+/* Admin shell — primary blue aligned with LaraCMS */
+/* form-chrome:v20260919e — dialog/page forms inherit LaraCMS gray-fill */
 :root {
     --side-w: 220px;
     --side-bg: #343a40;
     --side-hover: rgba(255, 255, 255, .08);
-    --side-active: #17805c;
-    --body-bg: #f4faf8;
+    --side-active: #0d6efd;
+    --body-bg: #f2f3f5;
     --text: #1d2129;
     --muted: #4e5969;
     --muted2: #86909c;
     --line: #e5e6eb;
     --panel: #fff;
     --hover: #f7f8fa;
-    --primary: #40cc92;
-    --primary-hover: #32b981;
-    --primary-deep: #1f9e6e;
-    --primary-soft: #e8f8f2;
-    --primary-ring: rgba(31, 158, 110, .14);
+    --primary: #007bff;
+    --primary-hover: #0069d9;
+    --primary-deep: #0a58ca;
+    --primary-soft: #e7f1ff;
+    --primary-ring: rgba(13, 110, 253, .14);
     --danger: #dc3545;
     --success: #28a745;
     --warning: #ffc107;
@@ -1119,6 +1119,7 @@ label.inline, label.remember {
     font-weight: 500;
     color: var(--text);
 }
+input:not([type]),
 input[type=text], input[type=email], input[type=password], input[type=number],
 input[type=url], input[type=date], input[type=datetime-local], input[type=search],
 select, textarea {
@@ -1155,11 +1156,19 @@ input[type=number] {
     -moz-appearance: textfield;
     appearance: textfield;
 }
-input:hover, select:hover, textarea:hover {
+input:not([type]):hover,
+input[type=text]:hover, input[type=email]:hover, input[type=password]:hover,
+input[type=number]:hover, input[type=url]:hover, input[type=date]:hover,
+input[type=datetime-local]:hover, input[type=search]:hover,
+select:hover, textarea:hover {
     background-color: #e8eaed;
     border-color: transparent;
 }
-input:focus, select:focus, textarea:focus {
+input:not([type]):focus,
+input[type=text]:focus, input[type=email]:focus, input[type=password]:focus,
+input[type=number]:focus, input[type=url]:focus, input[type=date]:focus,
+input[type=datetime-local]:focus, input[type=search]:focus,
+select:focus, textarea:focus {
     outline: 0;
     background-color: #fff;
     border-color: #8fd4b4;
@@ -1226,14 +1235,12 @@ textarea {
     max-width: none;
     width: 100%;
 }
-.admin-form input[type=text],
-.admin-form input[type=email],
-.admin-form input[type=url],
-.admin-form input[type=password],
-.admin-form input[type=search],
-.admin-form input[type=number],
-.admin-form select,
-.admin-form textarea {
+.admin-form .form-field > input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not([type=button]):not([type=submit]),
+.admin-form .form-field > select,
+.admin-form .form-field > textarea,
+.ui-dialog-body .form-field > input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not([type=button]):not([type=submit]),
+.ui-dialog-body .form-field > select,
+.ui-dialog-body .form-field > textarea {
     width: 100%;
     max-width: none;
 }
@@ -4357,7 +4364,7 @@ table.data td.collect-ops {
     font-size: 12px;
     font-weight: 600;
     color: var(--primary-deep);
-    background: #e8f8f2;
+    background: var(--primary-soft);
     border-radius: 10px;
     padding: 0 7px;
     line-height: 18px;
@@ -5333,7 +5340,7 @@ input[type=datetime-local] {
     gap: 8px;
     flex-wrap: wrap;
     flex: 0 0 auto;
-    background: #e8f8f2;
+    background: var(--primary-soft);
     border: 1px solid #8ee0c4;
     border-radius: 4px 4px 0 0;
     color: #1d2129;
@@ -5777,18 +5784,39 @@ pre.out, pre.code-block {
 .ui-dialog-body .admin-dialog-grid + .field-hint {
     margin: 0 0 14px;
 }
+.ui-dialog-body input:not([type]),
 .ui-dialog-body input[type=text],
 .ui-dialog-body input[type=number],
 .ui-dialog-body input[type=search],
 .ui-dialog-body input[type=url],
 .ui-dialog-body input[type=email],
 .ui-dialog-body input[type=password],
-.ui-dialog-body input:not([type]),
+.ui-dialog-body input[type=date],
+.ui-dialog-body input[type=datetime-local],
 .ui-dialog-body select,
 .ui-dialog-body textarea {
     width: 100%;
     max-width: none;
+    height: 36px;
+    min-height: 36px;
+    padding: 7px 12px;
     margin-bottom: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background-color: #f2f3f5;
+    color: var(--text);
+    font: inherit;
+    line-height: 1.4;
+    box-sizing: border-box;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.ui-dialog-body select {
+    padding-right: 28px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2386909c' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 7px;
 }
 .ui-dialog-body textarea {
     height: auto;
@@ -5802,6 +5830,54 @@ pre.out, pre.code-block {
 .ui-dialog-body .live-dialog-grid select,
 .ui-dialog-body .admin-dialog-grid select {
     max-width: none;
+}
+.ui-dialog-body input:not([type]):hover,
+.ui-dialog-body input[type=text]:hover,
+.ui-dialog-body input[type=number]:hover,
+.ui-dialog-body input[type=search]:hover,
+.ui-dialog-body input[type=url]:hover,
+.ui-dialog-body input[type=email]:hover,
+.ui-dialog-body input[type=password]:hover,
+.ui-dialog-body input[type=date]:hover,
+.ui-dialog-body input[type=datetime-local]:hover,
+.ui-dialog-body select:hover,
+.ui-dialog-body textarea:hover {
+    background-color: #e8eaed;
+    border-color: transparent;
+}
+.ui-dialog-body input:not([type]):focus,
+.ui-dialog-body input[type=text]:focus,
+.ui-dialog-body input[type=number]:focus,
+.ui-dialog-body input[type=search]:focus,
+.ui-dialog-body input[type=url]:focus,
+.ui-dialog-body input[type=email]:focus,
+.ui-dialog-body input[type=password]:focus,
+.ui-dialog-body input[type=date]:focus,
+.ui-dialog-body input[type=datetime-local]:focus,
+.ui-dialog-body select:focus,
+.ui-dialog-body textarea:focus {
+    outline: 0;
+    background-color: #fff;
+    border-color: #8fd4b4;
+    box-shadow: 0 0 0 2px rgba(31, 158, 110, .16);
+}
+.ui-dialog-body select:hover,
+.ui-dialog-body select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2386909c' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 7px;
+}
+.ui-dialog-body input[type=checkbox],
+.ui-dialog-body input[type=radio] {
+    width: auto;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    appearance: auto;
 }
 .ui-dialog-body .field-hint {
     margin: 6px 0 0;
@@ -5959,7 +6035,7 @@ pre.out, pre.code-block {
     padding: 4px 10px;
     border: 1px solid #b7e4d4;
     border-radius: var(--radius);
-    background: #e8f8f2;
+    background: var(--primary-soft);
     color: var(--primary-deep);
     font-size: 13px;
 }
@@ -6636,6 +6712,26 @@ pre.out, pre.code-block {
 .live-dialog-grid label,
 .ui-dialog .admin-dialog-grid label,
 .ui-dialog .live-dialog-grid label { margin-top: 0; }
+.ui-dialog-body .admin-form > label,
+.ui-dialog-body form > label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+.ui-dialog-body .admin-form > label:first-child,
+.ui-dialog-body .admin-form > input[type=hidden] + label,
+.ui-dialog-body .admin-form > h3 + label,
+.ui-dialog-body .admin-form > .field-hint + label,
+.ui-dialog-body form > label:first-child,
+.ui-dialog-body form > input[type=hidden] + label,
+.ui-dialog-body form > h3 + label,
+.ui-dialog-body form > .field-hint + label { margin-top: 0; }
+.ui-dialog-body .admin-form > .field-hint,
+.ui-dialog-body form > .field-hint {
+    margin: 6px 0 0;
+}
 .ui-dialog-body h3 {
     margin: 22px 0 10px;
     padding: 0 0 8px;

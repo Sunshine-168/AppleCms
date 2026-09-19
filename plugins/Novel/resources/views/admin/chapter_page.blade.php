@@ -22,7 +22,7 @@
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">只改话名时也可在列表快捷添加；正文、VIP 请在本页填写。</p>
-        <form class="tag-form" id="novel-chapter-form">
+        <form class="admin-form tag-form" id="novel-chapter-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $id : '' }}">
             <input type="hidden" name="desk" value="chapters">
             <label for="ch-novel">作品</label>

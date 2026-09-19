@@ -34,17 +34,9 @@
                     <a class="btn btn-muted btn-sm" href="/admin/video/live-categories/create">{{ admin_t('ui.full_form') }}</a>
                 </span>
             @endif
-            <a class="btn btn-muted btn-sm" href="/live" target="_blank" rel="noopener">{{ admin_t('ui.view_front') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <div class="queue-chips">
-            <a class="chip{{ $desk === 'channels' ? ' active' : '' }}" href="/admin/video/lives">{{ admin_t('nav.live_channels') }}</a>
-            <a class="chip{{ $desk === 'pending' ? ' active' : '' }}" href="?desk=pending">{{ admin_t('nav.live_pending') }}</a>
-            <a class="chip{{ $desk === 'categories' ? ' active' : '' }}" href="?desk=categories">{{ admin_t('nav.live_categories') }}</a>
-            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="?desk=stats">{{ admin_t('nav.live_stats') }}</a>
-        </div>
-
         @if($desk === 'stats')
             <p class="muted recycle-lead">{{ admin_t('live.lead_stats') }}</p>
             <div class="stat-grid dash">
@@ -152,11 +144,11 @@
         <h3>{{ admin_t('ui.basic') }}</h3>
         <div class="form-field">
             <label for="live-dlg-title">{{ admin_t('live.channel_name') }}</label>
-            <input id="live-dlg-title" class="entry-title" name="title" required placeholder="{{ admin_t('live.ph_channel_title') }}" autofocus>
+            <input id="live-dlg-title" class="entry-title" type="text" name="title" required placeholder="{{ admin_t('live.ph_channel_title') }}" autofocus>
         </div>
         <div class="form-field">
             <label for="live-dlg-sub">{{ admin_t('ui.subtitle') }}</label>
-            <input id="live-dlg-sub" name="sub" placeholder="{{ admin_t('live.ph_subtitle') }}">
+            <input id="live-dlg-sub" type="text" name="sub" placeholder="{{ admin_t('live.ph_subtitle') }}">
         </div>
         <div class="form-field">
             <label for="live-dlg-cate">{{ admin_t('ui.types') }}</label>
@@ -210,7 +202,7 @@
 
         <div class="form-field">
             <label for="live-dlg-remarks">{{ admin_t('ui.remarks') }}</label>
-            <input id="live-dlg-remarks" name="remarks" placeholder="{{ admin_t('live.ph_remarks') }}">
+            <input id="live-dlg-remarks" type="text" name="remarks" placeholder="{{ admin_t('live.ph_remarks') }}">
         </div>
         <div class="form-field">
             <label for="live-dlg-content">{{ admin_t('ui.intro') }}</label>
@@ -224,12 +216,12 @@
         <input type="hidden" name="desk" value="categories">
         <div class="form-field">
             <label for="live-cate-dlg-name">{{ admin_t('live.category_name') }}</label>
-            <input id="live-cate-dlg-name" class="entry-title" name="name" required placeholder="{{ admin_t('live.ph_category_name') }}" autofocus>
+            <input id="live-cate-dlg-name" class="entry-title" type="text" name="name" required placeholder="{{ admin_t('live.ph_category_name') }}" autofocus>
             <p class="muted field-hint">{{ admin_t('live.category_hint') }}</p>
         </div>
         <div class="form-field">
             <label for="live-cate-dlg-slug">{{ admin_t('ui.slug') }}</label>
-            <input id="live-cate-dlg-slug" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
+            <input id="live-cate-dlg-slug" type="text" name="slug" placeholder="{{ admin_t('live.ph_slug') }}">
         </div>
         <div class="form-field">
             <label for="live-cate-dlg-pic">{{ admin_t('ui.image') }}</label>

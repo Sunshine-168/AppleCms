@@ -60,7 +60,7 @@
 </div>
 
 <template id="mall-goods-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <h3>基本</h3>
         <label>名称</label>

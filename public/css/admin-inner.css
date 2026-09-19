@@ -1,6 +1,6 @@
 /* Skin Layui iframe pages to match the LaraCMS admin shell */
 html, body {
-    background: #f4faf8 !important;
+    background: #f2f3f5 !important;
 }
 body {
     margin: 0;
@@ -18,7 +18,7 @@ body {
     color: #1d2129;
 }
 .layui-btn {
-    background-color: #40cc92;
+    background-color: #007bff;
 }
 .layui-btn-primary {
     background-color: #fff;
@@ -26,8 +26,8 @@ body {
     border-color: #e5e6eb;
 }
 .layui-btn-primary:hover {
-    border-color: #40cc92;
-    color: #40cc92;
+    border-color: #007bff;
+    color: #007bff;
 }
 .layui-btn-danger {
     background-color: #dc3545;
@@ -36,30 +36,30 @@ body {
     background-color: #fd7e14;
 }
 .layui-btn-normal {
-    background-color: #40cc92;
+    background-color: #007bff;
 }
 .layui-form-onswitch {
-    border-color: #40cc92 !important;
-    background-color: #40cc92 !important;
+    border-color: #007bff !important;
+    background-color: #007bff !important;
 }
 .layui-form-checked[lay-skin=primary] > i {
-    border-color: #40cc92 !important;
-    background-color: #40cc92 !important;
+    border-color: #007bff !important;
+    background-color: #007bff !important;
 }
 .layui-form-radioed > i,
 .layui-form-checked > i,
 .layui-form-checked:hover > i {
-    color: #40cc92 !important;
+    color: #007bff !important;
 }
 .layui-laypage .layui-laypage-curr .layui-laypage-em {
-    background-color: #40cc92 !important;
+    background-color: #007bff !important;
 }
 .layui-tab-brief > .layui-tab-title .layui-this {
-    color: #40cc92 !important;
+    color: #007bff !important;
 }
 .layui-tab-brief > .layui-tab-more li.layui-this:after,
 .layui-tab-brief > .layui-tab-title .layui-this:after {
-    border-bottom-color: #40cc92 !important;
+    border-bottom-color: #007bff !important;
 }
 .layui-table thead tr,
 .layui-table-header,
@@ -69,10 +69,10 @@ body {
 .layui-input:focus,
 .layui-textarea:focus,
 .layui-select:focus {
-    border-color: #40cc92 !important;
+    border-color: #007bff !important;
 }
 .layui-form-select dl dd.layui-this {
-    background-color: #40cc92;
+    background-color: #007bff;
 }
 .layui-badge-dot {
     background-color: #dc3545;

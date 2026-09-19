@@ -77,7 +77,7 @@
     </div>
 </div>
 <template id="plog-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <label>{{ admin_t('ui.label_member_id') }}</label>
         <input type="number" name="member_id" placeholder="{{ admin_t('ui.ph_member_id') }}" min="1">
         <p class="muted field-hint">{{ admin_t('ui.hint_plog_member') }}</p>

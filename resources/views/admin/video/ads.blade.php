@@ -93,7 +93,7 @@
     </div>
 </div>
 <template id="ad-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_name') }}</label>
         <input type="text" name="name" placeholder="{{ admin_t('ui.ph_ad_name') }}">

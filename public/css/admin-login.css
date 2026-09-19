@@ -1,8 +1,8 @@
-/* AppleCMS 12 style admin login */
+/* Admin login — primary blue aligned with LaraCMS */
 :root {
-    --mac-green: #40cc92;
-    --mac-green-hover: #32b981;
-    --mac-green-deep: #1f9e6e;
+    --mac-green: #007bff;
+    --mac-green-hover: #0069d9;
+    --mac-green-deep: #0a58ca;
     --primary: var(--mac-green);
     --primary-hover: var(--mac-green-hover);
     --mac-text: #1f2937;
@@ -19,7 +19,7 @@ body.mac-login {
     font-family: var(--mac-font);
     color: var(--mac-text);
     min-height: 100vh;
-    background-color: #f4faf8;
+    background-color: #f2f3f5;
     background-image: url("../images/admin/signin_bg.png");
     background-repeat: no-repeat;
     background-position: left 6% center;
@@ -335,7 +335,7 @@ body.mac-login {
 @media (max-width: 980px) {
     body.mac-login {
         background-image: none;
-        background-color: #f4faf8;
+        background-color: #f2f3f5;
     }
     .mac-login-stage {
         width: 100%;

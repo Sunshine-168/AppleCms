@@ -75,7 +75,7 @@
     </div>
 </div>
 <template id="domain-dialog-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>{{ admin_t('ui.label_host') }}</label>
         <input class="entry-title" type="text" name="host" placeholder="{{ admin_t('ui.ph_host') }}" required autofocus>

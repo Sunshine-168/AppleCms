@@ -241,7 +241,7 @@
     const browsers = @json($clients['browsers']);
     const humanPv = trend.reduce((s, r) => s + Number(r.pv || 0), 0);
     const spiderPv = trend.reduce((s, r) => s + Number(r.spider_pv || 0), 0);
-    const colors = ['#40cc92', '#28a745', '#fd7e14', '#6f42c1', '#17a2b8', '#e83e8c', '#20c997', '#6c757d'];
+    const colors = ['#007bff', '#28a745', '#fd7e14', '#6f42c1', '#17a2b8', '#e83e8c', '#20c997', '#6c757d'];
 
     const grid = '#e5e6eb';
     const ticks = { color: '#86909c', font: { size: 11 } };
@@ -264,7 +264,7 @@
         data: {
             labels: trend.map(r => String(r.day).slice(5)),
             datasets: [
-                { label: 'PV', data: trend.map(r => r.pv), borderColor: '#40cc92', backgroundColor: 'rgba(64,204,146,.12)', fill: true, tension: .3, pointRadius: 2 },
+                { label: 'PV', data: trend.map(r => r.pv), borderColor: '#007bff', backgroundColor: 'rgba(0,123,255,.12)', fill: true, tension: .3, pointRadius: 2 },
                 { label: 'UV', data: trend.map(r => r.uv), borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,.08)', fill: true, tension: .3, pointRadius: 2 },
                 { label: '蜘蛛', data: trend.map(r => r.spider_pv), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: .3, pointRadius: 2, borderDash: [4, 3] }
             ]
@@ -276,7 +276,7 @@
         type: 'doughnut',
         data: {
             labels: ['人类 PV', '蜘蛛 PV'],
-            datasets: [{ data: [humanPv, spiderPv], backgroundColor: ['#40cc92', '#fd7e14'], borderWidth: 0 }]
+            datasets: [{ data: [humanPv, spiderPv], backgroundColor: ['#007bff', '#fd7e14'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend }, cutout: '62%' }
     });

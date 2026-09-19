@@ -60,7 +60,7 @@
 </div>
 
 <template id="activity-task-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>名称</label>
         <input class="entry-title" type="text" name="name" required maxlength="40" autofocus>
@@ -107,7 +107,7 @@
 </template>
 
 <template id="activity-mile-tpl">
-    <form>
+    <form class="admin-form">
         <input type="hidden" name="id">
         <label>名称</label>
         <input class="entry-title" type="text" name="name" required maxlength="40" autofocus>
