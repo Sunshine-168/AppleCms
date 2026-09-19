@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Scout\Searchable;
 
 class VideoModel extends Model
 {
@@ -19,9 +20,43 @@ class VideoModel extends Model
     public $timestamps = false;
     protected $guarded = [];
 
-    use QueryTrait, QueryCacheTrait;
+    use QueryTrait, QueryCacheTrait, Searchable;
 
     protected $appends = ['url', 'play_url'];
+
+    /**
+     * 写入 Scout 索引的字段。
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        $row = [
+            'id' => (int) $this->id,
+            'title' => (string) ($this->title ?? ''),
+            'subtitle' => (string) ($this->subtitle ?? ''),
+            'director' => (string) ($this->director ?? ''),
+        ];
+        foreach (['actor', 'actors', 'remarks'] as $col) {
+            if (Schema::hasColumn($this->getTable(), $col)) {
+                $row[$col] = (string) ($this->{$col} ?? '');
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * 插件关闭或未开搜时不写索引。
+     */
+    public function shouldBeSearchable(): bool
+    {
+        try {
+            return app(\Plugins\Scout\Services\ScoutSearchService::class)->indexingEnabled();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 
     protected static function booted(): void
     {

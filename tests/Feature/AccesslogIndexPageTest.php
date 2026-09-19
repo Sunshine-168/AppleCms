@@ -19,13 +19,21 @@ class AccesslogIndexPageTest extends TestCase
 
     public function test_accesslog_index_is_a_front_hit_board_not_a_generic_crud(): void
     {
-        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/accesslogs')
+            ->assertRedirect('/admin/system/runtime?desk=access&view=logs');
+
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/accesslogs?ip=198.51.100.2')
+            ->assertRedirect('/admin/system/runtime?desk=access&view=logs&ip=198.51.100.2');
+
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/system/runtime?desk=access&view=logs')
             ->assertOk()
             ->getContent();
 
         $this->assertStringContainsString('accesslog-index', $html);
-        $this->assertStringContainsString('访问风控', $html);
+        $this->assertStringContainsString('异常访问', $html);
         $this->assertStringContainsString('还没有前台访问', $html);
         $this->assertStringContainsString('搜 IP、地址或标识', $html);
         $this->assertStringContainsString('不能封 IP', $html);
@@ -34,7 +42,6 @@ class AccesslogIndexPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/botlogs', $html);
         $this->assertStringContainsString('/admin/stats/logs', $html);
         $this->assertStringContainsString('/admin/stats/spiders', $html);
-        $this->assertStringContainsString('/admin/system/monitor/system-logs', $html);
         $this->assertStringContainsString('/admin/video/config/ip', $html);
         $this->assertStringContainsString('accesslog-batch', $html);
         $this->assertStringContainsString('谁来的', $html);

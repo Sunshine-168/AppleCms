@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\Http;
 
 class ImageLocalizeService
 {
-    public function download(string $url, string $basename): string
+    public function download(string $url, string $basename, string $subdir = 'vod'): string
     {
         $url = trim($url);
         if ($url === '' || (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://'))) {
             return $url;
         }
+        $subdir = preg_replace('/[^a-z0-9_-]/i', '', $subdir) ?: 'vod';
         try {
             $resp = Http::timeout(15)->withHeaders(['User-Agent' => 'LaraVideo/1.0'])->get($url);
             if (! $resp->successful() || $resp->body() === '') {
@@ -24,13 +25,13 @@ class ImageLocalizeService
             if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                 $ext = 'jpg';
             }
-            $dir = public_path('uploads/vod');
+            $dir = public_path('uploads/'.$subdir);
             File::ensureDirectoryExists($dir);
             $file = $dir.DIRECTORY_SEPARATOR.$basename.'.'.$ext;
             File::put($file, $resp->body());
             $this->watermark($file);
 
-            return '/uploads/vod/'.$basename.'.'.$ext;
+            return '/uploads/'.$subdir.'/'.$basename.'.'.$ext;
         } catch (\Throwable) {
             return $url;
         }

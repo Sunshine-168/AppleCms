@@ -379,10 +379,15 @@ class Video extends Controller
         return view('admin.video.types', ['scope' => 'art']);
     }
 
+    public function showWebsiteTypes(): View|Factory
+    {
+        return view('admin.video.types', ['scope' => 'website']);
+    }
+
     public function createType(Request $request): View|Factory
     {
         $scope = $this->typeScope($request);
-        $mid = $scope === 'art' ? 2 : 1;
+        $mid = $this->typeMid($scope);
         $parentId = (int) $request->query('parent_id', 0);
         $parents = $this->typeParentOptions(null, $mid);
         $parent = $this->findTypeOption($parents, $parentId);
@@ -406,13 +411,17 @@ class Video extends Controller
         }
         $type = is_array($res['data'] ?? null) ? $res['data'] : [];
         $scope = $this->typeScope($request);
-        $want = $scope === 'art' ? 2 : 1;
+        $want = $this->typeMid($scope);
         $got = (int) ($type['mid'] ?? 1);
         if ($got < 1) {
             $got = 1;
         }
         if ($got !== $want) {
-            $url = $got === 2 ? '/admin/video/art-types/'.$id.'/edit' : '/admin/video/types/'.$id.'/edit';
+            $url = match ($got) {
+                2 => '/admin/video/art-types/'.$id.'/edit',
+                3 => '/admin/video/website-types/'.$id.'/edit',
+                default => '/admin/video/types/'.$id.'/edit',
+            };
 
             return redirect($url);
         }
@@ -429,12 +438,14 @@ class Video extends Controller
      */
     private function typeFormPage(array $type, array $parents, ?array $parent, string $scope = 'vod'): View|Factory
     {
+        $scope = in_array($scope, ['art', 'website'], true) ? $scope : 'vod';
+
         return view('admin.video.type_form', [
             'type' => $type,
             'isEdit' => (int) ($type['id'] ?? 0) > 0,
             'parents' => $parents,
             'parent' => $parent,
-            'scope' => $scope === 'art' ? 'art' : 'vod',
+            'scope' => $scope,
         ]);
     }
 
@@ -479,8 +490,23 @@ class Video extends Controller
     private function typeScope(Request $request): string
     {
         $path = '/'.$request->path();
+        if (str_contains($path, '/art-types')) {
+            return 'art';
+        }
+        if (str_contains($path, '/website-types')) {
+            return 'website';
+        }
 
-        return str_contains($path, '/art-types') ? 'art' : 'vod';
+        return 'vod';
+    }
+
+    private function typeMid(string $scope): int
+    {
+        return match ($scope) {
+            'art' => 2,
+            'website' => 3,
+            default => 1,
+        };
     }
 
     /**
@@ -510,7 +536,7 @@ class Video extends Controller
             'name' => (string)$request->input('name', ''),
             'parent_id' => $request->input('parent_id', ''),
             'limit' => (int)$request->input('limit', 10),
-            'mid' => $this->typeScope($request) === 'art' ? 2 : 1,
+            'mid' => $this->typeMid($this->typeScope($request)),
         ];
         $data = $this->videoService->getVideoTypeLists($params);
         return Ajax::message($data['code'], $data['msg'], $data['data']);
@@ -528,12 +554,13 @@ class Video extends Controller
             $id = null;
         }
 
-        $isArt = $this->typeScope($request) === 'art';
+        $scope = $this->typeScope($request);
+        $isArt = $scope === 'art';
         $payload = [
             'name' => (string) $request->input('name', ''),
             'slug' => (string) $request->input('slug', ''),
             'parent_id' => (int) $request->input('parent_id', 0),
-            'mid' => $isArt ? 2 : 1,
+            'mid' => $this->typeMid($scope),
             'sort' => (int) $request->input('sort', 0),
             'status' => (int) $request->input('status', 1),
             'seo_title' => (string) $request->input('seo_title', ''),

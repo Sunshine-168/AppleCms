@@ -1,0 +1,69 @@
+{
+    "id": "novel",
+    "name": "小说",
+    "name_en": "Novel",
+    "description": "独立小说库、章节阅读与会员书架。",
+    "version": "1.2.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "content",
+    "provider": "Plugins\\Novel\\NovelServiceProvider",
+    "admin": {
+        "modules": {
+            "novels": {
+                "title": "小说",
+                "hint": "独立小说库，不是影片分类。",
+                "model": "Plugins\\Novel\\Models\\Novel",
+                "search": "title",
+                "view": "novel::admin.board",
+                "handler": "Plugins\\Novel\\Services\\NovelAdmin",
+                "desks": ["works", "pending", "chapters", "types", "favors", "comments", "stats"],
+                "default_desk": "works",
+                "fields": [{"name":"title","label":"名称","type":"text"}],
+                "cols": ["id", "title", "author", "tags", "status", "sort"]
+            },
+            "novel_types": {
+                "title": "小说分类",
+                "model": "Plugins\\Novel\\Models\\NovelType",
+                "search": "name",
+                "redirect": "/admin/video/novels?desk=types",
+                "fields": [{"name":"name","label":"名称","type":"text"}],
+                "cols": ["id", "name", "slug", "sort", "status"]
+            },
+            "novel_tags": {
+                "title": "小说标签",
+                "model": "Plugins\\Novel\\Models\\NovelTag",
+                "search": "name",
+                "redirect": "/admin/video/novel-tags",
+                "fields": [{"name":"name","label":"名称","type":"text"}],
+                "cols": ["id", "name", "slug", "sort", "status"]
+            },
+            "novel_authors": {
+                "title": "小说作者",
+                "model": "Plugins\\Novel\\Models\\NovelAuthor",
+                "search": "name",
+                "redirect": "/admin/video/novel-authors",
+                "fields": [{"name":"name","label":"名称","type":"text"}],
+                "cols": ["id", "name", "slug", "sort", "status"]
+            }
+        },
+        "sidebar_fold": {
+            "novel": [
+                {"url":"/admin/video/novels","icon":"book","label":"nav.novel_list"},
+                {"url":"/admin/video/novels?desk=pending","icon":"clock","label":"nav.novel_pending"},
+                {"url":"/admin/video/novels?desk=chapters","icon":"list","label":"nav.novel_chapters"},
+                {"url":"/admin/video/novels?desk=types","icon":"sitemap","label":"nav.novel_types"},
+                {"url":"/admin/video/novel-tags","icon":"tags","label":"nav.novel_tags"},
+                {"url":"/admin/video/novel-authors","icon":"user","label":"nav.novel_authors"},
+                {"url":"/admin/video/novels?desk=comments","icon":"comments","label":"nav.novel_comments"},
+                {"url":"/admin/video/novels?desk=favors","icon":"star","label":"nav.novel_favors"},
+                {"url":"/admin/video/novels?desk=stats","icon":"chart-bar","label":"nav.novel_stats"}
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {"url":"/admin/video/novels","label":"item.novel","hint":"hint.novel","tag":"plugin"}
+            ]
+        }
+    }
+}

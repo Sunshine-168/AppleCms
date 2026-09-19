@@ -136,6 +136,13 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/art-types/save', [Video::class, 'saveType'])->name('admin.video.art-types.save');
     Route::post('/video/art-types/delete', [Video::class, 'deleteType'])->name('admin.video.art-types.delete');
     Route::post('/video/art-types/batch', [Video::class, 'batchTypes'])->name('admin.video.art-types.batch');
+    Route::get('/video/website-types', [Video::class, 'showWebsiteTypes'])->name('admin.video.website-types');
+    Route::get('/video/website-types/create', [Video::class, 'createType'])->name('admin.video.website-types.create');
+    Route::get('/video/website-types/{id}/edit', [Video::class, 'editType'])->whereNumber('id')->name('admin.video.website-types.edit');
+    Route::get('/video/website-types/list', [Video::class, 'getTypeLists'])->name('admin.video.website-types.list');
+    Route::post('/video/website-types/save', [Video::class, 'saveType'])->name('admin.video.website-types.save');
+    Route::post('/video/website-types/delete', [Video::class, 'deleteType'])->name('admin.video.website-types.delete');
+    Route::post('/video/website-types/batch', [Video::class, 'batchTypes'])->name('admin.video.website-types.batch');
     Route::get('/video/art-tags', [SiteModule::class, 'showArtTags'])->name('admin.video.art-tags');
     Route::get('/video/art-tags/create', [SiteModule::class, 'createArtTag'])->name('admin.video.art-tags.create');
     Route::get('/video/art-tags/{id}/edit', [SiteModule::class, 'editArtTag'])->whereNumber('id')->name('admin.video.art-tags.edit');

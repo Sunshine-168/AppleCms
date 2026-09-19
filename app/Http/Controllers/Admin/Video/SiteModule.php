@@ -246,12 +246,16 @@ class SiteModule extends Controller
         }
         if ($module === 'websites') {
             $typeId = (int) request()->query('type_id', request()->query('type', 0));
+            $flinkUrl = app(\App\Support\Plugins\PluginManager::class)->isEnabled('friendlink')
+                ? '/admin/video/flinks'
+                : '/admin/video/links';
 
             return view('admin.video.websites', [
                 'title' => $cfg['title'],
                 'queues' => $this->modules->websiteQueues(),
                 'types' => $this->modules->websiteTypeOptions(),
                 'typeId' => $typeId,
+                'flinkUrl' => $flinkUrl,
             ]);
         }
         if ($module === 'domains') {
@@ -407,16 +411,19 @@ class SiteModule extends Controller
                 'videoTitle' => $focus['video_title'],
             ]);
         }
+        if ($module === 'accesslogs') {
+            $ip = trim((string) request()->query('ip', ''));
+            $to = '/admin/system/runtime?desk=access&view=logs';
+            if ($ip !== '') {
+                $to .= '&ip='.rawurlencode(substr($ip, 0, 64));
+            }
+
+            return redirect($to);
+        }
         if ($module === 'botlogs') {
             return view('admin.video.botlogs', [
                 'title' => $cfg['title'],
                 'queues' => $this->modules->botlogQueues(),
-            ]);
-        }
-        if ($module === 'accesslogs') {
-            return view('admin.video.accesslogs', [
-                'title' => $cfg['title'],
-                'queues' => $this->modules->accesslogQueues(),
             ]);
         }
 

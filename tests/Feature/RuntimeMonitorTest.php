@@ -113,9 +113,27 @@ class RuntimeMonitorTest extends TestCase
 
         $this->assertStringContainsString('只看不封', $html);
         $this->assertStringContainsString('不能封', $html);
-        $this->assertStringContainsString('/admin/video/accesslogs', $html);
+        $this->assertStringContainsString('流水', $html);
+        $this->assertStringContainsString('/admin/system/runtime?desk=access&view=logs', $html);
         $this->assertStringContainsString('/admin/video/config/ip', $html);
         $this->assertStringNotContainsString('一键封', $html);
+    }
+
+    public function test_access_desk_embeds_accesslog_board(): void
+    {
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/system/runtime?desk=access&view=logs')
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('accesslog-search', $html);
+        $this->assertStringContainsString('还没有前台访问', $html);
+        $this->assertStringContainsString('搜 IP、地址或标识', $html);
+        $this->assertStringContainsString('/admin/video/accesslogs/list', $html);
+        $this->assertStringContainsString('/admin/video/botlogs', $html);
+        $this->assertStringContainsString('/admin/video/config/ip', $html);
+        $this->assertStringContainsString('runtime-access-links', $html);
+        $this->assertStringContainsString('不能封 IP', $html);
     }
 
     public function test_series_returns_json(): void

@@ -63,7 +63,7 @@
             <p class="muted field-hint">{{ $ui['install_hint'] ?? '' }}</p>
             <div class="schedule-cron-row">
                 <code id="backup-cron-line">{{ $cron_line ?? '' }}</code>
-                <button type="button" class="btn btn-muted btn-sm" id="backup-copy-cron">{{ $ui['copy'] ?? '' }}</button>
+                <button type="button" class="btn btn-muted" id="backup-copy-cron">{{ $ui['copy'] ?? '' }}</button>
             </div>
         </section>
 

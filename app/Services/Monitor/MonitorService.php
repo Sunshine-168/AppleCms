@@ -135,13 +135,21 @@ class MonitorService
                 $accessHigh++;
             }
         }
-        $accessOnly = (string) ($query['only'] ?? 'high') !== 'all';
+        $accessView = strtolower(trim((string) ($query['view'] ?? '')));
+        if ($accessView !== 'logs') {
+            $accessView = (string) ($query['only'] ?? 'high') === 'all' ? 'all' : 'high';
+        }
+        $accessOnly = $accessView === 'high';
         if ($accessOnly) {
             $access = array_values(array_filter($access, static fn (array $row): bool => ! empty($row['high'])));
         }
+        $accessIp = trim((string) ($query['ip'] ?? ''));
+        if (strlen($accessIp) > 64) {
+            $accessIp = substr($accessIp, 0, 64);
+        }
         $heartbeatText = $heartbeat > 0 ? date('Y-m-d H:i:s', $heartbeat) : '还没跑过';
 
-        return [
+        $board = [
             'desk' => $desk,
             'opts' => $opts,
             'heartbeat' => $heartbeat,
@@ -159,7 +167,15 @@ class MonitorService
             'access_cc' => $accessCc,
             'access_high' => $accessHigh,
             'access_only' => $accessOnly,
+            'access_view' => $accessView,
+            'access_ip' => $accessIp,
+            'accesslog_queues' => ['all' => 0, 'today' => 0, 'people' => 0, 'bot' => 0],
         ];
+        if ($desk === 'access') {
+            $board['accesslog_queues'] = app(\App\Services\Admin\Video\SiteModuleService::class)->accesslogQueues();
+        }
+
+        return $board;
     }
 
     /** @return array<string, mixed> */

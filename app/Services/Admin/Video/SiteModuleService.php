@@ -405,9 +405,10 @@ class SiteModuleService
                     ['name' => 'logo', 'label' => 'Logo', 'type' => 'text'],
                     ['name' => 'blurb', 'label' => '简介', 'type' => 'text'],
                     ['name' => 'sort', 'label' => '排序', 'type' => 'number'],
+                    ['name' => 'hits', 'label' => '人气', 'type' => 'number'],
                     ['name' => 'status', 'label' => '状态', 'type' => 'select', 'options' => ['1' => '显示', '0' => '隐藏']],
                 ],
-                'cols' => ['id', 'type_id', 'name', 'url', 'status', 'sort'],
+                'cols' => ['id', 'type_id', 'name', 'url', 'hits', 'status', 'sort'],
             ],
             'arts' => [
                 'title' => '文章管理',
@@ -2568,7 +2569,7 @@ class SiteModuleService
                         return Result::fail('分类不存在');
                     }
                     if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 3) {
-                        return Result::fail('这个分类不是网址导航，请到分类里把「用来放什么」选成网址导航');
+                        return Result::fail('这个分类不是网址导航，请到「导航分类」里新建');
                     }
                 }
             }
@@ -2577,6 +2578,11 @@ class SiteModuleService
             }
             if (array_key_exists('blurb', $payload)) {
                 $payload['blurb'] = mb_substr(trim((string) $payload['blurb']), 0, 255);
+            }
+            if (array_key_exists('hits', $payload) && Schema::hasColumn('video_websites', 'hits')) {
+                $payload['hits'] = max(0, (int) $payload['hits']);
+            } elseif ($id === null && Schema::hasColumn('video_websites', 'hits')) {
+                $payload['hits'] = 0;
             }
             foreach (['sort', 'status'] as $intField) {
                 if (array_key_exists($intField, $payload)) {

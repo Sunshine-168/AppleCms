@@ -13,7 +13,7 @@
         <div>
             <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">蜘蛛统计</a>
             <a class="btn btn-muted btn-sm" href="/admin/stats/logs?visitor=spider">访问明细</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/accesslogs">访问风控</a>
+            <a class="btn btn-muted btn-sm" href="/admin/system/runtime?desk=access&view=logs">访问风控</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/push">搜索推送</a>
             <a class="btn btn-muted btn-sm" href="/robots.txt" target="_blank" rel="noopener">robots</a>
         </div>
@@ -34,7 +34,7 @@
             <button type="button" class="chip" data-queue="engine" data-value="bing">Bing @if($q('bing') > 0)<em>{{ $q('bing') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="other">其他@if($q('other') > 0)<em>{{ $q('other') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">和「<a href="/admin/video/accesslogs">访问风控</a>」同一张前台页面流水，这里只看浏览器标识被认成爬虫的。趋势去「<a href="/admin/stats/spiders">蜘蛛统计</a>」；带标题和来路的页去「<a href="/admin/stats/logs?visitor=spider">访问明细</a>」。<strong>不能封 IP</strong>。删掉只清流水，不影响收录。</p>
+        <p class="muted recycle-lead">和「<a href="/admin/system/runtime?desk=access&view=logs">访问风控</a>」同一张前台页面流水，这里只看浏览器标识被认成爬虫的。趋势去「<a href="/admin/stats/spiders">蜘蛛统计</a>」；带标题和来路的页去「<a href="/admin/stats/logs?visitor=spider">访问明细</a>」。<strong>不能封 IP</strong>。删掉只清流水，不影响收录。</p>
         <div class="batch-bar" id="botlog-batch" hidden>
             <strong id="botlog-batch-count">已选 0 条</strong>
             <button type="button" class="btn btn-danger btn-sm" id="botlog-batch-del">删除</button>

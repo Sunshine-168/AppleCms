@@ -101,7 +101,7 @@ class SysDatabaseDictCatalog
             'video_ulogs' => ['group' => 'stats', 'label' => '会员行为', 'hint' => '会员播放等行为流水。', 'url' => '/admin/video/members'],
             'video_visit_days' => ['group' => 'stats', 'label' => '按日访问', 'hint' => '每天的 PV / UV 汇总。', 'url' => '/admin/stats'],
             'video_visit_items' => ['group' => 'stats', 'label' => '按片访问', 'hint' => '某天某部片子或某分类的浏览量。', 'url' => '/admin/stats'],
-            'video_access_logs' => ['group' => 'stats', 'label' => '访问流水', 'hint' => '前台 GET 流水。爬虫会标出来，完整图表在统计。', 'url' => '/admin/video/accesslogs'],
+            'video_access_logs' => ['group' => 'stats', 'label' => '访问流水', 'hint' => '前台 GET 流水。爬虫会标出来，完整图表在统计。', 'url' => '/admin/system/runtime?desk=access&view=logs'],
             'stat_hits' => ['group' => 'stats', 'label' => '点击明细', 'hint' => '带蜘蛛识别的访问明细，图表用这张。', 'url' => '/admin/stats'],
             'plugin_mangas' => ['group' => 'plugin', 'label' => '漫画', 'hint' => '漫画插件的作品表，不是影片分类。关掉插件后台入口会消失，表还在。', 'url' => '/admin/plugins'],
             'plugin_manga_chapters' => ['group' => 'plugin', 'label' => '漫画章节', 'hint' => '一话对应一组图片地址。属于漫画插件。', 'url' => '/admin/plugins'],

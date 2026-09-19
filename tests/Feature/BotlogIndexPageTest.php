@@ -32,7 +32,7 @@ class BotlogIndexPageTest extends TestCase
         $this->assertStringContainsString('同一张前台页面流水', $html);
         $this->assertStringContainsString('/admin/stats/spiders', $html);
         $this->assertStringContainsString('/admin/stats/logs?visitor=spider', $html);
-        $this->assertStringContainsString('/admin/video/accesslogs', $html);
+        $this->assertStringContainsString('/admin/system/runtime?desk=access&view=logs', $html);
         $this->assertStringContainsString('/admin/video/push', $html);
         $this->assertStringContainsString('/robots.txt', $html);
         $this->assertStringContainsString('botlog-batch', $html);

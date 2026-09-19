@@ -36,6 +36,7 @@
         </button>
         <nav class="main" id="site-nav" aria-label="主导航">
             @includeIf('manga::nav')
+            @includeIf('live::nav')
             @vodType(['type' => 'top'])
                 @php
                     $navTypeIds = method_exists($item, 'descendantIds') ? $item->descendantIds() : [(int) $item->id];

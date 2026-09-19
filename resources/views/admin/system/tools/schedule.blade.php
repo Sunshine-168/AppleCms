@@ -27,7 +27,7 @@
             <p class="muted field-hint">{{ $ui['install_hint'] ?? '' }}</p>
             <div class="schedule-cron-row">
                 <code id="schedule-cron-line">{{ $board['cron_line'] ?? '' }}</code>
-                <button type="button" class="btn btn-muted btn-sm" id="schedule-copy-cron">{{ $ui['copy'] ?? '' }}</button>
+                <button type="button" class="btn btn-muted" id="schedule-copy-cron">{{ $ui['copy'] ?? '' }}</button>
             </div>
             @if(($board['idle_on'] ?? 0) > 0)
                 <p class="schedule-idle-hint">{{ $board['idle_on'] }} {{ $ui['idle'] ?? '' }}</p>

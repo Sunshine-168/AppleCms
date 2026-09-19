@@ -6,14 +6,45 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Scout\Searchable;
 
 class VideoArt extends VideoOpsModel
 {
+    use Searchable;
+
     public const FLAGS = ['top', 'recommend', 'hot'];
 
     protected $table = 'video_arts';
 
     protected $appends = ['url'];
+
+    /**
+     * 写入 Scout 索引的字段。
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => (int) $this->id,
+            'title' => (string) ($this->title ?? ''),
+            'author' => (string) ($this->author ?? ''),
+            'from' => (string) ($this->from ?? ''),
+            'blurb' => mb_substr(strip_tags((string) ($this->blurb ?? $this->content ?? '')), 0, 500),
+        ];
+    }
+
+    /**
+     * 插件关闭或未开搜时不写索引。
+     */
+    public function shouldBeSearchable(): bool
+    {
+        try {
+            return app(\Plugins\Scout\Services\ScoutSearchService::class)->indexingEnabled();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 
     protected static function booted(): void
     {

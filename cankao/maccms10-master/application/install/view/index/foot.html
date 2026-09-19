@@ -1,5 +1,0 @@
-<div class="copyright">
-    © <a href="http://www.maccms.la/?v10" target="_blank">MacCMS.LA</a> All Rights Reserved.
-</div>
-</body>
-</html>

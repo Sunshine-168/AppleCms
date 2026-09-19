@@ -1,0 +1,21 @@
+<?php
+
+namespace Plugins\Live;
+
+use App\Support\Plugins\PluginBoot;
+use Illuminate\Support\ServiceProvider;
+
+class LiveServiceProvider extends ServiceProvider
+{
+    /** 启动直播频道插件。 */
+    public function boot(): void
+    {
+        $file = __DIR__.'/database/migrations/2026_09_19_120000_create_plugin_live.php';
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+        PluginBoot::migrateFile($file);
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'live');
+        if (! $this->app->routesAreCached()) {
+            $this->loadRoutesFrom(__DIR__.'/routes.php');
+        }
+    }
+}

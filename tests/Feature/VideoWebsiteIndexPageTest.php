@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Video\VideoTypeModel;
 use App\Models\Video\VideoWebsite;
 use App\Services\Admin\Video\SiteModuleService;
+use App\Support\Plugins\PluginManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,15 +31,47 @@ class VideoWebsiteIndexPageTest extends TestCase
         $this->assertStringContainsString('新增站点', $html);
         $this->assertStringContainsString('搜名称、网址或简介', $html);
         $this->assertStringContainsString('友情链接只出现在页脚', $html);
-        $this->assertStringContainsString('/admin/video/links', $html);
+        $flink = app(PluginManager::class)->isEnabled('friendlink')
+            ? '/admin/video/flinks'
+            : '/admin/video/links';
+        $this->assertStringContainsString($flink, $html);
+        $this->assertStringContainsString('/admin/video/website-types', $html);
         $this->assertStringContainsString("title: '站点'", $html);
         $this->assertStringContainsString("title: '分类'", $html);
+        $this->assertStringContainsString("title: '人气'", $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('暂无数据', $html);
         $this->assertStringNotContainsString('placeholder="name"', $html);
         $this->assertStringNotContainsString("title: 'type_id'", $html);
         $this->assertStringNotContainsString("title: 'url'", $html);
+        $this->assertStringNotContainsString('href="/admin/video/types"', $html);
+    }
+
+    public function test_website_type_form_creates_mid_3(): void
+    {
+        $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/website-types/create')
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('新建导航分类', $html);
+        $this->assertStringContainsString('name="mid" value="3"', $html);
+        $this->assertStringContainsString('网址导航自己的分类', $html);
+        $this->assertStringNotContainsString('用来放什么', $html);
+
+        $save = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->post('/admin/video/website-types/save', [
+                'name' => '工具',
+                'mid' => 3,
+                'status' => 1,
+                'sort' => 1,
+            ])
+            ->assertOk()
+            ->json();
+        $this->assertSame(0, $save['code'] ?? 1, $save['msg'] ?? '');
+        $row = VideoTypeModel::query()->where('name', '工具')->first();
+        $this->assertNotNull($row);
+        $this->assertSame(3, (int) $row->mid);
     }
 
     public function test_save_needs_name_url_and_rejects_film_category(): void
@@ -96,12 +129,14 @@ class VideoWebsiteIndexPageTest extends TestCase
             'blurb' => '采集用',
             'status' => 1,
             'sort' => 2,
+            'hits' => 5,
         ], null);
         $this->assertSame(0, $ok['code'], $ok['msg'] ?? '');
 
         $row = VideoWebsite::query()->orderByDesc('id')->first();
         $this->assertNotNull($row);
         $this->assertSame('https://example.com', (string) $row->url);
+        $this->assertSame(5, (int) $row->hits);
 
         $list = $svc->lists('websites', ['limit' => 20, 'q' => '某某']);
         $this->assertSame(0, $list['code']);
@@ -111,6 +146,7 @@ class VideoWebsiteIndexPageTest extends TestCase
         $this->assertSame('资源站', $rows[0]['type_name'] ?? '');
         $this->assertSame(0, (int) ($rows[0]['type_wrong'] ?? 1));
         $this->assertSame('https://example.com', $rows[0]['url'] ?? '');
+        $this->assertSame(5, (int) ($rows[0]['hits'] ?? 0));
 
         $json = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
             ->get('/admin/video/websites/list?q=资源站')

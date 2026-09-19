@@ -85,7 +85,7 @@ return [
                     ['name' => '草稿', 'url' => '/admin/video?status=2'],
                     ['name' => '未通过', 'url' => '/admin/video?status=3'],
                     ['name' => '定时', 'url' => '/admin/video?status=4'],
-                    ['name' => '访问风控', 'url' => '/admin/video/accesslogs'],
+                    ['name' => '访问风控', 'url' => '/admin/system/runtime?desk=access&view=logs'],
                     ['name' => '爬虫日志', 'url' => '/admin/video/botlogs'],
                     ['name' => '开放API', 'url' => '/admin/video/config/api'],
                     ['name' => '邮件设置', 'url' => '/admin/video/config/email'],

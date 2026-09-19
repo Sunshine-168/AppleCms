@@ -21,6 +21,15 @@ class AdminNav
         if (self::host()->findModule('mangas') !== null) {
             $mods[] = ['id' => 'manga', 'label' => 'nav.manga', 'home' => '/admin/video/mangas'];
         }
+        if (self::host()->findModule('novels') !== null) {
+            $mods[] = ['id' => 'novel', 'label' => 'nav.novel', 'home' => '/admin/video/novels'];
+        }
+        if (self::host()->findModule('galleries') !== null) {
+            $mods[] = ['id' => 'gallery', 'label' => 'nav.gallery', 'home' => '/admin/video/galleries'];
+        }
+        if (self::host()->findModule('lives') !== null) {
+            $mods[] = ['id' => 'live', 'label' => 'nav.live', 'home' => '/admin/video/lives'];
+        }
         $mods[] = ['id' => 'collect', 'label' => 'nav.collects', 'home' => '/admin/video/collects'];
         $mods[] = ['id' => 'member', 'label' => 'nav.members', 'home' => '/admin/video/members'];
         $mods[] = ['id' => 'site', 'label' => 'nav.site', 'home' => '/admin/video/settings'];
@@ -75,8 +84,8 @@ class AdminNav
         $all = self::moduleGroups();
         $groups = $all[$module] ?? $all['work'];
         $host = self::host();
-        if ($module === 'manga') {
-            $items = $host->sidebarFoldItems('manga');
+        if (in_array($module, ['manga', 'novel', 'gallery', 'live'], true)) {
+            $items = $host->sidebarFoldItems($module);
             if ($items === []) {
                 return self::flattenNavGroups($all['work']);
             }
@@ -86,7 +95,7 @@ class AdminNav
         if ($module === 'plugin') {
             $groups[0]['items'] = array_merge(
                 $groups[0]['items'] ?? [],
-                self::withPluginStayQuery($host->allSidebarFoldItems(['manga']))
+                self::withPluginStayQuery($host->allSidebarFoldItems(['manga', 'novel', 'gallery', 'live']))
             );
 
             return self::flattenNavGroups(self::hideCoreWhenPlugin($groups));
@@ -452,7 +461,7 @@ class AdminNav
                     self::cat('/admin/video/apidoc', 'item.apidoc', 'hint.apidoc'),
                     self::cat('/admin/video/config/ip', 'item.config_ip', 'hint.config_ip'),
                     self::cat('/admin/video/safety', 'item.safety', 'hint.safety'),
-                    self::cat('/admin/video/accesslogs', 'item.accesslogs', 'hint.accesslogs'),
+                    self::cat('/admin/system/runtime?desk=access&view=logs', 'item.accesslogs', 'hint.accesslogs'),
                     self::cat('/admin/video/botlogs', 'item.botlogs', 'hint.botlogs'),
                 ],
             ],
@@ -545,6 +554,15 @@ class AdminNav
                 ],
             ]],
             'manga' => [[
+                'items' => [],
+            ]],
+            'novel' => [[
+                'items' => [],
+            ]],
+            'gallery' => [[
+                'items' => [],
+            ]],
+            'live' => [[
                 'items' => [],
             ]],
             'art' => [[
@@ -682,6 +700,8 @@ class AdminNav
             '/admin/video/config/api' => 'system',
             '/admin/video/config/ip' => 'system',
             '/admin/video/config/ai' => 'site',
+            '/admin/video/config/scout' => 'site',
+            '/admin/video/scout' => 'site',
             '/admin/video/tools/players' => 'site',
             '/admin/video/tools/quality' => 'vod',
             '/admin/video/tools/images' => 'vod',
@@ -736,6 +756,11 @@ class AdminNav
             '/admin/video/manga_pics' => 'manga',
             '/admin/video/manga_comments' => 'manga',
             '/admin/video/config/manga' => 'manga',
+            '/admin/video/novels' => 'novel',
+            '/admin/video/novel-types' => 'novel',
+            '/admin/video/galleries' => 'gallery',
+            '/admin/video/gallery-types' => 'gallery',
+            '/admin/video/lives' => 'live',
             '/admin/video/ads' => 'site',
             '/admin/video/players' => 'site',
             '/admin/video/links' => 'site',
@@ -882,7 +907,7 @@ class AdminNav
                 }
             }
         };
-        foreach (self::host()->allSidebarFoldItems(['manga']) as $item) {
+        foreach (self::host()->allSidebarFoldItems(['manga', 'novel', 'gallery', 'live']) as $item) {
             if (is_array($item)) {
                 $walk($item);
             }
@@ -907,6 +932,9 @@ class AdminNav
             'system' => 'system',
             'collect' => 'collect',
             'manga' => 'manga',
+            'novel' => 'novel',
+            'gallery' => 'gallery',
+            'live' => 'live',
             'plugin' => 'plugin',
         ];
         $add = static function (array $item, string $module) use (&$core, &$add): void {

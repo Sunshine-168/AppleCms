@@ -14,14 +14,31 @@
     $access_high = (int) ($access_high ?? 0);
     $access_cc = (int) ($access_cc ?? 120);
     $access_only = (bool) ($access_only ?? true);
+    $access_view = in_array((string) ($access_view ?? ''), ['high', 'all', 'logs'], true)
+        ? (string) $access_view
+        : ($access_only ? 'high' : 'all');
+    $access_ip = trim((string) ($access_ip ?? ''));
+    $accesslog_queues = $accesslog_queues ?? ['all' => 0, 'today' => 0, 'people' => 0, 'bot' => 0];
 @endphp
 
 @section('plain')
 <div class="card card-panel runtime-board" id="runtime-board">
     <div class="card-header">
-        <span>{{ admin_t('nav.runtime') }}</span>
-        @if($firing_count > 0)
-            <a class="runtime-fire-count" href="/admin/system/runtime?desk=events&status=1">{{ $firing_count }} 条触发中</a>
+        <span>{{ admin_t('nav.runtime') }}@if($desk === 'access' && $access_view === 'logs') <em id="accesslog-count"></em>@endif</span>
+        @if($desk === 'access' || $firing_count > 0)
+            <div class="runtime-header-actions">
+                @if($desk === 'access')
+                    <div class="runtime-access-links">
+                        <a class="btn btn-muted btn-sm" href="/admin/video/botlogs">爬虫日志</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/stats/logs">访问明细</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">蜘蛛统计</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">IP 白名单</a>
+                    </div>
+                @endif
+                @if($firing_count > 0)
+                    <a class="runtime-fire-count" href="/admin/system/runtime?desk=events&status=1">{{ $firing_count }} 条触发中</a>
+                @endif
+            </div>
         @endif
     </div>
     <div class="card-body">
@@ -39,7 +56,7 @@
                 <p>采集未跑，到「<a href="/admin/system/tools/schedule">计划任务</a>」确认已装 <code>schedule:run</code>。</p>
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
-                    <button type="button" class="btn btn-muted btn-sm js-copy-cron">复制命令</button>
+                    <button type="button" class="btn btn-muted js-copy-cron">复制命令</button>
                 </div>
             </div>
         @endif
@@ -113,8 +130,8 @@
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
                     <div class="runtime-cron-actions">
-                        <button type="button" class="btn btn-muted btn-sm js-copy-cron">复制命令</button>
-                        <button type="submit" class="btn btn-sm">保存</button>
+                        <button type="button" class="btn btn-muted js-copy-cron">复制命令</button>
+                        <button type="submit" class="btn">保存</button>
                     </div>
                 </div>
             </form>
@@ -207,48 +224,62 @@
                 </table>
             </div>
         @else
-            <p class="muted recycle-lead">只看不封。这里不能封 IP。要拦后台请去「<a href="/admin/video/config/ip">后台 IP 白名单</a>」，流水在「<a href="/admin/video/accesslogs">访问风控</a>」。</p>
-            <p class="muted field-hint">24 小时里 {{ $access_high }} 条偏高（门槛 {{ $access_cc }} 次）</p>
-            <div class="queue-chips">
-                <a class="chip{{ $access_only ? ' active' : '' }}" href="/admin/system/runtime?desk=access">偏高</a>
-                <a class="chip{{ $access_only ? '' : ' active' }}" href="/admin/system/runtime?desk=access&only=all">全部</a>
+            <p class="muted recycle-lead">只看不封，这里不能封 IP。要拦后台请去「<a href="/admin/video/config/ip">后台 IP 白名单</a>」。@if($access_view !== 'logs')点 IP 可看流水。@endif</p>
+            <div class="queue-chips runtime-access-chips">
+                <a class="chip{{ $access_view === 'high' ? ' active' : '' }}" href="/admin/system/runtime?desk=access">偏高@if($access_high > 0)<em>{{ $access_high }}</em>@endif</a>
+                <a class="chip{{ $access_view === 'all' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&only=all">全部</a>
+                <a class="chip{{ $access_view === 'logs' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&view=logs">流水@if(($accesslog_queues['all'] ?? 0) > 0)<em>{{ (int) $accesslog_queues['all'] }}</em>@endif</a>
             </div>
-            <div class="ui-table-wrap">
-                <table class="data">
-                    <thead>
-                        <tr>
-                            <th>IP</th>
-                            <th>次数</th>
-                            <th>4xx</th>
-                            <th>5xx</th>
-                            <th>标记</th>
-                            <th>路径</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($access as $row)
-                            <tr class="{{ !empty($row['high']) ? 'runtime-row-high' : '' }}">
-                                <td>{{ $row['ip'] }}</td>
-                                <td>{{ $row['hits'] }}</td>
-                                <td>{{ $row['e4'] }}</td>
-                                <td>{{ $row['e5'] }}</td>
-                                <td>
-                                    @if(($row['flag'] ?? '') === '扫描痕迹')
-                                        <span class="runtime-badge is-fire">{{ $row['flag'] }}</span>
-                                    @elseif(($row['flag'] ?? '') === '次数偏高')
-                                        <span class="runtime-badge is-off">{{ $row['flag'] }}</span>
-                                    @else
-                                        {{ $row['flag'] ?? '' }}
-                                    @endif
-                                </td>
-                                <td class="runtime-path">{{ \Illuminate\Support\Str::limit((string) $row['path'], 60) }}</td>
+            @if($access_view === 'logs')
+                <div class="accesslog-index runtime-accesslog">
+                    @include('admin.video.partials.accesslog_board', [
+                        'queues' => $accesslog_queues,
+                        'access_ip' => $access_ip,
+                        'show_header_links' => false,
+                        'compact' => true,
+                    ])
+                </div>
+            @else
+                <p class="muted field-hint">最近 24 小时 · 门槛 {{ $access_cc }} 次</p>
+                <div class="ui-table-wrap">
+                    <table class="data">
+                        <thead>
+                            <tr>
+                                <th>IP</th>
+                                <th>次数</th>
+                                <th>4xx</th>
+                                <th>5xx</th>
+                                <th>标记</th>
+                                <th>路径</th>
                             </tr>
-                        @empty
-                            <tr><td colspan="6"><div class="list-empty"><p>{{ $access_only ? '最近 24 小时没有偏高或带扫描痕迹的 IP' : '最近 24 小时还没有可看的 IP' }}</p></div></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @forelse($access as $row)
+                                <tr class="{{ !empty($row['high']) ? 'runtime-row-high' : '' }}">
+                                    <td>
+                                        <a class="log-ip" href="/admin/system/runtime?desk=access&view=logs&ip={{ urlencode((string) $row['ip']) }}" title="看这个 IP 的流水">{{ $row['ip'] }}</a>
+                                    </td>
+                                    <td>{{ $row['hits'] }}</td>
+                                    <td>{{ $row['e4'] }}</td>
+                                    <td>{{ $row['e5'] }}</td>
+                                    <td>
+                                        @if(($row['flag'] ?? '') === '扫描痕迹')
+                                            <span class="runtime-badge is-fire">{{ $row['flag'] }}</span>
+                                        @elseif(($row['flag'] ?? '') === '次数偏高')
+                                            <span class="runtime-badge is-off">{{ $row['flag'] }}</span>
+                                        @else
+                                            {{ $row['flag'] ?? '' }}
+                                        @endif
+                                    </td>
+                                    <td class="runtime-path">{{ \Illuminate\Support\Str::limit((string) $row['path'], 60) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6"><div class="list-empty"><p>{{ $access_only ? '最近 24 小时没有偏高或带扫描痕迹的 IP' : '最近 24 小时还没有可看的 IP' }}</p></div></td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         @endif
     </div>
 </div>
@@ -702,3 +733,9 @@
 })();
 </script>
 @endpush
+
+@if(($access_view ?? '') === 'logs')
+@push('scripts')
+@include('admin.video.partials.accesslog_board_scripts')
+@endpush
+@endif

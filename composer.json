@@ -10,6 +10,7 @@
         "gregwar/captcha": "1.3",
         "guzzlehttp/guzzle": "^7.10.0",
         "laravel/framework": "^13.8",
+        "laravel/scout": "^11.7",
         "laravel/tinker": "^3.0",
         "zhuzhichao/ip-location-zh": "^2.4.5"
     },

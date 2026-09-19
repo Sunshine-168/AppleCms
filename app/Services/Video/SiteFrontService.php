@@ -226,11 +226,145 @@ class SiteFrontService
 
     public function findWebsite(int $id): ?\App\Models\Video\VideoWebsite
     {
-        if (! \Illuminate\Support\Facades\Schema::hasTable('video_websites')) {
+        if (! Schema::hasTable('video_websites')) {
             return null;
         }
 
         return \App\Models\Video\VideoWebsite::query()->where('status', 1)->find($id);
+    }
+
+    /** @return array{types: \Illuminate\Support\Collection, list: \Illuminate\Support\Collection, groups: list<array{type:\App\Models\Video\VideoTypeModel|null,items:\Illuminate\Support\Collection}>, hot: \Illuminate\Support\Collection, typeId: int, wd: string} */
+    public function websitePortal(string $wd = '', int $typeId = 0): array
+    {
+        $wd = trim($wd);
+        $types = collect();
+        if (Schema::hasTable('video_types') && Schema::hasColumn('video_types', 'mid')) {
+            $types = VideoTypeModel::query()->active()->where('mid', 3)
+                ->orderByDesc('sort')->orderBy('id')->get();
+        }
+        $typeIds = [];
+        if ($typeId > 0) {
+            $typeIds = $this->websiteTypeDescendantIds($types, $typeId);
+            if ($typeIds === []) {
+                $typeIds = [$typeId];
+            }
+        }
+        $list = collect();
+        if (Schema::hasTable('video_websites')) {
+            $q = \App\Models\Video\VideoWebsite::query()->where('status', 1);
+            if ($wd !== '') {
+                $q->where(function ($inner) use ($wd) {
+                    $inner->where('name', 'like', '%'.$wd.'%')
+                        ->orWhere('blurb', 'like', '%'.$wd.'%')
+                        ->orWhere('url', 'like', '%'.$wd.'%');
+                });
+            }
+            if ($typeIds !== [] && Schema::hasColumn('video_websites', 'type_id')) {
+                $q->whereIn('type_id', $typeIds);
+            }
+            $list = $q->orderByDesc('sort')->orderBy('id')->get();
+        }
+        $groups = [];
+        if ($types->isEmpty() || ($wd !== '' && $typeId < 1)) {
+            if ($list->isNotEmpty()) {
+                $groups[] = ['type' => null, 'items' => $list];
+            }
+        } else {
+            $byType = $list->groupBy(fn ($row) => (int) ($row->type_id ?? 0));
+            $shown = [];
+            $roots = $types->filter(fn ($t) => (int) ($t->parent_id ?? 0) < 1);
+            $walk = $typeId > 0
+                ? $types->filter(fn ($t) => in_array((int) $t->id, $typeIds, true))
+                : $roots;
+            foreach ($walk as $type) {
+                $ids = $this->websiteTypeDescendantIds($types, (int) $type->id);
+                $items = collect();
+                foreach ($ids as $tid) {
+                    $items = $items->merge($byType->get($tid, collect()));
+                    $shown[$tid] = true;
+                }
+                $items = $items->unique('id')->values();
+                if ($items->isEmpty() && $typeId < 1) {
+                    continue;
+                }
+                $groups[] = ['type' => $type, 'items' => $items];
+            }
+            if ($typeId < 1) {
+                $orphan = $byType->get(0, collect());
+                foreach ($byType as $tid => $rows) {
+                    if ((int) $tid > 0 && ! isset($shown[(int) $tid])) {
+                        $orphan = $orphan->merge($rows);
+                    }
+                }
+                $orphan = $orphan->unique('id')->values();
+                if ($orphan->isNotEmpty()) {
+                    $groups[] = ['type' => null, 'items' => $orphan];
+                }
+            }
+        }
+        $hot = collect();
+        if (Schema::hasTable('video_websites') && Schema::hasColumn('video_websites', 'hits')) {
+            $hot = \App\Models\Video\VideoWebsite::query()->where('status', 1)
+                ->where('hits', '>', 0)
+                ->orderByDesc('hits')->orderByDesc('sort')->orderBy('id')
+                ->limit(10)->get();
+        }
+
+        return compact('types', 'list', 'groups', 'hot', 'typeId', 'wd');
+    }
+
+    /** @param \Illuminate\Support\Collection<int, VideoTypeModel> $types @return list<int> */
+    public function websiteTypeDescendantIds($types, int $rootId): array
+    {
+        if ($rootId < 1) {
+            return [];
+        }
+        $byParent = [];
+        foreach ($types as $type) {
+            $byParent[(int) ($type->parent_id ?? 0)][] = (int) $type->id;
+        }
+        $out = [];
+        $stack = [$rootId];
+        while ($stack !== []) {
+            $id = array_pop($stack);
+            if (in_array($id, $out, true)) {
+                continue;
+            }
+            $out[] = $id;
+            foreach ($byParent[$id] ?? [] as $child) {
+                $stack[] = $child;
+            }
+        }
+
+        return $out;
+    }
+
+    /** @return \Illuminate\Support\Collection<int, \App\Models\Video\VideoWebsite> */
+    public function relatedWebsites(\App\Models\Video\VideoWebsite $website, int $limit = 8)
+    {
+        if (! Schema::hasTable('video_websites')) {
+            return collect();
+        }
+        $q = \App\Models\Video\VideoWebsite::query()
+            ->where('status', 1)
+            ->where('id', '!=', (int) $website->id);
+        $typeId = (int) ($website->type_id ?? 0);
+        if ($typeId > 0 && Schema::hasColumn('video_websites', 'type_id')) {
+            $q->where('type_id', $typeId);
+        }
+        if (Schema::hasColumn('video_websites', 'hits')) {
+            $q->orderByDesc('hits');
+        }
+
+        return $q->orderByDesc('sort')->orderBy('id')->limit($limit)->get();
+    }
+
+    public function bumpWebsiteHits(int $id): void
+    {
+        if ($id < 1 || ! Schema::hasTable('video_websites') || ! Schema::hasColumn('video_websites', 'hits')) {
+            return;
+        }
+        \App\Models\Video\VideoWebsite::query()->where('id', $id)->increment('hits');
     }
 
     public function resolvePlay(VideoModel $video, ?int $sid, ?int $nid, string $kind = 'play'): array

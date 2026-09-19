@@ -402,14 +402,9 @@ class VodController extends Controller
         $this->context->setSeo('网址导航 - '.$site['title'], $site['keyword'], $site['description']);
         $wd = trim((string) $request->query('wd', ''));
         $typeId = (int) $request->query('type_id', $request->query('t', 0));
-        $list = \Illuminate\Support\Facades\Schema::hasTable('video_websites')
-            ? \App\Models\Video\VideoWebsite::query()->where('status', 1)
-                ->when($wd !== '', fn ($q) => $q->where('name', 'like', '%'.$wd.'%'))
-                ->when($typeId > 0 && \Illuminate\Support\Facades\Schema::hasColumn('video_websites', 'type_id'), fn ($q) => $q->where('type_id', $typeId))
-                ->orderByDesc('sort')->orderBy('id')->get()
-            : collect();
+        $portal = $this->front->websitePortal($wd, $typeId);
 
-        return view($this->front->themeView('vod.websites'), compact('site', 'list'));
+        return view($this->front->themeView('vod.websites'), array_merge(compact('site'), $portal));
     }
 
     public function website(int|string $id): View
@@ -420,8 +415,24 @@ class VodController extends Controller
             throw new NotFoundHttpException();
         }
         $this->context->setSeo($website->name.' - '.$site['title'], $website->name, (string) $website->blurb);
+        $related = $this->front->relatedWebsites($website);
 
-        return view($this->front->themeView('vod.website'), compact('site', 'website'));
+        return view($this->front->themeView('vod.website'), compact('site', 'website', 'related'));
+    }
+
+    public function websiteGo(int|string $id): RedirectResponse
+    {
+        $website = $this->front->findWebsite($this->vodId($id));
+        if (! $website) {
+            throw new NotFoundHttpException();
+        }
+        $this->front->bumpWebsiteHits((int) $website->id);
+        $url = trim((string) $website->url);
+        if ($url === '') {
+            return redirect(vod_url('website', ['id' => $website->id]));
+        }
+
+        return redirect()->away($url);
     }
 
     public function art(int|string $id): View

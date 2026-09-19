@@ -1,21 +1,28 @@
 @extends('admin.layouts.inner')
-@section('title', ($scope ?? 'vod') === 'art' ? '栏目' : admin_t('page.types'))
-
 @php
-    $scope = ($scope ?? 'vod') === 'art' ? 'art' : 'vod';
+    $scope = in_array(($scope ?? 'vod'), ['art', 'website'], true) ? $scope : 'vod';
     $isArt = $scope === 'art';
-    $base = $isArt ? '/admin/video/art-types' : '/admin/video/types';
-    $contentUrl = $isArt ? '/admin/video/arts' : '/admin/video';
+    $isWebsite = $scope === 'website';
+    $base = $isArt ? '/admin/video/art-types' : ($isWebsite ? '/admin/video/website-types' : '/admin/video/types');
+    $contentUrl = $isArt ? '/admin/video/arts' : ($isWebsite ? '/admin/video/websites' : '/admin/video');
     $noun = $isArt ? '栏目' : '分类';
-    $unit = $isArt ? '篇' : '部';
-    $contentLabel = $isArt ? '文章' : '影片';
+    $unit = $isArt ? '篇' : ($isWebsite ? '个' : '部');
+    $contentLabel = $isArt ? '文章' : ($isWebsite ? '站点' : '影片');
+    $pageTitle = $isArt ? '栏目' : ($isWebsite ? '导航分类' : admin_t('page.types'));
+    $createLabel = $isArt ? '新建栏目' : ($isWebsite ? '新建导航分类' : '新增分类');
 @endphp
+@section('title', $pageTitle)
 
 @section('plain')
 <div class="card card-panel type-index list-desk">
     <div class="card-header">
-        <span>{{ $noun }} <em id="type-count"></em></span>
-            <a class="btn btn-sm" href="{{ $base }}/create">{{ $isArt ? '新建栏目' : '新增分类' }}</a>
+        <span>{{ $isWebsite ? '导航分类' : $noun }} <em id="type-count"></em></span>
+        <div>
+            <a class="btn btn-sm" href="{{ $base }}/create">{{ $createLabel }}</a>
+            @if($isWebsite)
+                <a class="btn btn-muted btn-sm" href="/admin/video/websites">网址导航</a>
+            @endif
+        </div>
     </div>
     <div class="card-body">
         <form class="filter-bar" id="video-type-search" onsubmit="return false;">
@@ -26,6 +33,8 @@
         <p class="muted recycle-lead">
             @if($isArt)
                 这是文章自己的栏目，不是影片分类。类型可以是列表、频道、单页或外链。下级会缩进。点「添加下级」挂到这一栏下面；有文章时请先移走再删。
+            @elseif($isWebsite)
+                这是网址导航自己的分类（mid=3），不是影片或文章分类。下级缩进显示。先建一级，再点「下级」做分组。有站点时请先移走再删。
             @else
                 下级缩进显示。先建电影 / 剧集这种一级，再在下面加动作片、国产剧。文章栏目请去「文章 → 栏目」。
             @endif
@@ -53,12 +62,13 @@
     var batchCount = document.getElementById('type-batch-count');
     var countEl = document.getElementById('type-count');
     var isArt = @json($isArt);
+    var isWebsite = @json($isWebsite);
     var base = @json($base);
     var contentUrl = @json($contentUrl);
     var noun = @json($noun);
     var unit = @json($unit);
     var contentLabel = @json($contentLabel);
-    var countKey = isArt ? 'art_count' : 'video_count';
+    var countKey = isArt ? 'art_count' : (isWebsite ? 'website_count' : 'video_count');
 
     function isFiltered(where) {
         return Object.keys(where || {}).some(function (k) { return where[k] !== ''; });
@@ -126,6 +136,9 @@
             if (isArt) {
                 return '<div class="list-empty"><p>还没有栏目。</p><p class="muted">栏目是文章的目录。先建一级栏目，再在它下面「添加下级」做多级频道。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新建栏目</a></p></div>';
             }
+            if (isWebsite) {
+                return '<div class="list-empty"><p>还没有导航分类</p><p class="muted">先建工具、资源这种一级，再在下面加二级。建好后回网址导航给站点分组。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新建导航分类</a> <a class="btn btn-muted btn-sm" href="/admin/video/websites">回网址导航</a></p></div>';
+            }
             return '<div class="list-empty"><p>还没有分类</p><p class="muted">栏目是片库的目录。先建一级，再点「下级」挂动作片、国产剧。</p><p><a class="btn btn-primary btn-sm" href="' + base + '/create">新增分类</a></p></div>';
         },
         onDraw: function (_wrap, list) {
@@ -159,6 +172,9 @@
                     if (isArt && String(d.status) === '1') {
                         var front = (kind === 'link' && d.jump_url) ? String(d.jump_url) : ('/art/type/' + id);
                         html += '<a href="' + U.escape(front) + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
+                    }
+                    if (isWebsite && String(d.status) === '1') {
+                        html += '<a href="/website?type_id=' + id + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
                     }
                     html += '<a class="btn-link js-child" href="' + base + '/create?parent_id=' + id + '">' + (isArt ? '添加下级' : '下级') + '</a>';
                     html += '<a href="' + contentUrl + '?type_id=' + id + '" class="btn-link">' + contentLabel + '</a>';

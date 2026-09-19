@@ -13,6 +13,7 @@ use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTagModel;
 use App\Models\Video\VideoTagRelModel;
 use App\Models\Video\VideoTypeModel;
+use App\Models\Video\VideoWebsite;
 use App\Support\AdminOpLog;
 use App\Support\AdminPage;
 use App\Support\Utils\Result;
@@ -856,6 +857,20 @@ class VideoService
         } catch (\Throwable) {
         }
 
+        $websiteCounts = [];
+        try {
+            if (Schema::hasTable('video_websites') && Schema::hasColumn('video_websites', 'type_id')) {
+                $siteRows = VideoWebsite::query()
+                    ->selectRaw('type_id, COUNT(*) as c')
+                    ->groupBy('type_id')
+                    ->get();
+                foreach ($siteRows as $row) {
+                    $websiteCounts[(int) $row->type_id] = (int) $row->c;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
         $byParent = [];
         $byId = [];
         foreach ($all as $row) {
@@ -906,6 +921,7 @@ class VideoService
             $item['parent_name'] = $pid > 0 ? (string) ($byId[$pid]['name'] ?? '') : '顶级';
             $item['video_count'] = $videoCounts[$id] ?? 0;
             $item['art_count'] = $artCounts[$id] ?? 0;
+            $item['website_count'] = $websiteCounts[$id] ?? 0;
             $item['child_count'] = count($byParent[$id] ?? []);
             $item['depth'] = (int) ($item['depth'] ?? 0);
             $item['kind'] = VideoTypeModel::normalizeKind($item['kind'] ?? 'list');
@@ -963,7 +979,11 @@ class VideoService
         if (! in_array($mid, [1, 2, 3], true)) {
             $mid = 1;
         }
-        $noun = $mid === 2 ? '栏目' : '分类';
+        $noun = match ($mid) {
+            2 => '栏目',
+            3 => '导航分类',
+            default => '分类',
+        };
         $name = trim((string)($data['name'] ?? ''));
         if ($name === '')
         {
@@ -1059,26 +1079,43 @@ class VideoService
         }
 
         $isArt = (int) ($exists['mid'] ?? 1) === 2;
+        $isWebsite = (int) ($exists['mid'] ?? 1) === 3;
         $childCount = $this->videoTypeModel->countByCondition([['parent_id', '=', $id]]);
         if ($childCount > 0)
         {
             return Result::fail($isArt ? '请先删掉下级栏目' : '请先删除子分类');
         }
 
-        $useCount = $this->videoModel->countByCondition([['type_id', '=', $id]]);
-        if ($useCount > 0)
-        {
-            return Result::fail('该分类下还有影片，无法删除');
-        }
-        $artCount = 0;
-        try {
-            if (Schema::hasTable('video_arts')) {
-                $artCount = (int) VideoArt::query()->where('type_id', $id)->count();
+        if (! $isArt && ! $isWebsite) {
+            $useCount = $this->videoModel->countByCondition([['type_id', '=', $id]]);
+            if ($useCount > 0)
+            {
+                return Result::fail('该分类下还有影片，无法删除');
             }
-        } catch (\Throwable) {
         }
-        if ($artCount > 0) {
-            return Result::fail('该栏目下还有文章，无法删除');
+        if ($isArt) {
+            $artCount = 0;
+            try {
+                if (Schema::hasTable('video_arts')) {
+                    $artCount = (int) VideoArt::query()->where('type_id', $id)->count();
+                }
+            } catch (\Throwable) {
+            }
+            if ($artCount > 0) {
+                return Result::fail('该栏目下还有文章，无法删除');
+            }
+        }
+        if ($isWebsite) {
+            $siteCount = 0;
+            try {
+                if (Schema::hasTable('video_websites') && Schema::hasColumn('video_websites', 'type_id')) {
+                    $siteCount = (int) VideoWebsite::query()->where('type_id', $id)->count();
+                }
+            } catch (\Throwable) {
+            }
+            if ($siteCount > 0) {
+                return Result::fail('该分类下还有导航站点，无法删除');
+            }
         }
 
         $ok = $this->videoTypeModel->deleteById($id);

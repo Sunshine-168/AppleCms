@@ -170,7 +170,8 @@ class VideoSettingService
             'theme_nav_name1', 'theme_nav_url1', 'theme_nav_name2', 'theme_nav_url2',
             'theme_nav_name3', 'theme_nav_url3', 'theme_nav_name4', 'theme_nav_url4',
             'watermark_text', 'analytics_code', 'seo_title_play',
-            'member_invite', 'upload_ext', 'upload_max_mb', 'ai_provider', 'ai_key', 'ai_model', 'ai_endpoint',
+            'ai_provider', 'ai_key', 'ai_model', 'ai_endpoint',
+            'scout_search_enabled', 'scout_driver', 'scout_meili_host', 'scout_meili_key',
         ];
         try {
             foreach (app(\App\Support\Plugins\PluginHost::class)->extraPages() as $page) {
@@ -195,7 +196,7 @@ class VideoSettingService
             }
             $data['admin_ip_allow'] = (string) ($checked['data']['value'] ?? '');
         }
-        $keepIfBlank = ['smtp_pass', 's3_secret', 'ai_key', 'pay_wechat_key', 'pay_alipay_key', 'sms_secret', 'weixin_secret'];
+        $keepIfBlank = ['smtp_pass', 's3_secret', 'ai_key', 'pay_wechat_key', 'pay_alipay_key', 'sms_secret', 'weixin_secret', 'scout_meili_key'];
         foreach ($keys as $key) {
             if (! array_key_exists($key, $data)) {
                 continue;

@@ -2,17 +2,23 @@
 @php
     $type = is_array($type ?? null) ? $type : [];
     $isEdit = (bool) ($isEdit ?? false);
-    $scope = ($scope ?? 'vod') === 'art' ? 'art' : 'vod';
+    $scope = in_array(($scope ?? 'vod'), ['art', 'website'], true) ? $scope : 'vod';
     $isArt = $scope === 'art';
+    $isWebsite = $scope === 'website';
     $parents = is_array($parents ?? null) ? $parents : [];
     $parent = is_array($parent ?? null) ? $parent : null;
     $name = (string) ($type['name'] ?? '');
     $parentId = (string) ($type['parent_id'] ?? '0');
     $status = (string) ($type['status'] ?? '1');
     $parentName = (string) ($parent['name'] ?? '');
-    $base = $isArt ? '/admin/video/art-types' : '/admin/video/types';
+    $base = $isArt ? '/admin/video/art-types' : ($isWebsite ? '/admin/video/website-types' : '/admin/video/types');
     $noun = $isArt ? '栏目' : '分类';
-    $title = $isEdit ? ('编辑'.$noun) : ($parentName !== '' ? ($isArt ? '添加下级栏目' : '添加下级') : ($isArt ? '新建栏目' : '新增分类'));
+    $mid = $isArt ? 2 : ($isWebsite ? 3 : 1);
+    $title = $isEdit
+        ? ('编辑'.$noun)
+        : ($parentName !== ''
+            ? ($isArt ? '添加下级栏目' : '添加下级')
+            : ($isArt ? '新建栏目' : ($isWebsite ? '新建导航分类' : '新增分类')));
 @endphp
 @section('title', $title)
 
@@ -27,6 +33,8 @@
             @if($isEdit)
                 @if($isArt)
                     改名称和别名会马上影响文章栏目页。下面有文章时不要删，可以先关掉前台显示。
+                @elseif($isWebsite)
+                    改名称会马上影响前台「导航」侧栏。下面有站点时不要删，可以先关掉前台显示。
                 @else
                     改名称和别名会马上影响前台分类页。下面有片子时不要删，可以先禁用。
                 @endif
@@ -34,6 +42,8 @@
                 将建在「{{ $parentName }}」下面。保存后会出现在上级的下一层。
             @elseif($isArt)
                 栏目是文章的目录，例如 资讯 → 公告。和影片分类不是同一棵树。
+            @elseif($isWebsite)
+                这是网址导航自己的分类，只给顶栏「导航」分组用。先建工具、资源这种一级，再在下面加二级。和影片 / 文章分类不是同一棵树。
             @else
                 先建电影、电视剧这种一级目录。动作片、国产剧请在对应分类里点「下级」。
             @endif
@@ -41,13 +51,13 @@
 
         <form class="type-form" id="type-form">
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($type['id'] ?? 0) : '' }}">
-            <input type="hidden" name="mid" value="{{ $isArt ? 2 : 1 }}">
+            <input type="hidden" name="mid" value="{{ $mid }}">
 
             <h3>这个{{ $noun }}</h3>
             <label for="type-name">名称</label>
-            <input id="type-name" type="text" name="name" value="{{ $name }}" placeholder="{{ $isArt ? '如 资讯、公告' : '如 电影、动作片' }}" required>
+            <input id="type-name" type="text" name="name" value="{{ $name }}" placeholder="{{ $isArt ? '如 资讯、公告' : ($isWebsite ? '如 工具、资源站' : '如 电影、动作片') }}" required>
             <label for="type-slug">网址别名</label>
-            <input id="type-slug" type="text" name="slug" value="{{ $type['slug'] ?? '' }}" placeholder="{{ $isArt ? '如 news，可空' : '如 movie，可空' }}">
+            <input id="type-slug" type="text" name="slug" value="{{ $type['slug'] ?? '' }}" placeholder="{{ $isArt ? '如 news，可空' : ($isWebsite ? '如 tools，可空' : '如 movie，可空') }}">
             <p class="muted field-hint">出现在{{ $isArt ? '栏目' : '分类' }}页链接里。只填英文、数字和短横线。留空则用数字 ID。</p>
 
             <label for="type-parent">上级</label>
@@ -105,7 +115,7 @@
                 <input type="checkbox" name="status" value="1" @checked($status === '1')>
                 在前台显示
             </label>
-            <p class="muted field-hint">关掉后前台菜单里不再出现，{{ $isArt ? '文章' : '片子' }}还在。</p>
+            <p class="muted field-hint">关掉后前台菜单里不再出现，{{ $isArt ? '文章' : ($isWebsite ? '站点' : '片子') }}还在。</p>
 
             <details class="settings-details" @if(trim((string) ($type['seo_title'] ?? '').($type['seo_keywords'] ?? '').($type['seo_description'] ?? '')) !== '') open @endif>
                 <summary>搜索标题（可空）</summary>
@@ -136,6 +146,8 @@
                 <button type="button" class="btn btn-muted" id="type-save-child">保存并添加下级</button>
                 @if($isArt)
                     <button type="button" class="btn btn-muted" id="type-save-art">保存并写文章</button>
+                @elseif($isWebsite)
+                    <a class="btn btn-muted" href="/admin/video/websites">去网址导航</a>
                 @endif
                 <a class="btn btn-muted" href="{{ $base }}">取消</a>
             </div>

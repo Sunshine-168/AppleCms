@@ -100,11 +100,25 @@ class VodTag
         $kw = trim((string) ($options['wd'] ?? $options['q'] ?? $filters['wd'] ?? request('wd', request('q', ''))));
         if ($kw !== '') {
             $kw = app(\App\Services\Video\SynonymService::class)->expand($kw);
-            $query->where(function (Builder $inner) use ($kw) {
-                $inner->where('title', 'like', "%{$kw}%")
-                    ->orWhere('subtitle', 'like', "%{$kw}%")
-                    ->orWhere('director', 'like', "%{$kw}%");
-            });
+            $scoutIds = null;
+            try {
+                $scoutIds = app(\Plugins\Scout\Services\ScoutSearchService::class)->searchVideoIds($kw);
+            } catch (\Throwable) {
+                $scoutIds = null;
+            }
+            if (is_array($scoutIds)) {
+                if ($scoutIds === []) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereIn('videos.id', $scoutIds);
+                }
+            } else {
+                $query->where(function (Builder $inner) use ($kw) {
+                    $inner->where('title', 'like', "%{$kw}%")
+                        ->orWhere('subtitle', 'like', "%{$kw}%")
+                        ->orWhere('director', 'like', "%{$kw}%");
+                });
+            }
         }
     }
 

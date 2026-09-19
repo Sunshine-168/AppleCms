@@ -1848,6 +1848,18 @@ hr.soft { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 .botlog-index .recycle-lead { margin: 0 0 12px; }
 .accesslog-index .filter-bar { margin: 0 0 8px; }
 .accesslog-index .recycle-lead { margin: 0 0 12px; }
+.runtime-accesslog .accesslog-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 10px;
+}
+.runtime-accesslog .field-hint em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 13px;
+}
 .botlog-url { word-break: break-all; }
 .pm-index .filter-bar { margin: 0 0 8px; }
 .pm-index .recycle-lead { margin: 0 0 12px; }
@@ -5626,7 +5638,7 @@ pre.out, pre.code-block {
 .schedule-cron-row {
     display: flex;
     gap: 8px;
-    align-items: flex-start;
+    align-items: center;
     min-width: 0;
 }
 .schedule-cron-row .btn { flex-shrink: 0; }
@@ -5634,15 +5646,15 @@ pre.out, pre.code-block {
     flex: 1;
     min-width: 0;
     display: block;
-    padding: 8px 10px;
+    padding: 6px 10px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     word-break: break-all;
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.4;
 }
 .schedule-idle-hint {
     margin: 10px 0 0;
@@ -6138,13 +6150,35 @@ pre.out, pre.code-block {
     justify-content: space-between;
     gap: 12px;
 }
+.runtime-board .card-header > span em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 13px;
+    margin-left: 6px;
+}
+.runtime-board .runtime-header-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+.runtime-board .runtime-access-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.runtime-board .runtime-access-chips { margin: 0 0 10px; }
+.runtime-board .runtime-accesslog { margin-top: 2px; }
+.runtime-board .runtime-accesslog .filter-bar { margin-top: 0; }
+.runtime-board .runtime-accesslog .queue-chips { margin-bottom: 8px; }
 .runtime-board .card-header em.runtime-fire-count,
 .runtime-board .card-header a.runtime-fire-count {
     font-style: normal;
     font-weight: 600;
     color: var(--danger);
     font-size: 13px;
-    margin-left: auto;
     text-decoration: none;
 }
 .runtime-dead {
@@ -6160,7 +6194,7 @@ pre.out, pre.code-block {
 .runtime-cron {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     min-width: 0;
 }
@@ -6168,15 +6202,15 @@ pre.out, pre.code-block {
     flex: 1 1 280px;
     min-width: 0;
     display: block;
-    padding: 8px 10px;
+    padding: 6px 10px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     word-break: break-all;
-    font-size: 12px;
-    line-height: 1.55;
+    font-size: 13px;
+    line-height: 1.4;
     color: #1d2129;
 }
 .runtime-dead .runtime-cron code {

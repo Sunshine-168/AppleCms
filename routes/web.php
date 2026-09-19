@@ -39,6 +39,7 @@ Route::get('/topics', [VodController::class, 'topics'])->name('vod.topics');
 Route::get('/topics/search', [VodController::class, 'topicSearch'])->name('vod.topic_search');
 Route::get('/topic/{id}', [VodController::class, 'topic'])->name('vod.topic');
 Route::get('/website', [VodController::class, 'websites'])->name('vod.website');
+Route::get('/website/{id}/go', [VodController::class, 'websiteGo'])->name('vod.website.go')->whereNumber('id');
 Route::get('/website/{id}', [VodController::class, 'website'])->name('vod.website.show')->whereNumber('id');
 Route::get('/arts', [VodController::class, 'arts'])->name('vod.arts');
 Route::get('/art/type/{id}', [VodController::class, 'arts'])->whereNumber('id');

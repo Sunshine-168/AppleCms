@@ -6,6 +6,8 @@
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $types = is_array($types ?? null) ? $types : [];
     $typeId = (int) ($typeId ?? 0);
+    $flinkUrl = trim((string) ($flinkUrl ?? '/admin/video/links')) ?: '/admin/video/links';
+    $typeUrl = '/admin/video/website-types';
 @endphp
 
 @section('plain')
@@ -14,15 +16,15 @@
         <span>网址导航 <em id="website-count"></em></span>
         <div>
             <button type="button" class="btn btn-sm" id="website-add-btn">新增站点</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video/links">友情链接</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/types">分类</a>
+            <a class="btn btn-muted btn-sm" href="{{ $flinkUrl }}">友情链接</a>
+            <a class="btn btn-muted btn-sm" href="{{ $typeUrl }}">分类</a>
             <a class="btn btn-muted btn-sm" href="/website" target="_blank" rel="noopener">看前台</a>
         </div>
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">顶栏「导航」的站外目录，可按分类分组。友情链接只出现在页脚，不是同一张表。</p>
         @if($types === [])
-            <p class="muted field-hint">还没有「用来放什么 = 网址导航」的分类。不分组也能加站点；要分组先到<a href="/admin/video/types">分类</a>里建一个。</p>
+            <p class="muted field-hint">还没有导航分类。不分组也能加站点；要分组先<a href="{{ $typeUrl }}/create">新建导航分类</a>。</p>
         @endif
         <form class="filter-bar" id="website-search" onsubmit="return false;">
             <input type="hidden" name="empty_type">
@@ -80,7 +82,7 @@
                     <option value="{{ (int) $type['id'] }}">{{ $type['name'] }}</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">只列出「用来放什么 = 网址导航」的分类。</p>
+            <p class="muted field-hint">只列出导航分类。没有合适的？去<a href="{{ $typeUrl }}/create" target="_blank" rel="noopener">新建</a>。</p>
         @else
             <input type="hidden" name="type_id" value="0">
         @endif
@@ -94,6 +96,9 @@
         <input type="text" name="blurb" placeholder="一两句，可空">
         <label>排序</label>
         <input type="number" name="sort" value="0">
+        <label>人气</label>
+        <input type="number" name="hits" value="0" min="0">
+        <p class="muted field-hint">前台「打开」会累加。也可在这里手改。</p>
         <label>状态</label>
         <select name="status">
             <option value="1">显示</option>
@@ -113,6 +118,8 @@
     var batchCount = document.getElementById('website-batch-count');
     var countEl = document.getElementById('website-count');
     var prefillType = @json($typeId > 0 ? $typeId : 0);
+    var flinkUrl = @json($flinkUrl);
+    var typeUrl = @json($typeUrl);
 
     function cleanWhere(data) {
         var out = {};
@@ -188,7 +195,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>没有符合条件的站点</p><p><button type="button" class="btn btn-muted btn-sm" id="website-empty-reset">清除筛选</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有网址导航</p><p class="muted">点新增，填名称和网址。会出现在前台顶栏「导航」，不会进页脚。页脚交换请去友情链接。</p><p><button type="button" class="btn btn-primary btn-sm" id="website-empty-add">新增站点</button> <a class="btn btn-muted btn-sm" href="/admin/video/links">去友情链接</a></p></div>';
+            return '<div class="list-empty"><p>还没有网址导航</p><p class="muted">点新增，填名称和网址。会出现在前台顶栏「导航」，不会进页脚。页脚交换请去友情链接。</p><p><button type="button" class="btn btn-primary btn-sm" id="website-empty-add">新增站点</button> <a class="btn btn-muted btn-sm" href="' + typeUrl + '/create">新建导航分类</a> <a class="btn btn-muted btn-sm" href="' + flinkUrl + '">去友情链接</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('website-empty-add');
@@ -208,6 +215,7 @@
             {check: true, width: 36},
             {title: '站点', html: nameHtml},
             {title: '分类', width: 140, html: typeHtml},
+            {key: 'hits', title: '人气', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
             {key: 'sort', title: '排序', width: 64},
             {title: '状态', width: 72, html: function (d) {
                 return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '隐藏');
@@ -248,6 +256,7 @@
                     logo: row.logo || '',
                     blurb: row.blurb || '',
                     sort: row.sort == null ? 0 : row.sort,
+                    hits: row.hits == null ? 0 : row.hits,
                     status: row.status == null ? '1' : String(row.status)
                 });
                 bindLogo(formEl);

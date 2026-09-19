@@ -1,0 +1,88 @@
+{
+    "id": "scout",
+    "name": "全文搜索",
+    "name_en": "Full-text search",
+    "description": "Laravel Scout 全文搜索。默认 database 驱动（表内检索）；可改 Meilisearch。关掉后前台关键词回退 LIKE。",
+    "description_en": "Laravel Scout full-text search. Default database driver; optional Meilisearch. Falls back to LIKE when off.",
+    "version": "1.0.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "site",
+    "provider": "Plugins\\Scout\\ScoutServiceProvider",
+    "admin": {
+        "extra_pages": {
+            "scout": {
+                "title": "全文搜索",
+                "hint": "基于 Laravel Scout。默认 database，不用另装搜索引擎；填 Meilisearch 主机后可改驱动。首次改驱动请点「重建索引」。",
+                "fields": [
+                    {
+                        "name": "scout_search_enabled",
+                        "label": "启用 Scout 搜影片",
+                        "type": "select",
+                        "options": ["否（用 LIKE）", "是"]
+                    },
+                    {
+                        "name": "scout_driver",
+                        "label": "驱动",
+                        "type": "select",
+                        "options": {"database": "database（推荐）", "collection": "collection（内存）", "meilisearch": "meilisearch"}
+                    },
+                    {
+                        "name": "scout_meili_host",
+                        "label": "Meilisearch 主机",
+                        "type": "text",
+                        "placeholder": "http://127.0.0.1:7700"
+                    },
+                    {
+                        "name": "scout_meili_key",
+                        "label": "Meilisearch Key",
+                        "type": "text",
+                        "hint": "留空则不改已存密钥"
+                    }
+                ]
+            }
+        },
+        "modules": {
+            "scout": {
+                "title": "全文搜索",
+                "hint": "Laravel Scout：开关、驱动、重建索引。",
+                "view": "scout::admin.board",
+                "handler": "Plugins\\Scout\\Services\\ScoutAdmin",
+                "desks": ["settings"],
+                "default_desk": "settings",
+                "fields": [],
+                "cols": ["id"]
+            }
+        },
+        "sidebar_fold": {
+            "site": [
+                {
+                    "url": "/admin/video/scout",
+                    "icon": "search",
+                    "label": "nav.scout"
+                },
+                {
+                    "url": "/admin/video/config/scout",
+                    "icon": "sliders-h",
+                    "label": "nav.scout_config"
+                }
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {
+                    "url": "/admin/video/scout",
+                    "label": "item.scout",
+                    "hint": "hint.scout",
+                    "tag": "plugin"
+                }
+            ]
+        },
+        "settings_links": [
+            {
+                "url": "/admin/video/config/scout",
+                "label": "item.config_scout"
+            }
+        ]
+    }
+}

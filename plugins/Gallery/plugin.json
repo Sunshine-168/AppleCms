@@ -1,0 +1,61 @@
+{
+    "id": "gallery",
+    "name": "图集",
+    "name_en": "Gallery",
+    "description": "独立图集、标签、收藏与统计。",
+    "version": "1.2.0",
+    "enabled": true,
+    "capability": "ready",
+    "group": "content",
+    "provider": "Plugins\\Gallery\\GalleryServiceProvider",
+    "admin": {
+        "modules": {
+            "galleries": {
+                "title": "图集",
+                "hint": "独立图集，不是影片分类。",
+                "model": "Plugins\\Gallery\\Models\\Gallery",
+                "search": "title",
+                "view": "gallery::admin.board",
+                "handler": "Plugins\\Gallery\\Services\\GalleryAdmin",
+                "desks": ["works", "pending", "pics", "types", "favors", "comments", "stats"],
+                "default_desk": "works",
+                "fields": [{"name":"title","label":"名称","type":"text"}],
+                "cols": ["id", "title", "author", "tags", "hits", "status", "sort"]
+            },
+            "gallery_tags": {
+                "title": "图集标签",
+                "model": "Plugins\\Gallery\\Models\\GalleryTag",
+                "search": "name",
+                "redirect": "/admin/video/gallery-tags",
+                "fields": [{"name":"name","label":"名称","type":"text"}],
+                "cols": ["id", "name", "slug", "sort", "status"]
+            },
+            "gallery_authors": {
+                "title": "图集作者",
+                "model": "Plugins\\Gallery\\Models\\GalleryAuthor",
+                "search": "name",
+                "redirect": "/admin/video/gallery-authors",
+                "fields": [{"name":"name","label":"名称","type":"text"}],
+                "cols": ["id", "name", "slug", "sort", "status"]
+            }
+        },
+        "sidebar_fold": {
+            "gallery": [
+                {"url":"/admin/video/galleries","icon":"images","label":"nav.gallery_list"},
+                {"url":"/admin/video/galleries?desk=pending","icon":"clock","label":"nav.gallery_pending"},
+                {"url":"/admin/video/galleries?desk=pics","icon":"image","label":"nav.gallery_pics"},
+                {"url":"/admin/video/galleries?desk=types","icon":"sitemap","label":"nav.gallery_types"},
+                {"url":"/admin/video/gallery-tags","icon":"tags","label":"nav.gallery_tags"},
+                {"url":"/admin/video/gallery-authors","icon":"user","label":"nav.gallery_authors"},
+                {"url":"/admin/video/galleries?desk=comments","icon":"comments","label":"nav.gallery_comments"},
+                {"url":"/admin/video/galleries?desk=favors","icon":"star","label":"nav.gallery_favors"},
+                {"url":"/admin/video/galleries?desk=stats","icon":"chart-bar","label":"nav.gallery_stats"}
+            ]
+        },
+        "catalog": {
+            "more.complete": [
+                {"url":"/admin/video/galleries","label":"item.gallery","hint":"hint.gallery","tag":"plugin"}
+            ]
+        }
+    }
+}
