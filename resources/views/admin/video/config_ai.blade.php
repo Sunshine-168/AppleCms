@@ -93,7 +93,7 @@
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
                 <a class="btn btn-muted" href="/admin/video?empty_content=1">去无简介列表</a>
             </div>
         </form>

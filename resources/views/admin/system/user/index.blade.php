@@ -16,31 +16,78 @@
     if ($defaultRoleId === 0 && $roles !== []) {
         $defaultRoleId = (int) ($roles[0]['id'] ?? 0);
     }
+    $offSuffix = admin_t('ui.group_disabled_suffix');
+    $T = [
+        'admins' => admin_t('nav.admins'),
+        'add_admin' => admin_t('ui.add_admin'),
+        'edit_admin' => admin_t('ui.edit_admin'),
+        'add' => admin_t('ui.add'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'actions' => admin_t('ui.actions'),
+        'login_name' => admin_t('ui.login_name'),
+        'ph_login_name' => admin_t('ui.ph_login_name'),
+        'ph_password_min' => admin_t('ui.ph_password_min'),
+        'password' => admin_t('ui.password'),
+        'role' => admin_t('ui.role'),
+        'no_role_yet' => admin_t('ui.no_role_yet'),
+        'need_role_first' => admin_t('ui.need_role_first', ['link' => admin_t('nav.roles')]),
+        'ph_search_admin' => admin_t('ui.ph_search_admin'),
+        'all' => admin_t('ui.all'),
+        'never_logged_in' => admin_t('ui.never_logged_in'),
+        'current_account' => admin_t('ui.current_account'),
+        'founder' => admin_t('ui.founder'),
+        'last_login_at' => admin_t('ui.last_login_at', ['time' => '__TIME__']),
+        'unnamed' => admin_t('ui.unnamed'),
+        'no_match_admins' => admin_t('ui.no_match_admins'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_admins' => admin_t('ui.empty_admins'),
+        'empty_admins_hint' => admin_t('ui.empty_admins_hint'),
+        'need_username' => admin_t('ui.need_username'),
+        'need_password' => admin_t('ui.need_password'),
+        'password_min6' => admin_t('ui.password_min6'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'added' => admin_t('ui.added'),
+        'ph_admin_username' => admin_t('ui.ph_admin_username'),
+        'admin_not_member' => admin_t('ui.admin_not_member'),
+        'email' => admin_t('ui.email'),
+        'ph_email_find' => admin_t('ui.ph_email_find'),
+        'role_pages_hint' => admin_t('ui.role_pages_hint'),
+        'founder_all_menus' => admin_t('ui.founder_all_menus'),
+        'remark' => admin_t('ui.remark'),
+        'ph_remark_admin' => admin_t('ui.ph_remark_admin'),
+        'ph_password_keep' => admin_t('ui.ph_password_keep'),
+        'password_edit_hint' => admin_t('ui.password_edit_hint'),
+        'cannot_delete_account' => admin_t('ui.cannot_delete_account'),
+        'confirm_delete_named' => admin_t('ui.confirm_delete_named', ['name' => '__NAME__']),
+        'deleted' => admin_t('ui.deleted'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel admin-user-index access-board">
     <div class="card-header">
-        <span>管理员 <em id="admin-user-count"></em></span>
+        <span>{{ admin_t('nav.admins') }} <em id="admin-user-count"></em></span>
     </div>
     <div class="card-body">
         @include('admin.partials.access-chain', ['step' => 'admins'])
         <div class="admin-user-compose">
             <form id="admin-user-compose" autocomplete="off">
-                <label class="admin-user-compose-label" for="admin-user-quick-name">新增管理员</label>
+                <label class="admin-user-compose-label" for="admin-user-quick-name">{{ admin_t('ui.add_admin') }}</label>
                 <div class="admin-user-compose-row">
-                    <input id="admin-user-quick-name" type="text" name="username" placeholder="登录名" aria-label="登录名" required>
-                    <input type="password" name="password" placeholder="密码，至少 6 位" aria-label="密码" required minlength="6" autocomplete="new-password">
-                    <select name="role_id" aria-label="角色">
-                        <option value="0">暂不选角色</option>
+                    <input id="admin-user-quick-name" type="text" name="username" placeholder="{{ admin_t('ui.ph_login_name') }}" aria-label="{{ admin_t('ui.login_name') }}" required>
+                    <input type="password" name="password" placeholder="{{ admin_t('ui.ph_password_min') }}" aria-label="{{ admin_t('ui.password') }}" required minlength="6" autocomplete="new-password">
+                    <select name="role_id" aria-label="{{ admin_t('ui.role') }}">
+                        <option value="0">{{ admin_t('ui.no_role_yet') }}</option>
                         @foreach($roles as $role)
-                            <option value="{{ $role['id'] }}" @selected($defaultRoleId === (int) $role['id'])>{{ $role['name'] }}{{ (int) ($role['status'] ?? 1) === 1 ? '' : '（停用）' }}</option>
+                            <option value="{{ $role['id'] }}" @selected($defaultRoleId === (int) $role['id'])>{{ $role['name'] }}{{ (int) ($role['status'] ?? 1) === 1 ? '' : $offSuffix }}</option>
                         @endforeach
                     </select>
-                    <button class="btn" type="submit" id="admin-user-compose-btn">添加</button>
+                    <button class="btn" type="submit" id="admin-user-compose-btn">{{ admin_t('ui.add') }}</button>
                 </div>
                 @if($roles === [])
-                    <p class="muted field-hint">还没有角色，先去「<a href="/admin/system/roles">角色</a>」加一个。</p>
+                    <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/system/roles">'.e(admin_t('nav.roles')).'</a>', e(admin_t('ui.need_role_first', ['link' => ':link']))) !!}</p>
                 @endif
             </form>
         </div>
@@ -48,16 +95,16 @@
         <form class="filter-bar admin-user-find" id="admin-user-search">
             <input type="hidden" name="kind">
             <input type="hidden" name="role_id">
-            <input type="search" name="q" placeholder="搜登录名或邮箱" autocomplete="off" aria-label="搜索管理员">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_admin') }}" autocomplete="off" aria-label="{{ admin_t('ui.ph_search_admin') }}">
             <button type="submit" class="btn btn-sm" id="admin-user-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="admin-user-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="admin-user-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
             @foreach($roles as $role)
                 <button type="button" class="chip" data-queue="role_id" data-value="{{ $role['id'] }}">{{ $role['name'] }}@if(($role['count'] ?? 0) > 0)<em>{{ $role['count'] }}</em>@endif</button>
             @endforeach
-            <button type="button" class="chip" data-queue="kind" data-value="never">从未登录@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="kind" data-value="never">{{ admin_t('ui.never_logged_in') }}@if($q('never') > 0)<em>{{ $q('never') }}</em>@endif</button>
         </div>
         <div id="admin-user-table" class="access-table"></div>
     </div>
@@ -65,24 +112,24 @@
 <template id="admin-user-dialog-tpl">
     <form class="admin-form">
         <input type="hidden" name="id">
-        <label>登录名</label>
-        <input type="text" name="username" placeholder="用来登录后台">
-        <p class="muted field-hint">前台会员进不了这里。改自己的登录名后，顶栏显示会跟着变。</p>
-        <label>邮箱</label>
-        <input type="email" name="email" placeholder="选填，方便找到人">
-        <label>角色</label>
+        <label>{{ admin_t('ui.login_name') }}</label>
+        <input type="text" name="username" placeholder="{{ admin_t('ui.ph_admin_username') }}">
+        <p class="muted field-hint">{{ admin_t('ui.admin_not_member') }}</p>
+        <label>{{ admin_t('ui.email') }}</label>
+        <input type="email" name="email" placeholder="{{ admin_t('ui.ph_email_find') }}">
+        <label>{{ admin_t('ui.role') }}</label>
         <select name="role_id" id="admin-user-role-select">
-            <option value="0">暂不选角色</option>
+            <option value="0">{{ admin_t('ui.no_role_yet') }}</option>
             @foreach($roles as $role)
-                <option value="{{ $role['id'] }}">{{ $role['name'] }}{{ (int) ($role['status'] ?? 1) === 1 ? '' : '（停用）' }}</option>
+                <option value="{{ $role['id'] }}">{{ $role['name'] }}{{ (int) ($role['status'] ?? 1) === 1 ? '' : $offSuffix }}</option>
             @endforeach
         </select>
-        <p class="muted field-hint" id="admin-user-role-hint">没有角色的人，进不了菜单里登记过的页。要收权限先到角色里勾。</p>
-        <label>备注</label>
-        <input type="text" name="remark" placeholder="选填，只在后台看到">
-        <label>密码</label>
-        <input type="password" name="password" autocomplete="new-password" placeholder="留空表示不改">
-        <p class="muted field-hint">新建至少 6 位。编辑留空则保持原密码。</p>
+        <p class="muted field-hint" id="admin-user-role-hint">{{ admin_t('ui.role_pages_hint') }}</p>
+        <label>{{ admin_t('ui.remark') }}</label>
+        <input type="text" name="remark" placeholder="{{ admin_t('ui.ph_remark_admin') }}">
+        <label>{{ admin_t('ui.password') }}</label>
+        <input type="password" name="password" autocomplete="new-password" placeholder="{{ admin_t('ui.ph_password_keep') }}">
+        <p class="muted field-hint">{{ admin_t('ui.password_edit_hint') }}</p>
     </form>
 </template>
 @endsection
@@ -91,6 +138,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var T = @json($T, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('admin-user-search');
     var compose = document.getElementById('admin-user-compose');
     var countEl = document.getElementById('admin-user-count');
@@ -134,17 +182,17 @@
     }
     function nameHtml(d) {
         var badges = '';
-        if (d.is_self) badges += '<span class="badge badge-ok">当前账号</span>';
-        if (d.is_founder) badges += '<span class="badge badge-ok">创始人</span>';
-        else if (d.never_login) badges += '<span class="badge badge-off">从未登录</span>';
+        if (d.is_self) badges += '<span class="badge badge-ok">' + U.escape(T.current_account) + '</span>';
+        if (d.is_founder) badges += '<span class="badge badge-ok">' + U.escape(T.founder) + '</span>';
+        else if (d.never_login) badges += '<span class="badge badge-off">' + U.escape(T.never_logged_in) + '</span>';
         var meta = U.escape(d.email || '');
         var role = d.kind_label || d.role_name || '';
         if (role) meta += (meta ? ' · ' : '') + U.escape(role);
         if (d.remark) meta += (meta ? ' · ' : '') + U.escape(d.remark);
-        if (d.login_text) meta += (meta ? ' · ' : '') + (d.never_login ? U.escape(d.login_text) : ('上次登录 ' + U.escape(d.login_text)));
+        if (d.login_text) meta += (meta ? ' · ' : '') + (d.never_login ? U.escape(d.login_text) : U.escape(String(T.last_login_at || '').replace('__TIME__', d.login_text)));
         if (d.login_ip) meta += (meta ? ' · ' : '') + U.escape(d.login_ip);
         if (d.ip_address) meta += ' ' + U.escape(d.ip_address);
-        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.username || '未命名') + '</a> ' + badges + '</div>'
+        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.username || T.unnamed) + '</a> ' + badges + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div>';
     }
 
@@ -155,19 +203,19 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的管理员。</p><p><button type="button" class="btn btn-muted btn-sm" id="admin-user-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(T.no_match_admins) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="admin-user-empty-reset">' + U.escape(T.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有管理员。</p><p class="muted">在上方填写登录名和密码即可添加。他们登录的是后台，不是网站。不能删自己，创始人不能删。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(T.empty_admins) + '</p><p class="muted">' + U.escape(T.empty_admins_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             var reset = document.getElementById('admin-user-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },
         cols: [
-            {title: '管理员', html: nameHtml},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-edit">编辑</a>';
-                if (d.can_delete) html += '<a href="#" class="btn-link js-del">删除</a>';
+            {title: T.admins, html: nameHtml},
+            {title: T.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-edit">' + U.escape(T.edit) + '</a>';
+                if (d.can_delete) html += '<a href="#" class="btn-link js-del">' + U.escape(T.delete) + '</a>';
                 return html;
             }}
         ]
@@ -178,7 +226,7 @@
         row = row || {};
         var founder = !!row.is_founder;
         U.dialog({
-            title: '编辑管理员',
+            title: T.edit_admin,
             content: document.getElementById('admin-user-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -194,17 +242,17 @@
                 var hint = body.querySelector('#admin-user-role-hint');
                 if (founder && sel) {
                     sel.disabled = true;
-                    if (hint) hint.textContent = '这是创始人，能进所有菜单，不用选角色。';
+                    if (hint) hint.textContent = T.founder_all_menus;
                 }
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.username) { U.toast('请填写登录名', 'err'); return false; }
+                if (!data.username) { U.toast(T.need_username, 'err'); return false; }
                 data.id = row.id;
                 if (!data.password) delete data.password;
                 return U.post('/admin/user/update', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast((res && res.msg) || '已保存', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return false; }
+                    U.toast((res && res.msg) || T.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -222,12 +270,12 @@
     U.on('#admin-user-compose', 'submit', function (e) {
         e.preventDefault();
         var data = U.formData(compose);
-        if (!data.username) { U.toast('请填写登录名', 'err'); return; }
-        if (!data.password) { U.toast('请填写密码', 'err'); return; }
-        if (data.password.length < 6) { U.toast('密码至少 6 位', 'err'); return; }
+        if (!data.username) { U.toast(T.need_username, 'err'); return; }
+        if (!data.password) { U.toast(T.need_password, 'err'); return; }
+        if (data.password.length < 6) { U.toast(T.password_min6, 'err'); return; }
         U.post('/admin/user/add', data).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能添加', 'err'); return; }
-            U.toast((res && res.msg) || '已添加', 'ok');
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return; }
+            U.toast((res && res.msg) || T.added, 'ok');
             compose.reset();
             table.refresh();
         });
@@ -242,12 +290,12 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openEdit(row);
         if (a.classList.contains('js-del')) {
-            if (!row.can_delete) { U.toast('这个账号不能删', 'err'); return; }
-            if (!U.confirm('确定删除「' + (row.username || '') + '」？不能再登录后台。')) return;
+            if (!row.can_delete) { U.toast(T.cannot_delete_account, 'err'); return; }
+            if (!U.confirm(String(T.confirm_delete_named || '').replace('__NAME__', row.username || ''))) return;
             U.post('/admin/user/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能删除', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return; }
                 table.refresh();
-                U.toast((res && res.msg) || '已删除', 'ok');
+                U.toast((res && res.msg) || T.deleted, 'ok');
             });
         }
     });

@@ -158,7 +158,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($videoJsLang);
+    var L = @json($videoJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'missing_ep', 'repeat', 'need_points', 'has_plot'];
     var form = document.getElementById('video-search');
     var moreBox = document.getElementById('video-filter-more');

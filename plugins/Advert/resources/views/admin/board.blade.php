@@ -27,16 +27,16 @@
             <input type="hidden" name="desk" value="{{ $desk }}">
             <input type="search" name="q" placeholder="{{ $desk === 'ads' ? '搜名称、标题' : ($desk === 'stats' ? '搜广告' : '搜 IP、页面') }}" autocomplete="off">
             <select name="slot" aria-label="位置" @if($desk !== 'ads') hidden @endif>
-                <option value="">全部位置</option>
+                <option value="">{{ admin_t('ui.all_positions') }}</option>
                 <option value="top">顶栏</option>
                 <option value="bottom">底栏</option>
                 <option value="player">播放器</option>
                 <option value="content">正文</option>
             </select>
             <select name="status" aria-label="状态" @if($desk !== 'ads') hidden @endif>
-                <option value="">全部状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">{{ admin_t('ui.all_status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
             <select name="period" aria-label="周期" @if($desk !== 'stats') hidden @endif>
                 <option value="day" @selected($period === 'day')>按日</option>
@@ -87,8 +87,8 @@
         <input type="number" name="sort" value="0">
         <label>状态</label>
         <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.enabled') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
     </form>
 </template>
@@ -126,28 +126,28 @@
     var cols = [];
     if (desk === 'clicks') {
         cols = [
-            {title: '广告', html: function (d) { return U.escape(d.ad_name || ('#' + (d.ad_id || ''))); }},
+            {title: AdminUi.t('ads'), html: function (d) { return U.escape(d.ad_name || ('#' + (d.ad_id || ''))); }},
             {title: 'IP', width: 120, html: function (d) { return U.escape(d.ip || ''); }},
-            {title: '页面', html: function (d) { return U.escape(d.page || ''); }},
-            {title: '时间', width: 120, html: function (d) { return U.escape(String(d.created_at || '')); }}
+            {title: AdminUi.t('pages'), html: function (d) { return U.escape(d.page || ''); }},
+            {title: AdminUi.t('time'), width: 120, html: function (d) { return U.escape(String(d.created_at || '')); }}
         ];
     } else if (desk === 'stats') {
         cols = [
-            {title: '周期', width: 110, html: function (d) { return U.escape(d.period_key || ''); }},
-            {title: '广告', html: function (d) { return U.escape(d.ad_name || ('#' + (d.ad_id || ''))); }},
-            {title: '展示', width: 72, html: function (d) { return U.escape(String(d.impressions == null ? 0 : d.impressions)); }},
-            {title: '点击', width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }}
+            {title: AdminUi.t('period'), width: 110, html: function (d) { return U.escape(d.period_key || ''); }},
+            {title: AdminUi.t('ads'), html: function (d) { return U.escape(d.ad_name || ('#' + (d.ad_id || ''))); }},
+            {title: AdminUi.t('impressions'), width: 72, html: function (d) { return U.escape(String(d.impressions == null ? 0 : d.impressions)); }},
+            {title: AdminUi.t('clicks'), width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }}
         ];
     } else {
         cols = [
-            {title: '名称', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>'; }},
+            {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>'; }},
             {title: '位置', width: 80, html: function (d) { return U.escape(d.slot_label || ''); }},
-            {title: '类型', width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
-            {title: '展示', width: 72, html: function (d) { return U.escape(String(d.impressions == null ? 0 : d.impressions)); }},
-            {title: '点击', width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
-            {title: '状态', width: 72, html: function (d) { return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '停用'); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('type'), width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
+            {title: AdminUi.t('impressions'), width: 72, html: function (d) { return U.escape(String(d.impressions == null ? 0 : d.impressions)); }},
+            {title: AdminUi.t('clicks'), width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
+            {title: AdminUi.t('status'), width: 72, html: function (d) { return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled')); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     }

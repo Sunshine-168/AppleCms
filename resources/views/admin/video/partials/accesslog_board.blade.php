@@ -36,8 +36,8 @@
     <p class="muted recycle-lead">只记前台页面 GET。后台、js/css、插件静态不记。点 IP 只看这个地址。<strong>不能封 IP</strong>，也没有限频。白名单只拦 <code>/admin</code>。标题和来路去「<a href="/admin/stats/logs">访问明细</a>」；程序报错去「<a href="/admin/system/monitor/system-logs">系统日志</a>」；蜘蛛是同一张表，切片在「<a href="/admin/video/botlogs">爬虫日志</a>」。</p>
 @endif
 <div class="batch-bar" id="accesslog-batch" hidden>
-    <strong id="accesslog-batch-count">已选 0 条</strong>
-    <button type="button" class="btn btn-danger btn-sm" id="accesslog-batch-del">删除</button>
-    <button type="button" class="btn btn-muted btn-sm" id="accesslog-batch-clear">取消选择</button>
+    <strong id="accesslog-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+    <button type="button" class="btn btn-danger btn-sm" id="accesslog-batch-del">{{ admin_t('ui.delete') }}</button>
+    <button type="button" class="btn btn-muted btn-sm" id="accesslog-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
 </div>
 <div id="accesslog-table"></div>

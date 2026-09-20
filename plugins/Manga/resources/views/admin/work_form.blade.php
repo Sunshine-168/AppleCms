@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', $isEdit ? '编辑作品' : '新增作品')
+@section('title', $isEdit ? admin_t('ui.edit_work') : admin_t('ui.add_work'))
 
 @php
     $work = is_array($work ?? null) ? $work : [];
@@ -28,12 +28,12 @@
 @section('plain')
 <div class="card card-panel">
     <div class="card-header">
-        <span>{{ $isEdit ? '编辑作品' : '新增作品' }}@if($isEdit && $title !== '') <em>{{ $title }}</em>@endif</span>
+        <span>{{ $isEdit ? admin_t('ui.edit_work') : admin_t('ui.add_work') }}@if($isEdit && $title !== '') <em>{{ $title }}</em>@endif</span>
         <div>
             @if($isEdit && $workId > 0)
-                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=work&manga_id={{ $workId }}">管理章节</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=work&manga_id={{ $workId }}">{{ admin_t('ui.manage_chapters') }}</a>
             @endif
-            <a class="btn btn-muted btn-sm" href="{{ $back }}">返回作品</a>
+            <a class="btn btn-muted btn-sm" href="{{ $back }}">{{ admin_t('ui.back_works') }}</a>
         </div>
     </div>
     <div class="card-body">

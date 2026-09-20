@@ -42,7 +42,7 @@
             <form class="tag-compose-form" id="novel-tag-compose" onsubmit="return false;">
                 <label class="tag-compose-label" for="novel-tag-quick">{{ admin_t('ui.add_tag') }}</label>
                 <div class="tag-compose-row">
-                    <input id="novel-tag-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_tag_name') }}" aria-label="{{ admin_t('ui.add_tag') }}" @if($ready) autofocus @endif>
+                    <input id="novel-tag-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_tag_name') }}" aria-label="{{ admin_t('ui.add_tag') }}">
                     <button class="btn" type="submit" id="novel-tag-add">{{ admin_t('ui.add') }}</button>
                 </div>
                 <p class="muted field-hint">{{ admin_t('ui.tag_compose_lead') }}<a href="/admin/video/novel-tags/create">{{ admin_t('ui.open_full_form') }}</a>{{ admin_t('novel.tag_compose_tail') }}</p>
@@ -73,7 +73,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($tagJsLang);
+    var L = @json($tagJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('novel-tag-search');
     var compose = document.getElementById('novel-tag-compose');
     var batchBar = document.getElementById('novel-tag-batch');

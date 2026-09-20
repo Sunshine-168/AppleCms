@@ -19,11 +19,11 @@
         <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}</p>
 
         <div class="queue-chips dict-groups" id="dict-groups">
-            <button type="button" class="chip active" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip active" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
             @foreach($groups as $group)
                 <button type="button" class="chip" data-queue="dict_type" data-value="{{ $group['dict_type'] }}">{{ $group['label'] }}@if(($group['cnt'] ?? 0) > 0)<em>{{ $group['cnt'] }}</em>@endif</button>
             @endforeach
-            <button type="button" class="chip" data-queue="status" data-value="1">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.already_off') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
         <p class="muted field-hint" id="dict-group-hint">点一个类型看选项。</p>
 
@@ -31,7 +31,7 @@
             <input type="hidden" name="dict_type">
             <input type="hidden" name="status">
             <input type="search" name="q" placeholder="{{ $ui['find'] ?? '搜类型、Key 或显示名' }}" autocomplete="off" aria-label="搜索字典">
-            <button type="button" class="btn btn-sm" id="dict-search-btn">搜索</button>
+            <button type="button" class="btn btn-sm" id="dict-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="dict-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div id="dict-table"></div>
@@ -75,8 +75,8 @@
                 <div>
                     <label for="dict-f-status">状态</label>
                     <select id="dict-f-status" name="status">
-                        <option value="0">启用</option>
-                        <option value="1">停用</option>
+                        <option value="0">{{ admin_t('ui.enabled') }}</option>
+                        <option value="1">{{ admin_t('ui.disabled') }}</option>
                     </select>
                 </div>
             </div>
@@ -190,13 +190,13 @@
     }
     function renderGroups(queues) {
         queues = queues || {};
-        var html = '<button type="button" class="chip" data-queue="">全部' + (queues.all > 0 ? '<em>' + queues.all + '</em>' : '') + '</button>';
+        var html = '<button type="button" class="chip" data-queue="">' + U.escape(AdminUi.t('all')) + (queues.all > 0 ? '<em>' + queues.all + '</em>' : '') + '</button>';
         GROUPS.forEach(function (t) {
             html += '<button type="button" class="chip" data-queue="dict_type" data-value="' + U.escape(t.dict_type || '') + '">' + U.escape(t.label || t.dict_type || '');
             if (t.cnt > 0) html += '<em>' + t.cnt + '</em>';
             html += '</button>';
         });
-        html += '<button type="button" class="chip" data-queue="status" data-value="1">已停用' + (queues.off > 0 ? '<em>' + queues.off + '</em>' : '') + '</button>';
+        html += '<button type="button" class="chip" data-queue="status" data-value="1">' + U.escape(AdminUi.t('already_off')) + (queues.off > 0 ? '<em>' + queues.off + '</em>' : '') + '</button>';
         groupsEl.innerHTML = html;
         if (typeList) {
             typeList.innerHTML = GROUPS.map(function (t) {
@@ -336,7 +336,7 @@
             showGroupMeta();
         },
         cols: [
-            {title: '类型', width: 120, html: function (d) {
+            {title: AdminUi.t('type'), width: 120, html: function (d) {
                 var g = groupById(d.dict_type || '');
                 return U.escape((g && g.label) ? g.label : (d.dict_type || ''));
             }},
@@ -350,13 +350,13 @@
             {title: '枚举限制', html: function (d) {
                 return d.enum_preview ? U.escape(d.enum_preview) : '<span class="muted">-</span>';
             }},
-            {title: '状态', width: 80, html: function (d) {
-                return '<button type="button" class="dict-switch js-state' + (d.is_on ? ' is-on' : '') + '" title="' + (d.is_on ? '启用' : '停用') + '"></button>';
+            {title: AdminUi.t('status'), width: 80, html: function (d) {
+                return '<button type="button" class="dict-switch js-state' + (d.is_on ? ' is-on' : '') + '" title="' + U.escape(d.is_on ? AdminUi.t('enabled') : AdminUi.t('disabled')) + '"></button>';
             }},
             {title: '备注', html: function (d) { return d.remark ? U.escape(d.remark) : '<span class="muted">-</span>'; }},
-            {title: '排序', width: 60, html: function (d) { return U.escape(d.sort == null ? '0' : d.sort); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('sort'), width: 60, html: function (d) { return U.escape(d.sort == null ? '0' : d.sort); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });
@@ -406,7 +406,7 @@
             U.post('/admin/system/dicts/state', {id: row.id, status: next}).then(function (res) {
                 if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能改状态', 'err'); return; }
                 table.refresh();
-                U.toast(next === 1 ? '已停用' : '已启用', 'ok');
+                U.toast(next === 1 ? AdminUi.t('already_off') : AdminUi.t('already_on'), 'ok');
             });
             return;
         }

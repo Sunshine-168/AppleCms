@@ -4,16 +4,43 @@
 @php
     $queues = $queues ?? ['all' => 0, 'on' => 0, 'off' => 0, 'skip' => 0, 'review' => 0, 'replace' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $auditJsLang = [
+        'unnamed' => admin_t('ui.unnamed_rule'),
+        'off' => admin_t('ui.disabled'),
+        'on' => admin_t('ui.enabled'),
+        'skip' => admin_t('ui.audit_skip'),
+        'unlist' => admin_t('ui.audit_unlist'),
+        'replace' => admin_t('ui.audit_replace'),
+        'regex' => admin_t('ui.regex'),
+        'watch' => admin_t('ui.watch_scope', ['scope' => '__SCOPE__']),
+        'no_words' => admin_t('ui.no_words_yet'),
+        'words_n' => admin_t('ui.words_n', ['n' => '__N__']),
+        'empty_match' => admin_t('ui.empty_audit_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty' => admin_t('ui.empty_audit'),
+        'empty_hint' => admin_t('ui.empty_audit_hint'),
+        'add' => admin_t('ui.add_rule'),
+        'go_collects' => admin_t('ui.go_collects'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'rule' => admin_t('ui.rule'),
+        'please_select' => admin_t('ui.please_select_rules'),
+        'confirm_batch' => admin_t('ui.confirm_batch_del_rules'),
+        'confirm_del' => admin_t('ui.confirm_del_rule'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'edit' => admin_t('ui.edit'),
+        'op_ok' => admin_t('ui.op_ok'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel audit-index">
     <div class="card-header">
-        <span>入库审核规则 <em id="audit-count"></em></span>
+        <span>{{ admin_t('ui.audit_rules') }} <em id="audit-count"></em></span>
         <div>
-            <a class="btn btn-sm" href="/admin/video/audits/create">新增规则</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/collects">采集源</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?status=0">下架影片</a>
+            <a class="btn btn-sm" href="/admin/video/audits/create">{{ admin_t('ui.add_rule') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/collects">{{ admin_t('ui.collects') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?status=0">{{ admin_t('ui.offline_videos') }}</a>
         </div>
     </div>
     <div class="card-body">
@@ -21,25 +48,25 @@
             <input type="hidden" name="status">
             <input type="hidden" name="action">
             <input type="hidden" name="scope">
-            <input type="search" name="q" placeholder="搜名称或关键词" autocomplete="off" aria-label="搜索审核规则">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_audit') }}" autocomplete="off" aria-label="{{ admin_t('ui.ph_search_audit') }}">
             <button type="button" class="btn btn-sm" id="audit-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="audit-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="audit-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">启用@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="action" data-value="skip">跳过@if($q('skip') > 0)<em>{{ $q('skip') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="action" data-value="review">下架入库@if($q('review') > 0)<em>{{ $q('review') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="action" data-value="replace">抠词@if($q('replace') > 0)<em>{{ $q('replace') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.enabled') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.disabled') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="action" data-value="skip">{{ admin_t('ui.audit_skip') }}@if($q('skip') > 0)<em>{{ $q('skip') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="action" data-value="review">{{ admin_t('ui.audit_review') }}@if($q('review') > 0)<em>{{ $q('review') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="action" data-value="replace">{{ admin_t('ui.audit_replace') }}@if($q('replace') > 0)<em>{{ $q('replace') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">采集时按顺序匹配，命中第一条就停。跳过的片子不会进库；「入库并下架」能在影片列表里再上架。删规则不影响已经进库的片子。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.audit_lead') }}</p>
         <div class="batch-bar" id="audit-batch" hidden>
-            <strong id="audit-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-sm" id="audit-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="audit-batch-off">停用</button>
-            <button type="button" class="btn btn-danger btn-sm" id="audit-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="audit-batch-clear">取消选择</button>
+            <strong id="audit-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="audit-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="audit-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="audit-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="audit-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="audit-table"></div>
     </div>
@@ -50,6 +77,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($auditJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('audit-search');
     var batchBar = document.getElementById('audit-batch');
     var batchCount = document.getElementById('audit-batch-count');
@@ -92,19 +120,19 @@
         markChips();
     }
     function titleHtml(d) {
-        var name = d.name || '未命名规则';
+        var name = d.name || L.unnamed;
         var badges = [];
-        if (parseInt(d.status, 10) !== 1) badges.push('<span class="badge badge-off">停用</span>');
-        else badges.push('<span class="badge badge-ok">启用</span>');
-        if (d.action === 'skip') badges.push('<span class="badge badge-warn">' + U.escape(d.action_label || '跳过') + '</span>');
-        else if (d.action === 'review') badges.push('<span class="badge badge-search">' + U.escape(d.action_label || '下架') + '</span>');
-        else badges.push('<span class="badge badge-ok">' + U.escape(d.action_label || '抠词') + '</span>');
-        if (parseInt(d.is_regex, 10) === 1) badges.push('<span class="badge badge-off">正则</span>');
+        if (parseInt(d.status, 10) !== 1) badges.push('<span class="badge badge-off">' + U.escape(L.off) + '</span>');
+        else badges.push('<span class="badge badge-ok">' + U.escape(L.on) + '</span>');
+        if (d.action === 'skip') badges.push('<span class="badge badge-warn">' + U.escape(d.action_label || L.skip) + '</span>');
+        else if (d.action === 'review') badges.push('<span class="badge badge-search">' + U.escape(d.action_label || L.unlist) + '</span>');
+        else badges.push('<span class="badge badge-ok">' + U.escape(d.action_label || L.replace) + '</span>');
+        if (parseInt(d.is_regex, 10) === 1) badges.push('<span class="badge badge-off">' + U.escape(L.regex) + '</span>');
         var meta = [];
-        if (d.scope_label) meta.push('看' + U.escape(d.scope_label));
+        if (d.scope_label) meta.push(L.watch.replace('__SCOPE__', U.escape(d.scope_label)));
         if (d.words_preview) meta.push(U.escape(d.words_preview));
-        else meta.push('还没填词');
-        if (parseInt(d.word_n, 10) > 0) meta.push(U.escape(String(d.word_n)) + ' 个词');
+        else meta.push(L.no_words);
+        if (parseInt(d.word_n, 10) > 0) meta.push(L.words_n.replace('__N__', String(d.word_n)));
         return '<div class="entry-row-title-line"><a class="entry-row-title" href="/admin/video/audits/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(name) + '</a> ' + badges.join(' ') + '</div>'
             + '<div class="entry-row-meta">' + (meta.join(' · ') || '—') + '</div>';
     }
@@ -116,9 +144,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的规则。</p><p><button type="button" class="btn btn-muted btn-sm" id="audit-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.empty_match) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="audit-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有审核规则。</p><p class="muted">采集时可以按标题、简介、演员里的词决定跳过、下架或抠词。</p><p><a class="btn btn-primary btn-sm" href="/admin/video/audits/create">新增规则</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">去采集源</a></p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty) + '</p><p class="muted">' + U.escape(L.empty_hint) + '</p><p><a class="btn btn-primary btn-sm" href="/admin/video/audits/create">' + U.escape(L.add) + '</a> <a class="btn btn-muted btn-sm" href="/admin/video/collects">' + U.escape(L.go_collects) + '</a></p></div>';
         },
         onDraw: function (wrap, list) {
             U.qa('tbody tr[data-idx]', wrap).forEach(function (tr) {
@@ -136,14 +164,14 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '规则', html: titleHtml},
-            {title: '操作', cls: 'actions', html: function (d) {
-                return '<a class="btn-link" href="/admin/video/audits/' + encodeURIComponent(d.id || '') + '/edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+            {title: L.rule, html: titleHtml},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
+                return '<a class="btn-link" href="/admin/video/audits/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(L.edit) + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });
@@ -152,12 +180,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选规则', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/audits/batch', {ids: ids.join(','), action: action, value: value || ''}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -177,7 +205,7 @@
     });
     U.on('#audit-batch-on', 'click', function () { batch('status', 1); });
     U.on('#audit-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#audit-batch-del', 'click', function () { batch('delete', '', '删除选中规则？已经进库的片子不会变。'); });
+    U.on('#audit-batch-del', 'click', function () { batch('delete', '', L.confirm_batch); });
     U.on('#audit-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#audit-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -189,11 +217,11 @@
         e.preventDefault();
         if (!row) return;
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条规则？已经进库的片子不会变。')) return;
+            if (!U.confirm(L.confirm_del)) return;
             U.post('/admin/video/audits/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

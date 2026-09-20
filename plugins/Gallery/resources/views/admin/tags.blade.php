@@ -3,40 +3,66 @@
 
 @php
     $ready = (bool) ($ready ?? false);
+    $tagJsLang = [
+        'tags' => admin_t('ui.tags'),
+        'works' => admin_t('ui.works'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+        'front' => admin_t('ui.front'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'added' => admin_t('ui.added'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'unused' => admin_t('ui.unused'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'works_n' => admin_t('ui.works_n', ['n' => '__N__']),
+        'empty_tags' => admin_t('ui.empty_tags'),
+        'empty_tags_hint' => admin_t('gallery.empty_tags_hint'),
+        'no_match_tags' => admin_t('ui.no_match_tags'),
+        'run_migrate_first' => admin_t('ui.run_migrate_first'),
+        'please_fill_tag_name' => admin_t('ui.please_fill_tag_name'),
+        'please_select_tags' => admin_t('ui.please_select_tags'),
+        'confirm_batch_del_tags_works' => admin_t('ui.confirm_batch_del_tags_works'),
+        'confirm_del_tag' => admin_t('ui.confirm_del_tag', ['name' => '__NAME__']),
+        'confirm_del_tag_used_works' => admin_t('ui.confirm_del_tag_used_works', ['name' => '__NAME__', 'n' => '__N__']),
+        'add_fail' => admin_t('manga.add_fail'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel tag-index">
     <div class="card-header">
-        <span>标签 <em id="gallery-tag-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/video/gallery-tags/create">完整表单</a>
+        <span>{{ admin_t('ui.tags') }} <em id="gallery-tag-count"></em></span>
+        <a class="btn btn-muted btn-sm" href="/admin/video/gallery-tags/create">{{ admin_t('ui.full_form') }}</a>
     </div>
     <div class="card-body">
         <div class="tag-compose">
             <form class="tag-compose-form" id="gallery-tag-compose" onsubmit="return false;">
-                <label class="tag-compose-label" for="gallery-tag-quick">新增标签</label>
+                <label class="tag-compose-label" for="gallery-tag-quick">{{ admin_t('ui.add_tag') }}</label>
                 <div class="tag-compose-row">
-                    <input id="gallery-tag-quick" type="text" name="name" value="" placeholder="输入名称，如 热血" aria-label="新增标签" @if($ready) autofocus @endif>
-                    <button class="btn" type="submit" id="gallery-tag-add">添加</button>
+                    <input id="gallery-tag-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_tag_name') }}" aria-label="{{ admin_t('ui.add_tag') }}">
+                    <button class="btn" type="submit" id="gallery-tag-add">{{ admin_t('ui.add') }}</button>
                 </div>
-                <p class="muted field-hint">回车可连续添加。需要改网址时，<a href="/admin/video/gallery-tags/create">打开完整表单</a>。只给图集用，不会进文章或影片标签库。</p>
+                <p class="muted field-hint">{{ admin_t('ui.tag_compose_lead') }}<a href="/admin/video/gallery-tags/create">{{ admin_t('ui.open_full_form') }}</a>{{ admin_t('gallery.tag_compose_tail') }}</p>
             </form>
         </div>
         <form class="filter-bar" id="gallery-tag-search" onsubmit="return false;">
             <input type="hidden" name="unused" value="">
-            <input type="search" name="q" placeholder="搜索标签名或网址标识" autocomplete="off" aria-label="搜索标签">
-            <button type="button" class="btn btn-sm" id="gallery-tag-search-btn">搜索</button>
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_art_tag') }}" autocomplete="off" aria-label="{{ admin_t('ui.tags') }}">
+            <button type="button" class="btn btn-sm" id="gallery-tag-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="gallery-tag-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="gallery-tag-queues">
-            <button type="button" class="chip" data-unused="">全部</button>
-            <button type="button" class="chip" data-unused="1">未使用</button>
+            <button type="button" class="chip" data-unused="">{{ admin_t('ui.all') }}</button>
+            <button type="button" class="chip" data-unused="1">{{ admin_t('ui.unused') }}</button>
         </div>
-        <p class="muted recycle-lead">热血、日常这类给图集用的聚合词，不是分类，也不是文章/影片标签。删标签只拿掉标记，作品还在。作品上也可直接填逗号标签，会自动进这个库。</p>
+        <p class="muted recycle-lead">{{ admin_t('gallery.tags_lead') }}</p>
         <div class="batch-bar" id="gallery-tag-batch" hidden>
-            <strong id="gallery-tag-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="gallery-tag-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="gallery-tag-batch-clear">取消选择</button>
+            <strong id="gallery-tag-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="gallery-tag-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="gallery-tag-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="gallery-tag-table"></div>
     </div>
@@ -47,6 +73,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($tagJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('gallery-tag-search');
     var compose = document.getElementById('gallery-tag-compose');
     var batchBar = document.getElementById('gallery-tag-batch');
@@ -83,12 +110,12 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (!ready) {
-                return '<div class="list-empty"><p>请先执行数据库迁移</p></div>';
+                return '<div class="list-empty"><p>' + L.run_migrate_first + '</p></div>';
             }
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的标签。</p><p><button type="button" class="btn btn-muted btn-sm" id="gallery-tag-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match_tags + '</p><p><button type="button" class="btn btn-muted btn-sm" id="gallery-tag-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有标签。</p><p class="muted">在上方输入名称即可添加，用来给图集归类。</p></div>';
+            return '<div class="list-empty"><p>' + L.empty_tags + '</p><p class="muted">' + L.empty_tags_hint + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             countEl.textContent = list.length ? '· ' + list.length : '';
@@ -97,25 +124,25 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '标签', html: function (d) {
+            {title: L.tags, html: function (d) {
                 var slug = String(d.slug || '').trim();
-                return '<a class="entry-row-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || '无标题') + '</a>'
+                return '<a class="entry-row-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || L.unnamed) + '</a>'
                     + '<div class="entry-row-meta">/gallery?tag=' + U.escape(slug || d.id) + ' · #' + U.escape(d.id) + '</div>';
             }},
-            {title: '作品', width: 120, html: function (d) {
+            {title: L.works, width: 120, html: function (d) {
                 var n = parseInt(d.gallery_count, 10) || 0;
-                if (n > 0) return '<a href="/admin/video/galleries?tag_id=' + encodeURIComponent(d.id) + '">' + n + ' 部</a>';
-                return '<span class="muted">未使用</span>';
+                if (n > 0) return '<a href="/admin/video/galleries?tag_id=' + encodeURIComponent(d.id) + '">' + String(L.works_n || '').replace('__N__', String(n)) + '</a>';
+                return '<span class="muted">' + L.unused + '</span>';
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/gallery?tag=' + encodeURIComponent(d.slug || d.id));
-                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="' + base + '/' + encodeURIComponent(d.id) + '/edit" class="btn-link">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + L.front + '</a>'
+                    + '<a href="' + base + '/' + encodeURIComponent(d.id) + '/edit" class="btn-link">' + L.edit + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + L.delete + '</a>';
             }}
         ]
     });
@@ -132,25 +159,25 @@
     compose.addEventListener('submit', function (e) {
         e.preventDefault();
         var name = String((compose.name && compose.name.value) || '').trim();
-        if (!name) { U.toast('请填写标签名称', 'err'); compose.name.focus(); return; }
+        if (!name) { U.toast(L.please_fill_tag_name, 'err'); compose.name.focus(); return; }
         U.loading(true);
         U.post(base + '/save', {name: name, status: 1}).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '添加失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.add_fail, 'err'); return; }
             compose.name.value = '';
             compose.name.focus();
             table.refresh();
-            U.toast('已添加', 'ok');
-        }).catch(function () { U.loading(false); U.toast('添加失败', 'err'); });
+            U.toast(L.added, 'ok');
+        }).catch(function () { U.loading(false); U.toast(L.add_fail, 'err'); });
     });
     U.on('#gallery-tag-batch-del', 'click', function () {
         var ids = table.selectedIds();
-        if (!ids.length) { U.toast('请先勾选标签', 'err'); return; }
-        if (!U.confirm('删除已选标签？作品还在，只去掉标记。')) return;
+        if (!ids.length) { U.toast(L.please_select_tags, 'err'); return; }
+        if (!U.confirm(L.confirm_batch_del_tags_works)) return;
         U.post(base + '/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted, 'ok');
         });
     });
     U.on('#gallery-tag-batch-clear', 'click', function () { table.clearSelection(); });
@@ -165,13 +192,13 @@
         e.preventDefault();
         var n = parseInt(row.gallery_count, 10) || 0;
         var msg = n > 0
-            ? ('「' + (row.name || '') + '」用在 ' + n + ' 部上，删除后只去掉标签，作品还在。确定？')
-            : ('确定删除「' + (row.name || '') + '」？');
+            ? String(L.confirm_del_tag_used_works || '').replace('__NAME__', row.name || '').replace('__N__', String(n))
+            : String(L.confirm_del_tag || '').replace('__NAME__', row.name || '');
         if (!U.confirm(msg)) return;
         U.post(base + '/delete', {id: row.id}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted, 'ok');
         });
     });
 })();

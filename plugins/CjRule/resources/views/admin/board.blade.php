@@ -237,15 +237,15 @@
                 <input type="search" name="q" placeholder="{{ $desk === 'logs' ? '搜说明、规则编号' : '搜名称、地址' }}" autocomplete="off">
                 @if($desk === 'rules')
                     <select name="type" aria-label="方式">
-                        <option value="">全部方式</option>
+                        <option value="">{{ admin_t('ui.all_methods') }}</option>
                         <option value="html">网站页面</option>
                         <option value="rss">RSS 订阅</option>
                         <option value="json">JSON 接口</option>
                     </select>
                     <select name="status" aria-label="状态">
-                        <option value="">全部状态</option>
-                        <option value="1">启用</option>
-                        <option value="0">停用</option>
+                        <option value="">{{ admin_t('ui.all_status') }}</option>
+                        <option value="1">{{ admin_t('ui.enabled') }}</option>
+                        <option value="0">{{ admin_t('ui.disabled') }}</option>
                     </select>
                 @endif
                 <button type="button" class="btn btn-sm" id="cj-search-btn">{{ admin_t('ui.search') }}</button>
@@ -427,18 +427,18 @@
     if (desk === 'logs') {
         cols = [
             {title: '采集源', html: function (d) {
-                return '<a href="/admin/video/cj?desk=form&id=' + U.escape(String(d.rule_id || '')) + '">' + U.escape(d.rule_name || '未命名') + '</a>';
+                return '<a href="/admin/video/cj?desk=form&id=' + U.escape(String(d.rule_id || '')) + '">' + U.escape(d.rule_name || AdminUi.t('unnamed')) + '</a>';
             }},
             {title: '结果', width: 80, html: function (d) {
                 return d.status === 'ok' ? U.status(true, '成功') : U.status(false, d.status_label || '失败');
             }},
             {title: '说明', html: function (d) { return '<span class="muted">' + U.escape(d.message || '') + '</span>'; }},
-            {title: '时间', width: 130, html: function (d) { return U.escape(d.created_at || ''); }}
+            {title: AdminUi.t('time'), width: 130, html: function (d) { return U.escape(d.created_at || ''); }}
         ];
     } else {
         cols = [
             {title: '任务', html: function (d) {
-                var html = '<div><a href="/admin/video/cj?desk=form&id=' + U.escape(String(d.id || '')) + '">' + U.escape(d.name || '未命名') + '</a>';
+                var html = '<div><a href="/admin/video/cj?desk=form&id=' + U.escape(String(d.id || '')) + '">' + U.escape(d.name || AdminUi.t('unnamed')) + '</a>';
                 html += ' <span class="badge">' + U.escape(d.type_label || '') + '</span>';
                 if (String(d.status) !== '1') html += ' <span class="badge badge-off">停用</span>';
                 if (String(d.status) === '1' && d.last_status === 'fail') html += ' <span class="badge badge-warn">上次失败</span>';
@@ -456,11 +456,11 @@
                 if (d.last_message) html += '<div class="muted">' + U.escape(String(d.last_message).slice(0, 36)) + '</div>';
                 return html;
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 var on = String(d.status) === '1';
                 return '<a href="#" class="btn-link js-run">立即采集</a>'
                     + '<a href="#" class="btn-link js-toggle">' + (on ? '停用' : '启用') + '</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                    + '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     }
@@ -505,7 +505,7 @@
         }
         if (a.classList.contains('js-del')) {
             e.preventDefault();
-            if (!confirm('确定删除「' + (row.name || '未命名') + '」？已经采进来的内容还在。')) return;
+            if (!confirm('确定删除「' + (row.name || AdminUi.t('unnamed')) + '」？已经采进来的内容还在。')) return;
             U.post('/admin/video/cj/delete', {id: row.id, desk: 'rules'}).then(function (res) {
                 U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
                 if (res && res.code === 0) table.refresh();

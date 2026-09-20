@@ -75,7 +75,7 @@
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
             </div>
         </form>
     </div>

@@ -14,19 +14,21 @@
 <div class="card card-panel desk-board" id="novel-board">
     <div class="card-header">
         <span>{{ $desk === 'stats' ? admin_t('novel.title_stats') : admin_t('novel.title') }} <em id="novel-count"></em></span>
-        @if(in_array($desk, ['works', 'pending'], true))
-            <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_work_aria') }}">
-                <a class="btn btn-sm" href="#novel-work-compose-box">{{ admin_t('ui.add_work') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
-            </span>
-        @elseif($desk === 'chapters')
-            <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_chapter_aria') }}">
-                <a class="btn btn-sm" href="#novel-chapter-compose-box">{{ admin_t('ui.add_chapter') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/novel-chapters/create">{{ admin_t('ui.full_form') }}</a>
-            </span>
-        @elseif($desk === 'types')
-            <button type="button" class="btn btn-sm" id="add">{{ admin_t('ui.add_type') }}</button>
-        @endif
+        <div>
+            @if(in_array($desk, ['works', 'pending'], true))
+                <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_work_aria') }}">
+                    <button type="button" class="btn btn-sm" data-focus="#novel-work-quick">{{ admin_t('ui.add_work') }}</button>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
+                </span>
+            @elseif($desk === 'chapters')
+                <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_chapter_aria') }}">
+                    <button type="button" class="btn btn-sm" data-focus="#novel-chapter-quick">{{ admin_t('ui.add_chapter') }}</button>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/novel-chapters/create">{{ admin_t('ui.full_form') }}</a>
+                </span>
+            @elseif($desk === 'types')
+                <button type="button" class="btn btn-sm" id="add">{{ admin_t('ui.add_type') }}</button>
+            @endif
+        </div>
     </div>
     <div class="card-body">
         @if($desk === 'stats')
@@ -54,7 +56,7 @@
                     <form class="tag-compose-form" id="novel-work-compose" onsubmit="return false;">
                         <label class="tag-compose-label" for="novel-work-quick">{{ admin_t('ui.add_work') }}</label>
                         <div class="tag-compose-row">
-                            <input id="novel-work-quick" type="text" name="title" placeholder="{{ admin_t('novel.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}" autofocus>
+                            <input id="novel-work-quick" type="text" name="title" placeholder="{{ admin_t('novel.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                                 <a class="btn btn-muted" href="/admin/video/novels/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
@@ -75,7 +77,7 @@
                                     <option value="{{ $w->id }}">{{ $w->title }}</option>
                                 @endforeach
                             </select>
-                            <input id="novel-chapter-quick" type="text" name="name" placeholder="{{ admin_t('novel.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}" autofocus>
+                            <input id="novel-chapter-quick" type="text" name="name" placeholder="{{ admin_t('novel.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                                 <a class="btn btn-muted" href="/admin/video/novel-chapters/create">{{ admin_t('ui.full_form') }}</a>
@@ -104,7 +106,7 @@
                 <input type="search" name="q" placeholder="{{ $desk === 'chapters' ? '搜章节名' : ($desk === 'types' ? '搜分类名' : ($desk === 'favors' ? '搜会员或作品 ID' : ($desk === 'comments' ? '搜评论、作品' : '搜标题、作者、标签'))) }}" autocomplete="off" aria-label="搜索">
                 @if($desk === 'chapters' && $works->isNotEmpty())
                     <select name="novel_id" aria-label="按作品筛选">
-                        <option value="">全部作品</option>
+                        <option value="">{{ admin_t('ui.all_works') }}</option>
                         @foreach($works as $w)
                             <option value="{{ $w->id }}">{{ $w->title }}</option>
                         @endforeach

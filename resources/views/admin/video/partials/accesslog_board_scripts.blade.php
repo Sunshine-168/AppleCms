@@ -106,17 +106,17 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(AdminUi.t('selected_n') || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '时间', width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
-            {title: '谁来的', width: 120, html: visitorHtml},
-            {title: '打开了', html: urlHtml},
+            {title: AdminUi.t('time'), width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
+            {title: AdminUi.t('who'), width: 120, html: visitorHtml},
+            {title: AdminUi.t('opened'), html: urlHtml},
             {title: 'IP', width: 140, html: ipHtml},
-            {title: '标识', html: function (d) { return '<span class="muted" title="' + U.escape(d.ua || '') + '">' + U.escape(d.ua_short || d.ua || '') + '</span>'; }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('identifier'), html: function (d) { return '<span class="muted" title="' + U.escape(d.ua || '') + '">' + U.escape(d.ua_short || d.ua || '') + '</span>'; }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });

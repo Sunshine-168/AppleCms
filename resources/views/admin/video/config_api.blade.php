@@ -101,7 +101,7 @@
             </details>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
                 <button type="button" class="btn btn-muted" id="api-probe">试拉一把</button>
             </div>
             <p class="muted field-hint">试拉走网上正在用的规则，改了密钥要先保存。不会改片库。</p>

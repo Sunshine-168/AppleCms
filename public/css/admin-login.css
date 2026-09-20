@@ -1,8 +1,8 @@
 /* Admin login — primary blue aligned with LaraCMS */
 :root {
-    --mac-green: #007bff;
-    --mac-green-hover: #0069d9;
-    --mac-green-deep: #0a58ca;
+    --mac-green: #7eb3ff;
+    --mac-green-hover: #6ea4f4;
+    --mac-green-deep: #5b9cff;
     --primary: var(--mac-green);
     --primary-hover: var(--mac-green-hover);
     --mac-text: #1f2937;
@@ -222,16 +222,17 @@ body.mac-login {
 .mac-submit {
     width: 100%;
     height: 40px;
-    border: 0;
+    border: 1px solid #d2e3ff;
     border-radius: 6px;
-    background: var(--mac-green);
-    color: #fff;
+    background: #f4f8ff;
+    color: #5b9cff;
     font: inherit;
     font-size: 16px;
     cursor: pointer;
-    transition: background .15s, transform .12s;
+    box-shadow: none;
+    transition: background .15s, transform .12s, box-shadow .12s;
 }
-.mac-submit:hover { background: var(--mac-green-hover); }
+.mac-submit:hover { background: #eaf1ff; }
 .mac-submit:active { transform: translateY(1px); }
 .mac-submit:disabled { opacity: .7; cursor: wait; }
 

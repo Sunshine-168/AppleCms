@@ -253,7 +253,7 @@
                         </select>
                         <p class="muted field-hint">选「马上换新」时，改完设置并清空后前台就会用新页面；选一段时间则期间都用存好的。</p>
                         <div class="form-actions">
-                            <button class="btn" type="submit">保存设置</button>
+                            <button class="btn" type="submit">{{ admin_t('page.save') }}</button>
                         </div>
                     </form>
                 </div>

@@ -43,7 +43,7 @@
                 <label>永久地址</label>
                 <input type="text" name="permanent_url" value="{{ $options['permanent_url'] ?? '' }}" placeholder="https://">
                 <p class="muted field-hint">只接受 http 或 https。记住访客靠 Cookie lv_publish_entered，清掉就会再看到发布页。</p>
-                <p><button type="button" class="btn btn-sm" id="publish-config-save">保存</button></p>
+                <p><button type="button" class="btn btn-sm" id="publish-config-save">{{ admin_t('ui.save') }}</button></p>
             </form>
         @else
             <form class="filter-bar" id="publish-search" onsubmit="return false;">
@@ -109,10 +109,10 @@
             if (add) add.addEventListener('click', function () { openDialog('add'); });
         },
         cols: [
-            {title: '名称', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.title || '未填写') + '</a>'; }},
+            {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.title || AdminUi.t('not_filled')) + '</a>'; }},
             {title: '地址数', width: 80, html: function (d) { return U.escape(String(d.url_count == null ? 0 : d.url_count)); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });

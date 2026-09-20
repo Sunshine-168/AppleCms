@@ -184,8 +184,15 @@
         head.appendChild(closeBtn);
         var body = document.createElement('div');
         body.className = 'ui-dialog-body';
-        if (typeof opts.content === 'string') body.innerHTML = opts.content;
-        else if (opts.content) body.appendChild(opts.content);
+        if (typeof opts.content === 'string') {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = opts.content;
+            stripAutofocus(tmp);
+            while (tmp.firstChild) body.appendChild(tmp.firstChild);
+        } else if (opts.content) {
+            stripAutofocus(opts.content);
+            body.appendChild(opts.content);
+        }
         var foot = document.createElement('div');
         foot.className = 'ui-dialog-foot';
         var cancel = document.createElement('button');
@@ -203,7 +210,9 @@
         box.appendChild(body);
         if (!opts.hideFoot) box.appendChild(foot);
         mask.appendChild(box);
+        stripAutofocus(box);
         document.body.appendChild(mask);
+        quietFocus(box.querySelector('input:not([type=hidden]), textarea, select'));
         function close() {
             if (mask.parentNode) mask.remove();
         }
@@ -842,10 +851,63 @@
 
     var visitCtl = null;
     var shellBound = false;
+    var swapGen = 0;
 
     function clearPageTimers() {
         pageTimers.forEach(function (id) { nativeClearInterval(id); });
         pageTimers = [];
+    }
+
+    var nativeFocus = HTMLElement.prototype.focus;
+    var quietFocusDepth = 0;
+
+    function quietFocus(el) {
+        if (!el || typeof el.focus !== 'function') return;
+        try { el.focus({ preventScroll: true }); } catch (err) { el.focus(); }
+    }
+
+    function stripAutofocus(root) {
+        if (!root) return;
+        if (root.nodeType === 1 && root.hasAttribute && root.hasAttribute('autofocus')) {
+            root.removeAttribute('autofocus');
+        }
+        if (!root.querySelectorAll) return;
+        Array.prototype.forEach.call(root.querySelectorAll('[autofocus]'), function (el) {
+            el.removeAttribute('autofocus');
+        });
+    }
+
+    function pinScrollTop() {
+        var html = document.documentElement;
+        var body = document.body;
+        if (html) html.scrollTop = 0;
+        if (body) body.scrollTop = 0;
+        window.scrollTo(0, 0);
+    }
+
+    function quietFocusOn() {
+        if (quietFocusDepth === 0) {
+            try {
+                HTMLElement.prototype.focus = function (opts) {
+                    try {
+                        nativeFocus.call(this, Object.assign({}, opts || {}, { preventScroll: true }));
+                    } catch (err) {
+                        nativeFocus.call(this, opts);
+                    }
+                };
+            } catch (err) {
+                return;
+            }
+        }
+        quietFocusDepth += 1;
+    }
+
+    function quietFocusOff() {
+        if (quietFocusDepth === 0) return;
+        quietFocusDepth -= 1;
+        if (quietFocusDepth === 0) {
+            try { HTMLElement.prototype.focus = nativeFocus; } catch (err) {}
+        }
     }
 
     function closeFloaters() {
@@ -889,6 +951,14 @@
         return extra === 0;
     }
 
+    function syncAdminCss(doc) {
+        var next = doc.querySelector('link[rel="stylesheet"][href*="admin.css"]');
+        var cur = document.querySelector('link[rel="stylesheet"][href*="admin.css"]');
+        if (!next || !cur) return;
+        var href = next.getAttribute('href') || '';
+        if (href && cur.getAttribute('href') !== href) cur.setAttribute('href', href);
+    }
+
     function applyShell(doc, url, push) {
         var newContent = doc.getElementById('admin-content');
         var content = document.getElementById('admin-content');
@@ -906,31 +976,67 @@
         }
         clearPageTimers();
         closeFloaters();
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+        var gen = ++swapGen;
+        quietFocusOn();
+        document.documentElement.classList.add('admin-shell-swap');
         document.title = doc.title || document.title;
         var htmlLang = doc.documentElement.getAttribute('lang');
         if (htmlLang) document.documentElement.setAttribute('lang', htmlLang);
         var newCsrf = doc.querySelector('meta[name="csrf-token"]');
         if (newCsrf) syncCsrf(newCsrf.getAttribute('content'));
-        side.innerHTML = newSide.innerHTML;
+        syncAdminCss(doc);
+        var oldSideNav = side.querySelector('.side-nav');
+        var nextSideNav = newSide.querySelector('.side-nav');
+        var oldSideMod = side.querySelector('.mod-nav-side');
+        var nextSideMod = newSide.querySelector('.mod-nav-side');
+        if (oldSideNav && nextSideNav) {
+            oldSideNav.innerHTML = nextSideNav.innerHTML;
+            if (oldSideMod && nextSideMod) oldSideMod.innerHTML = nextSideMod.innerHTML;
+        } else {
+            side.innerHTML = newSide.innerHTML;
+        }
         var nav = document.querySelector('.mod-nav-top');
         var newNav = doc.querySelector('.mod-nav-top');
         if (nav && newNav) nav.innerHTML = newNav.innerHTML;
         var title = document.querySelector('.topbar-title');
         var newTitle = doc.querySelector('.topbar-title');
         if (title && newTitle) title.textContent = newTitle.textContent;
+        stripAutofocus(newContent);
         content.className = newContent.className;
         content.innerHTML = newContent.innerHTML;
         scripts.innerHTML = newScripts.innerHTML;
-        if (push) history.pushState({ adminShell: 1 }, '', url);
-        else history.replaceState({ adminShell: 1 }, '', url);
-        window.scrollTo(0, 0);
+        var histUrl = url;
+        try {
+            var u = new URL(url, location.href);
+            u.hash = '';
+            histUrl = u.href;
+        } catch (err) {}
+        if (push) history.pushState({ adminShell: 1 }, '', histUrl);
+        else history.replaceState({ adminShell: 1 }, '', histUrl);
+        pinScrollTop();
         runScripts(scripts);
+        pinScrollTop();
+        requestAnimationFrame(function () {
+            pinScrollTop();
+            if (gen !== swapGen) {
+                quietFocusOff();
+                return;
+            }
+            requestAnimationFrame(function () {
+                pinScrollTop();
+                quietFocusOff();
+                if (gen === swapGen) document.documentElement.classList.remove('admin-shell-swap');
+            });
+        });
     }
 
     function visit(href, opts) {
         opts = opts || {};
         var url;
-        try { url = new URL(href, location.href); } catch (err) { location.href = href; return; }
+        try { url = new URL(href, location.href); url.hash = ''; } catch (err) { location.href = href; return; }
         if (visitCtl) visitCtl.abort();
         visitCtl = new AbortController();
         fetch(url.href, {
@@ -985,8 +1091,19 @@
     function bindShell() {
         if (shellBound || !document.getElementById('admin-content')) return;
         shellBound = true;
+        if (history.scrollRestoration) history.scrollRestoration = 'manual';
         history.replaceState({ adminShell: 1 }, '', location.href);
         document.addEventListener('click', function (e) {
+            var focusBtn = e.target && e.target.closest ? e.target.closest('[data-focus]') : null;
+            if (focusBtn) {
+                var sel = focusBtn.getAttribute('data-focus');
+                var field = sel ? document.querySelector(sel) : null;
+                if (field && typeof field.focus === 'function') {
+                    e.preventDefault();
+                    quietFocus(field);
+                    return;
+                }
+            }
             if (e.defaultPrevented || e.button !== 0) return;
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
             var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;

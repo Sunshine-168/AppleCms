@@ -29,26 +29,26 @@
             <input type="search" name="q" placeholder="{{ $desk === 'tasks' ? '搜任务名、动作' : ($desk === 'milestones' ? '搜里程碑' : '搜会员编号、动作或日期') }}" autocomplete="off">
             @if($desk === 'tasks')
                 <select name="type" aria-label="类型">
-                    <option value="">全部类型</option>
+                    <option value="">{{ admin_t('ui.all_types') }}</option>
                     <option value="1">每日</option>
                     <option value="2">新手</option>
                 </select>
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
-                    <option value="1">启用</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">未启用</option>
                 </select>
             @elseif($desk === 'logs')
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
                     <option value="0">进行中</option>
                     <option value="1">待领取</option>
                     <option value="2">已入账</option>
                 </select>
             @elseif($desk === 'milestones')
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
-                    <option value="1">启用</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">未启用</option>
                 </select>
             @endif
@@ -98,7 +98,7 @@
             <div>
                 <label>状态</label>
                 <select name="status">
-                    <option value="1">启用</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">未启用</option>
                 </select>
             </div>
@@ -130,7 +130,7 @@
             <div>
                 <label>状态</label>
                 <select name="status">
-                    <option value="1">启用</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">未启用</option>
                 </select>
             </div>
@@ -191,54 +191,54 @@
     var cols = [];
     if (desk === 'tasks') {
         cols = [
-            {title: '名称', html: function (d) {
-                return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>';
+            {title: AdminUi.t('name'), html: function (d) {
+                return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>';
             }},
-            {title: '类型', width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
+            {title: AdminUi.t('type'), width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
             {title: '动作', width: 120, html: function (d) { return U.escape(d.action || ''); }},
-            {title: '积分', width: 64, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('points'), width: 64, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
             {title: '目标', width: 64, html: function (d) { return U.escape(String(d.target == null ? 1 : d.target)); }},
-            {title: '状态', width: 80, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '未启用');
+            {title: AdminUi.t('status'), width: 80, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled'));
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     } else if (desk === 'logs') {
         cols = [
             {title: '任务', html: function (d) { return U.escape(d.task_name || d.action || ''); }},
-            {title: '会员', width: 100, html: function (d) { return U.escape(d.member_name || String(d.member_id || '')); }},
+            {title: AdminUi.t('member'), width: 100, html: function (d) { return U.escape(d.member_name || String(d.member_id || '')); }},
             {title: '进度', width: 80, html: function (d) { return U.escape(String(d.progress == null ? 0 : d.progress)); }},
-            {title: '积分', width: 64, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
-            {title: '日期', width: 96, html: function (d) { return U.escape(d.day_key || ''); }},
-            {title: '状态', width: 88, html: function (d) { return U.escape(d.status_label || ''); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('points'), width: 64, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('date'), width: 96, html: function (d) { return U.escape(d.day_key || ''); }},
+            {title: AdminUi.t('status'), width: 88, html: function (d) { return U.escape(d.status_label || ''); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     } else if (desk === 'signs') {
         cols = [
-            {title: '会员', html: function (d) { return U.escape(d.member_name || String(d.member_id || '')); }},
-            {title: '日期', width: 96, html: function (d) { return U.escape(d.day_key || ''); }},
+            {title: AdminUi.t('member'), html: function (d) { return U.escape(d.member_name || String(d.member_id || '')); }},
+            {title: AdminUi.t('date'), width: 96, html: function (d) { return U.escape(d.day_key || ''); }},
             {title: '连续', width: 72, html: function (d) { return U.escape(String(d.days == null ? 0 : d.days)); }},
-            {title: '积分', width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     } else {
         cols = [
-            {title: '名称', html: function (d) {
+            {title: AdminUi.t('name'), html: function (d) {
                 return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || ('连续' + (d.days || '') + '天')) + '</a>';
             }},
             {title: '天数', width: 72, html: function (d) { return U.escape(String(d.days == null ? 0 : d.days)); }},
-            {title: '积分', width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
-            {title: '状态', width: 80, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '未启用');
+            {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('status'), width: 80, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled'));
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     }

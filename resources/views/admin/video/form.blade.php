@@ -240,7 +240,7 @@
             </details>
 
             <div class="form-actions">
-                <button type="submit" class="btn" id="video-save">保存</button>
+                <button type="submit" class="btn" id="video-save">{{ admin_t('ui.save') }}</button>
                 <button type="button" class="btn btn-muted" id="video-save-play">保存并加播放地址</button>
                 <a class="btn btn-muted" href="/admin/video">取消</a>
             </div>

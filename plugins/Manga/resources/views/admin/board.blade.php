@@ -43,12 +43,12 @@
         <div>
             @if(in_array($desk, ['works', 'pending'], true))
                 <span class="btn-split" role="group" aria-label="{{ admin_t('manga.add_work_aria') }}">
-                    <a class="btn btn-sm" href="#manga-work-compose-box">{{ admin_t('ui.add_work') }}</a>
+                    <button type="button" class="btn btn-sm" data-focus="#manga-work-quick">{{ admin_t('ui.add_work') }}</button>
                     <a class="btn btn-muted btn-sm" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
                 </span>
             @elseif(in_array($desk, ['chapters', 'work'], true))
                 <span class="btn-split" role="group" aria-label="{{ admin_t('novel.add_chapter_aria') }}">
-                    <a class="btn btn-sm" href="#manga-chapter-compose-box">{{ admin_t('ui.add_chapter') }}</a>
+                    <button type="button" class="btn btn-sm" data-focus="#manga-chapter-quick">{{ admin_t('ui.add_chapter') }}</button>
                     <a class="btn btn-muted btn-sm" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">{{ admin_t('ui.full_form') }}</a>
                 </span>
             @elseif($desk === 'pics')
@@ -190,31 +190,31 @@
                     <strong>{{ $work['title'] }}</strong>
                     <span class="muted">#{{ $work['id'] }}</span>
                     <span>{{ $work['serialize_label'] }}</span>
-                    <span class="muted">{{ (int) $work['chapter_count'] }} 话 · 人气 {{ (int) $work['hits'] }}</span>
+                    <span class="muted">{{ admin_t('ui.chapters_n_hits', ['n' => (int) $work['chapter_count'], 'hits' => (int) $work['hits']]) }}</span>
                     @if(! empty($work['author']))
-                        <span class="muted">作者 {{ $work['author'] }}</span>
+                        <span class="muted">{{ admin_t('ui.authors') }} {{ $work['author'] }}</span>
                     @endif
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">编辑作品</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics&manga_id={{ $work['id'] }}">图片明细</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=comments&manga_id={{ $work['id'] }}">评论</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors&manga_id={{ $work['id'] }}">书架</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas/{{ (int) $work['id'] }}/edit">{{ admin_t('ui.edit_work') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=pics&manga_id={{ $work['id'] }}">{{ admin_t('ui.manage_pics') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=comments&manga_id={{ $work['id'] }}">{{ admin_t('ui.comments') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors&manga_id={{ $work['id'] }}">{{ admin_t('ui.bookshelf') }}</a>
                 </div>
             @endif
             @if($filterMangaId > 0 && in_array($desk, ['chapters', 'pics', 'comments', 'favors'], true))
                 <div class="flash is-ok" style="margin:10px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-                    <span>正在看作品</span>
+                    <span>{{ admin_t('ui.viewing_work') }}</span>
                     <strong>{{ $filterMangaTitle !== '' ? $filterMangaTitle : ('#'.$filterMangaId) }}</strong>
-                    <a class="btn btn-sm" href="/admin/video/mangas?desk=work&manga_id={{ $filterMangaId }}">作品工作台</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas">返回作品</a>
-                    <a class="btn btn-muted btn-sm" href="/manga/{{ $filterMangaId }}" target="_blank" rel="noopener">前台预览</a>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk={{ $desk }}">清除作品筛选</a>
+                    <a class="btn btn-sm" href="/admin/video/mangas?desk=work&manga_id={{ $filterMangaId }}">{{ admin_t('ui.work_desk') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas">{{ admin_t('ui.back_works') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/manga/{{ $filterMangaId }}" target="_blank" rel="noopener">{{ admin_t('ui.view_front') }}</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk={{ $desk }}">{{ admin_t('ui.clear_work_filter') }}</a>
                 </div>
             @endif
             @if($desk === 'favors' && $filterMemberId > 0)
                 <div class="flash is-ok" style="margin:10px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-                    <span>正在看会员</span>
+                    <span>{{ admin_t('ui.viewing_member') }}</span>
                     <strong>{{ $filterMemberName !== '' ? $filterMemberName : ('#'.$filterMemberId) }}</strong>
-                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors{{ $filterMangaId > 0 ? '&manga_id='.$filterMangaId : '' }}">清除会员筛选</a>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors{{ $filterMangaId > 0 ? '&manga_id='.$filterMangaId : '' }}">{{ admin_t('ui.clear_member_filter') }}</a>
                 </div>
             @endif
             @if(in_array($desk, ['works', 'pending'], true))
@@ -222,7 +222,7 @@
                     <form class="tag-compose-form" id="manga-work-compose" onsubmit="return false;">
                         <label class="tag-compose-label" for="manga-work-quick">{{ admin_t('ui.add_work') }}</label>
                         <div class="tag-compose-row">
-                            <input id="manga-work-quick" type="text" name="title" value="" placeholder="{{ admin_t('manga.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}" autofocus>
+                            <input id="manga-work-quick" type="text" name="title" value="" placeholder="{{ admin_t('manga.ph_work') }}" aria-label="{{ admin_t('ui.add_work') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                                 <a class="btn btn-muted" href="/admin/video/mangas/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
@@ -246,7 +246,7 @@
                             @else
                                 <input type="hidden" name="manga_id" value="{{ $desk === 'work' && $work ? (int) $work['id'] : $filterMangaId }}">
                             @endif
-                            <input id="manga-chapter-quick" type="text" name="name" value="" placeholder="{{ admin_t('manga.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}" autofocus>
+                            <input id="manga-chapter-quick" type="text" name="name" value="" placeholder="{{ admin_t('manga.ph_chapter') }}" aria-label="{{ admin_t('ui.add_chapter') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                                 <a class="btn btn-muted" href="/admin/video/manga-chapters/create{{ ($desk === 'work' && $work) ? '?manga_id='.(int) $work['id'] : ($filterMangaId > 0 ? '?manga_id='.$filterMangaId : '') }}">{{ admin_t('ui.full_form') }}</a>
@@ -276,7 +276,7 @@
             <input type="search" name="q" value="{{ $filterQ }}" placeholder="{{ $desk === 'types' ? '搜分类名' : (in_array($desk, ['chapters', 'work'], true) ? '搜章节' : ($desk === 'pics' ? '搜图片地址' : ($desk === 'comments' ? '搜评论、作品' : ($desk === 'favors' ? '搜会员、作品或 ID' : '搜名称、作者、标签')))) }}" autocomplete="off">
             @if(in_array($desk, ['works', 'pending'], true) && $types !== [])
                 <select name="type_id" aria-label="分类">
-                    <option value="">全部分类</option>
+                    <option value="">{{ admin_t('ui.all_categories') }}</option>
                     @foreach($types as $type)
                         <option value="{{ $type['id'] }}" @selected($filterTypeId === (int) $type['id'])>{{ $type['label'] ?? $type['name'] }}</option>
                     @endforeach
@@ -289,19 +289,19 @@
                 <input type="hidden" name="author_id" value="{{ $filterAuthorId }}">
             @endif
             @if(in_array($desk, ['works', 'pending'], true))
-                <select name="serialize" aria-label="连载">
-                    <option value="">全部状态</option>
-                    <option value="0" @selected($filterSerialize === '0')>连载</option>
-                    <option value="1" @selected($filterSerialize === '1')>完结</option>
+                <select name="serialize" aria-label="{{ admin_t('ui.serialize') }}">
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
+                    <option value="0" @selected($filterSerialize === '0')>{{ admin_t('ui.serialize_ongoing') }}</option>
+                    <option value="1" @selected($filterSerialize === '1')>{{ admin_t('ui.serialize_done') }}</option>
                 </select>
-                <select name="recommend" aria-label="推荐">
-                    <option value="">全部</option>
-                    <option value="1" @selected($filterRecommend === '1')>推荐</option>
+                <select name="recommend" aria-label="{{ admin_t('ui.recommend') }}">
+                    <option value="">{{ admin_t('ui.all') }}</option>
+                    <option value="1" @selected($filterRecommend === '1')>{{ admin_t('ui.recommend') }}</option>
                 </select>
             @endif
             @if($desk === 'comments')
                 <select name="status" aria-label="状态" hidden>
-                    <option value="">全部状态</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
                     <option value="1">显示</option>
                     <option value="0">待审</option>
                 </select>
@@ -311,9 +311,9 @@
         </form>
         @if($desk === 'comments')
             <div class="queue-chips" id="manga-comment-queues">
-                <button type="button" class="chip" data-queue="" data-value="">全部@if($cq('all') > 0)<em>{{ $cq('all') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="status" data-value="0">待审@if($cq('pending') > 0)<em>{{ $cq('pending') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="status" data-value="1">已通过@if($cq('pass') > 0)<em>{{ $cq('pass') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="" data-value="">{{ admin_t('ui.all') }}@if($cq('all') > 0)<em>{{ $cq('all') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.pending') }}@if($cq('pending') > 0)<em>{{ $cq('pending') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.approved') }}@if($cq('pass') > 0)<em>{{ $cq('pass') }}</em>@endif</button>
             </div>
         @endif
         @if($filterTag && in_array($desk, ['works', 'pending'], true))
@@ -328,28 +328,28 @@
         @endif
         @if($desk === 'favors')
             <div class="queue-chips" id="manga-favor-queues">
-                <button type="button" class="chip" data-queue="">全部@if($fq('all') > 0)<em>{{ $fq('all') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="today" data-value="1">今天@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($fq('all') > 0)<em>{{ $fq('all') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="missing" data-value="1">作品已删@if($fq('missing') > 0)<em>{{ $fq('missing') }}</em>@endif</button>
             </div>
         @endif
         @if(in_array($desk, ['works', 'pending', 'comments', 'chapters', 'pics', 'work', 'types', 'favors'], true))
             <div class="batch-bar" id="manga-batch" hidden>
-                <strong id="manga-batch-count">已选 0 条</strong>
+                <strong id="manga-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
                 @if(in_array($desk, ['works', 'pending'], true))
-                    <button type="button" class="btn btn-sm" id="manga-batch-on">上架</button>
-                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">下架</button>
-                    <button type="button" class="btn btn-sm" id="manga-batch-pass">通过审核</button>
-                    <button type="button" class="btn btn-sm" id="manga-batch-rec">推荐</button>
-                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-unrec">取消推荐</button>
+                    <button type="button" class="btn btn-sm" id="manga-batch-on">{{ admin_t('ui.on') }}</button>
+                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">{{ admin_t('ui.off') }}</button>
+                    <button type="button" class="btn btn-sm" id="manga-batch-pass">{{ admin_t('ui.approve') }}</button>
+                    <button type="button" class="btn btn-sm" id="manga-batch-rec">{{ admin_t('ui.recommend') }}</button>
+                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-unrec">{{ admin_t('ui.unset_recommend') }}</button>
                 @endif
                 @if($desk === 'comments')
-                    <button type="button" class="btn btn-sm" id="manga-batch-on">通过</button>
-                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">隐藏</button>
+                    <button type="button" class="btn btn-sm" id="manga-batch-on">{{ admin_t('ui.approve') }}</button>
+                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">{{ admin_t('ui.hide') }}</button>
                 @endif
                 @if($desk === 'types')
-                    <button type="button" class="btn btn-sm" id="manga-batch-on">启用</button>
-                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">禁用</button>
+                    <button type="button" class="btn btn-sm" id="manga-batch-on">{{ admin_t('ui.enabled') }}</button>
+                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">{{ admin_t('ui.disabled') }}</button>
                     <select id="manga-batch-parent" class="batch-select"><option value="">改到上级</option></select>
                     <button type="button" class="btn btn-muted btn-sm" id="manga-batch-move">移动</button>
                 @endif

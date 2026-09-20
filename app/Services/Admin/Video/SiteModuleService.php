@@ -4680,7 +4680,7 @@ class SiteModuleService
             $row['hours_label'] = $hourLabels[$hours] ?? ('最近 '.$hours.' 小时');
             $row['pages'] = $pages;
             $row['status'] = $status;
-            $row['status_label'] = $status === 1 ? '启用' : '停用';
+            $row['status_label'] = $status === 1 ? admin_t('ui.enabled') : admin_t('ui.disabled');
             $row['last_ok'] = $ok ? 1 : 0;
             $row['last_msg'] = $msg;
             $row['never'] = $lastRun < 1 ? 1 : 0;
@@ -4727,16 +4727,20 @@ class SiteModuleService
     /** @return array<string, string> */
     public function auditScopeOptions(): array
     {
-        return ['title' => '标题', 'content' => '简介', 'actor' => '演员'];
+        return [
+            'title' => admin_t('ui.title_label'),
+            'content' => admin_t('ui.intro'),
+            'actor' => admin_t('ui.actors'),
+        ];
     }
 
     /** @return array<string, string> */
     public function auditActionOptions(): array
     {
         return [
-            'skip' => '跳过不入库',
-            'review' => '入库并下架',
-            'replace' => '抠词后再入库',
+            'skip' => admin_t('ui.audit_skip_full'),
+            'review' => admin_t('ui.audit_review_full'),
+            'replace' => admin_t('ui.audit_replace_full'),
         ];
     }
 
@@ -4842,7 +4846,7 @@ class SiteModuleService
             $row['status'] = $status;
             $row['scope_label'] = $scopes[$scope] ?? $scope;
             $row['action_label'] = $actions[$action] ?? $action;
-            $row['status_label'] = $status === 1 ? '启用' : '停用';
+            $row['status_label'] = $status === 1 ? admin_t('ui.enabled') : admin_t('ui.disabled');
             $row['is_regex'] = (int) ($row['is_regex'] ?? 0) === 1 ? 1 : 0;
             $row['word_n'] = count($words);
             $row['words_preview'] = implode('、', $preview);

@@ -12,13 +12,23 @@
     $status = (string) ($type['status'] ?? '1');
     $parentName = (string) ($parent['name'] ?? '');
     $base = $isArt ? '/admin/video/art-types' : ($isWebsite ? '/admin/video/website-types' : '/admin/video/types');
-    $noun = $isArt ? '栏目' : '分类';
     $mid = $isArt ? 2 : ($isWebsite ? 3 : 1);
     $title = $isEdit
-        ? ('编辑'.$noun)
+        ? ($isArt ? admin_t('ui.edit_column') : admin_t('ui.edit_type'))
         : ($parentName !== ''
-            ? ($isArt ? '添加下级栏目' : '添加下级')
-            : ($isArt ? '新建栏目' : ($isWebsite ? '新建导航分类' : '新增分类')));
+            ? ($isArt ? admin_t('ui.add_child_column') : admin_t('ui.add_child'))
+            : ($isArt ? admin_t('ui.add_column') : ($isWebsite ? admin_t('ui.add_nav_type') : admin_t('ui.add_type'))));
+    $jsLang = [
+        'need_name' => admin_t('ui.need_name'),
+        'save_fail' => admin_t('ui.save_fail'),
+        'saved' => admin_t('ui.saved'),
+        'uploaded' => admin_t('ui.uploaded'),
+        'upload_fail' => admin_t('ui.upload_fail'),
+        'kind_list' => admin_t('ui.kind_list_hint'),
+        'kind_hub' => admin_t('ui.kind_hub_hint'),
+        'kind_single' => admin_t('ui.kind_single_hint'),
+        'kind_link' => admin_t('ui.kind_link_hint'),
+    ];
 @endphp
 @section('title', $title)
 
@@ -26,26 +36,26 @@
 <div class="card card-panel type-form-page">
     <div class="card-header">
         <span>{{ $title }}@if($isEdit && $name !== '') <em>{{ $name }}</em>@endif</span>
-        <a class="btn btn-muted btn-sm" href="{{ $base }}">返回{{ $noun }}</a>
+        <a class="btn btn-muted btn-sm" href="{{ $base }}">{{ $isArt ? admin_t('ui.back_columns') : admin_t('ui.back_types') }}</a>
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">
             @if($isEdit)
                 @if($isArt)
-                    改名称和别名会马上影响文章栏目页。下面有文章时不要删，可以先关掉前台显示。
+                    {{ admin_t('ui.type_form_edit_art') }}
                 @elseif($isWebsite)
-                    改名称会马上影响前台「导航」侧栏。下面有站点时不要删，可以先关掉前台显示。
+                    {{ admin_t('ui.type_form_edit_web') }}
                 @else
-                    改名称和别名会马上影响前台分类页。下面有片子时不要删，可以先禁用。
+                    {{ admin_t('ui.type_form_edit_vod') }}
                 @endif
             @elseif($parentName !== '')
-                将建在「{{ $parentName }}」下面。保存后会出现在上级的下一层。
+                {{ admin_t('ui.type_form_child_lead', ['name' => $parentName]) }}
             @elseif($isArt)
-                栏目是文章的目录，例如 资讯 → 公告。和影片分类不是同一棵树。
+                {{ admin_t('ui.type_form_new_art') }}
             @elseif($isWebsite)
-                这是网址导航自己的分类，只给顶栏「导航」分组用。先建工具、资源这种一级，再在下面加二级。和影片 / 文章分类不是同一棵树。
+                {{ admin_t('ui.type_form_new_web') }}
             @else
-                先建电影、电视剧这种一级目录。动作片、国产剧请在对应分类里点「下级」。
+                {{ admin_t('ui.type_form_new_vod') }}
             @endif
         </p>
 
@@ -53,103 +63,103 @@
             <input type="hidden" name="id" value="{{ $isEdit ? (int) ($type['id'] ?? 0) : '' }}">
             <input type="hidden" name="mid" value="{{ $mid }}">
 
-            <h3>这个{{ $noun }}</h3>
-            <label for="type-name">名称</label>
-            <input id="type-name" type="text" name="name" value="{{ $name }}" placeholder="{{ $isArt ? '如 资讯、公告' : ($isWebsite ? '如 工具、资源站' : '如 电影、动作片') }}" required>
-            <label for="type-slug">网址别名</label>
-            <input id="type-slug" type="text" name="slug" value="{{ $type['slug'] ?? '' }}" placeholder="{{ $isArt ? '如 news，可空' : ($isWebsite ? '如 tools，可空' : '如 movie，可空') }}">
-            <p class="muted field-hint">出现在{{ $isArt ? '栏目' : '分类' }}页链接里。只填英文、数字和短横线。留空则用数字 ID。</p>
+            <h3>{{ $isArt ? admin_t('ui.this_section') : admin_t('ui.this_type') }}</h3>
+            <label for="type-name">{{ admin_t('ui.name') }}</label>
+            <input id="type-name" type="text" name="name" value="{{ $name }}" placeholder="{{ $isArt ? admin_t('ui.ph_type_art') : ($isWebsite ? admin_t('ui.ph_type_web') : admin_t('ui.ph_type_vod')) }}" required>
+            <label for="type-slug">{{ admin_t('ui.url_alias') }}</label>
+            <input id="type-slug" type="text" name="slug" value="{{ $type['slug'] ?? '' }}" placeholder="{{ admin_t('ui.ph_type_slug_ex', ['slug' => $isArt ? 'news' : ($isWebsite ? 'tools' : 'movie')]) }}">
+            <p class="muted field-hint">{{ $isArt ? admin_t('ui.slug_in_section_url') : admin_t('ui.slug_in_type_url') }}</p>
 
-            <label for="type-parent">上级</label>
+            <label for="type-parent">{{ admin_t('ui.parent') }}</label>
             <select id="type-parent" name="parent_id">
-                <option value="0" @selected($parentId === '0' || $parentId === '')>顶级（不挂在任何{{ $noun }}下）</option>
+                <option value="0" @selected($parentId === '0' || $parentId === '')>{{ $isArt ? admin_t('ui.top_unattached_section') : admin_t('ui.top_unattached') }}</option>
                 @foreach($parents as $item)
                     <option value="{{ $item['id'] }}" @selected($parentId === (string) $item['id'])>
                         {{ str_repeat('└ ', max((int) ($item['depth'] ?? 0), 0)) }}{{ $item['name'] }}
                     </option>
                 @endforeach
             </select>
-            <p class="muted field-hint">选上级即可做多级。不能挂到自己的下级下面。</p>
+            <p class="muted field-hint">{{ admin_t('ui.parent_nest_hint') }}</p>
 
             @if($isArt)
                 @php $kind = \App\Models\Video\VideoTypeModel::normalizeKind($type['kind'] ?? 'list'); @endphp
-                <label for="type-kind">类型</label>
+                <label for="type-kind">{{ admin_t('ui.col_type') }}</label>
                 <select id="type-kind" name="kind">
-                    <option value="list" @selected($kind === 'list')>列表（显示文章）</option>
-                    <option value="hub" @selected($kind === 'hub')>频道（只做目录，下面再挂列表）</option>
-                    <option value="single" @selected($kind === 'single')>单页（打开栏目即那一篇）</option>
-                    <option value="link" @selected($kind === 'link')>外链</option>
+                    <option value="list" @selected($kind === 'list')>{{ admin_t('ui.kind_list') }}</option>
+                    <option value="hub" @selected($kind === 'hub')>{{ admin_t('ui.kind_hub') }}</option>
+                    <option value="single" @selected($kind === 'single')>{{ admin_t('ui.kind_single') }}</option>
+                    <option value="link" @selected($kind === 'link')>{{ admin_t('ui.kind_link') }}</option>
                 </select>
                 <p class="muted field-hint" id="type-kind-hint"></p>
                 <div id="type-jump-wrap" hidden>
-                    <label for="type-jump">外链地址</label>
+                    <label for="type-jump">{{ admin_t('ui.jump_url') }}</label>
                     <input id="type-jump" type="text" name="jump_url" value="{{ $type['jump_url'] ?? '' }}" placeholder="https:// 或 /arts">
-                    <p class="muted field-hint">前台点这一栏会跳走。不能挂文章。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.jump_hint') }}</p>
                 </div>
-                <label for="type-pic">封面</label>
+                <label for="type-pic">{{ admin_t('ui.cover') }}</label>
                 <div class="media-field">
                     <div class="media-preview" id="type-pic-preview" @if(trim((string) ($type['pic'] ?? '')) === '') hidden @endif>
-                        <img id="type-pic-img" src="{{ $type['pic'] ?? '' }}" alt="封面预览">
-                        <button type="button" class="media-preview-clear" id="type-pic-clear" title="移除封面">&times;</button>
+                        <img id="type-pic-img" src="{{ $type['pic'] ?? '' }}" alt="{{ admin_t('ui.cover') }}">
+                        <button type="button" class="media-preview-clear" id="type-pic-clear" title="{{ admin_t('ui.remove_cover') }}">&times;</button>
                     </div>
                     <div class="cover-row">
-                        <input id="type-pic" type="text" name="pic" value="{{ $type['pic'] ?? '' }}" placeholder="图片地址，可空">
-                        <button type="button" class="btn btn-muted" id="type-pic-upload">上传</button>
+                        <input id="type-pic" type="text" name="pic" value="{{ $type['pic'] ?? '' }}" placeholder="{{ admin_t('ui.ph_image_url_opt') }}">
+                        <button type="button" class="btn btn-muted" id="type-pic-upload">{{ admin_t('ui.upload') }}</button>
                     </div>
                 </div>
             @endif
 
-            <h3>显示</h3>
-            <label for="type-sort">排序</label>
+            <h3>{{ admin_t('ui.display') }}</h3>
+            <label for="type-sort">{{ admin_t('ui.sort') }}</label>
             <input id="type-sort" type="number" name="sort" value="{{ $type['sort'] ?? 0 }}">
-            <p class="muted field-hint">同一上级下，数字越大越靠前。</p>
+            <p class="muted field-hint">{{ admin_t('ui.sort_sibling_hint') }}</p>
             @if($isArt)
                 <div id="type-page-wrap">
-                    <label for="type-page-size">分页条数</label>
+                    <label for="type-page-size">{{ admin_t('ui.page_size') }}</label>
                     <input id="type-page-size" type="number" name="page_size" min="0" max="100" value="{{ (int) ($type['page_size'] ?? 0) }}">
-                    <p class="muted field-hint">列表栏目前台每页篇数。0 表示用站点默认 20。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.page_size_art_hint') }}</p>
                 </div>
             @endif
             <input type="hidden" name="status" value="0">
             <label class="inline">
                 <input type="checkbox" name="status" value="1" @checked($status === '1')>
-                在前台显示
+                {{ admin_t('ui.show_on_front') }}
             </label>
-            <p class="muted field-hint">关掉后前台菜单里不再出现，{{ $isArt ? '文章' : ($isWebsite ? '站点' : '片子') }}还在。</p>
+            <p class="muted field-hint">{{ $isArt ? admin_t('ui.hide_menu_arts_stay') : ($isWebsite ? admin_t('ui.hide_menu_sites_stay') : admin_t('ui.hide_menu_videos_stay')) }}</p>
 
             <details class="settings-details" @if(trim((string) ($type['seo_title'] ?? '').($type['seo_keywords'] ?? '').($type['seo_description'] ?? '')) !== '') open @endif>
-                <summary>搜索标题（可空）</summary>
-                <p class="muted field-hint">给搜索引擎看。留空则用站点设置里的{{ $noun }}标题模板。</p>
-                <label for="type-seo-title">标题</label>
+                <summary>{{ admin_t('ui.seo_optional') }}</summary>
+                <p class="muted field-hint">{{ $isArt ? admin_t('ui.seo_engine_section_hint') : admin_t('ui.seo_engine_tpl_hint') }}</p>
+                <label for="type-seo-title">{{ admin_t('ui.title_label') }}</label>
                 <input id="type-seo-title" type="text" name="seo_title" value="{{ $type['seo_title'] ?? '' }}" placeholder="{type} - {site}">
-                <label for="type-seo-keywords">关键词</label>
+                <label for="type-seo-keywords">{{ admin_t('ui.seo_key') }}</label>
                 <input id="type-seo-keywords" type="text" name="seo_keywords" value="{{ $type['seo_keywords'] ?? '' }}">
-                <label for="type-seo-description">描述</label>
+                <label for="type-seo-description">{{ admin_t('ui.seo_des') }}</label>
                 <textarea id="type-seo-description" name="seo_description" rows="3">{{ $type['seo_description'] ?? '' }}</textarea>
             </details>
 
             @if($isArt)
                 <details class="settings-details" @if(trim((string) ($type['tpl_list'] ?? '').($type['tpl_detail'] ?? '')) !== '') open @endif>
-                    <summary>模板（可空）</summary>
-                    <p class="muted field-hint">对应主题里的视图名，例如 arts_news 会找 vod.arts_news。找不到则用默认。</p>
+                    <summary>{{ admin_t('ui.tpl_optional') }}</summary>
+                    <p class="muted field-hint">{{ admin_t('ui.tpl_hint') }}</p>
                     <div id="type-tpl-list-wrap">
-                        <label for="type-tpl-list">列表 / 频道模板</label>
-                        <input id="type-tpl-list" type="text" name="tpl_list" value="{{ $type['tpl_list'] ?? '' }}" placeholder="空则用默认">
+                        <label for="type-tpl-list">{{ admin_t('ui.tpl_list') }}</label>
+                        <input id="type-tpl-list" type="text" name="tpl_list" value="{{ $type['tpl_list'] ?? '' }}" placeholder="{{ admin_t('ui.ph_tpl_empty') }}">
                     </div>
-                    <label for="type-tpl-detail">详情 / 单页模板</label>
-                    <input id="type-tpl-detail" type="text" name="tpl_detail" value="{{ $type['tpl_detail'] ?? '' }}" placeholder="空则用默认">
+                    <label for="type-tpl-detail">{{ admin_t('ui.tpl_detail') }}</label>
+                    <input id="type-tpl-detail" type="text" name="tpl_detail" value="{{ $type['tpl_detail'] ?? '' }}" placeholder="{{ admin_t('ui.ph_tpl_empty') }}">
                 </details>
             @endif
 
             <div class="form-actions">
-                <button type="submit" class="btn" id="type-save">保存</button>
-                <button type="button" class="btn btn-muted" id="type-save-child">保存并添加下级</button>
+                <button type="submit" class="btn" id="type-save">{{ admin_t('ui.save') }}</button>
+                <button type="button" class="btn btn-muted" id="type-save-child">{{ admin_t('ui.save_and_child') }}</button>
                 @if($isArt)
-                    <button type="button" class="btn btn-muted" id="type-save-art">保存并写文章</button>
+                    <button type="button" class="btn btn-muted" id="type-save-art">{{ admin_t('ui.save_and_art') }}</button>
                 @elseif($isWebsite)
-                    <a class="btn btn-muted" href="/admin/video/websites">去网址导航</a>
+                    <a class="btn btn-muted" href="/admin/video/websites">{{ admin_t('ui.go_websites') }}</a>
                 @endif
-                <a class="btn btn-muted" href="{{ $base }}">取消</a>
+                <a class="btn btn-muted" href="{{ $base }}">{{ admin_t('ui.cancel') }}</a>
             </div>
         </form>
     </div>
@@ -160,6 +170,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('type-form');
     var isEdit = !!String(form.id.value || '').trim();
     var base = @json($base);
@@ -167,7 +178,7 @@
     function save(next) {
         var data = U.formData(form);
         if (!String(data.name || '').trim()) {
-            U.toast('请填写名称', 'err');
+            U.toast(L.need_name, 'err');
             document.getElementById('type-name').focus();
             return;
         }
@@ -176,11 +187,11 @@
         U.post(base + '/save', data).then(function (res) {
             U.loading(false);
             if (!res || res.code !== 0) {
-                U.toast((res && res.msg) || '保存失败', 'err');
+                U.toast((res && res.msg) || L.save_fail, 'err');
                 return;
             }
             var id = (res.data && res.data.id) || data.id;
-            U.toast('已保存', 'ok');
+            U.toast(L.saved, 'ok');
             if (next === 'child' && id) {
                 location.href = base + '/create?parent_id=' + encodeURIComponent(id);
                 return;
@@ -192,7 +203,7 @@
             location.href = base;
         }).catch(function () {
             U.loading(false);
-            U.toast('保存失败', 'err');
+            U.toast(L.save_fail, 'err');
         });
     }
     form.addEventListener('submit', function (e) {
@@ -204,12 +215,7 @@
     if (writeBtn) writeBtn.addEventListener('click', function () { save('write'); });
 
     var kindSel = document.getElementById('type-kind');
-    var hints = {
-        list: '列表页显示这个栏目和下级里的文章。',
-        hub: '频道只做目录，下面再挂列表栏目。前台打开这一栏会看到下级。',
-        single: '前台打开这一栏，显示该栏目下排序最高的一篇已发布文章。',
-        link: '前台点这一栏会跳到填写的地址，不能挂文章。'
-    };
+    var hints = { list: L.kind_list, hub: L.kind_hub, single: L.kind_single, link: L.kind_link };
     function syncKind() {
         var kind = kindSel ? kindSel.value : 'list';
         var jump = document.getElementById('type-jump-wrap');
@@ -257,8 +263,8 @@
                 if (res && res.code === 0 && res.data && res.data.url) {
                     picInput.value = res.data.url;
                     syncPic(res.data.url);
-                    U.toast('上传成功', 'ok');
-                } else U.toast((res && res.msg) || '上传失败', 'err');
+                    U.toast(L.uploaded, 'ok');
+                } else U.toast((res && res.msg) || L.upload_fail, 'err');
             });
         });
     });

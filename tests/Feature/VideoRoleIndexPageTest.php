@@ -32,7 +32,7 @@ class VideoRoleIndexPageTest extends TestCase
         $this->assertStringContainsString('没挂影片', $html);
         $this->assertStringContainsString('这不是后台管理员', $html);
         $this->assertStringContainsString('/admin/video/actors', $html);
-        $this->assertStringContainsString('title: \'角色\'', $html);
+        $this->assertStringContainsString("title: L.cast", $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('暂无数据', $html);

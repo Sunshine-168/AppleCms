@@ -36,9 +36,9 @@
         </div>
         <p class="muted recycle-lead">和「<a href="/admin/system/runtime?desk=access&view=logs">访问风控</a>」同一张前台页面流水，这里只看浏览器标识被认成爬虫的。趋势去「<a href="/admin/stats/spiders">蜘蛛统计</a>」；带标题和来路的页去「<a href="/admin/stats/logs?visitor=spider">访问明细</a>」。<strong>不能封 IP</strong>。删掉只清流水，不影响收录。</p>
         <div class="batch-bar" id="botlog-batch" hidden>
-            <strong id="botlog-batch-count">已选 0 条</strong>
-            <button type="button" class="btn btn-danger btn-sm" id="botlog-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="botlog-batch-clear">取消选择</button>
+            <strong id="botlog-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-danger btn-sm" id="botlog-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="botlog-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="botlog-table"></div>
     </div>
@@ -127,13 +127,13 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: '时间', width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
-            {title: '蜘蛛', width: 120, html: spiderHtml},
-            {title: '地址', html: urlHtml},
+            {title: AdminUi.t('time'), width: 150, html: function (d) { return U.escape(d.created_at_text || ''); }},
+            {title: AdminUi.t('spider'), width: 120, html: spiderHtml},
+            {title: AdminUi.t('address'), html: urlHtml},
             {title: 'IP', width: 130, html: function (d) { return U.escape(d.ip || ''); }},
-            {title: '标识', html: function (d) { return '<span class="muted" title="' + U.escape(d.ua || '') + '">' + U.escape(d.ua_short || d.ua || '') + '</span>'; }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('identifier'), html: function (d) { return '<span class="muted" title="' + U.escape(d.ua || '') + '">' + U.escape(d.ua_short || d.ua || '') + '</span>'; }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });

@@ -122,15 +122,15 @@
             <form class="filter-bar" id="pay-ch-search" onsubmit="return false;">
                 <input type="search" name="q" placeholder="搜名称、商户号、产品码" autocomplete="off">
                 <select name="driver" aria-label="驱动">
-                    <option value="">全部驱动</option>
+                    <option value="">{{ admin_t('ui.all_drivers') }}</option>
                     @foreach($drivers as $k => $label)
                         <option value="{{ $k }}">{{ $label }}</option>
                     @endforeach
                 </select>
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
-                    <option value="1">启用</option>
-                    <option value="0">停用</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
                 </select>
                 <button type="button" class="btn btn-sm" id="pay-ch-search-btn">{{ admin_t('ui.search') }}</button>
                 <button type="reset" class="btn btn-muted btn-sm" id="pay-ch-reset-btn">{{ admin_t('ui.reset') }}</button>
@@ -189,8 +189,8 @@
             <div>
                 <label>状态</label>
                 <select name="status">
-                    <option value="1">启用</option>
-                    <option value="0">停用</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
                 </select>
             </div>
         </div>
@@ -239,17 +239,17 @@
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },
         cols: [
-            {title: '名称', html: function (d) {
+            {title: AdminUi.t('name'), html: function (d) {
                 return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.title || '') + '</a>';
             }},
-            {title: '驱动', width: 140, html: function (d) { return U.escape(d.driver_label || d.driver || ''); }},
+            {title: AdminUi.t('driver'), width: 140, html: function (d) { return U.escape(d.driver_label || d.driver || ''); }},
             {title: '产品码', width: 100, html: function (d) { return U.escape(d.code || '-'); }},
             {title: '商户号', width: 120, html: function (d) { return U.escape(d.mch_id || ''); }},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '停用');
+            {title: AdminUi.t('status'), width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled'));
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });

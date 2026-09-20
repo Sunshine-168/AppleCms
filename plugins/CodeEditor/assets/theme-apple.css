@@ -21,17 +21,17 @@
     color: #86909c;
     min-width: 36px;
 }
-.cm-s-apple .CodeMirror-cursor { border-left: 2px solid #0a58ca; }
+.cm-s-apple .CodeMirror-cursor { border-left: 2px solid #5b9cff; }
 .cm-s-apple .CodeMirror-selected,
 .cm-s-apple .CodeMirror-focused .CodeMirror-selected { background: #d6e8ff; }
 .cm-s-apple .CodeMirror-line::selection,
 .cm-s-apple .CodeMirror-line > span::selection { background: #d6e8ff; }
 .cm-s-apple .CodeMirror-activeline-background { background: #f2f3f5; }
 .cm-s-apple .CodeMirror-matchingbracket {
-    color: #0a58ca !important;
+    color: #3d7fe6 !important;
     font-weight: 700;
 }
-.cm-s-apple .cm-keyword { color: #0a58ca; font-weight: 700; }
+.cm-s-apple .cm-keyword { color: #3d7fe6; font-weight: 700; }
 .cm-s-apple .cm-atom { color: #c2410c; font-weight: 700; }
 .cm-s-apple .cm-tag { color: #0f766e; font-weight: 600; }
 .cm-s-apple .cm-attribute { color: #3b6d11; }
@@ -41,12 +41,12 @@
 .cm-s-apple .cm-def { color: #7c3aed; font-weight: 700; }
 .cm-s-apple .cm-operator,
 .cm-s-apple .cm-punctuation { color: #4e5969; }
-.cm-s-apple .cm-meta { color: #0a58ca; font-weight: 700; }
+.cm-s-apple .cm-meta { color: #3d7fe6; font-weight: 700; }
 .cm-s-apple .cm-variable { color: #1d2129; }
 .cm-s-apple .cm-variable-2 { color: #0369a1; font-weight: 600; }
 .cm-s-apple .cm-property { color: #0b6e4f; }
 .cm-s-apple .cm-qualifier { color: #c45c26; }
-.cm-s-apple .cm-builtin { color: #0a58ca; font-weight: 600; }
+.cm-s-apple .cm-builtin { color: #3d7fe6; font-weight: 600; }
 .cm-s-apple .cm-searching {
     background: #fff3bf;
     border-radius: 2px;
@@ -90,7 +90,7 @@
 }
 .tpl-index .CodeMirror { max-width: none; }
 .tpl-index .CodeMirror.is-drag {
-    border-color: #007bff;
-    background: #e7f1ff;
+    border-color: #5b9cff;
+    background: #eef4ff;
 }
 .tpl-file.is-loading { opacity: .55; }

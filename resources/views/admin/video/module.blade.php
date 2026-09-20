@@ -56,15 +56,15 @@
         tableCols.push({key: c, title: c});
     });
     tableCols.push({
-        title: '操作',
+        title: AdminUi.t('actions'),
         cls: 'actions',
         html: function (row) {
-            var html = '<a href="#" class="btn-link js-edit">编辑</a>';
+            var html = '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a>';
             if (module === 'topics') html += '<a href="#" class="btn-link js-bind">绑片</a>';
             if (module === 'collect_tasks') html += '<a href="#" class="btn-link js-run">执行</a>';
             if (module === 'cj') html += '<a href="#" class="btn-link js-try">试跑</a><a href="#" class="btn-link js-import">入库</a>';
             if (module === 'playfails') html += '<a href="#" class="btn-link js-off">下线线路</a>';
-            html += '<a href="#" class="btn-link js-del">删除</a>';
+            html += '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             return html;
         }
     });

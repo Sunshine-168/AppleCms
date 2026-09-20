@@ -241,7 +241,7 @@
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存设置</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('page.save') }}</button>
             </div>
         </form>
     </div>

@@ -77,7 +77,7 @@
                     <input id="art-hits" type="number" name="hits" min="0" value="{{ $hits }}">
                     <p class="muted field-hint">一般不用改，前台浏览会自己加。</p>
                     <div class="entry-save">
-                        <button class="btn" type="submit" id="art-save">保存</button>
+                        <button class="btn" type="submit" id="art-save">{{ admin_t('ui.save') }}</button>
                         <a class="btn btn-muted" href="/admin/video/arts">返回文章</a>
                     </div>
                     @if($isEdit && $listed && $frontUrl !== '')

@@ -55,7 +55,7 @@
             <label>Meilisearch Key</label>
             <input type="text" name="scout_meili_key" value="" placeholder="{{ !empty($options['scout_meili_key_set']) ? '已保存，留空不改' : '可选' }}">
             <p class="muted field-hint">改驱动或接 Meilisearch 后请点「重建索引」。命令行：<code>php artisan scout:site-sync</code></p>
-            <p><button type="button" class="btn btn-sm" id="scout-save-btn">保存</button></p>
+            <p><button type="button" class="btn btn-sm" id="scout-save-btn">{{ admin_t('ui.save') }}</button></p>
         </form>
     </div>
 </div>

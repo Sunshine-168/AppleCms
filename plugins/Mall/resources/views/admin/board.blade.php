@@ -29,25 +29,25 @@
             <input type="search" name="q" placeholder="{{ $desk === 'goods' ? '搜商品名' : '搜商品名、会员编号' }}" autocomplete="off">
             @if($desk === 'goods')
                 <select name="type" aria-label="类型">
-                    <option value="">全部类型</option>
+                    <option value="">{{ admin_t('ui.all_types') }}</option>
                     <option value="vip">会员时长</option>
                     <option value="card">积分卡密</option>
                     <option value="goods">实物周边</option>
                 </select>
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
                     <option value="1">上架</option>
                     <option value="0">下架</option>
                 </select>
             @elseif($desk === 'orders')
                 <select name="goods_type" aria-label="类型">
-                    <option value="">全部类型</option>
+                    <option value="">{{ admin_t('ui.all_types') }}</option>
                     <option value="vip">会员时长</option>
                     <option value="card">积分卡密</option>
                     <option value="goods">实物周边</option>
                 </select>
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
                     <option value="1">待发货</option>
                     <option value="2">已完成</option>
                 </select>
@@ -191,38 +191,38 @@
     var cols = [];
     if (desk === 'goods') {
         cols = [
-            {title: '名称', html: function (d) {
+            {title: AdminUi.t('name'), html: function (d) {
                 var hot = String(d.is_hot) === '1' ? '<span class="badge">热</span> ' : '';
-                return hot + '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>';
+                return hot + '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>';
             }},
-            {title: '类型', width: 96, html: function (d) {
+            {title: AdminUi.t('type'), width: 96, html: function (d) {
                 var extra = '';
                 if (d.type === 'vip') extra = ' · ' + U.escape(d.vip_days_label || '');
                 if (d.type === 'card' && d.card_mode === 'assign') extra = ' · 池' + (d.pool_remain == null ? 0 : d.pool_remain);
                 return U.escape(d.type_label || '') + extra;
             }},
-            {title: '积分', width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
-            {title: '库存', width: 72, html: function (d) {
+            {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('stock'), width: 72, html: function (d) {
                 var n = Number(d.stock == null ? 0 : d.stock);
                 return n < 5 ? '<span class="status status-off">' + n + '</span>' : String(n);
             }},
-            {title: '销量', width: 64, html: function (d) { return U.escape(String(d.sales == null ? 0 : d.sales)); }},
-            {title: '状态', width: 72, html: function (d) {
+            {title: AdminUi.t('sales'), width: 64, html: function (d) { return U.escape(String(d.sales == null ? 0 : d.sales)); }},
+            {title: AdminUi.t('status'), width: 72, html: function (d) {
                 return String(d.status) === '1' ? U.status(true, '上架') : U.status(false, '下架');
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     } else {
         cols = [
-            {title: '商品', html: function (d) { return U.escape(d.goods_name || ('#' + (d.goods_id || ''))); }},
-            {title: '会员', width: 80, html: function (d) { return U.escape(String(d.member_id || '')); }},
-            {title: '类型', width: 96, html: function (d) { return U.escape(d.type_label || ''); }},
-            {title: '积分', width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
-            {title: '状态', width: 88, html: function (d) { return U.escape(d.status_label || ''); }},
+            {title: AdminUi.t('goods'), html: function (d) { return U.escape(d.goods_name || ('#' + (d.goods_id || ''))); }},
+            {title: AdminUi.t('member'), width: 80, html: function (d) { return U.escape(String(d.member_id || '')); }},
+            {title: AdminUi.t('type'), width: 96, html: function (d) { return U.escape(d.type_label || ''); }},
+            {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
+            {title: AdminUi.t('status'), width: 88, html: function (d) { return U.escape(d.status_label || ''); }},
             {title: '发放 / 联系', html: function (d) { return U.escape(d.delivery_label || ''); }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 if (String(d.status) === '1') {
                     return '<a href="#" class="btn-link js-ship">标为已发货</a>';
                 }

@@ -29,7 +29,7 @@
         <div class="field">
             <label for="log-visitor">类型</label>
             <select id="log-visitor" name="visitor">
-                <option value="" @selected($filters['visitor'] === '')>全部</option>
+                <option value="" @selected($filters['visitor'] === '')>{{ admin_t('ui.all') }}</option>
                 <option value="human" @selected($filters['visitor'] === 'human')>人类</option>
                 <option value="spider" @selected($filters['visitor'] === 'spider')>蜘蛛</option>
             </select>

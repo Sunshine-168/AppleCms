@@ -18,7 +18,13 @@ body {
     color: #1d2129;
 }
 .layui-btn {
-    background-color: #007bff;
+    background-color: #f4f8ff;
+    color: #5b9cff;
+    border: 1px solid #dde8ff;
+}
+.layui-btn:hover {
+    background-color: #e0ebff;
+    color: #5b9cff;
 }
 .layui-btn-primary {
     background-color: #fff;
@@ -26,40 +32,49 @@ body {
     border-color: #e5e6eb;
 }
 .layui-btn-primary:hover {
-    border-color: #007bff;
-    color: #007bff;
+    border-color: #dde8ff;
+    color: #5b9cff;
 }
 .layui-btn-danger {
     background-color: #dc3545;
+    color: #fff;
+    border-color: #dc3545;
 }
 .layui-btn-warm {
     background-color: #fd7e14;
+    color: #fff;
+    border-color: #fd7e14;
 }
 .layui-btn-normal {
-    background-color: #007bff;
+    background-color: #f4f8ff;
+    color: #5b9cff;
+    border-color: #dde8ff;
 }
 .layui-form-onswitch {
-    border-color: #007bff !important;
-    background-color: #007bff !important;
+    border-color: #89b6ff !important;
+    background-color: #89b6ff !important;
 }
 .layui-form-checked[lay-skin=primary] > i {
-    border-color: #007bff !important;
-    background-color: #007bff !important;
+    border-color: #89b6ff !important;
+    background-color: #89b6ff !important;
 }
 .layui-form-radioed > i,
 .layui-form-checked > i,
 .layui-form-checked:hover > i {
-    color: #007bff !important;
+    color: #5b9cff !important;
 }
 .layui-laypage .layui-laypage-curr .layui-laypage-em {
-    background-color: #007bff !important;
+    background-color: #f4f8ff !important;
+}
+.layui-laypage .layui-laypage-curr em {
+    color: #5b9cff !important;
 }
 .layui-tab-brief > .layui-tab-title .layui-this {
-    color: #007bff !important;
+    color: #5b9cff !important;
 }
 .layui-tab-brief > .layui-tab-more li.layui-this:after,
 .layui-tab-brief > .layui-tab-title .layui-this:after {
-    border-bottom-color: #007bff !important;
+    border-bottom-color: #dde8ff !important;
 }
 .layui-table thead tr,
 .layui-table-header,
@@ -69,10 +84,11 @@ body {
 .layui-input:focus,
 .layui-textarea:focus,
 .layui-select:focus {
-    border-color: #007bff !important;
+    border-color: #89b6ff !important;
 }
 .layui-form-select dl dd.layui-this {
-    background-color: #007bff;
+    background-color: #f4f8ff;
+    color: #5b9cff;
 }
 .layui-badge-dot {
     background-color: #dc3545;

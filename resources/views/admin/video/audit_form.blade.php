@@ -75,7 +75,7 @@
             <p class="muted field-hint">关掉后还留着，只是采集不再用它。</p>
 
             <div class="form-actions">
-                <button type="submit" class="btn" id="audit-save">保存</button>
+                <button type="submit" class="btn" id="audit-save">{{ admin_t('ui.save') }}</button>
                 <a class="btn btn-muted" href="/admin/video/audits">取消</a>
             </div>
         </form>

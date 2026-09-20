@@ -218,7 +218,7 @@
                     <option value="1" @selected((int) ($options['allow_edit'] ?? 1) === 1)>允许</option>
                     <option value="0" @selected((int) ($options['allow_edit'] ?? 1) !== 1)>关闭</option>
                 </select>
-                <p><button type="button" class="btn btn-sm" id="flink-settings-save">保存</button></p>
+                <p><button type="button" class="btn btn-sm" id="flink-settings-save">{{ admin_t('ui.save') }}</button></p>
             </form>
         @else
             <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。汇总见「统计」。</p>
@@ -227,7 +227,7 @@
                 <input type="search" name="q" placeholder="{{ $desk === 'cates' ? '搜分类' : ($desk === 'clicks' || $desk === 'hits' ? '搜 IP、网址' : '搜名称、网址') }}" autocomplete="off">
                 @if($desk === 'links')
                     <select name="status" aria-label="状态">
-                        <option value="">全部状态</option>
+                        <option value="">{{ admin_t('ui.all_status') }}</option>
                         <option value="1">显示</option>
                         <option value="2">拒绝</option>
                         <option value="3">冻结</option>
@@ -356,46 +356,46 @@
     var cols = [];
     if (desk === 'cates') {
         cols = [
-            {title: '名称', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>'; }},
-            {title: '排序', width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '隐藏');
+            {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>'; }},
+            {title: AdminUi.t('sort'), width: 72, html: function (d) { return U.escape(String(d.sort || 0)); }},
+            {title: AdminUi.t('status'), width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('show')) : U.status(false, AdminUi.t('hide'));
             }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     } else if (desk === 'clicks') {
         cols = [
             {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
             {title: 'IP', width: 120, html: function (d) { return U.escape(d.ip || ''); }},
-            {title: '时间', width: 120, html: function (d) { return U.escape(String(d.created_at || '')); }}
+            {title: AdminUi.t('time'), width: 120, html: function (d) { return U.escape(String(d.created_at || '')); }}
         ];
     } else if (desk === 'hits') {
         cols = [
             {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
             {title: '来路主机', html: function (d) { return U.escape(d.from_host || ''); }},
             {title: 'IP', width: 120, html: function (d) { return U.escape(d.ip || ''); }},
-            {title: '日期', width: 90, html: function (d) { return U.escape(d.day_key || ''); }}
+            {title: AdminUi.t('date'), width: 90, html: function (d) { return U.escape(d.day_key || ''); }}
         ];
     } else if (desk === 'stats') {
         cols = [
-            {title: '周期', width: 110, html: function (d) { return U.escape(d.period_key || ''); }},
+            {title: AdminUi.t('period'), width: 110, html: function (d) { return U.escape(d.period_key || ''); }},
             {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
             {title: '来路', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }}
         ];
     } else {
         cols = [
-            {title: '名称', html: function (d) {
-                return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>';
+            {title: AdminUi.t('name'), html: function (d) {
+                return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>';
             }},
             {title: '网址', html: function (d) { return U.escape(d.url || ''); }},
-            {title: '分类', width: 88, html: function (d) { return U.escape(d.cate_name || ''); }},
+            {title: AdminUi.t('types'), width: 88, html: function (d) { return U.escape(d.cate_name || ''); }},
             {title: '来路', width: 72, html: function (d) { return U.escape(String(d.referer_total == null ? 0 : d.referer_total)); }},
             {title: '出站', width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
-            {title: '状态', width: 72, html: function (d) { return U.escape(d.status_label || ''); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('status'), width: 72, html: function (d) { return U.escape(d.status_label || ''); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     }

@@ -38,7 +38,7 @@
                     <option value="1" @selected((int) ($options['danmaku_login'] ?? 0) === 1)>是</option>
                 </select>
                 <p class="muted field-hint">默认允许游客。打开后未登录会提示去登录，不会假装发出去。</p>
-                <p><button type="button" class="btn btn-sm" id="dm-settings-save">保存</button></p>
+                <p><button type="button" class="btn btn-sm" id="dm-settings-save">{{ admin_t('ui.save') }}</button></p>
             </form>
         @else
             <form class="filter-bar" id="dm-search" onsubmit="return false;">
@@ -68,11 +68,11 @@
                 <button type="button" class="chip" data-queue="report" data-value="1">被举报@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
             </div>
             <div class="batch-bar" id="dm-batch" hidden>
-                <strong id="dm-batch-count">已选 0 条</strong>
+                <strong id="dm-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
                 <button type="button" class="btn btn-sm" id="dm-batch-on">显示</button>
                 <button type="button" class="btn btn-muted btn-sm" id="dm-batch-off">隐藏</button>
-                <button type="button" class="btn btn-danger btn-sm" id="dm-batch-del">删除</button>
-                <button type="button" class="btn btn-muted btn-sm" id="dm-batch-clear">取消选择</button>
+                <button type="button" class="btn btn-danger btn-sm" id="dm-batch-del">{{ admin_t('ui.delete') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="dm-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
             </div>
             <div id="dm-table" class="desk-table"></div>
         @endif
@@ -177,14 +177,14 @@
         cols: [
             {check: true, width: 36},
             {title: '弹幕', html: contentHtml},
-            {title: '状态', width: 80, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '隐藏');
+            {title: AdminUi.t('status'), width: 80, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('show')) : U.status(false, AdminUi.t('hide'));
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 var html = '';
                 if (String(d.status) !== '1') html += '<a href="#" class="btn-link js-pass">显示</a>';
                 else html += '<a href="#" class="btn-link js-hide">隐藏</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                html += '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
                 return html;
             }}
         ]

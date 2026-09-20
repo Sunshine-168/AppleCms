@@ -19,7 +19,7 @@
             <button type="button" class="btn btn-muted" id="site-test-mail">发送测试邮件</button>
         </div>
         <div class="form-actions">
-            <button type="button" class="btn" id="site-save">保存</button>
+            <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
         </div>
     </form>
 @endsection

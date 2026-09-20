@@ -1,10 +1,40 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.sources'))
 
+@php
+    $sourceJsLang = [
+        'add_title' => admin_t('ui.add_source'),
+        'edit_title' => admin_t('ui.edit_source'),
+        'need_name' => admin_t('ui.please_fill_source_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'confirm_off' => admin_t('ui.confirm_offline_source'),
+        'offlined' => admin_t('ui.offlined'),
+        'confirm_del' => admin_t('ui.confirm_del_source'),
+        'deleted' => admin_t('ui.deleted'),
+        'episodes' => admin_t('page.episodes'),
+        'pick' => admin_t('ui.pick'),
+        'select' => admin_t('ui.select_source'),
+        'line' => admin_t('ui.line'),
+        'off' => admin_t('ui.offline_line'),
+        'source_name' => admin_t('ui.col_source_name'),
+        'player' => admin_t('ui.col_player'),
+        'downer' => admin_t('ui.col_downer'),
+        'server' => admin_t('ui.col_server'),
+        'ep_count' => admin_t('ui.col_episode_count'),
+        'type' => admin_t('ui.col_type'),
+        'sort' => admin_t('ui.sort'),
+        'updated' => admin_t('ui.col_updated'),
+        'actions' => admin_t('ui.actions'),
+        'edit' => admin_t('ui.edit'),
+        'delete' => admin_t('ui.delete'),
+    ];
+@endphp
+
 @section('header_actions')
-    <a class="btn btn-muted btn-sm" href="/admin/video">返回影片</a>
-    <button type="button" class="btn btn-sm" id="source-add-btn">新增线路</button>
-    <button type="button" class="btn btn-muted btn-sm" id="source-refresh-btn">刷新</button>
+    <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.back_videos') }}</a>
+    <button type="button" class="btn btn-sm" id="source-add-btn">{{ admin_t('ui.add_source') }}</button>
+    <button type="button" class="btn btn-muted btn-sm" id="source-refresh-btn">{{ admin_t('ui.refresh') }}</button>
 @endsection
 
 @section('content')
@@ -13,39 +43,39 @@
         <form class="admin-form">
             <input type="hidden" name="id">
             <input type="hidden" name="video_id" value="{{ (int)($videoId ?? 0) }}">
-            <label>线路名</label>
-            <input class="entry-title" type="text" name="name" placeholder="如 高清线路 / 线路1" autofocus>
-            <p class="muted field-hint">播放页上切换线路时显示的名字。</p>
-            <label>类型</label>
+            <label>{{ admin_t('ui.label_source_name') }}</label>
+            <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_source_name') }}" autofocus>
+            <p class="muted field-hint">{{ admin_t('ui.hint_source_name') }}</p>
+            <label>{{ admin_t('ui.label_source_type') }}</label>
             <select name="type">
                 <option value="m3u8">m3u8</option>
                 <option value="mp4">mp4</option>
                 <option value="parse">parse</option>
-                <option value="down">下载</option>
+                <option value="down">{{ admin_t('ui.type_down') }}</option>
             </select>
-            <p class="muted field-hint">m3u8 / mp4 走直链播放器；parse 走解析接口；down 进下载页。</p>
-            <label>播放器标识</label>
-            <input type="text" name="player" placeholder="要和「播放器」里的标识一致">
-            <p class="muted field-hint">须与「播放器」台的标识一致，如 artplayer、dplayer。空则用默认。</p>
-            <label>下载器标识</label>
+            <p class="muted field-hint">{{ admin_t('ui.hint_source_type') }}</p>
+            <label>{{ admin_t('ui.label_player_code') }}</label>
+            <input type="text" name="player" placeholder="{{ admin_t('ui.ph_player_code_match') }}">
+            <p class="muted field-hint">{{ admin_t('ui.hint_player_code_source') }}</p>
+            <label>{{ admin_t('ui.label_downer_code') }}</label>
             <select name="downer">
-                <option value="">不指定</option>
+                <option value="">{{ admin_t('ui.not_specified') }}</option>
                 @foreach(($downloaders ?? []) as $d)
                     <option value="{{ $d['code'] ?? '' }}">{{ $d['name'] ?? '' }} ({{ $d['code'] ?? '' }})</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">仅类型为下载时有用。下载页用模板替换 {url}/{id}，不是后台任务队列。</p>
-            <label>服务器组</label>
+            <p class="muted field-hint">{{ admin_t('ui.hint_downer') }}</p>
+            <label>{{ admin_t('ui.label_server_group') }}</label>
             <select name="server_id">
-                <option value="0">不拼接前缀</option>
+                <option value="0">{{ admin_t('ui.no_url_prefix') }}</option>
                 @foreach(($servers ?? []) as $s)
                     <option value="{{ (int) ($s['id'] ?? 0) }}">{{ $s['name'] ?? '' }}</option>
                 @endforeach
             </select>
-            <p class="muted field-hint">相对路径会拼上该组的地址前缀。已经是 http 或 // 开头的不会改。</p>
-            <label>排序</label>
+            <p class="muted field-hint">{{ admin_t('ui.hint_server_group') }}</p>
+            <label>{{ admin_t('ui.sort') }}</label>
             <input type="number" name="sort" value="0">
-            <p class="muted field-hint">数字越大越靠前。保存后可进「剧集」填各集播放地址。</p>
+            <p class="muted field-hint">{{ admin_t('ui.hint_source_sort') }}</p>
         </form>
     </template>
 @endsection
@@ -54,6 +84,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($sourceJsLang, JSON_UNESCAPED_UNICODE);
     var videoId = {{ (int)($videoId ?? 0) }};
     var openEpisodeOnce = new URLSearchParams(location.search).get('open_episode') === '1';
     var table = U.table({
@@ -62,16 +93,16 @@
         where: {video_id: videoId},
         cols: [
             {key: 'id', title: 'ID', width: 70},
-            {key: 'name', title: '线路名'},
-            {key: 'type', title: '类型', width: 80},
-            {key: 'player', title: '播放器', width: 90},
-            {key: 'downer', title: '下载器', width: 90},
-            {key: 'server_id', title: '服务器', width: 80},
-            {key: 'episode_total', title: '剧集数', width: 80},
-            {key: 'sort', title: '排序', width: 70},
-            {key: 'updated_at_text', title: '更新时间', width: 160},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-ep">剧集</a><a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-off">下线</a><a href="#" class="btn-link js-del">删除</a>';
+            {key: 'name', title: L.source_name},
+            {key: 'type', title: L.type, width: 80},
+            {key: 'player', title: L.player, width: 90},
+            {key: 'downer', title: L.downer, width: 90},
+            {key: 'server_id', title: L.server, width: 80},
+            {key: 'episode_total', title: L.ep_count, width: 80},
+            {key: 'sort', title: L.sort, width: 70},
+            {key: 'updated_at_text', title: L.updated, width: 160},
+            {title: L.actions, cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-ep">' + U.escape(L.episodes) + '</a><a href="#" class="btn-link js-edit">' + U.escape(L.edit) + '</a><a href="#" class="btn-link js-off">' + U.escape(L.off) + '</a><a href="#" class="btn-link js-del">' + U.escape(L.delete) + '</a>';
             }}
         ],
         onDraw: function (wrap, rows) {
@@ -82,18 +113,18 @@
                 location.href = '/admin/video/episodes?source_id=' + encodeURIComponent(rows[0].id);
                 return;
             }
-            var html = '<table class="data"><thead><tr><th>ID</th><th>线路</th><th></th></tr></thead><tbody>';
+            var html = '<table class="data"><thead><tr><th>ID</th><th>' + U.escape(L.line) + '</th><th></th></tr></thead><tbody>';
             rows.forEach(function (r) {
-                html += '<tr><td>' + U.escape(r.id) + '</td><td>' + U.escape(r.name || '') + '</td><td class="actions"><a href="/admin/video/episodes?source_id=' + encodeURIComponent(r.id) + '">选择</a></td></tr>';
+                html += '<tr><td>' + U.escape(r.id) + '</td><td>' + U.escape(r.name || '') + '</td><td class="actions"><a href="/admin/video/episodes?source_id=' + encodeURIComponent(r.id) + '">' + U.escape(L.pick) + '</a></td></tr>';
             });
             html += '</tbody></table>';
-            U.dialog({ title: '选择线路', content: html, hideOk: true });
+            U.dialog({ title: L.select, content: html, hideOk: true });
         }
     });
     function openSourceDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑线路' : '新增线路',
+            title: mode === 'edit' ? L.edit_title : L.add_title,
             wide: true,
             content: document.getElementById('source-dialog-tpl').innerHTML,
             onOpen: function (body) {
@@ -110,10 +141,10 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请输入线路名', 'err'); return false; }
+                if (!data.name) { U.toast(L.need_name, 'err'); return false; }
                 return U.post('/admin/video/sources/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('保存成功', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -128,16 +159,16 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openSourceDialog('edit', row);
         if (a.classList.contains('js-ep')) location.href = '/admin/video/episodes?source_id=' + encodeURIComponent(row.id);
-        if (a.classList.contains('js-off') && U.confirm('确认下线该线路？前台将不再播放。')) {
+        if (a.classList.contains('js-off') && U.confirm(L.confirm_off)) {
             U.post('/admin/video/sources/disable', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
-                table.refresh(); U.toast('已下线', 'ok');
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
+                table.refresh(); U.toast(L.offlined, 'ok');
             });
         }
-        if (a.classList.contains('js-del') && U.confirm('确定删除该线路吗？')) {
+        if (a.classList.contains('js-del') && U.confirm(L.confirm_del)) {
             U.post('/admin/video/sources/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
-                table.refresh(); U.toast('删除成功', 'ok');
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
+                table.refresh(); U.toast(L.deleted, 'ok');
             });
         }
     });

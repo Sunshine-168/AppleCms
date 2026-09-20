@@ -67,7 +67,7 @@
                 <button type="button" class="btn btn-muted btn-sm" id="tpl-attach">插入附件</button>
                 <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback" disabled>回滚</button>
                 <button type="button" class="btn btn-muted btn-sm" id="tpl-backup" disabled>备份</button>
-                <button type="button" class="btn btn-sm" id="tpl-save" disabled>保存</button>
+                <button type="button" class="btn btn-sm" id="tpl-save" disabled>{{ admin_t('ui.save') }}</button>
             </div>
         </div>
         <div class="card-body">

@@ -72,7 +72,7 @@
                     <form class="tag-compose-form" id="live-channel-compose" onsubmit="return false;">
                         <label class="tag-compose-label" for="live-channel-quick">{{ admin_t('live.quick_channel') }}</label>
                         <div class="tag-compose-row">
-                            <input id="live-channel-quick" type="text" name="title" value="" placeholder="{{ admin_t('live.ph_channel') }}" aria-label="{{ admin_t('live.add_channel') }}" autofocus>
+                            <input id="live-channel-quick" type="text" name="title" value="" placeholder="{{ admin_t('live.ph_channel') }}" aria-label="{{ admin_t('live.add_channel') }}">
                             @if($categories->isNotEmpty())
                                 <select name="cate_id" aria-label="{{ admin_t('nav.live_categories') }}" style="max-width:160px">
                                     <option value="0">{{ admin_t('ui.uncategorized') }}</option>
@@ -95,7 +95,7 @@
                     <form class="tag-compose-form" id="live-cate-compose" onsubmit="return false;">
                         <label class="tag-compose-label" for="live-cate-quick">{{ admin_t('live.quick_category') }}</label>
                         <div class="tag-compose-row">
-                            <input id="live-cate-quick" type="text" name="name" value="" placeholder="{{ admin_t('live.ph_category') }}" aria-label="{{ admin_t('live.add_category') }}" autofocus>
+                            <input id="live-cate-quick" type="text" name="name" value="" placeholder="{{ admin_t('live.ph_category') }}" aria-label="{{ admin_t('live.add_category') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit" id="live-cate-add">{{ admin_t('ui.add') }}</button>
                                 <button class="btn btn-muted" type="button" id="live-cate-compose-more">{{ admin_t('ui.fill_more') }}</button>

@@ -181,7 +181,7 @@
                     @if(($spark['pv'] ?? '') !== '')
                         <a class="dash-spark-link" href="{{ route('admin.stats.index') }}">
                             <svg class="spark" viewBox="0 0 {{ $spark['width'] }} {{ $spark['height'] }}" preserveAspectRatio="none">
-                                <polyline points="{{ $spark['pv'] }}" fill="none" stroke="#007bff" stroke-width="2"/>
+                                <polyline points="{{ $spark['pv'] }}" fill="none" stroke="#5b9cff" stroke-width="2"/>
                                 <polyline points="{{ $spark['uv'] }}" fill="none" stroke="#28a745" stroke-width="2"/>
                             </svg>
                         </a>

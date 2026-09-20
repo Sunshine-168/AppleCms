@@ -42,7 +42,7 @@
             <form class="tag-compose-form" id="novel-author-compose" onsubmit="return false;">
                 <label class="tag-compose-label" for="novel-author-quick">{{ admin_t('ui.add_author') }}</label>
                 <div class="tag-compose-row">
-                    <input id="novel-author-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_author_name') }}" aria-label="{{ admin_t('ui.add_author') }}" @if($ready) autofocus @endif>
+                    <input id="novel-author-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_author_name') }}" aria-label="{{ admin_t('ui.add_author') }}">
                     <button class="btn" type="submit" id="novel-author-add">{{ admin_t('ui.add') }}</button>
                 </div>
                 <p class="muted field-hint">{{ admin_t('ui.tag_compose_lead') }}<a href="/admin/video/novel-authors/create">{{ admin_t('ui.open_full_form') }}</a>{{ admin_t('novel.author_compose_tail') }}</p>
@@ -73,7 +73,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($authorJsLang);
+    var L = @json($authorJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('novel-author-search');
     var compose = document.getElementById('novel-author-compose');
     var batchBar = document.getElementById('novel-author-batch');
@@ -135,7 +135,7 @@
             }},
             {title: L.works, width: 120, html: function (d) {
                 var n = parseInt(d.novel_count, 10) || 0;
-                if (n > 0) return '<a href="/admin/video/mangas?author_id=' + encodeURIComponent(d.id) + '">' + String(L.works_n || '').replace('__N__', String(n)) + '</a>';
+                if (n > 0) return '<a href="/admin/video/novels?author_id=' + encodeURIComponent(d.id) + '">' + String(L.works_n || '').replace('__N__', String(n)) + '</a>';
                 return '<span class="muted">' + L.unused + '</span>';
             }},
             {title: L.actions, cls: 'actions', html: function (d) {

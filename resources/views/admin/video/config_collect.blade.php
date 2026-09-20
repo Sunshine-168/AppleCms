@@ -78,7 +78,7 @@
             <p class="muted field-hint">别的程序 POST 片子进本站，密钥和地址在「<a href="/admin/video/config/interface">入库接口</a>」。采集资源站请用采集源，不要跟这个接口混用。</p>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
             </div>
         </form>
     </div>

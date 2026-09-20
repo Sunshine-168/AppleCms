@@ -131,7 +131,7 @@
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
                     <div class="runtime-cron-actions">
                         <button type="button" class="btn btn-muted js-copy-cron">复制命令</button>
-                        <button type="submit" class="btn">保存</button>
+                        <button type="submit" class="btn">{{ admin_t('ui.save') }}</button>
                     </div>
                 </div>
             </form>
@@ -184,7 +184,7 @@
         @elseif($desk === 'events')
             <p class="muted field-hint">事件只记在库里，没有外发通知。</p>
             <div class="queue-chips">
-                <a class="chip{{ $event_status === 0 ? ' active' : '' }}" href="/admin/system/runtime?desk=events">全部</a>
+                <a class="chip{{ $event_status === 0 ? ' active' : '' }}" href="/admin/system/runtime?desk=events">{{ admin_t('ui.all') }}</a>
                 <a class="chip{{ $event_status === 1 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=1">触发中</a>
                 <a class="chip{{ $event_status === 2 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=2">已恢复</a>
                 <a class="chip{{ $event_status === 3 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=3">已确认</a>
@@ -227,7 +227,7 @@
             <p class="muted recycle-lead">只看不封，这里不能封 IP。要拦后台请去「<a href="/admin/video/config/ip">后台 IP 白名单</a>」。@if($access_view !== 'logs')点 IP 可看流水。@endif</p>
             <div class="queue-chips runtime-access-chips">
                 <a class="chip{{ $access_view === 'high' ? ' active' : '' }}" href="/admin/system/runtime?desk=access">偏高@if($access_high > 0)<em>{{ $access_high }}</em>@endif</a>
-                <a class="chip{{ $access_view === 'all' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&only=all">全部</a>
+                <a class="chip{{ $access_view === 'all' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&only=all">{{ admin_t('ui.all') }}</a>
                 <a class="chip{{ $access_view === 'logs' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&view=logs">流水@if(($accesslog_queues['all'] ?? 0) > 0)<em>{{ (int) $accesslog_queues['all'] }}</em>@endif</a>
             </div>
             @if($access_view === 'logs')

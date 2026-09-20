@@ -4,36 +4,70 @@
 @php
     $queues = $queues ?? ['all' => 0, 'used' => 0, 'empty' => 0, 'off' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $T = [
+        'roles' => admin_t('nav.roles'),
+        'admins' => admin_t('nav.admins'),
+        'add_role' => admin_t('ui.add_role'),
+        'edit_role' => admin_t('ui.edit_role'),
+        'add' => admin_t('ui.add'),
+        'delete' => admin_t('ui.delete'),
+        'actions' => admin_t('ui.actions'),
+        'tick_perms' => admin_t('ui.tick_perms'),
+        'ph_role_name' => admin_t('ui.ph_role_name'),
+        'ph_search_role' => admin_t('ui.ph_search_role'),
+        'all' => admin_t('ui.all'),
+        'in_use' => admin_t('ui.in_use'),
+        'nobody_yet' => admin_t('ui.nobody_yet'),
+        'deactivated' => admin_t('ui.deactivated'),
+        'unnamed' => admin_t('ui.unnamed'),
+        'menus_n' => admin_t('ui.menus_n', ['n' => '__N__']),
+        'no_menus_ticked' => admin_t('ui.no_menus_ticked'),
+        'people_n' => admin_t('ui.people_n', ['n' => '__N__']),
+        'no_match_roles' => admin_t('ui.no_match_roles'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_roles' => admin_t('ui.empty_roles'),
+        'empty_roles_hint' => admin_t('ui.empty_roles_hint'),
+        'need_name' => admin_t('ui.need_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'added' => admin_t('ui.added'),
+        'deleted' => admin_t('ui.deleted'),
+        'name' => admin_t('ui.name'),
+        'remark' => admin_t('ui.remark'),
+        'confirm_delete_named' => admin_t('ui.confirm_delete_named', ['name' => '__NAME__']),
+        'empty_pages_hint' => admin_t('ui.empty_pages_hint'),
+        'disabled' => admin_t('ui.disabled'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel role-index access-board">
     <div class="card-header">
-        <span>角色 <em id="role-count"></em></span>
+        <span>{{ admin_t('nav.roles') }} <em id="role-count"></em></span>
     </div>
     <div class="card-body">
         @include('admin.partials.access-chain', ['step' => 'roles'])
         <div class="role-compose">
             <form id="role-compose" autocomplete="off">
-                <label class="role-compose-label" for="role-quick-name">新增角色</label>
+                <label class="role-compose-label" for="role-quick-name">{{ admin_t('ui.add_role') }}</label>
                 <div class="role-compose-row">
-                    <input id="role-quick-name" type="text" name="name" placeholder="名称，如 审核员" aria-label="角色名称" required>
-                    <button class="btn" type="submit">添加</button>
+                    <input id="role-quick-name" type="text" name="name" placeholder="{{ admin_t('ui.ph_role_name') }}" aria-label="{{ admin_t('ui.name') }}" required>
+                    <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                 </div>
             </form>
         </div>
 
         <form class="filter-bar role-find" id="role-search">
             <input type="hidden" name="kind">
-            <input type="search" name="q" placeholder="搜名称或备注" autocomplete="off" aria-label="搜索角色">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_role') }}" autocomplete="off" aria-label="{{ admin_t('ui.ph_search_role') }}">
             <button type="submit" class="btn btn-sm" id="role-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="role-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="kind" data-value="used">使用中@if($q('used') > 0)<em>{{ $q('used') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="kind" data-value="empty">还没人@if($q('empty') > 0)<em>{{ $q('empty') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="kind" data-value="off">已停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="kind" data-value="used">{{ admin_t('ui.in_use') }}@if($q('used') > 0)<em>{{ $q('used') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="kind" data-value="empty">{{ admin_t('ui.nobody_yet') }}@if($q('empty') > 0)<em>{{ $q('empty') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="kind" data-value="off">{{ admin_t('ui.deactivated') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
         <div id="role-table" class="access-table"></div>
     </div>
@@ -43,21 +77,21 @@
         <input type="hidden" name="id">
         <input type="hidden" name="code">
         <input type="hidden" name="sort">
-        <label>名称</label>
-        <input type="text" name="name" placeholder="给管理员分角色时看到的名字">
-        <p class="muted field-hint" id="role-code-hint">标识码会按名称自动生成，一般不用改。</p>
-        <label>备注</label>
-        <input type="text" name="remark" placeholder="给自己看，可空">
-        <label>状态</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input type="text" name="name" placeholder="{{ admin_t('ui.ph_role_name') }}">
+        <p class="muted field-hint" id="role-code-hint"></p>
+        <label>{{ admin_t('ui.remark') }}</label>
+        <input type="text" name="remark" placeholder="{{ admin_t('ui.ph_remark_admin') }}">
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.enabled') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
-        <p class="role-perms-label">能进哪些菜单</p>
-        <p class="muted field-hint">不勾的工作区页，这个角色进后台看不到也打不开。工作台、全部功能、插件不用勾。1 号创始人不用勾。</p>
+        <p class="role-perms-label">{{ admin_t('ui.which_menus') }}</p>
+        <p class="muted field-hint">{{ admin_t('ui.role_menus_hint') }}</p>
         <div class="html-cache-actions" style="margin:0 0 8px">
-            <button type="button" class="btn btn-muted btn-sm" id="role-perm-checkall">全选</button>
-            <button type="button" class="btn btn-muted btn-sm" id="role-perm-uncheckall">全不选</button>
+            <button type="button" class="btn btn-muted btn-sm" id="role-perm-checkall">{{ admin_t('ui.select_all') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="role-perm-uncheckall">{{ admin_t('ui.select_none') }}</button>
         </div>
         <div class="role-perm-box" id="role-perm-box"></div>
     </form>
@@ -68,6 +102,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var T = @json($T, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('role-search');
     var compose = document.getElementById('role-compose');
     var countEl = document.getElementById('role-count');
@@ -103,18 +138,18 @@
     }
     function nameHtml(d) {
         var badges = '';
-        if (String(d.status) === '0') badges += '<span class="badge badge-off">停用</span>';
-        if (d.in_use) badges += '<span class="badge badge-ok">使用中</span>';
+        if (String(d.status) === '0') badges += '<span class="badge badge-off">' + U.escape(T.deactivated) + '</span>';
+        if (d.in_use) badges += '<span class="badge badge-ok">' + U.escape(T.in_use) + '</span>';
         var meta = U.escape(d.code || '');
-        meta += (meta ? ' · ' : '') + ((d.perms_count || 0) > 0 ? (d.perms_count + ' 项菜单') : '还没勾菜单');
+        meta += (meta ? ' · ' : '') + ((d.perms_count || 0) > 0 ? String(T.menus_n || '').replace('__N__', d.perms_count) : T.no_menus_ticked);
         if (d.remark) meta += ' · ' + U.escape(d.remark);
-        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badges + '</div>'
+        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || T.unnamed) + '</a> ' + badges + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div>';
     }
     function usersHtml(d) {
         var n = parseInt(d.users_count || '0', 10) || 0;
-        if (n < 1) return '<span class="muted">还没人</span>';
-        return '<a href="/admin/user?role_id=' + encodeURIComponent(d.id) + '">' + n + ' 人</a>';
+        if (n < 1) return '<span class="muted">' + U.escape(T.nobody_yet) + '</span>';
+        return '<a href="/admin/user?role_id=' + encodeURIComponent(d.id) + '">' + U.escape(String(T.people_n || '').replace('__N__', n)) + '</a>';
     }
 
     var table = U.table({
@@ -124,20 +159,20 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的角色。</p><p><button type="button" class="btn btn-muted btn-sm" id="role-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(T.no_match_roles) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="role-empty-reset">' + U.escape(T.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有角色。</p><p class="muted">在上方填写名称即可添加。点名称去勾能进哪些页，再给管理员套上。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(T.empty_roles) + '</p><p class="muted">' + U.escape(T.empty_roles_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             var reset = document.getElementById('role-empty-reset');
             if (reset) reset.addEventListener('click', function () { form.reset(); runSearch(); });
         },
         cols: [
-            {title: '角色', html: nameHtml},
-            {title: '管理员', width: 88, html: usersHtml},
-            {title: '操作', cls: 'actions', html: function (d) {
-                var html = '<a href="#" class="btn-link js-edit">勾权限</a>';
-                if (d.can_delete) html += '<a href="#" class="btn-link js-del">删除</a>';
+            {title: T.roles, html: nameHtml},
+            {title: T.admins, width: 88, html: usersHtml},
+            {title: T.actions, cls: 'actions', html: function (d) {
+                var html = '<a href="#" class="btn-link js-edit">' + U.escape(T.tick_perms) + '</a>';
+                if (d.can_delete) html += '<a href="#" class="btn-link js-del">' + U.escape(T.delete) + '</a>';
                 return html;
             }}
         ]
@@ -156,7 +191,7 @@
     }
     function renderGroups(nodes, checkedMap) {
         if (!nodes || !nodes.length) {
-            return '<p class="muted">还没有可勾的页。先到「<a href="/admin/system/menus">菜单</a>」点对齐当前工作区。</p>';
+            return '<p class="muted">' + U.escape(T.empty_pages_hint || T.empty_roles_hint) + '</p>';
         }
         return nodes.map(function (n) {
             return '<div class="role-perm-group">' + renderNode(n, checkedMap) + '</div>';
@@ -181,12 +216,12 @@
             U.loading(false);
             var idsRes = both[0];
             var tree = both[1] || treeCache || [];
-            if (idsRes && idsRes.code !== 0) { U.toast((idsRes && idsRes.msg) || '没能读取权限', 'err'); return; }
+            if (idsRes && idsRes.code !== 0) { U.toast((idsRes && idsRes.msg) || T.fail, 'err'); return; }
             var checkedIds = Array.isArray(idsRes && idsRes.data) ? idsRes.data : [];
             var checkedMap = {};
             checkedIds.forEach(function (id) { checkedMap[String(id)] = true; });
             U.dialog({
-                title: row.id ? ('勾权限 · ' + (row.name || '')) : '编辑角色',
+                title: row.id ? (T.tick_perms + ' · ' + (row.name || '')) : T.edit_role,
                 wide: true,
                 content: document.getElementById('role-dialog-tpl').innerHTML,
                 onOpen: function (body) {
@@ -199,7 +234,7 @@
                         sort: row.sort || 0
                     });
                     var hint = body.querySelector('#role-code-hint');
-                    if (hint && row.code) hint.textContent = '标识码 ' + row.code + '，建好后不用改。';
+                    if (hint && row.code) hint.textContent = row.code;
                     var box = body.querySelector('#role-perm-box');
                     if (box) box.innerHTML = renderGroups(tree, checkedMap);
                     var checkAll = body.querySelector('#role-perm-checkall');
@@ -222,19 +257,19 @@
                 },
                 onSave: function (body) {
                     var payload = U.formData(body.querySelector('form'));
-                    if (!payload.name) { U.toast('请填写名称', 'err'); return false; }
+                    if (!payload.name) { U.toast(T.need_name, 'err'); return false; }
                     var permIds = U.qa('#role-perm-box input[type=checkbox]:checked', body).map(function (c) {
                         return parseInt(c.value, 10);
                     }).filter(Boolean);
                     var url = payload.id ? '/admin/system/roles/update' : '/admin/system/roles/add';
                     if (!payload.id) delete payload.id;
                     return U.post(url, payload).then(function (res) {
-                        if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能保存', 'err'); return false; }
+                        if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return false; }
                         var id = parseInt(payload.id || (res.data && res.data.id) || '0', 10);
                         if (!id) { table.refresh(); return; }
                         return U.post('/admin/system/roles/perms/set', {role_id: id, perm_ids: permIds}).then(function (pres) {
-                            if (!pres || pres.code !== 0) { U.toast((pres && pres.msg) || '资料已存，菜单没勾上', 'err'); return false; }
-                            U.toast((pres && pres.msg) || '已保存', 'ok');
+                            if (!pres || pres.code !== 0) { U.toast((pres && pres.msg) || T.fail, 'err'); return false; }
+                            U.toast((pres && pres.msg) || T.saved, 'ok');
                             table.refresh();
                         });
                     });
@@ -254,12 +289,12 @@
     U.on('#role-compose', 'submit', function (e) {
         e.preventDefault();
         var data = U.formData(compose);
-        if (!data.name) { U.toast('请填写名称', 'err'); return; }
+        if (!data.name) { U.toast(T.need_name, 'err'); return; }
         U.post('/admin/system/roles/add', data).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能添加', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return; }
             compose.reset();
             table.refresh();
-            U.toast((res && res.msg) || '已添加', 'ok');
+            U.toast((res && res.msg) || T.added, 'ok');
             var id = res.data && res.data.id;
             if (id) openEdit({id: id, name: data.name, status: 1, perms_count: 0});
         });
@@ -274,12 +309,12 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openEdit(row);
         if (a.classList.contains('js-del')) {
-            if (!row.can_delete) { U.toast('有人在用，先换人再删', 'err'); return; }
-            if (!U.confirm('确定删除「' + (row.name || '') + '」？')) return;
+            if (!row.can_delete) { U.toast(T.in_use, 'err'); return; }
+            if (!U.confirm(String(T.confirm_delete_named || T.delete).replace('__NAME__', row.name || ''))) return;
             U.post('/admin/system/roles/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能删除', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || T.fail, 'err'); return; }
                 table.refresh();
-                U.toast((res && res.msg) || '已删除', 'ok');
+                U.toast((res && res.msg) || T.deleted, 'ok');
             });
         }
     });

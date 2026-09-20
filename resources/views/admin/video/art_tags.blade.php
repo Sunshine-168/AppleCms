@@ -45,7 +45,7 @@
             <form class="tag-compose-form" id="art-tag-compose" onsubmit="return false;">
                 <label class="tag-compose-label" for="art-tag-quick">{{ admin_t('ui.add_tag') }}</label>
                 <div class="tag-compose-row">
-                    <input id="art-tag-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_art_tag_name') }}" aria-label="{{ admin_t('ui.add_tag') }}" @if($ready) autofocus @endif>
+                    <input id="art-tag-quick" type="text" name="name" value="" placeholder="{{ admin_t('ui.ph_art_tag_name') }}" aria-label="{{ admin_t('ui.add_tag') }}">
                     <button class="btn" type="submit" id="art-tag-add">{{ admin_t('ui.add') }}</button>
                 </div>
                 <p class="muted field-hint">{{ admin_t('ui.art_tag_compose_lead') }}<a href="/admin/video/art-tags/create">{{ admin_t('ui.open_full_form') }}</a>{{ admin_t('ui.art_tag_compose_tail') }}</p>

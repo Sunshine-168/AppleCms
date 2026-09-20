@@ -96,7 +96,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($typeJsLang);
+    var L = @json($typeJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('video-type-search');
     var batchBar = document.getElementById('type-batch');
     var batchCount = document.getElementById('type-batch-count');

@@ -27,25 +27,25 @@
             <input type="search" name="q" placeholder="{{ $desk === 'campaigns' ? '搜名称' : '搜会员编号、券编号、订单号' }}" autocomplete="off">
             @if($desk === 'campaigns')
                 <select name="scene" aria-label="场景">
-                    <option value="">全部场景</option>
+                    <option value="">{{ admin_t('ui.all_scenes') }}</option>
                     <option value="all">通用</option>
                     <option value="recharge">充值</option>
                     <option value="vip">会员</option>
                 </select>
                 <select name="type" aria-label="类型">
-                    <option value="">全部类型</option>
+                    <option value="">{{ admin_t('ui.all_types') }}</option>
                     <option value="amount">满减</option>
                     <option value="discount">折扣</option>
                 </select>
                 <select name="validity" aria-label="有效期">
-                    <option value="">全部有效期</option>
+                    <option value="">{{ admin_t('ui.all_validity') }}</option>
                     <option value="active">未过期</option>
                     <option value="expired">已过期</option>
                 </select>
                 <select name="status" aria-label="状态">
-                    <option value="">全部状态</option>
-                    <option value="1">启用</option>
-                    <option value="0">停用</option>
+                    <option value="">{{ admin_t('ui.all_status') }}</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
                 </select>
             @endif
             <button type="button" class="btn btn-sm" id="coupon-search-btn">{{ admin_t('ui.search') }}</button>
@@ -129,8 +129,8 @@
         <p class="muted field-hint">结束留空表示长期有效。</p>
         <label>状态</label>
         <select name="status">
-            <option value="1">启用</option>
-            <option value="0">停用</option>
+            <option value="1">{{ admin_t('ui.enabled') }}</option>
+            <option value="0">{{ admin_t('ui.disabled') }}</option>
         </select>
     </form>
 </template>
@@ -178,26 +178,26 @@
     var cols = [];
     if (desk === 'received') {
         cols = [
-            {title: '券', html: function (d) { return U.escape(d.coupon_name || ('#' + (d.coupon_id || ''))); }},
-            {title: '会员', width: 140, html: function (d) { return U.escape((d.member_name || '') + (d.member_id ? ' #' + d.member_id : '')); }},
-            {title: '状态', width: 72, html: function (d) { return U.escape(d.status_label || ''); }},
-            {title: '订单', html: function (d) { return U.escape(d.order_no || ''); }},
-            {title: '领取', width: 120, html: function (d) { return U.escape(d.received_at || ''); }},
-            {title: '使用', width: 120, html: function (d) { return U.escape(d.used_at || ''); }}
+            {title: AdminUi.t('coupon'), html: function (d) { return U.escape(d.coupon_name || ('#' + (d.coupon_id || ''))); }},
+            {title: AdminUi.t('member'), width: 140, html: function (d) { return U.escape((d.member_name || '') + (d.member_id ? ' #' + d.member_id : '')); }},
+            {title: AdminUi.t('status'), width: 72, html: function (d) { return U.escape(d.status_label || ''); }},
+            {title: AdminUi.t('order'), html: function (d) { return U.escape(d.order_no || ''); }},
+            {title: AdminUi.t('received'), width: 120, html: function (d) { return U.escape(d.received_at || ''); }},
+            {title: AdminUi.t('used'), width: 120, html: function (d) { return U.escape(d.used_at || ''); }}
         ];
     } else {
         cols = [
-            {title: '名称', html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || '未填写') + '</a>'; }},
-            {title: '类型', width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
+            {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>'; }},
+            {title: AdminUi.t('type'), width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
             {title: '面额', width: 80, html: function (d) { return U.escape(String(d.value || '')); }},
             {title: '场景', width: 72, html: function (d) { return U.escape(d.scene_label || ''); }},
             {title: '发放', width: 72, html: function (d) { return U.escape(String(d.total == null ? 0 : d.total)); }},
             {title: '已领', width: 72, html: function (d) { return U.escape(String(d.received == null ? 0 : d.received)); }},
             {title: '已用', width: 72, html: function (d) { return U.escape(String(d.used == null ? 0 : d.used)); }},
-            {title: '到期', width: 120, html: function (d) { return U.escape(d.end_label || ''); }},
-            {title: '状态', width: 72, html: function (d) { return String(d.status) === '1' ? U.status(true, '启用') : U.status(false, '停用'); }},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-edit">编辑</a><a href="#" class="btn-link js-del">删除</a>';
+            {title: AdminUi.t('expire'), width: 120, html: function (d) { return U.escape(d.end_label || ''); }},
+            {title: AdminUi.t('status'), width: 72, html: function (d) { return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled')); }},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ];
     }

@@ -136,7 +136,7 @@
             if (reset) reset.addEventListener('click', resetAll);
         },
         cols: [
-            {title: '操作', html: rowHtml}
+            {title: AdminUi.t('actions'), html: rowHtml}
         ]
     });
     syncWhenUi();

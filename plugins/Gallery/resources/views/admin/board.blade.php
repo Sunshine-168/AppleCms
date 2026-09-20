@@ -14,19 +14,21 @@
 <div class="card card-panel desk-board" id="gallery-board">
     <div class="card-header">
         <span>{{ $desk === 'stats' ? admin_t('gallery.title_stats') : admin_t('gallery.title') }} <em id="gallery-count"></em></span>
-        @if(in_array($desk, ['works', 'pending'], true))
-            <span class="btn-split" role="group" aria-label="{{ admin_t('gallery.add_work_aria') }}">
-                <a class="btn btn-sm" href="#gallery-work-compose-box">{{ admin_t('gallery.add_gallery') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/galleries/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
-            </span>
-        @elseif($desk === 'pics')
-            <span class="btn-split" role="group" aria-label="{{ admin_t('gallery.add_pic_aria') }}">
-                <a class="btn btn-sm" href="#gallery-pic-compose-box">{{ admin_t('ui.batch_add') }}</a>
-                <a class="btn btn-muted btn-sm" href="/admin/video/gallery-pics/create">{{ admin_t('ui.single_form') }}</a>
-            </span>
-        @elseif($desk === 'types')
-            <button type="button" class="btn btn-sm" id="add">{{ admin_t('ui.add_type') }}</button>
-        @endif
+        <div>
+            @if(in_array($desk, ['works', 'pending'], true))
+                <span class="btn-split" role="group" aria-label="{{ admin_t('gallery.add_work_aria') }}">
+                    <button type="button" class="btn btn-sm" data-focus="#gallery-work-quick">{{ admin_t('gallery.add_gallery') }}</button>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/galleries/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
+                </span>
+            @elseif($desk === 'pics')
+                <span class="btn-split" role="group" aria-label="{{ admin_t('gallery.add_pic_aria') }}">
+                    <button type="button" class="btn btn-sm" data-focus="#gallery-pic-urls">{{ admin_t('ui.batch_add') }}</button>
+                    <a class="btn btn-muted btn-sm" href="/admin/video/gallery-pics/create">{{ admin_t('ui.single_form') }}</a>
+                </span>
+            @elseif($desk === 'types')
+                <button type="button" class="btn btn-sm" id="add">{{ admin_t('ui.add_type') }}</button>
+            @endif
+        </div>
     </div>
     <div class="card-body">
         @if($desk === 'stats')
@@ -54,7 +56,7 @@
                     <form class="tag-compose-form" id="gallery-work-compose" onsubmit="return false;">
                         <label class="tag-compose-label" for="gallery-work-quick">{{ admin_t('gallery.add_gallery') }}</label>
                         <div class="tag-compose-row">
-                            <input id="gallery-work-quick" type="text" name="title" placeholder="{{ admin_t('gallery.ph_work') }}" aria-label="{{ admin_t('gallery.add_gallery') }}" autofocus>
+                            <input id="gallery-work-quick" type="text" name="title" placeholder="{{ admin_t('gallery.ph_work') }}" aria-label="{{ admin_t('gallery.add_gallery') }}">
                             <span class="btn-split" role="group">
                                 <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                                 <a class="btn btn-muted" href="/admin/video/galleries/create{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.full_form') }}</a>
@@ -101,7 +103,7 @@
                 <input type="search" name="q" placeholder="{{ $desk === 'pics' ? '搜图片地址' : ($desk === 'types' ? '搜分类名' : ($desk === 'favors' ? '搜会员或图集 ID' : ($desk === 'comments' ? '搜评论、图集' : '搜标题、作者、标签'))) }}" autocomplete="off" aria-label="搜索">
                 @if($desk === 'pics' && $works->isNotEmpty())
                     <select name="gallery_id" aria-label="按图集筛选">
-                        <option value="">全部图集</option>
+                        <option value="">{{ admin_t('ui.all_galleries') }}</option>
                         @foreach($works as $w)
                             <option value="{{ $w->id }}">{{ $w->title }}</option>
                         @endforeach

@@ -53,11 +53,11 @@
             <button type="button" class="chip" data-queue="logo" data-value="1">有图@if($q('logo') > 0)<em>{{ $q('logo') }}</em>@endif</button>
         </div>
         <div class="batch-bar" id="website-batch" hidden>
-            <strong id="website-batch-count">已选 0 个</strong>
+            <strong id="website-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
             <button type="button" class="btn btn-sm" id="website-batch-on">显示</button>
             <button type="button" class="btn btn-muted btn-sm" id="website-batch-off">隐藏</button>
-            <button type="button" class="btn btn-danger btn-sm" id="website-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="website-batch-clear">取消选择</button>
+            <button type="button" class="btn btn-danger btn-sm" id="website-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="website-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="website-table"></div>
     </div>
@@ -176,7 +176,7 @@
             : '<span class="link-thumb is-empty">' + U.escape(letter) + '</span>';
         var badge = String(d.status) === '1' ? '' : '<span class="badge badge-off">隐藏</span>';
         var meta = d.blurb ? U.escape(d.blurb) : U.escape(d.url || '');
-        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || '未命名') + '</a> ' + badge + '</div>'
+        return '<div class="vod-cell">' + thumb + '<div><div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('unnamed')) + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div></div></div>';
     }
     function typeHtml(d) {
@@ -215,19 +215,19 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: '站点', html: nameHtml},
-            {title: '分类', width: 140, html: typeHtml},
-            {key: 'hits', title: '人气', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '显示') : U.status(false, '隐藏');
+            {title: AdminUi.t('sites'), html: nameHtml},
+            {title: AdminUi.t('types'), width: 140, html: typeHtml},
+            {key: 'hits', title: AdminUi.t('hits'), width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }},
+            {key: 'sort', title: AdminUi.t('sort'), width: 64},
+            {title: AdminUi.t('status'), width: 72, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, AdminUi.t('show')) : U.status(false, AdminUi.t('hide'));
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 var html = '';
-                if (d.front_url) html += '<a href="' + U.escape(d.front_url) + '" target="_blank" rel="noopener" class="btn-link">前台</a>';
-                if (d.url) html += '<a href="' + U.escape(d.url) + '" target="_blank" rel="noopener noreferrer" class="btn-link">打开</a>';
-                html += '<a href="#" class="btn-link js-edit">编辑</a>';
-                html += '<a href="#" class="btn-link js-del">删除</a>';
+                if (d.front_url) html += '<a href="' + U.escape(d.front_url) + '" target="_blank" rel="noopener" class="btn-link">' + AdminUi.t('front') + '</a>';
+                if (d.url) html += '<a href="' + U.escape(d.url) + '" target="_blank" rel="noopener noreferrer" class="btn-link">' + AdminUi.t('open_link') + '</a>';
+                html += '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
                 return html;
             }}
         ]

@@ -8,20 +8,34 @@
     $actorId = (int) ($actorId ?? 0);
     $videoTitle = (string) ($videoTitle ?? '');
     $actorName = (string) ($actorName ?? '');
+    $roleJsLang = [
+        'no_image' => admin_t('ui.no_image'),
+        'no_video' => admin_t('ui.no_video_link'),
+        'no_actor' => admin_t('ui.no_actor_link'),
+        'no_match' => admin_t('ui.no_match_roles'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty' => admin_t('ui.empty_cast'),
+        'empty_hint' => admin_t('ui.empty_cast_hint'),
+        'add_role' => admin_t('ui.add_role'),
+        'cast' => admin_t('ui.cast'),
+        'videos' => admin_t('ui.videos'),
+        'actors' => admin_t('ui.actors'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel role-index" id="role-index">
     <div class="card-header">
-        <span>角色库 <em id="role-count"></em></span>
+        <span>{{ admin_t('ui.cast_lib') }} <em id="role-count"></em></span>
         <div>
-            <button type="button" class="btn btn-sm" id="role-add-btn">新增角色</button>
-            <a class="btn btn-muted btn-sm" href="/admin/video">影片</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/actors">演员</a>
+            <button type="button" class="btn btn-sm" id="role-add-btn">{{ admin_t('ui.add_role') }}</button>
+            <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.videos') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/actors">{{ admin_t('ui.actors') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">片子里的角色，挂到影片，也可挂演员。启用的会出现在详情页。这不是后台管理员。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.cast_lead') }}</p>
         @if($videoId > 0)
             <p class="role-focus">{{ $videoTitle !== '' ? '正在看「'.$videoTitle.'」的角色。' : '影片 #'.$videoId.' 不存在，保存时会失败。' }}</p>
         @endif
@@ -34,29 +48,29 @@
             <input type="hidden" name="empty_pic">
             <input type="hidden" name="video_id" value="{{ $videoId > 0 ? $videoId : '' }}">
             <input type="hidden" name="actor_id" value="{{ $actorId > 0 ? $actorId : '' }}">
-            <input type="search" name="q" placeholder="搜角色名、片名或演员" autocomplete="off" aria-label="搜索角色">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_cast') }}" autocomplete="off" aria-label="{{ admin_t('ui.ph_search_cast') }}">
             <select name="status">
-                <option value="">状态</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">{{ admin_t('ui.status') }}</option>
+                <option value="1">{{ admin_t('ui.enabled') }}</option>
+                <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
             <button type="button" class="btn btn-sm" id="role-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="role-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="role-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="1">启用@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="status" data-value="0">停用@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_video" data-value="1">没挂影片@if($q('no_video') > 0)<em>{{ $q('no_video') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_actor" data-value="1">没挂演员@if($q('no_actor') > 0)<em>{{ $q('no_actor') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="empty_pic" data-value="1">无封面@if($q('no_cover') > 0)<em>{{ $q('no_cover') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.enabled') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.disabled') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_video" data-value="1">{{ admin_t('ui.no_video_link') }}@if($q('no_video') > 0)<em>{{ $q('no_video') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_actor" data-value="1">{{ admin_t('ui.no_actor_link') }}@if($q('no_actor') > 0)<em>{{ $q('no_actor') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="empty_pic" data-value="1">{{ admin_t('ui.no_cover') }}@if($q('no_cover') > 0)<em>{{ $q('no_cover') }}</em>@endif</button>
         </div>
         <div class="batch-bar" id="role-batch" hidden>
-            <strong id="role-batch-count">已选 0 个</strong>
-            <button type="button" class="btn btn-sm" id="role-batch-on">启用</button>
-            <button type="button" class="btn btn-muted btn-sm" id="role-batch-off">停用</button>
-            <button type="button" class="btn btn-danger btn-sm" id="role-batch-del">删除</button>
-            <button type="button" class="btn btn-muted btn-sm" id="role-batch-clear">取消选择</button>
+            <strong id="role-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
+            <button type="button" class="btn btn-sm" id="role-batch-on">{{ admin_t('ui.enabled') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="role-batch-off">{{ admin_t('ui.disabled') }}</button>
+            <button type="button" class="btn btn-danger btn-sm" id="role-batch-del">{{ admin_t('ui.delete') }}</button>
+            <button type="button" class="btn btn-muted btn-sm" id="role-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="role-table"></div>
     </div>
@@ -93,8 +107,8 @@
             <div>
                 <label>状态</label>
                 <select name="status">
-                    <option value="1">启用</option>
-                    <option value="0">停用</option>
+                    <option value="1">{{ admin_t('ui.enabled') }}</option>
+                    <option value="0">{{ admin_t('ui.disabled') }}</option>
                 </select>
             </div>
         </div>
@@ -115,6 +129,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($roleJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_video', 'empty_actor', 'empty_pic'];
     var form = document.getElementById('role-search');
     var batchBar = document.getElementById('role-batch');
@@ -169,7 +184,7 @@
         var cover = String(d.cover || '').trim();
         var thumb = cover
             ? '<img class="vod-thumb role-thumb" src="' + U.escape(cover) + '" alt="">'
-            : '<span class="vod-thumb role-thumb is-empty">无图</span>';
+            : '<span class="vod-thumb role-thumb is-empty">' + L.no_image + '</span>';
         var meta = '#' + U.escape(d.id);
         if (d.blurb) meta += ' · ' + U.escape(d.blurb);
         return '<div class="vod-cell">' + thumb + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'
@@ -177,14 +192,14 @@
     }
     function videoHtml(d) {
         var vid = parseInt(d.video_id, 10) || 0;
-        if (vid < 1) return '<span class="muted">没挂影片</span>';
+        if (vid < 1) return '<span class="muted">' + L.no_video + '</span>';
         if (d.video_missing) return '<span class="muted">片子已删 #' + vid + '</span>';
         var title = d.video_title || ('影片 #' + vid);
         return '<a href="/admin/video/' + vid + '/edit">' + U.escape(title) + '</a>';
     }
     function actorHtml(d) {
         var aid = parseInt(d.actor_id, 10) || 0;
-        if (aid < 1) return '<span class="muted">没挂演员</span>';
+        if (aid < 1) return '<span class="muted">' + L.no_actor + '</span>';
         if (d.actor_missing) return '<span class="muted">演员已删 #' + aid + '</span>';
         var name = d.actor_name || ('演员 #' + aid);
         return '<a href="/admin/video/actors">' + U.escape(name) + '</a>';
@@ -198,9 +213,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的角色</p><p><button type="button" class="btn btn-muted btn-sm" id="role-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match + '</p><p><button type="button" class="btn btn-muted btn-sm" id="role-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有角色</p><p class="muted">点新增，填角色名并挂到一部片子。启用后详情页才会列出。</p><p><button type="button" class="btn btn-primary btn-sm" id="role-empty-add">新增角色</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty + '</p><p class="muted">' + L.empty_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="role-empty-add">' + L.add_role + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('role-empty-add');
@@ -215,22 +230,22 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 个';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '角色', html: nameHtml},
-            {title: '影片', html: videoHtml},
-            {title: '演员', html: actorHtml},
-            {key: 'sort', title: '排序', width: 64},
-            {title: '状态', width: 72, html: function (d) {
-                return d.is_on ? U.status(true, '启用') : U.status(false, '停用');
+            {title: L.cast, html: nameHtml},
+            {title: L.videos, html: videoHtml},
+            {title: L.actors, html: actorHtml},
+            {key: 'sort', title: AdminUi.t('sort'), width: 64},
+            {title: AdminUi.t('status'), width: 72, html: function (d) {
+                return d.is_on ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled'));
             }},
-            {title: '操作', cls: 'actions', html: function (d) {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 var href = d.url ? String(d.url) : ('/role/' + encodeURIComponent(d.id));
-                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">前台</a>'
-                    + '<a href="#" class="btn-link js-edit">编辑</a>'
-                    + '<a href="#" class="btn-link js-del">删除</a>';
+                return '<a href="' + U.escape(href) + '" target="_blank" rel="noopener" class="btn-link">' + AdminUi.t('front') + '</a>'
+                    + '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a>'
+                    + '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ]
     });

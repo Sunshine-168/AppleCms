@@ -103,7 +103,7 @@
         <div class="field">
             <label for="spider-bot">蜘蛛</label>
             <select id="spider-bot" name="bot">
-                <option value="">全部</option>
+                <option value="">{{ admin_t('ui.all') }}</option>
                 @foreach($spiderNames as $name)
                     <option value="{{ $name }}" @selected($bot === $name)>{{ $name }}</option>
                 @endforeach
@@ -112,7 +112,7 @@
         <div class="field">
             <label for="spider-status">状态</label>
             <select id="spider-status" name="status">
-                <option value="">全部</option>
+                <option value="">{{ admin_t('ui.all') }}</option>
                 <option value="200" @selected($status === 200)>200</option>
                 <option value="404" @selected($status === 404)>404</option>
             </select>
@@ -229,7 +229,7 @@
         data: {
             labels: trend.map(r => String(r.day).slice(5)),
             datasets: [
-                { label: '搜索引擎', data: trend.map(r => r.search), borderColor: '#007bff', backgroundColor: 'rgba(0,123,255,.10)', fill: true, tension: .3, pointRadius: 2 },
+                { label: '搜索引擎', data: trend.map(r => r.search), borderColor: '#5b9cff', backgroundColor: 'rgba(91,156,255,.10)', fill: true, tension: .3, pointRadius: 2 },
                 { label: 'SEO 工具', data: trend.map(r => r.tool), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: .3, pointRadius: 2 },
                 { label: 'AI 爬虫', data: trend.map(r => r.ai), borderColor: '#6f42c1', backgroundColor: 'transparent', tension: .3, pointRadius: 2, borderDash: [4, 3] },
                 { label: '其他', data: trend.map(r => r.other), borderColor: '#6c757d', backgroundColor: 'transparent', tension: .3, pointRadius: 2 }
@@ -242,7 +242,7 @@
         type: 'doughnut',
         data: {
             labels: hasMix ? mix.map(r => r.name) : ['暂无数据'],
-            datasets: [{ data: hasMix ? mix.map(r => r.hits) : [1], backgroundColor: hasMix ? ['#007bff', '#fd7e14', '#6f42c1', '#6c757d'] : ['#e5e6eb'], borderWidth: 0 }]
+            datasets: [{ data: hasMix ? mix.map(r => r.hits) : [1], backgroundColor: hasMix ? ['#5b9cff', '#fd7e14', '#6f42c1', '#6c757d'] : ['#e5e6eb'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend }, cutout: '62%' }
     });

@@ -21,7 +21,7 @@
         <form class="filter-bar" id="art-recycle-search" onsubmit="return false;">
             <input type="hidden" name="trash" value="1">
             <input type="search" name="q" placeholder="搜索已删内容的标题或 ID" autocomplete="off" aria-label="搜索回收站">
-            <button type="button" class="btn btn-sm" id="art-recycle-search-btn">搜索</button>
+            <button type="button" class="btn btn-sm" id="art-recycle-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="art-recycle-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <p class="muted recycle-lead">还原后回到文章，状态与栏目保持删除前的样子。彻底删除无法恢复。</p>
@@ -29,7 +29,7 @@
             <strong id="art-recycle-batch-count">已选 0 篇</strong>
             <button type="button" class="btn btn-sm" id="art-recycle-restore">还原所选</button>
             <button type="button" class="btn btn-danger btn-sm" id="art-recycle-purge">彻底删除所选</button>
-            <button type="button" class="btn btn-muted btn-sm" id="art-recycle-clear">取消选择</button>
+            <button type="button" class="btn btn-muted btn-sm" id="art-recycle-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="art-recycle-table"></div>
     </div>
@@ -95,14 +95,14 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: '标题', html: function (d) {
+            {title: AdminUi.t('title'), html: function (d) {
                 return '<div class="entry-row-title">' + U.escape(d.title || '无标题') + '</div>'
                     + '<div class="entry-row-meta">' + U.escape(d.type_name || '未分栏') + ' · #' + U.escape(d.id) + '</div>';
             }},
             {title: '删除时间', width: 140, html: function (d) {
                 return '<span class="muted">' + U.escape(fmtTime(d.deleted_at_unix || d.deleted_at)) + '</span>';
             }},
-            {title: '操作', cls: 'actions', html: function () {
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
                 return '<a href="#" class="btn-link js-restore">还原</a><a href="#" class="btn-link js-purge">彻底删除</a>';
             }}
         ]

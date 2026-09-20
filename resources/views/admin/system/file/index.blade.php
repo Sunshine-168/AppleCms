@@ -40,8 +40,8 @@
             <button type="reset" class="btn btn-muted btn-sm" id="file-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="file-kinds">
-            <button type="button" class="chip active" data-kind="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-kind="image">图片@if($q('image') > 0)<em>{{ $q('image') }}</em>@endif</button>
+            <button type="button" class="chip active" data-kind="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-kind="image">{{ admin_t('ui.pics') }}@if($q('image') > 0)<em>{{ $q('image') }}</em>@endif</button>
             <button type="button" class="chip" data-kind="video">视频@if($q('video') > 0)<em>{{ $q('video') }}</em>@endif</button>
             <button type="button" class="chip" data-kind="file">其它@if($q('file') > 0)<em>{{ $q('file') }}</em>@endif</button>
         </div>
@@ -67,12 +67,12 @@
         cols: [
             {check: true, width: 36},
             {title: ui.preview || '预览', width: 88, cls: 'file-preview-cell', html: previewCell},
-            {key: 'name', title: '名称', html: nameCell},
-            {key: 'kind_label', title: '类型', width: 80},
-            {key: 'size_text', title: '大小', width: 90},
-            {key: 'create_time', title: '上传时间', width: 160},
-            {title: '操作', cls: 'actions', html: function () {
-                return '<a href="#" class="btn-link js-open">打开</a><a href="#" class="btn-link js-copy">复制地址</a><a href="#" class="btn-link js-del">删除</a>';
+            {key: 'name', title: AdminUi.t('name'), html: nameCell},
+            {key: 'kind_label', title: AdminUi.t('type'), width: 80},
+            {key: 'size_text', title: AdminUi.t('size'), width: 90},
+            {key: 'create_time', title: AdminUi.t('upload_time'), width: 160},
+            {title: AdminUi.t('actions'), cls: 'actions', html: function () {
+                return '<a href="#" class="btn-link js-open">' + AdminUi.t('open_link') + '</a><a href="#" class="btn-link js-copy">' + AdminUi.t('copy_url') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             }}
         ],
         emptyHtml: function (parsed, where) {
@@ -228,7 +228,7 @@
             var url = row.url || row.open_url || '';
             if (!url) { U.toast('无可用链接', 'err'); return; }
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(function () { U.toast('已复制地址', 'ok'); }).catch(function () { U.toast('复制失败', 'err'); });
+                navigator.clipboard.writeText(url).then(function () { U.toast(AdminUi.t('copied') || ui.copied || '', 'ok'); }).catch(function () { U.toast(AdminUi.t('copy_fail') || ui.copy_fail || '', 'err'); });
             } else {
                 U.toast(url, 'ok');
             }

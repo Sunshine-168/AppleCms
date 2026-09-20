@@ -37,7 +37,7 @@ class ArtTypesPageTest extends TestCase
         $this->assertStringContainsString('class="is-on">文章</a>', $html);
         $this->assertStringContainsString('文章自己的栏目', $html);
         $this->assertStringContainsString('频道', $html);
-        $this->assertStringContainsString('title: \'类型\'', $html);
+        $this->assertStringContainsString('"kind":"类型"', $html);
         $this->assertStringNotContainsString('class="is-on">影片</a>', $html);
         $this->assertStringNotContainsString('用来放什么', $html);
         $this->assertStringNotContainsString('title: \'模型\'', $html);

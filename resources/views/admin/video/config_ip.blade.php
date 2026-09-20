@@ -72,7 +72,7 @@
                 <p class="muted field-hint">每行一条。支持单个地址，也支持网段如 <code>192.168.1.0/24</code>。不要写 <code>*</code>，留空就是不限制。</p>
                 <div class="field-inline">
                     <input id="ip-new" type="text" placeholder="再加一条，例如 203.0.113.8" autocomplete="off" spellcheck="false">
-                    <button type="button" class="btn btn-muted" id="ip-add-one">添加</button>
+                    <button type="button" class="btn btn-muted" id="ip-add-one">{{ admin_t('ui.add') }}</button>
                 </div>
                 <ul class="ip-chips" id="ip-chips"></ul>
                 <label for="admin_ip_allow">整段编辑</label>
@@ -97,7 +97,7 @@
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="site-save">保存</button>
+                <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
                 <a class="btn btn-muted" href="/admin/system/monitor/login-logs">看登录日志</a>
             </div>
         </form>

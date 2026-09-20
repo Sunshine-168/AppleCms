@@ -148,7 +148,7 @@
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="theme-save">保存设置</button>
+                <button type="button" class="btn" id="theme-save">{{ admin_t('page.save') }}</button>
             </div>
         </form>
     </div>
