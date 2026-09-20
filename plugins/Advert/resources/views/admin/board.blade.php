@@ -6,42 +6,56 @@
     $period = in_array((string) request()->query('period', 'day'), ['day', 'month', 'year'], true)
         ? (string) request()->query('period', 'day')
         : 'day';
+    $advertJsLang = [
+        'no_match_rows' => admin_t('ui.no_match_rows'),
+        'empty_ads' => admin_t('ui.empty_ads'),
+        'add_ad' => admin_t('ui.add_ad'),
+        'edit_ad' => admin_t('ui.edit_ad'),
+        'empty_clicks' => admin_t('ui.empty_clicks'),
+        'empty_stats_rows' => admin_t('ui.empty_stats_rows'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'confirm_remove' => admin_t('ui.confirm_remove'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel advert-board desk-board" id="advert-board">
     <div class="card-header">
-        <span>广告 <em id="advert-count"></em></span>
+        <span>{{ admin_t('nav.advert') }} <em id="advert-count"></em></span>
         <div>
             <button type="button" class="btn btn-sm" id="advert-add-btn" @if($desk !== 'ads') hidden @endif>{{ admin_t('ui.add') }}</button>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">文字或图片。顶栏/底栏固定，播放器在播放框下，正文在主栏顶部。展示在渲染时加，点击由前台跳转产生。javascript: 会拒绝。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.advert_lead') }}</p>
         <div class="queue-chips">
-            <a class="chip{{ $desk === 'ads' ? ' active' : '' }}" href="/admin/video/adverts">广告位</a>
-            <a class="chip{{ $desk === 'clicks' ? ' active' : '' }}" href="/admin/video/adverts?desk=clicks">点击</a>
-            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/adverts?desk=stats">统计</a>
+            <a class="chip{{ $desk === 'ads' ? ' active' : '' }}" href="/admin/video/adverts">{{ admin_t('nav.advert_list') }}</a>
+            <a class="chip{{ $desk === 'clicks' ? ' active' : '' }}" href="/admin/video/adverts?desk=clicks">{{ admin_t('nav.advert_clicks') }}</a>
+            <a class="chip{{ $desk === 'stats' ? ' active' : '' }}" href="/admin/video/adverts?desk=stats">{{ admin_t('nav.advert_stats') }}</a>
         </div>
         <form class="filter-bar" id="advert-search" onsubmit="return false;">
             <input type="hidden" name="desk" value="{{ $desk }}">
-            <input type="search" name="q" placeholder="{{ $desk === 'ads' ? '搜名称、标题' : ($desk === 'stats' ? '搜广告' : '搜 IP、页面') }}" autocomplete="off">
-            <select name="slot" aria-label="位置" @if($desk !== 'ads') hidden @endif>
+            <input type="search" name="q" placeholder="{{ $desk === 'ads' ? admin_t('ui.ph_search_ad_name') : ($desk === 'stats' ? admin_t('ui.ph_search_ad_item') : admin_t('ui.ph_search_ad_click')) }}" autocomplete="off">
+            <select name="slot" aria-label="{{ admin_t('ui.label_slot') }}" @if($desk !== 'ads') hidden @endif>
                 <option value="">{{ admin_t('ui.all_positions') }}</option>
-                <option value="top">顶栏</option>
-                <option value="bottom">底栏</option>
-                <option value="player">播放器</option>
-                <option value="content">正文</option>
+                <option value="top">{{ admin_t('ui.slot_top') }}</option>
+                <option value="bottom">{{ admin_t('ui.slot_bottom_bar') }}</option>
+                <option value="player">{{ admin_t('ui.slot_player_bar') }}</option>
+                <option value="content">{{ admin_t('ui.slot_body') }}</option>
             </select>
-            <select name="status" aria-label="状态" @if($desk !== 'ads') hidden @endif>
+            <select name="status" aria-label="{{ admin_t('ui.status') }}" @if($desk !== 'ads') hidden @endif>
                 <option value="">{{ admin_t('ui.all_status') }}</option>
                 <option value="1">{{ admin_t('ui.enabled') }}</option>
                 <option value="0">{{ admin_t('ui.disabled') }}</option>
             </select>
-            <select name="period" aria-label="周期" @if($desk !== 'stats') hidden @endif>
-                <option value="day" @selected($period === 'day')>按日</option>
-                <option value="month" @selected($period === 'month')>按月</option>
-                <option value="year" @selected($period === 'year')>按年</option>
+            <select name="period" aria-label="{{ admin_t('ui.period') }}" @if($desk !== 'stats') hidden @endif>
+                <option value="day" @selected($period === 'day')>{{ admin_t('ui.by_day') }}</option>
+                <option value="month" @selected($period === 'month')>{{ admin_t('ui.by_month') }}</option>
+                <option value="year" @selected($period === 'year')>{{ admin_t('ui.by_year') }}</option>
             </select>
             <button type="button" class="btn btn-sm" id="advert-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="advert-reset-btn">{{ admin_t('ui.reset') }}</button>
@@ -53,39 +67,39 @@
     <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="ads">
-        <label>名称</label>
-        <input type="text" name="name" required placeholder="如 顶栏横幅">
-        <label>类型</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input type="text" name="name" required placeholder="{{ admin_t('ui.ph_ad_banner') }}">
+        <label>{{ admin_t('ui.col_type') }}</label>
         <select name="type">
-            <option value="text">文字</option>
-            <option value="image">图片</option>
+            <option value="text">{{ admin_t('ui.kind_text') }}</option>
+            <option value="image">{{ admin_t('ui.kind_image') }}</option>
         </select>
-        <label>位置</label>
+        <label>{{ admin_t('ui.label_slot') }}</label>
         <select name="slot">
-            <option value="top">顶栏</option>
-            <option value="bottom">底栏</option>
-            <option value="player">播放器</option>
-            <option value="content">正文</option>
+            <option value="top">{{ admin_t('ui.slot_top') }}</option>
+            <option value="bottom">{{ admin_t('ui.slot_bottom_bar') }}</option>
+            <option value="player">{{ admin_t('ui.slot_player_bar') }}</option>
+            <option value="content">{{ admin_t('ui.slot_body') }}</option>
         </select>
-        <label>标题</label>
-        <input type="text" name="title" placeholder="可选">
-        <label>网址</label>
-        <input type="text" name="url" placeholder="https://">
-        <p class="muted field-hint">只接受 http 或 https。空则前台跳转 404。javascript: 会拒绝。</p>
-        <label>图片</label>
+        <label>{{ admin_t('ui.title_label') }}</label>
+        <input type="text" name="title" placeholder="{{ admin_t('ui.optional') }}">
+        <label>{{ admin_t('ui.label_url') }}</label>
+        <input type="text" name="url" placeholder="{{ admin_t('ui.ph_https') }}">
+        <p class="muted field-hint">{{ admin_t('ui.ad_https_hint') }}</p>
+        <label>{{ admin_t('ui.kind_image') }}</label>
         <div class="field-inline">
-            <input type="text" name="image" placeholder="图片地址，类型为图片时填写">
-            <button type="button" class="btn btn-sm advert-image-upload">上传</button>
+            <input type="text" name="image" placeholder="{{ admin_t('ui.ph_image_if_image') }}">
+            <button type="button" class="btn btn-sm advert-image-upload">{{ admin_t('ui.upload') }}</button>
         </div>
         <img class="img-preview advert-image-preview" alt="">
-        <label>开始时间戳</label>
+        <label>{{ admin_t('ui.start_unix') }}</label>
         <input type="number" name="start_at" value="0">
-        <label>结束时间戳</label>
+        <label>{{ admin_t('ui.end_unix') }}</label>
         <input type="number" name="expire_at" value="0">
-        <p class="muted field-hint">0 表示不限制。到点后不再展示。</p>
-        <label>排序</label>
+        <p class="muted field-hint">{{ admin_t('ui.zero_unlimited') }}</p>
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <label>状态</label>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
             <option value="1">{{ admin_t('ui.enabled') }}</option>
             <option value="0">{{ admin_t('ui.disabled') }}</option>
@@ -98,6 +112,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($advertJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     var form = document.getElementById('advert-search');
     var countEl = document.getElementById('advert-count');
@@ -117,11 +132,11 @@
         var filtered = Object.keys(where || {}).some(function (k) {
             return k !== 'limit' && k !== 'desk' && k !== 'period' && where[k] !== '' && where[k] != null;
         });
-        if (filtered) return '<div class="list-empty"><p>没有符合条件的记录</p></div>';
+        if (filtered) return '<div class="list-empty"><p>' + L.no_match_rows + '</p></div>';
         if (desk === 'ads') {
-            return '<div class="list-empty"><p>还没有广告</p><p><button type="button" class="btn btn-primary btn-sm" id="advert-empty-add">新增广告</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_ads + '</p><p><button type="button" class="btn btn-primary btn-sm" id="advert-empty-add">' + L.add_ad + '</button></p></div>';
         }
-        return '<div class="list-empty"><p>' + (desk === 'clicks' ? '还没有点击记录' : '还没有统计') + '</p></div>';
+        return '<div class="list-empty"><p>' + (desk === 'clicks' ? L.empty_clicks : L.empty_stats_rows) + '</p></div>';
     }
     var cols = [];
     if (desk === 'clicks') {
@@ -141,7 +156,7 @@
     } else {
         cols = [
             {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>'; }},
-            {title: '位置', width: 80, html: function (d) { return U.escape(d.slot_label || ''); }},
+            {title: AdminUi.t('label_slot'), width: 80, html: function (d) { return U.escape(d.slot_label || ''); }},
             {title: AdminUi.t('type'), width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
             {title: AdminUi.t('impressions'), width: 72, html: function (d) { return U.escape(String(d.impressions == null ? 0 : d.impressions)); }},
             {title: AdminUi.t('clicks'), width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
@@ -166,7 +181,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑广告' : '新增广告',
+            title: mode === 'edit' ? L.edit_ad : L.add_ad,
             content: document.getElementById('advert-ad-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -191,12 +206,12 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
                 data.desk = 'ads';
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/adverts/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -214,11 +229,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确认删除？')) return;
+            if (!U.confirm(L.confirm_remove)) return;
             U.post('/admin/video/adverts/delete', {id: row.id, desk: 'ads'}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

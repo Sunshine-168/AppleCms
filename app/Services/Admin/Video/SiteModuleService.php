@@ -4163,7 +4163,7 @@ class SiteModuleService
             $row['url_short'] = $this->shortBotUrl((string) ($row['url'] ?? ''));
             $bot = (int) ($row['is_bot'] ?? 0) === 1;
             $row['visitor_kind'] = $bot ? 'bot' : 'people';
-            $row['visitor_label'] = $bot ? ((string) $row['spider_label'] !== '' ? (string) $row['spider_label'] : '爬虫') : '访客';
+            $row['visitor_label'] = $bot ? ((string) $row['spider_label'] !== '' ? (string) $row['spider_label'] : admin_t('ui.spider')) : admin_t('ui.visitor');
         }
         unset($row);
 

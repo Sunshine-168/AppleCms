@@ -19,40 +19,40 @@
             @endif
         @endforeach
         <div class="field">
-            <label for="log-from">从</label>
+            <label for="log-from">{{ admin_t('ui.date_from') }}</label>
             <input id="log-from" type="date" name="from" value="{{ $filters['from'] }}">
         </div>
         <div class="field">
-            <label for="log-to">到</label>
+            <label for="log-to">{{ admin_t('ui.date_to') }}</label>
             <input id="log-to" type="date" name="to" value="{{ $filters['to'] }}">
         </div>
         <div class="field">
-            <label for="log-visitor">类型</label>
+            <label for="log-visitor">{{ admin_t('ui.visitor_kind') }}</label>
             <select id="log-visitor" name="visitor">
                 <option value="" @selected($filters['visitor'] === '')>{{ admin_t('ui.all') }}</option>
-                <option value="human" @selected($filters['visitor'] === 'human')>人类</option>
-                <option value="spider" @selected($filters['visitor'] === 'spider')>蜘蛛</option>
+                <option value="human" @selected($filters['visitor'] === 'human')>{{ admin_t('ui.human') }}</option>
+                <option value="spider" @selected($filters['visitor'] === 'spider')>{{ admin_t('ui.spider') }}</option>
             </select>
         </div>
         <div class="field">
-            <label for="log-path">页面</label>
-            <input id="log-path" type="text" name="path" value="{{ $filters['path'] }}" placeholder="标题或路径，如 /news">
+            <label for="log-path">{{ admin_t('ui.pages_col') }}</label>
+            <input id="log-path" type="text" name="path" value="{{ $filters['path'] }}" placeholder="{{ admin_t('ui.ph_log_path') }}">
         </div>
-        <button class="btn" type="submit">筛选</button>
-        <a class="chip {{ $filters['from'] === $today && $filters['to'] === $today ? 'active' : '' }}" href="{{ $qs(['from' => $today, 'to' => $today]) }}">今天</a>
-        <a class="chip {{ $filters['from'] === $weekFrom && $filters['to'] === $today ? 'active' : '' }}" href="{{ $qs(['from' => $weekFrom, 'to' => $today]) }}">近 7 天</a>
-        <a class="chip {{ $filters['status'] === '404' ? 'active' : '' }}" href="{{ $qs(['status' => $filters['status'] === '404' ? '' : '404']) }}">仅 404</a>
-        <a class="chip {{ $filters['probe'] === 'hide' ? 'active' : '' }}" href="{{ $qs(['probe' => $filters['probe'] === 'hide' ? '' : 'hide']) }}">排除本机</a>
-        <a class="chip" href="{{ route('admin.stats.logs.export', $filters) }}">导出</a>
+        <button class="btn" type="submit">{{ admin_t('ui.filter') }}</button>
+        <a class="chip {{ $filters['from'] === $today && $filters['to'] === $today ? 'active' : '' }}" href="{{ $qs(['from' => $today, 'to' => $today]) }}">{{ admin_t('ui.today_chip') }}</a>
+        <a class="chip {{ $filters['from'] === $weekFrom && $filters['to'] === $today ? 'active' : '' }}" href="{{ $qs(['from' => $weekFrom, 'to' => $today]) }}">{{ admin_t('ui.last_7d') }}</a>
+        <a class="chip {{ $filters['status'] === '404' ? 'active' : '' }}" href="{{ $qs(['status' => $filters['status'] === '404' ? '' : '404']) }}">{{ admin_t('ui.only_404') }}</a>
+        <a class="chip {{ $filters['probe'] === 'hide' ? 'active' : '' }}" href="{{ $qs(['probe' => $filters['probe'] === 'hide' ? '' : 'hide']) }}">{{ admin_t('ui.hide_local') }}</a>
+        <a class="chip" href="{{ route('admin.stats.logs.export', $filters) }}">{{ admin_t('ui.export') }}</a>
         @if($activeFilters > 0)
-            <a class="chip" href="{{ route('admin.stats.logs') }}">清除</a>
+            <a class="chip" href="{{ route('admin.stats.logs') }}">{{ admin_t('ui.clear_filter') }}</a>
         @endif
     </form>
 
     <p class="muted" style="margin:-4px 0 12px">
-        共 {{ $logs->total() }} 条
+        {{ admin_t('ui.n_rows', ['n' => $logs->total()]) }}
         @if($errorCount > 0)
-            · 非 200 {{ $errorCount }} 条
+            · {{ admin_t('ui.n_non_200', ['n' => $errorCount]) }}
         @endif
         @if($filters['ip'] !== '')
             · IP {{ $filters['ip'] }}
@@ -65,8 +65,8 @@
     @if($trail->isNotEmpty())
         <div class="card card-panel" style="margin-bottom:16px">
             <div class="card-header">
-                <span>该访客轨迹（{{ $trail->count() }} 步）</span>
-                <a class="btn btn-sm btn-muted" href="{{ $qs(['hash' => '']) }}">退出轨迹</a>
+                <span>{{ admin_t('ui.visitor_trail', ['n' => $trail->count()]) }}</span>
+                <a class="btn btn-sm btn-muted" href="{{ $qs(['hash' => '']) }}">{{ admin_t('ui.exit_trail') }}</a>
             </div>
             <div class="card-body">
                 <p class="trail">
@@ -84,11 +84,11 @@
             <table class="data" style="border:0">
                 <thead>
                 <tr>
-                    <th>时间</th>
-                    <th>访问者</th>
-                    <th>页面</th>
-                    <th>来路</th>
-                    <th>状态</th>
+                    <th>{{ admin_t('ui.col_time') }}</th>
+                    <th>{{ admin_t('ui.visitor_col') }}</th>
+                    <th>{{ admin_t('ui.pages_col') }}</th>
+                    <th>{{ admin_t('ui.referrer') }}</th>
+                    <th>{{ admin_t('ui.status') }}</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -99,7 +99,7 @@
                         <td>
                             <span class="badge {{ $row['visitor_kind'] === 'bot' ? 'badge-tool' : 'badge-search' }}">{{ $row['visitor'] }}</span>
                             @if($row['local'])
-                                <span class="badge badge-off">本机</span>
+                                <span class="badge badge-off">{{ admin_t('ui.local_chip') }}</span>
                             @endif
                             <div class="muted" title="{{ $row['ua'] }}">{{ $row['client'] }} · {{ $row['ip'] }}</div>
                         </td>
@@ -117,15 +117,15 @@
                         </td>
                         <td class="log-actions">
                             @if($row['ip'])
-                                <a href="{{ $qs(['ip' => $row['ip'], 'hash' => '']) }}">同 IP</a>
+                                <a href="{{ $qs(['ip' => $row['ip'], 'hash' => '']) }}">{{ admin_t('ui.same_ip') }}</a>
                             @endif
                             @if($row['hash'])
-                                <a href="{{ $qs(['hash' => $row['hash'], 'ip' => '']) }}">轨迹</a>
+                                <a href="{{ $qs(['hash' => $row['hash'], 'ip' => '']) }}">{{ admin_t('ui.trail') }}</a>
                             @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="muted">该条件下没有访问记录</td></tr>
+                    <tr><td colspan="6" class="muted">{{ admin_t('ui.empty_access_logs') }}</td></tr>
                 @endforelse
                 </tbody>
             </table>

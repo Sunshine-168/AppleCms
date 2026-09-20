@@ -332,6 +332,14 @@
         'already_on' => admin_t('ui.already_on'),
         'copied' => admin_t('ui.copied'),
         'copy_fail' => admin_t('ui.copy_fail'),
+        'product_code' => admin_t('ui.product_code'),
+        'mch_id' => admin_t('ui.mch_id'),
+        'label_slot' => admin_t('ui.label_slot'),
+        'face_value' => admin_t('ui.face_value'),
+        'scene' => admin_t('ui.scene'),
+        'issued' => admin_t('ui.issued'),
+        'showing' => admin_t('ui.showing'),
+        'reported' => admin_t('ui.reported'),
     ];
 @endphp
 <script>

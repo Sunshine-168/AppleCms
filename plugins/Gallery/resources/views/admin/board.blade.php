@@ -79,16 +79,16 @@
                             </select>
                             <button class="btn" type="submit">{{ admin_t('ui.add') }}</button>
                         </div>
-                        <textarea id="gallery-pic-urls" name="urls" rows="4" placeholder="每行一个图片地址（http:// 会下载到本地，或直接贴 /upload/...）" aria-label="图片地址" style="width:100%;margin-top:8px;box-sizing:border-box"></textarea>
-                        <p class="muted field-hint">先选图集，再粘贴多行地址。远程链接自动下载；空行会跳过。</p>
+                        <textarea id="gallery-pic-urls" name="urls" rows="4" placeholder="{{ admin_t('gallery.ph_pic_urls') }}" aria-label="{{ admin_t('ui.ph_pic') }}" style="width:100%;margin-top:8px;box-sizing:border-box"></textarea>
+                        <p class="muted field-hint">{{ admin_t('gallery.hint_pics') }}</p>
                     </form>
                 </div>
             @elseif($desk === 'types')
-                <p class="muted recycle-lead">分类挂在图集上，一部图集一个分类。</p>
+                <p class="muted recycle-lead">{{ admin_t('gallery.types_lead') }}</p>
             @elseif($desk === 'favors')
-                <p class="muted recycle-lead">会员前台收藏后出现，后台不能代收藏。删除只清记录，不影响图集。</p>
+                <p class="muted recycle-lead">{{ admin_t('gallery.lead_favors') }}</p>
             @elseif($desk === 'comments')
-                <p class="muted recycle-lead">前台图集详情页提交的评论。可审核或删除。</p>
+                <p class="muted recycle-lead">{{ admin_t('gallery.lead_comments') }}</p>
             @endif
 
             @if($desk === 'comments')
@@ -100,9 +100,9 @@
             @endif
 
             <form class="filter-bar" id="gallery-search" onsubmit="return false;">
-                <input type="search" name="q" placeholder="{{ $desk === 'pics' ? '搜图片地址' : ($desk === 'types' ? '搜分类名' : ($desk === 'favors' ? '搜会员或图集 ID' : ($desk === 'comments' ? '搜评论、图集' : '搜标题、作者、标签'))) }}" autocomplete="off" aria-label="搜索">
+                <input type="search" name="q" placeholder="{{ $desk === 'pics' ? admin_t('ui.ph_search_pic_url') : ($desk === 'types' ? admin_t('ui.ph_search_type_name') : ($desk === 'favors' ? admin_t('ui.ph_search_member_gallery') : ($desk === 'comments' ? admin_t('ui.ph_search_comment_gallery') : admin_t('ui.ph_search_title_author_tag')))) }}" autocomplete="off" aria-label="{{ admin_t('ui.search') }}">
                 @if($desk === 'pics' && $works->isNotEmpty())
-                    <select name="gallery_id" aria-label="按图集筛选">
+                    <select name="gallery_id" aria-label="{{ admin_t('ui.filter_by_gallery') }}">
                         <option value="">{{ admin_t('ui.all_galleries') }}</option>
                         @foreach($works as $w)
                             <option value="{{ $w->id }}">{{ $w->title }}</option>
@@ -161,12 +161,14 @@
         'need_title' => admin_t('gallery.need_title'),
         'need_urls' => admin_t('gallery.need_urls'),
         'select_gallery' => admin_t('gallery.select_gallery'),
+        'confirm_unfavor' => admin_t('gallery.confirm_unfavor'),
+        'confirm_remove' => admin_t('ui.confirm_remove'),
     ];
 @endphp
 @push('scripts')
 <script>
 (function () {
-    var U = AdminUi, desk = @json($desk), url = '/admin/video/galleries', L = @json($galleryJsLang);
+    var U = AdminUi, desk = @json($desk), url = '/admin/video/galleries', L = @json($galleryJsLang, JSON_UNESCAPED_UNICODE);
     if (desk === 'stats' || !U) return;
     var countEl = document.getElementById('gallery-count');
     var search = document.getElementById('gallery-search');
@@ -342,9 +344,9 @@
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
         if (a.classList.contains('js-edit')) openForm(row);
-        if (a.classList.contains('js-del') && U.confirm(desk === 'favors' ? '取消这条收藏？' : '确认删除？')) {
+        if (a.classList.contains('js-del') && U.confirm(desk === 'favors' ? L.confirm_unfavor : L.confirm_remove)) {
             U.post(url + '/delete', { id: row.id, desk: desk }).then(function (r) {
-                if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return; }
+                if (!r || r.code !== 0) { U.toast((r && r.msg) || L.fail, 'err'); return; }
                 table.refresh();
             });
         }

@@ -4,12 +4,25 @@
 @php
     $desk = in_array((string) ($desk ?? ''), ['campaigns', 'received'], true) ? (string) $desk : 'campaigns';
     $groups = is_array($groups ?? null) ? $groups : [];
+    $couponJsLang = [
+        'no_match_rows' => admin_t('ui.no_match_rows'),
+        'empty_coupons' => admin_t('ui.empty_coupons'),
+        'add_coupon' => admin_t('ui.add_coupon'),
+        'edit_coupon' => admin_t('ui.edit_coupon'),
+        'empty_claims' => admin_t('ui.empty_claims'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'confirm_del_coupon' => admin_t('ui.confirm_del_coupon'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel coupon-board desk-board" id="coupon-board">
     <div class="card-header">
-        <span>优惠券 <em id="coupon-count"></em></span>
+        <span>{{ admin_t('nav.coupons') }} <em id="coupon-count"></em></span>
         <div>
             @if($desk === 'campaigns')
                 <button type="button" class="btn btn-sm" id="coupon-add-btn">{{ admin_t('ui.add') }}</button>
@@ -17,32 +30,32 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">对照苹果：满减或折扣、门槛、通用/充值/会员、发放数、每人 1 张。本站现金通道只有充值，积分到账按套餐原价算；积分商城不抵。会员场景要现金买会员才用得上，现在没有这条通道。全额抵成 0 元会拒绝。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.coupon_lead') }}</p>
         <div class="queue-chips">
-            <a class="chip{{ $desk === 'campaigns' ? ' active' : '' }}" href="/admin/video/coupons">券</a>
-            <a class="chip{{ $desk === 'received' ? ' active' : '' }}" href="/admin/video/coupons?desk=received">领取</a>
+            <a class="chip{{ $desk === 'campaigns' ? ' active' : '' }}" href="/admin/video/coupons">{{ admin_t('ui.coupon') }}</a>
+            <a class="chip{{ $desk === 'received' ? ' active' : '' }}" href="/admin/video/coupons?desk=received">{{ admin_t('ui.received') }}</a>
         </div>
         <form class="filter-bar" id="coupon-search" onsubmit="return false;">
             <input type="hidden" name="desk" value="{{ $desk }}">
-            <input type="search" name="q" placeholder="{{ $desk === 'campaigns' ? '搜名称' : '搜会员编号、券编号、订单号' }}" autocomplete="off">
+            <input type="search" name="q" placeholder="{{ $desk === 'campaigns' ? admin_t('ui.ph_search_coupon') : admin_t('ui.ph_search_claim') }}" autocomplete="off">
             @if($desk === 'campaigns')
-                <select name="scene" aria-label="场景">
+                <select name="scene" aria-label="{{ admin_t('ui.scene') }}">
                     <option value="">{{ admin_t('ui.all_scenes') }}</option>
-                    <option value="all">通用</option>
-                    <option value="recharge">充值</option>
-                    <option value="vip">会员</option>
+                    <option value="all">{{ admin_t('ui.scene_all') }}</option>
+                    <option value="recharge">{{ admin_t('ui.scene_recharge') }}</option>
+                    <option value="vip">{{ admin_t('ui.member') }}</option>
                 </select>
-                <select name="type" aria-label="类型">
+                <select name="type" aria-label="{{ admin_t('ui.col_type') }}">
                     <option value="">{{ admin_t('ui.all_types') }}</option>
-                    <option value="amount">满减</option>
-                    <option value="discount">折扣</option>
+                    <option value="amount">{{ admin_t('ui.coupon_amount') }}</option>
+                    <option value="discount">{{ admin_t('ui.coupon_discount') }}</option>
                 </select>
-                <select name="validity" aria-label="有效期">
+                <select name="validity" aria-label="{{ admin_t('ui.validity') }}">
                     <option value="">{{ admin_t('ui.all_validity') }}</option>
-                    <option value="active">未过期</option>
-                    <option value="expired">已过期</option>
+                    <option value="active">{{ admin_t('ui.not_expired') }}</option>
+                    <option value="expired">{{ admin_t('ui.expired') }}</option>
                 </select>
-                <select name="status" aria-label="状态">
+                <select name="status" aria-label="{{ admin_t('ui.status') }}">
                     <option value="">{{ admin_t('ui.all_status') }}</option>
                     <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">{{ admin_t('ui.disabled') }}</option>
@@ -58,76 +71,76 @@
     <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="campaigns">
-        <h3>基本</h3>
-        <label>优惠券名称</label>
-        <input class="entry-title" type="text" name="name" required placeholder="例如：新人立减券" autofocus>
+        <h3>{{ admin_t('ui.section_basic') }}</h3>
+        <label>{{ admin_t('ui.coupon_name') }}</label>
+        <input class="entry-title" type="text" name="name" required placeholder="{{ admin_t('ui.ph_newcomer_coupon') }}" autofocus>
         <div class="admin-dialog-grid">
             <div>
-                <label>类型</label>
+                <label>{{ admin_t('ui.col_type') }}</label>
                 <select name="type">
-                    <option value="amount">满减</option>
-                    <option value="discount">折扣</option>
+                    <option value="amount">{{ admin_t('ui.coupon_amount') }}</option>
+                    <option value="discount">{{ admin_t('ui.coupon_discount') }}</option>
                 </select>
             </div>
             <div>
-                <label>面额/折扣</label>
+                <label>{{ admin_t('ui.coupon_value') }}</label>
                 <input type="text" name="value" value="0.00" required>
             </div>
         </div>
-        <p class="muted field-hint">满减填元，折扣填 0 到 100 的百分比。全额抵成 0 元下不了单。</p>
-        <label>满减门槛</label>
+        <p class="muted field-hint">{{ admin_t('ui.coupon_value_hint') }}</p>
+        <label>{{ admin_t('ui.min_spend') }}</label>
         <input type="text" name="min_price" value="0.00">
-        <p class="muted field-hint">订单金额需达到此门槛才可用。0 表示无门槛。</p>
-        <label>适用场景</label>
+        <p class="muted field-hint">{{ admin_t('ui.min_spend_hint') }}</p>
+        <label>{{ admin_t('ui.apply_scene') }}</label>
         <select name="scene">
-            <option value="all">通用</option>
-            <option value="recharge">充值</option>
-            <option value="vip">会员</option>
+            <option value="all">{{ admin_t('ui.scene_all') }}</option>
+            <option value="recharge">{{ admin_t('ui.scene_recharge') }}</option>
+            <option value="vip">{{ admin_t('ui.member') }}</option>
         </select>
-        <p class="muted field-hint">通用和充值可在现金充值里用。会员要现金买会员组才对得上，本站会员组走积分商城。</p>
+        <p class="muted field-hint">{{ admin_t('ui.coupon_scene_hint') }}</p>
 
-        <h3>发放</h3>
+        <h3>{{ admin_t('ui.issue') }}</h3>
         <div class="admin-dialog-grid">
             <div>
-                <label>发放总数</label>
+                <label>{{ admin_t('ui.issue_total') }}</label>
                 <input type="number" name="total" value="10" min="1">
             </div>
             <div>
-                <label>每人限额</label>
+                <label>{{ admin_t('ui.per_user_cap') }}</label>
                 <input type="number" name="per_user" value="1" min="1" max="1" readonly>
             </div>
         </div>
-        <label>适用会员组</label>
+        <label>{{ admin_t('ui.apply_groups') }}</label>
         <div class="check-row">
             @forelse($groups as $group)
                 <label class="check-inline"><input type="checkbox" name="group_ids[]" value="{{ $group['id'] }}"> {{ $group['name'] }}</label>
             @empty
-                <span class="muted">还没有会员组</span>
+                <span class="muted">{{ admin_t('ui.no_groups_yet') }}</span>
             @endforelse
         </div>
-        <p class="muted field-hint">不勾表示全部会员组可用。</p>
-        <label>适用时长</label>
+        <p class="muted field-hint">{{ admin_t('ui.all_groups_hint') }}</p>
+        <label>{{ admin_t('ui.apply_duration') }}</label>
         <div class="check-row">
-            <label class="check-inline"><input type="checkbox" name="longs[]" value="day"> 日</label>
-            <label class="check-inline"><input type="checkbox" name="longs[]" value="week"> 周</label>
-            <label class="check-inline"><input type="checkbox" name="longs[]" value="month"> 月</label>
-            <label class="check-inline"><input type="checkbox" name="longs[]" value="year"> 年</label>
+            <label class="check-inline"><input type="checkbox" name="longs[]" value="day"> {{ admin_t('ui.unit_day') }}</label>
+            <label class="check-inline"><input type="checkbox" name="longs[]" value="week"> {{ admin_t('ui.unit_week') }}</label>
+            <label class="check-inline"><input type="checkbox" name="longs[]" value="month"> {{ admin_t('ui.unit_month') }}</label>
+            <label class="check-inline"><input type="checkbox" name="longs[]" value="year"> {{ admin_t('ui.unit_year') }}</label>
         </div>
-        <p class="muted field-hint">时长只在现金买会员时校验。不勾表示不限。</p>
+        <p class="muted field-hint">{{ admin_t('ui.duration_cash_hint') }}</p>
 
-        <h3>有效期</h3>
+        <h3>{{ admin_t('ui.validity') }}</h3>
         <div class="admin-dialog-grid">
             <div>
-                <label>开始时间</label>
+                <label>{{ admin_t('ui.start_time') }}</label>
                 <input type="datetime-local" name="start_at">
             </div>
             <div>
-                <label>结束时间</label>
+                <label>{{ admin_t('ui.end_time') }}</label>
                 <input type="datetime-local" name="end_at">
             </div>
         </div>
-        <p class="muted field-hint">结束留空表示长期有效。</p>
-        <label>状态</label>
+        <p class="muted field-hint">{{ admin_t('ui.long_valid_hint') }}</p>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
             <option value="1">{{ admin_t('ui.enabled') }}</option>
             <option value="0">{{ admin_t('ui.disabled') }}</option>
@@ -140,6 +153,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($couponJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     var form = document.getElementById('coupon-search');
     var countEl = document.getElementById('coupon-count');
@@ -156,11 +170,11 @@
         var filtered = Object.keys(where || {}).some(function (k) {
             return k !== 'limit' && k !== 'desk' && where[k] !== '' && where[k] != null;
         });
-        if (filtered) return '<div class="list-empty"><p>没有符合条件的记录</p></div>';
+        if (filtered) return '<div class="list-empty"><p>' + L.no_match_rows + '</p></div>';
         if (desk === 'campaigns') {
-            return '<div class="list-empty"><p>还没有优惠券</p><p><button type="button" class="btn btn-primary btn-sm" id="coupon-empty-add">新增优惠券</button></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_coupons + '</p><p><button type="button" class="btn btn-primary btn-sm" id="coupon-empty-add">' + L.add_coupon + '</button></p></div>';
         }
-        return '<div class="list-empty"><p>还没有领取记录</p></div>';
+        return '<div class="list-empty"><p>' + L.empty_claims + '</p></div>';
     }
     function toLocal(ts) {
         ts = parseInt(ts, 10) || 0;
@@ -189,11 +203,11 @@
         cols = [
             {title: AdminUi.t('name'), html: function (d) { return '<a class="js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>'; }},
             {title: AdminUi.t('type'), width: 72, html: function (d) { return U.escape(d.type_label || ''); }},
-            {title: '面额', width: 80, html: function (d) { return U.escape(String(d.value || '')); }},
-            {title: '场景', width: 72, html: function (d) { return U.escape(d.scene_label || ''); }},
-            {title: '发放', width: 72, html: function (d) { return U.escape(String(d.total == null ? 0 : d.total)); }},
-            {title: '已领', width: 72, html: function (d) { return U.escape(String(d.received == null ? 0 : d.received)); }},
-            {title: '已用', width: 72, html: function (d) { return U.escape(String(d.used == null ? 0 : d.used)); }},
+            {title: AdminUi.t('face_value'), width: 80, html: function (d) { return U.escape(String(d.value || '')); }},
+            {title: AdminUi.t('scene'), width: 72, html: function (d) { return U.escape(d.scene_label || ''); }},
+            {title: AdminUi.t('issued'), width: 72, html: function (d) { return U.escape(String(d.total == null ? 0 : d.total)); }},
+            {title: AdminUi.t('received'), width: 72, html: function (d) { return U.escape(String(d.received == null ? 0 : d.received)); }},
+            {title: AdminUi.t('used'), width: 72, html: function (d) { return U.escape(String(d.used == null ? 0 : d.used)); }},
             {title: AdminUi.t('expire'), width: 120, html: function (d) { return U.escape(d.end_label || ''); }},
             {title: AdminUi.t('status'), width: 72, html: function (d) { return String(d.status) === '1' ? U.status(true, AdminUi.t('enabled')) : U.status(false, AdminUi.t('disabled')); }},
             {title: AdminUi.t('actions'), cls: 'actions', html: function () {
@@ -216,7 +230,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑优惠券' : '新增优惠券',
+            title: mode === 'edit' ? L.edit_coupon : L.add_coupon,
             wide: true,
             content: document.getElementById('coupon-form-tpl').innerHTML,
             onOpen: function (body) {
@@ -244,7 +258,7 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
                 data.desk = 'campaigns';
                 data.start_at = fromLocal(data.start_at);
                 data.end_at = fromLocal(data.end_at);
@@ -257,8 +271,8 @@
                 data.per_user = 1;
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/coupons/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -276,11 +290,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确认删除？已领取的券不能删。')) return;
+            if (!U.confirm(L.confirm_del_coupon)) return;
             U.post('/admin/video/coupons/delete', {id: row.id, desk: 'campaigns'}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

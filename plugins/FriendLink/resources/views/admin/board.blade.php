@@ -20,6 +20,33 @@
     $topClicks = is_array($stats['top_clicks'] ?? null) ? $stats['top_clicks'] : [];
     $daily = is_array($stats['daily'] ?? null) ? $stats['daily'] : [];
     $hosts = is_array($stats['hosts'] ?? null) ? $stats['hosts'] : [];
+    $flinkJsLang = [
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'add' => admin_t('ui.add'),
+        'add_flink' => admin_t('ui.add_flink'),
+        'edit_flink' => admin_t('ui.edit_flink'),
+        'add_type' => admin_t('ui.add_type'),
+        'edit_type' => admin_t('ui.edit_type'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'confirm_remove' => admin_t('ui.confirm_remove'),
+        'no_match_rows' => admin_t('ui.no_match_rows'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_flink' => admin_t('ui.empty_flink'),
+        'no_pending_apply' => admin_t('ui.no_pending_apply'),
+        'empty_types' => admin_t('ui.empty_types'),
+        'empty_outbound' => admin_t('ui.empty_outbound'),
+        'empty_referrers' => admin_t('ui.empty_referrers'),
+        'empty_referrer_stats' => admin_t('ui.empty_referrer_stats'),
+        'flink_short' => admin_t('ui.flink_short'),
+        'referrer' => admin_t('ui.referrer'),
+        'referrer_host' => admin_t('ui.referrer_host'),
+        'outbound' => admin_t('ui.outbound'),
+        'label_url' => admin_t('ui.label_url'),
+        'empty_rows' => admin_t('ui.no_match_rows'),
+    ];
 @endphp
 
 @section('plain')
@@ -48,58 +75,58 @@
         </div>
 
         @if($desk === 'stats')
-            <p class="muted recycle-lead">按来路 / 出站汇总（前台访问自动产生）。明细在「来路」「出站」；链接库状态见下方卡片。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.flink_stats_lead') }}</p>
             <div class="stat-grid dash" style="margin:12px 0 20px">
                 <div class="stat-card">
-                    <em>今日</em>
+                    <em>{{ admin_t('ui.today') }}</em>
                     <strong>{{ (int) $today['hits'] }}</strong>
-                    <span class="muted">来路 · 出站 {{ (int) $today['clicks'] }}</span>
+                    <span class="muted">{{ admin_t('ui.referrer') }} · {{ admin_t('ui.outbound') }} {{ (int) $today['clicks'] }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>昨日</em>
+                    <em>{{ admin_t('ui.yesterday') }}</em>
                     <strong>{{ (int) $yesterday['hits'] }}</strong>
-                    <span class="muted">来路 · 出站 {{ (int) $yesterday['clicks'] }}</span>
+                    <span class="muted">{{ admin_t('ui.referrer') }} · {{ admin_t('ui.outbound') }} {{ (int) $yesterday['clicks'] }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>近 7 日</em>
+                    <em>{{ admin_t('ui.week_7') }}</em>
                     <strong>{{ (int) $week['hits'] }}</strong>
-                    <span class="muted">来路 · 出站 {{ (int) $week['clicks'] }}</span>
+                    <span class="muted">{{ admin_t('ui.referrer') }} · {{ admin_t('ui.outbound') }} {{ (int) $week['clicks'] }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>近 30 日</em>
+                    <em>{{ admin_t('ui.month_30') }}</em>
                     <strong>{{ (int) $month['hits'] }}</strong>
-                    <span class="muted">来路 · 出站 {{ (int) $month['clicks'] }}</span>
+                    <span class="muted">{{ admin_t('ui.referrer') }} · {{ admin_t('ui.outbound') }} {{ (int) $month['clicks'] }}</span>
                 </div>
             </div>
             <div class="stat-grid dash" style="margin:0 0 20px">
                 <div class="stat-card">
-                    <em>显示中</em>
+                    <em>{{ admin_t('ui.showing') }}</em>
                     <strong>{{ (int) ($linksStat['show'] ?? 0) }}</strong>
-                    <span class="muted">共 {{ (int) ($linksStat['all'] ?? 0) }} 条</span>
+                    <span class="muted">{{ admin_t('ui.n_items', ['n' => (int) ($linksStat['all'] ?? 0)]) }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>待审</em>
+                    <em>{{ admin_t('ui.pending') }}</em>
                     <strong>{{ (int) ($linksStat['pending'] ?? 0) }}</strong>
                 </div>
                 <div class="stat-card">
-                    <em>拒绝</em>
+                    <em>{{ admin_t('ui.reject') }}</em>
                     <strong>{{ (int) ($linksStat['reject'] ?? 0) }}</strong>
                 </div>
                 <div class="stat-card">
-                    <em>冻结</em>
+                    <em>{{ admin_t('ui.freeze') }}</em>
                     <strong>{{ (int) ($linksStat['freeze'] ?? 0) }}</strong>
                 </div>
             </div>
 
             <div class="flink-stats-split" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:8px">
                 <div>
-                    <h3 style="font-size:15px;margin:0 0 10px">近 30 日来路 TOP</h3>
+                    <h3 style="font-size:15px;margin:0 0 10px">{{ admin_t('ui.last_30d_referrer_top') }}</h3>
                     @if($topHits === [])
-                        <p class="muted">还没有来路。</p>
+                        <p class="muted">{{ admin_t('ui.empty_referrers_dot') }}</p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
-                                <thead><tr><th>友链</th><th>来路</th></tr></thead>
+                                <thead><tr><th>{{ admin_t('ui.flink_short') }}</th><th>{{ admin_t('ui.referrer') }}</th></tr></thead>
                                 <tbody>
                                 @foreach($topHits as $row)
                                     <tr>
@@ -118,13 +145,13 @@
                     @endif
                 </div>
                 <div>
-                    <h3 style="font-size:15px;margin:0 0 10px">近 30 日出站 TOP</h3>
+                    <h3 style="font-size:15px;margin:0 0 10px">{{ admin_t('ui.last_30d_outbound_top') }}</h3>
                     @if($topClicks === [])
-                        <p class="muted">还没有出站点击。</p>
+                        <p class="muted">{{ admin_t('ui.empty_outbound') }}</p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
-                                <thead><tr><th>友链</th><th>出站</th></tr></thead>
+                                <thead><tr><th>{{ admin_t('ui.flink_short') }}</th><th>{{ admin_t('ui.outbound') }}</th></tr></thead>
                                 <tbody>
                                 @foreach($topClicks as $row)
                                     <tr>
@@ -144,13 +171,13 @@
                 </div>
             </div>
 
-            <h3 style="font-size:15px;margin:20px 0 10px">近 14 日趋势</h3>
+            <h3 style="font-size:15px;margin:20px 0 10px">{{ admin_t('ui.last_14d_trend') }}</h3>
             @if($daily === [])
-                <p class="muted">暂无数据。</p>
+                <p class="muted">{{ admin_t('ui.none') }}</p>
             @else
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead><tr><th>日期</th><th>来路</th><th>出站</th></tr></thead>
+                        <thead><tr><th>{{ admin_t('ui.date') }}</th><th>{{ admin_t('ui.referrer') }}</th><th>{{ admin_t('ui.outbound') }}</th></tr></thead>
                         <tbody>
                         @foreach(array_reverse($daily) as $row)
                             <tr>
@@ -164,13 +191,13 @@
                 </div>
             @endif
 
-            <h3 style="font-size:15px;margin:20px 0 10px">近 30 日来路主机</h3>
+            <h3 style="font-size:15px;margin:20px 0 10px">{{ admin_t('ui.last_30d_hosts') }}</h3>
             @if($hosts === [])
-                <p class="muted">还没有带主机名的来路。</p>
+                <p class="muted">{{ admin_t('ui.empty_hosts') }}</p>
             @else
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead><tr><th>主机</th><th>次数</th></tr></thead>
+                        <thead><tr><th>{{ admin_t('ui.host_col') }}</th><th>{{ admin_t('ui.times_col') }}</th></tr></thead>
                         <tbody>
                         @foreach($hosts as $row)
                             <tr>
@@ -183,55 +210,55 @@
                 </div>
             @endif
 
-            <h3 style="font-size:15px;margin:20px 0 10px">周期明细</h3>
+            <h3 style="font-size:15px;margin:20px 0 10px">{{ admin_t('ui.period_detail') }}</h3>
             <form class="filter-bar" id="flink-search" onsubmit="return false;">
                 <input type="hidden" name="desk" value="stats">
-                <input type="search" name="q" placeholder="搜名称" autocomplete="off">
-                <select name="period" aria-label="周期">
-                    <option value="day" @selected($period === 'day')>按日</option>
-                    <option value="month" @selected($period === 'month')>按月</option>
-                    <option value="year" @selected($period === 'year')>按年</option>
+                <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_name') }}" autocomplete="off">
+                <select name="period" aria-label="{{ admin_t('ui.period') }}">
+                    <option value="day" @selected($period === 'day')>{{ admin_t('ui.by_day') }}</option>
+                    <option value="month" @selected($period === 'month')>{{ admin_t('ui.by_month') }}</option>
+                    <option value="year" @selected($period === 'year')>{{ admin_t('ui.by_year') }}</option>
                 </select>
                 <button type="button" class="btn btn-sm" id="flink-search-btn">{{ admin_t('ui.search') }}</button>
                 <button type="reset" class="btn btn-muted btn-sm" id="flink-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div id="flink-table"></div>
         @elseif($desk === 'settings')
-            <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.flink_lead') }}</p>
             <form id="flink-settings" onsubmit="return false;">
                 <input type="hidden" name="desk" value="settings">
-                <label>模式</label>
+                <label>{{ admin_t('ui.mode') }}</label>
                 <select name="mode">
-                    <option value="normal" @selected(($options['mode'] ?? '') === 'normal')>普通（按排序）</option>
-                    <option value="strong" @selected(($options['mode'] ?? '') === 'strong')>强化（按来路）</option>
+                    <option value="normal" @selected(($options['mode'] ?? '') === 'normal')>{{ admin_t('ui.mode_normal') }}</option>
+                    <option value="strong" @selected(($options['mode'] ?? '') === 'strong')>{{ admin_t('ui.mode_strong') }}</option>
                 </select>
-                <p class="muted field-hint">强化模式：来路主机名对上友链网址，同一 IP 同一天只记一次；待审达到最少来路后才显示。不会假装激活。</p>
-                <label>最少来路</label>
+                <p class="muted field-hint">{{ admin_t('ui.strong_mode_hint') }}</p>
+                <label>{{ admin_t('ui.min_referer') }}</label>
                 <input type="number" name="min_referer" min="1" value="{{ (int) ($options['min_referer'] ?? 1) }}">
-                <label>前台申请</label>
+                <label>{{ admin_t('ui.allow_apply') }}</label>
                 <select name="allow_apply">
-                    <option value="1" @selected((int) ($options['allow_apply'] ?? 1) === 1)>允许</option>
-                    <option value="0" @selected((int) ($options['allow_apply'] ?? 1) !== 1)>关闭</option>
+                    <option value="1" @selected((int) ($options['allow_apply'] ?? 1) === 1)>{{ admin_t('ui.allow') }}</option>
+                    <option value="0" @selected((int) ($options['allow_apply'] ?? 1) !== 1)>{{ admin_t('ui.off_switch') }}</option>
                 </select>
-                <label>自助修改</label>
+                <label>{{ admin_t('ui.self_edit') }}</label>
                 <select name="allow_edit">
-                    <option value="1" @selected((int) ($options['allow_edit'] ?? 1) === 1)>允许</option>
-                    <option value="0" @selected((int) ($options['allow_edit'] ?? 1) !== 1)>关闭</option>
+                    <option value="1" @selected((int) ($options['allow_edit'] ?? 1) === 1)>{{ admin_t('ui.allow') }}</option>
+                    <option value="0" @selected((int) ($options['allow_edit'] ?? 1) !== 1)>{{ admin_t('ui.off_switch') }}</option>
                 </select>
                 <p><button type="button" class="btn btn-sm" id="flink-settings-save">{{ admin_t('ui.save') }}</button></p>
             </form>
         @else
-            <p class="muted recycle-lead">页脚友链。普通按排序；强化按来路。出站和来路由前台产生，不能手添。关掉插件后页脚改回核心友链表。汇总见「统计」。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.flink_lead_list') }}</p>
             <form class="filter-bar" id="flink-search" onsubmit="return false;">
                 <input type="hidden" name="desk" value="{{ $desk }}">
-                <input type="search" name="q" placeholder="{{ $desk === 'cates' ? '搜分类' : ($desk === 'clicks' || $desk === 'hits' ? '搜 IP、网址' : '搜名称、网址') }}" autocomplete="off">
+                <input type="search" name="q" placeholder="{{ $desk === 'cates' ? admin_t('ui.ph_search_noun', ['name' => admin_t('ui.types')]) : ($desk === 'clicks' || $desk === 'hits' ? admin_t('ui.ph_search_ip_url') : admin_t('ui.ph_search_name_url')) }}" autocomplete="off">
                 @if($desk === 'links')
-                    <select name="status" aria-label="状态">
+                    <select name="status" aria-label="{{ admin_t('ui.status') }}">
                         <option value="">{{ admin_t('ui.all_status') }}</option>
-                        <option value="1">显示</option>
-                        <option value="2">拒绝</option>
-                        <option value="3">冻结</option>
-                        <option value="0">待审</option>
+                        <option value="1">{{ admin_t('ui.show') }}</option>
+                        <option value="2">{{ admin_t('ui.reject') }}</option>
+                        <option value="3">{{ admin_t('ui.freeze') }}</option>
+                        <option value="0">{{ admin_t('ui.pending') }}</option>
                     </select>
                 @endif
                 <button type="button" class="btn btn-sm" id="flink-search-btn">{{ admin_t('ui.search') }}</button>
@@ -246,32 +273,32 @@
     <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="links">
-        <label>名称</label>
-        <input type="text" name="name" required placeholder="如 某某资源站">
-        <p class="muted field-hint">出现在页脚友链列表。</p>
-        <label>网址</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input type="text" name="name" required placeholder="{{ admin_t('ui.ph_flink_name') }}">
+        <p class="muted field-hint">{{ admin_t('ui.footer_flink_hint') }}</p>
+        <label>{{ admin_t('ui.label_url') }}</label>
         <input type="text" name="url" required placeholder="https://">
-        <p class="muted field-hint">只接受 http 或 https。javascript: 会拒绝。前台出站走 /links/go/编号。</p>
-        <label>分类</label>
+        <p class="muted field-hint">{{ admin_t('ui.https_only_go') }}</p>
+        <label>{{ admin_t('ui.types') }}</label>
         <select name="cate_id">
-            <option value="0">未分类</option>
+            <option value="0">{{ admin_t('ui.ungrouped') }}</option>
             @foreach($cates as $cate)
                 <option value="{{ $cate['id'] }}">{{ $cate['name'] }}</option>
             @endforeach
         </select>
-        <label>邮箱</label>
-        <input type="text" name="email" placeholder="可选">
-        <label>备注</label>
-        <input type="text" name="remark" placeholder="可选">
-        <label>排序</label>
+        <label>{{ admin_t('ui.email') }}</label>
+        <input type="text" name="email" placeholder="{{ admin_t('ui.optional') }}">
+        <label>{{ admin_t('ui.remarks') }}</label>
+        <input type="text" name="remark" placeholder="{{ admin_t('ui.optional') }}">
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <p class="muted field-hint">数字越大越靠前（普通模式）。</p>
-        <label>状态</label>
+        <p class="muted field-hint">{{ admin_t('ui.sort_normal_hint') }}</p>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="0">待审</option>
-            <option value="1">显示</option>
-            <option value="2">拒绝</option>
-            <option value="3">冻结</option>
+            <option value="0">{{ admin_t('ui.pending') }}</option>
+            <option value="1">{{ admin_t('ui.show') }}</option>
+            <option value="2">{{ admin_t('ui.reject') }}</option>
+            <option value="3">{{ admin_t('ui.freeze') }}</option>
         </select>
     </form>
 </template>
@@ -279,16 +306,16 @@
     <form class="admin-form">
         <input type="hidden" name="id">
         <input type="hidden" name="desk" value="cates">
-        <label>名称</label>
-        <input type="text" name="name" required placeholder="如 合作站点" autofocus>
-        <p class="muted field-hint">友链分组名，只用于后台筛选和前台分组展示。</p>
-        <label>排序</label>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input type="text" name="name" required placeholder="{{ admin_t('ui.ph_partner_site') }}" autofocus>
+        <p class="muted field-hint">{{ admin_t('ui.flink_group_hint') }}</p>
+        <label>{{ admin_t('ui.sort') }}</label>
         <input type="number" name="sort" value="0">
-        <p class="muted field-hint">数字越大越靠前。</p>
-        <label>状态</label>
+        <p class="muted field-hint">{{ admin_t('ui.hint_sort_desc') }}</p>
+        <label>{{ admin_t('ui.status') }}</label>
         <select name="status">
-            <option value="1">显示</option>
-            <option value="0">隐藏</option>
+            <option value="1">{{ admin_t('ui.show') }}</option>
+            <option value="0">{{ admin_t('ui.hide') }}</option>
         </select>
     </form>
 </template>
@@ -298,6 +325,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($flinkJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     if (desk === 'settings') {
         U.on('#flink-settings-save', 'click', function () {
@@ -305,8 +333,8 @@
             var data = U.formData(form);
             data.desk = 'settings';
             U.post('/admin/video/flinks/save', data).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
-                U.toast('已保存', 'ok');
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
+                U.toast(L.saved, 'ok');
             });
         });
         return;
@@ -314,8 +342,8 @@
     var form = document.getElementById('flink-search');
     var countEl = document.getElementById('flink-count');
     var addBtn = document.getElementById('flink-add-btn');
-    var addLabels = {links: '新增链接', pending: '新增链接', cates: '新增分类'};
-    if (addBtn) addBtn.textContent = addLabels[desk] || '新增';
+    var addLabels = {links: L.add_flink, pending: L.add_flink, cates: L.add_type};
+    if (addBtn) addBtn.textContent = addLabels[desk] || L.add;
     if (!form) return;
 
     function cleanWhere(data) {
@@ -339,16 +367,16 @@
     }
     function emptyHtml(_parsed, where) {
         if (isFiltered(where)) {
-            return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="flink-empty-reset">清除筛选</button></p></div>';
+            return '<div class="list-empty"><p>' + L.no_match_rows + '</p><p><button type="button" class="btn btn-muted btn-sm" id="flink-empty-reset">' + L.clear_filter + '</button></p></div>';
         }
         var copy = {
-            links: ['还没有友链', '新增链接'],
-            pending: ['没有待审申请', ''],
-            cates: ['还没有分类', '新增分类'],
-            clicks: ['还没有出站记录', ''],
-            hits: ['还没有来路', ''],
-            stats: ['还没有来路统计', '']
-        }[desk] || ['还没有记录', ''];
+            links: [L.empty_flink, L.add_flink],
+            pending: [L.no_pending_apply, ''],
+            cates: [L.empty_types, L.add_type],
+            clicks: [L.empty_outbound, ''],
+            hits: [L.empty_referrers, ''],
+            stats: [L.empty_referrer_stats, '']
+        }[desk] || [L.empty_rows, ''];
         if (!copy[1]) return '<div class="list-empty"><p>' + copy[0] + '</p></div>';
         return '<div class="list-empty"><p>' + copy[0] + '</p><p><button type="button" class="btn btn-primary btn-sm" id="flink-empty-add">' + copy[1] + '</button></p></div>';
     }
@@ -367,32 +395,32 @@
         ];
     } else if (desk === 'clicks') {
         cols = [
-            {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
+            {title: L.flink_short, html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
             {title: 'IP', width: 120, html: function (d) { return U.escape(d.ip || ''); }},
             {title: AdminUi.t('time'), width: 120, html: function (d) { return U.escape(String(d.created_at || '')); }}
         ];
     } else if (desk === 'hits') {
         cols = [
-            {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
-            {title: '来路主机', html: function (d) { return U.escape(d.from_host || ''); }},
+            {title: L.flink_short, html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
+            {title: L.referrer_host, html: function (d) { return U.escape(d.from_host || ''); }},
             {title: 'IP', width: 120, html: function (d) { return U.escape(d.ip || ''); }},
             {title: AdminUi.t('date'), width: 90, html: function (d) { return U.escape(d.day_key || ''); }}
         ];
     } else if (desk === 'stats') {
         cols = [
             {title: AdminUi.t('period'), width: 110, html: function (d) { return U.escape(d.period_key || ''); }},
-            {title: '友链', html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
-            {title: '来路', width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }}
+            {title: L.flink_short, html: function (d) { return U.escape(d.link_name || ('#' + (d.link_id || ''))); }},
+            {title: L.referrer, width: 72, html: function (d) { return U.escape(String(d.hits == null ? 0 : d.hits)); }}
         ];
     } else {
         cols = [
             {title: AdminUi.t('name'), html: function (d) {
                 return '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>';
             }},
-            {title: '网址', html: function (d) { return U.escape(d.url || ''); }},
+            {title: L.label_url, html: function (d) { return U.escape(d.url || ''); }},
             {title: AdminUi.t('types'), width: 88, html: function (d) { return U.escape(d.cate_name || ''); }},
-            {title: '来路', width: 72, html: function (d) { return U.escape(String(d.referer_total == null ? 0 : d.referer_total)); }},
-            {title: '出站', width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
+            {title: L.referrer, width: 72, html: function (d) { return U.escape(String(d.referer_total == null ? 0 : d.referer_total)); }},
+            {title: L.outbound, width: 72, html: function (d) { return U.escape(String(d.clicks == null ? 0 : d.clicks)); }},
             {title: AdminUi.t('status'), width: 72, html: function (d) { return U.escape(d.status_label || ''); }},
             {title: AdminUi.t('actions'), cls: 'actions', html: function () {
                 return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
@@ -420,7 +448,7 @@
         row = row || {};
         var isCate = desk === 'cates';
         U.dialog({
-            title: mode === 'edit' ? (isCate ? '编辑分类' : '编辑友链') : (isCate ? '新增分类' : '新增友链'),
+            title: mode === 'edit' ? (isCate ? L.edit_type : L.edit_flink) : (isCate ? L.add_type : L.add_flink),
             content: document.getElementById(isCate ? 'flink-cate-tpl' : 'flink-link-tpl').innerHTML,
             onOpen: function (body) {
                 U.fillForm(body.querySelector('form'), isCate ? {
@@ -441,12 +469,12 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
                 data.desk = isCate ? 'cates' : 'links';
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/flinks/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -465,11 +493,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确认删除？')) return;
+            if (!U.confirm(L.confirm_remove)) return;
             U.post('/admin/video/flinks/delete', {id: row.id, desk: desk === 'cates' ? 'cates' : 'links'}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

@@ -207,7 +207,7 @@ class PayChannelTest extends TestCase
             ->assertOk()
             ->assertSee('前台可见')
             ->assertSee('ch:')
-            ->assertSee('用订单号查询');
+            ->assertSee('订单号查询');
     }
 
     public function test_member_can_lookup_own_order_no(): void

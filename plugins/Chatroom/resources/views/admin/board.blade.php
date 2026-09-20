@@ -1,69 +1,99 @@
 @extends('admin.layouts.inner')
-@section('title', $title ?? '聊天室')
+@section('title', $title ?? admin_t('nav.chatroom'))
 
 @php
     $desk = in_array((string) ($desk ?? ''), ['messages', 'settings'], true) ? (string) $desk : 'messages';
     $queues = $queues ?? ['all' => 0, 'on' => 0, 'off' => 0, 'report' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $options = is_array($options ?? null) ? $options : ['chatroom_enabled' => 1, 'chatroom_login' => 0];
+    $chatJsLang = [
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'deleted' => admin_t('ui.deleted'),
+        'show' => admin_t('ui.show'),
+        'hide' => admin_t('ui.hide'),
+        'delete' => admin_t('ui.delete'),
+        'status' => admin_t('ui.status'),
+        'actions' => admin_t('ui.actions'),
+        'speech' => admin_t('ui.speech'),
+        'guest' => admin_t('ui.guest'),
+        'shown' => admin_t('ui.shown'),
+        'hidden' => admin_t('ui.hidden'),
+        'cleared' => admin_t('ui.emptied'),
+        'op_fail' => admin_t('ui.op_fail'),
+        'op_ok' => admin_t('ui.op_ok'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_speech' => admin_t('ui.empty_speech'),
+        'empty_speech_hint' => admin_t('ui.empty_speech_hint'),
+        'no_match_speech' => admin_t('ui.no_match_speech'),
+        'please_select_posts' => admin_t('ui.please_select_posts'),
+        'confirm_del_speech' => admin_t('ui.confirm_del_speech'),
+        'confirm_batch_del_speech' => admin_t('ui.confirm_batch_del_speech'),
+        'confirm_clear_speech' => admin_t('ui.confirm_clear_speech'),
+        'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'member_hash' => admin_t('ui.member_hash', ['id' => '__ID__']),
+        'vod_hash' => admin_t('ui.vod_hash', ['id' => '__ID__']),
+        'video_gone' => admin_t('ui.video_gone'),
+        'report_n' => admin_t('ui.report_n', ['n' => '__N__']),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel chat-board desk-board" id="chat-board">
     <div class="card-header">
-        <span>聊天室</span>
+        <span>{{ admin_t('nav.chatroom') }}</span>
         @if($desk === 'messages')
-            <button type="button" class="btn btn-danger btn-sm" id="chat-clear-all">清空全部</button>
+            <button type="button" class="btn btn-danger btn-sm" id="chat-clear-all">{{ admin_t('ui.clear_all') }}</button>
         @endif
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">播放页「本片讨论」。关掉后入口消失。不是弹幕。后台只审显示或删除，不能手添。违禁词走站点设置，没有独立 IP 黑名单。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.chatroom_lead') }}</p>
         <div class="queue-chips">
-            <a class="chip{{ $desk === 'messages' ? ' active' : '' }}" href="/admin/video/chat_messages">发言</a>
-            <a class="chip{{ $desk === 'settings' ? ' active' : '' }}" href="/admin/video/chat_messages?desk=settings">设置</a>
+            <a class="chip{{ $desk === 'messages' ? ' active' : '' }}" href="/admin/video/chat_messages">{{ admin_t('ui.speech') }}</a>
+            <a class="chip{{ $desk === 'settings' ? ' active' : '' }}" href="/admin/video/chat_messages?desk=settings">{{ admin_t('ui.settings') }}</a>
         </div>
         @if($desk === 'settings')
             <form id="chat-settings" onsubmit="return false;">
                 <input type="hidden" name="desk" value="settings">
-                <label>聊天室</label>
+                <label>{{ admin_t('nav.chatroom') }}</label>
                 <select name="chatroom_enabled">
-                    <option value="1" @selected((int) ($options['chatroom_enabled'] ?? 1) === 1)>开启</option>
-                    <option value="0" @selected((int) ($options['chatroom_enabled'] ?? 1) !== 1)>关闭</option>
+                    <option value="1" @selected((int) ($options['chatroom_enabled'] ?? 1) === 1)>{{ admin_t('ui.on_switch') }}</option>
+                    <option value="0" @selected((int) ($options['chatroom_enabled'] ?? 1) !== 1)>{{ admin_t('ui.off_switch') }}</option>
                 </select>
-                <p class="muted field-hint">关闭后播放页不再出现本片讨论。已经发出的发言还在这张表里，可继续审。</p>
-                <label>发言需登录</label>
+                <p class="muted field-hint">{{ admin_t('ui.chatroom_off_hint') }}</p>
+                <label>{{ admin_t('ui.need_login_post') }}</label>
                 <select name="chatroom_login">
-                    <option value="0" @selected((int) ($options['chatroom_login'] ?? 0) !== 1)>否</option>
-                    <option value="1" @selected((int) ($options['chatroom_login'] ?? 0) === 1)>是</option>
+                    <option value="0" @selected((int) ($options['chatroom_login'] ?? 0) !== 1)>{{ admin_t('ui.no') }}</option>
+                    <option value="1" @selected((int) ($options['chatroom_login'] ?? 0) === 1)>{{ admin_t('ui.yes') }}</option>
                 </select>
-                <p class="muted field-hint">默认允许游客。打开后未登录会提示去登录，不会假装发出去。</p>
+                <p class="muted field-hint">{{ admin_t('ui.guest_ok_hint') }}</p>
                 <p><button type="button" class="btn btn-sm" id="chat-settings-save">{{ admin_t('ui.save') }}</button></p>
             </form>
         @else
             <form class="filter-bar" id="chat-search" onsubmit="return false;">
                 <input type="hidden" name="desk" value="messages">
                 <input type="hidden" name="report">
-                <input type="search" name="q" placeholder="搜内容或昵称" autocomplete="off">
-                <input type="number" name="video_id" placeholder="影片编号" min="1">
-                <input type="number" name="member_id" placeholder="会员编号" min="1">
+                <input type="search" name="q" placeholder="{{ admin_t('ui.ph_search_speech') }}" autocomplete="off">
+                <input type="number" name="video_id" placeholder="{{ admin_t('ui.ph_video_no') }}" min="1">
+                <input type="number" name="member_id" placeholder="{{ admin_t('ui.ph_member_no') }}" min="1">
                 <select name="status">
-                    <option value="">状态</option>
-                    <option value="1">显示</option>
-                    <option value="0">隐藏</option>
+                    <option value="">{{ admin_t('ui.status') }}</option>
+                    <option value="1">{{ admin_t('ui.show') }}</option>
+                    <option value="0">{{ admin_t('ui.hide') }}</option>
                 </select>
                 <button type="button" class="btn btn-sm" id="chat-search-btn">{{ admin_t('ui.search') }}</button>
                 <button type="reset" class="btn btn-muted btn-sm" id="chat-reset-btn">{{ admin_t('ui.reset') }}</button>
             </form>
             <div class="queue-chips" id="chat-queues">
-                <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="status" data-value="1">显示@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="status" data-value="0">隐藏@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="report" data-value="1">被举报@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.show') }}@if($q('on') > 0)<em>{{ $q('on') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="status" data-value="0">{{ admin_t('ui.hide') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="report" data-value="1">{{ admin_t('ui.reported') }}@if($q('report') > 0)<em>{{ $q('report') }}</em>@endif</button>
             </div>
             <div class="batch-bar" id="chat-batch" hidden>
                 <strong id="chat-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
-                <button type="button" class="btn btn-sm" id="chat-batch-on">显示</button>
-                <button type="button" class="btn btn-muted btn-sm" id="chat-batch-off">隐藏</button>
+                <button type="button" class="btn btn-sm" id="chat-batch-on">{{ admin_t('ui.show') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="chat-batch-off">{{ admin_t('ui.hide') }}</button>
                 <button type="button" class="btn btn-danger btn-sm" id="chat-batch-del">{{ admin_t('ui.delete') }}</button>
                 <button type="button" class="btn btn-muted btn-sm" id="chat-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
             </div>
@@ -77,13 +107,14 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($chatJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     if (desk === 'settings') {
         U.on('#chat-settings-save', 'click', function () {
             var data = U.formData(document.getElementById('chat-settings'));
             U.post('/admin/video/chat_messages/save', data).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
-                U.toast((res && res.msg) || '已保存', 'ok');
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
+                U.toast((res && res.msg) || L.saved, 'ok');
             });
         });
         return;
@@ -127,16 +158,16 @@
         markChips();
     }
     function contentHtml(d) {
-        var who = U.escape(d.name || '游客');
+        var who = U.escape(d.name || L.guest);
         var meta = who;
         if (d.created_at_text) meta += ' · ' + U.escape(d.created_at_text);
         if (d.ip) meta += ' · ' + U.escape(d.ip);
-        if (d.member_id) meta += ' · 会员 #' + U.escape(d.member_id);
+        if (d.member_id) meta += ' · ' + String(L.member_hash || '').replace('__ID__', U.escape(d.member_id));
         var film = d.video_title
             ? '<a href="/vod/' + encodeURIComponent(d.video_id) + '" target="_blank" rel="noopener">' + U.escape(d.video_title) + '</a>'
-            : (d.video_id ? '影片 #' + U.escape(d.video_id) : '影片已删');
+            : (d.video_id ? String(L.vod_hash || '').replace('__ID__', U.escape(d.video_id)) : L.video_gone);
         var badges = [];
-        if (parseInt(d.report, 10) > 0) badges.push('<span class="badge badge-off">举报 ' + U.escape(d.report) + '</span>');
+        if (parseInt(d.report, 10) > 0) badges.push('<span class="badge badge-off">' + String(L.report_n || '').replace('__N__', U.escape(d.report)) + '</span>');
         return '<div class="comment-cell"><div class="comment-body">' + U.escape(d.text || '') + '</div>'
             + '<div class="muted">' + meta + ' · ' + film + '</div>'
             + (badges.length ? '<div class="vod-badges">' + badges.join('') + '</div>' : '')
@@ -148,9 +179,9 @@
         where: cleanWhere(U.formData(form)),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的发言</p><p><button type="button" class="btn btn-muted btn-sm" id="chat-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match_speech) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="chat-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有发言</p><p class="muted">用户在播放页「本片讨论」发出的内容会出现在这里。后台不能手添。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_speech) + '</p><p class="muted">' + U.escape(L.empty_speech_hint) + '</p></div>';
         },
         onDraw: function () {
             var reset = document.getElementById('chat-empty-reset');
@@ -162,19 +193,19 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_n || '').replace('__N__', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
-            {title: '发言', html: contentHtml},
-            {title: AdminUi.t('status'), width: 80, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, AdminUi.t('show')) : U.status(false, AdminUi.t('hide'));
+            {title: L.speech, html: contentHtml},
+            {title: L.status, width: 80, html: function (d) {
+                return String(d.status) === '1' ? U.status(true, L.show) : U.status(false, L.hide);
             }},
-            {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
+            {title: L.actions, cls: 'actions', html: function (d) {
                 var html = '';
-                if (String(d.status) !== '1') html += '<a href="#" class="btn-link js-pass">显示</a>';
-                else html += '<a href="#" class="btn-link js-hide">隐藏</a>';
-                html += '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
+                if (String(d.status) !== '1') html += '<a href="#" class="btn-link js-pass">' + U.escape(L.show) + '</a>';
+                else html += '<a href="#" class="btn-link js-hide">' + U.escape(L.hide) + '</a>';
+                html += '<a href="#" class="btn-link js-del">' + U.escape(L.delete) + '</a>';
                 return html;
             }}
         ]
@@ -183,19 +214,19 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选发言', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_posts, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/chat_messages/batch', {ids: ids.join(','), action: action, value: value, desk: 'messages'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
     function setStatus(row, status) {
         U.post('/admin/video/chat_messages/save', {id: row.id, status: status, desk: 'messages'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast(status === 1 ? '已显示' : '已隐藏', 'ok');
+            U.toast(status === 1 ? L.shown : L.hidden, 'ok');
         });
     }
     U.on('#chat-search-btn', 'click', runSearch);
@@ -212,14 +243,14 @@
     });
     U.on('#chat-batch-on', 'click', function () { batch('status', 1); });
     U.on('#chat-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#chat-batch-del', 'click', function () { batch('delete', '', '确认删除选中发言？'); });
+    U.on('#chat-batch-del', 'click', function () { batch('delete', '', L.confirm_batch_del_speech); });
     U.on('#chat-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#chat-clear-all', 'click', function () {
-        if (!U.confirm('清空全部发言？前台立刻看不到，不能恢复。')) return;
+        if (!U.confirm(L.confirm_clear_speech)) return;
         U.post('/admin/video/chat_messages/batch', {action: 'clear', desk: 'messages'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已清空', 'ok');
+            U.toast((res && res.msg) || L.cleared, 'ok');
         });
     });
     U.on('#chat-table', 'click', function (e) {
@@ -233,11 +264,11 @@
         if (a.classList.contains('js-pass')) setStatus(row, 1);
         if (a.classList.contains('js-hide')) setStatus(row, 0);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条发言？')) return;
+            if (!U.confirm(L.confirm_del_speech)) return;
             U.post('/admin/video/chat_messages/delete', {id: row.id, desk: 'messages'}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

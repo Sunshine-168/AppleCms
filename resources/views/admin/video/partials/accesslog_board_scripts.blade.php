@@ -2,6 +2,20 @@
 (function () {
     var U = AdminUi;
     if (!U) return;
+    var L = @json($accessJsLang ?? [
+        'spider' => admin_t('ui.spider'),
+        'visitor' => admin_t('ui.visitor'),
+        'no_match' => admin_t('ui.no_match_rows'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_front_visits' => admin_t('ui.empty_front_visits'),
+        'empty_front_visits_hint' => admin_t('ui.empty_front_visits_hint'),
+        'open_front' => admin_t('ui.open_front'),
+        'please_select_rows' => admin_t('ui.please_select_rows'),
+        'confirm_batch_del_access' => admin_t('ui.confirm_batch_del_access'),
+        'confirm_del_access' => admin_t('ui.confirm_del_access'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+    ], JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('accesslog-search');
     if (!form) return;
     var batchBar = document.getElementById('accesslog-batch');
@@ -66,7 +80,7 @@
     }
     function visitorHtml(d) {
         var bot = d.visitor_kind === 'bot';
-        var html = '<span class="badge' + (bot ? ' badge-warn' : '') + '">' + U.escape(d.visitor_label || (bot ? '爬虫' : '访客')) + '</span>';
+        var html = '<span class="badge' + (bot ? ' badge-warn' : '') + '">' + U.escape(d.visitor_label || (bot ? (L.spider || '') : (L.visitor || ''))) + '</span>';
         if (bot && d.group_label) html += '<div class="muted">' + U.escape(d.group_label) + '</div>';
         return html;
     }
@@ -90,9 +104,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="accesslog-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match || '') + '</p><p><button type="button" class="btn btn-muted btn-sm" id="accesslog-empty-reset">' + U.escape(L.clear_filter || '') + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有前台访问</p><p class="muted">本机只开后台不会记。打开前台任意页才会出现。</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">打开前台</a></p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_front_visits || '') + '</p><p class="muted">' + U.escape(L.empty_front_visits_hint || '') + '</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">' + U.escape(L.open_front || '') + '</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var reset = document.getElementById('accesslog-empty-reset');
@@ -125,12 +139,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batchDel() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选记录', 'err'); return; }
-        if (!U.confirm('删除这 ' + ids.length + ' 条？只清流水，不会封 IP。')) return;
+        if (!ids.length) { U.toast(L.please_select_rows || '', 'err'); return; }
+        if (!U.confirm(String(L.confirm_batch_del_access || '').replace(':n', String(ids.length)))) return;
         U.post('/admin/video/accesslogs/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail || '', 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted || '', 'ok');
         });
     }
 
@@ -170,11 +184,11 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条？只清流水，不会封 IP。')) return;
+            if (!U.confirm(L.confirm_del_access || '')) return;
             U.post('/admin/video/accesslogs/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail || '', 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted || '', 'ok');
             });
         }
     });

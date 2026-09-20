@@ -69,13 +69,13 @@ class AdvertAdmin
         return Result::success($this->page($q, $params, static function (PluginAd $row): array {
             $arr = $row->toArray();
             $arr['slot_label'] = match ((string) $row->slot) {
-                'top' => '顶栏',
-                'bottom' => '底栏',
-                'player' => '播放器',
-                default => '正文',
+                'top' => admin_t('ui.slot_top'),
+                'bottom' => admin_t('ui.slot_bottom_bar'),
+                'player' => admin_t('ui.slot_player_bar'),
+                default => admin_t('ui.slot_body'),
             };
-            $arr['type_label'] = (string) $row->type === 'image' ? '图片' : '文字';
-            $arr['status_label'] = (int) $row->status === 1 ? '启用' : '停用';
+            $arr['type_label'] = (string) $row->type === 'image' ? admin_t('ui.kind_image') : admin_t('ui.kind_text');
+            $arr['status_label'] = (int) $row->status === 1 ? admin_t('ui.enabled') : admin_t('ui.disabled');
             $arr['go_url'] = '/ads/go/'.(int) $row->id;
 
             return $arr;

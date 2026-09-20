@@ -1,45 +1,45 @@
 <form class="admin-form tag-form" data-desk="works">
     <input type="hidden" name="desk" value="works">
-    <h3>基本</h3>
-    <label>名称</label>
+    <h3>{{ admin_t('ui.section_basic') }}</h3>
+    <label>{{ admin_t('ui.name') }}</label>
     <input type="text" name="title" required autofocus>
-    <label>作者</label>
-    <input type="text" name="author" placeholder="作者 / 笔名">
-    <label>标签</label>
-    <input type="text" name="tags" placeholder="逗号分隔，如 都市,穿越">
-    <p class="muted field-hint">多个标签用逗号隔开，前台可按标签筛选。</p>
-    <label>分类</label>
+    <label>{{ admin_t('ui.authors') }}</label>
+    <input type="text" name="author" placeholder="{{ admin_t('ui.ph_pen_name') }}">
+    <label>{{ admin_t('ui.tags') }}</label>
+    <input type="text" name="tags" placeholder="{{ admin_t('ui.ph_novel_tags') }}">
+    <p class="muted field-hint">{{ admin_t('ui.tags_comma_hint') }}</p>
+    <label>{{ admin_t('ui.types') }}</label>
     <select name="type_id">
-        <option value="0">未分类</option>
+        <option value="0">{{ admin_t('ui.uncategorized') }}</option>
         @foreach($types as $type)
             <option value="{{ $type->id }}">{{ $type->name }}</option>
         @endforeach
     </select>
-    <label>封面</label>
-    <input type="text" name="cover" placeholder="图片地址">
-    <label>备注</label>
+    <label>{{ admin_t('ui.cover') }}</label>
+    <input type="text" name="cover" placeholder="{{ admin_t('ui.ph_image_url') }}">
+    <label>{{ admin_t('ui.remarks') }}</label>
     <input type="text" name="remarks">
-    <label>简介</label>
+    <label>{{ admin_t('ui.intro') }}</label>
     <textarea name="content" rows="5"></textarea>
 
-    <h3>发布</h3>
-    <label>连载</label>
+    <h3>{{ admin_t('ui.publish') }}</h3>
+    <label>{{ admin_t('ui.serialize') }}</label>
     <select name="serialize">
-        <option value="0">连载</option>
-        <option value="1">完结</option>
+        <option value="0">{{ admin_t('ui.serialize_ongoing') }}</option>
+        <option value="1">{{ admin_t('ui.serialize_done') }}</option>
     </select>
-    <label>状态</label>
+    <label>{{ admin_t('ui.status') }}</label>
     <select name="status">
-        <option value="1">上架</option>
-        <option value="0">下架</option>
+        <option value="1">{{ admin_t('ui.on') }}</option>
+        <option value="0">{{ admin_t('ui.off') }}</option>
     </select>
-    <label>审核</label>
+    <label>{{ admin_t('ui.audit') }}</label>
     <select name="yid">
-        <option value="0">已审</option>
-        <option value="1">待审</option>
+        <option value="0">{{ admin_t('ui.audited') }}</option>
+        <option value="1">{{ admin_t('ui.pending') }}</option>
     </select>
-    <label>人气</label>
+    <label>{{ admin_t('ui.hits') }}</label>
     <input name="hits" type="number" value="0" min="0">
-    <label>排序</label>
+    <label>{{ admin_t('ui.sort') }}</label>
     <input name="sort" type="number" value="0" min="0">
 </form>

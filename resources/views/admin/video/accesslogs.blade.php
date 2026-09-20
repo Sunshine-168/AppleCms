@@ -4,12 +4,12 @@
 @section('plain')
 <div class="card card-panel accesslog-index list-desk">
     <div class="card-header">
-        <span>访问风控 <em id="accesslog-count"></em></span>
+        <span>{{ admin_t('ui.access_risk') }} <em id="accesslog-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/botlogs">爬虫日志</a>
-            <a class="btn btn-muted btn-sm" href="/admin/stats/logs">访问明细</a>
-            <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">蜘蛛统计</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">IP 白名单</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/botlogs">{{ admin_t('ui.botlogs') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/stats/logs">{{ admin_t('ui.visit_detail') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">{{ admin_t('ui.spider_stats') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">{{ admin_t('nav.config_ip') }}</a>
         </div>
     </div>
     <div class="card-body">

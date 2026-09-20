@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', $isEdit ? '编辑图集' : '新增图集')
+@section('title', $isEdit ? admin_t('ui.edit_gallery') : admin_t('ui.add_gallery'))
 
 @php
     $work = is_array($work ?? null) ? $work : [];
@@ -28,88 +28,88 @@
 @section('plain')
 <div class="card card-panel">
     <div class="card-header">
-        <span>{{ $isEdit ? '编辑图集' : '新增图集' }}@if($isEdit && $title !== '') <em>{{ $title }}</em>@endif</span>
+        <span>{{ $isEdit ? admin_t('ui.edit_gallery') : admin_t('ui.add_gallery') }}@if($isEdit && $title !== '') <em>{{ $title }}</em>@endif</span>
         <div>
             @if($isEdit && $workId > 0)
-                <a class="btn btn-muted btn-sm" href="/admin/video/galleries?desk=pics">管理图片</a>
+                <a class="btn btn-muted btn-sm" href="/admin/video/galleries?desk=pics">{{ admin_t('ui.manage_pics') }}</a>
             @endif
-            <a class="btn btn-muted btn-sm" href="{{ $back }}">返回图集</a>
+            <a class="btn btn-muted btn-sm" href="{{ $back }}">{{ admin_t('ui.back_galleries') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">图片请到「图片」台批量粘贴。这里改图集信息、封面、模特/作者与标签。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.gallery_work_lead') }}</p>
         <form class="admin-form tag-form" id="gallery-work-form">
             <input type="hidden" name="id" value="{{ $isEdit ? $workId : '' }}">
             <input type="hidden" name="desk" value="works">
 
-            <h3>基本</h3>
-            <label for="work-title">名称</label>
+            <h3>{{ admin_t('ui.section_basic') }}</h3>
+            <label for="work-title">{{ admin_t('ui.name') }}</label>
             <input id="work-title" class="entry-title" type="text" name="title" value="{{ $title }}" required autofocus>
 
-            <label>作者 / 模特</label>
+            <label>{{ admin_t('ui.author_model') }}</label>
             <div class="pick-field" id="work-author-pick"
                  data-ready="{{ $authorsReady ? '1' : '0' }}"
                  data-search="/admin/video/gallery-authors/list"
                  data-create="/admin/video/gallery-authors/save"
                  data-browse="1"
-                 data-placeholder="搜作者或模特名；回车可新建"
-                 data-empty="还没有作者。输入名字回车即可新建，或去<a href=&quot;/admin/video/gallery-authors&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>作者台</a>。"
+                 data-placeholder="{{ admin_t('ui.pick_author_model_ph') }}"
+                 data-empty="{{ admin_t('ui.pick_authors_empty_pre') }}<a href=&quot;/admin/video/gallery-authors&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>{{ admin_t('ui.authors_desk') }}</a>{{ admin_t('ui.period_end') }}"
                  data-selected='@json($selectedAuthors, JSON_UNESCAPED_UNICODE)'></div>
 
-            <label for="work-type">分类</label>
+            <label for="work-type">{{ admin_t('ui.types') }}</label>
             <select id="work-type" name="type_id">
-                <option value="0">未分类</option>
+                <option value="0">{{ admin_t('ui.uncategorized') }}</option>
                 @foreach($types as $type)
                     <option value="{{ $type->id }}" @selected($typeId === (int) $type->id)>{{ $type->name }}</option>
                 @endforeach
             </select>
 
-            <label for="work-cover">封面</label>
+            <label for="work-cover">{{ admin_t('ui.cover') }}</label>
             <div class="field-inline">
-                <input id="work-cover" type="text" name="cover" value="{{ $cover }}" placeholder="图片地址">
-                <button type="button" class="btn btn-sm" id="work-cover-pick">上传</button>
+                <input id="work-cover" type="text" name="cover" value="{{ $cover }}" placeholder="{{ admin_t('ui.ph_image_url') }}">
+                <button type="button" class="btn btn-sm" id="work-cover-pick">{{ admin_t('ui.upload') }}</button>
             </div>
             <img class="img-preview" id="work-cover-preview" alt="" @if($cover === '') style="display:none" @else src="{{ $cover }}" @endif>
 
-            <h3>标签</h3>
-            <label>标签</label>
+            <h3>{{ admin_t('ui.section_tags') }}</h3>
+            <label>{{ admin_t('ui.tags') }}</label>
             <div class="pick-field" id="work-tag-pick"
                  data-ready="{{ $tagsReady ? '1' : '0' }}"
                  data-search="/admin/video/gallery-tags/list"
                  data-create="/admin/video/gallery-tags/save"
                  data-browse="1"
-                 data-placeholder="搜标签名；回车可新建"
-                 data-empty="还没有标签。输入词回车即可新建，或去<a href=&quot;/admin/video/gallery-tags&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>标签台</a>。"
+                 data-placeholder="{{ admin_t('ui.pick_tag_ph_short') }}"
+                 data-empty="{{ admin_t('ui.pick_tags_empty_pre') }}<a href=&quot;/admin/video/gallery-tags&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>{{ admin_t('ui.tags_desk') }}</a>{{ admin_t('ui.period_end') }}"
                  data-selected='@json($selectedTags, JSON_UNESCAPED_UNICODE)'></div>
             <input type="hidden" name="tags" id="work-tags" value="{{ $tags }}">
-            <p class="muted field-hint">保存时会同步逗号 tags 列，前台筛选不变。</p>
+            <p class="muted field-hint">{{ admin_t('ui.tags_sync_hint_short') }}</p>
 
-            <h3>发布</h3>
-            <label for="work-yid">审核</label>
+            <h3>{{ admin_t('ui.publish') }}</h3>
+            <label for="work-yid">{{ admin_t('ui.audit') }}</label>
             <select id="work-yid" name="yid">
-                <option value="0" @selected($yid === '0')>已审</option>
-                <option value="1" @selected($yid === '1')>待审</option>
+                <option value="0" @selected($yid === '0')>{{ admin_t('ui.audited') }}</option>
+                <option value="1" @selected($yid === '1')>{{ admin_t('ui.pending') }}</option>
             </select>
-            <label for="work-status">状态</label>
+            <label for="work-status">{{ admin_t('ui.status') }}</label>
             <select id="work-status" name="status">
-                <option value="1" @selected($status === '1')>上架</option>
-                <option value="0" @selected($status === '0')>下架</option>
+                <option value="1" @selected($status === '1')>{{ admin_t('ui.on') }}</option>
+                <option value="0" @selected($status === '0')>{{ admin_t('ui.off') }}</option>
             </select>
-            <label for="work-remarks">备注</label>
+            <label for="work-remarks">{{ admin_t('ui.remarks') }}</label>
             <input id="work-remarks" type="text" name="remarks" value="{{ $remarks }}">
-            <label for="work-content">简介</label>
+            <label for="work-content">{{ admin_t('ui.intro') }}</label>
             <textarea id="work-content" name="content" rows="6">{{ $content }}</textarea>
-            <label for="work-hits">人气 / 浏览</label>
+            <label for="work-hits">{{ admin_t('ui.hits_views') }}</label>
             <input id="work-hits" type="number" name="hits" min="0" value="{{ $hits }}">
-            <p class="muted field-hint">前台打开详情会自动累加，一般不用手改。</p>
-            <label for="work-sort">排序</label>
+            <p class="muted field-hint">{{ admin_t('ui.hits_auto_hint') }}</p>
+            <label for="work-sort">{{ admin_t('ui.sort') }}</label>
             <input id="work-sort" type="number" name="sort" value="{{ $sort }}">
 
             <div class="entry-save">
-                <button class="btn" type="submit">{{ $isEdit ? '保存' : '创建图集' }}</button>
-                <a class="btn btn-muted" href="{{ $back }}">取消</a>
+                <button class="btn" type="submit">{{ $isEdit ? admin_t('ui.save') : admin_t('ui.create_gallery') }}</button>
+                <a class="btn btn-muted" href="{{ $back }}">{{ admin_t('ui.cancel') }}</a>
                 @if($isEdit && $frontUrl !== '')
-                    <a class="btn btn-muted" href="{{ $frontUrl }}" target="_blank" rel="noopener">前台</a>
+                    <a class="btn btn-muted" href="{{ $frontUrl }}" target="_blank" rel="noopener">{{ admin_t('ui.front') }}</a>
                 @endif
             </div>
         </form>
@@ -139,7 +139,7 @@
         delete data['author_ids[]'];
         delete data['tag_ids[]'];
         if (!String(data.title || '').trim()) {
-            U.toast('请填写名称', 'err');
+            U.toast(@json(admin_t('ui.please_fill_name'), JSON_UNESCAPED_UNICODE), 'err');
             form.querySelector('[name=title]').focus();
             return;
         }
@@ -148,17 +148,17 @@
         U.post('/admin/video/galleries/save', data).then(function (res) {
             U.loading(false);
             if (!res || res.code !== 0) {
-                U.toast((res && res.msg) || '保存失败', 'err');
+                U.toast((res && res.msg) || @json(admin_t('ui.save_fail'), JSON_UNESCAPED_UNICODE), 'err');
                 return;
             }
             var id = (res.data && res.data.id) || data.id;
-            U.toast(isEdit ? '已保存' : '已创建', 'ok');
+            U.toast(isEdit ? @json(admin_t('ui.saved'), JSON_UNESCAPED_UNICODE) : @json(admin_t('ui.created'), JSON_UNESCAPED_UNICODE), 'ok');
             if (!isEdit && id) {
                 location.href = '/admin/video/galleries/' + encodeURIComponent(id) + '/edit';
             }
         }).catch(function () {
             U.loading(false);
-            U.toast('保存失败', 'err');
+            U.toast(@json(admin_t('ui.save_fail'), JSON_UNESCAPED_UNICODE), 'err');
         });
     });
 })();

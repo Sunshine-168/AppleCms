@@ -113,7 +113,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($linkJsLang);
+    var L = @json($linkJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['logo'];
     var form = document.getElementById('link-search');
     var batchBar = document.getElementById('link-batch');

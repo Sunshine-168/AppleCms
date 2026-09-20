@@ -1,5 +1,5 @@
 @extends('admin.layouts.inner')
-@section('title', $isEdit ? '编辑文章' : '写文章')
+@section('title', $isEdit ? admin_t('ui.edit_art') : admin_t('ui.write_art'))
 
 @php
     $art = is_array($art ?? null) ? $art : [];
@@ -30,6 +30,14 @@
     if ($frontUrl === '' && $isEdit) {
         $frontUrl = '/art/'.(int) ($art['id'] ?? 0);
     }
+    $artJsLang = [
+        'uploaded' => admin_t('ui.uploaded'),
+        'upload_fail' => admin_t('ui.upload_fail'),
+        'please_fill_title' => admin_t('ui.please_fill_title'),
+        'save_fail' => admin_t('ui.save_fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+    ];
 @endphp
 
 @section('plain')
@@ -39,106 +47,106 @@
         <div class="entry-main">
             <div class="card card-panel">
                 <div class="card-header">
-                    <span>{{ $isEdit ? '编辑文章' : '写文章' }}</span>
+                    <span>{{ $isEdit ? admin_t('ui.edit_art') : admin_t('ui.write_art') }}</span>
                 </div>
                 <div class="card-body">
-                    <label for="art-title">标题</label>
-                    <input id="art-title" type="text" name="title" class="entry-title" value="{{ $title }}" placeholder="读者看到的标题" required>
-                    <label for="art-blurb">摘要</label>
-                    <textarea id="art-blurb" name="blurb" rows="3" placeholder="列表和搜索用的一句话，可空">{{ $blurb }}</textarea>
-                    <label for="art-content">正文</label>
-                    <textarea id="art-content" name="content" class="cms-editor art-content" placeholder="正文">{{ $content }}</textarea>
+                    <label for="art-title">{{ admin_t('ui.title_label') }}</label>
+                    <input id="art-title" type="text" name="title" class="entry-title" value="{{ $title }}" placeholder="{{ admin_t('ui.ph_reader_title') }}" required>
+                    <label for="art-blurb">{{ admin_t('ui.blurb') }}</label>
+                    <textarea id="art-blurb" name="blurb" rows="3" placeholder="{{ admin_t('ui.ph_art_blurb') }}">{{ $blurb }}</textarea>
+                    <label for="art-content">{{ admin_t('ui.body_text') }}</label>
+                    <textarea id="art-content" name="content" class="cms-editor art-content" placeholder="{{ admin_t('ui.body_text') }}">{{ $content }}</textarea>
                     <details class="entry-seo">
-                        <summary>搜索标题 / 关键字 / 描述</summary>
-                        <label for="art-seo-title">搜索标题</label>
-                        <input id="art-seo-title" type="text" name="seo_title" value="{{ $seoTitle }}" placeholder="空则用标题">
-                        <label for="art-seo-key">关键字</label>
-                        <input id="art-seo-key" type="text" name="seo_key" value="{{ $seoKey }}" placeholder="逗号分隔，可空">
-                        <label for="art-seo-des">描述</label>
-                        <textarea id="art-seo-des" name="seo_des" rows="2" placeholder="空则用摘要或正文截取">{{ $seoDes }}</textarea>
+                        <summary>{{ admin_t('ui.seo_pack') }}</summary>
+                        <label for="art-seo-title">{{ admin_t('ui.seo_title') }}</label>
+                        <input id="art-seo-title" type="text" name="seo_title" value="{{ $seoTitle }}" placeholder="{{ admin_t('ui.ph_seo_title') }}">
+                        <label for="art-seo-key">{{ admin_t('ui.keywords') }}</label>
+                        <input id="art-seo-key" type="text" name="seo_key" value="{{ $seoKey }}" placeholder="{{ admin_t('ui.ph_seo_key') }}">
+                        <label for="art-seo-des">{{ admin_t('ui.description') }}</label>
+                        <textarea id="art-seo-des" name="seo_des" rows="2" placeholder="{{ admin_t('ui.ph_seo_des') }}">{{ $seoDes }}</textarea>
                     </details>
                 </div>
             </div>
         </div>
         <aside class="entry-aside">
             <div class="card card-panel">
-                <div class="card-header"><span>发布</span></div>
+                <div class="card-header"><span>{{ admin_t('ui.publish') }}</span></div>
                 <div class="card-body">
-                    <label for="art-status">状态</label>
+                    <label for="art-status">{{ admin_t('ui.status') }}</label>
                     <select id="art-status" name="status">
-                        <option value="1" @selected($status === '1')>发布</option>
-                        <option value="0" @selected($status === '0')>草稿</option>
+                        <option value="1" @selected($status === '1')>{{ admin_t('ui.publish') }}</option>
+                        <option value="0" @selected($status === '0')>{{ admin_t('ui.draft') }}</option>
                     </select>
-                    <p class="muted field-hint">草稿前台看不到。填了未来时间也看不到，到点才出现。</p>
-                    <label for="art-published-at">定时发布</label>
+                    <p class="muted field-hint">{{ admin_t('ui.draft_front_hint') }}</p>
+                    <label for="art-published-at">{{ admin_t('ui.scheduled_publish') }}</label>
                     <input id="art-published-at" type="datetime-local" name="published_at" value="{{ $publishedLocal }}">
-                    <p class="muted field-hint">可空。空则用创建时间；填未来时间则到点才出现在前台。</p>
-                    <label for="art-hits">点击</label>
+                    <p class="muted field-hint">{{ admin_t('ui.published_at_hint') }}</p>
+                    <label for="art-hits">{{ admin_t('ui.hits') }}</label>
                     <input id="art-hits" type="number" name="hits" min="0" value="{{ $hits }}">
-                    <p class="muted field-hint">一般不用改，前台浏览会自己加。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.hits_auto_hint') }}</p>
                     <div class="entry-save">
                         <button class="btn" type="submit" id="art-save">{{ admin_t('ui.save') }}</button>
-                        <a class="btn btn-muted" href="/admin/video/arts">返回文章</a>
+                        <a class="btn btn-muted" href="/admin/video/arts">{{ admin_t('ui.back_arts') }}</a>
                     </div>
                     @if($isEdit && $listed && $frontUrl !== '')
-                        <p class="muted field-hint"><a href="{{ $frontUrl }}" target="_blank" rel="noopener">打开前台</a></p>
+                        <p class="muted field-hint"><a href="{{ $frontUrl }}" target="_blank" rel="noopener">{{ admin_t('ui.front') }}</a></p>
                     @endif
                 </div>
             </div>
             <div class="card card-panel">
-                <div class="card-header"><span>栏目与展示</span></div>
+                <div class="card-header"><span>{{ admin_t('ui.section_column_show') }}</span></div>
                 <div class="card-body">
-                    <label for="art-type">栏目</label>
+                    <label for="art-type">{{ admin_t('ui.column') }}</label>
                     <select id="art-type" name="type_id">
-                        <option value="0">未分栏</option>
+                        <option value="0">{{ admin_t('ui.loose_column') }}</option>
                         @foreach($types as $type)
                             <option value="{{ $type['id'] }}" @selected($typeId === (string) $type['id'])>{{ $type['name'] }}@if(!empty($type['kind_label']) && ($type['kind'] ?? 'list') !== 'list') · {{ $type['kind_label'] }}@endif</option>
                         @endforeach
                     </select>
                     @if($types === [])
-                        <p class="muted field-hint">还没有文章栏目。<a href="/admin/video/art-types/create">去建一个栏目</a>，也可以先不选。频道和外链不能挂稿。</p>
+                        <p class="muted field-hint">{!! str_replace(':link', '<a href="/admin/video/art-types/create">'.e(admin_t('ui.go_create_columns')).'</a>', e(admin_t('ui.empty_art_types_cta'))) !!}</p>
                     @else
-                        <p class="muted field-hint">决定这篇出现在哪个文章栏目。频道和外链不能挂稿，请选列表或单页。</p>
+                        <p class="muted field-hint">{{ admin_t('ui.art_type_pick_hint') }}</p>
                     @endif
-                    <label for="art-cover">封面</label>
+                    <label for="art-cover">{{ admin_t('ui.cover') }}</label>
                     <div class="media-field">
                         <div class="media-preview" id="art-cover-preview" @if($cover === '') hidden @endif>
-                            <img id="art-cover-img" src="{{ $cover }}" alt="封面预览">
-                            <button type="button" class="media-preview-clear" id="art-cover-clear" title="移除封面">&times;</button>
+                            <img id="art-cover-img" src="{{ $cover }}" alt="{{ admin_t('ui.cover_preview') }}">
+                            <button type="button" class="media-preview-clear" id="art-cover-clear" title="{{ admin_t('ui.remove_cover') }}">&times;</button>
                         </div>
                         <div class="cover-row">
-                            <input id="art-cover" type="text" name="cover" value="{{ $cover }}" placeholder="图片地址">
-                            <button type="button" class="btn btn-muted" id="art-cover-upload">上传</button>
+                            <input id="art-cover" type="text" name="cover" value="{{ $cover }}" placeholder="{{ admin_t('ui.ph_image_url') }}">
+                            <button type="button" class="btn btn-muted" id="art-cover-upload">{{ admin_t('ui.upload') }}</button>
                         </div>
                     </div>
-                    <label for="art-author">署名</label>
-                    <input id="art-author" type="text" name="author" value="{{ $author }}" placeholder="纯文本，不是会员">
-                    <label for="art-source">来源</label>
-                    <input id="art-source" type="text" name="source" value="{{ $source }}" placeholder="转载出处，可空">
-                    <label>标签</label>
+                    <label for="art-author">{{ admin_t('ui.byline') }}</label>
+                    <input id="art-author" type="text" name="author" value="{{ $author }}" placeholder="{{ admin_t('ui.ph_byline') }}">
+                    <label for="art-source">{{ admin_t('ui.source_label') }}</label>
+                    <input id="art-source" type="text" name="source" value="{{ $source }}" placeholder="{{ admin_t('ui.ph_source') }}">
+                    <label>{{ admin_t('ui.tags') }}</label>
                     <div class="pick-field" id="art-tag-pick"
                          data-ready="{{ $tagsReady ? '1' : '0' }}"
                          data-search="/admin/video/art-tags/list"
                          data-create="/admin/video/art-tags/save"
                          data-browse="1"
-                         data-placeholder="搜标签名，点一下可看近期；回车可新建"
-                         data-empty="还没有标签。输入词回车即可新建，或去<a href=&quot;/admin/video/art-tags&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>标签台</a>。"
+                         data-placeholder="{{ admin_t('ui.pick_tag_ph') }}"
+                         data-empty="{{ admin_t('ui.pick_tags_empty_pre') }}<a href=&quot;/admin/video/art-tags&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>{{ admin_t('ui.tags_desk') }}</a>{{ admin_t('ui.period_end') }}"
                          data-selected='@json($selectedTags, JSON_UNESCAPED_UNICODE)'></div>
-                    <p class="muted field-hint">不铺全表。和影片标签不是同一套；几千个也只搜不铺。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.no_spread_tags') }}</p>
                 </div>
             </div>
             <details class="card card-panel entry-aside-more">
-                <summary>更多</summary>
+                <summary>{{ admin_t('ui.more') }}</summary>
                 <div class="card-body">
-                    <label>推荐属性</label>
+                    <label>{{ admin_t('ui.flag_attrs') }}</label>
                     <div class="choice-grid">
-                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="top" @checked(in_array('top', $flagSet, true))> 置顶</label>
-                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="recommend" @checked(in_array('recommend', $flagSet, true))> 推荐</label>
-                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="hot" @checked(in_array('hot', $flagSet, true))> 热门</label>
+                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="top" @checked(in_array('top', $flagSet, true))> {{ admin_t('ui.flag_top') }}</label>
+                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="recommend" @checked(in_array('recommend', $flagSet, true))> {{ admin_t('ui.recommend') }}</label>
+                        <label class="inline"><input type="checkbox" class="js-art-flag" name="flag_list[]" value="hot" @checked(in_array('hot', $flagSet, true))> {{ admin_t('ui.flag_hot') }}</label>
                     </div>
-                    <label for="art-sort">排序</label>
+                    <label for="art-sort">{{ admin_t('ui.sort') }}</label>
                     <input id="art-sort" type="number" name="sort" min="0" value="{{ $sort }}">
-                    <p class="muted field-hint">越大越靠前。标签按 ID 倒序时用不上。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.sort_id_hint') }}</p>
                 </div>
             </details>
         </aside>
@@ -152,6 +160,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($artJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('art-form');
     var idInput = form.querySelector('input[name="id"]');
     var isEdit = !!String(idInput && idInput.value || '').trim();
@@ -187,8 +196,8 @@
                 if (res && res.code === 0 && res.data && res.data.url) {
                     coverInput.value = res.data.url;
                     syncCover(res.data.url);
-                    U.toast('上传成功', 'ok');
-                } else U.toast((res && res.msg) || '上传失败', 'err');
+                    U.toast(L.uploaded, 'ok');
+                } else U.toast((res && res.msg) || L.upload_fail, 'err');
             });
         });
     });
@@ -198,7 +207,7 @@
         if (window.tinymce) tinymce.triggerSave();
         var data = U.formData(form);
         if (!String(data.title || '').trim()) {
-            U.toast('请填写标题', 'err');
+            U.toast(L.please_fill_title, 'err');
             document.getElementById('art-title').focus();
             return;
         }
@@ -218,17 +227,17 @@
         U.post('/admin/video/arts/save', data).then(function (res) {
             U.loading(false);
             if (!res || res.code !== 0) {
-                U.toast((res && res.msg) || '保存失败', 'err');
+                U.toast((res && res.msg) || L.save_fail, 'err');
                 return;
             }
             var id = (res.data && res.data.id) || data.id;
-            U.toast(isEdit ? '已保存' : '已创建', 'ok');
+            U.toast(isEdit ? L.saved : L.created, 'ok');
             if (!isEdit && id) {
                 location.href = '/admin/video/arts/' + encodeURIComponent(id) + '/edit';
             }
         }).catch(function () {
             U.loading(false);
-            U.toast('保存失败', 'err');
+            U.toast(L.save_fail, 'err');
         });
     });
 })();

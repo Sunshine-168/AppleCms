@@ -36,9 +36,9 @@ class VideoWebsiteIndexPageTest extends TestCase
             : '/admin/video/links';
         $this->assertStringContainsString($flink, $html);
         $this->assertStringContainsString('/admin/video/website-types', $html);
-        $this->assertStringContainsString("title: '站点'", $html);
-        $this->assertStringContainsString("title: '分类'", $html);
-        $this->assertStringContainsString("title: '人气'", $html);
+        $this->assertStringContainsString("AdminUi.t('sites')", $html);
+        $this->assertStringContainsString("AdminUi.t('types')", $html);
+        $this->assertStringContainsString("AdminUi.t('hits')", $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('暂无数据', $html);

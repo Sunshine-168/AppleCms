@@ -87,11 +87,11 @@
                     </form>
                 </div>
             @elseif($desk === 'types')
-                <p class="muted recycle-lead">分类挂在作品上，一部作品一个分类。</p>
+                <p class="muted recycle-lead">{{ admin_t('novel.types_lead') }}</p>
             @elseif($desk === 'favors')
-                <p class="muted recycle-lead">会员前台加入书架后出现，后台不能代收藏。删除只清记录，不影响作品。</p>
+                <p class="muted recycle-lead">{{ admin_t('novel.lead_favors') }}</p>
             @elseif($desk === 'comments')
-                <p class="muted recycle-lead">前台小说详情页提交的评论。可审核或删除。</p>
+                <p class="muted recycle-lead">{{ admin_t('novel.lead_comments') }}</p>
             @endif
 
             @if($desk === 'comments')
@@ -103,9 +103,9 @@
             @endif
 
             <form class="filter-bar" id="novel-search" onsubmit="return false;">
-                <input type="search" name="q" placeholder="{{ $desk === 'chapters' ? '搜章节名' : ($desk === 'types' ? '搜分类名' : ($desk === 'favors' ? '搜会员或作品 ID' : ($desk === 'comments' ? '搜评论、作品' : '搜标题、作者、标签'))) }}" autocomplete="off" aria-label="搜索">
+                <input type="search" name="q" placeholder="{{ $desk === 'chapters' ? admin_t('ui.ph_search_chapter_name') : ($desk === 'types' ? admin_t('ui.ph_search_type_name') : ($desk === 'favors' ? admin_t('ui.ph_search_member_work') : ($desk === 'comments' ? admin_t('ui.ph_search_comment_work') : admin_t('ui.ph_search_title_author_tag')))) }}" autocomplete="off" aria-label="{{ admin_t('ui.search') }}">
                 @if($desk === 'chapters' && $works->isNotEmpty())
-                    <select name="novel_id" aria-label="按作品筛选">
+                    <select name="novel_id" aria-label="{{ admin_t('ui.filter_by_work') }}">
                         <option value="">{{ admin_t('ui.all_works') }}</option>
                         @foreach($works as $w)
                             <option value="{{ $w->id }}">{{ $w->title }}</option>
@@ -166,12 +166,14 @@
         'need_work_title' => admin_t('novel.need_work_title'),
         'need_chapter_name' => admin_t('novel.need_chapter_name'),
         'select_work' => admin_t('novel.select_work'),
+        'confirm_unfavor' => admin_t('novel.confirm_unfavor'),
+        'confirm_remove' => admin_t('ui.confirm_remove'),
     ];
 @endphp
 @push('scripts')
 <script>
 (function () {
-    var U = AdminUi, desk = @json($desk), url = '/admin/video/novels', L = @json($novelJsLang);
+    var U = AdminUi, desk = @json($desk), url = '/admin/video/novels', L = @json($novelJsLang, JSON_UNESCAPED_UNICODE);
     if (desk === 'stats' || !U) return;
     var countEl = document.getElementById('novel-count');
     var search = document.getElementById('novel-search');
@@ -343,9 +345,9 @@
         var row = (table.rows() || [])[tr ? tr.getAttribute('data-idx') : -1];
         if (!row) return;
         if (a.classList.contains('js-edit')) openForm(row);
-        if (a.classList.contains('js-del') && U.confirm(desk === 'favors' ? '取消这条收藏？' : '确认删除？')) {
+        if (a.classList.contains('js-del') && U.confirm(desk === 'favors' ? L.confirm_unfavor : L.confirm_remove)) {
             U.post(url + '/delete', { id: row.id, desk: desk }).then(function (r) {
-                if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return; }
+                if (!r || r.code !== 0) { U.toast((r && r.msg) || L.fail, 'err'); return; }
                 table.refresh();
             });
         }

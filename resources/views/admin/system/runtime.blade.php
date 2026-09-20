@@ -19,6 +19,24 @@
         : ($access_only ? 'high' : 'all');
     $access_ip = trim((string) ($access_ip ?? ''));
     $accesslog_queues = $accesslog_queues ?? ['all' => 0, 'today' => 0, 'people' => 0, 'bot' => 0];
+    $runtimeJsLang = [
+        'copied' => admin_t('ui.copied'),
+        'copy_cmd' => admin_t('ui.copy_cmd'),
+        'empty_chart' => admin_t('ui.empty_chart'),
+        'gran_hour' => admin_t('ui.gran_hour'),
+        'gran_min' => admin_t('ui.gran_min'),
+        'reading_samples' => admin_t('ui.reading_samples'),
+        'updated_at_clock' => admin_t('ui.updated_at_clock'),
+        'pause' => admin_t('ui.pause'),
+        'resume' => admin_t('ui.resume'),
+        'saved' => admin_t('ui.saved'),
+        'changed_ok' => admin_t('ui.changed_ok'),
+        'edit_threshold' => admin_t('ui.edit_threshold'),
+        'edit_threshold_named' => admin_t('ui.edit_threshold_named'),
+        'please_fill_threshold' => admin_t('ui.please_fill_threshold'),
+        'no_result' => admin_t('ui.no_result'),
+        'ack_ok' => admin_t('ui.ack_ok'),
+    ];
 @endphp
 
 @section('plain')
@@ -29,14 +47,14 @@
             <div class="runtime-header-actions">
                 @if($desk === 'access')
                     <div class="runtime-access-links">
-                        <a class="btn btn-muted btn-sm" href="/admin/video/botlogs">爬虫日志</a>
-                        <a class="btn btn-muted btn-sm" href="/admin/stats/logs">访问明细</a>
-                        <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">蜘蛛统计</a>
-                        <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">IP 白名单</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/video/botlogs">{{ admin_t('ui.botlogs') }}</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/stats/logs">{{ admin_t('ui.visit_detail') }}</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">{{ admin_t('ui.spider_stats') }}</a>
+                        <a class="btn btn-muted btn-sm" href="/admin/video/config/ip">{{ admin_t('nav.config_ip') }}</a>
                     </div>
                 @endif
                 @if($firing_count > 0)
-                    <a class="runtime-fire-count" href="/admin/system/runtime?desk=events&status=1">{{ $firing_count }} 条触发中</a>
+                    <a class="runtime-fire-count" href="/admin/system/runtime?desk=events&status=1">{{ admin_t('ui.firing_n', ['n' => $firing_count]) }}</a>
                 @endif
             </div>
         @endif
@@ -53,103 +71,106 @@
 
         @if(!empty($heartbeat_dead) && in_array($desk, ['perf', 'live', 'settings'], true))
             <div class="runtime-dead">
-                <p>采集未跑，到「<a href="/admin/system/tools/schedule">计划任务</a>」确认已装 <code>schedule:run</code>。</p>
+                <p>{{ admin_t('ui.cron_dead_before') }}<a href="/admin/system/tools/schedule">{{ admin_t('page.schedule') }}</a>{{ admin_t('ui.cron_dead_after') }}<code>schedule:run</code>{{ admin_t('ui.cron_dead_end') }}</p>
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
-                    <button type="button" class="btn btn-muted js-copy-cron">复制命令</button>
+                    <button type="button" class="btn btn-muted js-copy-cron">{{ admin_t('ui.copy_cmd') }}</button>
                 </div>
             </div>
         @endif
 
         @if($desk === 'perf')
-            <p class="muted recycle-lead">跟计划任务同一条 crontab，不另装监控插件。</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.runtime_same_cron') }}</p>
             <div class="runtime-range-row">
                 <div class="queue-chips runtime-range-chips" id="runtime-ranges">
-                    <button type="button" class="chip active" data-range="1h">1 小时</button>
-                    <button type="button" class="chip" data-range="6h">6 小时</button>
-                    <button type="button" class="chip" data-range="24h">24 小时</button>
-                    <button type="button" class="chip" data-range="72h">72 小时</button>
-                    <button type="button" class="chip" data-range="7d">7 天</button>
-                    <button type="button" class="chip" data-range="30d">30 天</button>
+                    <button type="button" class="chip active" data-range="1h">{{ admin_t('ui.range_1h') }}</button>
+                    <button type="button" class="chip" data-range="6h">{{ admin_t('ui.range_6h') }}</button>
+                    <button type="button" class="chip" data-range="24h">{{ admin_t('ui.range_24h') }}</button>
+                    <button type="button" class="chip" data-range="72h">{{ admin_t('ui.range_72h') }}</button>
+                    <button type="button" class="chip" data-range="7d">{{ admin_t('ui.range_7d') }}</button>
+                    <button type="button" class="chip" data-range="30d">{{ admin_t('ui.range_30d') }}</button>
                 </div>
                 <p class="muted field-hint" id="runtime-granularity"></p>
             </div>
             @if(!empty($snapshot))
             <div class="runtime-snap">
               @foreach($snapshot as $item)
-                <article @class(['is-dead' => ($item['k'] ?? '') === '心跳' && !empty($heartbeat_dead)])><span>{{ $item['k'] }}</span><strong>{{ $item['v'] }}</strong></article>
+                <article @class(['is-dead' => ($item['k'] ?? '') === 'heartbeat' && !empty($heartbeat_dead)])><span>{{ $item['label'] ?? $item['k'] }}</span><strong>{{ $item['v'] }}</strong></article>
               @endforeach
             </div>
             @endif
-            <div id="runtime-charts" class="runtime-charts"><div class="list-empty"><p>正在读样本…</p></div></div>
+            <div id="runtime-charts" class="runtime-charts"><div class="list-empty"><p>{{ admin_t('ui.reading_samples') }}</p></div></div>
         @elseif($desk === 'live')
             <div class="runtime-live-head">
                 <div>
-                    <p class="muted field-hint">最近 5 分钟。空着表示还没采到，不是写成了 0。</p>
+                    <p class="muted field-hint">{{ admin_t('ui.last_5min_hint') }}</p>
                     <p class="muted field-hint" id="live-stamp"></p>
                 </div>
-                <button type="button" class="btn btn-muted btn-sm" id="runtime-pause">暂停</button>
+                <button type="button" class="btn btn-muted btn-sm" id="runtime-pause">{{ admin_t('ui.pause') }}</button>
             </div>
             <div class="runtime-kpis" id="runtime-kpis">
                 <article class="is-empty"><strong id="live-qps">—</strong><span>QPS</span></article>
-                <article class="is-empty"><strong id="live-req">—</strong><span>请求（5 分钟）</span></article>
-                <article class="is-empty"><strong id="live-err">—</strong><span>5xx（5 分钟）</span></article>
-                <article class="is-empty"><strong id="live-slow">—</strong><span>慢请求（5 分钟）</span></article>
-                <article class="is-empty"><strong id="live-load">—</strong><span>负载</span></article>
-                <article class="is-empty"><strong id="live-mem">—</strong><span>内存 %</span></article>
-                <article class="is-empty"><strong id="live-disk">—</strong><span>磁盘 %</span></article>
-                <article class="is-empty"><strong id="live-php">—</strong><span>PHP 内存 %</span></article>
+                <article class="is-empty"><strong id="live-req">—</strong><span>{{ admin_t('ui.req_5min') }}</span></article>
+                <article class="is-empty"><strong id="live-err">—</strong><span>{{ admin_t('ui.err_5min') }}</span></article>
+                <article class="is-empty"><strong id="live-slow">—</strong><span>{{ admin_t('ui.slow_5min') }}</span></article>
+                <article class="is-empty"><strong id="live-load">—</strong><span>{{ admin_t('ui.load_label') }}</span></article>
+                <article class="is-empty"><strong id="live-mem">—</strong><span>{{ admin_t('ui.mem_pct') }}</span></article>
+                <article class="is-empty"><strong id="live-disk">—</strong><span>{{ admin_t('ui.disk_pct') }}</span></article>
+                <article class="is-empty"><strong id="live-php">—</strong><span>{{ admin_t('ui.php_mem_pct') }}</span></article>
             </div>
         @elseif($desk === 'settings')
             <form id="runtime-settings" class="runtime-form">
                 @csrf
                 <div class="runtime-form-enable">
-                    <label><input type="checkbox" name="monitor_enabled" value="1" @checked((int)($opts['monitor_enabled'] ?? 1) === 1)> 开启采集</label>
+                    <label><input type="checkbox" name="monitor_enabled" value="1" @checked((int)($opts['monitor_enabled'] ?? 1) === 1)> {{ admin_t('ui.enable_collect') }}</label>
                 </div>
                 <div class="runtime-form-grid">
                     <div>
-                        <label>慢请求门槛（毫秒）</label>
+                        <label>{{ admin_t('ui.slow_threshold_ms') }}</label>
                         <input type="number" name="monitor_slow_ms" min="100" max="60000" value="{{ (int) ($opts['monitor_slow_ms'] ?? 1000) }}">
-                        <p class="muted field-hint">超过这个耗时记一条慢请求</p>
+                        <p class="muted field-hint">{{ admin_t('ui.slow_threshold_hint') }}</p>
                     </div>
                     <div>
-                        <label>分钟数据保留（天）</label>
+                        <label>{{ admin_t('ui.keep_min_days') }}</label>
                         <input type="number" name="monitor_retain_min_days" min="1" max="14" value="{{ (int) ($opts['monitor_retain_min_days'] ?? 3) }}">
                     </div>
                     <div>
-                        <label>小时数据保留（天）</label>
+                        <label>{{ admin_t('ui.keep_hour_days') }}</label>
                         <input type="number" name="monitor_retain_hour_days" min="7" max="730" value="{{ (int) ($opts['monitor_retain_hour_days'] ?? 90) }}">
                     </div>
                     <div>
-                        <label>异常访问次数门槛（24 小时）</label>
+                        <label>{{ admin_t('ui.unusual_hit_threshold') }}</label>
                         <input type="number" name="monitor_access_cc" min="10" max="10000" value="{{ (int) ($opts['monitor_access_cc'] ?? 120) }}">
-                        <p class="muted field-hint">超过门槛在异常访问里标「次数偏高」</p>
+                        <p class="muted field-hint">{{ admin_t('ui.unusual_hit_hint') }}</p>
                     </div>
                 </div>
-                <p class="muted field-hint">最近心跳：{{ $heartbeat_text ?? '还没跑过' }}</p>
+                <p class="muted field-hint">{{ admin_t('ui.last_heartbeat', ['t' => $heartbeat_text ?? admin_t('ui.never_ran')]) }}</p>
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
                     <div class="runtime-cron-actions">
-                        <button type="button" class="btn btn-muted js-copy-cron">复制命令</button>
+                        <button type="button" class="btn btn-muted js-copy-cron">{{ admin_t('ui.copy_cmd') }}</button>
                         <button type="submit" class="btn">{{ admin_t('ui.save') }}</button>
                     </div>
                 </div>
             </form>
         @elseif($desk === 'rules')
-            <p class="muted field-hint">推荐规则默认停用。试跑只看当前样本会不会触发，不会假装发出去了。</p>
+            <p class="muted field-hint">{{ admin_t('ui.rules_default_off') }}</p>
             <div class="ui-table-wrap">
                 <table class="data">
                     <thead>
                         <tr>
-                            <th>名称</th>
-                            <th>指标</th>
-                            <th>条件</th>
-                            <th>状态</th>
+                            <th>{{ admin_t('ui.name') }}</th>
+                            <th>{{ admin_t('ui.metric') }}</th>
+                            <th>{{ admin_t('ui.condition') }}</th>
+                            <th>{{ admin_t('ui.status') }}</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($rules as $row)
+                            @php
+                                $ruleCond = ($row['agg_text'] ?? '').' '.admin_t('ui.n_minutes', ['n' => $row['window_min'] ?? 0]).' '.($row['op_text'] ?? '').' '.($row['threshold'] ?? '');
+                            @endphp
                             <tr data-id="{{ $row['id'] }}">
                                 <td>
                                     {{ $row['name'] }}
@@ -161,42 +182,42 @@
                                     {{ $row['metric_label'] ?? $row['metric_key'] }}
                                     <code hidden>{{ $row['metric_key'] }}</code>
                                 </td>
-                                <td>{{ $row['agg_text'] }} {{ $row['window_min'] }} 分钟 {{ $row['op_text'] }} {{ $row['threshold'] }}</td>
+                                <td>{{ $ruleCond }}</td>
                                 <td><span class="runtime-badge {{ (int) $row['status'] === 1 ? 'is-on' : 'is-off' }}">{{ $row['status_text'] }}</span></td>
                                 <td class="runtime-actions">
-                                    <button type="button" class="btn btn-muted btn-sm js-rule-on" data-on="{{ (int) $row['status'] === 1 ? 0 : 1 }}">{{ (int) $row['status'] === 1 ? '停用' : '启用' }}</button>
-                                    <button type="button" class="btn btn-muted btn-sm js-rule-edit" data-threshold="{{ $row['threshold'] }}" data-name="{{ $row['name'] }}" data-metric="{{ $row['metric_key'] }}" data-cond="{{ $row['agg_text'] }} {{ $row['window_min'] }} 分钟 {{ $row['op_text'] }} {{ $row['threshold'] }}">改阈值</button>
-                                    <button type="button" class="btn btn-muted btn-sm js-rule-test">试跑</button>
+                                    <button type="button" class="btn btn-muted btn-sm js-rule-on" data-on="{{ (int) $row['status'] === 1 ? 0 : 1 }}">{{ (int) $row['status'] === 1 ? admin_t('ui.disabled') : admin_t('ui.enabled') }}</button>
+                                    <button type="button" class="btn btn-muted btn-sm js-rule-edit" data-threshold="{{ $row['threshold'] }}" data-name="{{ $row['name'] }}" data-metric="{{ $row['metric_key'] }}" data-cond="{{ $ruleCond }}">{{ admin_t('ui.edit_threshold') }}</button>
+                                    <button type="button" class="btn btn-muted btn-sm js-rule-test">{{ admin_t('ui.try_run') }}</button>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5"><div class="list-empty"><p>还没有规则</p></div></td></tr>
+                            <tr><td colspan="5"><div class="list-empty"><p>{{ admin_t('ui.empty_rules') }}</p></div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             <template id="runtime-rule-tpl">
                 <form class="admin-form">
-                    <label>阈值</label>
+                    <label>{{ admin_t('ui.threshold') }}</label>
                     <input type="number" name="threshold" step="any">
                 </form>
             </template>
         @elseif($desk === 'events')
-            <p class="muted field-hint">事件只记在库里，没有外发通知。</p>
+            <p class="muted field-hint">{{ admin_t('ui.events_local_only') }}</p>
             <div class="queue-chips">
                 <a class="chip{{ $event_status === 0 ? ' active' : '' }}" href="/admin/system/runtime?desk=events">{{ admin_t('ui.all') }}</a>
-                <a class="chip{{ $event_status === 1 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=1">触发中</a>
-                <a class="chip{{ $event_status === 2 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=2">已恢复</a>
-                <a class="chip{{ $event_status === 3 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=3">已确认</a>
+                <a class="chip{{ $event_status === 1 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=1">{{ admin_t('ui.firing') }}</a>
+                <a class="chip{{ $event_status === 2 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=2">{{ admin_t('ui.recovered') }}</a>
+                <a class="chip{{ $event_status === 3 ? ' active' : '' }}" href="/admin/system/runtime?desk=events&status=3">{{ admin_t('ui.acknowledged') }}</a>
             </div>
             <div class="ui-table-wrap">
                 <table class="data">
                     <thead>
                         <tr>
-                            <th>规则</th>
-                            <th>状态</th>
-                            <th>说明</th>
-                            <th>开始</th>
+                            <th>{{ admin_t('ui.rule') }}</th>
+                            <th>{{ admin_t('ui.status') }}</th>
+                            <th>{{ admin_t('ui.note_col') }}</th>
+                            <th>{{ admin_t('ui.time') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -213,22 +234,22 @@
                                 <td>{{ $row['opened_text'] }}</td>
                                 <td>
                                     @if($st === 1)
-                                        <button type="button" class="btn btn-muted btn-sm js-event-ack">确认</button>
+                                        <button type="button" class="btn btn-muted btn-sm js-event-ack">{{ admin_t('ui.confirm') }}</button>
                                     @endif
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5"><div class="list-empty"><p>{{ in_array($event_status, [1, 2, 3], true) ? '没有这个状态的事件' : '还没有事件' }}</p></div></td></tr>
+                            <tr><td colspan="5"><div class="list-empty"><p>{{ in_array($event_status, [1, 2, 3], true) ? admin_t('ui.empty_events_status') : admin_t('ui.empty_events') }}</p></div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         @else
-            <p class="muted recycle-lead">只看不封，这里不能封 IP。要拦后台请去「<a href="/admin/video/config/ip">后台 IP 白名单</a>」。@if($access_view !== 'logs')点 IP 可看流水。@endif</p>
+            <p class="muted recycle-lead">{{ admin_t('ui.runtime_access_lead_before') }}<a href="/admin/video/config/ip">{{ admin_t('nav.config_ip') }}</a>{{ admin_t('ui.runtime_access_lead_after') }}@if($access_view !== 'logs'){{ admin_t('ui.runtime_access_lead_ip') }}@endif</p>
             <div class="queue-chips runtime-access-chips">
-                <a class="chip{{ $access_view === 'high' ? ' active' : '' }}" href="/admin/system/runtime?desk=access">偏高@if($access_high > 0)<em>{{ $access_high }}</em>@endif</a>
+                <a class="chip{{ $access_view === 'high' ? ' active' : '' }}" href="/admin/system/runtime?desk=access">{{ admin_t('ui.high_count') }}@if($access_high > 0)<em>{{ $access_high }}</em>@endif</a>
                 <a class="chip{{ $access_view === 'all' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&only=all">{{ admin_t('ui.all') }}</a>
-                <a class="chip{{ $access_view === 'logs' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&view=logs">流水@if(($accesslog_queues['all'] ?? 0) > 0)<em>{{ (int) $accesslog_queues['all'] }}</em>@endif</a>
+                <a class="chip{{ $access_view === 'logs' ? ' active' : '' }}" href="/admin/system/runtime?desk=access&view=logs">{{ admin_t('ui.trail_log') }}@if(($accesslog_queues['all'] ?? 0) > 0)<em>{{ (int) $accesslog_queues['all'] }}</em>@endif</a>
             </div>
             @if($access_view === 'logs')
                 <div class="accesslog-index runtime-accesslog">
@@ -240,32 +261,32 @@
                     ])
                 </div>
             @else
-                <p class="muted field-hint">最近 24 小时 · 门槛 {{ $access_cc }} 次</p>
+                <p class="muted field-hint">{{ admin_t('ui.last_24h_cc', ['n' => $access_cc]) }}</p>
                 <div class="ui-table-wrap">
                     <table class="data">
                         <thead>
                             <tr>
                                 <th>IP</th>
-                                <th>次数</th>
+                                <th>{{ admin_t('ui.times_col') }}</th>
                                 <th>4xx</th>
                                 <th>5xx</th>
-                                <th>标记</th>
-                                <th>路径</th>
+                                <th>{{ admin_t('ui.flag_col') }}</th>
+                                <th>{{ admin_t('ui.path_col') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($access as $row)
                                 <tr class="{{ !empty($row['high']) ? 'runtime-row-high' : '' }}">
                                     <td>
-                                        <a class="log-ip" href="/admin/system/runtime?desk=access&view=logs&ip={{ urlencode((string) $row['ip']) }}" title="看这个 IP 的流水">{{ $row['ip'] }}</a>
+                                        <a class="log-ip" href="/admin/system/runtime?desk=access&view=logs&ip={{ urlencode((string) $row['ip']) }}" title="{{ admin_t('ui.view_ip_trail') }}">{{ $row['ip'] }}</a>
                                     </td>
                                     <td>{{ $row['hits'] }}</td>
                                     <td>{{ $row['e4'] }}</td>
                                     <td>{{ $row['e5'] }}</td>
                                     <td>
-                                        @if(($row['flag'] ?? '') === '扫描痕迹')
+                                        @if((int) ($row['scan'] ?? 0) > 0)
                                             <span class="runtime-badge is-fire">{{ $row['flag'] }}</span>
-                                        @elseif(($row['flag'] ?? '') === '次数偏高')
+                                        @elseif(!empty($row['high']))
                                             <span class="runtime-badge is-off">{{ $row['flag'] }}</span>
                                         @else
                                             {{ $row['flag'] ?? '' }}
@@ -274,7 +295,7 @@
                                     <td class="runtime-path">{{ \Illuminate\Support\Str::limit((string) $row['path'], 60) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6"><div class="list-empty"><p>{{ $access_only ? '最近 24 小时没有偏高或带扫描痕迹的 IP' : '最近 24 小时还没有可看的 IP' }}</p></div></td></tr>
+                                <tr><td colspan="6"><div class="list-empty"><p>{{ $access_only ? admin_t('ui.empty_high_ips') : admin_t('ui.empty_access_ips') }}</p></div></td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -290,12 +311,13 @@
 (function () {
     var desk = @json($desk);
     var U = window.AdminUi;
+    var L = @json($runtimeJsLang ?? [], JSON_UNESCAPED_UNICODE);
     var COLORS = ['#3b82c4', '#e67e22', '#27ae60', '#8e44ad'];
 
     function copyText(text) {
         text = String(text || '');
         function done() {
-            if (U) U.toast('已复制');
+            if (U) U.toast(L.copied || '');
         }
         function fallback() {
             var ta = document.createElement('textarea');
@@ -322,7 +344,7 @@
         copyText(text);
         var old = btn.getAttribute('data-label') || btn.textContent;
         btn.setAttribute('data-label', old);
-        btn.textContent = '已复制';
+        btn.textContent = L.copied || '';
         btn.disabled = true;
         setTimeout(function () {
             btn.textContent = old;
@@ -364,7 +386,7 @@
         return pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + clock;
     }
     function emptyCharts(wrap) {
-        wrap.innerHTML = '<div class="list-empty"><p>这个时间范围内还没有点，曲线空着。</p></div>';
+        wrap.innerHTML = '<div class="list-empty"><p>' + (L.empty_chart || '') + '</p></div>';
     }
     function drawGroup(canvas, seriesList, hoverX) {
         var ctx = canvas.getContext('2d');
@@ -515,7 +537,7 @@
         }
         var groups = groupsFrom(data);
         var hint = document.getElementById('runtime-granularity');
-        if (hint) hint.textContent = data.granularity === 'hour' ? '这一段按小时聚合。' : (data.granularity ? '这一段按分钟聚合。' : '');
+        if (hint) hint.textContent = data.granularity === 'hour' ? (L.gran_hour || '') : (data.granularity ? (L.gran_min || '') : '');
         wrap.innerHTML = '';
         if (!groups.length) {
             emptyCharts(wrap);

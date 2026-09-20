@@ -4,17 +4,31 @@
 @php
     $queues = $queues ?? ['all' => 0, 'today' => 0, 'baidu' => 0, 'google' => 0, 'bing' => 0, 'other' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $botJsLang = [
+        'spider_default' => admin_t('ui.spider_default'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_botlogs' => admin_t('ui.empty_botlogs'),
+        'empty_botlogs_hint' => admin_t('ui.empty_botlogs_hint'),
+        'open_site_front' => admin_t('ui.open_site_front'),
+        'selected_n' => admin_t('ui.selected_rows'),
+        'please_select_botlogs' => admin_t('ui.please_select_botlogs'),
+        'confirm_batch_del_botlogs' => admin_t('ui.confirm_batch_del_botlogs'),
+        'confirm_del_botlog' => admin_t('ui.confirm_del_botlog'),
+        'op_fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel botlog-index list-desk">
     <div class="card-header">
-        <span>爬虫日志 <em id="botlog-count"></em></span>
+        <span>{{ admin_t('ui.botlogs') }} <em id="botlog-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">蜘蛛统计</a>
-            <a class="btn btn-muted btn-sm" href="/admin/stats/logs?visitor=spider">访问明细</a>
-            <a class="btn btn-muted btn-sm" href="/admin/system/runtime?desk=access&view=logs">访问风控</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/push">搜索推送</a>
+            <a class="btn btn-muted btn-sm" href="/admin/stats/spiders">{{ admin_t('ui.spider_stats') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/stats/logs?visitor=spider">{{ admin_t('ui.visit_detail') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/system/runtime?desk=access&view=logs">{{ admin_t('ui.access_risk') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/push">{{ admin_t('ui.search_push') }}</a>
             <a class="btn btn-muted btn-sm" href="/robots.txt" target="_blank" rel="noopener">robots</a>
         </div>
     </div>
@@ -22,19 +36,19 @@
         <form class="filter-bar" id="botlog-search" onsubmit="return false;">
             <input type="hidden" name="today">
             <input type="hidden" name="engine">
-            <input type="search" name="q" placeholder="搜 IP、地址或标识" autocomplete="off" aria-label="搜索爬虫日志">
+            <input type="search" name="q" placeholder="{{ admin_t('ui.ph_botlog') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_botlogs') }}">
             <button type="button" class="btn btn-sm" id="botlog-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="botlog-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
         <div class="queue-chips" id="botlog-queues">
-            <button type="button" class="chip" data-queue="">全部@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="today" data-value="1">今天@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="engine" data-value="baidu">百度@if($q('baidu') > 0)<em>{{ $q('baidu') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($q('all') > 0)<em>{{ $q('all') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today_chip') }}@if($q('today') > 0)<em>{{ $q('today') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="engine" data-value="baidu">{{ admin_t('ui.engine_baidu') }}@if($q('baidu') > 0)<em>{{ $q('baidu') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="google">Google @if($q('google') > 0)<em>{{ $q('google') }}</em>@endif</button>
             <button type="button" class="chip" data-queue="engine" data-value="bing">Bing @if($q('bing') > 0)<em>{{ $q('bing') }}</em>@endif</button>
-            <button type="button" class="chip" data-queue="engine" data-value="other">其他@if($q('other') > 0)<em>{{ $q('other') }}</em>@endif</button>
+            <button type="button" class="chip" data-queue="engine" data-value="other">{{ admin_t('ui.engine_other') }}@if($q('other') > 0)<em>{{ $q('other') }}</em>@endif</button>
         </div>
-        <p class="muted recycle-lead">和「<a href="/admin/system/runtime?desk=access&view=logs">访问风控</a>」同一张前台页面流水，这里只看浏览器标识被认成爬虫的。趋势去「<a href="/admin/stats/spiders">蜘蛛统计</a>」；带标题和来路的页去「<a href="/admin/stats/logs?visitor=spider">访问明细</a>」。<strong>不能封 IP</strong>。删掉只清流水，不影响收录。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.botlogs_lead_before') }}<a href="/admin/system/runtime?desk=access&view=logs">{{ admin_t('ui.access_risk') }}</a>{{ admin_t('ui.botlogs_lead_after_access') }}<a href="/admin/stats/spiders">{{ admin_t('ui.spider_stats') }}</a>{{ admin_t('ui.botlogs_lead_after_spiders') }}<a href="/admin/stats/logs?visitor=spider">{{ admin_t('ui.visit_detail') }}</a>{{ admin_t('ui.botlogs_lead_after_detail') }}<strong>{{ admin_t('ui.botlogs_lead_strong') }}</strong>{{ admin_t('ui.botlogs_lead_tail') }}</p>
         <div class="batch-bar" id="botlog-batch" hidden>
             <strong id="botlog-batch-count">{{ admin_t('ui.selected_n', ['n' => 0]) }}</strong>
             <button type="button" class="btn btn-danger btn-sm" id="botlog-batch-del">{{ admin_t('ui.delete') }}</button>
@@ -49,6 +63,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($botJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('botlog-search');
     var batchBar = document.getElementById('botlog-batch');
     var batchCount = document.getElementById('botlog-batch-count');
@@ -89,7 +104,7 @@
         markChips();
     }
     function spiderHtml(d) {
-        var html = '<strong>' + U.escape(d.spider_label || '爬虫') + '</strong>';
+        var html = '<strong>' + U.escape(d.spider_label || L.spider_default) + '</strong>';
         if (d.group_label) html += '<div class="muted">' + U.escape(d.group_label) + '</div>';
         return html;
     }
@@ -109,9 +124,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="botlog-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + L.no_match + '</p><p><button type="button" class="btn btn-muted btn-sm" id="botlog-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有爬虫进来</p><p class="muted">本机只开后台不会记。站点放到公网、等搜索引擎来抓，或前台被带爬虫标识的访问打到，才会出现。</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">打开前台</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_botlogs + '</p><p class="muted">' + L.empty_botlogs_hint + '</p><p><a class="btn btn-muted btn-sm" href="/" target="_blank" rel="noopener">' + L.open_site_front + '</a></p></div>';
         },
         onDraw: function (_wrap, list) {
             var reset = document.getElementById('botlog-empty-reset');
@@ -123,7 +138,7 @@
         },
         onCheck: function (ids) {
             batchBar.hidden = ids.length === 0;
-            batchCount.textContent = '已选 ' + ids.length + ' 条';
+            batchCount.textContent = String(L.selected_n || '').replace(':n', String(ids.length));
         },
         cols: [
             {check: true, width: 36},
@@ -142,12 +157,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batchDel() {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选记录', 'err'); return; }
-        if (!U.confirm('删除这 ' + ids.length + ' 条？不影响收录。')) return;
+        if (!ids.length) { U.toast(L.please_select_botlogs, 'err'); return; }
+        if (!U.confirm(String(L.confirm_batch_del_botlogs || '').replace(':n', String(ids.length)))) return;
         U.post('/admin/video/botlogs/batch', {ids: ids.join(','), action: 'delete'}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '已删除', 'ok');
+            U.toast((res && res.msg) || L.deleted, 'ok');
         });
     }
 
@@ -173,11 +188,11 @@
         if (!row) return;
         e.preventDefault();
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除这条？不影响收录。')) return;
+            if (!U.confirm(L.confirm_del_botlog)) return;
             U.post('/admin/video/botlogs/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

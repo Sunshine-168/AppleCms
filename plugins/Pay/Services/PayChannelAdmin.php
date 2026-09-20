@@ -16,7 +16,10 @@ class PayChannelAdmin
     /** @param  array<string, mixed>  $payload */
     public function boardPayload(array $payload): array
     {
-        $payload['drivers'] = PayChannelService::DRIVERS;
+        $payload['drivers'] = [
+            'epay' => PayChannelService::driverLabel('epay'),
+            'dfpay' => PayChannelService::driverLabel('dfpay'),
+        ];
         $payload['notify_epay'] = url('/pay/notify/epay');
         $payload['notify_dfpay'] = url('/pay/notify/dfpay');
         $desk = (string) ($payload['desk'] ?? 'channels');

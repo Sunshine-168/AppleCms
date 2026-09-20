@@ -39,20 +39,33 @@ class SysFileService
         return [
             'queues' => $this->queueCounts(),
             'ui' => [
-                'title' => '附件',
-                'lead' => '后台上传过的文件。图片可以看缩略图，点开会放大。',
-                'note' => '只列出已入库的记录。PDF、压缩包、视频没有缩略图。磁盘里未入库的不会出现。',
-                'find' => '搜名称、类型或地址',
-                'empty' => '还没有附件',
-                'empty_hint' => '点右上角上传。图片会出现缩略图。',
-                'empty_search' => '没有叫这个名字的文件',
-                'empty_kind' => '这一类还没有文件',
-                'preview' => '预览',
-                'no_preview' => '不能预览',
-                'templates' => '模板',
-                'settings' => '站点设置',
-                'annex' => '附件清理',
-                'upload' => '上传文件',
+                'title' => admin_t('ui.files_title'),
+                'lead' => admin_t('ui.files_lead'),
+                'note' => admin_t('ui.files_note'),
+                'find' => admin_t('ui.ph_search_file'),
+                'empty' => admin_t('ui.empty_files'),
+                'empty_hint' => admin_t('ui.empty_files_hint'),
+                'empty_search' => admin_t('ui.empty_file_search'),
+                'empty_kind' => admin_t('ui.empty_file_kind'),
+                'preview' => admin_t('ui.preview'),
+                'no_preview' => admin_t('ui.no_preview'),
+                'templates' => admin_t('nav.templates'),
+                'settings' => admin_t('nav.settings'),
+                'annex' => admin_t('nav.annex'),
+                'upload' => admin_t('ui.upload_file'),
+                'click_to_enlarge' => admin_t('ui.click_to_enlarge'),
+                'kind_video' => admin_t('ui.kind_video'),
+                'kind_file' => admin_t('ui.kind_file'),
+                'n_files' => admin_t('ui.n_files'),
+                'uploaded' => admin_t('ui.uploaded'),
+                'upload_fail' => admin_t('ui.upload_fail'),
+                'please_select_files' => admin_t('ui.please_select_files'),
+                'confirm_batch_del_files' => admin_t('ui.confirm_batch_del_files'),
+                'confirm_del_file' => admin_t('ui.confirm_del_file'),
+                'cannot_open_image' => admin_t('ui.cannot_open_image'),
+                'no_usable_link' => admin_t('ui.no_usable_link'),
+                'deleted' => admin_t('ui.deleted'),
+                'fail' => admin_t('ui.fail'),
             ],
         ];
     }
@@ -368,9 +381,9 @@ class SysFileService
         $item['is_video'] = $this->isVideo($item);
         $item['kind'] = $item['is_image'] ? 'image' : ($item['is_video'] ? 'video' : 'file');
         $item['kind_label'] = match ($item['kind']) {
-            'image' => '图片',
-            'video' => '视频',
-            default => '文件',
+            'image' => admin_t('ui.pics'),
+            'video' => admin_t('ui.kind_video'),
+            default => admin_t('ui.kind_file'),
         };
         $item['ext'] = $this->extOf($item);
         $item['open_url'] = $id > 0 ? '/admin/system/attachments/open?id='.$id : $this->publicUrl($item);

@@ -7,49 +7,73 @@
         : 'goods';
     $groups = is_array($groups ?? null) ? $groups : [];
     $hint = (string) ($hint ?? '');
+    $mallJsLang = [
+        'add_goods' => admin_t('ui.add_goods'),
+        'edit_goods' => admin_t('ui.edit_goods'),
+        'no_match_rows' => admin_t('ui.no_match_rows'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_goods' => admin_t('ui.empty_goods'),
+        'empty_mall_orders' => admin_t('ui.empty_mall_orders'),
+        'empty_ship' => admin_t('ui.empty_ship'),
+        'please_fill_name' => admin_t('ui.please_fill_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'deleted' => admin_t('ui.deleted'),
+        'confirm_remove' => admin_t('ui.confirm_remove'),
+        'on' => admin_t('ui.on'),
+        'off' => admin_t('ui.off'),
+        'hot_badge' => admin_t('ui.hot_badge'),
+        'mark_shipped' => admin_t('ui.mark_shipped'),
+        'delivery_contact' => admin_t('ui.delivery_contact'),
+        'ship_note_ph' => admin_t('ui.ship_note_ph'),
+        'confirm_ship' => admin_t('ui.confirm_ship'),
+        'shipped' => admin_t('ui.shipped'),
+        'pool_remain' => admin_t('ui.pool_remain'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel mall-board desk-board" id="mall-board">
     <div class="card-header">
-        <span>积分商城 <em id="mall-count"></em></span>
+        <span>{{ admin_t('nav.mall') }} <em id="mall-count"></em></span>
         <div>
             <button type="button" class="btn btn-sm" id="mall-add-btn">{{ admin_t('ui.add') }}</button>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">用会员积分兑换。不接微信支付宝。会员时长（可设天数）、积分卡密（可立即到账）、实物周边（需联系方式）。关掉插件后 /mall 一起消失。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.mall_lead') }}</p>
         <div class="queue-chips" id="mall-desks">
-            <a class="chip{{ $desk === 'goods' ? ' active' : '' }}" href="/admin/video/mall_goods">商品</a>
-            <a class="chip{{ $desk === 'orders' ? ' active' : '' }}" href="/admin/video/mall_goods?desk=orders">订单</a>
-            <a class="chip{{ $desk === 'ship' ? ' active' : '' }}" href="/admin/video/mall_goods?desk=ship">待发货</a>
+            <a class="chip{{ $desk === 'goods' ? ' active' : '' }}" href="/admin/video/mall_goods">{{ admin_t('nav.mall_goods') }}</a>
+            <a class="chip{{ $desk === 'orders' ? ' active' : '' }}" href="/admin/video/mall_goods?desk=orders">{{ admin_t('nav.mall_orders') }}</a>
+            <a class="chip{{ $desk === 'ship' ? ' active' : '' }}" href="/admin/video/mall_goods?desk=ship">{{ admin_t('nav.mall_ship') }}</a>
         </div>
         <form class="filter-bar" id="mall-search" onsubmit="return false;">
             <input type="hidden" name="desk" value="{{ $desk }}">
-            <input type="search" name="q" placeholder="{{ $desk === 'goods' ? '搜商品名' : '搜商品名、会员编号' }}" autocomplete="off">
+            <input type="search" name="q" placeholder="{{ $desk === 'goods' ? admin_t('ui.ph_search_goods') : admin_t('ui.ph_search_mall_order') }}" autocomplete="off">
             @if($desk === 'goods')
-                <select name="type" aria-label="类型">
+                <select name="type" aria-label="{{ admin_t('ui.col_type') }}">
                     <option value="">{{ admin_t('ui.all_types') }}</option>
-                    <option value="vip">会员时长</option>
-                    <option value="card">积分卡密</option>
-                    <option value="goods">实物周边</option>
+                    <option value="vip">{{ admin_t('ui.vip_duration') }}</option>
+                    <option value="card">{{ admin_t('ui.point_card') }}</option>
+                    <option value="goods">{{ admin_t('ui.physical') }}</option>
                 </select>
-                <select name="status" aria-label="状态">
+                <select name="status" aria-label="{{ admin_t('ui.status') }}">
                     <option value="">{{ admin_t('ui.all_status') }}</option>
-                    <option value="1">上架</option>
-                    <option value="0">下架</option>
+                    <option value="1">{{ admin_t('ui.on') }}</option>
+                    <option value="0">{{ admin_t('ui.off') }}</option>
                 </select>
             @elseif($desk === 'orders')
-                <select name="goods_type" aria-label="类型">
+                <select name="goods_type" aria-label="{{ admin_t('ui.col_type') }}">
                     <option value="">{{ admin_t('ui.all_types') }}</option>
-                    <option value="vip">会员时长</option>
-                    <option value="card">积分卡密</option>
-                    <option value="goods">实物周边</option>
+                    <option value="vip">{{ admin_t('ui.vip_duration') }}</option>
+                    <option value="card">{{ admin_t('ui.point_card') }}</option>
+                    <option value="goods">{{ admin_t('ui.physical') }}</option>
                 </select>
-                <select name="status" aria-label="状态">
+                <select name="status" aria-label="{{ admin_t('ui.status') }}">
                     <option value="">{{ admin_t('ui.all_status') }}</option>
-                    <option value="1">待发货</option>
-                    <option value="2">已完成</option>
+                    <option value="1">{{ admin_t('ui.to_ship') }}</option>
+                    <option value="2">{{ admin_t('ui.completed') }}</option>
                 </select>
             @endif
             <button type="button" class="btn btn-sm" id="mall-search-btn">{{ admin_t('ui.search') }}</button>
@@ -62,77 +86,77 @@
 <template id="mall-goods-tpl">
     <form class="admin-form">
         <input type="hidden" name="id">
-        <h3>基本</h3>
-        <label>名称</label>
-        <input class="entry-title" type="text" name="name" required placeholder="如 月卡 VIP / 500 积分礼包" autofocus>
-        <label>类型</label>
+        <h3>{{ admin_t('ui.section_basic') }}</h3>
+        <label>{{ admin_t('ui.name') }}</label>
+        <input class="entry-title" type="text" name="name" required placeholder="{{ admin_t('ui.ph_mall_name') }}" autofocus>
+        <label>{{ admin_t('ui.col_type') }}</label>
         <select name="type" id="mall-type">
-            <option value="vip">会员时长</option>
-            <option value="card">积分卡密</option>
-            <option value="goods">实物周边</option>
+            <option value="vip">{{ admin_t('ui.vip_duration') }}</option>
+            <option value="card">{{ admin_t('ui.point_card') }}</option>
+            <option value="goods">{{ admin_t('ui.physical') }}</option>
         </select>
-        <p class="muted field-hint">影视站常见三类：VIP 天数、积分礼包/卡密、少量周边发货。不接微信支付宝。</p>
+        <p class="muted field-hint">{{ admin_t('ui.mall_type_hint') }}</p>
         <div class="js-vip-fields" style="display:none">
-            <label>会员组</label>
+            <label>{{ admin_t('ui.apply_groups') }}</label>
             <select name="group_id">
-                <option value="0">请选择</option>
+                <option value="0">{{ admin_t('ui.pick_one') }}</option>
                 @foreach($groups as $group)
                     <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
                 @endforeach
             </select>
-            <label>时长（天）</label>
+            <label>{{ admin_t('ui.vip_days') }}</label>
             <input type="number" name="vip_days" value="30" min="0">
-            <p class="muted field-hint">填 0 表示长期。同组未过期会叠加天数；过期后从今天起算。</p>
+            <p class="muted field-hint">{{ admin_t('ui.vip_days_hint') }}</p>
         </div>
         <div class="js-card-fields" style="display:none">
-            <label>卡密来源</label>
+            <label>{{ admin_t('ui.card_source') }}</label>
             <select name="card_mode">
-                <option value="generate">生成新卡密</option>
-                <option value="assign">从现有未用卡领取</option>
+                <option value="generate">{{ admin_t('ui.gen_card') }}</option>
+                <option value="assign">{{ admin_t('ui.assign_card') }}</option>
             </select>
-            <label>卡密积分</label>
+            <label>{{ admin_t('ui.card_points') }}</label>
             <input type="number" name="card_points" value="0" min="0">
-            <label>发放方式</label>
+            <label>{{ admin_t('ui.grant_mode') }}</label>
             <select name="auto_credit">
-                <option value="1">立即到账</option>
-                <option value="0">只发卡密（可转赠）</option>
+                <option value="1">{{ admin_t('ui.credit_now') }}</option>
+                <option value="0">{{ admin_t('ui.card_only') }}</option>
             </select>
-            <p class="muted field-hint">生成时用卡密积分；填 0 则用商品积分。领取模式看卡池剩余。立即到账会核销卡密并加积分。</p>
+            <p class="muted field-hint">{{ admin_t('ui.mall_type_hint') }}</p>
         </div>
-        <label>封面</label>
+        <label>{{ admin_t('ui.cover') }}</label>
         <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址，可空">
-            <button type="button" class="btn btn-sm js-cover-pick">上传</button>
+            <input type="text" name="cover" placeholder="{{ admin_t('ui.ph_image_url') }}">
+            <button type="button" class="btn btn-sm js-cover-pick">{{ admin_t('ui.upload') }}</button>
         </div>
         <img class="img-preview js-cover-preview" alt="">
-        <h3>兑换</h3>
+        <h3>{{ admin_t('ui.redeem') }}</h3>
         <div class="admin-dialog-grid">
             <div>
-                <label>积分</label>
+                <label>{{ admin_t('ui.points') }}</label>
                 <input type="number" name="points" value="0" min="0">
             </div>
             <div>
-                <label>库存</label>
+                <label>{{ admin_t('ui.stock') }}</label>
                 <input type="number" name="stock" value="0" min="0">
             </div>
         </div>
-        <label>热门</label>
+        <label>{{ admin_t('ui.hot') }}</label>
         <select name="is_hot">
-            <option value="0">否</option>
-            <option value="1">是（首页「大家都在换」）</option>
+            <option value="0">{{ admin_t('ui.no') }}</option>
+            <option value="1">{{ admin_t('ui.hot_home') }}</option>
         </select>
-        <label>说明</label>
-        <textarea name="hint" rows="3" placeholder="前台商品说明，可空"></textarea>
+        <label>{{ admin_t('ui.intro') }}</label>
+        <textarea name="hint" rows="3" placeholder="{{ admin_t('ui.ph_goods_hint') }}"></textarea>
         <div class="admin-dialog-grid">
             <div>
-                <label>排序</label>
+                <label>{{ admin_t('ui.sort') }}</label>
                 <input type="number" name="sort" value="0">
             </div>
             <div>
-                <label>状态</label>
+                <label>{{ admin_t('ui.status') }}</label>
                 <select name="status">
-                    <option value="1">上架</option>
-                    <option value="0">下架</option>
+                    <option value="1">{{ admin_t('ui.on') }}</option>
+                    <option value="0">{{ admin_t('ui.off') }}</option>
                 </select>
             </div>
         </div>
@@ -144,6 +168,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($mallJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     var form = document.getElementById('mall-search');
     var countEl = document.getElementById('mall-count');
@@ -151,7 +176,7 @@
     var module = desk === 'goods' ? 'mall_goods' : 'mall_orders';
     if (addBtn) {
         addBtn.style.display = desk === 'goods' ? '' : 'none';
-        addBtn.textContent = '新增商品';
+        addBtn.textContent = L.add_goods;
     }
 
     function cleanWhere(data) {
@@ -175,13 +200,13 @@
     }
     function emptyHtml(_parsed, where) {
         if (isFiltered(where)) {
-            return '<div class="list-empty"><p>没有符合条件的记录</p><p><button type="button" class="btn btn-muted btn-sm" id="mall-empty-reset">清除筛选</button></p></div>';
+            return '<div class="list-empty"><p>' + L.no_match_rows + '</p><p><button type="button" class="btn btn-muted btn-sm" id="mall-empty-reset">' + L.clear_filter + '</button></p></div>';
         }
         var copy = {
-            goods: ['还没有商品', '新增商品'],
-            orders: ['还没有兑换订单', ''],
-            ship: ['没有待发货的实物单', '']
-        }[desk] || ['还没有记录', '新增'];
+            goods: [L.empty_goods, L.add_goods],
+            orders: [L.empty_mall_orders, ''],
+            ship: [L.empty_ship, '']
+        }[desk] || [L.no_match_rows, L.add_goods];
         if (!copy[1]) {
             return '<div class="list-empty"><p>' + copy[0] + '</p></div>';
         }
@@ -192,13 +217,13 @@
     if (desk === 'goods') {
         cols = [
             {title: AdminUi.t('name'), html: function (d) {
-                var hot = String(d.is_hot) === '1' ? '<span class="badge">热</span> ' : '';
+                var hot = String(d.is_hot) === '1' ? '<span class="badge">' + L.hot_badge + '</span> ' : '';
                 return hot + '<a class="entry-row-title js-edit" href="#">' + U.escape(d.name || AdminUi.t('not_filled')) + '</a>';
             }},
             {title: AdminUi.t('type'), width: 96, html: function (d) {
                 var extra = '';
                 if (d.type === 'vip') extra = ' · ' + U.escape(d.vip_days_label || '');
-                if (d.type === 'card' && d.card_mode === 'assign') extra = ' · 池' + (d.pool_remain == null ? 0 : d.pool_remain);
+                if (d.type === 'card' && d.card_mode === 'assign') extra = ' · ' + String(L.pool_remain || '').replace(':n', String(d.pool_remain == null ? 0 : d.pool_remain));
                 return U.escape(d.type_label || '') + extra;
             }},
             {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
@@ -208,7 +233,7 @@
             }},
             {title: AdminUi.t('sales'), width: 64, html: function (d) { return U.escape(String(d.sales == null ? 0 : d.sales)); }},
             {title: AdminUi.t('status'), width: 72, html: function (d) {
-                return String(d.status) === '1' ? U.status(true, '上架') : U.status(false, '下架');
+                return String(d.status) === '1' ? U.status(true, L.on) : U.status(false, L.off);
             }},
             {title: AdminUi.t('actions'), cls: 'actions', html: function () {
                 return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
@@ -221,10 +246,10 @@
             {title: AdminUi.t('type'), width: 96, html: function (d) { return U.escape(d.type_label || ''); }},
             {title: AdminUi.t('points'), width: 72, html: function (d) { return U.escape(String(d.points == null ? 0 : d.points)); }},
             {title: AdminUi.t('status'), width: 88, html: function (d) { return U.escape(d.status_label || ''); }},
-            {title: '发放 / 联系', html: function (d) { return U.escape(d.delivery_label || ''); }},
+            {title: L.delivery_contact, html: function (d) { return U.escape(d.delivery_label || ''); }},
             {title: AdminUi.t('actions'), cls: 'actions', html: function (d) {
                 if (String(d.status) === '1') {
-                    return '<a href="#" class="btn-link js-ship">标为已发货</a>';
+                    return '<a href="#" class="btn-link js-ship">' + L.mark_shipped + '</a>';
                 }
                 return '';
             }}
@@ -278,7 +303,7 @@
     function openDialog(mode, row) {
         row = row || {};
         U.dialog({
-            title: mode === 'edit' ? '编辑商品' : '新增商品',
+            title: mode === 'edit' ? L.edit_goods : L.add_goods,
             wide: true,
             content: document.getElementById('mall-goods-tpl').innerHTML,
             onOpen: function (body) {
@@ -294,11 +319,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写名称', 'err'); return false; }
+                if (!data.name) { U.toast(L.please_fill_name, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/' + module + '/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -317,21 +342,21 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确认删除？')) return;
+            if (!U.confirm(L.confirm_remove)) return;
             U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
         if (a.classList.contains('js-ship')) {
-            var note = U.prompt('发货备注（可选）', row.remark || '');
+            var note = U.prompt(L.ship_note_ph, row.remark || '');
             if (note === null) return;
-            if (!U.confirm('标为已发货？')) return;
+            if (!U.confirm(L.confirm_ship)) return;
             U.post('/admin/video/mall_orders/save', {id: row.id, status: 2, remark: note}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已发货', 'ok');
+                U.toast(L.shipped, 'ok');
             });
         }
     });

@@ -154,7 +154,10 @@ $fe = flatten($en);
 $common = is_file($root.'/tools/overlays/common_phrases.php') ? include $root.'/tools/overlays/common_phrases.php' : [];
 $seedKeys = is_file($root.'/tools/overlays/seed_keys.php') ? include $root.'/tools/overlays/seed_keys.php' : [];
 $restKeys = is_file($root.'/tools/overlays/rest_keys.php') ? include $root.'/tools/overlays/rest_keys.php' : [];
-$seedKeys = $restKeys + $seedKeys;
+$boardKeys = is_file($root.'/tools/overlays/rest_keys_boards.php') ? include $root.'/tools/overlays/rest_keys_boards.php' : [];
+$chromeKeys = is_file($root.'/tools/overlays/rest_keys_chrome.php') ? include $root.'/tools/overlays/rest_keys_chrome.php' : [];
+$detailKeys = is_file($root.'/tools/overlays/rest_keys_details.php') ? include $root.'/tools/overlays/rest_keys_details.php' : [];
+$seedKeys = $chromeKeys + $boardKeys + $detailKeys + $restKeys + $seedKeys;
 
 foreach ($locales as $code) {
     $path = $root.'/resources/lang/'.$code.'/admin.php';

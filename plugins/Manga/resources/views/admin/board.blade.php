@@ -69,58 +69,58 @@
         @if($desk !== 'stats')
         <p class="muted recycle-lead">
             @if($desk === 'work')
-                下方管本章节。快捷填话名即可添加；贴图、VIP 请点「完整表单」。
+                {{ admin_t('manga.lead_work') }}
             @elseif(in_array($desk, ['chapters', 'pics', 'comments'], true))
-                列表页只做快捷添加与浏览。复杂字段进「完整表单」。
+                {{ admin_t('manga.lead_list') }}
             @elseif($desk === 'favors')
-                会员在漫画页点「加入书架」后出现。后台不能代收藏。删除只取消此人的书架，不删作品。
+                {{ admin_t('manga.lead_favors') }}
             @elseif(in_array($desk, ['works', 'pending'], true))
-                独立漫画库，不是影片分类。快捷填名称即可添加；分类、标签、封面等进「完整表单」。点「管理」进工作台管章节。
+                {{ admin_t('manga.lead') }}
             @else
-                独立漫画库，不是影片分类。
+                {{ admin_t('manga.lead_short') }}
             @endif
         </p>
         @endif
 
         @if($desk === 'stats')
-            <p class="muted recycle-lead manga-stats-lead">独立漫画库 · 阅读来自会员历史，新章来自章节创建，人气为 hits，收藏来自书架。</p>
+            <p class="muted recycle-lead manga-stats-lead">{{ admin_t('manga.lead_stats') }}</p>
             <div class="stat-grid dash manga-stats-grid">
                 <div class="stat-card">
-                    <em>今日阅读</em>
+                    <em>{{ admin_t('ui.today_reads') }}</em>
                     <strong>{{ (int) ($stats['today_reads'] ?? 0) }}</strong>
-                    <span class="muted">会员续看记录</span>
+                    <span class="muted">{{ admin_t('ui.member_reads') }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>近 7 日阅读</em>
+                    <em>{{ admin_t('ui.week_reads') }}</em>
                     <strong>{{ (int) ($stats['week_reads'] ?? 0) }}</strong>
-                    <span class="muted">近 30 日 {{ (int) ($stats['month_reads'] ?? 0) }}</span>
+                    <span class="muted">{{ admin_t('ui.last_30d_n', ['n' => (int) ($stats['month_reads'] ?? 0)]) }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>近 7 日新章</em>
+                    <em>{{ admin_t('ui.week_chapters') }}</em>
                     <strong>{{ (int) ($stats['week_chapters'] ?? 0) }}</strong>
-                    <span class="muted">近 30 日 {{ (int) ($stats['month_chapters'] ?? 0) }}</span>
+                    <span class="muted">{{ admin_t('ui.last_30d_n', ['n' => (int) ($stats['month_chapters'] ?? 0)]) }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>上架作品</em>
+                    <em>{{ admin_t('ui.works_on') }}</em>
                     <strong>{{ (int) ($worksStat['show'] ?? 0) }}</strong>
-                    <span class="muted">共 {{ (int) ($worksStat['all'] ?? 0) }} · 待审 {{ (int) ($worksStat['pending'] ?? 0) }} · 下架 {{ (int) ($worksStat['off'] ?? 0) }}</span>
+                    <span class="muted">{{ admin_t('ui.n_total_pending_off', ['all' => (int) ($worksStat['all'] ?? 0), 'pending' => (int) ($worksStat['pending'] ?? 0), 'off' => (int) ($worksStat['off'] ?? 0)]) }}</span>
                 </div>
                 <div class="stat-card">
-                    <em>书架收藏</em>
+                    <em>{{ admin_t('ui.bookshelf') }}</em>
                     <strong>{{ (int) ($stats['favor_total'] ?? 0) }}</strong>
-                    <span class="muted"><a href="/admin/video/mangas?desk=favors">打开书架台</a></span>
+                    <span class="muted"><a href="/admin/video/mangas?desk=favors">{{ admin_t('ui.open_bookshelf') }}</a></span>
                 </div>
             </div>
             <div class="flink-stats-split manga-stats-split">
                 <div>
-                    <h3 style="font-size:15px;margin:0 0 10px">人气 TOP</h3>
+                    <h3 style="font-size:15px;margin:0 0 10px">{{ admin_t('ui.hits_top') }}</h3>
                     @if($topHits === [])
-                        <p class="muted">还没有作品。</p>
-                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas">去作品台</a></p>
+                        <p class="muted">{{ admin_t('ui.empty_works_dot') }}</p>
+                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas">{{ admin_t('ui.go_works') }}</a></p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
-                                <thead><tr><th>作品</th><th>人气</th></tr></thead>
+                                <thead><tr><th>{{ admin_t('ui.works') }}</th><th>{{ admin_t('ui.hits') }}</th></tr></thead>
                                 <tbody>
                                 @foreach($topHits as $row)
                                     <tr>
@@ -134,14 +134,14 @@
                     @endif
                 </div>
                 <div>
-                    <h3 style="font-size:15px;margin:0 0 10px">收藏 TOP</h3>
+                    <h3 style="font-size:15px;margin:0 0 10px">{{ admin_t('ui.favor_top') }}</h3>
                     @if($topFavors === [])
-                        <p class="muted">还没有书架收藏。会员前台点「加入书架」后会出现在这里。</p>
-                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors">打开书架台</a></p>
+                        <p class="muted">{{ admin_t('ui.empty_favors_hint') }}</p>
+                        <p><a class="btn btn-muted btn-sm" href="/admin/video/mangas?desk=favors">{{ admin_t('ui.open_bookshelf') }}</a></p>
                     @else
                         <div class="table-wrap">
                             <table class="data-table">
-                                <thead><tr><th>作品</th><th>收藏</th></tr></thead>
+                                <thead><tr><th>{{ admin_t('ui.works') }}</th><th>{{ admin_t('ui.favors') }}</th></tr></thead>
                                 <tbody>
                                 @foreach($topFavors as $row)
                                     <tr>
@@ -155,13 +155,13 @@
                     @endif
                 </div>
             </div>
-            <h3 style="font-size:15px;margin:20px 0 10px">近 14 日趋势</h3>
+            <h3 style="font-size:15px;margin:20px 0 10px">{{ admin_t('ui.last_14d_trend') }}</h3>
             @if($daily === [])
-                <p class="muted">暂无数据。</p>
+                <p class="muted">{{ admin_t('ui.none') }}</p>
             @else
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead><tr><th>日期</th><th>阅读</th><th>新章</th></tr></thead>
+                        <thead><tr><th>{{ admin_t('ui.date') }}</th><th>{{ admin_t('ui.reads') }}</th><th>{{ admin_t('ui.new_chapters') }}</th></tr></thead>
                         <tbody>
                         @foreach(array_reverse($daily) as $row)
                             <tr>
@@ -178,10 +178,10 @@
             @if(in_array($desk, ['works', 'pending'], true) && (! $tagsReady || ! $authorsReady))
                 <div class="flash" style="margin:0 0 12px">
                     @if(! $tagsReady)
-                        <p class="muted" style="margin:0">标签表还没建，完整表单里暂不能挂标签。<a href="/admin/video/manga-tags">打开标签台</a>查看迁移说明。</p>
+                        <p class="muted" style="margin:0">{!! str_replace(':link', '<a href="/admin/video/manga-tags">'.e(admin_t('ui.open_tags_desk')).'</a>', e(admin_t('ui.tags_table_missing'))) !!}</p>
                     @endif
                     @if(! $authorsReady)
-                        <p class="muted" style="margin:{{ $tagsReady ? '0' : '6px 0 0' }}">作者表还没建，完整表单里暂不能挂作者库。<a href="/admin/video/manga-authors">打开作者台</a>查看迁移说明。</p>
+                        <p class="muted" style="margin:{{ $tagsReady ? '0' : '6px 0 0' }}">{!! str_replace(':link', '<a href="/admin/video/manga-authors">'.e(admin_t('ui.open_authors_desk')).'</a>', e(admin_t('ui.authors_table_missing'))) !!}</p>
                     @endif
                 </div>
             @endif
@@ -273,9 +273,9 @@
                 <input type="hidden" name="today" value="">
                 <input type="hidden" name="missing" value="">
             @endif
-            <input type="search" name="q" value="{{ $filterQ }}" placeholder="{{ $desk === 'types' ? '搜分类名' : (in_array($desk, ['chapters', 'work'], true) ? '搜章节' : ($desk === 'pics' ? '搜图片地址' : ($desk === 'comments' ? '搜评论、作品' : ($desk === 'favors' ? '搜会员、作品或 ID' : '搜名称、作者、标签')))) }}" autocomplete="off">
+            <input type="search" name="q" value="{{ $filterQ }}" placeholder="{{ $desk === 'types' ? admin_t('ui.ph_search_noun', ['name' => admin_t('ui.types')]) : (in_array($desk, ['chapters', 'work'], true) ? admin_t('ui.ph_search_chapter') : ($desk === 'pics' ? admin_t('ui.ph_search_pic_url') : ($desk === 'comments' ? admin_t('ui.ph_search_comment_work') : ($desk === 'favors' ? admin_t('ui.ph_search_member_work') : admin_t('ui.ph_search_name_author_tag'))))) }}" autocomplete="off">
             @if(in_array($desk, ['works', 'pending'], true) && $types !== [])
-                <select name="type_id" aria-label="分类">
+                <select name="type_id" aria-label="{{ admin_t('ui.types') }}">
                     <option value="">{{ admin_t('ui.all_categories') }}</option>
                     @foreach($types as $type)
                         <option value="{{ $type['id'] }}" @selected($filterTypeId === (int) $type['id'])>{{ $type['label'] ?? $type['name'] }}</option>
@@ -300,10 +300,10 @@
                 </select>
             @endif
             @if($desk === 'comments')
-                <select name="status" aria-label="状态" hidden>
+                <select name="status" aria-label="{{ admin_t('ui.status') }}" hidden>
                     <option value="">{{ admin_t('ui.all_status') }}</option>
-                    <option value="1">显示</option>
-                    <option value="0">待审</option>
+                    <option value="1">{{ admin_t('ui.show') }}</option>
+                    <option value="0">{{ admin_t('ui.pending') }}</option>
                 </select>
             @endif
             <button type="button" class="btn btn-sm" id="manga-search-btn">{{ admin_t('ui.search') }}</button>
@@ -318,19 +318,19 @@
         @endif
         @if($filterTag && in_array($desk, ['works', 'pending'], true))
             <div class="queue-chips">
-                <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">标签 {{ $filterTag['name'] }} ×</a>
+                <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.tag_chip', ['name' => $filterTag['name']]) }}</a>
             </div>
         @endif
         @if($filterAuthor && in_array($desk, ['works', 'pending'], true))
             <div class="queue-chips">
-                <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">作者 {{ $filterAuthor['name'] }} ×</a>
+                <a class="chip active" href="/admin/video/mangas{{ $desk === 'pending' ? '?desk=pending' : '' }}">{{ admin_t('ui.author_chip', ['name' => $filterAuthor['name']]) }}</a>
             </div>
         @endif
         @if($desk === 'favors')
             <div class="queue-chips" id="manga-favor-queues">
                 <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($fq('all') > 0)<em>{{ $fq('all') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="missing" data-value="1">作品已删@if($fq('missing') > 0)<em>{{ $fq('missing') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="missing" data-value="1">{{ admin_t('ui.work_gone') }}@if($fq('missing') > 0)<em>{{ $fq('missing') }}</em>@endif</button>
             </div>
         @endif
         @if(in_array($desk, ['works', 'pending', 'comments', 'chapters', 'pics', 'work', 'types', 'favors'], true))
@@ -350,8 +350,8 @@
                 @if($desk === 'types')
                     <button type="button" class="btn btn-sm" id="manga-batch-on">{{ admin_t('ui.enabled') }}</button>
                     <button type="button" class="btn btn-muted btn-sm" id="manga-batch-off">{{ admin_t('ui.disabled') }}</button>
-                    <select id="manga-batch-parent" class="batch-select"><option value="">改到上级</option></select>
-                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-move">移动</button>
+                    <select id="manga-batch-parent" class="batch-select"><option value="">{{ admin_t('ui.move_parent') }}</option></select>
+                    <button type="button" class="btn btn-muted btn-sm" id="manga-batch-move">{{ admin_t('ui.move') }}</button>
                 @endif
                 <button type="button" class="btn btn-danger btn-sm" id="manga-batch-del">{{ $desk === 'favors' ? admin_t('manga.unfavor') : admin_t('ui.delete') }}</button>
                 <button type="button" class="btn btn-muted btn-sm" id="manga-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
@@ -439,7 +439,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($mangaJsLang);
+    var L = @json($mangaJsLang, JSON_UNESCAPED_UNICODE);
     var desk = @json($desk);
     var filterMangaId = @json($filterMangaId);
     var workPayload = @json($work);

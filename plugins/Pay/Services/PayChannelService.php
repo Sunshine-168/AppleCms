@@ -17,6 +17,15 @@ class PayChannelService
         'dfpay' => 'DfPay（A13 协议）',
     ];
 
+    public static function driverLabel(string $driver): string
+    {
+        return match (strtolower($driver)) {
+            'dfpay' => admin_t('ui.channel_dfpay'),
+            'epay' => admin_t('ui.channel_epay'),
+            default => $driver,
+        };
+    }
+
     public function ready(): bool
     {
         return Schema::hasTable('plugin_pay_channels');
