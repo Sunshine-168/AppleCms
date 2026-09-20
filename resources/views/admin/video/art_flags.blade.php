@@ -9,19 +9,19 @@
 @section('plain')
 <div class="card card-panel art-flag-index">
     <div class="card-header">
-        <span>推荐属性</span>
-        <a class="btn btn-muted btn-sm" href="/admin/video/arts">返回文章</a>
+        <span>{{ admin_t('nav.art_flags') }}</span>
+        <a class="btn btn-muted btn-sm" href="/admin/video/arts">{{ admin_t('ui.back_arts') }}</a>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">写稿勾选这三项。不能自己加标识码，也没有单独再建一张推荐表。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.art_flags_lead') }}</p>
         @if(! $ready)
-            <p class="muted">请先执行数据库迁移。</p>
+            <p class="muted">{{ admin_t('ui.migrate_first') }}</p>
         @else
             <ul class="flag-board">
                 @foreach($flags as $flag)
                     <li>
                         <a href="{{ $flag['url'] }}">{{ $flag['label'] }}</a>
-                        <em>{{ (int) ($flag['art_count'] ?? 0) }} 篇</em>
+                        <em>{{ admin_t('ui.topic_arts_n', ['n' => (int) ($flag['art_count'] ?? 0)]) }}</em>
                         <span class="muted">{{ $flag['hint'] }}</span>
                     </li>
                 @endforeach

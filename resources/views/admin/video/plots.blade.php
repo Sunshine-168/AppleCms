@@ -107,14 +107,14 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($plotJsLang);
+    var L = @json($plotJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_video', 'empty_content', 'empty_title'];
     var form = document.getElementById('plot-search');
     var batchBar = document.getElementById('plot-batch');
     var batchCount = document.getElementById('plot-batch-count');
     var countEl = document.getElementById('plot-count');
     var prefillVideo = @json($videoId > 0 ? $videoId : 0);
-    var prefillVideoTitle = @json($videoTitle);
+    var prefillVideoTitle = @json($videoTitle, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

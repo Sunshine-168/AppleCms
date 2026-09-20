@@ -109,7 +109,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($ctaskFormJsLang);
+    var L = @json($ctaskFormJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('ctask-form');
     var source = document.getElementById('ctask-source');
     var name = document.getElementById('ctask-name');

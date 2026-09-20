@@ -111,13 +111,13 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($domainJsLang);
+    var L = @json($domainJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['current'];
     var form = document.getElementById('domain-search');
     var batchBar = document.getElementById('domain-batch');
     var batchCount = document.getElementById('domain-batch-count');
     var countEl = document.getElementById('domain-count');
-    var currentHost = @json($currentHost);
+    var currentHost = @json($currentHost, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

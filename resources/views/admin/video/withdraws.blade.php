@@ -92,7 +92,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($withdrawJsLang);
+    var L = @json($withdrawJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('withdraw-search');
     var batchBar = document.getElementById('withdraw-batch');
     var batchCount = document.getElementById('withdraw-batch-count');

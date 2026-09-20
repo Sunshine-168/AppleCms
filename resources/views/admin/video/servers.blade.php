@@ -125,7 +125,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($serverJsLang);
+    var L = @json($serverJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_url'];
     var form = document.getElementById('server-search');
     var tryForm = document.getElementById('server-try');

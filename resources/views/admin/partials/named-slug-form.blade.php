@@ -81,10 +81,10 @@
 (function () {
     var U = AdminUi;
     var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
-    var form = document.getElementById(@json($formId));
-    var title = document.getElementById(@json($nameId));
-    var slug = document.getElementById(@json($slugId));
-    var hint = document.getElementById(@json($hintId));
+    var form = document.getElementById(@json($formId, JSON_UNESCAPED_UNICODE));
+    var title = document.getElementById(@json($nameId, JSON_UNESCAPED_UNICODE));
+    var slug = document.getElementById(@json($slugId, JSON_UNESCAPED_UNICODE));
+    var hint = document.getElementById(@json($hintId, JSON_UNESCAPED_UNICODE));
     var isEdit = !!String(form.querySelector('input[name="id"]').value || '').trim();
     function preview() {
         var custom = (slug && slug.value || '').trim();

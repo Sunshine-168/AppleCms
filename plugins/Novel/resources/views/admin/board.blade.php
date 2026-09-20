@@ -173,7 +173,7 @@
 @push('scripts')
 <script>
 (function () {
-    var U = AdminUi, desk = @json($desk), url = '/admin/video/novels', L = @json($novelJsLang, JSON_UNESCAPED_UNICODE);
+    var U = AdminUi, desk = @json($desk, JSON_UNESCAPED_UNICODE), url = '/admin/video/novels', L = @json($novelJsLang, JSON_UNESCAPED_UNICODE);
     if (desk === 'stats' || !U) return;
     var countEl = document.getElementById('novel-count');
     var search = document.getElementById('novel-search');

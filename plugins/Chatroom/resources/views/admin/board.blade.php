@@ -108,7 +108,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($chatJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     if (desk === 'settings') {
         U.on('#chat-settings-save', 'click', function () {
             var data = U.formData(document.getElementById('chat-settings'));

@@ -117,13 +117,16 @@
         'empty_actors_hint' => admin_t('ui.empty_actors_hint'),
         'no_match_actors' => admin_t('ui.no_match_actors'),
         'videos' => admin_t('nav.videos'),
+        'no_image' => admin_t('ui.no_image'),
+        'videos_n' => admin_t('ui.tag_videos_n', ['n' => '__N__']),
+        'no_videos_yet' => admin_t('ui.tag_no_videos'),
     ];
 @endphp
 @push('scripts')
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($actorJsLang);
+    var L = @json($actorJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_pic', 'repeat'];
     var form = document.getElementById('actor-search');
     var batchBar = document.getElementById('actor-batch');
@@ -174,10 +177,10 @@
         var cover = String(d.avatar || '').trim();
         var thumb = cover
             ? '<img class="vod-thumb actor-thumb" src="' + U.escape(cover) + '" alt="">'
-            : '<span class="vod-thumb actor-thumb is-empty">无图</span>';
+            : '<span class="vod-thumb actor-thumb is-empty">' + U.escape(L.no_image) + '</span>';
         var meta = '#' + U.escape(d.id);
         var n = parseInt(d.video_count, 10) || 0;
-        meta += n > 0 ? ' · ' + n + ' 部' : ' · 还没挂片';
+        meta += n > 0 ? ' · ' + String(L.videos_n || '').replace('__N__', String(n)) : ' · ' + U.escape(L.no_videos_yet);
         if (d.sex) meta += ' · ' + U.escape(d.sex);
         if (d.area) meta += ' · ' + U.escape(d.area);
         return '<div class="vod-cell">' + thumb + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'

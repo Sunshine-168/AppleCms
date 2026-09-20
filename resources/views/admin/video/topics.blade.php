@@ -185,7 +185,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($topicJsLang);
+    var L = @json($topicJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('topic-search');
     var batchBar = document.getElementById('topic-batch');
     var batchCount = document.getElementById('topic-batch-count');

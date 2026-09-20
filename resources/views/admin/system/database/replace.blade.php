@@ -3,24 +3,35 @@
 
 @php
     $targets = $targets ?? [];
+    $jsLang = [
+        'need_replace_fields' => admin_t('ui.need_replace_fields'),
+        'need_replace_from' => admin_t('ui.need_replace_from'),
+        'preview_fail' => admin_t('ui.preview_fail'),
+        'match_n' => admin_t('ui.match_n'),
+        'no_match_text' => admin_t('ui.no_match_text'),
+        'need_preview_first' => admin_t('ui.need_preview_first'),
+        'replace_confirm' => admin_t('ui.replace_confirm'),
+        'replace_fail' => admin_t('ui.replace_fail'),
+        'replaced_ok' => admin_t('ui.replaced_ok'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel replace-index db-index">
     <div class="card-header">
-        <span>批量替换</span>
+        <span>{{ admin_t('page.db_replace') }}</span>
     </div>
     <div class="card-body">
         @include('admin.partials.db-tabs', ['tab' => 'replace'])
-        <p class="muted recycle-lead">把片库里一段文字换成另一段。换域名、改错字。改完不能撤销，先备份。系统表不在这里。复杂条件用 SQL。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.replace_lead') }}</p>
 
         @if($targets === [])
             <div class="list-empty">
-                <p>还没有可替换的片库表。</p>
-                <p class="muted">装好影片、文章或分类之后再来。</p>
+                <p>{{ admin_t('ui.empty_replace') }}</p>
+                <p class="muted">{{ admin_t('ui.empty_replace_hint') }}</p>
             </div>
         @else
-            <p class="replace-label">改哪一类</p>
+            <p class="replace-label">{{ admin_t('ui.replace_which') }}</p>
             <div class="queue-chips" id="replace-targets">
                 @foreach($targets as $i => $target)
                     <button type="button" class="chip{{ $i === 0 ? ' active' : '' }}" data-target="{{ $target['id'] }}">{{ $target['label'] }}</button>
@@ -28,16 +39,16 @@
             </div>
             <p class="muted field-hint" id="replace-target-hint">{{ $targets[0]['hint'] ?? '' }}</p>
 
-            <p class="replace-label">勾要改的项</p>
+            <p class="replace-label">{{ admin_t('ui.replace_tick') }}</p>
             <div class="replace-fields" id="replace-fields"></div>
 
             <form id="replace-form" autocomplete="off" onsubmit="return false;">
                 <input type="hidden" name="target" id="replace-target" value="{{ $targets[0]['id'] ?? '' }}">
-                <label for="replace-from">找这段</label>
-                <input type="text" id="replace-from" name="from" placeholder="例如旧域名或错别字" maxlength="500">
-                <label for="replace-to">换成</label>
-                <input type="text" id="replace-to" name="to" placeholder="可留空，等于删掉这段字" maxlength="500">
-                <p class="muted field-hint">只改含这段文字的行。新旧一样不会动库。</p>
+                <label for="replace-from">{{ admin_t('ui.replace_find') }}</label>
+                <input type="text" id="replace-from" name="from" placeholder="{{ admin_t('ui.ph_replace_from') }}" maxlength="500">
+                <label for="replace-to">{{ admin_t('ui.replace_to') }}</label>
+                <input type="text" id="replace-to" name="to" placeholder="{{ admin_t('ui.ph_replace_to') }}" maxlength="500">
+                <p class="muted field-hint">{{ admin_t('ui.replace_hint') }}</p>
             </form>
 
             <div class="replace-preview" id="replace-preview" hidden>
@@ -45,8 +56,8 @@
             </div>
 
             <div class="form-actions">
-                <button type="button" class="btn btn-muted" id="replace-preview-btn">看看会改几条</button>
-                <button type="button" class="btn btn-danger" id="replace-run-btn" disabled>确认替换</button>
+                <button type="button" class="btn btn-muted" id="replace-preview-btn">{{ admin_t('ui.replace_preview_btn') }}</button>
+                <button type="button" class="btn btn-danger" id="replace-run-btn" disabled>{{ admin_t('ui.replace_run') }}</button>
             </div>
         @endif
     </div>
@@ -57,7 +68,8 @@
 <script>
 (function () {
     var U = AdminUi;
-    var TARGETS = @json($targets);
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
+    var TARGETS = @json($targets, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('replace-form');
     if (!form) return;
     var previewBox = document.getElementById('replace-preview');
@@ -116,41 +128,41 @@
 
     U.on('#replace-preview-btn', 'click', function () {
         var p = payload();
-        if (!p.fields.length) { U.toast('请勾要改的项', 'err'); return; }
-        if (!p.from) { U.toast('请填写要找的文字', 'err'); return; }
+        if (!p.fields.length) { U.toast(L.need_replace_fields, 'err'); return; }
+        if (!p.from) { U.toast(L.need_replace_from, 'err'); return; }
         U.loading(true);
         U.post('/admin/system/database/replace/preview', p).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能预览', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.preview_fail, 'err'); return; }
             var d = res.data || {};
             previewText.textContent = d.summary || res.msg || '';
             previewBox.hidden = false;
             var n = parseInt(d.matched, 10) || 0;
             stamp = n > 0 ? keyOf(p) : '';
             runBtn.disabled = n < 1;
-            U.toast(res.msg || (n ? '约 ' + n + ' 条' : '没有匹配'), n ? 'ok' : 'err');
+            U.toast(res.msg || (n ? String(L.match_n || '').replace(':n', String(n)) : L.no_match_text), n ? 'ok' : 'err');
         }).catch(function () {
             U.loading(false);
-            U.toast('没能预览', 'err');
+            U.toast(L.preview_fail, 'err');
         });
     });
 
     U.on('#replace-run-btn', 'click', function () {
         var p = payload();
-        if (stamp === '' || stamp !== keyOf(p)) { U.toast('请先看看会改几条', 'err'); return; }
-        if (!U.confirm('将按预览替换，改完不能撤销。确定？')) return;
+        if (stamp === '' || stamp !== keyOf(p)) { U.toast(L.need_preview_first, 'err'); return; }
+        if (!U.confirm(L.replace_confirm)) return;
         U.loading(true);
         U.post('/admin/system/database/replace/run', p).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能替换', 'err'); return; }
-            U.toast((res && res.msg) || '已替换', 'ok');
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.replace_fail, 'err'); return; }
+            U.toast((res && res.msg) || L.replaced_ok, 'ok');
             previewText.textContent = (res.data && res.data.summary) || res.msg || '';
             previewBox.hidden = false;
             stamp = '';
             runBtn.disabled = true;
         }).catch(function () {
             U.loading(false);
-            U.toast('没能替换', 'err');
+            U.toast(L.replace_fail, 'err');
         });
     });
 

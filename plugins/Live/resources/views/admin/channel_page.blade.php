@@ -136,7 +136,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($pageJsLang);
+    var L = @json($pageJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('live-channel-form');
     var isEdit = !!String(form.id.value || '').trim();
     U.bindImageField(form, { input: '#ch-cover', btn: '#ch-cover-pick', preview: '#ch-cover-preview' });

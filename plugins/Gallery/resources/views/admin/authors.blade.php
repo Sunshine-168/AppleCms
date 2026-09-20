@@ -79,7 +79,7 @@
     var batchBar = document.getElementById('gallery-author-batch');
     var batchCount = document.getElementById('gallery-author-batch-count');
     var countEl = document.getElementById('gallery-author-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
     var base = '/admin/video/gallery-authors';
 
     function cleanWhere(data) {

@@ -17,7 +17,7 @@
     </div>
     <div class="card-body">
         @include('admin.partials.db-tabs', ['tab' => 'dict'])
-        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}前台下拉选项在「<a href="/admin/system/dicts">字典</a>」。</p>
+        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}{{ admin_t('ui.dict_dropdowns') }}「<a href="/admin/system/dicts">{{ admin_t('page.dict') }}</a>」。</p>
         <form class="filter-bar schema-find" id="schema-search" autocomplete="off" onsubmit="return false;">
             <input type="search" id="schema-q" placeholder="{{ $ui['find'] ?? '' }}" aria-label="{{ $ui['find'] ?? '' }}">
         </form>
@@ -84,9 +84,9 @@
     var U = AdminUi;
     var root = document.getElementById('schema-index');
     if (!root || !U) return;
-    var UI = @json($ui);
+    var UI = @json($ui, JSON_UNESCAPED_UNICODE);
     var group = '';
-    var current = @json($current);
+    var current = @json($current, JSON_UNESCAPED_UNICODE);
 
     function visible(btn) {
         if (group && btn.getAttribute('data-group') !== group) return false;

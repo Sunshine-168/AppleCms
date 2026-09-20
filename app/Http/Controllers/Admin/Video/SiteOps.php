@@ -147,7 +147,7 @@ class SiteOps extends Controller
         $ttl = max(0, (int) ($site['html_cache_ttl'] ?? 3600));
         $ttlOptions = HtmlCacheService::ttlOptions();
         if (! array_key_exists($ttl, $ttlOptions)) {
-            $ttlOptions[$ttl] = '当前 '.$this->ttlPlain($ttl);
+            $ttlOptions[$ttl] = admin_t('ui.ttl_current', ['n' => $this->ttlPlain($ttl)]);
         }
         $lastBust = $this->htmlCache->lastBust();
         $catalog = $this->diskHtml->optCatalog();
@@ -311,19 +311,19 @@ class SiteOps extends Controller
     protected function ttlPlain(int $seconds): string
     {
         if ($seconds <= 0) {
-            return '改内容后马上换新';
+            return admin_t('ui.ttl_now');
         }
         if ($seconds % 86400 === 0) {
-            return ($seconds / 86400).' 天';
+            return admin_t('ui.ttl_1d_n', ['n' => $seconds / 86400]);
         }
         if ($seconds % 3600 === 0) {
-            return ($seconds / 3600).' 小时';
+            return admin_t('ui.ttl_1h_n', ['n' => $seconds / 3600]);
         }
         if ($seconds % 60 === 0) {
-            return ($seconds / 60).' 分钟';
+            return admin_t('ui.ttl_1m_n', ['n' => $seconds / 60]);
         }
 
-        return $seconds.' 秒';
+        return admin_t('ui.ttl_sec_n', ['n' => $seconds]);
     }
 
     public function disableFailSource(Request $request): JsonResponse

@@ -79,7 +79,7 @@
     var batchBar = document.getElementById('novel-tag-batch');
     var batchCount = document.getElementById('novel-tag-batch-count');
     var countEl = document.getElementById('novel-tag-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
     var base = '/admin/video/novel-tags';
 
     function cleanWhere(data) {

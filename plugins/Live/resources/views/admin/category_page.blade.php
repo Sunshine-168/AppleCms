@@ -84,7 +84,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($pageJsLang);
+    var L = @json($pageJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('live-category-form');
     var isEdit = !!String(form.id.value || '').trim();
     U.bindImageField(form, { input: '#cate-pic', btn: '#cate-pic-pick', preview: '#cate-pic-preview' });

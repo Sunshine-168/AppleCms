@@ -156,10 +156,10 @@ class CjRuleService
 
             return Result::success(
                 ['items' => $rows, 'fetched' => count($rows), 'total' => count($rows)],
-                '抓到 '.count($rows).' 条，未写入库。'
+                admin_t('ui.cj_try_ok', ['n' => count($rows)])
             );
         } catch (\Throwable $e) {
-            return Result::fail($e->getMessage() !== '' ? $e->getMessage() : '试抓失败', ['items' => []]);
+            return Result::fail($e->getMessage() !== '' ? $e->getMessage() : admin_t('ui.try_fetch_fail'), ['items' => []]);
         }
     }
 
@@ -775,9 +775,9 @@ class CjRuleService
     public static function intoLabel(string $into): string
     {
         return match ($into) {
-            'art' => '文章',
-            'manga' => '漫画',
-            default => '影片',
+            'art' => admin_t('ui.articles'),
+            'manga' => admin_t('ui.chip_manga'),
+            default => admin_t('ui.chip_videos'),
         };
     }
 

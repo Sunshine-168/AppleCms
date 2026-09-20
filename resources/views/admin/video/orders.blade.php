@@ -129,7 +129,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($orderJsLang);
+    var L = @json($orderJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('order-search');
     var batchBar = document.getElementById('order-batch');
     var batchCount = document.getElementById('order-batch-count');

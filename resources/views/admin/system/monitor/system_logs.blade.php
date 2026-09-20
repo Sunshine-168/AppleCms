@@ -6,17 +6,32 @@
     $yesterday = $yesterday ?? now()->subDay()->toDateString();
     $weekFrom = $weekFrom ?? now()->subDays(6)->toDateString();
     $monthFrom = $monthFrom ?? now()->subDays(29)->toDateString();
+    $jsLang = [
+        'error_log_title' => admin_t('ui.tab_error'),
+        'error_once' => admin_t('ui.error_once'),
+        'view_detail' => admin_t('ui.view_detail'),
+        'said_what' => admin_t('ui.said_what'),
+        'exc_class' => admin_t('ui.exc_class'),
+        'kind_file' => admin_t('ui.kind_file'),
+        'opened_then' => admin_t('ui.opened_then'),
+        'stack_trace' => admin_t('ui.stack_trace'),
+        'error_detail' => admin_t('ui.error_detail'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_sys_error' => admin_t('ui.empty_sys_error'),
+        'empty_sys_error_hint' => admin_t('ui.empty_sys_error_hint'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel log-index system-log-index">
     <div class="card-header">
-        <span>报错 <em id="system-log-count"></em></span>
+        <span>{{ admin_t('ui.tab_error') }} <em id="system-log-count"></em></span>
     </div>
     <div class="card-body">
         @include('admin.partials.log-tabs', ['tab' => 'error'])
         @include('admin.partials.log-filters', ['kind' => 'error'])
-        <p class="muted recycle-lead">程序抛错会记一行。这里改不了报错，也打不开 laravel.log。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.error_lead') }}</p>
         <div id="system-log-table"></div>
     </div>
 </div>
@@ -26,15 +41,16 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('system-log-search');
     var countEl = document.getElementById('system-log-count');
     var ipChip = document.getElementById('system-log-ip-chip');
     var whenSel = document.getElementById('system-log-when');
     var datesWrap = document.getElementById('system-log-dates');
-    var TODAY = @json($today);
-    var YESTERDAY = @json($yesterday);
-    var WEEK_FROM = @json($weekFrom);
-    var MONTH_FROM = @json($monthFrom);
+    var TODAY = @json($today, JSON_UNESCAPED_UNICODE);
+    var YESTERDAY = @json($yesterday, JSON_UNESCAPED_UNICODE);
+    var WEEK_FROM = @json($weekFrom, JSON_UNESCAPED_UNICODE);
+    var MONTH_FROM = @json($monthFrom, JSON_UNESCAPED_UNICODE);
     var typing = 0;
 
     function cleanWhere(data) {
@@ -102,7 +118,7 @@
         runSearch();
     }
     function rowHtml(d) {
-        var kind = d.kind_text || '报错';
+        var kind = d.kind_text || L.error_log_title;
         var badge = '<span class="badge' + (d.is_error ? ' badge-warn' : '') + '">' + U.escape(kind) + '</span>';
         var meta = [];
         if (d.who_text) meta.push(U.escape(d.who_text));
@@ -114,20 +130,20 @@
         }
         if (d.file_text) meta.push(U.escape(d.file_text));
         var extra = d.extra_text ? '<div class="muted">' + U.escape(d.extra_text) + '</div>' : '';
-        return '<div class="entry-row-title-line">' + badge + ' <span class="entry-row-title">' + U.escape(d.summary || '一次程序报错') + '</span>'
-            + ' <a href="#" class="btn-link js-detail">看详情</a></div>'
+        return '<div class="entry-row-title-line">' + badge + ' <span class="entry-row-title">' + U.escape(d.summary || L.error_once) + '</span>'
+            + ' <a href="#" class="btn-link js-detail">' + U.escape(L.view_detail) + '</a></div>'
             + '<div class="entry-row-meta">' + meta.join(' · ') + '</div>'
             + extra;
     }
     function showDetail(row) {
         var blocks = [];
-        blocks.push('<p><b>说了什么</b></p><pre class="out">' + U.escape(row.detail_message || row.summary || '') + '</pre>');
-        if (row.detail_class) blocks.push('<p><b>异常</b></p><pre class="out">' + U.escape(row.detail_class) + '</pre>');
-        if (row.detail_file) blocks.push('<p><b>文件</b></p><pre class="out">' + U.escape(row.detail_file) + '</pre>');
-        if (row.detail_url) blocks.push('<p><b>当时打开</b></p><pre class="out">' + U.escape(row.detail_url) + '</pre>');
-        if (row.detail_trace) blocks.push('<p><b>调用栈</b></p><pre class="out">' + U.escape(row.detail_trace) + '</pre>');
+        blocks.push('<p><b>' + U.escape(L.said_what) + '</b></p><pre class="out">' + U.escape(row.detail_message || row.summary || '') + '</pre>');
+        if (row.detail_class) blocks.push('<p><b>' + U.escape(L.exc_class) + '</b></p><pre class="out">' + U.escape(row.detail_class) + '</pre>');
+        if (row.detail_file) blocks.push('<p><b>' + U.escape(L.kind_file) + '</b></p><pre class="out">' + U.escape(row.detail_file) + '</pre>');
+        if (row.detail_url) blocks.push('<p><b>' + U.escape(L.opened_then) + '</b></p><pre class="out">' + U.escape(row.detail_url) + '</pre>');
+        if (row.detail_trace) blocks.push('<p><b>' + U.escape(L.stack_trace) + '</b></p><pre class="out">' + U.escape(row.detail_trace) + '</pre>');
         U.dialog({
-            title: row.kind_text || '报错详情',
+            title: row.kind_text || L.error_detail,
             wide: true,
             hideOk: true,
             content: blocks.join('')
@@ -141,9 +157,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的记录。</p><p><button type="button" class="btn btn-muted btn-sm" id="system-log-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="system-log-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有程序报错。</p><p class="muted">前台或后台一旦抛错会出现在这里。打开本页不会记。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_sys_error) + '</p><p class="muted">' + U.escape(L.empty_sys_error_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             markExtra();
@@ -151,7 +167,7 @@
             if (reset) reset.addEventListener('click', resetAll);
         },
         cols: [
-            {title: '报错', html: rowHtml}
+            {title: L.error_log_title, html: rowHtml}
         ]
     });
     syncWhenUi();

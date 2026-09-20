@@ -142,7 +142,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($workJsLang);
+    var L = @json($workJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('novel-work-form');
     if (!U || !form) return;
     var isEdit = !!String(form.querySelector('input[name="id"]').value || '').trim();

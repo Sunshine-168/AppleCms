@@ -154,7 +154,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($couponJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('coupon-search');
     var countEl = document.getElementById('coupon-count');
     function queryWhere() {

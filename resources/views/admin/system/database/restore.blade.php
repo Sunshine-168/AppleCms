@@ -24,7 +24,7 @@
     </div>
     <div class="card-body">
         @include('admin.partials.db-tabs', ['tab' => 'restore'])
-        <p class="muted recycle-lead">{{ $ui['restore_lead'] ?? '' }}盖完前台还是旧的，去「<a href="/admin/system/tools/cache">缓存</a>」清一下。</p>
+        <p class="muted recycle-lead">{{ $ui['restore_lead'] ?? '' }}{{ admin_t('ui.restore_cache_after') }}「<a href="/admin/system/tools/cache">{{ $ui['restore_cache'] ?? admin_t('page.cache') }}</a>」{{ admin_t('ui.restore_cache_clear') }}</p>
         <p class="restore-note">{{ $ui['restore_note'] ?? '' }}</p>
 
         <section class="cache-block">
@@ -95,8 +95,14 @@
     var U = AdminUi;
     var root = document.getElementById('restore-index');
     if (!root || !U) return;
-    var UI = @json($ui);
-    var canSnapshot = @json($canSnapshot);
+    var UI = @json($ui, JSON_UNESCAPED_UNICODE);
+    var L = @json([
+        'delete_fail' => admin_t('ui.delete_fail'),
+        'restore_typed_wrong' => admin_t('ui.restore_typed_wrong'),
+        'restore_fail' => admin_t('ui.restore_fail'),
+        'restore_word' => admin_t('ui.restore_word'),
+    ], JSON_UNESCAPED_UNICODE);
+    var canSnapshot = @json($canSnapshot, JSON_UNESCAPED_UNICODE);
 
     function cardHtml(row, can) {
         var name = row.name || '';
@@ -151,7 +157,7 @@
         if (e.target.closest('.js-del')) {
             if (!U.confirm(UI.del_confirm || '')) return;
             U.post('/admin/system/database/backup/delete', {file: name}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '删除失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.delete_fail, 'err'); return; }
                 U.toast(res.msg || '', 'ok');
                 reloadFiles();
             });
@@ -162,8 +168,8 @@
             if (!U.confirm(warn + '\n' + name)) return;
             var typed = U.prompt(UI.restore_type || '', '');
             if (typed === null) return;
-            if (String(typed).trim() !== String(UI.restore_word || '盖回')) {
-                U.toast(UI.restore_type_err || '没打对，没有盖', 'err');
+            if (String(typed).trim() !== String(UI.restore_word || L.restore_word)) {
+                U.toast(UI.restore_type_err || L.restore_typed_wrong, 'err');
                 return;
             }
             U.loading(true);
@@ -179,7 +185,7 @@
                 if (ok) reloadFiles();
             }).catch(function () {
                 U.loading(false);
-                U.toast('没能恢复', 'err');
+                U.toast(L.restore_fail, 'err');
             });
         }
     }

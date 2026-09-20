@@ -120,7 +120,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($downerJsLang);
+    var L = @json($downerJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['kind'];
     var form = document.getElementById('downer-search');
     var tryForm = document.getElementById('downer-try');

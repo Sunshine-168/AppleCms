@@ -111,7 +111,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($notifyJsLang);
+    var L = @json($notifyJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('notify-search');
     var batchBar = document.getElementById('notify-batch');
     var batchCount = document.getElementById('notify-batch-count');

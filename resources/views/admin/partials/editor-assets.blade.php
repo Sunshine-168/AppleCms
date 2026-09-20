@@ -10,6 +10,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (!window.tinymce) return;
+    var L = @json(['upload_fail' => admin_t('ui.upload_fail')], JSON_UNESCAPED_UNICODE);
     tinymce.init({
         selector: 'textarea.cms-editor',
         height: 420,
@@ -27,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var file = blob instanceof File ? blob : new File([blob], name, { type: blob.type || 'image/png' });
             return AdminUi.upload(file).then(function (res) {
                 if (res && res.code === 0 && res.data && res.data.url) return res.data.url;
-                throw new Error((res && res.msg) || '上传失败');
+                throw new Error((res && res.msg) || L.upload_fail);
             });
         },
         file_picker_types: 'image',
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (res && res.code === 0 && res.data && res.data.url) {
                         callback(res.data.url, { alt: '' });
                     } else {
-                        AdminUi.toast((res && res.msg) || '上传失败', 'err');
+                        AdminUi.toast((res && res.msg) || L.upload_fail, 'err');
                     }
                 });
             });

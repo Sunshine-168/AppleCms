@@ -74,7 +74,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($recycleJsLang);
+    var L = @json($recycleJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('recycle-search');
     var batchBar = document.getElementById('recycle-batch');
     var batchCount = document.getElementById('recycle-batch-count');

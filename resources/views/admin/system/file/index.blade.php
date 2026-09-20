@@ -6,6 +6,26 @@
     $queues = $queues ?? ['all' => 0, 'image' => 0, 'video' => 0, 'file' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
     $hideExtras = (bool) ($hide_extras ?? false);
+    $jsLang = [
+        'empty_search' => admin_t('ui.empty_file_search'),
+        'empty_kind' => admin_t('ui.empty_file_kind'),
+        'empty' => admin_t('ui.empty_files'),
+        'empty_hint' => admin_t('ui.empty_files_hint'),
+        'click_to_enlarge' => admin_t('ui.click_to_enlarge'),
+        'kind_video' => admin_t('ui.kind_video'),
+        'kind_file' => admin_t('ui.kind_file'),
+        'no_preview' => admin_t('ui.no_preview'),
+        'uploaded' => admin_t('ui.uploaded'),
+        'upload_fail' => admin_t('ui.upload_fail'),
+        'please_select_files' => admin_t('ui.please_select_files'),
+        'confirm_batch_del_files' => admin_t('ui.confirm_batch_del_files'),
+        'fail' => admin_t('ui.fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'cannot_open_image' => admin_t('ui.cannot_open_image'),
+        'no_usable_link' => admin_t('ui.no_usable_link'),
+        'confirm_del_file' => admin_t('ui.confirm_del_file'),
+        'preview' => admin_t('ui.preview'),
+    ];
     $api = is_array($api ?? null) ? $api : [];
     $api = array_merge([
         'list' => '/admin/system/attachments/list',
@@ -59,6 +79,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var ui = @json($ui, JSON_UNESCAPED_UNICODE);
     var api = {!! json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var table = U.table({
@@ -66,7 +87,7 @@
         url: api.list,
         cols: [
             {check: true, width: 36},
-            {title: ui.preview || '预览', width: 88, cls: 'file-preview-cell', html: previewCell},
+            {title: ui.preview || L.preview, width: 88, cls: 'file-preview-cell', html: previewCell},
             {key: 'name', title: AdminUi.t('name'), html: nameCell},
             {key: 'kind_label', title: AdminUi.t('type'), width: 80},
             {key: 'size_text', title: AdminUi.t('size'), width: 90},
@@ -77,12 +98,12 @@
         ],
         emptyHtml: function (parsed, where) {
             if (where && String(where.keyword || '').trim()) {
-                return '<div class="list-empty"><p>' + U.escape(ui.empty_search || '没有叫这个名字的文件') + '</p></div>';
+                return '<div class="list-empty"><p>' + U.escape(ui.empty_search || L.empty_search) + '</p></div>';
             }
             if (where && String(where.kind || '').trim()) {
-                return '<div class="list-empty"><p>' + U.escape(ui.empty_kind || '这一类还没有文件') + '</p></div>';
+                return '<div class="list-empty"><p>' + U.escape(ui.empty_kind || L.empty_kind) + '</p></div>';
             }
-            return '<div class="list-empty"><p>' + U.escape(ui.empty || '还没有附件') + '</p><p class="muted">' + U.escape(ui.empty_hint || '点右上角上传。图片会出现缩略图。') + '</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(ui.empty || L.empty) + '</p><p class="muted">' + U.escape(ui.empty_hint || L.empty_hint) + '</p></div>';
         },
         onDraw: function (wrap, list, parsed) {
             var total = (parsed && parsed.total) || 0;
@@ -111,12 +132,12 @@
             var src = U.escape(row.preview_url);
             var name = U.escape(row.name || '');
             var fallback = U.escape(row.open_url || row.preview_url);
-            return '<button type="button" class="file-thumb js-preview" data-src="' + src + '" data-fallback="' + fallback + '" data-name="' + name + '" title="' + U.escape(ui.click_to_enlarge || '点开会放大') + '">'
+            return '<button type="button" class="file-thumb js-preview" data-src="' + src + '" data-fallback="' + fallback + '" data-name="' + name + '" title="' + U.escape(ui.click_to_enlarge || L.click_to_enlarge) + '">'
                 + '<img src="' + src + '" alt="' + name + '"></button>';
         }
-        var label = row.is_video ? (ui.kind_video || '视频') : (row.ext || ui.kind_file || '文件');
+        var label = row.is_video ? (ui.kind_video || L.kind_video) : (row.ext || ui.kind_file || L.kind_file);
         return '<span class="file-kind' + (row.is_video ? ' is-video' : '') + '">' + U.escape(label) + '</span>'
-            + '<span class="muted file-no-preview">' + U.escape(ui.no_preview || '不能预览') + '</span>';
+            + '<span class="muted file-no-preview">' + U.escape(ui.no_preview || L.no_preview) + '</span>';
     }
     function nameCell(row) {
         return '<div class="file-name"><strong>' + U.escape(row.name || '') + '</strong>'
@@ -150,18 +171,18 @@
             U.loading(true);
             return U.upload(file, api.upload).then(function (res) {
                 U.loading(false);
-                if (res && res.code === 0) { U.toast(ui.uploaded || '上传成功', 'ok'); table.refresh(); }
-                else U.toast((res && res.msg) || ui.upload_fail || '上传失败', 'err');
+                if (res && res.code === 0) { U.toast(ui.uploaded || L.uploaded, 'ok'); table.refresh(); }
+                else U.toast((res && res.msg) || ui.upload_fail || L.upload_fail, 'err');
             });
         });
     });
     U.on('#batch-del-btn', 'click', function () {
         var ids = table.selectedIds();
-        if (!ids.length) { U.toast(ui.please_select_files || '请勾选要删除的文件', 'err'); return; }
-        if (!U.confirm(ui.confirm_batch_del_files || '确认删除选中的文件？')) return;
+        if (!ids.length) { U.toast(ui.please_select_files || L.please_select_files, 'err'); return; }
+        if (!U.confirm(ui.confirm_batch_del_files || L.confirm_batch_del_files)) return;
         U.post(api.delete, {ids: ids}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || ui.fail || '失败', 'err'); return; }
-            table.refresh(); U.toast(ui.deleted || '删除成功', 'ok');
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || ui.fail || L.fail, 'err'); return; }
+            table.refresh(); U.toast(ui.deleted || L.deleted, 'ok');
         });
     });
 
@@ -181,13 +202,13 @@
             if (fallback && fallback !== src) {
                 boxImg.onerror = function () {
                     closePreview();
-                    U.toast(ui.cannot_open_image || '打不开这张图', 'err');
+                    U.toast(ui.cannot_open_image || L.cannot_open_image, 'err');
                 };
                 boxImg.src = fallback;
                 return;
             }
             closePreview();
-            U.toast(ui.cannot_open_image || '打不开这张图', 'err');
+            U.toast(ui.cannot_open_image || L.cannot_open_image, 'err');
         };
         boxImg.src = src;
         box.hidden = false;
@@ -222,21 +243,21 @@
         if (a.classList.contains('js-open')) {
             var href = row.open_url || (row.id ? api.open + '?id=' + row.id : row.url);
             if (href) window.open(href, '_blank');
-            else U.toast(ui.no_usable_link || '无可用链接', 'err');
+            else U.toast(ui.no_usable_link || L.no_usable_link, 'err');
         }
         if (a.classList.contains('js-copy')) {
             var url = row.url || row.open_url || '';
-            if (!url) { U.toast(ui.no_usable_link || '无可用链接', 'err'); return; }
+            if (!url) { U.toast(ui.no_usable_link || L.no_usable_link, 'err'); return; }
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(url).then(function () { U.toast(AdminUi.t('copied') || ui.copied || '', 'ok'); }).catch(function () { U.toast(AdminUi.t('copy_fail') || ui.copy_fail || '', 'err'); });
             } else {
                 U.toast(url, 'ok');
             }
         }
-        if (a.classList.contains('js-del') && U.confirm(ui.confirm_del_file || '确认删除该文件？')) {
+        if (a.classList.contains('js-del') && U.confirm(ui.confirm_del_file || L.confirm_del_file)) {
             U.post(api.delete, {ids: [row.id]}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || ui.fail || '失败', 'err'); return; }
-                table.refresh(); U.toast(ui.deleted || '删除成功', 'ok');
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || ui.fail || L.fail, 'err'); return; }
+                table.refresh(); U.toast(ui.deleted || L.deleted, 'ok');
             });
         }
     });

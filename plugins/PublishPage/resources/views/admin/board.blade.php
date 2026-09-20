@@ -43,7 +43,7 @@
                     <option value="1" @selected((int) ($options['status'] ?? 0) === 1)>{{ admin_t('ui.gate_on') }}</option>
                 </select>
                 <label>{{ admin_t('ui.title_label') }}</label>
-                <input type="text" name="title" value="{{ $options['title'] ?? '地址发布页' }}">
+                <input type="text" name="title" value="{{ $options['title'] ?? admin_t('ui.publish_default_title') }}">
                 <label>{{ admin_t('ui.subtitle') }}</label>
                 <input type="text" name="subtitle" value="{{ $options['subtitle'] ?? '' }}">
                 <label>{{ admin_t('ui.bookmark') }}</label>
@@ -88,7 +88,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($publishJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     if (desk === 'config') {
         U.on('#publish-config-save', 'click', function () {
             var data = U.formData(document.getElementById('publish-config'));

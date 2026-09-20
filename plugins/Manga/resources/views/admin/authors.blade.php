@@ -79,7 +79,7 @@
     var batchBar = document.getElementById('manga-author-batch');
     var batchCount = document.getElementById('manga-author-batch-count');
     var countEl = document.getElementById('manga-author-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
     var base = '/admin/video/manga-authors';
 
     function cleanWhere(data) {

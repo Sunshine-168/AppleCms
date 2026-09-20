@@ -108,7 +108,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($synJsLang);
+    var L = @json($synJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_to'];
     var form = document.getElementById('syn-search');
     var tryForm = document.getElementById('syn-try');

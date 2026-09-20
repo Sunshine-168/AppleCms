@@ -29,11 +29,10 @@ class VideoCjRule extends VideoOpsModel
     public static function typeLabel(?string $type): string
     {
         return match ($type) {
-            'html' => '网站页面',
-            'rss' => 'RSS 订阅',
-            'json' => 'JSON 接口',
-            'regex' => '正则',
-            default => $type ?: '网站页面',
+            'rss' => admin_t('ui.cj_type_rss'),
+            'json' => admin_t('ui.cj_type_json'),
+            'regex' => admin_t('ui.cj_type_regex'),
+            default => admin_t('ui.cj_type_html'),
         };
     }
 }

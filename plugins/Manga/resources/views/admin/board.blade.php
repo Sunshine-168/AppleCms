@@ -440,9 +440,9 @@
 (function () {
     var U = AdminUi;
     var L = @json($mangaJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
-    var filterMangaId = @json($filterMangaId);
-    var workPayload = @json($work);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
+    var filterMangaId = @json($filterMangaId, JSON_UNESCAPED_UNICODE);
+    var workPayload = @json($work, JSON_UNESCAPED_UNICODE);
     if (desk === 'stats') return;
     var form = document.getElementById('manga-search');
     var countEl = document.getElementById('manga-count');

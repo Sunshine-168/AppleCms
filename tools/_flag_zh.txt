@@ -1,0 +1,300 @@
+﻿OK  ui.add_fail	娣诲姞澶辫触
+OK  ui.ai_compat	鏈嶅姟鍟?OK  ui.ai_endpoint_hint	濉啓瀵嗛挜鍚庝繚瀛橈紝鍙姹傛ā鍨嬪啓绠€浠嬨€傝瘯鍐欐垨鍒板奖鐗囬噷鐢熸垚鍙～鏂囨湰妗嗭紝娌￠厤瀵嗛挜浼氬け璐ャ€?OK  ui.ai_ernie	鏂囧績
+OK  ui.ai_ernie_hint	鐧惧害鍗冨竼锛屾ā鍨嬪 ernie-4.0-8k銆?BAD ui.ai_gen_fail	
+BAD ui.ai_hint_ernie	
+BAD ui.ai_hint_openai	
+BAD ui.ai_hint_other	
+BAD ui.ai_hint_qwen	
+OK  ui.ai_key_keep_hint	鐣欑┖鍐嶄繚瀛樺垯淇濇寔鍘熷瘑閽ャ€傚～鏂扮殑浼氳鐩栥€?OK  ui.ai_key_miss_hint	娌℃湁瀵嗛挜鏃剁敓鎴愪細鐩存帴澶辫触銆?OK  ui.ai_key_tail	灏惧彿
+OK  ui.ai_model_hint	璇锋眰妯″瀷鏃朵細甯︿笂杩欎釜鍚嶅瓧銆?OK  ui.ai_model_name	妯″瀷鍚?OK  ui.ai_model_title	鏈嶅姟鍟?BAD ui.ai_need_try_title	
+OK  ui.ai_other_hint	鑷繁鍐欐湇鍔″晢鍚嶅瓧锛屽苟濉啓鍏煎鎺ュ彛銆?OK  ui.ai_provider_name	鏈嶅姟鍟嗗悕绉?OK  ui.ai_qwen	閫氫箟
+OK  ui.ai_qwen_hint	闃块噷浜戠櫨鐐?/ DashScope锛屾ā鍨嬪 qwen-plus銆?OK  ui.ai_try_btn	璇曞啓涓€娈?OK  ui.ai_try_title	璇曞啓鏍囬
+BAD ui.all_detail	
+OK  ui.annex	闄勪欢娓呯悊
+OK  ui.annex_hint	瀵圭収褰辩墖/鏂囩珷/婕斿憳灏侀潰锛屾壘鍑?BAD ui.api_app	
+OK  ui.api_app_key	APP 瀵嗛挜
+OK  ui.api_app_key_hint_after	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_app_key_hint_before	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_app_key_set	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+BAD ui.api_app_key_title	
+BAD ui.api_detail	
+BAD ui.api_filters	
+OK  ui.api_give_hint_after	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_give_hint_before	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_give_url	璋佽兘鎷?OK  ui.api_how	瀵规柟鎬庝箞璋?OK  ui.api_how_hint	鏁板瓧 1 鍙槸涓句緥銆傚彧鍑哄凡鍙戝竷鐨勫奖鐗囷紝娌℃湁鏂囩珷 / 婕斿憳鍗曠嫭鎺ュ彛銆?OK  ui.api_lead_after	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_lead_before	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_lead_mid	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+OK  ui.api_lead_mid2	缁欏埆浜烘媺鏈珯宸插彂甯冨奖鐗囥€傚湴鍧€鏄?Laravel 璺敱
+BAD ui.api_list	
+BAD ui.api_manga_detail	
+BAD ui.api_manga_list	
+OK  ui.api_need_key_after	锛屽惁鍒欒繑鍥炪€屽瘑閽ユ棤鏁堛€嶃€?OK  ui.api_need_key_before	璇锋眰蹇呴』甯﹀悓涓€鎶?OK  ui.api_ok_after	閫氫簡浼氳繑鍥?OK  ui.api_ok_before	閫氫簡浼氳繑鍥?OK  ui.api_ok_mid	銆傚瘑閽ヤ笉瀵规槸 403銆屽瘑閽ユ棤鏁堛€嶃€傚畬鏁村鐓у湪銆?OK  ui.api_out_n	閮ㄤ細浠庢帴鍙ｅ嚭鍘汇€傝鎯呴噷甯︽挱鏀惧湴鍧€銆?OK  ui.api_param_detail	鍚挱鏀惧湴鍧€
+OK  ui.api_param_h	鏈€杩戝嚑灏忔椂
+OK  ui.api_param_list	鍒嗙被 + 鍒楄〃锛?OK  ui.api_param_pg	椤电爜锛?OK  ui.api_param_t	鍒嗙被 ID锛?OK  ui.api_param_wd	鐗囧悕锛?OK  ui.api_param_xml	杈撳嚭 XML锛岄粯璁?JSON
+BAD ui.api_probe_fail	
+BAD ui.api_probe_ok_empty	
+BAD ui.api_probe_ok_n	
+BAD ui.api_probe_unsaved	
+OK  ui.api_public	鍏紑
+OK  ui.api_public_hint	涓嶈瀵嗛挜銆傚绔欏～鍦板潃灏辫兘鎷夊垪琛ㄥ拰鎾斁鍦板潃銆?BAD ui.api_recv_manga	
+BAD ui.api_recv_vod	
+BAD ui.api_xml	
+BAD ui.apidoc_lead_after	
+BAD ui.apidoc_lead_before	
+OK  ui.apidoc_short	鎺ュ彛璇存槑
+OK  ui.aria_search_tpl	鎼滅储妯℃澘
+OK  ui.audits	鍏ュ簱瀹℃牳
+OK  ui.backup	澶囦唤
+BAD ui.backup_fail	
+OK  ui.backup_see_ran	銆嶉噷鑳界湅鍒板埌鐐规湁娌℃湁璺戙€?OK  ui.cache_clear	娓呮帀
+OK  ui.cache_clear_all	鍏ㄩ儴娓呮帀
+OK  ui.cache_config	閰嶇疆鍜岃矾鐢?BAD ui.cache_confirm_all	
+OK  ui.cache_data	鏁版嵁缂撳瓨
+OK  ui.cache_data_hint	鏀逛簡璁剧疆鎴栨ā鏉垮悗娓呯紦瀛樸€傛暣椤甸潤鎬佸湪銆?OK  ui.cache_fresh	姣忔璇绘渶鏂?OK  ui.cache_fresh_hint	鎵撳寘鍚庢敼绋嬪簭閰嶇疆涓嶄細椹笂鐢熸晥锛屽厛瑙ｅ紑銆?OK  ui.cache_html_note	鍏ㄩ〉缂撳瓨寮€鐫€銆傛暣椤佃繕鏄棫鐨勶紝鍘婚潤鎬佺敓鎴愭竻锛岀偣杩欓噷娓呬笉鍒般€?OK  ui.cache_lead_after	鏀逛簡璁剧疆鎴栨ā鏉垮悗娓呯紦瀛樸€傛暣椤甸潤鎬佸湪銆?OK  ui.cache_lead_before	鏀逛簡璁剧疆鎴栨ā鏉垮悗娓呯紦瀛樸€傛暣椤甸潤鎬佸湪銆?OK  ui.cache_pack_config	鎵撳寘璺敱
+OK  ui.cache_pack_config_confirm	鎵撳寘閰嶇疆
+OK  ui.cache_pack_hint	鎶婇厤缃€佽矾鐢便€佹ā鏉垮仛鎴愭枃浠讹紝灏戣纾佺洏銆傛墦鍖呭悗鏀归厤缃枃浠朵笉浼氱珛鍒荤敓鏁堬紝鏈湴寮€鍙戜笉瑕佺偣銆?OK  ui.cache_pack_routes	鎵撳寘鍚庢敼閰嶇疆鏂囦欢涓嶄細绔嬪埢鐢熸晥銆傛湰鍦板紑鍙戜笉瑕佺偣銆傜‘瀹氾紵
+OK  ui.cache_pack_routes_confirm	棰勭紪璇戞ā鏉?OK  ui.cache_pack_title	鎵撳寘鍔犻€燂紙涓婄嚎鍚庯級
+OK  ui.cache_pack_views	棰勭紪璇戝悗鏀规ā鏉胯鍏堟竻鎺夋墠浼氱敤鏂版枃浠躲€傜‘瀹氾紵
+OK  ui.cache_pack_views_confirm	鎵撳寘鍚庢敼璺敱涓嶄細绔嬪埢鐢熸晥銆傜‘瀹氾紵
+OK  ui.cache_packed	宸叉墦鍖?OK  ui.cache_packed_hint	瑙ｅ紑鎵撳寘
+OK  ui.cache_stuck_hint	鏀逛簡璁剧疆鎴栨ā鏉垮悗娓呯紦瀛樸€傛暣椤甸潤鎬佸湪銆?OK  ui.cache_unpack	鐜板湪娌℃湁鎵撳寘锛屾敼閰嶇疆浼氶┈涓婅鍒般€?OK  ui.cache_views_hint_after	鏀硅繃涓婚鎴栧悗鍙伴〉闈㈣繕鏄剧ず鏃ф牱瀛愭椂娓呫€傚厛纭銆?OK  ui.cache_views_hint_before	鏀硅繃涓婚鎴栧悗鍙伴〉闈㈣繕鏄剧ず鏃ф牱瀛愭椂娓呫€傚厛纭銆?OK  ui.captcha_refresh	鐪嬩笉娓呭氨鐐逛竴涓嬫崲涓€棰?OK  ui.col_api	鎺ュ彛
+OK  ui.col_explain	璇存槑
+OK  ui.collect_after_hint_after	鍏虫帀銆岄噰闆嗗悗鐩存帴涓婃灦銆嶅垯鏂扮墖鏄緟瀹＄姸鎬侊紝瑕佸湪褰辩墖鍒楄〃閲屽啀涓婃灦銆備笅杞藉皝闈細鍗犵鐩橈紝閫傚悎璧勬簮绔欏浘搴婁笉绋冲畾鐨勬儏鍐点€備篃鍙簨鍚庡湪銆?OK  ui.collect_after_hint_before	鍏虫帀銆岄噰闆嗗悗鐩存帴涓婃灦銆嶅垯鏂扮墖鏄緟瀹＄姸鎬侊紝瑕佸湪褰辩墖鍒楄〃閲屽啀涓婃灦銆備笅杞藉皝闈細鍗犵鐩橈紝閫傚悎璧勬簮绔欏浘搴婁笉绋冲畾鐨勬儏鍐点€備篃鍙簨鍚庡湪銆?OK  ui.collect_cfg_lead_after	鎵嶇敓鏁堬紝宸茬粡杩涘簱鐨勭墖瀛愪笉浼氭敼銆?OK  ui.collect_cfg_lead_before	鐗囧瓙浠庤祫婧愮珯杩涙潵鏃舵寜杩欓噷澶勭悊銆傛极鐢婚噰闆嗘簮鍐欏叆鎻掍欢搴擄紝涓嶈蛋寰呭鍏ュ簱銆傛敼瀹岀偣淇濆瓨锛?OK  ui.collect_cfg_lead_strong	涓嬫閲囬泦
+OK  ui.collect_direct	鐩存帴杩涚墖搴?OK  ui.collect_direct_hint	閲囧埌鐨勭墖瀛愰┈涓婂嚭鐜板湪褰辩墖鍒楄〃銆傞€傚悎淇″緱杩囩殑璧勬簮绔欍€?OK  ui.collect_list_on	閲囬泦鍚庣洿鎺ヤ笂鏋?OK  ui.collect_map_hint_after	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.collect_map_hint_before	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.collect_map_hint_mid	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.collect_map_hint_or	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.collect_map_settings	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.collect_map_title	鍏ュ簱鏂瑰紡
+OK  ui.collect_pic_local	鎶婂皝闈笅杞藉埌鏈珯
+OK  ui.collect_push_hint_after	鍒殑绋嬪簭 POST 鐗囧瓙杩涙湰绔欙紝瀵嗛挜鍜屽湴鍧€鍦ㄣ€?OK  ui.collect_push_hint_before	鍒殑绋嬪簭 POST 鐗囧瓙杩涙湰绔欙紝瀵嗛挜鍜屽湴鍧€鍦ㄣ€?OK  ui.collect_push_title	鍏ュ簱鏂瑰紡
+OK  ui.collect_sync_pic	鍚屾灏侀潰鍦板潃
+OK  ui.collect_temp_first	鍏堝緟瀹″啀杞叆
+OK  ui.collect_temp_go_after	銆嶅鐞嗗仠浣忕殑鐗囧瓙銆傜幇鍦ㄩ噰闆嗘槸鐩存帴杩涘簱鐨勮瘽锛岄偅閲岄€氬父鏄┖鐨勩€?OK  ui.collect_temp_go_before	鎵撳紑鍚庡幓銆?OK  ui.collect_temp_hint	鏂扮墖鍏堝仠鍦ㄥ緟瀹″叆搴擄紝鏍稿灏侀潰鍜屽垎绫诲悗鍐嶈繘鐗囧簱銆?OK  ui.compare	瀵规瘮
+OK  ui.config_player	鎾斁鍣ㄥ弬鏁?BAD ui.confirm_del_unref	
+BAD ui.copied_key_unsaved	
+BAD ui.db_tabs_aria	
+BAD ui.del_unref	
+OK  ui.detail	鏄庣粏
+OK  ui.dict_dropdowns	瀛楀吀
+OK  ui.empty_replace	杩樻病鏈夊彲鏇挎崲鐨勭墖搴撹〃銆?OK  ui.empty_replace_hint	瑁呭ソ褰辩墖銆佹枃绔犳垨鍒嗙被涔嬪悗鍐嶆潵銆?BAD ui.exc_class	
+OK  ui.favicon_hint	娴忚鍣ㄦ爣绛句笂鐨勫皬鍥炬爣锛屽缓璁鏂瑰舰 png / ico銆?BAD ui.file_fail	
+BAD ui.file_uploaded	
+BAD ui.front_base64	
+BAD ui.gen_save	
+OK  ui.home_rec_hint_a	榛樿涓婚棣栭〉銆屾帹鑽愩€嶅尯鍧楃殑
+OK  ui.home_rec_hint_b	鏉℃暟锛岄粯璁?12銆?OK  ui.home_rec_num	棣栭〉鎺ㄨ崘鏉℃暟
+BAD ui.hub_about_n	
+BAD ui.hub_adopt_need_bind	
+BAD ui.hub_already_collect	
+BAD ui.hub_already_saved	
+BAD ui.hub_confirm_adopt	
+OK  ui.hub_empty	杩樻病鎺㈡祴銆?OK  ui.hub_empty_hint	鎶婅祫婧愮珯缁欑殑鍦板潃璐翠笂鏉ワ紝鐐广€屾帰娴嬨€嶃€傛垚鍔熷悗鍙互鏀惰棌锛屾垨鐩存帴鎺ュ叆閲囬泦婧愩€?BAD ui.hub_favor_fail	
+BAD ui.hub_favor_incomplete	
+BAD ui.hub_favor_ok	
+BAD ui.hub_go_bind	
+BAD ui.hub_need_probe	
+BAD ui.hub_need_url	
+BAD ui.hub_no_samples	
+BAD ui.hub_over_100k	
+OK  ui.hub_pending_n	鏉¤繕娌℃帴鍏ラ噰闆嗘簮
+BAD ui.hub_probe_fail	
+BAD ui.hub_samples	
+BAD ui.hub_types_n	
+BAD ui.hub_unknown_host	
+OK  ui.hub_url_hint_after	銆傛病鍐?http 浼氭寜 https 琛ヤ笂銆?OK  ui.hub_url_hint_before	涓€鑸槸
+BAD ui.human_pv	
+BAD ui.img_again	
+OK  ui.img_auto_off_before	閲囬泦鏃朵笉浼氳嚜鍔ㄤ笅杞藉皝闈€傝鑷姩涓嬶紝鍒般€?OK  ui.img_auto_off_mid	閲囬泦鏃朵笉浼氳嚜鍔ㄤ笅杞藉皝闈€傝鑷姩涓嬶紝鍒般€?BAD ui.img_broken	
+BAD ui.img_confirm_local	
+BAD ui.img_dl_fail	
+BAD ui.img_download_local	
+BAD ui.img_downloaded	
+BAD ui.img_edit_cover	
+OK  ui.img_empty	杩樻病鎵弿銆?OK  ui.img_empty_hint	鐐广€屾壂鎻忓皝闈€嶇湅鍝簺杩樺湪璧勬簮绔欍€佸摢浜涙墦涓嶅紑銆備笉浼氭敼鐗囧瓙銆?BAD ui.img_go_empty	
+BAD ui.img_hint_broken	
+BAD ui.img_hint_local	
+BAD ui.img_hint_missing	
+BAD ui.img_hint_remote	
+OK  ui.img_lead_after	銆傜己鍥惧幓琛ユ棤灏侀潰銆傛壂鎻忎笉鏀瑰奖鐗囥€?OK  ui.img_lead_before	鎵弿灏侀潰銆佷笅杞藉埌鏈珯
+BAD ui.img_list_missing	
+BAD ui.img_list_remote	
+OK  ui.img_local_cover	鏈珯灏侀潰
+BAD ui.img_no_change	
+OK  ui.img_no_cover_yet	杩樻病灏侀潰
+BAD ui.img_remain_done	
+BAD ui.img_remain_more	
+OK  ui.img_remote_cover	澶栫珯灏侀潰
+OK  ui.img_scan	鎵弿灏侀潰
+BAD ui.img_scan_again	
+BAD ui.img_scan_done	
+BAD ui.img_scan_fail	
+OK  ui.img_wm_off_after	涓嬭浇鏃朵細鍦ㄥ浘涓婃墦姘村嵃銆屻€嶃€傝鏀瑰瓧鍘汇€?OK  ui.img_wm_off_before	涓嬭浇鏃朵細鍦ㄥ浘涓婃墦姘村嵃銆屻€嶃€傝鏀瑰瓧鍘汇€?OK  ui.img_wm_on_after	涓嬭浇鏃朵細鍦ㄥ浘涓婃墦姘村嵃銆屻€嶃€傝鏀瑰瓧鍘汇€?OK  ui.img_wm_on_before	涓嬭浇鏃朵細鍦ㄥ浘涓婃墦姘村嵃銆屻€嶃€傝鏀瑰瓧鍘汇€?BAD ui.inbound_chapters	
+OK  ui.inbound_data_after	閲?OK  ui.inbound_data_before	涔熷彲鎶婃暣鏉＄墖瀛愭斁鍦?BAD ui.inbound_img_ok	
+OK  ui.inbound_key_miss_hint	鐜板湪鎺ㄩ€佷竴寰嬩細琚嫆缁濄€傜敓鎴愪竴鎶婂啀淇濆瓨銆?OK  ui.inbound_key_set_hint	璇锋眰蹇呴』甯﹀悓涓€鎶婂瘑閽ワ紝鍚﹀垯杩斿洖銆屽叆搴撳瘑閽ユ棤鏁堛€嶃€?OK  ui.inbound_key_where_after	銆備繚瀛樺悗绔嬪嵆鐢熸晥銆?OK  ui.inbound_key_where_before	鏀惧湪鍙傛暟
+OK  ui.inbound_key_where_mid	锛屾垨璇锋眰澶?OK  ui.inbound_lead_after	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_lead_before	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_lead_mid	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_manga_how_after	锛岄槄璇婚〉閾炬帴涓嶄細鍐嶆姄銆?OK  ui.inbound_manga_how_before	婕敾 POST 鍒版极鐢诲湴鍧€锛岃嚦灏戝甫浣滃搧鍚嶃€傜珷鑺傚浘鐗囩敤鎹㈣鎴?OK  ui.inbound_manga_id	瀵规柟绔欎綔鍝?ID锛堝彲閫夛紝鐢ㄦ潵缁洿锛?OK  ui.inbound_manga_type_id	鏈珯婕敾鍒嗙被 ID
+BAD ui.inbound_or	
+OK  ui.inbound_result_after	銆傜己鐗囧悕鎴栧瘑閽ヤ笉瀵逛細澶辫触銆傚奖鐗囨槸鍚﹀厛鍋滃湪寰呭鍏ュ簱锛岃窡鍐呭鎺ュ叆鐨勫紑鍏崇浉鍚屻€傛极鐢荤洿鎺ヨ繘鎻掍欢搴撱€?OK  ui.inbound_result_before	鎴愬姛杩斿洖
+OK  ui.inbound_type_id	鏈珯鍒嗙被 ID
+OK  ui.inbound_url_hint_after	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_url_hint_before	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_url_hint_manga	缁欏埆鐨勭▼搴?POST 鐗囧瓙鎴栨极鐢昏繘鏈珯銆傚幓璧勬簮绔欐媺鐗囩敤銆?OK  ui.inbound_url_title	鎺ユ敹鍦板潃
+OK  ui.inbound_vod_name	鐗囧悕锛堝繀濉級
+OK  ui.inbound_vod_url	褰辩墖鍦板潃
+OK  ui.inbound_work_name	浣滃搧鍚嶏紙蹇呭～锛?BAD ui.ip_added	
+OK  ui.ip_allow_hint_after	锛岀暀绌哄氨鏄笉闄愬埗銆?OK  ui.ip_allow_hint_before	姣忚涓€鏉°€傛敮鎸佸崟涓湴鍧€锛屼篃鏀寔缃戞濡?OK  ui.ip_allow_hint_mid	銆備笉瑕佸啓
+OK  ui.ip_allow_list	鍏佽鐨?IP
+BAD ui.ip_already	
+BAD ui.ip_current_mark	
+BAD ui.ip_empty_on	
+OK  ui.ip_forwarded_hint	鏈俊浠讳唬鐞嗘椂涓嶄細鎸夊畠鏀捐锛屼笉瑕佸彧鎶婅繖涓啓杩涘悕鍗曘€?OK  ui.ip_lead_after	銆傚瀹?IP 鍙樹簡浼氳繘涓嶅幓銆?OK  ui.ip_lead_before	鍙檺鍒跺悗鍙扮櫥褰曘€傚悕鍗曚负绌轰笉闄愬埗锛涘～浜嗕互鍚庡彧鏈夎繖浜?IP 鑳芥墦寮€
+OK  ui.ip_limited_n	宸查檺鍒?路
+OK  ui.ip_lockout_cli	鍦ㄦ湇鍔″櫒鎵ц
+OK  ui.ip_lockout_db_after	鏀规垚绌?OK  ui.ip_lockout_db_before	鎴栨妸
+OK  ui.ip_lockout_db_mid	閲?OK  ui.ip_mode_off	涓嶉檺鍒?OK  ui.ip_mode_off_hint	鍙潬璐﹀彿瀵嗙爜銆傚姙鍏 IP 涓嶅浐瀹氭椂閫夎繖涓€?OK  ui.ip_mode_on	鍙厑璁稿悕鍗?OK  ui.ip_mode_on_hint	鍏跺畠 IP 鎵撳紑鍚庡彴浼?403銆備繚瀛樻椂蹇呴』鍖呭惈浣犵幇鍦ㄧ殑 IP銆?BAD ui.ip_now_label	
+OK  ui.ip_open_login	鍚庡彴 IP 鐧藉悕鍗?OK  ui.ip_raw_edit	鏁存缂栬緫
+BAD ui.ip_remove	
+OK  ui.ip_unlimited	鍚庡彴 IP 鐧藉悕鍗?OK  ui.key_missing	杩樻病璁惧瘑閽?OK  ui.key_set	宸茶缃?BAD ui.last_backup	
+OK  ui.lazy_hint	灏侀潰涓虹┖鏃剁敤杩欏紶鍥鹃《涓婏紝涓嶆槸鐙珛鐨?JS 鎳掑姞杞藉簱銆?OK  ui.lazy_placeholder	鎳掑姞杞藉崰浣?BAD ui.list_sep	
+BAD ui.log_tabs_aria	
+OK  ui.login_logs	鐧诲綍鏃ュ織
+OK  ui.logo_foot	搴曢儴 Logo
+OK  ui.logo_foot_hint	鍑虹幇鍦ㄩ〉鑴氥€傜暀绌哄垯涓嶆樉绀恒€?OK  ui.logo_top	椤堕儴 Logo
+BAD ui.match_n	
+BAD ui.need_preview_first	
+BAD ui.need_replace_fields	
+BAD ui.need_replace_from	
+BAD ui.need_sql	
+BAD ui.need_test_mail	
+BAD ui.need_token_save	
+BAD ui.net_retry	
+BAD ui.no_backup	
+BAD ui.no_change_save	
+OK  ui.no_icon	杩樻病鏈夊浘鏍?OK  ui.no_logo_foot	杩樻病鏈夊簳閮?Logo
+BAD ui.no_match_text	
+OK  ui.no_placeholder	杩樻病鏈夊崰浣嶅浘
+OK  ui.no_webapp_icon	杩樻病鏈?webapp 鍥炬爣
+BAD ui.not_connected	
+OK  ui.not_set	鎶?BAD ui.opened_then	
+OK  ui.ph_ai_endpoint	鍙┖銆傚叾浠栨湇鍔″晢濉?/v1/chat/completions
+OK  ui.ph_ai_key_keep	鐣欑┖鍒欎繚鐣欑幇鏈夊瘑閽?OK  ui.ph_ai_key_new	sk-鈥?鍙瓨鍦ㄦ湰绔?OK  ui.ph_ai_model	濡?gpt-4.1-mini
+OK  ui.ph_ai_provider	濡?DeepSeek銆並imi
+OK  ui.ph_ai_try_title	濡?褰辩墖鍚?OK  ui.ph_app_key	绌虹潃鍒欑敤涓婇潰閭ｆ妸
+OK  ui.ph_area_map	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.ph_area_map_csv	璧勬簮绔欏啓娉曞拰鏈珯绛涢€変笉涓€鑷存椂锛屽湪杩欓噷瀵圭収銆傛瘡琛屼竴鏉★紝
+OK  ui.ph_foot_code	椤佃剼琛ュ厖 HTML
+OK  ui.ph_gen_then_save	鐢熸垚
+OK  ui.ph_head_code	缁熻銆侀獙璇佺瓑 HTML锛屼細鍘熸牱鎻掑埌 &lt;head&gt;
+OK  ui.ph_http_or_path	https:// 鎴?/path
+OK  ui.ph_hub_api_ex	https://鍩熷悕/api.php/provide/vod/
+OK  ui.ph_hub_url	鎺㈡祴
+OK  ui.ph_inbound_key	鐢熸垚
+OK  ui.ph_ip_raw	姣忚涓€涓?IP 鎴栫綉娈?OK  ui.ph_lang_map	鍥借=鏅€氳瘽
+OK  ui.ph_play_from	鐐逛笅闈㈢殑鏍囪瘑锛屾垨鑷繁濉?OK  ui.ph_play_notice	鍑虹幇鍦ㄦ挱鏀惧櫒涓婃柟锛屼緥濡傜増鏉冩垨绾胯矾璇存槑
+OK  ui.ph_play_to	閫夌珯鍐呮挱鏀惧櫒锛屾垨濉柊鏍囪瘑
+BAD ui.ph_remarks	
+BAD ui.ph_replace_from	
+BAD ui.ph_replace_to	
+OK  ui.ph_s3_endpoint	OSS / COS 鐨?Endpoint
+OK  ui.ph_seo_play	鍙敤
+BAD ui.ph_subtitle	
+BAD ui.ph_tpl_picker	
+OK  ui.ph_tpl_search	鎼滈〉闈紝濡?棣栭〉銆佹挱鏀?BAD ui.plaintext	
+BAD ui.play_confirm_disable	
+BAD ui.play_confirm_disable_n	
+BAD ui.play_confirm_rename	
+BAD ui.play_confirm_rename_n	
+OK  ui.play_empty	杩樻病鏀广€?OK  ui.play_empty_code	锛堢┖鏍囪瘑锛?OK  ui.play_empty_hint	鐐逛笅闈㈢嚎璺笂鐨勬爣璇嗗～鍒般€屽師鏍囪瘑銆嶏紝鍐嶉€夎鎹㈡垚鐨勬挱鏀惧櫒銆傜墖瀛愬拰鎾斁鍦板潃涓嶅彉銆?OK  ui.play_from	鍘熸爣璇?BAD ui.play_go_check	
+BAD ui.play_hint_created	
+BAD ui.play_hint_disable	
+BAD ui.play_hint_rename	
+OK  ui.play_in_table	鍦ㄦ挱鏀惧櫒琛?BAD ui.play_need_from	
+BAD ui.play_need_to	
+OK  ui.play_no_players_after	杩樻病鏈夋挱鏀惧櫒銆傚厛鍘汇€?OK  ui.play_no_players_before	杩樻病鏈夋挱鏀惧櫒銆傚厛鍘汇€?OK  ui.play_notice	鎾斁椤垫彁绀?OK  ui.play_notice_hint	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.play_off	涓嬬嚎杩欎簺绾胯矾
+OK  ui.play_on_air_n	鏉″湪鎾瑻endif
+OK  ui.play_rename	鏇存崲鎾斁鍣?OK  ui.play_to	鎹㈡垚
+OK  ui.play_unknown_n	鏉＄嚎璺殑鏍囪瘑涓嶅湪鎾斁鍣ㄨ〃閲岋紝鍓嶅彴鍙兘鎾笉浜嗐€傛崲鎴愮珯鍐呮挱鏀惧櫒鍗冲彲銆?BAD ui.please_fill_ip	
+OK  ui.plugins	>褰辩墖鍒楄〃</a>
+OK  ui.prev_period	涓婃湡
+BAD ui.preview_fail	
+OK  ui.provide_key_where_after	銆傜┖鐫€淇濆瓨绛変簬鍏紑銆備繚瀛樺悗绔嬪嵆鐢熸晥銆?OK  ui.provide_key_where_before	鏀惧湪鍙傛暟
+OK  ui.provide_key_where_mid	锛屾垨璇锋眰澶?OK  ui.public_domain	璁块棶鍩熷悕
+OK  ui.push_batch	涓诲姩鎺ㄤ竴鎵?OK  ui.push_batch_hint	鎸夋渶鏂板彂甯冪殑寰€澶栨帹銆備竴娆℃渶澶?100 鏉°€傚け璐ユ椂浼氭妸鎺ュ彛鍘熻瘽鎶ュ嚭鏉ャ€?BAD ui.push_fail	
+OK  ui.push_lead	鐨勫湴鍧€浜ょ粰鐧惧害 / 绁為┈ / 蹇呭簲銆俿itemap 缁欒湗铔涜嚜宸辨姄锛屼笉绛変簬鎺ㄩ€佹垚鍔熴€傛病鏈夌珯闀胯处鍙峰氨鐣欑┖銆?OK  ui.push_local_after	鎶?OK  ui.push_local_before	鎶?OK  ui.push_published_n	閮?路 杩?48 灏忔椂鏀硅繃
+OK  ui.push_samples	杩欐浼氭帹鍝簺
+OK  ui.push_samples_hint	棰勮鏈€鏂?5 鏉★紝瀹為檯鏉℃暟鐪嬩笂闈㈢殑閫夋嫨銆?BAD ui.read_fail	
+BAD ui.recent_404	
+BAD ui.replace_confirm	
+BAD ui.replace_fail	
+BAD ui.replace_find	
+BAD ui.replace_hint	
+BAD ui.replace_preview_btn	
+BAD ui.replace_run	
+BAD ui.replace_to	
+BAD ui.replaced_ok	
+OK  ui.restore_cache_after	缂撳瓨
+BAD ui.restore_cache_clear	
+BAD ui.restore_fail	
+BAD ui.restore_typed_wrong	
+BAD ui.restore_word	
+OK  ui.rollback	鍥炴粴
+BAD ui.run_fail	
+OK  ui.s3_endpoint	鎺ュ彛鍦板潃
+OK  ui.safety	鎸傞┈鎵弿
+OK  ui.safety_known_n	鏈珯宸茬煡
+OK  ui.safety_meta	涓枃浠?路
+OK  ui.safety_need_review	瑕佷汉宸ョ湅
+BAD ui.scan_btn	
+BAD ui.scan_done	
+BAD ui.scan_fail	
+BAD ui.scan_interrupted	
+BAD ui.scan_lost	
+BAD ui.scan_too_long	
+BAD ui.sched_go_cache	
+BAD ui.sched_go_push	
+BAD ui.shortcut_lead_before	
+BAD ui.shortcut_lead_end	
+BAD ui.shortcut_lead_mid	
+OK  ui.site_icon	缃戠珯鍥炬爣
+BAD ui.spider_pv	
+OK  ui.spider_urls	缁欒湗铔涚殑鍦板潃
+OK  ui.spider_urls_hint	鎶?BAD ui.sql_run_fail	
+BAD ui.sql_typed_wrong	
+BAD ui.sql_word	
+OK  ui.static_make	闈欐€佺敓鎴?BAD ui.stopped_ok	
+BAD ui.tab_backup	
+BAD ui.tab_login	
+BAD ui.tab_operate	
+BAD ui.tab_replace	
+OK  ui.theme_ads_lead_a	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.theme_ads_lead_b	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?BAD ui.theme_bench	
+BAD ui.theme_files	
+OK  ui.theme_home_hint_a	骞荤伅鐗囧湪銆屽够鐏€峴lot=
+OK  ui.theme_home_hint_b	骞荤伅鐗囧湪銆屽够鐏€峴lot=
+OK  ui.theme_home_hint_c	骞荤伅鐗囧湪銆屽够鐏€峴lot=
+OK  ui.theme_seo_hint_a	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.theme_seo_hint_b	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.theme_seo_hint_c	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.theme_seo_hint_mid	鏀?Logo銆佸鑸拰椤靛ご浠ｇ爜銆傚箍鍛婁綅銆佹爣绛惧悜瀵间粛鏄嫭绔嬪叆鍙ｃ€?OK  ui.this_period	鏈湡
+OK  ui.today_pv_uv	浠婃棩 PV
+OK  ui.token_ready_n	瀹跺凡濉?Token
+BAD ui.token_unsaved	
+BAD ui.tpl_confirm_rollback	
+BAD ui.tpl_confirm_save	
+BAD ui.tpl_copied_paste	
+BAD ui.tpl_cursor_pos	
+BAD ui.tpl_hl_plain	
+BAD ui.tpl_insert_into	
+BAD ui.tpl_inserted_cursor	
+BAD ui.tpl_no_changes	
+BAD ui.tpl_no_named_file	
+BAD ui.tpl_no_pages	
+BAD ui.tpl_pick_page	
+BAD ui.tpl_picker_drop	
+BAD ui.tpl_picker_hint_off	
+BAD ui.tpl_picker_hint_on	
+BAD ui.tpl_picker_named_hint	
+BAD ui.tpl_picker_no_img	
+BAD ui.tpl_picker_no_img_hint	
+BAD ui.tpl_put_files	
+BAD ui.tpl_unsaved_switch	
+BAD ui.unavailable	
+OK  ui.unknown	鏈煡
+BAD ui.view_detail	
+OK  ui.vod_urls	褰辩墖鍦板潃
+OK  ui.watermark_in_settings_a	绔欑偣璁剧疆
+OK  ui.watermark_in_settings_b	濡?#1b4f72銆傜暀绌哄垯鐢ㄦā鏉胯嚜甯﹂厤鑹层€傞噰闆嗗皝闈㈡按鍗板湪銆?OK  ui.webapp_hint	娣诲姞鍒颁富灞忓箷鏃剁敤鐨勫浘鏍囷紝寤鸿姝ｆ柟褰€?OK  ui.webapp_icon	webapp 鍥炬爣

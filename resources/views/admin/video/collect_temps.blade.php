@@ -88,13 +88,13 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($ctempJsLang);
+    var L = @json($ctempJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('ctemp-search');
     var batchBar = document.getElementById('ctemp-batch');
     var batchCount = document.getElementById('ctemp-batch-count');
     var countEl = document.getElementById('ctemp-count');
     var sourceChip = document.getElementById('ctemp-source-chip');
-    var toTemp = @json($toTemp);
+    var toTemp = @json($toTemp, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

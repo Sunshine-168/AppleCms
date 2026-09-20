@@ -150,7 +150,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($collectJsLang);
+    var L = @json($collectJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['empty_bind', 'has_error', 'mid'];
     var form = document.getElementById('collect-source-search');
 

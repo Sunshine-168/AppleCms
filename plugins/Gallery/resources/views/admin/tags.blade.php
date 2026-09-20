@@ -79,7 +79,7 @@
     var batchBar = document.getElementById('gallery-tag-batch');
     var batchCount = document.getElementById('gallery-tag-batch-count');
     var countEl = document.getElementById('gallery-tag-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
     var base = '/admin/video/gallery-tags';
 
     function cleanWhere(data) {

@@ -20,7 +20,7 @@
     </div>
     <div class="mac-login-card">
         <h1>{{ admin_t('auth.system') }}</h1>
-        <form id="loginForm" method="post" action="/api/admin/login" data-fail="{{ admin_t('auth.fail') }}" data-network="{{ admin_t('auth.network') }}" data-user="{{ admin_t('auth.required_user') }}" data-pass="{{ admin_t('auth.required_pass') }}" data-captcha-empty="{{ admin_t('auth.required_captcha') }}">
+        <form id="loginForm" method="post" action="/api/admin/login" data-fail="{{ admin_t('auth.fail') }}" data-network="{{ admin_t('auth.network') }}" data-user="{{ admin_t('auth.required_user') }}" data-pass="{{ admin_t('auth.required_pass') }}" data-captcha-empty="{{ admin_t('auth.required_captcha') }}" data-expired="{{ admin_t('top.unlock_expired') }}">
             @csrf
             <div class="mac-field">
                 <label for="username">{{ admin_t('auth.username') }}</label>
@@ -49,7 +49,7 @@
                         </svg>
                         <input type="text" id="captcha" name="captcha" required inputmode="numeric" autocomplete="off" maxlength="4">
                     </div>
-                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="看不清就点一下换一题"><img id="captchaImg" src="/admin/captcha" width="160" height="48" alt="验证码"></button>
+                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="{{ admin_t('ui.captcha_refresh') }}"><img id="captchaImg" src="/admin/captcha" width="160" height="48" alt="{{ admin_t('auth.captcha') }}"></button>
                 </div>
             </div>
             <label class="mac-remember"><input type="checkbox" name="remember" value="1"> {{ admin_t('auth.remember') }}</label>
@@ -171,7 +171,7 @@
                 return;
             }
             var fallback = pack.res && pack.res.status === 419
-                ? '页面已过期，请刷新后再试'
+                ? (form.getAttribute('data-expired') || '')
                 : (form.getAttribute('data-fail') || '');
             showError(pickMsg(json, fallback));
             refreshCaptcha();

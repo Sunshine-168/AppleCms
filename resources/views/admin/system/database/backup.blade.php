@@ -16,7 +16,7 @@
     </div>
     <div class="card-body">
         @include('admin.partials.db-tabs', ['tab' => 'backup'])
-        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}「<a href="/admin/system/tools/schedule">计划任务</a>」里能看到到点有没有跑。</p>
+        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}「<a href="/admin/system/tools/schedule">{{ $ui['schedule'] ?? admin_t('page.schedule') }}</a>」{{ admin_t('ui.backup_see_ran') }}</p>
 
         <div class="cache-block">
             <div class="cache-block-head">
@@ -103,8 +103,13 @@
     var U = AdminUi;
     var root = document.getElementById('backup-index');
     if (!root || !U) return;
-    var UI = @json($ui);
-    var canBackup = @json($canBackup);
+    var UI = @json($ui, JSON_UNESCAPED_UNICODE);
+    var L = @json([
+        'backup_fail' => admin_t('ui.backup_fail'),
+        'save_fail' => admin_t('ui.save_fail'),
+        'delete_fail' => admin_t('ui.delete_fail'),
+    ], JSON_UNESCAPED_UNICODE);
+    var canBackup = @json($canBackup, JSON_UNESCAPED_UNICODE);
 
     function renderFiles(rows) {
         var box = document.getElementById('backup-file-list');
@@ -141,7 +146,7 @@
         var keep = parseInt(document.getElementById('backup-keep').value, 10) || 7;
         U.post('/admin/system/database/backup/run', {keep: keep}).then(function (res) {
             U.loading(false);
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '备份失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.backup_fail, 'err'); return; }
             U.toast((res.msg) || UI.ok || '', 'ok');
             reloadFiles();
         });
@@ -154,7 +159,7 @@
             cron: document.getElementById('backup-cron').value,
             keep: parseInt(document.getElementById('backup-keep').value, 10) || 7
         }).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '保存失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.save_fail, 'err'); return; }
             U.toast(res.msg || '', 'ok');
             location.reload();
         });
@@ -179,7 +184,7 @@
         if (!name) return;
         if (!U.confirm(UI.del_confirm || '')) return;
         U.post('/admin/system/database/backup/delete', {file: name}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '删除失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.delete_fail, 'err'); return; }
             U.toast(res.msg || '', 'ok');
             reloadFiles();
         });

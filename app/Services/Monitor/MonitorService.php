@@ -147,7 +147,7 @@ class MonitorService
         if (strlen($accessIp) > 64) {
             $accessIp = substr($accessIp, 0, 64);
         }
-        $heartbeatText = $heartbeat > 0 ? date('Y-m-d H:i:s', $heartbeat) : '还没跑过';
+        $heartbeatText = $heartbeat > 0 ? date('Y-m-d H:i:s', $heartbeat) : admin_t('ui.never_ran');
 
         $board = [
             'desk' => $desk,
@@ -212,14 +212,14 @@ class MonitorService
                 $lastPt = $points === [] ? null : $points[array_key_last($points)];
                 $series[] = [
                     'key' => $key,
-                    'label' => self::METRIC_LABELS[$key] ?? $key,
+                    'label' => $this->metricLabel($key),
                     'points' => $points,
                     'last' => $lastPt === null ? null : (float) $lastPt[1],
                 ];
             }
             $groups[] = [
                 'id' => $group['id'],
-                'label' => $group['label'],
+                'label' => $this->groupLabel((string) $group['id']),
                 'series' => $series,
                 'empty_reason' => $this->groupEmptyReason($group),
             ];
@@ -440,13 +440,13 @@ class MonitorService
         foreach (VideoMonitorRule::query()->orderBy('id')->get() as $row) {
             $item = $row->toArray();
             $key = (string) $row->metric_key;
-            $item['metric_label'] = self::METRIC_LABELS[$key] ?? $key;
-            $item['status_text'] = ((int) $row->status === 1) ? '开着' : '停用';
+            $item['metric_label'] = $this->metricLabel($key);
+            $item['status_text'] = ((int) $row->status === 1) ? admin_t('ui.rule_on') : admin_t('ui.disabled');
             $item['agg_text'] = match ((string) $row->agg) {
-                'max' => '最大',
-                'sum' => '求和',
-                'last' => '最新',
-                default => '平均',
+                'max' => admin_t('ui.agg_max'),
+                'sum' => admin_t('ui.agg_sum'),
+                'last' => admin_t('ui.agg_last'),
+                default => admin_t('ui.agg_avg'),
             };
             $item['op_text'] = match ((string) $row->op) {
                 'gte' => '≥',
@@ -476,9 +476,9 @@ class MonitorService
             $item = $row->toArray();
             $item['rule_name'] = (string) ($names[$row->rule_id] ?? ('#'.$row->rule_id));
             $item['status_text'] = match ((int) $row->status) {
-                2 => '已恢复',
-                3 => '已确认',
-                default => '触发中',
+                2 => admin_t('ui.recovered'),
+                3 => admin_t('ui.acknowledged'),
+                default => admin_t('ui.firing'),
             };
             $item['opened_text'] = $row->opened_at > 0 ? date('Y-m-d H:i', (int) $row->opened_at) : '';
             $out[] = $item;
@@ -510,26 +510,26 @@ class MonitorService
     }
 
     /**
-     * @return list<array{k: string, v: string}>
+     * @return list<array{k: string, label: string, v: string}>
      */
     private function snapshotItems(bool $dead, string $heartbeatText): array
     {
         $items = [
-            ['k' => '心跳', 'v' => $dead ? '采集未跑' : $heartbeatText],
-            ['k' => 'PHP', 'v' => PHP_VERSION],
-            ['k' => '系统', 'v' => PHP_OS_FAMILY === 'Windows' ? 'Windows' : PHP_OS_FAMILY],
+            ['k' => 'heartbeat', 'label' => admin_t('ui.heartbeat'), 'v' => $dead ? admin_t('ui.collect_not_running') : $heartbeatText],
+            ['k' => 'php', 'label' => 'PHP', 'v' => PHP_VERSION],
+            ['k' => 'os', 'label' => admin_t('ui.os_label'), 'v' => PHP_OS_FAMILY === 'Windows' ? 'Windows' : PHP_OS_FAMILY],
         ];
         $path = realpath(base_path()) ?: base_path();
         $total = @disk_total_space($path);
         $free = @disk_free_space($path);
         if (is_numeric($total) && is_numeric($free) && (float) $total > 0) {
             $usedPct = 100.0 * (((float) $total - max(0.0, (float) $free)) / (float) $total);
-            $items[] = ['k' => '磁盘', 'v' => number_format($usedPct, 1, '.', '').'%'];
+            $items[] = ['k' => 'disk', 'label' => admin_t('ui.disk_pct'), 'v' => number_format($usedPct, 1, '.', '').'%'];
         }
         try {
             $ram = ServerStats::snapshot()['ram'] ?? [];
             if (! empty($ram['ok'])) {
-                $items[] = ['k' => '内存', 'v' => number_format((float) ($ram['percent'] ?? 0), 1, '.', '').'%'];
+                $items[] = ['k' => 'mem', 'label' => admin_t('ui.mem_pct'), 'v' => number_format((float) ($ram['percent'] ?? 0), 1, '.', '').'%'];
             }
         } catch (\Throwable) {
         }
@@ -540,13 +540,13 @@ class MonitorService
     private function skipLine(string $key, string $reason): string
     {
         $label = match ($key) {
-            'runtime' => '请求计数',
-            'sys.load1', 'sys.load5', 'sys.load15' => '负载',
+            'runtime' => admin_t('ui.skip_req_count'),
+            'sys.load1', 'sys.load5', 'sys.load15' => admin_t('ui.load_label'),
             'sys.cpu.pct' => 'CPU',
-            'sys.mem.used_pct' => '内存',
-            'sys.disk.used_pct' => '磁盘',
-            'php.memory_pct' => 'PHP 内存',
-            default => self::METRIC_LABELS[$key] ?? $key,
+            'sys.mem.used_pct' => admin_t('ui.mem_pct'),
+            'sys.disk.used_pct' => admin_t('ui.disk_pct'),
+            'php.memory_pct' => admin_t('ui.php_mem_pct'),
+            default => $this->metricLabel($key),
         };
         $reason = trim($reason);
 
@@ -639,5 +639,34 @@ class MonitorService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    private function metricLabel(string $key): string
+    {
+        return match ($key) {
+            'sys.load1' => admin_t('ui.metric_load1'),
+            'sys.load5' => admin_t('ui.metric_load5'),
+            'sys.load15' => admin_t('ui.metric_load15'),
+            'sys.cpu.pct' => admin_t('ui.metric_cpu'),
+            'sys.mem.used_pct' => admin_t('ui.mem_pct'),
+            'sys.disk.used_pct' => admin_t('ui.disk_pct'),
+            'php.memory_pct' => admin_t('ui.php_mem_pct'),
+            'http.req' => admin_t('ui.metric_req'),
+            'http.slow' => admin_t('ui.metric_slow'),
+            default => self::METRIC_LABELS[$key] ?? $key,
+        };
+    }
+
+    private function groupLabel(string $id): string
+    {
+        return match ($id) {
+            'load' => admin_t('ui.group_load'),
+            'cpu' => 'CPU',
+            'mem' => admin_t('ui.group_mem'),
+            'req' => admin_t('ui.group_req'),
+            'slow' => admin_t('ui.metric_slow'),
+            'http' => admin_t('ui.group_http'),
+            default => $id,
+        };
     }
 }

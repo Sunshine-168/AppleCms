@@ -326,7 +326,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($flinkJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     if (desk === 'settings') {
         U.on('#flink-settings-save', 'click', function () {
             var form = document.getElementById('flink-settings');

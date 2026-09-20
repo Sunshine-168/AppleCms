@@ -3,12 +3,47 @@
 
 @php
     $groups = $groups ?? [];
-    $theme = $theme ?? ['slug' => 'default', 'title' => '默认模板'];
+    $theme = $theme ?? ['slug' => 'default', 'title' => admin_t('ui.default_tpl')];
     $codeEditor = (bool) ($codeEditor ?? false);
     $hasFiles = false;
     foreach ($groups as $g) {
         if (! empty($g['files'])) { $hasFiles = true; break; }
     }
+    $tplJsLang = [
+        'tpl' => admin_t('nav.templates'),
+        'unsaved_switch' => admin_t('ui.tpl_unsaved_switch'),
+        'read_fail' => admin_t('ui.read_fail'),
+        'hl_plain' => admin_t('ui.tpl_hl_plain'),
+        'last_backup' => admin_t('ui.last_backup'),
+        'no_backup' => admin_t('ui.no_backup'),
+        'cursor_pos' => admin_t('ui.tpl_cursor_pos'),
+        'pick_page' => admin_t('ui.tpl_pick_page'),
+        'no_changes' => admin_t('ui.tpl_no_changes'),
+        'confirm_save' => admin_t('ui.tpl_confirm_save'),
+        'finished' => admin_t('ui.finished'),
+        'save_fail' => admin_t('ui.save_fail'),
+        'confirm_rollback' => admin_t('ui.tpl_confirm_rollback'),
+        'kind_file' => admin_t('ui.kind_file'),
+        'copied_paste' => admin_t('ui.tpl_copied_paste'),
+        'inserted_cursor' => admin_t('ui.tpl_inserted_cursor'),
+        'file_fail' => admin_t('ui.file_fail'),
+        'file_uploaded' => admin_t('ui.file_uploaded'),
+        'picker_hint_on' => admin_t('ui.tpl_picker_hint_on'),
+        'picker_hint_off' => admin_t('ui.tpl_picker_hint_off'),
+        'insert_into' => admin_t('ui.tpl_insert_into'),
+        'insert_attach' => admin_t('ui.insert_attach'),
+        'picker_drop' => admin_t('ui.tpl_picker_drop'),
+        'ph_picker_q' => admin_t('ui.ph_tpl_picker'),
+        'go_attach' => admin_t('ui.go_attach_lib'),
+        'refresh' => admin_t('ui.refresh'),
+        'empty_named' => admin_t('ui.tpl_no_named_file'),
+        'empty_named_hint' => admin_t('ui.tpl_picker_named_hint'),
+        'empty_img' => admin_t('ui.tpl_picker_no_img'),
+        'empty_img_hint' => admin_t('ui.tpl_picker_no_img_hint'),
+        'insert' => admin_t('ui.insert'),
+        'copy_url' => admin_t('ui.copy_url'),
+        'copied_url' => admin_t('ui.copied_url'),
+    ];
 @endphp
 
 @if($codeEditor)
@@ -20,13 +55,13 @@
 @section('plain')
 <div class="card card-panel desk-board tpl-board">
     <div class="card-header">
-        <span>模板</span>
+        <span>{{ admin_t('nav.templates') }}</span>
         <div>
             @include('admin.video.partials.theme-desks', ['desk' => 'files'])
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">改当前主题的页面文件。@if($codeEditor) 绿色是 Blade，橙色是 <code>@@vod</code>，紫色是 <code>@@php</code>。括号里的参数会另外上色。Ctrl+F 查找，Ctrl+S 直接保存。@else 打开「<a href="/admin/plugins/code_editor">代码编辑器</a>」插件可高亮 Blade 标签。@endif</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.tpl_lead') }}@if($codeEditor) {{ admin_t('ui.tpl_lead_hl_a') }}<code>@@vod</code>{{ admin_t('ui.tpl_lead_hl_b') }}<code>@@php</code>{{ admin_t('ui.tpl_lead_hl_c') }}@else {{ admin_t('ui.tpl_lead_plugin_a') }}<a href="/admin/plugins/code_editor">{{ admin_t('ui.code_editor') }}</a>{{ admin_t('ui.tpl_lead_plugin_b') }}@endif</p>
     </div>
 </div>
 <div class="split-side tpl-index">
@@ -34,7 +69,7 @@
         <div class="card-header"><span>{{ $theme['title'] }}</span></div>
         <div class="card-body">
             @if($hasFiles)
-                <input type="search" id="tpl-search" class="tpl-search" placeholder="搜页面，如 首页、播放" autocomplete="off" aria-label="搜索模板">
+                <input type="search" id="tpl-search" class="tpl-search" placeholder="{{ admin_t('ui.ph_tpl_search') }}" autocomplete="off" aria-label="{{ admin_t('ui.aria_search_tpl') }}">
                 <div class="file-list" id="tpl-files" data-theme="{{ $theme['slug'] }}">
                     @foreach($groups as $group)
                         <div class="tpl-group" data-group="{{ $group['key'] }}" data-fold>
@@ -50,39 +85,39 @@
                         </div>
                     @endforeach
                 </div>
-                <p class="muted" id="tpl-filter-empty" hidden>没有匹配的页面。</p>
+                <p class="muted" id="tpl-filter-empty" hidden>{{ admin_t('ui.tpl_filter_empty') }}</p>
             @else
                 <div class="list-empty">
-                    <p>这个主题还没有可改的页面。</p>
-                    <p class="muted">把 Blade 文件放到 <code>resources/views/themes/{{ $theme['slug'] }}</code>。</p>
+                    <p>{{ admin_t('ui.tpl_no_pages') }}</p>
+                    <p class="muted">{{ admin_t('ui.tpl_put_files') }} <code>resources/views/themes/{{ $theme['slug'] }}</code>{{ admin_t('ui.seo_tokens_end') }}</p>
                 </div>
             @endif
         </div>
     </div>
     <div class="card card-panel">
         <div class="card-header">
-            <span id="tpl-title">模板</span>
+            <span id="tpl-title">{{ admin_t('nav.templates') }}</span>
             <div>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-find" hidden title="Ctrl+F">查找</button>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-attach">插入附件</button>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback" disabled>回滚</button>
-                <button type="button" class="btn btn-muted btn-sm" id="tpl-backup" disabled>备份</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-find" hidden title="Ctrl+F">{{ admin_t('ui.find') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-attach">{{ admin_t('ui.insert_attach') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-rollback" disabled>{{ admin_t('ui.rollback') }}</button>
+                <button type="button" class="btn btn-muted btn-sm" id="tpl-backup" disabled>{{ admin_t('ui.backup') }}</button>
                 <button type="button" class="btn btn-sm" id="tpl-save" disabled>{{ admin_t('ui.save') }}</button>
             </div>
         </div>
         <div class="card-body">
             <p class="muted field-hint" id="tpl-meta">
-                <span id="tpl-meta-main">从左边点一个页面开始改。保存会先备份，改错了可以回滚。</span>
+                <span id="tpl-meta-main">{{ admin_t('ui.tpl_meta_idle') }}</span>
                 <span id="tpl-meta-pos" class="tpl-meta-pos" hidden></span>
             </p>
             <div class="list-empty" id="tpl-empty">
-                <p>还没有打开文件。</p>
-                <p class="muted">先点「首页」或「整站头尾」。这是 Blade 模板，不是可视化排版。需要图片时点「插入附件」。</p>
+                <p>{{ admin_t('ui.tpl_no_open') }}</p>
+                <p class="muted">{{ admin_t('ui.tpl_empty_hint') }}</p>
             </div>
             <div id="tpl-find-bar" class="tpl-find-bar" hidden>
-                <label for="tpl-find-q">查找：</label>
+                <label for="tpl-find-q">{{ admin_t('ui.find_label') }}</label>
                 <input type="search" id="tpl-find-q" autocomplete="off" spellcheck="false">
-                <span class="muted">可用 /正则/</span>
+                <span class="muted">{{ admin_t('ui.find_regex_hint') }}</span>
             </div>
             <textarea id="tpl-content" class="tpl-editor" hidden spellcheck="false"></textarea>
         </div>
@@ -97,6 +132,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($tplJsLang, JSON_UNESCAPED_UNICODE);
     var current = '';
     var saved = '';
     var backupAt = 0;
@@ -158,7 +194,7 @@
     function cursorBit() {
         if (!code || !current) return '';
         var c = code.cursor();
-        return (c.line + 1) + '行 ' + (c.ch + 1) + '列';
+        return L.cursor_pos.replace(':line', String(c.line + 1)).replace(':col', String(c.ch + 1));
     }
     function paintPos() {
         var pos = cursorBit();
@@ -166,7 +202,7 @@
         metaPos.textContent = pos;
     }
     function updateChrome() {
-        var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current || '模板';
+        var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current || L.tpl;
         titleEl.title = label;
         titleEl.textContent = label + (dirty() ? ' *' : '');
         saveBtn.disabled = !current;
@@ -177,8 +213,8 @@
     function setMeta(label, path, bak) {
         backupAt = parseInt(bak, 10) || 0;
         var bits = [path];
-        if (backupAt) bits.push('上次备份 ' + fmtTime(backupAt));
-        else bits.push('还没有备份');
+        if (backupAt) bits.push(L.last_backup.replace(':time', fmtTime(backupAt)));
+        else bits.push(L.no_backup);
         metaMain.textContent = bits.join(' · ');
         paintPos();
         updateChrome();
@@ -217,14 +253,14 @@
             else editor.focus();
             return;
         }
-        if (current && dirty() && !U.confirm('当前文件还没保存，换过去会丢掉改动。确定？')) return;
+        if (current && dirty() && !U.confirm(L.unsaved_switch)) return;
         var seq = ++loadSeq;
         a.classList.add('is-loading');
         U.get('/admin/video/templates/read', {path: path}).then(function (res) {
             a.classList.remove('is-loading');
             if (seq !== loadSeq) return;
             if (!res || res.code !== 0) {
-                U.toast((res && (res.msg || res.message)) || '读取失败', 'err');
+                U.toast((res && (res.msg || res.message)) || L.read_fail, 'err');
                 return;
             }
             var raw = (res.data && res.data.content) || '';
@@ -239,7 +275,7 @@
                 editor.hidden = false;
                 if (code) code.show(false);
                 editor.value = saved;
-                U.toast('高亮没加上，已用文本框打开', 'err');
+                U.toast(L.hl_plain, 'err');
             }
             markActive(path);
             setMeta((res.data && res.data.label) || label, path, res.data && res.data.backup_at);
@@ -249,7 +285,7 @@
         }).catch(function () {
             a.classList.remove('is-loading');
             if (seq !== loadSeq) return;
-            U.toast('读取失败', 'err');
+            U.toast(L.read_fail, 'err');
         });
     }
 
@@ -374,15 +410,15 @@
 
     function saveFile(quiet) {
         if (!current) {
-            U.toast('请先选一个页面', 'err');
+            U.toast(L.pick_page, 'err');
             return;
         }
         if (saving) return;
         if (!dirty()) {
-            U.toast('没有改动，不用保存');
+            U.toast(L.no_changes);
             return;
         }
-        if (!quiet && !U.confirm('保存会覆盖这个页面，并先做一份备份。确定？')) return;
+        if (!quiet && !U.confirm(L.confirm_save)) return;
         saving = true;
         var payload = encode(getContent());
         var snap = normalize(payload);
@@ -392,9 +428,9 @@
                 var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current;
                 setMeta(label, current, res.data && res.data.backup_at);
             }
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
         }).catch(function () {
-            U.toast('保存失败', 'err');
+            U.toast(L.save_fail, 'err');
         }).then(function () {
             saving = false;
         });
@@ -479,18 +515,18 @@
         });
     }
     U.on('#tpl-backup', 'click', function () {
-        if (!current) { U.toast('请先选一个页面', 'err'); return; }
+        if (!current) { U.toast(L.pick_page, 'err'); return; }
         U.post('/admin/video/templates/backup', {path: current}).then(function (res) {
             if (res && res.code === 0) {
                 var label = (document.querySelector('.tpl-file.active') || {}).getAttribute('data-label') || current;
                 setMeta(label, current, res.data && res.data.backup_at);
             }
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
         });
     });
     U.on('#tpl-rollback', 'click', function () {
-        if (!current) { U.toast('请先选一个页面', 'err'); return; }
-        if (!U.confirm('回到最近一次备份？现在编辑器里没保存的改动会丢掉。')) return;
+        if (!current) { U.toast(L.pick_page, 'err'); return; }
+        if (!U.confirm(L.confirm_rollback)) return;
         U.post('/admin/video/templates/rollback', {path: current}).then(function (res) {
             if (res && res.code === 0) {
                 U.get('/admin/video/templates/read', {path: current}).then(function (r) {
@@ -502,7 +538,7 @@
                     }
                 });
             }
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
         });
     });
 
@@ -522,7 +558,7 @@
     function fileExt(row) {
         var s = String((row && row.name) || (row && row.url) || '');
         var m = s.match(/\.([a-z0-9]+)(\?|$)/i);
-        return m ? m[1].toUpperCase() : '文件';
+        return m ? m[1].toUpperCase() : L.kind_file;
     }
     function snippet(row) {
         var url = fileUrl(row);
@@ -534,13 +570,13 @@
         if (!text) return;
         if (!current) {
             copyText(text);
-            U.toast('已复制，打开页面后可粘贴到光标处', 'ok');
+            U.toast(L.copied_paste, 'ok');
             return;
         }
         if (code) {
             code.insert(text);
             markDirtyTitle();
-            U.toast('已插入到光标处', 'ok');
+            U.toast(L.inserted_cursor, 'ok');
             return;
         }
         editor.focus();
@@ -550,7 +586,7 @@
         editor.value = val.slice(0, start) + text + val.slice(end);
         editor.selectionStart = editor.selectionEnd = start + text.length;
         editor.dispatchEvent(new Event('input'));
-        U.toast('已插入到光标处', 'ok');
+        U.toast(L.inserted_cursor, 'ok');
     }
     function copyText(text) {
         if (!text) return Promise.resolve();
@@ -574,11 +610,11 @@
             chain = chain.then(function () {
                 return U.upload(file, '/admin/system/attachments/upload').then(function (res) {
                     if (!res || res.code !== 0) {
-                        U.toast((res && res.msg) || (file.name + ' 失败'), 'err');
+                        U.toast((res && res.msg) || L.file_fail.replace(':name', file.name), 'err');
                         return;
                     }
                     if (after) after(res.data || {});
-                    else U.toast(file.name + ' 已上传', 'ok');
+                    else U.toast(L.file_uploaded.replace(':name', file.name), 'ok');
                 });
             });
         });
@@ -602,20 +638,18 @@
     function openPicker() {
         var active = document.querySelector('.tpl-file.active');
         var currentLabel = (active && active.getAttribute('data-label')) || current;
-        var hint = current
-            ? '点缩略图插到光标处。图片写成 img 标签，其它文件只写地址。'
-            : '还没打开页面，点插入只会复制地址。先在左边打开一个模板。';
+        var hint = current ? L.picker_hint_on : L.picker_hint_off;
         U.dialog({
-            title: current ? ('插入到「' + currentLabel + '」') : '插入附件',
+            title: current ? L.insert_into.replace(':name', currentLabel) : L.insert_attach,
             wide: true,
             hideOk: true,
             hideFoot: true,
             content: '<p class="muted tpl-picker-lead">' + hint + '</p>'
-                + '<div class="tpl-picker-drop" id="tpl-picker-drop">把 Logo、海报拖到这里，或点击上传（图片，最大 10MB）'
+                + '<div class="tpl-picker-drop" id="tpl-picker-drop">' + L.picker_drop
                 + '<input type="file" id="tpl-picker-input" multiple hidden accept="image/*,.svg,.ico,.webp,.css"></div>'
-                + '<div class="tpl-picker-bar"><input type="search" id="tpl-picker-q" placeholder="搜文件名，如 logo、海报" autocomplete="off">'
-                + '<a href="/admin/system/attachments" target="_blank">去附件库</a>'
-                + '<button type="button" class="btn btn-muted btn-sm" id="tpl-picker-reload">刷新</button></div>'
+                + '<div class="tpl-picker-bar"><input type="search" id="tpl-picker-q" placeholder="' + U.escape(L.ph_picker_q) + '" autocomplete="off">'
+                + '<a href="/admin/system/attachments" target="_blank">' + L.go_attach + '</a>'
+                + '<button type="button" class="btn btn-muted btn-sm" id="tpl-picker-reload">' + L.refresh + '</button></div>'
                 + '<div id="tpl-picker-grid" class="tpl-picker-grid"></div>'
                 + '<div id="tpl-picker-pager"></div>',
             onOpen: function (body) {
@@ -636,8 +670,8 @@
                         var total = d.total != null ? d.total : list.length;
                         if (!list.length) {
                             grid.innerHTML = state.keyword
-                                ? '<div class="list-empty tpl-picker-empty"><p>没有叫这个名字的文件。</p><p class="muted">换个词，或把文件拖到上面上传。</p></div>'
-                                : '<div class="list-empty tpl-picker-empty"><p>还没有可用的图。</p><p class="muted">把海报或图标拖到上面，插入时会写进当前模板。</p></div>';
+                                ? '<div class="list-empty tpl-picker-empty"><p>' + L.empty_named + '</p><p class="muted">' + L.empty_named_hint + '</p></div>'
+                                : '<div class="list-empty tpl-picker-empty"><p>' + L.empty_img + '</p><p class="muted">' + L.empty_img_hint + '</p></div>';
                             pagerEl.innerHTML = '';
                             return;
                         }
@@ -652,8 +686,8 @@
                                 + '<span class="entry-row-title">' + name + '</span>'
                                 + '<p class="muted">' + U.escape(row.size_text || '') + '</p>'
                                 + '<div class="tpl-picker-actions">'
-                                + '<button type="button" class="btn btn-sm js-insert">插入</button>'
-                                + '<button type="button" class="btn btn-muted btn-sm js-copy">复制地址</button>'
+                                + '<button type="button" class="btn btn-sm js-insert">' + L.insert + '</button>'
+                                + '<button type="button" class="btn btn-muted btn-sm js-copy">' + L.copy_url + '</button>'
                                 + '</div></div>';
                         }).join('');
                         grid._rows = list;
@@ -704,7 +738,7 @@
                     if (!row) return;
                     if (e.target.closest('.js-copy')) {
                         e.stopPropagation();
-                        copyText(fileUrl(row)).then(function () { U.toast('已复制地址', 'ok'); });
+                        copyText(fileUrl(row)).then(function () { U.toast(L.copied_url, 'ok'); });
                         return;
                     }
                     insertAtCursor(snippet(row));

@@ -15,7 +15,7 @@
     </div>
     <div class="card-body">
         @include('admin.partials.schedule-kind-tabs', ['tab' => 'other'])
-        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}推地址去「<a href="/admin/video/push">搜索推送</a>」。改完还不生效去「<a href="/admin/system/tools/cache">缓存</a>」。</p>
+        <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}{{ admin_t('ui.sched_go_push') }}「<a href="/admin/video/push">{{ $ui['push'] ?? admin_t('ui.search_push') }}</a>」。{{ admin_t('ui.sched_go_cache') }}「<a href="/admin/system/tools/cache">{{ $ui['cache'] ?? admin_t('page.cache') }}</a>」。</p>
         @if(($board['collect_note'] ?? '') !== '')
             <p class="muted">{{ $board['collect_note'] }}</p>
         @endif
@@ -172,8 +172,9 @@
     var root = document.getElementById('schedule-index');
     if (!root || !U) return;
     var form = document.getElementById('schedule-form');
-    var presets = @json($board['presets'] ?? []);
-    var ui = @json($ui);
+    var presets = @json($board['presets'] ?? [], JSON_UNESCAPED_UNICODE);
+    var ui = @json($ui, JSON_UNESCAPED_UNICODE);
+    var L = @json(['not_connected' => admin_t('ui.not_connected')], JSON_UNESCAPED_UNICODE);
     function say(res) { U.toast((res && res.msg) || '', res && res.code === 0 ? 'ok' : 'err'); }
     function reload() { location.reload(); }
     function showForm() { form.hidden = false; form.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
@@ -223,7 +224,7 @@
                 U.loading(false);
                 say(res);
                 if (res && res.code === 0) reload();
-            }).catch(function () { U.loading(false); U.toast('没连上', 'err'); });
+            }).catch(function () { U.loading(false); U.toast(L.not_connected, 'err'); });
         });
     });
     root.querySelectorAll('.js-run').forEach(function (btn) {
@@ -235,7 +236,7 @@
                 U.loading(false);
                 say(res);
                 if (res && res.code === 0) setTimeout(reload, 400);
-            }).catch(function () { U.loading(false); U.toast('没连上', 'err'); }).finally(function () { btn.disabled = false; });
+            }).catch(function () { U.loading(false); U.toast(L.not_connected, 'err'); }).finally(function () { btn.disabled = false; });
         });
     });
     root.querySelectorAll('.js-toggle').forEach(function (btn) {
@@ -348,7 +349,7 @@
             U.loading(false);
             say(res);
             if (res && res.code === 0) reload();
-        }).catch(function () { U.loading(false); U.toast('没连上', 'err'); });
+        }).catch(function () { U.loading(false); U.toast(L.not_connected, 'err'); });
     });
 })();
 </script>

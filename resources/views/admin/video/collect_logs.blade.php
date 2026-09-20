@@ -76,7 +76,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($clogJsLang);
+    var L = @json($clogJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('clog-search');
     var batchBar = document.getElementById('clog-batch');
     var batchCount = document.getElementById('clog-batch-count');

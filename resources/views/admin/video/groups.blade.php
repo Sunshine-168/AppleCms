@@ -126,7 +126,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($groupJsLang);
+    var L = @json($groupJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('group-search');
     var batchBar = document.getElementById('group-batch');
     var batchCount = document.getElementById('group-batch-count');

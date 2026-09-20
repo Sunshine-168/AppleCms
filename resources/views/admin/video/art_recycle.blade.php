@@ -74,7 +74,7 @@
     var batchBar = document.getElementById('art-recycle-batch');
     var batchCount = document.getElementById('art-recycle-batch-count');
     var countEl = document.getElementById('art-recycle-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

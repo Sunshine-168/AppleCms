@@ -160,7 +160,7 @@
     var batchCount = document.getElementById('website-batch-count');
     var countEl = document.getElementById('website-count');
     var prefillType = @json($typeId > 0 ? $typeId : 0);
-    var typeUrl = @json($typeUrl);
+    var typeUrl = @json($typeUrl, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

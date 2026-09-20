@@ -157,11 +157,11 @@ class HtmlCacheService
     public static function ttlOptions(): array
     {
         return [
-            0 => '改内容后马上换新',
-            900 => '15 分钟',
-            3600 => '1 小时',
-            21600 => '6 小时',
-            86400 => '1 天',
+            0 => admin_t('ui.ttl_now'),
+            900 => admin_t('ui.ttl_15m'),
+            3600 => admin_t('ui.ttl_1h'),
+            21600 => admin_t('ui.ttl_6h'),
+            86400 => admin_t('ui.ttl_1d'),
         ];
     }
 
@@ -169,13 +169,13 @@ class HtmlCacheService
     {
         $reason = (string) ($bust['reason'] ?? '');
         if ($reason === '') {
-            return '还没有刷新过';
+            return admin_t('ui.never_refreshed');
         }
 
         return match (true) {
-            $reason === 'admin:clear' => '你手动清空了页面缓存',
-            $reason === 'settings' => '改了缓存设置',
-            default => '内容有更新',
+            $reason === 'admin:clear' => admin_t('ui.bust_admin_clear'),
+            $reason === 'settings' => admin_t('ui.bust_settings'),
+            default => admin_t('ui.bust_content'),
         };
     }
 

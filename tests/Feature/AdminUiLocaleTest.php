@@ -201,6 +201,12 @@ class AdminUiLocaleTest extends TestCase
             ['es', '/admin/video/galleries?desk=favors', 'cuando los miembros marcan', 'El admin no puede', 'galería queda'],
             ['ja', '/admin/video/novels?desk=types', '1作品1分類', 'カテゴリ名を検索', 'カテゴリ'],
             ['de', '/admin/video/botlogs', 'Spider-Protokoll', 'Heute', 'IPs können nicht gesperrt werden'],
+            ['de', '/admin/video/create', 'Video hinzufügen', 'Titel ist Pflicht', 'Wiedergabelinien'],
+            ['ja', '/admin/video/create', 'ビデオを追加', 'タイトルは必須', '再生回線'],
+            ['de', '/admin/video/cj', 'Website-Sammlung', 'Aufgaben', 'Laufprotokoll'],
+            ['ja', '/admin/video/cj', 'サイト収集', 'タスク', '実行ログ'],
+            ['de', '/admin/video/make', 'Generieren', 'Statische Disk-Seiten', 'Video-Kategorien'],
+            ['ja', '/admin/system/dicts', '文字列', 'JSONオブジェクト', '辞書値'],
         ];
         foreach ($cases as [$locale, $path, $a, $b, $c]) {
             $html = $this->withSession([

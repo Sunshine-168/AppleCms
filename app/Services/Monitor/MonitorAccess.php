@@ -139,7 +139,7 @@ class MonitorAccess
         foreach ($map as $row) {
             $high = ((int) $row['hits'] >= $cc) || ((int) $row['scan'] > 0);
             $row['high'] = $high;
-            $row['flag'] = $high ? (((int) $row['scan'] > 0) ? '扫描痕迹' : '次数偏高') : '';
+            $row['flag'] = $high ? (((int) $row['scan'] > 0) ? admin_t('ui.flag_scan') : admin_t('ui.flag_high')) : '';
             $out[] = $row;
         }
         usort($out, static function (array $a, array $b): int {

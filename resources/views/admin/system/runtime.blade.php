@@ -309,7 +309,7 @@
 @push('scripts')
 <script>
 (function () {
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     var U = window.AdminUi;
     var L = @json($runtimeJsLang ?? [], JSON_UNESCAPED_UNICODE);
     var COLORS = ['#3b82c4', '#e67e22', '#27ae60', '#8e44ad'];
@@ -556,7 +556,7 @@
             if (!list.length) {
                 var empty = document.createElement('p');
                 empty.className = 'runtime-chart-empty';
-                empty.textContent = group.empty_reason || '这个时间范围内还没有点，曲线空着。';
+                empty.textContent = group.empty_reason || L.empty_chart || '';
                 card.appendChild(empty);
                 wrap.appendChild(card);
                 return;
@@ -587,7 +587,7 @@
     function loadSeries(range) {
         var wrap = document.getElementById('runtime-charts');
         if (!wrap) return;
-        wrap.innerHTML = '<div class="list-empty"><p>正在读样本…</p></div>';
+        wrap.innerHTML = '<div class="list-empty"><p>' + (L.reading_samples || '') + '</p></div>';
         U.get('/admin/system/runtime/series', { range: range }).then(function (res) {
             if (!res || res.code !== 0) {
                 lastPayload = null;
@@ -667,7 +667,7 @@
             var stamp = document.getElementById('live-stamp');
             if (stamp && d.ts) {
                 var t = new Date(Number(d.ts) * 1000);
-                stamp.textContent = '更新于 ' + pad2(t.getHours()) + ':' + pad2(t.getMinutes()) + ':' + pad2(t.getSeconds());
+                stamp.textContent = String(L.updated_at_clock || '').replace(':t', pad2(t.getHours()) + ':' + pad2(t.getMinutes()) + ':' + pad2(t.getSeconds()));
             }
         });
     }
@@ -678,7 +678,7 @@
         if (pauseBtn) {
             pauseBtn.addEventListener('click', function () {
                 paused = !paused;
-                pauseBtn.textContent = paused ? '继续' : '暂停';
+                pauseBtn.textContent = paused ? (L.resume || '') : (L.pause || '');
             });
         }
     }
@@ -688,7 +688,7 @@
         settings.addEventListener('submit', function (e) {
             e.preventDefault();
             U.post('/admin/system/runtime/settings', U.formData(settings)).then(function (res) {
-                U.toast(U.pickMsg(res, '已保存'));
+                U.toast(U.pickMsg(res, L.saved || ''));
             });
         });
     }
@@ -697,7 +697,7 @@
         btn.addEventListener('click', function () {
             var id = btn.closest('tr').getAttribute('data-id');
             U.post('/admin/system/runtime/rules/status', { id: id, status: btn.getAttribute('data-on') }).then(function (res) {
-                U.toast(U.pickMsg(res, '已改'));
+                U.toast(U.pickMsg(res, L.changed_ok || ''));
                 if (res.code === 0) location.reload();
             });
         });
@@ -710,7 +710,7 @@
             var name = btn.getAttribute('data-name') || '';
             var cond = btn.getAttribute('data-cond') || '';
             U.dialog({
-                title: name ? ('改阈值 · ' + name) : '改阈值',
+                title: name ? String(L.edit_threshold_named || '').replace(':name', name) : (L.edit_threshold || ''),
                 content: tpl.innerHTML,
                 onOpen: function (body) {
                     var input = body.querySelector('[name=threshold]');
@@ -725,9 +725,9 @@
                 onSave: function (body) {
                     var input = body.querySelector('[name=threshold]');
                     var next = input ? input.value : '';
-                    if (next === '') { U.toast('请填写阈值', 'err'); return false; }
+                    if (next === '') { U.toast(L.please_fill_threshold || '', 'err'); return false; }
                     return U.post('/admin/system/runtime/rules/save', { id: id, threshold: next }).then(function (res) {
-                        U.toast(U.pickMsg(res, '已保存'));
+                        U.toast(U.pickMsg(res, L.saved || ''));
                         if (!res || res.code !== 0) return false;
                         location.reload();
                     });
@@ -739,7 +739,7 @@
         btn.addEventListener('click', function () {
             var id = btn.closest('tr').getAttribute('data-id');
             U.post('/admin/system/runtime/rules/test', { id: id }).then(function (res) {
-                U.toast(U.pickMsg(res, '没有结果'));
+                U.toast(U.pickMsg(res, L.no_result || ''));
             });
         });
     });
@@ -747,7 +747,7 @@
         btn.addEventListener('click', function () {
             var id = btn.closest('tr').getAttribute('data-id');
             U.post('/admin/system/runtime/events/ack', { id: id }).then(function (res) {
-                U.toast(U.pickMsg(res, '已确认'));
+                U.toast(U.pickMsg(res, L.ack_ok || ''));
                 if (res.code === 0) location.reload();
             });
         });

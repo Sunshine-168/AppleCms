@@ -1,13 +1,28 @@
 @extends('admin.layouts.inner')
 @section('title', admin_t('page.wizard'))
 
+@php
+    $jsLang = [
+        'wiz_group_list' => admin_t('ui.wiz_group_list'),
+        'wiz_group_page' => admin_t('ui.wiz_group_page'),
+        'wiz_group_format' => admin_t('ui.wiz_group_format'),
+        'yes' => admin_t('ui.yes'),
+        'more_conds' => admin_t('ui.more_conds'),
+        'gen_fail' => admin_t('ui.gen_fail'),
+        'no_snippet_yet' => admin_t('ui.no_snippet_yet'),
+        'copied' => admin_t('ui.copied'),
+        'copy_manually' => admin_t('ui.copy_manually'),
+        'fail' => admin_t('ui.fail'),
+    ];
+@endphp
+
 @section('plain')
 <div class="card card-panel wizard-index" id="wizard-index">
     <div class="card-header">
-        <span>标签向导</span>
+        <span>{{ admin_t('page.wizard') }}</span>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">生成主题里能跑的 Blade 标签。选一种，改条件，复制到「模板编辑」里贴。没有苹果的 <code>{maccms:vod}</code>。给片子打标签请去「标签」。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.wizard_lead_1') }}「{{ admin_t('page.templates') }}」{{ admin_t('ui.wizard_lead_2') }} <code>{maccms:vod}</code>{{ admin_t('ui.wizard_lead_3') }}「{{ admin_t('nav.tags') }}」{{ admin_t('ui.wizard_lead_4') }}</p>
         <div class="wiz-picker">
             <div class="queue-chips" id="wiz-group-chips"></div>
             <div class="queue-chips" id="wiz-tag-chips"></div>
@@ -17,19 +32,19 @@
             <div class="wiz-left">
                 <form class="wiz-form" id="wiz-form" onsubmit="return false;"></form>
                 <div class="wiz-actions">
-                    <button type="button" class="btn btn-muted btn-sm" id="wiz-try">试一下会捞几条</button>
+                    <button type="button" class="btn btn-muted btn-sm" id="wiz-try">{{ admin_t('ui.wiz_try') }}</button>
                     <span class="muted" id="wiz-try-out"></span>
                 </div>
                 <ul class="wiz-samples" id="wiz-samples" hidden></ul>
                 <div class="wiz-vars" id="wiz-vars" hidden>
-                    <h3>循环里能用的字段</h3>
+                    <h3>{{ admin_t('ui.wiz_loop_fields') }}</h3>
                     <ul id="wiz-var-list"></ul>
                 </div>
             </div>
             <div class="wiz-right">
                 <div class="wiz-snippet-head">
-                    <label class="wiz-snippet-label" for="wiz-snippet">生成的标签</label>
-                    <button type="button" class="btn btn-sm" id="wiz-copy">复制</button>
+                    <label class="wiz-snippet-label" for="wiz-snippet">{{ admin_t('ui.wiz_snippet') }}</label>
+                    <button type="button" class="btn btn-sm" id="wiz-copy">{{ admin_t('ui.copy') }}</button>
                 </div>
                 <textarea id="wiz-snippet" class="wiz-snippet" rows="12" spellcheck="false"></textarea>
             </div>
@@ -42,11 +57,12 @@
 <script>
 (function () {
     var U = AdminUi;
-    var catalog = @json($catalog);
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
+    var catalog = @json($catalog, JSON_UNESCAPED_UNICODE);
     var groups = [
-        {id: 'list', label: '列表'},
-        {id: 'page', label: '当前页'},
-        {id: 'format', label: '格式化'}
+        {id: 'list', label: L.wiz_group_list},
+        {id: 'page', label: L.wiz_group_page},
+        {id: 'format', label: L.wiz_group_format}
     ];
     var currentGroup = 'list';
     var current = 'vod';
@@ -107,7 +123,7 @@
             });
             html += '</select>';
         } else if (field.type === 'checkbox') {
-            html += '<label class="wiz-check"><input id="' + id + '" type="checkbox" name="' + esc(field.name) + '" value="1"> 是</label>';
+            html += '<label class="wiz-check"><input id="' + id + '" type="checkbox" name="' + esc(field.name) + '" value="1"> ' + esc(L.yes) + '</label>';
         } else {
             html += '<input id="' + id + '" type="' + (field.type === 'number' ? 'number' : 'text') + '" name="' + esc(field.name) + '" value="' + esc(field.value || '') + '" autocomplete="off">';
         }
@@ -125,7 +141,7 @@
         });
         var html = basic.map(renderFieldHtml).join('');
         if (advanced.length) {
-            html += '<details class="wiz-more"><summary>更多条件</summary><div class="wiz-more-grid">';
+            html += '<details class="wiz-more"><summary>' + esc(L.more_conds) + '</summary><div class="wiz-more-grid">';
             html += advanced.map(renderFieldHtml).join('');
             html += '</div></details>';
         }
@@ -151,7 +167,7 @@
         U.post('/admin/video/wizard/snippet', payload()).then(function (res) {
             if (!res || res.code !== 0) {
                 snippet.value = '';
-                U.toast((res && res.msg) || '生成失败', 'err');
+                U.toast((res && res.msg) || L.gen_fail, 'err');
                 return;
             }
             snippet.value = (res.data && res.data.snippet) || '';
@@ -196,24 +212,24 @@
     form.addEventListener('input', refreshSnippet);
     U.on('#wiz-copy', 'click', function () {
         var text = snippet.value || '';
-        if (!text) { U.toast('还没有生成内容', 'err'); return; }
+        if (!text) { U.toast(L.no_snippet_yet, 'err'); return; }
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function () { U.toast('已复制', 'ok'); }).catch(function () {
+            navigator.clipboard.writeText(text).then(function () { U.toast(L.copied, 'ok'); }).catch(function () {
                 snippet.select();
-                U.toast('请手动复制', 'err');
+                U.toast(L.copy_manually, 'err');
             });
         } else {
             snippet.select();
-            U.toast('请手动复制', 'err');
+            U.toast(L.copy_manually, 'err');
         }
     });
     U.on('#wiz-try', 'click', function () {
         tryOut.textContent = '…';
         samples.hidden = true;
         U.post('/admin/video/wizard/try', payload()).then(function (res) {
-            tryOut.textContent = (res && res.msg) || '失败';
+            tryOut.textContent = (res && res.msg) || L.fail;
             if (!res || res.code !== 0) {
-                U.toast((res && res.msg) || '失败', 'err');
+                U.toast((res && res.msg) || L.fail, 'err');
                 return;
             }
             var list = (res.data && res.data.samples) || [];

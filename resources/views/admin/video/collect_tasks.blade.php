@@ -93,7 +93,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($ctaskJsLang);
+    var L = @json($ctaskJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('ctask-search');
     var batchBar = document.getElementById('ctask-batch');
     var batchCount = document.getElementById('ctask-batch-count');

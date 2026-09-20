@@ -51,7 +51,7 @@ class CjRuleAdmin
     public function lists(array $params): array
     {
         if (! $this->cj->ready()) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.cj_migrate_first'));
         }
         $desk = $this->desk($params);
         if ($desk === 'logs') {
@@ -79,34 +79,34 @@ class CjRuleAdmin
     public function save(array $data, ?int $id = null): array
     {
         if (! $this->cj->ready()) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.cj_migrate_first'));
         }
         if ($this->desk($data) === 'logs') {
-            return Result::fail('运行日志由采集写入，不能手添或改。');
+            return Result::fail(admin_t('ui.cj_logs_readonly'));
         }
         $attrs = $this->cj->attributesFromInput($data);
         if (trim((string) $attrs['url']) === '' || ! preg_match('#^https?://#i', (string) $attrs['url'])) {
-            return Result::fail('列表地址必须是 http/https');
+            return Result::fail(admin_t('ui.cj_url_http'));
         }
         if ($attrs['type'] === 'html' && trim((string) ($attrs['options']['item_selector'] ?? '')) === '') {
-            return Result::fail('请填写列表条目选择器');
+            return Result::fail(admin_t('ui.cj_need_item_selector'));
         }
         $into = (string) ($attrs['options']['into'] ?? 'vod');
         if ($into === 'manga' && ! $this->cj->mangaReady()) {
-            return Result::fail('漫画插件未启用，不能写入漫画库');
+            return Result::fail(admin_t('ui.cj_manga_off'));
         }
         if ($into === 'art' && ! Schema::hasTable('video_arts')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.cj_migrate_first'));
         }
         $row = $id ? VideoCjRule::query()->find($id) : new VideoCjRule;
         if ($id && ! $row) {
-            return Result::fail('规则不存在');
+            return Result::fail(admin_t('ui.cj_rule_missing'));
         }
         $row->fill($attrs);
         $row->save();
 
         return AdminOpLog::ifOk(
-            Result::success($this->present($row->fresh() ?? $row), $id ? '已保存' : '已添加'),
+            Result::success($this->present($row->fresh() ?? $row), $id ? admin_t('ui.saved') : admin_t('ui.added')),
             $id ? 'update' : 'create',
             ($id ? '改了网站采集 ' : '加了网站采集 ').$row->name,
             ['module' => 'cj', 'target_id' => (int) $row->id]
@@ -117,7 +117,7 @@ class CjRuleAdmin
     {
         $row = VideoCjRule::query()->find($id);
         if (! $row) {
-            return Result::fail('规则不存在');
+            return Result::fail(admin_t('ui.cj_rule_missing'));
         }
         $name = (string) $row->name;
         $row->delete();
@@ -135,13 +135,13 @@ class CjRuleAdmin
     {
         $row = VideoCjRule::query()->find($id);
         if (! $row) {
-            return Result::fail('规则不存在');
+            return Result::fail(admin_t('ui.cj_rule_missing'));
         }
         $row->status = (int) $row->status === 1 ? 0 : 1;
         $row->save();
 
         return AdminOpLog::ifOk(
-            Result::success($this->present($row), $row->status ? '已启用，到点会跟着到期采集跑' : '已停用，不再自动采集'),
+            Result::success($this->present($row), $row->status ? admin_t('ui.cj_enabled_run') : admin_t('ui.cj_disabled_stop')),
             'update',
             ($row->status ? '启用了网站采集 ' : '停用了网站采集 ').$row->name,
             ['module' => 'cj', 'target_id' => $id]
@@ -176,7 +176,7 @@ class CjRuleAdmin
             'publish_immediately' => (int) ($row->publish_immediately ?? 0),
             'note' => (string) ($row->note ?? ''),
             'last_run_at' => $lastAt,
-            'last_run_text' => $lastAt > 0 ? date('m-d H:i', $lastAt) : '还没跑过',
+            'last_run_text' => $lastAt > 0 ? date('m-d H:i', $lastAt) : admin_t('ui.never_ran'),
             'last_status' => (string) ($row->last_status ?? ''),
             'last_message' => (string) ($row->last_message ?? ''),
             'item_selector' => (string) ($opts['item_selector'] ?? $row->list_rule ?? ''),
@@ -313,7 +313,7 @@ class CjRuleAdmin
             'rule_id' => (int) $row->rule_id,
             'rule_name' => $ruleName !== '' ? $ruleName : ('#'.$row->rule_id),
             'status' => (string) $row->status,
-            'status_label' => (string) $row->status === 'ok' ? '成功' : ((string) $row->status === 'fail' ? '失败' : (string) $row->status),
+            'status_label' => (string) $row->status === 'ok' ? admin_t('ui.success') : ((string) $row->status === 'fail' ? admin_t('ui.fail') : (string) $row->status),
             'fetched' => (int) $row->fetched,
             'created' => (int) $row->created,
             'skipped' => (int) $row->skipped,

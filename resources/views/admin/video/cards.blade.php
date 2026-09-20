@@ -122,7 +122,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($cardJsLang);
+    var L = @json($cardJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('card-search');
     var qs = new URLSearchParams(location.search);
     if (qs.get('used_by') && form.used_by) form.used_by.value = qs.get('used_by');

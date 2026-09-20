@@ -161,7 +161,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($artJsLang);
+    var L = @json($artJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('art-search');
     var batchBar = document.getElementById('art-batch');
     var batchCount = document.getElementById('art-batch-count');

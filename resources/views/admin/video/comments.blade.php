@@ -63,7 +63,7 @@
 <div class="card card-panel comment-index list-desk">
     <div class="card-header">
         <span>{{ admin_t('ui.comments') }} <em id="comment-count"></em></span>
-        <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('ui.comment_audit') }}</a>
+        <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('item.config_comment') }}</a>
     </div>
     <div class="card-body">
         @if($scope === 'art' && ! $ready)
@@ -127,7 +127,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($commentJsLang);
+    var L = @json($commentJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['report'];
     var SCOPE = {!! json_encode($scope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
     var API = {!! json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};

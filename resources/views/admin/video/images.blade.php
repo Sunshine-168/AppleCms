@@ -7,51 +7,75 @@
     $emptyN = (int) ($empty_n ?? 0);
     $picLocal = (bool) ($pic_local ?? false);
     $watermark = trim((string) ($watermark ?? ''));
+    $jsLang = [
+        'vod_hash' => admin_t('ui.video_hash', ['id' => '__ID__']),
+        'broken' => admin_t('ui.img_broken'),
+        'edit_cover' => admin_t('ui.img_edit_cover'),
+        'scan_done' => admin_t('ui.img_scan_done'),
+        'hint_broken' => admin_t('ui.img_hint_broken'),
+        'hint_remote' => admin_t('ui.img_hint_remote'),
+        'hint_missing' => admin_t('ui.img_hint_missing'),
+        'hint_local' => admin_t('ui.img_hint_local'),
+        'list_remote' => admin_t('ui.img_list_remote'),
+        'list_missing' => admin_t('ui.img_list_missing'),
+        'download_local' => admin_t('ui.img_download_local'),
+        'go_empty_pic' => admin_t('ui.img_go_empty'),
+        'downloaded' => admin_t('ui.img_downloaded'),
+        'remain_more' => admin_t('ui.img_remain_more'),
+        'remain_done' => admin_t('ui.img_remain_done'),
+        'no_change_videos' => admin_t('ui.img_no_change'),
+        'again' => admin_t('ui.img_again'),
+        'scan_again' => admin_t('ui.img_scan_again'),
+        'scan_fail' => admin_t('ui.img_scan_fail'),
+        'net_retry' => admin_t('ui.net_retry'),
+        'confirm_local' => admin_t('ui.img_confirm_local'),
+        'dl_fail' => admin_t('ui.img_dl_fail'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel img-index">
     <div class="card-header">
-        <span>远程图片 / 坏图</span>
+        <span>{{ admin_t('ui.img_title') }}</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video">影片列表</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_pic=1">无封面@if($emptyN > 0) · {{ $emptyN }}@endif</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/collect">内容接入</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/tools/annex">附件清理</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.video_list') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?empty_pic=1">{{ admin_t('ui.no_cover') }}@if($emptyN > 0) · {{ $emptyN }}@endif</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/collect">{{ admin_t('ui.config_collect') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/tools/annex">{{ admin_t('ui.annex') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">扫描封面、下载到本站 <code>/uploads/vod/</code>。缺图去补无封面。扫描不改影片。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.img_lead_before') }}<code>/uploads/vod/</code>{{ admin_t('ui.img_lead_after') }}</p>
 
         <div class="img-stock" id="img-stock">
-            <span>外站封面 <strong id="img-remote-n">{{ $remoteN }}</strong></span>
-            <span>本站封面 <strong id="img-local-n">{{ $localN }}</strong></span>
-            <a href="/admin/video?empty_pic=1">还没封面 <strong id="img-empty-n">{{ $emptyN }}</strong></a>
+            <span>{{ admin_t('ui.img_remote_cover') }} <strong id="img-remote-n">{{ $remoteN }}</strong></span>
+            <span>{{ admin_t('ui.img_local_cover') }} <strong id="img-local-n">{{ $localN }}</strong></span>
+            <a href="/admin/video?empty_pic=1">{{ admin_t('ui.img_no_cover_yet') }} <strong id="img-empty-n">{{ $emptyN }}</strong></a>
         </div>
-        <p class="muted img-note">上面的数字看的是库里的地址，不会去访问外站。片子多就多点几次扫描和下载，一次看最近 80 部、最多下 40 张。</p>
+        <p class="muted img-note">{{ admin_t('ui.img_stock_note') }}</p>
         @if(! $picLocal)
-            <p class="muted img-note">采集时不会自动下载封面。要自动下，到「<a href="/admin/video/config/collect">内容接入</a>」打开「把封面下载到本站」。</p>
+            <p class="muted img-note">{{ admin_t('ui.img_auto_off_before') }}<a href="/admin/video/config/collect">{{ admin_t('ui.config_collect') }}</a>{{ admin_t('ui.img_auto_off_mid') }}</p>
         @endif
         @if($watermark !== '')
-            <p class="muted img-note">下载时会在图上打水印「{{ $watermark }}」。要改字去「<a href="/admin/video/settings">站点设置</a>」。</p>
+            <p class="muted img-note">{{ admin_t('ui.img_wm_on_before', ['name' => $watermark]) }}<a href="/admin/video/settings">{{ admin_t('ui.site_settings') }}</a>{{ admin_t('ui.img_wm_on_after') }}</p>
         @else
-            <p class="muted img-note">现在下载不打水印。需要的话在「<a href="/admin/video/settings">站点设置</a>」里写封面水印。</p>
+            <p class="muted img-note">{{ admin_t('ui.img_wm_off_before') }}<a href="/admin/video/settings">{{ admin_t('ui.site_settings') }}</a>{{ admin_t('ui.img_wm_off_after') }}</p>
         @endif
 
         <div class="hub-actions img-ops">
-            <button type="button" class="btn" id="img-scan-btn">扫描封面</button>
-            <button type="button" class="btn btn-muted" id="img-local-btn">下载到本站</button>
+            <button type="button" class="btn" id="img-scan-btn">{{ admin_t('ui.img_scan') }}</button>
+            <button type="button" class="btn btn-muted" id="img-local-btn">{{ admin_t('ui.img_download_local') }}</button>
         </div>
 
         <div class="hub-result" id="img-result">
             <div class="hub-empty" id="img-empty">
-                <p>还没扫描。</p>
-                <p class="muted">点「扫描封面」看哪些还在资源站、哪些打不开。不会改片子。</p>
+                <p>{{ admin_t('ui.img_empty') }}</p>
+                <p class="muted">{{ admin_t('ui.img_empty_hint') }}</p>
             </div>
             <div class="hub-fail" id="img-fail" hidden>
-                <p class="hub-fail-title">没扫成</p>
+                <p class="hub-fail-title">{{ admin_t('ui.img_fail_title') }}</p>
                 <p class="hub-fail-msg" id="img-fail-msg"></p>
-                <p class="muted">常见原因：网络超时。可以再点一次，或先下一批外站封面。</p>
+                <p class="muted">{{ admin_t('ui.img_fail_hint') }}</p>
             </div>
             <div class="hub-ok" id="img-ok" hidden>
                 <p class="hub-ok-stats" id="img-ok-stats"></p>
@@ -73,6 +97,7 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var scanBtn = document.getElementById('img-scan-btn');
     var localBtn = document.getElementById('img-local-btn');
     var emptyEl = document.getElementById('img-empty');
@@ -99,10 +124,10 @@
     }
     function rowHtml(item) {
         var id = parseInt(item.id, 10) || 0;
-        var title = U.escape(item.title || ('影片 #' + id));
+        var title = U.escape(item.title || String(L.vod_hash || '').replace('__ID__', String(id)));
         var host = U.escape(item.host || item.cover || '');
-        var badge = item.ok ? '' : '<span class="badge">打不开</span>';
-        var link = id ? '<a class="btn-link" href="/admin/video/' + id + '/edit">改封面</a>' : '';
+        var badge = item.ok ? '' : '<span class="badge">' + U.escape(L.broken) + '</span>';
+        var link = id ? '<a class="btn-link" href="/admin/video/' + id + '/edit">' + U.escape(L.edit_cover) + '</a>' : '';
         return '<div class="img-row"><div><strong>' + title + '</strong> ' + badge + '<div class="muted">' + host + '</div></div><div class="img-row-ops">' + link + '</div></div>';
     }
     function listHtml(title, rows) {
@@ -115,47 +140,47 @@
     function renderScan(data, msg) {
         lastScan = data || {};
         setStock(lastScan);
-        document.getElementById('img-ok-stats').textContent = msg || '扫描完成';
+        document.getElementById('img-ok-stats').textContent = msg || L.scan_done;
         var remote = lastScan.remote || [];
         var missing = lastScan.missing || [];
         var hint = '';
         if (remote.length && lastScan.broken_n > 0) {
-            hint = '外站封面资源站挂了就会打不开。下载到本站后，地址会改成 /uploads/vod/。';
+            hint = L.hint_broken;
         } else if (remote.length) {
-            hint = '这些封面还在资源站。点「下载到本站」会改影片上的地址。';
+            hint = L.hint_remote;
         } else if (missing.length) {
-            hint = '本站文件找不到了。去影片编辑里重传，或到无封面列表补图。';
+            hint = L.hint_missing;
         } else {
-            hint = '这批封面都在本站。没有封面的片子在无封面列表里。';
+            hint = L.hint_local;
         }
         document.getElementById('img-ok-hint').textContent = hint;
         document.getElementById('img-ok-lists').innerHTML =
-            listHtml('外站封面', remote) + listHtml('本站文件丢失', missing);
+            listHtml(L.list_remote, remote) + listHtml(L.list_missing, missing);
         var actions = document.getElementById('img-ok-actions');
         actions.innerHTML = '';
         if (remote.length) {
             var down = document.createElement('button');
             down.type = 'button';
             down.className = 'btn';
-            down.textContent = '下载到本站';
+            down.textContent = L.download_local;
             down.addEventListener('click', localize);
             actions.appendChild(down);
         }
         var emptyLink = document.createElement('a');
         emptyLink.className = 'btn btn-muted';
         emptyLink.href = '/admin/video?empty_pic=1';
-        emptyLink.textContent = '去无封面列表';
+        emptyLink.textContent = L.go_empty_pic;
         actions.appendChild(emptyLink);
         show('ok');
     }
     function renderDone(data, msg) {
         setStock(data || {});
-        document.getElementById('img-done-stats').textContent = msg || '已下载';
+        document.getElementById('img-done-stats').textContent = msg || L.downloaded;
         var remaining = parseInt((data && data.remaining != null) ? data.remaining : (data && data.remote_n), 10) || 0;
         var done = parseInt((data && data.count), 10) || 0;
         var hint = done > 0
-            ? (remaining > 0 ? '还剩外站封面，可再点一次下载。' : '外站封面这批已经下完。')
-            : '没有改任何片子。';
+            ? (remaining > 0 ? L.remain_more : L.remain_done)
+            : L.no_change_videos;
         document.getElementById('img-done-hint').textContent = hint;
         var actions = document.getElementById('img-done-actions');
         actions.innerHTML = '';
@@ -163,20 +188,20 @@
             var again = document.createElement('button');
             again.type = 'button';
             again.className = 'btn';
-            again.textContent = '再下一轮';
+            again.textContent = L.again;
             again.addEventListener('click', localize);
             actions.appendChild(again);
         }
         var scanAgain = document.createElement('button');
         scanAgain.type = 'button';
         scanAgain.className = 'btn btn-muted';
-        scanAgain.textContent = '再扫描';
+        scanAgain.textContent = L.scan_again;
         scanAgain.addEventListener('click', scan);
         actions.appendChild(scanAgain);
         var emptyLink = document.createElement('a');
         emptyLink.className = 'btn btn-muted';
         emptyLink.href = '/admin/video?empty_pic=1';
-        emptyLink.textContent = '去无封面列表';
+        emptyLink.textContent = L.go_empty_pic;
         actions.appendChild(emptyLink);
         show('done');
     }
@@ -190,43 +215,43 @@
             U.loading(false);
             scanBtn.disabled = false;
             if (!res || res.code !== 0) {
-                failMsg.textContent = (res && res.msg) || '扫描失败';
+                failMsg.textContent = (res && res.msg) || L.scan_fail;
                 show('fail');
-                U.toast((res && res.msg) || '扫描失败', 'err');
+                U.toast((res && res.msg) || L.scan_fail, 'err');
                 return;
             }
             renderScan(res.data || {}, res.msg || '');
-            U.toast(res.msg || '扫描完成', 'ok');
+            U.toast(res.msg || L.scan_done, 'ok');
         }).catch(function () {
             U.loading(false);
             scanBtn.disabled = false;
-            failMsg.textContent = '网络错误，稍后再试。';
+            failMsg.textContent = L.net_retry;
             show('fail');
-            U.toast('扫描失败', 'err');
+            U.toast(L.scan_fail, 'err');
         });
     }
     function localize() {
-        if (!U.confirm('会把外站封面下到本站 /uploads/vod/，并改影片上的地址。一次最多 40 张。资源站挂了就下不下来。')) return;
+        if (!U.confirm(L.confirm_local)) return;
         localBtn.disabled = true;
         U.loading(true);
         post('localize').then(function (res) {
             U.loading(false);
             localBtn.disabled = false;
             if (!res || res.code !== 0) {
-                failMsg.textContent = (res && res.msg) || '下载失败';
+                failMsg.textContent = (res && res.msg) || L.dl_fail;
                 show('fail');
-                U.toast((res && res.msg) || '下载失败', 'err');
+                U.toast((res && res.msg) || L.dl_fail, 'err');
                 return;
             }
             lastScan = null;
             renderDone(res.data || {}, res.msg || '');
-            U.toast(res.msg || '已下载', 'ok');
+            U.toast(res.msg || L.downloaded, 'ok');
         }).catch(function () {
             U.loading(false);
             localBtn.disabled = false;
-            failMsg.textContent = '网络错误，稍后再试。';
+            failMsg.textContent = L.net_retry;
             show('fail');
-            U.toast('下载失败', 'err');
+            U.toast(L.dl_fail, 'err');
         });
     }
 

@@ -76,13 +76,13 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($artTagJsLang);
+    var L = @json($artTagJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('art-tag-search');
     var compose = document.getElementById('art-tag-compose');
     var batchBar = document.getElementById('art-tag-batch');
     var batchCount = document.getElementById('art-tag-batch-count');
     var countEl = document.getElementById('art-tag-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};

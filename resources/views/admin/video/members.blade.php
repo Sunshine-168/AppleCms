@@ -132,7 +132,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($memberJsLang);
+    var L = @json($memberJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['group_id'];
     var form = document.getElementById('member-search');
     var qs = new URLSearchParams(location.search);

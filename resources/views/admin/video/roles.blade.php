@@ -21,6 +21,27 @@
         'videos' => admin_t('ui.videos'),
         'actors' => admin_t('ui.actors'),
         'selected_n' => admin_t('ui.selected_n', ['n' => '__N__']),
+        'video_deleted_n' => admin_t('ui.video_deleted_n'),
+        'video_n' => admin_t('ui.video_n'),
+        'actor_deleted_n' => admin_t('ui.actor_deleted_n'),
+        'actor_n' => admin_t('ui.actor_n'),
+        'role_no_video_hint' => admin_t('ui.role_no_video_hint'),
+        'video_missing_will_fail' => admin_t('ui.video_missing_will_fail'),
+        'will_attach' => admin_t('ui.will_attach'),
+        'actor_will' => admin_t('ui.actor_will'),
+        'actor_missing_will_fail' => admin_t('ui.actor_missing_will_fail'),
+        'role_actor_hint' => admin_t('ui.role_actor_hint'),
+        'edit_role' => admin_t('ui.edit_role'),
+        'need_role_name' => admin_t('ui.need_role_name'),
+        'fail' => admin_t('ui.fail'),
+        'saved' => admin_t('ui.saved'),
+        'created' => admin_t('ui.created'),
+        'please_select_roles' => admin_t('ui.please_select_roles'),
+        'op_fail' => admin_t('ui.op_fail'),
+        'op_ok' => admin_t('ui.op_ok'),
+        'confirm_del_roles' => admin_t('ui.confirm_del_roles'),
+        'confirm_del_role' => admin_t('ui.confirm_del_role'),
+        'deleted' => admin_t('ui.deleted'),
     ];
 @endphp
 
@@ -37,10 +58,10 @@
     <div class="card-body">
         <p class="muted recycle-lead">{{ admin_t('ui.cast_lead') }}</p>
         @if($videoId > 0)
-            <p class="role-focus">{{ $videoTitle !== '' ? '正在看「'.$videoTitle.'」的角色。' : '影片 #'.$videoId.' 不存在，保存时会失败。' }}</p>
+            <p class="role-focus">{{ $videoTitle !== '' ? admin_t('ui.watching_roles', ['name' => $videoTitle]) : admin_t('ui.video_missing_save', ['id' => $videoId]) }}</p>
         @endif
         @if($actorId > 0)
-            <p class="role-focus">{{ $actorName !== '' ? '正在看演员「'.$actorName.'」的角色。' : '演员 #'.$actorId.' 不存在，保存时会失败。' }}</p>
+            <p class="role-focus">{{ $actorName !== '' ? admin_t('ui.watching_actor_roles', ['name' => $actorName]) : admin_t('ui.actor_missing_save', ['id' => $actorId]) }}</p>
         @endif
         <form class="filter-bar" id="role-search" onsubmit="return false;">
             <input type="hidden" name="empty_video">
@@ -78,34 +99,34 @@
 <template id="role-dialog-tpl">
     <form class="admin-form">
         <input type="hidden" name="id">
-        <label>角色名</label>
-        <input class="entry-title" type="text" name="name" placeholder="如 周星星" required autofocus>
-        <p class="muted field-hint">影片角色名，不是后台管理员角色。</p>
+        <label>{{ admin_t('ui.role_name') }}</label>
+        <input class="entry-title" type="text" name="name" placeholder="{{ admin_t('ui.ph_role_name') }}" required autofocus>
+        <p class="muted field-hint">{{ admin_t('ui.role_name_hint') }}</p>
         <div class="admin-dialog-grid">
             <div>
-                <label>影片 ID</label>
-                <input type="number" name="video_id" min="0" placeholder="这部戏的影片编号" inputmode="numeric">
-                <p class="muted field-hint" id="role-video-hint">不填影片，详情页不会列出这个角色。</p>
+                <label>{{ admin_t('ui.video_id') }}</label>
+                <input type="number" name="video_id" min="0" placeholder="{{ admin_t('ui.ph_video_id') }}" inputmode="numeric">
+                <p class="muted field-hint" id="role-video-hint">{{ admin_t('ui.role_no_video_hint') }}</p>
             </div>
             <div>
-                <label>演员 ID</label>
-                <input type="number" name="actor_id" min="0" placeholder="可空，对应演员库" inputmode="numeric">
-                <p class="muted field-hint" id="role-actor-hint">可空。填了必须是演员库里已有的人。</p>
+                <label>{{ admin_t('ui.actor_id') }}</label>
+                <input type="number" name="actor_id" min="0" placeholder="{{ admin_t('ui.ph_actor_id') }}" inputmode="numeric">
+                <p class="muted field-hint" id="role-actor-hint">{{ admin_t('ui.role_actor_hint') }}</p>
             </div>
         </div>
-        <label>封面</label>
+        <label>{{ admin_t('ui.cover') }}</label>
         <div class="field-inline">
-            <input type="text" name="cover" placeholder="图片地址，可空">
-            <button type="button" class="btn btn-muted role-cover-upload-btn">上传</button>
+            <input type="text" name="cover" placeholder="{{ admin_t('ui.ph_cover_opt') }}">
+            <button type="button" class="btn btn-muted role-cover-upload-btn">{{ admin_t('ui.upload') }}</button>
         </div>
         <img class="img-preview role-cover-preview" alt="">
         <div class="admin-dialog-grid">
             <div>
-                <label>排序</label>
+                <label>{{ admin_t('ui.sort') }}</label>
                 <input type="number" name="sort" value="0">
             </div>
             <div>
-                <label>状态</label>
+                <label>{{ admin_t('ui.status') }}</label>
                 <select name="status">
                     <option value="1">{{ admin_t('ui.enabled') }}</option>
                     <option value="0">{{ admin_t('ui.disabled') }}</option>
@@ -113,13 +134,13 @@
             </div>
         </div>
         <details class="form-more">
-            <summary>简介和详情</summary>
-            <label>别名</label>
-            <input type="text" name="slug" placeholder="前台网址用，可空">
-            <label>简介</label>
-            <input type="text" name="blurb" placeholder="一两句">
-            <label>详情</label>
-            <textarea name="content" rows="4" placeholder="可选"></textarea>
+            <summary>{{ admin_t('ui.blurb_detail') }}</summary>
+            <label>{{ admin_t('ui.slug') }}</label>
+            <input type="text" name="slug" placeholder="{{ admin_t('ui.ph_slug_url') }}">
+            <label>{{ admin_t('ui.intro') }}</label>
+            <input type="text" name="blurb" placeholder="{{ admin_t('ui.ph_one_line') }}">
+            <label>{{ admin_t('ui.role_detail') }}</label>
+            <textarea name="content" rows="4" placeholder="{{ admin_t('ui.optional') }}"></textarea>
         </details>
     </form>
 </template>
@@ -137,8 +158,8 @@
     var countEl = document.getElementById('role-count');
     var prefillVideo = @json($videoId > 0 ? $videoId : 0);
     var prefillActor = @json($actorId > 0 ? $actorId : 0);
-    var prefillVideoTitle = @json($videoTitle);
-    var prefillActorName = @json($actorName);
+    var prefillVideoTitle = @json($videoTitle, JSON_UNESCAPED_UNICODE);
+    var prefillActorName = @json($actorName, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = {};
@@ -193,15 +214,15 @@
     function videoHtml(d) {
         var vid = parseInt(d.video_id, 10) || 0;
         if (vid < 1) return '<span class="muted">' + L.no_video + '</span>';
-        if (d.video_missing) return '<span class="muted">片子已删 #' + vid + '</span>';
-        var title = d.video_title || ('影片 #' + vid);
+        if (d.video_missing) return '<span class="muted">' + U.escape((L.video_deleted_n || '').replace(':id', vid)) + '</span>';
+        var title = d.video_title || (L.video_n || '').replace(':id', vid);
         return '<a href="/admin/video/' + vid + '/edit">' + U.escape(title) + '</a>';
     }
     function actorHtml(d) {
         var aid = parseInt(d.actor_id, 10) || 0;
         if (aid < 1) return '<span class="muted">' + L.no_actor + '</span>';
-        if (d.actor_missing) return '<span class="muted">演员已删 #' + aid + '</span>';
-        var name = d.actor_name || ('演员 #' + aid);
+        if (d.actor_missing) return '<span class="muted">' + U.escape((L.actor_deleted_n || '').replace(':id', aid)) + '</span>';
+        var name = d.actor_name || (L.actor_n || '').replace(':id', aid);
         return '<a href="/admin/video/actors">' + U.escape(name) + '</a>';
     }
 
@@ -266,17 +287,17 @@
         function setHint(el, text) { if (el) el.textContent = text; }
         function showVideo(id, title, missing) {
             id = parseInt(id, 10) || 0;
-            if (id < 1) { setHint(videoHint, '不填影片，详情页不会列出这个角色。'); return; }
-            if (missing) { setHint(videoHint, '影片 #' + id + ' 不存在，保存会失败。'); return; }
-            if (title) { setHint(videoHint, '将挂到「' + title + '」。'); return; }
-            setHint(videoHint, '影片 #' + id);
+            if (id < 1) { setHint(videoHint, L.role_no_video_hint); return; }
+            if (missing) { setHint(videoHint, (L.video_missing_will_fail || '').replace(':id', id)); return; }
+            if (title) { setHint(videoHint, (L.will_attach || '').replace(':name', title)); return; }
+            setHint(videoHint, (L.video_n || '').replace(':id', id));
         }
         function showActor(id, name, missing) {
             id = parseInt(id, 10) || 0;
-            if (id < 1) { setHint(actorHint, '可空。填了必须是演员库里已有的人。'); return; }
-            if (missing) { setHint(actorHint, '演员 #' + id + ' 不存在，保存会失败。'); return; }
-            if (name) { setHint(actorHint, '对应演员「' + name + '」。'); return; }
-            setHint(actorHint, '演员 #' + id);
+            if (id < 1) { setHint(actorHint, L.role_actor_hint); return; }
+            if (missing) { setHint(actorHint, (L.actor_missing_will_fail || '').replace(':id', id)); return; }
+            if (name) { setHint(actorHint, (L.actor_will || '').replace(':name', name)); return; }
+            setHint(actorHint, (L.actor_n || '').replace(':id', id));
         }
         showVideo(videoInput.value, row.video_title || (String(videoInput.value) === String(prefillVideo) ? prefillVideoTitle : ''), row.video_missing);
         showActor(actorInput.value, row.actor_name || (String(actorInput.value) === String(prefillActor) ? prefillActorName : ''), row.actor_missing);
@@ -304,7 +325,7 @@
         row = row || {};
         U.dialog({
             wide: true,
-            title: mode === 'edit' ? '编辑角色' : '新增角色',
+            title: mode === 'edit' ? L.edit_role : L.add_role,
             content: document.getElementById('role-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var formEl = body.querySelector('form');
@@ -336,11 +357,11 @@
             },
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
-                if (!data.name) { U.toast('请填写角色名', 'err'); return false; }
+                if (!data.name) { U.toast(L.need_role_name, 'err'); return false; }
                 if (mode !== 'edit') delete data.id; else data.id = row.id;
                 return U.post('/admin/video/roles/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast(mode === 'edit' ? '已保存' : '已创建', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(mode === 'edit' ? L.saved : L.created, 'ok');
                     table.refresh();
                 });
             }
@@ -350,12 +371,12 @@
     function selectedIds() { return table.selectedIds(); }
     function batch(action, value, confirmText) {
         var ids = selectedIds();
-        if (!ids.length) { U.toast('请先勾选角色', 'err'); return; }
+        if (!ids.length) { U.toast(L.please_select_roles, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         U.post('/admin/video/roles/batch', {ids: ids.join(','), action: action, value: value}).then(function (res) {
-            if (!res || res.code !== 0) { U.toast((res && res.msg) || '操作失败', 'err'); return; }
+            if (!res || res.code !== 0) { U.toast((res && res.msg) || L.op_fail, 'err'); return; }
             table.refresh();
-            U.toast((res && res.msg) || '操作成功', 'ok');
+            U.toast((res && res.msg) || L.op_ok, 'ok');
         });
     }
 
@@ -375,7 +396,7 @@
     });
     U.on('#role-batch-on', 'click', function () { batch('status', 1); });
     U.on('#role-batch-off', 'click', function () { batch('status', 0); });
-    U.on('#role-batch-del', 'click', function () { batch('delete', '', '确认删除选中角色？'); });
+    U.on('#role-batch-del', 'click', function () { batch('delete', '', L.confirm_del_roles); });
     U.on('#role-batch-clear', 'click', function () { table.clearSelection(); });
     U.on('#role-table', 'click', function (e) {
         var a = e.target.closest('a');
@@ -387,11 +408,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openDialog('edit', row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('删除角色「' + (row.name || '') + '」？')) return;
+            if (!U.confirm((L.confirm_del_role || '').replace(':name', row.name || ''))) return;
             U.post('/admin/video/roles/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return; }
                 table.refresh();
-                U.toast('已删除', 'ok');
+                U.toast(L.deleted, 'ok');
             });
         }
     });

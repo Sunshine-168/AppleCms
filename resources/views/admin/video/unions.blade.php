@@ -83,7 +83,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($unionJsLang);
+    var L = @json($unionJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['adopted'];
     var form = document.getElementById('union-search');
     var batchBar = document.getElementById('union-batch');

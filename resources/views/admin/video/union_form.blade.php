@@ -84,7 +84,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($unionFormJsLang);
+    var L = @json($unionFormJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('union-form');
     var isEdit = !!String(form.id.value || '').trim();
     var adoptBtn = document.getElementById('union-save-adopt');

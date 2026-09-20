@@ -145,7 +145,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($adJsLang);
+    var L = @json($adJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['slot', 'expired'];
     var KNOWN = {header: 1, footer: 1, play: 1};
     var form = document.getElementById('ad-search');

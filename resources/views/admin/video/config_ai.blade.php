@@ -10,29 +10,38 @@
     $provider = trim((string) ($s['ai_provider'] ?? ''));
     $model = trim((string) ($s['ai_model'] ?? ''));
     $ready = $hasKey && $provider !== '';
+    $jsLang = [
+        'hint_openai' => admin_t('ui.ai_hint_openai'),
+        'hint_qwen' => admin_t('ui.ai_hint_qwen'),
+        'hint_ernie' => admin_t('ui.ai_hint_ernie'),
+        'hint_other' => admin_t('ui.ai_hint_other'),
+        'need_try_title' => admin_t('ui.ai_need_try_title'),
+        'finished' => admin_t('ui.finished'),
+        'gen_fail' => admin_t('ui.ai_gen_fail'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel ai-config-index">
     <div class="card-header">
-        <span>AI 写内容</span>
+        <span>{{ admin_t('ui.config_ai') }}</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video">影片列表</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video?empty_content=1">无简介@if($emptyN > 0) · {{ $emptyN }}@endif</a>
-            <a class="btn btn-muted btn-sm" href="/admin/plugins">插件</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video">{{ admin_t('ui.video_list') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video?empty_content=1">{{ admin_t('ui.no_intro') }}@if($emptyN > 0) · {{ $emptyN }}@endif</a>
+            <a class="btn btn-muted btn-sm" href="/admin/plugins">{{ admin_t('ui.plugins') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">填写密钥后保存，可请求模型写简介。试写或到影片里生成只填文本框，没配密钥会失败。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.ai_lead') }}</p>
 
         <div class="ai-stock">
             @if($ready)
-                <span class="badge badge-ok">已存密钥</span>
+                <span class="badge badge-ok">{{ admin_t('ui.ai_key_stored') }}</span>
             @else
-                <span class="badge">还没密钥</span>
+                <span class="badge">{{ admin_t('ui.ai_no_key') }}</span>
             @endif
             @if($hasKey && $keyTail !== '')
-                <span class="muted">尾号 {{ $keyTail }}</span>
+                <span class="muted">{{ admin_t('ui.ai_key_tail', ['tail' => $keyTail]) }}</span>
             @endif
             @if($provider !== '')
                 <span class="muted">{{ $provider }}@if($model !== '') · {{ $model }}@endif</span>
@@ -40,61 +49,61 @@
         </div>
 
         <form class="admin-form settings-page ai-config-form" id="site-form">
-            <h3>服务商</h3>
+            <h3>{{ admin_t('ui.ai_provider') }}</h3>
             <input type="hidden" name="ai_provider" id="ai_provider" value="{{ $provider }}">
             <div class="ingest-modes ai-providers" id="ai-providers">
                 <button type="button" class="ingest-mode{{ $kind === 'openai' ? ' is-on' : '' }}" data-value="openai">
                     <strong>OpenAI</strong>
-                    <span>国际接口，模型如 gpt-4.1-mini。</span>
+                    <span>{{ admin_t('ui.ai_openai_hint') }}</span>
                 </button>
                 <button type="button" class="ingest-mode{{ $kind === 'qwen' ? ' is-on' : '' }}" data-value="通义">
-                    <strong>通义</strong>
-                    <span>阿里云百炼 / DashScope，模型如 qwen-plus。</span>
+                    <strong>{{ admin_t('ui.ai_qwen') }}</strong>
+                    <span>{{ admin_t('ui.ai_qwen_hint') }}</span>
                 </button>
                 <button type="button" class="ingest-mode{{ $kind === 'ernie' ? ' is-on' : '' }}" data-value="文心">
-                    <strong>文心</strong>
-                    <span>百度千帆，模型如 ernie-4.0-8k。</span>
+                    <strong>{{ admin_t('ui.ai_ernie') }}</strong>
+                    <span>{{ admin_t('ui.ai_ernie_hint') }}</span>
                 </button>
                 <button type="button" class="ingest-mode{{ $kind === 'other' ? ' is-on' : '' }}" data-value="other">
-                    <strong>其他</strong>
-                    <span>自己写服务商名字，并填写兼容接口。</span>
+                    <strong>{{ admin_t('ui.other') }}</strong>
+                    <span>{{ admin_t('ui.ai_other_hint') }}</span>
                 </button>
             </div>
             <div id="ai-provider-custom" @if($kind !== 'other') hidden @endif>
-                <label for="ai_provider_custom">服务商名称</label>
-                <input id="ai_provider_custom" type="text" value="{{ $kind === 'other' ? $provider : '' }}" placeholder="如 DeepSeek、Kimi" autocomplete="off">
+                <label for="ai_provider_custom">{{ admin_t('ui.ai_provider_name') }}</label>
+                <input id="ai_provider_custom" type="text" value="{{ $kind === 'other' ? $provider : '' }}" placeholder="{{ admin_t('ui.ph_ai_provider') }}" autocomplete="off">
             </div>
 
-            <h3>密钥</h3>
+            <h3>{{ admin_t('ui.secret_key') }}</h3>
             @if($hasKey)
-                <p class="muted field-hint"><span class="badge badge-ok">已保存</span> 留空再保存则保持原密钥。填新的会覆盖。</p>
+                <p class="muted field-hint"><span class="badge badge-ok">{{ admin_t('ui.saved') }}</span> {{ admin_t('ui.ai_key_keep_hint') }}</p>
             @else
-                <p class="muted field-hint"><span class="badge">还没密钥</span> 没有密钥时生成会直接失败。</p>
+                <p class="muted field-hint"><span class="badge">{{ admin_t('ui.ai_no_key') }}</span> {{ admin_t('ui.ai_key_miss_hint') }}</p>
             @endif
             <label for="ai_key">API Key</label>
-            <input id="ai_key" type="password" name="ai_key" value="" autocomplete="new-password" spellcheck="false" placeholder="{{ $hasKey ? '留空则保留现有密钥' : 'sk-… 只存在本站' }}">
+            <input id="ai_key" type="password" name="ai_key" value="" autocomplete="new-password" spellcheck="false" placeholder="{{ $hasKey ? admin_t('ui.ph_ai_key_keep') : admin_t('ui.ph_ai_key_new') }}">
 
-            <h3>模型</h3>
-            <label for="ai_model">模型名</label>
-            <input id="ai_model" type="text" name="ai_model" value="{{ $model }}" placeholder="如 gpt-4.1-mini" autocomplete="off" spellcheck="false">
-            <p class="muted field-hint" id="ai-model-hint">请求模型时会带上这个名字。</p>
+            <h3>{{ admin_t('ui.ai_model_title') }}</h3>
+            <label for="ai_model">{{ admin_t('ui.ai_model_name') }}</label>
+            <input id="ai_model" type="text" name="ai_model" value="{{ $model }}" placeholder="{{ admin_t('ui.ph_ai_model') }}" autocomplete="off" spellcheck="false">
+            <p class="muted field-hint" id="ai-model-hint">{{ admin_t('ui.ai_model_hint') }}</p>
 
-            <h3>兼容接口</h3>
-            <label for="ai_endpoint">接口地址</label>
-            <input id="ai_endpoint" type="text" name="ai_endpoint" value="{{ $s['ai_endpoint'] ?? '' }}" placeholder="可空。其他服务商填 /v1/chat/completions" autocomplete="off" spellcheck="false">
-            <p class="muted field-hint">OpenAI / 通义 / 文心有默认地址。其他必须填。</p>
+            <h3>{{ admin_t('ui.ai_compat') }}</h3>
+            <label for="ai_endpoint">{{ admin_t('ui.label_api_url') }}</label>
+            <input id="ai_endpoint" type="text" name="ai_endpoint" value="{{ $s['ai_endpoint'] ?? '' }}" placeholder="{{ admin_t('ui.ph_ai_endpoint') }}" autocomplete="off" spellcheck="false">
+            <p class="muted field-hint">{{ admin_t('ui.ai_endpoint_hint') }}</p>
 
             <div class="hub-result ai-result">
-                <label for="ai-try-title">试写标题</label>
-                <input id="ai-try-title" type="text" placeholder="如 影片名" autocomplete="off">
-                <p><button type="button" class="btn btn-muted" id="ai-try-btn">试写一段</button></p>
+                <label for="ai-try-title">{{ admin_t('ui.ai_try_title') }}</label>
+                <input id="ai-try-title" type="text" placeholder="{{ admin_t('ui.ph_ai_try_title') }}" autocomplete="off">
+                <p><button type="button" class="btn btn-muted" id="ai-try-btn">{{ admin_t('ui.ai_try_btn') }}</button></p>
                 <pre class="out" id="ai-try-out" hidden></pre>
-                <p class="muted">试写不会改影片。无简介列表仍可手写核对。</p>
+                <p class="muted">{{ admin_t('ui.ai_try_note') }}</p>
             </div>
 
             <div class="form-actions settings-save">
                 <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
-                <a class="btn btn-muted" href="/admin/video?empty_content=1">去无简介列表</a>
+                <a class="btn btn-muted" href="/admin/video?empty_content=1">{{ admin_t('ui.ai_go_empty') }}</a>
             </div>
         </form>
     </div>
@@ -106,15 +115,16 @@
 @push('scripts')
 <script>
 (function () {
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var hidden = document.getElementById('ai_provider');
     var customWrap = document.getElementById('ai-provider-custom');
     var customInput = document.getElementById('ai_provider_custom');
     var modelHint = document.getElementById('ai-model-hint');
     var hints = {
-        openai: 'OpenAI 常见写法：gpt-4.1-mini。',
-        '通义': '通义常见写法：qwen-plus。',
-        '文心': '文心常见写法：ernie-4.0-8k。',
-        other: '按服务商文档填写模型名，并填兼容接口。'
+        openai: L.hint_openai,
+        '通义': L.hint_qwen,
+        '文心': L.hint_ernie,
+        other: L.hint_other
     };
     function currentKind() {
         var v = String((hidden && hidden.value) || '').trim();
@@ -165,7 +175,7 @@
     if (tryBtn && typeof AdminUi !== 'undefined') {
         tryBtn.addEventListener('click', function () {
             var title = String((document.getElementById('ai-try-title') || {}).value || '').trim();
-            if (!title) { AdminUi.toast('请填写试写标题', 'err'); return; }
+            if (!title) { AdminUi.toast(L.need_try_title, 'err'); return; }
             AdminUi.loading(true);
             AdminUi.post('/admin/video/ai/generate', {title: title}).then(function (res) {
                 AdminUi.loading(false);
@@ -173,10 +183,10 @@
                     tryOut.hidden = false;
                     tryOut.textContent = (res && res.data && res.data.text) ? res.data.text : ((res && res.msg) || '');
                 }
-                AdminUi.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+                AdminUi.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
             }).catch(function () {
                 AdminUi.loading(false);
-                AdminUi.toast('生成失败', 'err');
+                AdminUi.toast(L.gen_fail, 'err');
             });
         });
     }

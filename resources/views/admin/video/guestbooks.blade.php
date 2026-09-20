@@ -44,7 +44,7 @@
         <div>
             <a class="btn btn-muted btn-sm" href="/gbook" target="_blank" rel="noopener">{{ admin_t('ui.front_guestbook') }}</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/comments">{{ admin_t('ui.comments') }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('ui.comment_audit') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/comment">{{ admin_t('item.config_comment') }}</a>
         </div>
     </div>
     <div class="card-body">
@@ -102,7 +102,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($gbookJsLang);
+    var L = @json($gbookJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('gbook-search');
     var batchBar = document.getElementById('gbook-batch');
     var batchCount = document.getElementById('gbook-batch-count');

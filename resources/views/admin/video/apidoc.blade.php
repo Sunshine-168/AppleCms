@@ -4,29 +4,29 @@
 @section('plain')
 <div class="card card-panel api-config-index">
     <div class="card-header">
-        <span>接口说明</span>
+        <span>{{ admin_t('ui.api_notes_title') }}</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/api">开放 API</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/config/interface">入库接口</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/api">{{ admin_t('page.config_api') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/config/interface">{{ admin_t('page.config_interface') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">接口字段对照。密钥、试拉和复制地址在「<a href="/admin/video/config/api">开放 API</a>」。只出已发布影片。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.apidoc_lead_before') }}「<a href="/admin/video/config/api">{{ admin_t('page.config_api') }}</a>」。{{ admin_t('ui.apidoc_lead_after') }}</p>
         <table class="data">
-            <thead><tr><th>接口</th><th>说明</th></tr></thead>
+            <thead><tr><th>{{ admin_t('ui.col_api') }}</th><th>{{ admin_t('ui.col_explain') }}</th></tr></thead>
             <tbody>
-                <tr><td><code>GET /api/provide/vod?ac=list</code></td><td>分类与影片列表</td></tr>
-                <tr><td><code>GET /api/provide/vod?ac=detail&amp;ids=1,2</code></td><td>详情（含播放地址）</td></tr>
-                <tr><td><code>GET /api/provide/manga?ac=list</code></td><td>漫画列表（插件开启）</td></tr>
-                <tr><td><code>GET /api/provide/manga?ac=detail&amp;ids=1,2</code></td><td>漫画详情含章节图片</td></tr>
-                <tr><td><code>&amp;t=分类ID &amp;wd=关键词 &amp;pg=页码 &amp;h=小时</code></td><td>筛选参数</td></tr>
-                <tr><td><code>&amp;at=xml</code></td><td>输出 XML，默认 JSON</td></tr>
-                <tr><td><code>GET /api/app/vod</code></td><td>APP 列表，可另设密钥</td></tr>
-                <tr><td><code>POST /api/receive/vod</code></td><td>站外入库影片，在入库接口里配密钥</td></tr>
-                <tr><td><code>POST /api/receive/manga</code></td><td>站外入库漫画（插件开启时），密钥同上</td></tr>
+                <tr><td><code>GET /api/provide/vod?ac=list</code></td><td>{{ admin_t('ui.api_list') }}</td></tr>
+                <tr><td><code>GET /api/provide/vod?ac=detail&amp;ids=1,2</code></td><td>{{ admin_t('ui.api_detail') }}</td></tr>
+                <tr><td><code>GET /api/provide/manga?ac=list</code></td><td>{{ admin_t('ui.api_manga_list') }}</td></tr>
+                <tr><td><code>GET /api/provide/manga?ac=detail&amp;ids=1,2</code></td><td>{{ admin_t('ui.api_manga_detail') }}</td></tr>
+                <tr><td><code>&amp;t=分类ID &amp;wd=关键词 &amp;pg=页码 &amp;h=小时</code></td><td>{{ admin_t('ui.api_filters') }}</td></tr>
+                <tr><td><code>&amp;at=xml</code></td><td>{{ admin_t('ui.api_xml') }}</td></tr>
+                <tr><td><code>GET /api/app/vod</code></td><td>{{ admin_t('ui.api_app') }}</td></tr>
+                <tr><td><code>POST /api/receive/vod</code></td><td>{{ admin_t('ui.api_recv_vod') }}</td></tr>
+                <tr><td><code>POST /api/receive/manga</code></td><td>{{ admin_t('ui.api_recv_manga') }}</td></tr>
             </tbody>
         </table>
-        <p class="muted field-hint">对方后台采集源填本站 provide 地址。漫画采集走采集源写入到「漫画」，或 POST 入库接口。没有演员单独接口。</p>
+        <p class="muted field-hint">{{ admin_t('ui.apidoc_hint') }}</p>
     </div>
 </div>
 @endsection

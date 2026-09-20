@@ -92,7 +92,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($favJsLang);
+    var L = @json($favJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('fav-search');
     var batchBar = document.getElementById('fav-batch');
     var batchCount = document.getElementById('fav-batch-count');

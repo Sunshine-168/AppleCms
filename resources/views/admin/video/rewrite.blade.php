@@ -2,43 +2,48 @@
 @section('title', admin_t('page.rewrite'))
 
 @php
-    $modeLabel = (string) ($mode_label ?? '本站路由');
+    $modeLabel = (string) ($mode_label ?? admin_t('ui.rewrite_local_mode'));
     $modeSample = (string) ($mode_sample ?? '/vod/123');
     $mac = (bool) ($mac ?? false);
     $suffix = (string) ($suffix ?? '.html');
     $routeGroups = $route_groups ?? [];
+    $jsLang = [
+        'nothing_to_copy' => admin_t('ui.nothing_to_copy'),
+        'copied' => admin_t('ui.copied'),
+        'copy_fail_pick' => admin_t('ui.copy_fail_pick'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel rewrite-index">
     <div class="card-header">
-        <span>伪静态</span>
+        <span>{{ admin_t('page.rewrite') }}</span>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">本机 <code>php artisan serve</code> 只适合试用，不用配下面规则。正式站点要把网站根指到项目的 <code>public</code>，不要指到项目根。影片链接怎么写在「<a href="/admin/video/settings?tab=more">站点设置 → 更多</a>」：本站路由一般是 <code>/vod/123</code>，苹果风格才是 <code>/index.php/vod/detail/id/123.html</code>。改过之后，外面收藏的旧地址可能打不开。</p>
+        <p class="muted recycle-lead">{!! admin_t('ui.rewrite_lead_before') !!}「<a href="/admin/video/settings?tab=more">{{ admin_t('ui.settings_to_more') }}</a>」{!! admin_t('ui.rewrite_lead_after') !!}</p>
 
         <div class="rewrite-now">
             <div class="rewrite-now-head">
-                <h3>当前写法</h3>
+                <h3>{{ admin_t('ui.rewrite_now') }}</h3>
                 <span class="badge badge-ok">{{ $modeLabel }}</span>
             </div>
-            <p class="muted">详情页现在是 <code>{{ $modeSample }}</code>。@if($mac) 后缀 <code>{{ $suffix }}</code> 会加在苹果链接后面。@else 本站路由一般不带 <code>.html</code>。@endif</p>
+            <p class="muted">{{ admin_t('ui.rewrite_detail_now') }} <code>{{ $modeSample }}</code>。@if($mac) {{ admin_t('ui.rewrite_suffix') }} <code>{{ $suffix }}</code> {{ admin_t('ui.rewrite_suffix_mac') }}@else {!! admin_t('ui.rewrite_no_html') !!}@endif</p>
         </div>
 
-        <h3>本系统怎么走</h3>
-        <p class="muted">地址写在 Laravel 路由里，不是苹果那种伪静态规则文件。没有真实文件的请求交给 <code>public/index.php</code> 即可。两种链接写法用同一段 Nginx / Apache，不必按每种页面再写 location。</p>
+        <h3>{{ admin_t('ui.rewrite_how') }}</h3>
+        <p class="muted">{!! admin_t('ui.rewrite_how_body') !!}</p>
 
         <div class="help-faq">
             <details>
-                <summary>上线打开是目录或 404</summary>
-                <p>网站根必须指到项目的 <code>public</code>，不要指到项目根。本页下面的 Nginx / Apache 就是干这个的。</p>
+                <summary>{{ admin_t('ui.rewrite_faq_title') }}</summary>
+                <p>{!! admin_t('ui.rewrite_faq_body') !!}</p>
             </details>
         </div>
 
-        <h3>前台地址</h3>
-        <p class="muted field-hint">数字 1 只是举例。下面是当前写法实际会生成的地址。</p>
+        <h3>{{ admin_t('ui.front_urls') }}</h3>
+        <p class="muted field-hint">{{ admin_t('ui.front_urls_hint') }}</p>
         @if($mac)
-            <p class="muted field-hint">最近更新、演员库、专题列表、播放器内嵌仍走本站路径，没有苹果别名。</p>
+            <p class="muted field-hint">{{ admin_t('ui.rewrite_no_mac_alias') }}</p>
         @endif
         <div class="rewrite-route-groups">
             @foreach($routeGroups as $group)
@@ -52,7 +57,7 @@
                                 @if(!empty($row['note']))
                                     <span class="rewrite-ex-note muted">{{ $row['note'] }}</span>
                                 @endif
-                                <button type="button" class="btn-link js-copy" data-copy="{{ $row['path'] }}">复制</button>
+                                <button type="button" class="btn-link js-copy" data-copy="{{ $row['path'] }}">{{ admin_t('ui.copy') }}</button>
                             </div>
                         @endforeach
                     </div>
@@ -63,18 +68,18 @@
         <div class="rewrite-snippet">
             <div class="rewrite-snippet-head">
                 <h3>Nginx</h3>
-                <button type="button" class="btn btn-muted btn-sm js-copy" data-copy-el="#rewrite-nginx">复制</button>
+                <button type="button" class="btn btn-muted btn-sm js-copy" data-copy-el="#rewrite-nginx">{{ admin_t('ui.copy') }}</button>
             </div>
-            <p class="muted field-hint">网站根必须是 <code>public</code>。PHP 那一行按机器改。苹果链接也进 <code>index.php</code>，不必再单独写一段 location。</p>
+            <p class="muted field-hint">{!! admin_t('ui.rewrite_nginx_hint') !!}</p>
             <pre class="code-block" id="rewrite-nginx">{{ $nginx ?? '' }}</pre>
         </div>
 
         <div class="rewrite-snippet">
             <div class="rewrite-snippet-head">
                 <h3>Apache</h3>
-                <button type="button" class="btn btn-muted btn-sm js-copy" data-copy-el="#rewrite-apache">复制</button>
+                <button type="button" class="btn btn-muted btn-sm js-copy" data-copy-el="#rewrite-apache">{{ admin_t('ui.copy') }}</button>
             </div>
-            <p class="muted field-hint">仓库 <code>public/.htaccess</code> 已有一份。虚拟主机要允许 <code>AllowOverride All</code>。</p>
+            <p class="muted field-hint">{!! admin_t('ui.rewrite_apache_hint') !!}</p>
             <pre class="code-block" id="rewrite-apache">{{ $apache ?? '' }}</pre>
         </div>
     </div>
@@ -85,10 +90,11 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     function copyText(text) {
         text = String(text || '');
-        if (!text) { U.toast('没有可复制的内容', 'err'); return; }
-        var ok = function () { U.toast('已复制', 'ok'); };
+        if (!text) { U.toast(L.nothing_to_copy, 'err'); return; }
+        var ok = function () { U.toast(L.copied, 'ok'); };
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(ok).catch(function () { fallback(text); });
             return;
@@ -100,7 +106,7 @@
             document.body.appendChild(ta);
             ta.select();
             try { document.execCommand('copy'); ok(); }
-            catch (e) { U.toast('复制失败，请手动选', 'err'); }
+            catch (e) { U.toast(L.copy_fail_pick, 'err'); }
             document.body.removeChild(ta);
         }
     }

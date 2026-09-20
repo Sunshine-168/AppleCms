@@ -86,7 +86,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($failJsLang);
+    var L = @json($failJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('fail-search');
     var batchBar = document.getElementById('fail-batch');
     var batchCount = document.getElementById('fail-batch-count');

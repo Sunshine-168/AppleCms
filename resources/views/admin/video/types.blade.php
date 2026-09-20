@@ -101,10 +101,10 @@
     var batchBar = document.getElementById('type-batch');
     var batchCount = document.getElementById('type-batch-count');
     var countEl = document.getElementById('type-count');
-    var isArt = @json($isArt);
-    var isWebsite = @json($isWebsite);
-    var base = @json($base);
-    var contentUrl = @json($contentUrl);
+    var isArt = @json($isArt, JSON_UNESCAPED_UNICODE);
+    var isWebsite = @json($isWebsite, JSON_UNESCAPED_UNICODE);
+    var base = @json($base, JSON_UNESCAPED_UNICODE);
+    var contentUrl = @json($contentUrl, JSON_UNESCAPED_UNICODE);
     var countKey = isArt ? 'art_count' : (isWebsite ? 'website_count' : 'video_count');
 
     function isFiltered(where) {

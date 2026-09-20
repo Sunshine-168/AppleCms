@@ -171,7 +171,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($activityJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('activity-search');
     var countEl = document.getElementById('activity-count');
     var addBtn = document.getElementById('activity-add-btn');

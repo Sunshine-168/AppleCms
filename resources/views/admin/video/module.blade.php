@@ -1,18 +1,42 @@
 @extends('admin.layouts.inner')
 @section('title', $title)
 
+@php
+    $modJsLang = [
+        'fail' => admin_t('ui.fail'),
+        'save_ok' => admin_t('ui.save_ok'),
+        'finished' => admin_t('ui.finished'),
+        'deleted' => admin_t('ui.deleted'),
+        'edit' => admin_t('ui.edit'),
+        'add' => admin_t('ui.add'),
+        'bind_videos' => admin_t('ui.bind_videos'),
+        'run_job' => admin_t('ui.run_job'),
+        'try_run' => admin_t('ui.try_run'),
+        'import_in' => admin_t('ui.import_in'),
+        'offline_fail_line' => admin_t('ui.offline_fail_line'),
+        'prompt_invite_gen' => admin_t('ui.prompt_invite_gen'),
+        'prompt_card_gen' => admin_t('ui.prompt_card_gen'),
+        'prompt_video_ids' => admin_t('ui.prompt_video_ids'),
+        'try_run_n' => admin_t('ui.try_run_n'),
+        'no_match' => admin_t('ui.no_match'),
+        'confirm_cj_import' => admin_t('ui.confirm_cj_import'),
+        'confirm_offline_fail' => admin_t('ui.confirm_offline_fail'),
+        'confirm_del_simple' => admin_t('ui.confirm_del_simple'),
+    ];
+@endphp
+
 @section('content')
     @if(! empty($hint))
         <p class="hint">{{ $hint }}</p>
     @endif
     <div class="toolbar">
         <button type="button" class="btn btn-sm" id="mod-add">{{ admin_t('ui.add') }}</button>
-        <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">刷新</button>
+        <button type="button" class="btn btn-muted btn-sm" id="mod-refresh">{{ admin_t('ui.refresh') }}</button>
         @if($module === 'invites')
-            <button type="button" class="btn btn-muted btn-sm" id="mod-gen">批量生成</button>
+            <button type="button" class="btn btn-muted btn-sm" id="mod-gen">{{ admin_t('ui.batch_gen') }}</button>
         @endif
         @if($module === 'collect_tasks')
-            <button type="button" class="btn btn-muted btn-sm" id="mod-due">执行到期采集</button>
+            <button type="button" class="btn btn-muted btn-sm" id="mod-due">{{ admin_t('ui.run_due_collect') }}</button>
         @endif
         <form class="filter-bar" id="mod-search-form" onsubmit="return false;">
             <input type="search" id="mod-q" name="{{ $search }}" placeholder="{{ $search }}" autocomplete="off">
@@ -45,10 +69,11 @@
 <script>
 (function () {
     var U = AdminUi;
-    var module = @json($module);
-    var cols = @json($cols);
-    var fields = @json($fields);
-    var searchField = @json($search);
+    var L = @json($modJsLang, JSON_UNESCAPED_UNICODE);
+    var module = @json($module, JSON_UNESCAPED_UNICODE);
+    var cols = @json($cols, JSON_UNESCAPED_UNICODE);
+    var fields = @json($fields, JSON_UNESCAPED_UNICODE);
+    var searchField = @json($search, JSON_UNESCAPED_UNICODE);
     var tableCols = [];
     tableCols.push({key: 'id', title: 'ID', width: 70});
     cols.forEach(function (c) {
@@ -60,10 +85,10 @@
         cls: 'actions',
         html: function (row) {
             var html = '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a>';
-            if (module === 'topics') html += '<a href="#" class="btn-link js-bind">绑片</a>';
-            if (module === 'collect_tasks') html += '<a href="#" class="btn-link js-run">执行</a>';
-            if (module === 'cj') html += '<a href="#" class="btn-link js-try">试跑</a><a href="#" class="btn-link js-import">入库</a>';
-            if (module === 'playfails') html += '<a href="#" class="btn-link js-off">下线线路</a>';
+            if (module === 'topics') html += '<a href="#" class="btn-link js-bind">' + U.escape(L.bind_videos) + '</a>';
+            if (module === 'collect_tasks') html += '<a href="#" class="btn-link js-run">' + U.escape(L.run_job) + '</a>';
+            if (module === 'cj') html += '<a href="#" class="btn-link js-try">' + U.escape(L.try_run) + '</a><a href="#" class="btn-link js-import">' + U.escape(L.import_in) + '</a>';
+            if (module === 'playfails') html += '<a href="#" class="btn-link js-off">' + U.escape(L.offline_fail_line) + '</a>';
             html += '<a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
             return html;
         }
@@ -73,7 +98,7 @@
     function open(row) {
         row = row || {};
         U.dialog({
-            title: row.id ? '编辑' : '新增',
+            title: row.id ? L.edit : L.add,
             content: document.getElementById('mod-dialog-tpl').innerHTML,
             onOpen: function (body) {
                 var form = body.querySelector('form');
@@ -84,8 +109,8 @@
             onSave: function (body) {
                 var data = U.formData(body.querySelector('form'));
                 return U.post('/admin/video/' + module + '/save', data).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '失败', 'err'); return false; }
-                    U.toast('保存成功', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.fail, 'err'); return false; }
+                    U.toast(L.save_ok, 'ok');
                     table.refresh();
                 });
             }
@@ -101,7 +126,7 @@
     });
     U.on('#mod-gen', 'click', function () {
         var isInvite = module === 'invites';
-        var val = U.prompt(isInvite ? '数量,积分,会员ID' : '数量,积分', isInvite ? '10,0,0' : '10,100');
+        var val = U.prompt(isInvite ? L.prompt_invite_gen : L.prompt_card_gen, isInvite ? '10,0,0' : '10,100');
         if (val == null) return;
         var parts = String(val).split(/[,，\s]+/);
         var url = isInvite ? '/admin/video/invites/generate' : '/admin/video/cards/generate';
@@ -109,7 +134,7 @@
             ? {count: parts[0] || 10, points: parts[1] || 0, member_id: parts[2] || 0}
             : {count: parts[0] || 10, points: parts[1] || 100};
         U.post(url, payload).then(function (res) {
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
             if (res && res.code === 0) table.refresh();
         });
     });
@@ -118,7 +143,7 @@
         U.post('/admin/video/collect-due', {}).then(function (res) {
             U.loading(false);
             table.refresh();
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
         });
     });
     U.on('#mod-table', 'click', function (e) {
@@ -132,54 +157,55 @@
         if (a.classList.contains('js-bind')) {
             U.get('/admin/video/topics/' + row.id + '/videos').then(function (res) {
                 var ids = (res.data && res.data.video_ids) ? res.data.video_ids : '';
-                var val = U.prompt('影片ID，逗号分隔', ids);
+                var val = U.prompt(L.prompt_video_ids, ids);
                 if (val == null) return;
                 U.post('/admin/video/topics/' + row.id + '/videos', {video_ids: val}).then(function (r) {
-                    U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+                    U.toast((r && r.msg) || L.finished, r && r.code === 0 ? 'ok' : 'err');
                 });
             });
         }
         if (a.classList.contains('js-run')) {
             U.post('/admin/video/collect_tasks/run', {id: row.id}).then(function (r) {
                 table.refresh();
-                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+                U.toast((r && r.msg) || L.finished, r && r.code === 0 ? 'ok' : 'err');
             });
         }
         if (a.classList.contains('js-try')) {
             U.loading(true);
             U.post('/admin/video/cj/try', {id: row.id}).then(function (r) {
                 U.loading(false);
-                if (!r || r.code !== 0) { U.toast((r && r.msg) || '失败', 'err'); return; }
+                if (!r || r.code !== 0) { U.toast((r && r.msg) || L.fail, 'err'); return; }
                 var items = (r.data && r.data.items) ? r.data.items : [];
                 var lines = items.map(function (it) { return (it.title || '') + ' ' + (it.url || ''); });
+                var n = (r.data && r.data.total) || items.length;
                 U.dialog({
-                    title: '试跑 ' + ((r.data && r.data.total) || items.length) + ' 条',
-                    content: '<pre class="out">' + U.escape(lines.join('\n') || '没有匹配') + '</pre>',
+                    title: (L.try_run_n || '').replace(':n', n),
+                    content: '<pre class="out">' + U.escape(lines.join('\n') || L.no_match) + '</pre>',
                     hideOk: true
                 });
             });
         }
         if (a.classList.contains('js-import')) {
-            if (!U.confirm('确认按规则入库？已有同名影片会跳过。')) return;
+            if (!U.confirm(L.confirm_cj_import)) return;
             U.loading(true);
             U.post('/admin/video/cj/run', {id: row.id}).then(function (r) {
                 U.loading(false);
                 table.refresh();
-                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+                U.toast((r && r.msg) || L.finished, r && r.code === 0 ? 'ok' : 'err');
             });
         }
         if (a.classList.contains('js-off')) {
-            if (!U.confirm('确认下线该失败记录关联的播放线路？')) return;
+            if (!U.confirm(L.confirm_offline_fail)) return;
             U.post('/admin/video/playfails/offline', {id: row.id}).then(function (r) {
                 table.refresh();
-                U.toast((r && r.msg) || '完成', r && r.code === 0 ? 'ok' : 'err');
+                U.toast((r && r.msg) || L.finished, r && r.code === 0 ? 'ok' : 'err');
             });
         }
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确认删除？')) return;
+            if (!U.confirm(L.confirm_del_simple)) return;
             U.post('/admin/video/' + module + '/delete', {id: row.id}).then(function (res) {
-                if (res && res.code === 0) { table.refresh(); U.toast('已删除', 'ok'); }
-                else U.toast((res && res.msg) || '失败', 'err');
+                if (res && res.code === 0) { table.refresh(); U.toast(L.deleted, 'ok'); }
+                else U.toast((res && res.msg) || L.fail, 'err');
             });
         }
     });

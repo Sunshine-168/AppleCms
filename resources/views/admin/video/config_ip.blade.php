@@ -11,74 +11,84 @@
     $currentOk = (bool) ($current_ok ?? true);
     $recent = $recent ?? [];
     $raw = trim((string) ($s['admin_ip_allow'] ?? ''));
+    $jsLang = [
+        'please_fill_ip' => admin_t('ui.please_fill_ip'),
+        'ip_already' => admin_t('ui.ip_already'),
+        'ip_added' => admin_t('ui.ip_added'),
+        'current' => admin_t('ui.ip_current_mark'),
+        'remove' => admin_t('ui.ip_remove'),
+        'empty_list' => admin_t('ui.ip_empty_on'),
+        'no_change_save' => admin_t('ui.no_change_save'),
+        'finished' => admin_t('ui.finished'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel ip-config-index">
     <div class="card-header">
-        <span>后台 IP 白名单</span>
+        <span>{{ admin_t('ui.config_ip') }}</span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/system/monitor/login-logs">登录日志</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/safety">挂马扫描</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=more">站点设置</a>
+            <a class="btn btn-muted btn-sm" href="/admin/system/monitor/login-logs">{{ admin_t('ui.login_logs') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/safety">{{ admin_t('ui.safety') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=more">{{ admin_t('ui.site_settings') }}</a>
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">只限制后台登录。名单为空不限制；填了以后只有这些 IP 能打开 <code>/admin</code>。家宽 IP 变了会进不去。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.ip_lead_before') }}<code>/admin</code>{{ admin_t('ui.ip_lead_after') }}</p>
 
         <div class="ai-stock">
             @if($enabled)
-                <span class="badge badge-warn">已限制 · {{ count($rules) }} 条</span>
+                <span class="badge badge-warn">{{ admin_t('ui.ip_limited_n', ['n' => count($rules)]) }}</span>
                 @if($currentOk)
-                    <span class="badge badge-ok">当前 IP 在名单内</span>
+                    <span class="badge badge-ok">{{ admin_t('ui.ip_current_ok') }}</span>
                 @else
-                    <span class="badge badge-warn">当前 IP 不在名单</span>
+                    <span class="badge badge-warn">{{ admin_t('ui.ip_current_miss') }}</span>
                 @endif
             @else
-                <span class="badge">未限制</span>
-                <span class="muted">任何人能打开登录页（仍要账号密码）</span>
+                <span class="badge">{{ admin_t('ui.ip_unlimited') }}</span>
+                <span class="muted">{{ admin_t('ui.ip_open_login') }}</span>
             @endif
         </div>
 
         <div class="ip-now">
             <div>
-                <div class="label">当前访问 IP</div>
-                <div class="value" id="ip-current">{{ $currentIp !== '' ? $currentIp : '读不到' }}</div>
+                <div class="label">{{ admin_t('ui.ip_now_label') }}</div>
+                <div class="value" id="ip-current">{{ $currentIp !== '' ? $currentIp : admin_t('ui.unavailable') }}</div>
                 @if($local)
-                    <p class="muted">这是本机或反向代理看到的地址。若站点前面有 Nginx，请先在 Laravel 里配置信任代理，否则公网 IP 对不上。</p>
+                    <p class="muted">{{ admin_t('ui.ip_local_hint') }}</p>
                 @endif
                 @if($forwardedIp !== '')
-                    <p class="muted">请求头里还有 {{ $forwardedIp }}。未信任代理时不会按它放行，不要只把这个写进名单。</p>
+                    <p class="muted">{{ admin_t('ui.ip_forwarded_hint', ['ip' => $forwardedIp]) }}</p>
                 @endif
             </div>
-            <button type="button" class="btn" id="ip-add-current" @disabled($currentIp === '')>加入当前 IP</button>
+            <button type="button" class="btn" id="ip-add-current" @disabled($currentIp === '')>{{ admin_t('ui.ip_add_current') }}</button>
         </div>
 
         <form class="admin-form settings-page ip-config-form" id="site-form">
-            <h3>限制方式</h3>
+            <h3>{{ admin_t('ui.ip_mode_title') }}</h3>
             <div class="ingest-modes" id="ip-modes">
                 <button type="button" class="ingest-mode{{ $enabled ? '' : ' is-on' }}" data-mode="off">
-                    <strong>不限制</strong>
-                    <span>只靠账号密码。办公室 IP 不固定时选这个。</span>
+                    <strong>{{ admin_t('ui.ip_mode_off') }}</strong>
+                    <span>{{ admin_t('ui.ip_mode_off_hint') }}</span>
                 </button>
                 <button type="button" class="ingest-mode{{ $enabled ? ' is-on' : '' }}" data-mode="on">
-                    <strong>只允许名单</strong>
-                    <span>其它 IP 打开后台会 403。保存时必须包含你现在的 IP。</span>
+                    <strong>{{ admin_t('ui.ip_mode_on') }}</strong>
+                    <span>{{ admin_t('ui.ip_mode_on_hint') }}</span>
                 </button>
             </div>
 
             <div id="ip-list-wrap" @if(! $enabled) hidden @endif>
-                <h3>允许的 IP</h3>
-                <p class="muted field-hint">每行一条。支持单个地址，也支持网段如 <code>192.168.1.0/24</code>。不要写 <code>*</code>，留空就是不限制。</p>
+                <h3>{{ admin_t('ui.ip_allow_list') }}</h3>
+                <p class="muted field-hint">{{ admin_t('ui.ip_allow_hint_before') }}<code>192.168.1.0/24</code>{{ admin_t('ui.ip_allow_hint_mid') }}<code>*</code>{{ admin_t('ui.ip_allow_hint_after') }}</p>
                 <div class="field-inline">
-                    <input id="ip-new" type="text" placeholder="再加一条，例如 203.0.113.8" autocomplete="off" spellcheck="false">
+                    <input id="ip-new" type="text" placeholder="{{ admin_t('ui.ph_ip_add') }}" autocomplete="off" spellcheck="false">
                     <button type="button" class="btn btn-muted" id="ip-add-one">{{ admin_t('ui.add') }}</button>
                 </div>
                 <ul class="ip-chips" id="ip-chips"></ul>
-                <label for="admin_ip_allow">整段编辑</label>
-                <textarea id="admin_ip_allow" name="admin_ip_allow" rows="6" placeholder="每行一个 IP 或网段">{{ $raw }}</textarea>
+                <label for="admin_ip_allow">{{ admin_t('ui.ip_raw_edit') }}</label>
+                <textarea id="admin_ip_allow" name="admin_ip_allow" rows="6" placeholder="{{ admin_t('ui.ph_ip_raw') }}">{{ $raw }}</textarea>
                 @if($recent !== [])
-                    <p class="muted field-hint">最近登录过、还不在名单里：</p>
+                    <p class="muted field-hint">{{ admin_t('ui.ip_recent_hint') }}</p>
                     <div class="ip-recent" id="ip-recent">
                         @foreach($recent as $rip)
                             <button type="button" class="btn btn-muted btn-sm" data-ip="{{ $rip }}">{{ $rip }}</button>
@@ -88,17 +98,17 @@
             </div>
 
             <div class="interface-howto">
-                <p>把自己锁在外面时：</p>
+                <p>{{ admin_t('ui.ip_lockout_title') }}</p>
                 <ul>
-                    <li>在服务器执行 <code>php artisan video:admin-ip-clear</code></li>
-                    <li>或把 <code>video_options</code> 里 <code>admin_ip_allow</code> 改成空</li>
+                    <li>{{ admin_t('ui.ip_lockout_cli') }} <code>php artisan video:admin-ip-clear</code></li>
+                    <li>{{ admin_t('ui.ip_lockout_db_before') }} <code>video_options</code> {{ admin_t('ui.ip_lockout_db_mid') }} <code>admin_ip_allow</code> {{ admin_t('ui.ip_lockout_db_after') }}</li>
                 </ul>
-                <p class="muted">清名单后立刻不限制。前台、采集、会员登录都不走这套名单。</p>
+                <p class="muted">{{ admin_t('ui.ip_lockout_note') }}</p>
             </div>
 
             <div class="form-actions settings-save">
                 <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>
-                <a class="btn btn-muted" href="/admin/system/monitor/login-logs">看登录日志</a>
+                <a class="btn btn-muted" href="/admin/system/monitor/login-logs">{{ admin_t('ui.view_login_logs') }}</a>
             </div>
         </form>
     </div>
@@ -109,8 +119,9 @@
 <script>
 (function () {
     var U = window.AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var modeOn = {{ $enabled ? 'true' : 'false' }};
-    var current = @json($currentIp);
+    var current = @json($currentIp, JSON_UNESCAPED_UNICODE);
     var original = normalize(document.getElementById('admin_ip_allow') ? document.getElementById('admin_ip_allow').value : '');
     var originalOn = {{ $enabled ? 'true' : 'false' }};
     var ta = document.getElementById('admin_ip_allow');
@@ -153,19 +164,19 @@
     }
     function addIp(ip) {
         ip = String(ip || '').trim();
-        if (!ip) { U && U.toast('请填写 IP', 'err'); return; }
+        if (!ip) { U && U.toast(L.please_fill_ip, 'err'); return; }
         if (!modeOn) setMode(true);
         var cur = lines(ta ? ta.value : '');
         var k = ip.toLowerCase();
         if (cur.some(function (x) { return x.toLowerCase() === k; })) {
-            U && U.toast('名单里已有 ' + ip, 'ok');
+            U && U.toast(String(L.ip_already || '').replace(':ip', ip), 'ok');
             renderChips();
             return;
         }
         cur.push(ip);
         if (ta) ta.value = cur.join('\n');
         renderChips();
-        U && U.toast('已加入 ' + ip, 'ok');
+        U && U.toast(String(L.ip_added || '').replace(':ip', ip), 'ok');
     }
     function removeIp(ip) {
         var k = String(ip || '').toLowerCase();
@@ -181,13 +192,13 @@
             span.textContent = ip;
             if (current && ip.toLowerCase() === String(current).toLowerCase()) {
                 var mark = document.createElement('em');
-                mark.textContent = '当前';
+                mark.textContent = L.current;
                 span.appendChild(mark);
             }
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'btn-link';
-            btn.textContent = '去掉';
+            btn.textContent = L.remove;
             btn.addEventListener('click', function () { removeIp(ip); });
             li.appendChild(span);
             li.appendChild(btn);
@@ -223,15 +234,15 @@
     function doSave() {
         var value = modeOn ? normalize(ta ? ta.value : '') : '';
         if (modeOn && value === '') {
-            U && U.toast('开了限制但名单是空的。请先加入当前 IP。', 'err');
+            U && U.toast(L.empty_list, 'err');
             return;
         }
         if (modeOn === originalOn && value === original) {
-            U && U.toast('没有改动，不用保存', 'ok');
+            U && U.toast(L.no_change_save, 'ok');
             return;
         }
         U.post('/admin/video/settings', { admin_ip_allow: value }).then(function (res) {
-            U.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+            U.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
             if (res && res.code === 0) {
                 original = value;
                 originalOn = modeOn;

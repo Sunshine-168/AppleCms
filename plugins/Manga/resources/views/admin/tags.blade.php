@@ -79,7 +79,7 @@
     var batchBar = document.getElementById('manga-tag-batch');
     var batchCount = document.getElementById('manga-tag-batch-count');
     var countEl = document.getElementById('manga-tag-count');
-    var ready = @json($ready);
+    var ready = @json($ready, JSON_UNESCAPED_UNICODE);
     var base = '/admin/video/manga-tags';
 
     function cleanWhere(data) {

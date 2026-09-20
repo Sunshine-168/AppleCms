@@ -104,7 +104,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($pmJsLang);
+    var L = @json($pmJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('pm-search');
     var batchBar = document.getElementById('pm-batch');
     var batchCount = document.getElementById('pm-batch-count');

@@ -63,7 +63,7 @@
                 <button type="button" class="btn btn-muted" id="safety-scan-app" data-app="1">{{ $ui['scan_app'] ?? '' }}</button>
             </div>
             <div class="safety-progress" id="safety-progress" hidden>
-                <div class="safety-progress-track" id="safety-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="扫描进度">
+                <div class="safety-progress-track" id="safety-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="{{ admin_t('ui.scan_progress_aria') }}">
                     <i id="safety-progress-fill"></i>
                 </div>
                 <div class="safety-progress-row">
@@ -76,12 +76,12 @@
         <section class="safety-block" id="safety-result-block">
             <div class="safety-block-head">
                 <h3>{{ $ui['result'] ?? '' }}</h3>
-                <span class="badge" id="safety-meta">@if($hasLast){{ $last['scanned_at'] ?? '' }} · {{ (int) ($last['files_scanned'] ?? 0) }} 个文件 · {{ (int) ($last['duration_ms'] ?? 0) }} ms @endif</span>
+                <span class="badge" id="safety-meta">@if($hasLast){{ admin_t('ui.safety_meta', ['at' => $last['scanned_at'] ?? '', 'n' => (int) ($last['files_scanned'] ?? 0), 'ms' => (int) ($last['duration_ms'] ?? 0)]) }}@endif</span>
             </div>
             <p class="safety-stale" id="safety-stale" @if(! $hasLast) hidden @endif>{{ $ui['stale'] ?? '' }}</p>
             <div class="safety-summary" id="safety-summary" @if(! $hasLast) hidden @endif>
-                <span class="badge{{ (int) ($last['other_count'] ?? 0) > 0 ? ' badge-warn' : ' badge-ok' }}" id="safety-other-badge">要人工看 {{ (int) ($last['other_count'] ?? 0) }}</span>
-                <span class="badge" id="safety-known-badge">本站已知 {{ (int) ($last['known_count'] ?? 0) }}</span>
+                <span class="badge{{ (int) ($last['other_count'] ?? 0) > 0 ? ' badge-warn' : ' badge-ok' }}" id="safety-other-badge">{{ admin_t('ui.safety_need_review', ['n' => (int) ($last['other_count'] ?? 0)]) }}</span>
+                <span class="badge" id="safety-known-badge">{{ admin_t('ui.safety_known_n', ['n' => (int) ($last['known_count'] ?? 0)]) }}</span>
             </div>
             <p class="safety-msg" id="safety-msg" @if(! $hasLast) hidden @endif>{{ $hasLast ? (string) ($last['summary'] ?? '') : '' }}</p>
             <div class="safety-empty" id="safety-empty" @if($hasLast) hidden @endif>
@@ -100,8 +100,19 @@
 <script>
 (function () {
     var U = AdminUi;
-    var ui = @json($ui);
-    var last = @json($last);
+    var ui = @json($ui, JSON_UNESCAPED_UNICODE);
+    var last = @json($last, JSON_UNESCAPED_UNICODE);
+    var L = @json([
+        'safety_meta' => admin_t('ui.safety_meta'),
+        'safety_need_review' => admin_t('ui.safety_need_review'),
+        'safety_known_n' => admin_t('ui.safety_known_n'),
+        'scan_fail' => admin_t('ui.scan_fail'),
+        'scan_too_long' => admin_t('ui.scan_too_long'),
+        'scan_interrupted' => admin_t('ui.scan_interrupted'),
+        'scan_done' => admin_t('ui.scan_done'),
+        'scan_lost' => admin_t('ui.scan_lost'),
+        'stopped_ok' => admin_t('ui.stopped_ok'),
+    ], JSON_UNESCAPED_UNICODE);
 
     function hitCard(group, known) {
         var html = '<article class="safety-hit' + (known ? ' is-known' : ' is-other') + '">';
@@ -141,14 +152,14 @@
         if (summary) summary.hidden = false;
         if (stale) stale.hidden = false;
         if (meta) {
-            meta.textContent = (data.scanned_at || '') + ' · ' + (data.files_scanned || 0) + ' 个文件 · ' + (data.duration_ms || 0) + ' ms';
+            meta.textContent = String(L.safety_meta || '').replace(':at', data.scanned_at || '').replace(':n', String(data.files_scanned || 0)).replace(':ms', String(data.duration_ms || 0));
         }
         if (otherBadge) {
-            otherBadge.textContent = '要人工看 ' + (data.other_count || 0);
+            otherBadge.textContent = String(L.safety_need_review || '').replace(':n', String(data.other_count || 0));
             otherBadge.classList.toggle('badge-warn', (data.other_count || 0) > 0);
             otherBadge.classList.toggle('badge-ok', (data.other_count || 0) < 1);
         }
-        if (knownBadge) knownBadge.textContent = '本站已知 ' + (data.known_count || 0);
+        if (knownBadge) knownBadge.textContent = String(L.safety_known_n || '').replace(':n', String(data.known_count || 0));
         if (msg) {
             msg.hidden = false;
             msg.textContent = data.summary || '';
@@ -202,14 +213,14 @@
     function failScan(text) {
         setBusy(false);
         hideProgress();
-        U.toast(text || '没能扫描', 'err');
+        U.toast(text || L.scan_fail, 'err');
     }
     function tick(payload) {
         if (cancelled) return;
         U.post('/admin/video/safety/scan', payload).then(function (res) {
             if (cancelled) return;
             if (!res || res.code !== 0) {
-                failScan((res && res.msg) || '没能扫描');
+                failScan((res && res.msg) || L.scan_fail);
                 return;
             }
             var data = res.data || {};
@@ -222,7 +233,7 @@
                     msg: res.msg || data.msg || ''
                 }, false);
                 if (!data.token || ticks > 400) {
-                    failScan(data.token ? '扫得太久，停了。再点扫一遍。' : '扫描中断了，请再点扫一遍');
+                    failScan(data.token ? L.scan_too_long : L.scan_interrupted);
                     return;
                 }
                 token = data.token;
@@ -233,10 +244,10 @@
             hideProgress();
             data.summary = data.summary || res.msg || '';
             render(data);
-            U.toast(res.msg || '已扫完', 'ok');
+            U.toast(res.msg || L.scan_done, 'ok');
         }).catch(function () {
             if (cancelled) return;
-            failScan('没连上，扫到一半停了。再点扫一遍。');
+            failScan(L.scan_lost);
         });
     }
     function scan(withApp) {
@@ -259,7 +270,7 @@
         setBusy(false);
         hideProgress();
         if (t) U.post('/admin/video/safety/scan', {token: t, cancel: 1});
-        U.toast('已停', 'ok');
+        U.toast(L.stopped_ok, 'ok');
     });
     if (last && last.scanned_at) {
         last.summary = last.summary || '';

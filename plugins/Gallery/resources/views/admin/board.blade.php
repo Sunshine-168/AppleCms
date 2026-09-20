@@ -168,7 +168,7 @@
 @push('scripts')
 <script>
 (function () {
-    var U = AdminUi, desk = @json($desk), url = '/admin/video/galleries', L = @json($galleryJsLang, JSON_UNESCAPED_UNICODE);
+    var U = AdminUi, desk = @json($desk, JSON_UNESCAPED_UNICODE), url = '/admin/video/galleries', L = @json($galleryJsLang, JSON_UNESCAPED_UNICODE);
     if (desk === 'stats' || !U) return;
     var countEl = document.getElementById('gallery-count');
     var search = document.getElementById('gallery-search');

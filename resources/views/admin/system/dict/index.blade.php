@@ -6,14 +6,41 @@
     $groups = $groups ?? [];
     $queues = $queues ?? ['all' => 0, 'off' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
-    $valueTypes = $ui['value_types'] ?? \App\Services\Admin\System\SysDictService::VALUE_TYPES;
+    $valueTypes = $ui['value_types'] ?? \App\Services\Admin\System\SysDictService::valueTypeLabels();
+    $dictJsLang = [
+        'dict_group_hint' => admin_t('ui.dict_group_hint'),
+        'empty_type_opts' => admin_t('ui.empty_type_opts'),
+        'click_add' => admin_t('ui.click_add'),
+        'no_match_opts' => admin_t('ui.no_match_opts'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_opts' => admin_t('ui.empty_opts'),
+        'click_add_type' => admin_t('ui.click_add_type'),
+        'display_name' => admin_t('ui.display_name'),
+        'value_type' => admin_t('ui.value_type'),
+        'dict_value' => admin_t('ui.dict_value'),
+        'enum_limit' => admin_t('ui.enum_limit'),
+        'remark' => admin_t('ui.remark'),
+        'vt_string' => admin_t('ui.vt_string'),
+        'pick_enum' => admin_t('ui.pick_enum'),
+        'confirm_save' => admin_t('ui.confirm_save'),
+        'please_fill_type' => admin_t('ui.please_fill_type'),
+        'please_fill_key' => admin_t('ui.please_fill_key'),
+        'dict_save_fail' => admin_t('ui.dict_save_fail'),
+        'saved' => admin_t('ui.saved'),
+        'state_fail' => admin_t('ui.state_fail'),
+        'confirm_del_dict' => admin_t('ui.confirm_del_dict'),
+        'delete_fail' => admin_t('ui.delete_fail'),
+        'deleted' => admin_t('ui.deleted'),
+        'dict_add' => admin_t('ui.dict_add'),
+        'dict_edit' => admin_t('ui.dict_edit'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel dict-index" id="dict-index">
     <div class="card-header">
-        <span>{{ $ui['title'] ?? '字典' }} <em id="dict-count"></em></span>
-        <button type="button" class="btn btn-sm" id="dict-add-btn">{{ $ui['compose'] ?? '添加' }}</button>
+        <span>{{ $ui['title'] ?? admin_t('page.dict') }} <em id="dict-count"></em></span>
+        <button type="button" class="btn btn-sm" id="dict-add-btn">{{ $ui['compose'] ?? admin_t('ui.add_action') }}</button>
     </div>
     <div class="card-body">
         <p class="muted recycle-lead">{{ $ui['lead'] ?? '' }}</p>
@@ -25,12 +52,12 @@
             @endforeach
             <button type="button" class="chip" data-queue="status" data-value="1">{{ admin_t('ui.already_off') }}@if($q('off') > 0)<em>{{ $q('off') }}</em>@endif</button>
         </div>
-        <p class="muted field-hint" id="dict-group-hint">点一个类型看选项。</p>
+        <p class="muted field-hint" id="dict-group-hint">{{ admin_t('ui.dict_group_hint') }}</p>
 
         <form class="filter-bar dict-find" id="dict-search" onsubmit="return false;">
             <input type="hidden" name="dict_type">
             <input type="hidden" name="status">
-            <input type="search" name="q" placeholder="{{ $ui['find'] ?? '搜类型、Key 或显示名' }}" autocomplete="off" aria-label="搜索字典">
+            <input type="search" name="q" placeholder="{{ $ui['find'] ?? admin_t('ui.dict_find') }}" autocomplete="off" aria-label="{{ admin_t('ui.dict_search_aria') }}">
             <button type="button" class="btn btn-sm" id="dict-search-btn">{{ admin_t('ui.search') }}</button>
             <button type="reset" class="btn btn-muted btn-sm" id="dict-reset-btn">{{ admin_t('ui.reset') }}</button>
         </form>
@@ -46,18 +73,18 @@
     <form class="dict-form" autocomplete="off">
         <input type="hidden" name="id">
         <section class="dict-form-sec">
-            <h3>基础信息</h3>
+            <h3>{{ admin_t('ui.dict_basic') }}</h3>
             <div class="dict-form-grid">
                 <div>
-                    <label for="dict-f-type">字典类型</label>
-                    <input id="dict-f-type" type="text" name="dict_type" list="dict-type-list" placeholder="如：filter_area">
+                    <label for="dict-f-type">{{ admin_t('ui.dict_type_label') }}</label>
+                    <input id="dict-f-type" type="text" name="dict_type" list="dict-type-list" placeholder="{{ admin_t('ui.ph_dict_type') }}">
                 </div>
                 <div>
-                    <label for="dict-f-key">字典键名</label>
-                    <input id="dict-f-key" type="text" name="dict_key" placeholder="如：大陆">
+                    <label for="dict-f-key">{{ admin_t('ui.dict_key_label') }}</label>
+                    <input id="dict-f-key" type="text" name="dict_key" placeholder="{{ admin_t('ui.ph_dict_key') }}">
                 </div>
                 <div>
-                    <label for="dict-f-vtype">值类型</label>
+                    <label for="dict-f-vtype">{{ admin_t('ui.value_type') }}</label>
                     <select id="dict-f-vtype" name="value_type" class="dict-value-type">
                         @foreach($valueTypes as $code => $label)
                             <option value="{{ $code }}">{{ $label }}</option>
@@ -65,15 +92,15 @@
                     </select>
                 </div>
                 <div>
-                    <label for="dict-f-label">显示名称</label>
-                    <input id="dict-f-label" type="text" name="label" placeholder="请输入显示名称">
+                    <label for="dict-f-label">{{ admin_t('ui.display_name') }}</label>
+                    <input id="dict-f-label" type="text" name="label" placeholder="{{ admin_t('ui.ph_display_name') }}">
                 </div>
                 <div>
-                    <label for="dict-f-sort">排序</label>
+                    <label for="dict-f-sort">{{ admin_t('ui.sort') }}</label>
                     <input id="dict-f-sort" type="number" name="sort" value="0">
                 </div>
                 <div>
-                    <label for="dict-f-status">状态</label>
+                    <label for="dict-f-status">{{ admin_t('ui.status') }}</label>
                     <select id="dict-f-status" name="status">
                         <option value="0">{{ admin_t('ui.enabled') }}</option>
                         <option value="1">{{ admin_t('ui.disabled') }}</option>
@@ -82,46 +109,46 @@
             </div>
         </section>
         <section class="dict-form-sec">
-            <h3>字典值配置</h3>
+            <h3>{{ admin_t('ui.dict_value_cfg') }}</h3>
             <div class="dict-value-box" data-type="0">
-                <label>字典值</label>
-                <input type="text" name="dict_value" class="dict-v dict-v-0" placeholder="请输入字符串值">
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <input type="text" name="dict_value" class="dict-v dict-v-0" placeholder="{{ admin_t('ui.ph_string_val') }}">
             </div>
             <div class="dict-value-box" data-type="1" hidden>
-                <label>字典值</label>
-                <input type="number" name="dict_value_int" class="dict-v dict-v-1" placeholder="请输入整数" step="1">
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <input type="number" name="dict_value_int" class="dict-v dict-v-1" placeholder="{{ admin_t('ui.ph_int_val') }}" step="1">
             </div>
             <div class="dict-value-box" data-type="2" hidden>
-                <label>字典值</label>
-                <input type="text" name="dict_value_float" class="dict-v dict-v-2" placeholder="如: 3.14, 0.5">
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <input type="text" name="dict_value_float" class="dict-v dict-v-2" placeholder="{{ admin_t('ui.ph_float_val') }}">
             </div>
             <div class="dict-value-box" data-type="3" hidden>
-                <label>字典值</label>
-                <textarea name="dict_value_json_obj" class="dict-v dict-v-3" rows="6" placeholder='{"name":"示例"}'></textarea>
-                <p class="muted field-hint">请输入 JSON 对象，如 {"k":"v"}。不是数组。</p>
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <textarea name="dict_value_json_obj" class="dict-v dict-v-3" rows="6" placeholder='{"name":"example"}'></textarea>
+                <p class="muted field-hint">{{ admin_t('ui.json_obj_hint') }}</p>
             </div>
             <div class="dict-value-box" data-type="4" hidden>
-                <label>字典值</label>
-                <textarea name="dict_value_json_arr" class="dict-v dict-v-4" rows="6" placeholder='["选项1","选项2"]'></textarea>
-                <p class="muted field-hint">请输入 JSON 数组，如 ["a","b"]。不是对象。</p>
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <textarea name="dict_value_json_arr" class="dict-v dict-v-4" rows="6" placeholder='["a","b"]'></textarea>
+                <p class="muted field-hint">{{ admin_t('ui.json_arr_hint') }}</p>
             </div>
             <div class="dict-value-box" data-type="5" hidden>
-                <label>枚举限制</label>
+                <label>{{ admin_t('ui.enum_limit') }}</label>
                 <textarea name="enum_limit" class="dict-enum-limit" rows="4" placeholder='["on","off"]'></textarea>
-                <p class="muted field-hint">先定义可选值列表，再在下面选当前值。</p>
-                <label>字典值</label>
+                <p class="muted field-hint">{{ admin_t('ui.enum_limit_hint') }}</p>
+                <label>{{ admin_t('ui.dict_value') }}</label>
                 <select name="dict_value_enum" class="dict-v dict-v-5"></select>
             </div>
             <div class="dict-value-box" data-type="6" hidden>
-                <label>字典值</label>
-                <textarea name="dict_value_text" class="dict-v dict-v-6" rows="8" placeholder="可写 HTML 文本。本站没有可视化编辑器。"></textarea>
-                <p class="muted field-hint">富文本按 HTML 保存，前台怎么用由调用方决定。</p>
+                <label>{{ admin_t('ui.dict_value') }}</label>
+                <textarea name="dict_value_text" class="dict-v dict-v-6" rows="8" placeholder="{{ admin_t('ui.ph_html_val') }}"></textarea>
+                <p class="muted field-hint">{{ admin_t('ui.html_val_hint') }}</p>
             </div>
         </section>
         <section class="dict-form-sec">
-            <h3>备注说明</h3>
-            <label for="dict-f-remark">备注信息</label>
-            <textarea id="dict-f-remark" name="remark" rows="3" maxlength="200" placeholder="可选填，用于说明该字典项的用途和注意事项"></textarea>
+            <h3>{{ admin_t('ui.remark') }}</h3>
+            <label for="dict-f-remark">{{ admin_t('ui.remark_info') }}</label>
+            <textarea id="dict-f-remark" name="remark" rows="3" maxlength="200" placeholder="{{ admin_t('ui.ph_dict_remark') }}"></textarea>
             <p class="muted field-hint dict-remark-count">0 / 200</p>
         </section>
     </form>
@@ -137,8 +164,9 @@
     var groupsEl = document.getElementById('dict-groups');
     var typeList = document.getElementById('dict-type-list');
     var hintEl = document.getElementById('dict-group-hint');
-    var GROUPS = @json($groups);
-    var UI = @json($ui);
+    var GROUPS = @json($groups, JSON_UNESCAPED_UNICODE);
+    var UI = @json($ui, JSON_UNESCAPED_UNICODE);
+    var L = @json($dictJsLang, JSON_UNESCAPED_UNICODE);
 
     function groupById(id) {
         id = String(id || '');
@@ -172,7 +200,7 @@
     }
     function showGroupMeta() {
         var g = groupById(form.dict_type.value);
-        if (hintEl) hintEl.textContent = g ? (g.hint || '') : '点一个类型看选项。';
+        if (hintEl) hintEl.textContent = g ? (g.hint || '') : (L.dict_group_hint || '');
     }
     function applyQueue(key, value) {
         if (key === 'status') {
@@ -221,7 +249,7 @@
         }
     }
     function fillEnumSelect(select, options, current) {
-        var html = '<option value="">请选择枚举值</option>';
+        var html = '<option value="">' + U.escape(L.pick_enum || '') + '</option>';
         options.forEach(function (item) {
             html += '<option value="' + U.escape(item) + '"' + (String(item) === String(current || '') ? ' selected' : '') + '>' + U.escape(item) + '</option>';
         });
@@ -307,7 +335,7 @@
         return payload;
     }
     function typeTag(d) {
-        return '<span class="dict-type-tag">' + U.escape(d.value_type_label || '字符串') + '</span>';
+        return '<span class="dict-type-tag">' + U.escape(d.value_type_label || L.vt_string || '') + '</span>';
     }
 
     var table = U.table({
@@ -318,11 +346,11 @@
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
                 if (where.dict_type) {
-                    return '<div class="list-empty"><p>这个类型还没有选项。</p><p class="muted">点右上角「添加」。</p></div>';
+                    return '<div class="list-empty"><p>' + U.escape(L.empty_type_opts) + '</p><p class="muted">' + U.escape(L.click_add) + '</p></div>';
                 }
-                return '<div class="list-empty"><p>没有符合条件的选项。</p><p><button type="button" class="btn btn-muted btn-sm" id="dict-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match_opts) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="dict-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有选项。</p><p class="muted">点「添加」，选一个类型再填。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_opts) + '</p><p class="muted">' + U.escape(L.click_add_type) + '</p></div>';
         },
         onDraw: function (_wrap, list, parsed) {
             if (parsed && parsed.groups && parsed.groups.length) GROUPS = parsed.groups;
@@ -341,19 +369,19 @@
                 return U.escape((g && g.label) ? g.label : (d.dict_type || ''));
             }},
             {title: 'Key', width: 120, html: function (d) { return '<code>' + U.escape(d.dict_key || '') + '</code>'; }},
-            {title: '显示名称', html: function (d) { return U.escape(d.title || ''); }},
-            {title: '值类型', width: 100, html: typeTag},
-            {title: '字典值', html: function (d) {
+            {title: L.display_name, html: function (d) { return U.escape(d.title || ''); }},
+            {title: L.value_type, width: 100, html: typeTag},
+            {title: L.dict_value, html: function (d) {
                 var text = d.value_preview || '';
                 return text ? U.escape(text) : '<span class="muted">-</span>';
             }},
-            {title: '枚举限制', html: function (d) {
+            {title: L.enum_limit, html: function (d) {
                 return d.enum_preview ? U.escape(d.enum_preview) : '<span class="muted">-</span>';
             }},
             {title: AdminUi.t('status'), width: 80, html: function (d) {
                 return '<button type="button" class="dict-switch js-state' + (d.is_on ? ' is-on' : '') + '" title="' + U.escape(d.is_on ? AdminUi.t('enabled') : AdminUi.t('disabled')) + '"></button>';
             }},
-            {title: '备注', html: function (d) { return d.remark ? U.escape(d.remark) : '<span class="muted">-</span>'; }},
+            {title: L.remark, html: function (d) { return d.remark ? U.escape(d.remark) : '<span class="muted">-</span>'; }},
             {title: AdminUi.t('sort'), width: 60, html: function (d) { return U.escape(d.sort == null ? '0' : d.sort); }},
             {title: AdminUi.t('actions'), cls: 'actions', html: function () {
                 return '<a href="#" class="btn-link js-edit">' + AdminUi.t('edit') + '</a><a href="#" class="btn-link js-del">' + AdminUi.t('delete') + '</a>';
@@ -366,19 +394,19 @@
     function openForm(data) {
         data = data || {};
         U.dialog({
-            title: data.id ? (UI.edit || '编辑字典') : (UI.add || '新增字典'),
+            title: data.id ? (UI.edit || L.dict_edit) : (UI.add || L.dict_add),
             wide: true,
-            okText: '确认保存',
+            okText: L.confirm_save,
             content: document.getElementById('dict-dialog-tpl').innerHTML,
             onOpen: function (body) { bindForm(body, data); },
             onSave: function (body) {
                 var payload = collectPayload(body);
-                if (!payload.dict_type) { U.toast('请填写分类', 'err'); return false; }
-                if (!payload.dict_key) { U.toast('请填写标识', 'err'); return false; }
+                if (!payload.dict_type) { U.toast(L.please_fill_type, 'err'); return false; }
+                if (!payload.dict_key) { U.toast(L.please_fill_key, 'err'); return false; }
                 var url = payload.id ? '/admin/system/dicts/update' : '/admin/system/dicts/add';
                 return U.post(url, payload).then(function (res) {
-                    if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能保存', 'err'); return false; }
-                    U.toast((res && res.msg) || '已保存', 'ok');
+                    if (!res || res.code !== 0) { U.toast((res && res.msg) || L.dict_save_fail, 'err'); return false; }
+                    U.toast((res && res.msg) || L.saved, 'ok');
                     table.refresh();
                 });
             }
@@ -404,7 +432,7 @@
             e.preventDefault();
             var next = row.is_on ? 1 : 0;
             U.post('/admin/system/dicts/state', {id: row.id, status: next}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能改状态', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.state_fail, 'err'); return; }
                 table.refresh();
                 U.toast(next === 1 ? AdminUi.t('already_off') : AdminUi.t('already_on'), 'ok');
             });
@@ -415,11 +443,11 @@
         e.preventDefault();
         if (a.classList.contains('js-edit')) openForm(row);
         if (a.classList.contains('js-del')) {
-            if (!U.confirm('确定删除「' + (row.title || '') + '」？分类里会少这一条。')) return;
+            if (!U.confirm((L.confirm_del_dict || '').replace(':name', row.title || ''))) return;
             U.post('/admin/system/dicts/delete', {id: row.id}).then(function (res) {
-                if (!res || res.code !== 0) { U.toast((res && res.msg) || '没能删除', 'err'); return; }
+                if (!res || res.code !== 0) { U.toast((res && res.msg) || L.delete_fail, 'err'); return; }
                 table.refresh();
-                U.toast((res && res.msg) || '已删除', 'ok');
+                U.toast((res && res.msg) || L.deleted, 'ok');
             });
         }
     });

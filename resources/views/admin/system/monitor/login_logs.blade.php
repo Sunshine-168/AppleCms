@@ -6,17 +6,26 @@
     $yesterday = $yesterday ?? now()->subDay()->toDateString();
     $weekFrom = $weekFrom ?? now()->subDays(6)->toDateString();
     $monthFrom = $monthFrom ?? now()->subDays(29)->toDateString();
+    $jsLang = [
+        'unknown_admin' => admin_t('ui.unknown_admin'),
+        'current_account' => admin_t('ui.current_account'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_login' => admin_t('ui.empty_login'),
+        'empty_login_hint' => admin_t('ui.empty_login_hint'),
+        'login_col' => admin_t('ui.tab_login'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel log-index login-log-index">
     <div class="card-header">
-        <span>登录日志 <em id="login-log-count"></em></span>
+        <span>{{ admin_t('page.login_logs') }} <em id="login-log-count"></em></span>
     </div>
     <div class="card-body">
         @include('admin.partials.log-tabs', ['tab' => 'login'])
         @include('admin.partials.log-filters', ['kind' => 'login'])
-        <p class="muted recycle-lead">谁、从哪、用什么设备登录过后台。点 IP 只看这个地址。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.login_lead') }}</p>
         <div id="login-log-table"></div>
     </div>
 </div>
@@ -26,15 +35,16 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('login-log-search');
     var countEl = document.getElementById('login-log-count');
     var ipChip = document.getElementById('login-log-ip-chip');
     var whenSel = document.getElementById('login-log-when');
     var datesWrap = document.getElementById('login-log-dates');
-    var TODAY = @json($today);
-    var YESTERDAY = @json($yesterday);
-    var WEEK_FROM = @json($weekFrom);
-    var MONTH_FROM = @json($monthFrom);
+    var TODAY = @json($today, JSON_UNESCAPED_UNICODE);
+    var YESTERDAY = @json($yesterday, JSON_UNESCAPED_UNICODE);
+    var WEEK_FROM = @json($weekFrom, JSON_UNESCAPED_UNICODE);
+    var MONTH_FROM = @json($monthFrom, JSON_UNESCAPED_UNICODE);
     var typing = 0;
 
     function cleanWhere(data) {
@@ -102,8 +112,8 @@
         runSearch();
     }
     function rowHtml(d) {
-        var name = d.username || '未知管理员';
-        var badges = d.is_self ? '<span class="badge badge-ok">当前账号</span>' : '';
+        var name = d.username || L.unknown_admin;
+        var badges = d.is_self ? '<span class="badge badge-ok">' + U.escape(L.current_account) + '</span>' : '';
         var meta = [];
         if (d.time_text) meta.push(U.escape(d.time_text));
         if (d.login_ip) {
@@ -122,9 +132,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的记录。</p><p><button type="button" class="btn btn-muted btn-sm" id="login-log-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="login-log-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有登录记录。</p><p class="muted">登录后台会出现在这里，并写清是谁、从哪、用什么设备。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_login) + '</p><p class="muted">' + U.escape(L.empty_login_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             markExtra();
@@ -132,7 +142,7 @@
             if (reset) reset.addEventListener('click', resetAll);
         },
         cols: [
-            {title: '登录', html: rowHtml}
+            {title: L.login_col, html: rowHtml}
         ]
     });
     syncWhenUi();

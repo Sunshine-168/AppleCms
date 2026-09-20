@@ -3,12 +3,12 @@
 
 @section('content')
     <form class="admin-form" id="site-form">
-        <label>缓冲秒数</label>
+        <label>{{ admin_t('ui.buffer_seconds') }}</label>
         <input type="number" name="play_buffer" value="{{ $site['play_buffer'] ?? 5 }}">
-        <label>地址编码</label>
+        <label>{{ admin_t('ui.url_encode') }}</label>
         <select name="play_encrypt">
-            <option value="0" @selected(($site['play_encrypt'] ?? '0')==='0')>明文</option>
-            <option value="1" @selected(($site['play_encrypt'] ?? '0')==='1')>前端 Base64</option>
+            <option value="0" @selected(($site['play_encrypt'] ?? '0')==='0')>{{ admin_t('ui.plaintext') }}</option>
+            <option value="1" @selected(($site['play_encrypt'] ?? '0')==='1')>{{ admin_t('ui.front_base64') }}</option>
         </select>
         <div class="form-actions">
             <button type="button" class="btn" id="site-save">{{ admin_t('ui.save') }}</button>

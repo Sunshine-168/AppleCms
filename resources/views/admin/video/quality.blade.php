@@ -90,8 +90,8 @@
 (function () {
     var U = AdminUi;
     var L = @json($qualityJsLang, JSON_UNESCAPED_UNICODE);
-    var counts = @json($counts);
-    var focus = @json($focus);
+    var counts = @json($counts, JSON_UNESCAPED_UNICODE);
+    var focus = @json($focus, JSON_UNESCAPED_UNICODE);
     var qInput = document.getElementById('quality-q');
     var listLink = document.getElementById('quality-list-link');
     var note = document.getElementById('quality-note');

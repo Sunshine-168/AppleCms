@@ -23,7 +23,7 @@
             </div>
             <p class="muted field-hint">{{ $driver_hint ?? '' }}</p>
             @if(empty($can_delete))
-                <p class="muted field-hint">当前不是 1 号管理员，不能跑 DELETE。</p>
+                <p class="muted field-hint">{{ admin_t('ui.sql_no_delete') }}</p>
             @endif
         </section>
 
@@ -63,7 +63,13 @@
     var U = AdminUi;
     var root = document.getElementById('sql-index');
     if (!root || !U) return;
-    var UI = @json($ui);
+    var UI = @json($ui, JSON_UNESCAPED_UNICODE);
+    var L = @json([
+        'need_sql' => admin_t('ui.need_sql'),
+        'sql_word' => admin_t('ui.sql_word'),
+        'sql_typed_wrong' => admin_t('ui.sql_typed_wrong'),
+        'sql_run_fail' => admin_t('ui.sql_run_fail'),
+    ], JSON_UNESCAPED_UNICODE);
     var input = document.getElementById('sql-input');
     var msg = document.getElementById('sql-msg');
     var idle = document.getElementById('sql-idle');
@@ -140,17 +146,17 @@
 
     U.on('#sql-run', 'click', function () {
         var sql = (input && input.value || '').trim();
-        if (!sql) { U.toast(UI.need_sql || '请先写一条 SQL', 'err'); return; }
+        if (!sql) { U.toast(UI.need_sql || L.need_sql, 'err'); return; }
         var body = {sql: sql};
         if (isWrite(firstKeyword(sql))) {
             if (!U.confirm(UI.confirm_write || '')) return;
             var typed = U.prompt(UI.type_hint || '', '');
             if (typed === null) return;
-            if (String(typed).trim() !== String(UI.word || '执行')) {
-                U.toast(UI.type_err || '没打对，没有改库', 'err');
+            if (String(typed).trim() !== String(UI.word || L.sql_word)) {
+                U.toast(UI.type_err || L.sql_typed_wrong, 'err');
                 return;
             }
-            body.word = UI.word || '执行';
+            body.word = UI.word || L.sql_word;
         }
         U.loading(true);
         U.post('/admin/system/database/sql/run', body).then(function (res) {
@@ -174,7 +180,7 @@
             showText(res.msg || '');
         }).catch(function () {
             U.loading(false);
-            U.toast('没能执行', 'err');
+            U.toast(L.sql_run_fail, 'err');
         });
     });
 })();

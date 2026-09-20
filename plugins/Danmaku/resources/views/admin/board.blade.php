@@ -116,7 +116,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($dmJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     if (desk === 'settings') {
         U.on('#dm-settings-save', 'click', function () {
             var data = U.formData(document.getElementById('dm-settings'));

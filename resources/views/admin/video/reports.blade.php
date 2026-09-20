@@ -76,7 +76,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($reportJsLang);
+    var L = @json($reportJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('report-search');
     var batchBar = document.getElementById('report-batch');
     var batchCount = document.getElementById('report-batch-count');

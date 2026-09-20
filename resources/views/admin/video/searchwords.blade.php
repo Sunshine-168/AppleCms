@@ -87,7 +87,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($swordJsLang);
+    var L = @json($swordJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('sword-search');
     var batchBar = document.getElementById('sword-batch');
     var batchCount = document.getElementById('sword-batch-count');

@@ -304,11 +304,11 @@
 <script>
 (function () {
     var U = AdminUi;
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     var url = '/admin/video/lives';
     if (desk === 'stats') return;
 
-    var I = @json($liveJsLang);
+    var I = @json($liveJsLang, JSON_UNESCAPED_UNICODE);
     function fillTpl(tpl, map) {
         var out = String(tpl || '');
         Object.keys(map || {}).forEach(function (k) {
@@ -323,7 +323,7 @@
     var countEl = document.getElementById('live-count');
     var prefillCate = @json($cateId > 0 ? $cateId : 0);
     var pendingDefault = desk === 'pending';
-    var hasRecommend = @json($hasRecommend);
+    var hasRecommend = @json($hasRecommend, JSON_UNESCAPED_UNICODE);
 
     function cleanWhere(data) {
         var out = { desk: desk, limit: 20 };

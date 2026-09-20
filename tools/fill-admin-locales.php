@@ -69,6 +69,30 @@ function apply_keys(array $data, array $keys, string $prefix = ''): array
     return $data;
 }
 
+function set_key_paths(array $data, array $keys): array
+{
+    foreach ($keys as $path => $val) {
+        if (! is_string($path) || $path === '' || ! is_string($val) || $val === '') {
+            continue;
+        }
+        $parts = explode('.', $path);
+        $ref = &$data;
+        foreach ($parts as $i => $part) {
+            if ($i === count($parts) - 1) {
+                $ref[$part] = $val;
+                break;
+            }
+            if (! isset($ref[$part]) || ! is_array($ref[$part])) {
+                $ref[$part] = [];
+            }
+            $ref = &$ref[$part];
+        }
+        unset($ref);
+    }
+
+    return $data;
+}
+
 function convert_tw(mixed $v)
 {
     static $tr = null;
@@ -157,7 +181,8 @@ $restKeys = is_file($root.'/tools/overlays/rest_keys.php') ? include $root.'/too
 $boardKeys = is_file($root.'/tools/overlays/rest_keys_boards.php') ? include $root.'/tools/overlays/rest_keys_boards.php' : [];
 $chromeKeys = is_file($root.'/tools/overlays/rest_keys_chrome.php') ? include $root.'/tools/overlays/rest_keys_chrome.php' : [];
 $detailKeys = is_file($root.'/tools/overlays/rest_keys_details.php') ? include $root.'/tools/overlays/rest_keys_details.php' : [];
-$seedKeys = $chromeKeys + $boardKeys + $detailKeys + $restKeys + $seedKeys;
+$leftoverKeys = is_file($root.'/tools/overlays/rest_keys_leftover.php') ? include $root.'/tools/overlays/rest_keys_leftover.php' : [];
+$seedKeys = $chromeKeys + $boardKeys + $detailKeys + $leftoverKeys + $restKeys + $seedKeys;
 
 foreach ($locales as $code) {
     $path = $root.'/resources/lang/'.$code.'/admin.php';
@@ -199,7 +224,7 @@ foreach ($locales as $code) {
             }
         }
         $keys = $overlay['keys'] + $keys;
-        $merged = apply_keys(apply_phrases(fill_missing($en, is_array($cur) ? $cur : []), $phrases), $keys);
+        $merged = set_key_paths(apply_keys(apply_phrases(fill_missing($en, is_array($cur) ? $cur : []), $phrases), $keys), $keys);
     }
     $ok = file_put_contents($path, "<?php\n\nreturn ".export_php($merged).";\n");
     echo $code.' write='.($ok === false ? 'FAIL' : $ok).' path='.$path.PHP_EOL;

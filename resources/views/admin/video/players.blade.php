@@ -151,7 +151,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($playerJsLang);
+    var L = @json($playerJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['engine'];
     var form = document.getElementById('player-search');
     var batchBar = document.getElementById('player-batch');

@@ -121,7 +121,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($slideJsLang);
+    var L = @json($slideJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['slot'];
     var form = document.getElementById('slide-search');
     var batchBar = document.getElementById('slide-batch');

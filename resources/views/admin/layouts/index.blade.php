@@ -11,7 +11,7 @@
 </head>
 <body>
 @php
-    $adminName = (string) (session('admin_username') ?: '管理员');
+    $adminName = (string) (session('admin_username') ?: admin_t('top.admin'));
     $brand = (string) (conf('name') ?: '苹果v12');
     $brandMark = function_exists('mb_substr') ? mb_substr($brand, 0, 1) : substr($brand, 0, 1);
     if (! isset($menus) || ! is_array($menus)) {

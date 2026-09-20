@@ -113,7 +113,7 @@
     var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('manga-type-form');
     var isEdit = !!String(form.id.value || '').trim();
-    var base = @json($base);
+    var base = @json($base, JSON_UNESCAPED_UNICODE);
     var api = '/admin/video/manga_types';
 
     function save(next) {

@@ -66,7 +66,7 @@
     var list = document.getElementById('manga-history-list');
     var empty = document.getElementById('manga-history-empty');
     var clear = document.getElementById('manga-history-clear');
-    var skip = @json($accountIds);
+    var skip = @json($accountIds, JSON_UNESCAPED_UNICODE);
     var skipMap = {};
     (skip || []).forEach(function (id) { skipMap[String(id)] = 1; });
     if (!list) return;

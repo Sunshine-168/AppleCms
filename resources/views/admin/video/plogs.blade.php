@@ -94,7 +94,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($plogJsLang);
+    var L = @json($plogJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('plog-search');
     var qs = new URLSearchParams(location.search);
     if (qs.get('member_id') && form.member_id) form.member_id.value = qs.get('member_id');

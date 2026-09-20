@@ -113,7 +113,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($advertJsLang, JSON_UNESCAPED_UNICODE);
-    var desk = @json($desk);
+    var desk = @json($desk, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('advert-search');
     var countEl = document.getElementById('advert-count');
     function queryWhere() {

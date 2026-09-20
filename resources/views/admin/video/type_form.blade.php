@@ -93,7 +93,7 @@
                 <p class="muted field-hint" id="type-kind-hint"></p>
                 <div id="type-jump-wrap" hidden>
                     <label for="type-jump">{{ admin_t('ui.jump_url') }}</label>
-                    <input id="type-jump" type="text" name="jump_url" value="{{ $type['jump_url'] ?? '' }}" placeholder="https:// 或 /arts">
+                    <input id="type-jump" type="text" name="jump_url" value="{{ $type['jump_url'] ?? '' }}" placeholder="{{ admin_t('ui.ph_jump_url') }}">
                     <p class="muted field-hint">{{ admin_t('ui.jump_hint') }}</p>
                 </div>
                 <label for="type-pic">{{ admin_t('ui.cover') }}</label>
@@ -173,7 +173,7 @@
     var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('type-form');
     var isEdit = !!String(form.id.value || '').trim();
-    var base = @json($base);
+    var base = @json($base, JSON_UNESCAPED_UNICODE);
 
     function save(next) {
         var data = U.formData(form);

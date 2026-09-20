@@ -1,0 +1,206 @@
+ui.add_fail	添加失败
+ui.compare	对比
+ui.this_period	本期
+ui.prev_period	上期
+ui.detail	明细
+ui.backup_see_ran	」里能看到到点有没有跑。
+ui.dict_dropdowns	字典
+ui.empty_replace	还没有可替换的片库表。
+ui.empty_replace_hint	装好影片、文章或分类之后再来。
+ui.restore_cache_after	缓存
+ui.restore_cache_clear	}}盖完前台还是旧的，去「<a href=
+ui.cache_data	数据缓存
+ui.unknown	未知
+ui.cache_config	配置和路由
+ui.cache_packed	已打包
+ui.cache_fresh	每次读最新
+ui.cache_packed_hint	解开打包
+ui.cache_fresh_hint	打包后改程序配置不会马上生效，先解开。
+ui.cache_unpack	现在没有打包，改配置会马上读到。
+ui.cache_pack_title	打包加速（上线后）
+ui.cache_pack_hint	把配置、路由、模板做成文件，少读磁盘。打包后改配置文件不会立刻生效，本地开发不要点。
+ui.cache_pack_config_confirm	打包配置
+ui.cache_pack_config	打包路由
+ui.cache_pack_routes_confirm	预编译模板
+ui.cache_pack_routes	打包后改配置文件不会立刻生效。本地开发不要点。确定？
+ui.cache_pack_views_confirm	打包后改路由不会立刻生效。确定？
+ui.cache_pack_views	预编译后改模板要先清掉才会用新文件。确定？
+ui.captcha_refresh	看不清就点一下换一题
+ui.col_api	接口
+ui.col_explain	说明
+ui.play_unknown_n	条线路的标识不在播放器表里，前台可能播不了。换成站内播放器即可。
+ui.play_empty	还没改。
+ui.play_empty_hint	点下面线路上的标识填到「原标识」，再选要换成的播放器。片子和播放地址不变。
+ui.play_empty_code	（空标识）
+ui.play_in_table	在播放器表
+ui.play_on_air_n	条在播@endif
+ui.plugins	>影片列表</a>
+            <a class=
+ui.ai_key_tail	尾号
+ui.ai_qwen	通义
+ui.ai_qwen_hint	阿里云百炼 / DashScope，模型如 qwen-plus。
+ui.ai_ernie	文心
+ui.ai_ernie_hint	百度千帆，模型如 ernie-4.0-8k。
+ui.ai_other_hint	自己写服务商名字，并填写兼容接口。
+ui.ai_key_keep_hint	留空再保存则保持原密钥。填新的会覆盖。
+ui.ai_key_miss_hint	没有密钥时生成会直接失败。
+ui.ph_ai_key_keep	留空则保留现有密钥
+ui.ph_ai_key_new	sk-… 只存在本站
+ui.api_out_n	部会从接口出去。详情里带播放地址。
+ui.api_public	公开
+ui.api_public_hint	不设密钥。外站填地址就能拉列表和播放地址。
+ui.api_need_key_before	请求必须带同一把
+ui.api_need_key_after	，否则返回「密钥无效」。
+ui.ph_gen_then_save	生成
+ui.provide_key_where_before	放在参数
+ui.provide_key_where_mid	，或请求头
+ui.provide_key_where_after	。空着保存等于公开。保存后立即生效。
+ui.api_how	对方怎么调
+ui.api_how_hint	数字 1 只是举例。只出已发布的影片，没有文章 / 演员单独接口。
+ui.api_param_list	分类 + 列表；
+ui.api_param_detail	含播放地址
+ui.api_param_t	分类 ID，
+ui.api_param_wd	片名，
+ui.api_param_pg	页码，
+ui.api_param_h	最近几小时
+ui.api_param_xml	输出 XML，默认 JSON
+ui.api_ok_before	通了会返回
+ui.api_ok_mid	。密钥不对是 403「密钥无效」。完整对照在「
+ui.apidoc_short	接口说明
+ui.api_ok_after	>通了会返回 <code>code: 1</code>。密钥不对是 403「密钥无效」。完整对照在「<a href=
+ui.collect_cfg_lead_before	片子从资源站进来时按这里处理。漫画采集源写入插件库，不走待审入库。改完点保存，
+ui.collect_cfg_lead_strong	下次采集
+ui.collect_cfg_lead_after	才生效，已经进库的片子不会改。
+ui.collect_direct	直接进片库
+ui.collect_direct_hint	采到的片子马上出现在影片列表。适合信得过的资源站。
+ui.collect_temp_first	先待审再转入
+ui.collect_temp_hint	新片先停在待审入库，核对封面和分类后再进片库。
+ui.collect_temp_go_before	打开后去「
+ui.collect_temp_go_after	」处理停住的片子。现在采集是直接进库的话，那里通常是空的。
+ui.collect_list_on	采集后直接上架
+ui.collect_sync_pic	同步封面地址
+ui.collect_pic_local	把封面下载到本站
+ui.ph_mail_to	发送测试邮件
+ui.send_test_mail	收件邮箱
+ui.key_set	已设置
+ui.inbound_key_set_hint	请求必须带同一把密钥，否则返回「入库密钥无效」。
+ui.key_missing	还没设密钥
+ui.inbound_key_miss_hint	现在推送一律会被拒绝。生成一把再保存。
+ui.ph_inbound_key	生成
+ui.inbound_key_where_before	放在参数
+ui.inbound_key_where_mid	，或请求头
+ui.inbound_key_where_after	。保存后立即生效。
+ui.inbound_vod_name	片名（必填）
+ui.inbound_type_id	本站分类 ID
+ui.inbound_data_before	也可把整条片子放在
+ui.inbound_data_after	里
+ui.inbound_manga_how_before	漫画 POST 到漫画地址，至少带作品名。章节图片用换行或
+ui.inbound_manga_how_after	，阅读页链接不会再抓。
+ui.inbound_work_name	作品名（必填）
+ui.inbound_manga_id	对方站作品 ID（可选，用来续更）
+ui.inbound_manga_type_id	本站漫画分类 ID
+ui.inbound_result_before	成功返回
+ui.inbound_result_after	。缺片名或密钥不对会失败。影片是否先停在待审入库，跟内容接入的开关相同。漫画直接进插件库。
+ui.ip_lead_before	只限制后台登录。名单为空不限制；填了以后只有这些 IP 能打开
+ui.ip_lead_after	。家宽 IP 变了会进不去。
+ui.ip_limited_n	已限制 ·
+ui.ip_forwarded_hint	未信任代理时不会按它放行，不要只把这个写进名单。
+ui.ip_mode_off	不限制
+ui.ip_mode_off_hint	只靠账号密码。办公室 IP 不固定时选这个。
+ui.ip_mode_on	只允许名单
+ui.ip_mode_on_hint	其它 IP 打开后台会 403。保存时必须包含你现在的 IP。
+ui.ip_allow_list	允许的 IP
+ui.ip_allow_hint_before	每行一条。支持单个地址，也支持网段如
+ui.ip_allow_hint_mid	。不要写
+ui.ip_allow_hint_after	，留空就是不限制。
+ui.ip_lockout_cli	在服务器执行
+ui.ip_lockout_db_before	或把
+ui.ip_lockout_db_mid	里
+ui.ip_lockout_db_after	改成空
+ui.ph_hub_url	探测
+ui.hub_url_hint_before	一般是
+ui.ph_hub_api_ex	https://域名/api.php/provide/vod/
+ui.hub_url_hint_after	。没写 http 会按 https 补上。
+ui.hub_empty	还没探测。
+ui.hub_empty_hint	把资源站给的地址贴上来，点「探测」。成功后可以收藏，或直接接入采集源。
+ui.hub_pending_n	条还没接入采集源
+ui.img_lead_before	扫描封面、下载到本站
+ui.img_lead_after	。缺图去补无封面。扫描不改影片。
+ui.img_empty	还没扫描。
+ui.img_empty_hint	点「扫描封面」看哪些还在资源站、哪些打不开。不会改片子。
+ui.push_lead	的地址交给百度 / 神马 / 必应。sitemap 给蜘蛛自己抓，不等于推送成功。没有站长账号就留空。
+ui.token_ready_n	家已填 Token
+ui.push_published_n	部 · 近 48 小时改过
+ui.push_batch	主动推一批
+ui.push_batch_hint	按最新发布的往外推。一次最多 100 条。失败时会把接口原话报出来。
+ui.push_samples	这次会推哪些
+ui.push_samples_hint	预览最新 5 条，实际条数看上面的选择。
+ui.front_urls	前台地址
+ui.front_urls_hint	数字 1 只是举例。下面是当前写法实际会生成的地址。
+ui.rewrite_nginx_hint	。PHP 那一行按机器改。苹果链接也进
+ui.rewrite_apache_hint	已有一份。虚拟主机要允许
+ui.safety_meta	个文件 ·
+ui.safety_need_review	要人工看
+ui.safety_known_n	本站已知
+ui.tab_website	网站
+ui.look	外观
+ui.close_site	暂时关闭网站
+ui.upload_image	图片地址，或点上传
+ui.allow_register	允许前台注册
+ui.require_invite	注册必须填邀请码
+ui.comment_need_login	评论必须先登录
+ui.gbook_audit	留言要先审再显示
+ui.vod_urls	影片地址
+ui.rewrite_how	链接怎么写
+ui.rewrite_suffix_hint_a	苹果风格才会用到后缀。本站路由一般是
+ui.rewrite_suffix_hint_b	。服务器要抄的 Nginx / Apache 在「
+ui.rewrite_suffix_hint_c	>苹果风格才会用到后缀。本站路由一般是 <code>/vod/123</code>。服务器要抄的 Nginx / Apache 在「<a href=
+ui.play_buffer_sec	开始缓冲（秒）
+ui.play_encrypt	播放地址前端编码
+ui.title_tpl	标题模板
+ui.seo_vod_page	影片页
+ui.seo_play_page	播放页
+ui.ph_seo_play	可用
+ui.seo_tokens_pre	>播放页</label>
+                <input id=
+ui.seo_tokens_end	{name} 在线播放 - {site}
+ui.front_filters	前台筛选
+ui.filter_csv_hint	逗号分开。字典里「地区 / 语言 / 年份」有启用项时，前台筛选用字典，这里当后备。
+ui.go_dict_items	去字典按条维护
+ui.ph_analytics	会插到前台页面底部，如百度统计。
+ui.analytics_hint	把统计平台给的代码贴在这里
+ui.attach_storage	附件存储
+ui.store_where	存在哪里
+ui.allowed_ext	允许的扩展名
+ui.plugin_params	插件参数
+ui.plugin_params_hint	支付、短信这些在插件里单独配。
+ui.ph_tpl_search	搜页面，如 首页、播放
+ui.aria_search_tpl	搜索模板
+ui.tpl_no_open	还没有打开文件。
+ui.tpl_empty_hint	先点「首页」或「整站头尾」。这是 Blade 模板，不是可视化排版。需要图片时点「插入附件」。
+ui.basic_settings	基本设置
+ui.home_config	首页配置
+ui.page_config	页面配置
+ui.nav_menu	导航菜单
+ui.other_settings	其他设置
+ui.seo_settings	SEO设置
+ui.ad_settings	广告设置
+ui.logo_top	顶部 Logo
+ui.logo_foot	底部 Logo
+ui.no_logo_foot	还没有底部 Logo
+ui.logo_foot_hint	出现在页脚。留空则不显示。
+ui.site_icon	网站图标
+ui.no_icon	还没有图标
+ui.favicon_hint	浏览器标签上的小图标，建议正方形 png / ico。
+ui.webapp_icon	webapp 图标
+ui.no_webapp_icon	还没有 webapp 图标
+ui.webapp_hint	添加到主屏幕时用的图标，建议正方形。
+ui.lazy_placeholder	懒加载占位
+ui.no_placeholder	还没有占位图
+ui.lazy_hint	封面为空时用这张图顶上，不是独立的 JS 懒加载库。
+ui.home_rec_hint_a	默认主题首页「推荐」区块的
+ui.home_rec_hint_b	条数，默认 12。
+ui.watermark_in_settings_a	站点设置
+ui.watermark_in_settings_b	>如 #1b4f72。留空则用模板自带配色。采集封面水印在「<a href=
+ui.annex_hint	对照影片/文章/演员封面，找出
+ui.today_pv_uv	今日 PV

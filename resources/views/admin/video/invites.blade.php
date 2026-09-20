@@ -110,7 +110,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($inviteJsLang);
+    var L = @json($inviteJsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('invite-search');
     var batchBar = document.getElementById('invite-batch');
     var batchCount = document.getElementById('invite-batch-count');

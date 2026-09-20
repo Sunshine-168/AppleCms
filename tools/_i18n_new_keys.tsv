@@ -1,0 +1,804 @@
+ui.topics_manage	专题管理	Topic lists
+ui.topics_board_hint	专题是片单。先建「贺岁档」「冷门佳片」这类栏目，再点绑片挂影片，需要资讯时点绑文。	A topic is a list. Create something like “New Year” or “hidden gems”, then bind videos; bind articles when you need news.
+ui.sub_mark	副标	Tagline
+ui.seo_title_ns	SEO标题	SEO title
+ui.seo_key_ns	SEO关键字	SEO keywords
+ui.seo_des_ns	SEO描述	SEO description
+ui.players_board_hint	播放器是线路用的内核。直链用 ArtPlayer / DPlayer / Video.js；加密采集地址填解析接口。标识要和线路上的播放器字段一致。	A player is the engine a line uses. Direct URLs use ArtPlayer / DPlayer / Video.js; encrypted collect URLs need a parse API. The code must match the player field on the line.
+ui.links_board_hint	友链出现在页脚。默认主题只显示文字；有 Logo 时自定义主题可改成图链。隐藏后前台不再输出。	Friend links appear in the footer. The default theme shows text; a custom theme can use a logo as an image link. Hidden rows are not output.
+ui.comments_manage	评论管理	Comments
+ui.comments_board_hint	前台发来的评论在这里审。打开站点设置里的「评论审核」后，新评论会先进入待审。	Review comments posted on the site. If “comment review” is on in site settings, new comments start pending.
+ui.video_id_ns	影片ID	Video ID
+ui.reports_board_hint	会员在详情页报的无法播放。处理完打标；删掉只去记录，不改播放地址。	Members report unplayable titles on the detail page. Mark them handled; deleting only removes the row, not the play URL.
+ui.members_board_hint	会员登录的是网站，不是后台。积分用来点播，分组决定试看和门槛。	Members sign in to the site, not admin. Points pay for plays; groups set trial seconds and thresholds.
+ui.cards_board_hint	批量生成后发给会员，他们在会员中心兑换加积分。每张只能用一次。已兑的不能改、不能删。	Batch-generate codes and give them to members to redeem for points in the member center. Each card works once. Redeemed cards cannot be edited or deleted.
+ui.downloaders_board_hint	下载页把剧集地址套进模板。不是后台去下文件，也不是播放器。	The download page wraps episode URLs in a template. This does not download files in admin, and it is not a player.
+ui.servers_board_hint	相对播放地址会拼上此前缀。已经是 http(s) 的地址不会改。不是下载器，也不是播放内核。	Relative play URLs get this prefix. URLs that already start with http(s) are left as-is. Not a downloader, and not a play engine.
+ui.playfails_board_hint	播放页点报错记下的坏链。标已处理不会改地址；下线线路才会关掉这条线。	Bad links logged when someone taps report on the play page. Marking handled does not change the URL; offlining the line is what turns it off.
+ui.source_id_ns	线路ID	Line ID
+ui.audits_board_hint	采集时扫标题、简介、演员。命中后可跳过、先下架，或把词抠掉再入库。	Collect scans title, blurb, and actors. On a hit you can skip, ingest offline, or strip the words then ingest.
+ui.collect_tasks_board_hint	到点自动采。服务器要跑 Laravel 调度，也可以在列表里立刻检查一遍。	Run collects on a schedule. The server must run Laravel’s scheduler; you can also check a row immediately from the list.
+ui.ads_board_hint	广告按位置出现。页头在导航旁，页脚在版权上，播放页在播放器下。过期或停用后前台不再输出。	Ads appear by slot: header next to nav, footer above copyright, play page under the player. Expired or disabled ads are not output.
+ui.guestbooks_board_hint	访客在留言板写的。后台回复会出现在那条下面；待审的不会出现在前台。	Notes visitors write on the guestbook. Admin replies show under that row; pending notes stay off the front.
+ui.groups_board_hint	会员组是点播档位。积分门槛、试看秒数、每天免费条数在这里。停用后这组权限关掉，人还在名单里。删掉后会员变成未分组。	A group is a play tier: point threshold, trial seconds, and daily free titles. Disable to drop those rights; members stay listed. Delete and they become ungrouped.
+ui.orders_board_hint	订单是充值入账。确认已付会给会员加积分，每笔只加一次。关掉或删除不会扣回去。	Orders credit a top-up. Confirming paid adds points once. Closing or deleting does not take points back.
+ui.member_id_ns	会员ID	Member ID
+ui.amount_fen	金额分	Amount (fen)
+ui.withdraws_board_hint	积分兑现金申请，待审后打款或拒绝	Requests to cash out points; pay or reject after review
+ui.account_label	账号	Account
+ui.pms_board_hint	发给指定会员，会员在站内信里看	Send to a member; they read it in site mail
+ui.from_id_sys	发件人ID(0系统)	Sender ID (0 = system)
+ui.to_id_ns	收件人ID	Recipient ID
+ui.collect_logs_board_hint	每次采集当天、本周、全部都会记一行。失败看说明；删记录不影响片库。	Each collect of today, this week, or all writes a row. Failures show in the note; deleting logs does not change the library.
+ui.collect_source_id_ns	采集源ID	Collect source ID
+ui.page_no	页码	Page
+ui.created_n	新建	Created
+ui.plogs_board_hint	点播、充值、卡密、后台调积分都会记在这里。删记录不会改会员积分。	Plays, top-ups, cards, and admin point edits are logged here. Deleting a row does not change member points.
+ui.roles_board_hint	片子里的角色名，挂到影片和演员。不是后台管理员。启用的才会出现在详情页。	Character names on a title, linked to the video and actor. Not admin roles. Only enabled rows show on the detail page.
+ui.actor_id_ns	演员ID	Actor ID
+ui.websites_board_hint	顶栏「导航」里的站外目录，可按分类分组。页脚交换链接请去友情链接，不是同一张表。	Off-site directory under top-bar “Nav”, optionally grouped by category. Footer swaps belong in friend links — a different table.
+ui.type_id_ns	分类ID	Category ID
+ui.arts_manage	文章管理	Articles
+ui.arts_board_hint	站内资讯，有自己的栏目，不是影片。按 LaraCMS 内容列表来写稿、发布。	Site articles with their own columns, not videos. Write and publish like a LaraCMS content list.
+ui.search_title_plain	搜索标题	Search title
+ui.keyword_plain	关键字	Keywords
+ui.search_des_plain	搜索描述	Search description
+ui.unions_board_hint	收藏别人给的苹果接口。点接入后才会出现在采集源里。	Saved Apple-CMS APIs from others. They appear under collect sources only after you connect one.
+ui.visit_logs	访问日志	Visit logs
+ui.ulog_type	类型 play/down/fav	Type play/down/fav
+ui.plots_board_hint	按集写剧情简介，挂到一部片子。详情页会列出；不是整部片子的剧情简介。	Per-episode plot text on a title. The detail page lists them; this is not the whole-title synopsis.
+ui.synonyms_board_hint	搜到这个词时，按那个词去查。采集入库时片名也会换。不会改已经在库里的片子。	Searching this word looks up that word. Collect also rewrites titles on ingest. Rows already in the library are not renamed.
+ui.replace_with	替换为	Replace with
+ui.invites_board_hint	注册用的码，可批量生成；站点设置可强制填写	Signup codes; you can batch-generate them. Site settings can require one.
+ui.inviter_member_id	邀请人会员ID	Inviter member ID
+ui.classes_board_hint	分类页「类型」筛选词，如喜剧、动作。不是电影/电视剧那种栏目树，栏目请去分类；聚合词请去标签。	“Type” filters on a category page, e.g. comedy or action. Not the movie/series tree — that is Categories. Cloud words are Tags.
+ui.favorites_board_hint	会员在影片页点的收藏。后台只查看和删除，不能代收藏。	Favorites members tap on a video page. Admin can view and delete, not favorite for them.
+ui.accesslogs_board_hint	前台页面 GET。不是封 IP。静态和插件资源不记。爬虫是同一张表的切片。	Front GET pages. This is not an IP ban. Static and plugin assets are skipped. Bots are a slice of the same table.
+ui.botlogs_board_hint	访问风控同一张表，只看爬虫。图表在蜘蛛统计。不是封 IP。	Same table as access risk, bots only. Charts are under spider stats. Not an IP ban.
+ui.searchwords_board_hint	前台搜片会自动记在这里。次数高的就是访客在找什么。	Site searches are logged here. High counts show what visitors look for.
+ui.slides_board_hint	幻灯是首页轮播、播放页贴片。先选位置，再上传横图和跳转链接。主题用位置调用，例如 @@vodSlide(['slot' => 'home'])。	Slides are the home carousel and play-page strips. Pick a slot, then upload a wide image and link. Themes call a slot, e.g. @@vodSlide(['slot' => 'home']).
+ui.notifies_board_hint	全站或指定会员的公告，和站内信不同	Notices to everyone or one member; not the same as site mail
+ui.member_id_all	会员ID(0全部)	Member ID (0 = all)
+ui.collect_temps_board_hint	采集开了先入临时表时，新片停在这里。确认后再转入片库。	When collect writes a temp table first, new titles wait here. Confirm to move them into the library.
+ui.task_logs_title	任务记录	Task logs
+ui.task_logs_board_hint	会员完成任务的进度和入账。由前台产生。	Progress and credits when members finish tasks. Created on the front.
+ui.task_id_ns	任务ID	Task ID
+ui.sign_logs_title	签到记录	Sign-in logs
+ui.signs_board_hint	每日签到和连续奖励。由会员在前台点。	Daily sign-in and streak rewards. Members tap this on the front.
+ui.date_ymd	日期Ymd	Date Ymd
+ui.sign_milestones_title	签到里程碑	Sign-in milestones
+ui.milestones_board_hint	达到连续天数当场入账。	Credit immediately when the streak hits the day count.
+ui.plain_match	普通匹配	Plain match
+ui.channel_dfpay_plain	DfPay	DfPay
+ui.forbidden_status	禁用	Disabled
+db.group_novel	小说	Novel
+db.group_gallery	图集	Gallery
+db.group_live	直播	Live
+db.group_stats	访问	Traffic
+db.group_plugin	插件	Plugins
+db.group_framework	框架	Framework
+db.hint_videos	一部片子一行。播放地址不在这张，在播放线路和剧集。	One row per title. Play URLs are on play lines and episodes, not this table.
+db.hint_video_types	影片、文章、网址导航的栏目树。不是后台字典选项。	Category tree for videos, articles, and the site directory. Not admin dictionary options.
+db.tbl_video_stats	影片人气	Video hits
+db.hint_video_stats	点击、顶踩、评分。每天凌晨会清今日人气。	Clicks, up/down votes, and scores. Daily hits reset at midnight.
+db.hint_video_sources	一部片子可以有多条线路。每条线路下面才是集。	A title can have several lines. Episodes sit under each line.
+db.tbl_video_episodes	剧集地址	Episode URLs
+db.hint_video_episodes	某一条线路下的第几集和播放地址。	Episode number and play URL under one line.
+db.hint_video_players	前台用哪种内核播。解析接口填在 parse。	Which front-end engine plays. Put the parse API in parse.
+db.hint_video_tags	给片子打的词，和分类不是一回事。	Words tagged on a title; not the same as categories.
+db.tbl_video_tag_rel	影片-标签	Video-tag
+db.hint_video_tag_rel	哪部片子打了哪个标签。	Which title has which tag.
+db.hint_actors	演员资料。哪部戏演过在关联表。	Actor profiles. Appearances are in the relation table.
+db.tbl_video_actor_rel	影片-演员	Video-actor
+db.hint_video_actor_rel	片子和演员的对应，可区分主演配角。	Maps titles to actors; can mark lead vs supporting.
+db.tbl_video_roles	角色卡	Role cards
+db.hint_video_roles	片子里的角色，不是后台管理员角色。	Characters in a title, not admin roles.
+db.hint_video_topics	一组片子或文章的合集页。	A collection page of titles or articles.
+db.tbl_video_topic_rel	专题-影片	Topic-video
+db.hint_video_topic_rel	专题里有哪些片子。	Which titles are in a topic.
+db.tbl_video_topic_art_rel	专题-文章	Topic-article
+db.hint_video_topic_art_rel	专题里有哪些文章。	Which articles are in a topic.
+db.hint_video_arts	资讯文章，不是影片简介。摘要、来源、署名、标签、推荐属性、SEO、定时发布都在这张表。删进回收站看 deleted_at。	News articles, not a video blurb. Summary, source, byline, tags, recommend flags, SEO, and scheduled publish live here. Recycle bin uses deleted_at.
+db.tbl_video_art_tags	文章标签	Article tags
+db.hint_video_art_tags	文章聚合词，和影片标签、栏目不是一回事。	Article cloud words; not video tags or columns.
+db.tbl_video_art_tag_rel	文章-标签	Article-tag
+db.hint_video_art_tag_rel	哪篇文章打了哪个标签。	Which article has which tag.
+db.hint_video_plots	某一集的剧情文字，挂在影片上。	Plot text for one episode, attached to the title.
+db.hint_video_classes	分类页「类型」筛选词。栏目树在「分类」，聚合词在「标签」。	“Type” filters on a category page. The tree is Categories; cloud words are Tags.
+db.hint_video_synonyms	搜索和采集时把原词换成当成的词。不会改库里已有片名。	Search and collect rewrite the original word to this one. Existing library titles are not renamed.
+db.hint_video_downloaders	下载页把剧集地址套进模板。不是后台去下文件，也不是播放器。	The download page wraps episode URLs in a template. Admin does not download files, and this is not a player.
+db.hint_video_servers	相对播放地址会拼上此前缀。http(s) 或 // 开头不改。不是下载器，也不是真的去管机器。	Relative play URLs get this prefix. http(s) or // is left as-is. Not a downloader, and not a real server manager.
+db.hint_collect_sources	资源站接口。日常采集走这里。	Resource-site APIs. Day-to-day collect uses this.
+db.hint_video_collect_tasks	到点去跑哪个采集源。要服务器先装计划任务。	Which collect source to run at the scheduled time. The server must have a scheduler.
+db.hint_video_collect_logs	某次采集新建、更新、跳过了多少。	How many rows a collect created, updated, or skipped.
+db.tbl_video_collect_temps	待审采集	Pending collect
+db.hint_video_collect_temps	采回来还没转正的片子，确认后再入库。	Titles fetched but not yet promoted; confirm to ingest.
+db.tbl_video_audit_rules	入库审核词	Ingest audit words
+db.hint_video_audit_rules	标题里碰到这些词就跳过或待审。	Skip or hold for review when the title hits these words.
+db.hint_video_cj_rules	网页 / RSS / JSON 采进影片、文章或漫画。日常接资源站请用采集源。	HTML / RSS / JSON into videos, articles, or manga. Use collect sources for resource sites.
+db.tbl_video_cj_rule_logs	网站采集日志	Site-collect logs
+db.hint_video_cj_rule_logs	某次网站采集拉了多少、新建了多少。	How many a site collect fetched and created.
+db.tbl_video_unions	联盟资源	Union resources
+db.hint_video_unions	对外资源接口登记，不是支付。	Outbound resource-API registry, not payments.
+db.hint_members	前台注册用户。后台管理员在 sys_user。	Front-end registered users. Admins are in sys_user.
+db.hint_member_groups	按积分门槛分组，可限制试看。	Grouped by a points threshold; can limit trial plays.
+db.hint_member_favorites	谁收藏了哪部片子。	Who favorited which title.
+db.tbl_member_histories	观看记录	Watch history
+db.hint_member_histories	看到哪条线路哪一集。	Which line and episode they reached.
+db.hint_member_orders	积分订单。不是微信支付宝收款。	Points orders. Not WeChat/Alipay payouts.
+db.tbl_member_withdraws	提现申请	Withdraw requests
+db.hint_member_withdraws	会员申请把积分兑出去，要人工处理。	Members ask to cash out points; handle them by hand.
+db.hint_member_pms	会员之间或站发给会员的私信。	Private mail between members or from the site.
+db.hint_member_point_logs	积分加减各记一笔。	Each points credit or debit is a row.
+db.hint_member_invites	邀请码和谁用了。	Invite codes and who used them.
+db.tbl_member_follows	关注	Follows
+db.hint_member_follows	会员关注演员等对象。	Members following actors and other targets.
+db.tbl_member_dynamics	动态	Dynamics
+db.hint_member_dynamics	会员发的动态，可以带一部片子。	Member posts, optionally attached to a title.
+db.tbl_member_shares	分享记录	Share logs
+db.hint_member_shares	谁把哪部片子分享出去了。	Who shared which title.
+db.tbl_member_signs	签到	Sign-in
+db.hint_member_signs	每天签到领积分。	Daily sign-in for points.
+db.tbl_member_tasks	会员任务	Member tasks
+db.hint_member_tasks	每日签到、观看、评论、复制链接。绑定邮箱默认关。	Daily sign-in, watch, comment, copy link. Bind-email is off by default.
+db.tbl_member_task_logs	任务记录	Task logs
+db.hint_member_task_logs	谁完成了哪条任务、积分解没解。	Who finished which task and whether points posted.
+db.tbl_member_sign_milestones	签到里程碑	Sign-in milestones
+db.hint_member_sign_milestones	连续天数达标当场加积分。	Credit immediately when the streak hits the day count.
+db.tbl_member_sign_milestone_logs	里程碑领取	Milestone claims
+db.hint_member_sign_milestone_logs	谁拿到了哪档连续签到奖励。	Who claimed which streak reward.
+db.hint_video_cards	一卡换积分，用过就作废。	One card for points; spent cards are void.
+db.tbl_video_coupons	优惠码	Coupon codes
+db.hint_video_coupons	旧的积分兑换码。新优惠券在会员栏优惠券里发，用于现金充值满减。	Old points redeem codes. New coupons are issued under Members and discount cash top-ups.
+db.hint_video_comments	影片和文章评论，用 mid 分开：1 影片 2 文章。	Video and article comments, split by mid: 1 video 2 article.
+db.hint_video_reports	用户反馈片子不能播或有问题。	Users reporting a title that will not play or has a problem.
+db.hint_video_play_fails	前台播不了时记下的地址。	URLs logged when the front cannot play.
+db.hint_video_guestbooks	站点留言本，不是评论。	Site guestbook, not comments.
+db.hint_video_notifies	发给某个会员的站内通知。	In-site notices to one member.
+db.hint_video_ads	投放位上的广告代码或内容。	Ad code or content on a slot.
+db.hint_video_slides	首页等位置的轮播图。	Carousel images on home and similar slots.
+db.hint_friend_links	页脚交换链接，不是网址导航。	Footer swap links, not the site directory.
+db.hint_video_websites	顶栏「导航」目录，可挂分类。不是页脚友链。	Top-bar “Nav” directory; can attach categories. Not footer friend links.
+db.hint_video_domains	同一套片库，按域名换站名和模板。	Same library; swap site name and theme by host.
+db.tbl_video_options	站点键值	Site key/value
+db.hint_video_options	站点设置存成 k/v，不是影片字段。	Site settings stored as k/v, not video fields.
+db.hint_video_search_words	有人搜过的词和次数。	Words people searched and how often.
+db.tbl_video_ulogs	会员行为	Member actions
+db.hint_video_ulogs	会员播放等行为流水。	Play and similar member action rows.
+db.tbl_video_visit_days	按日访问	Daily visits
+db.hint_video_visit_days	每天的 PV / UV 汇总。	Daily PV / UV totals.
+db.tbl_video_visit_items	按片访问	Per-title visits
+db.hint_video_visit_items	某天某部片子或某分类的浏览量。	Views of a title or category on a day.
+db.tbl_video_access_logs	访问流水	Visit stream
+db.hint_video_access_logs	前台 GET 流水。爬虫会标出来，完整图表在统计。	Front GET rows. Bots are flagged; full charts are under Stats.
+db.tbl_stat_hits	点击明细	Hit details
+db.hint_stat_hits	带蜘蛛识别的访问明细，图表用这张。	Visit details with spider detection; charts use this.
+db.tbl_plugin_mangas	漫画作品	Manga works
+db.hint_plugin_mangas	独立漫画库，不是影片分类。关掉插件后台入口会消失，表还在。	A separate manga library, not a video category. Turning the plugin off hides admin; tables stay.
+db.tbl_plugin_manga_chapters	漫画章节	Manga chapters
+db.hint_plugin_manga_chapters	一话对应一组图片地址。	One chapter is a set of image URLs.
+db.hint_plugin_manga_types	漫画自己的分类，不是影片分类。	Manga’s own categories, not video categories.
+db.tbl_plugin_manga_tags	漫画标签	Manga tags
+db.hint_plugin_manga_tags	漫画聚合词，不是影片标签。	Manga cloud words, not video tags.
+db.tbl_plugin_manga_authors	漫画作者	Manga authors
+db.hint_plugin_manga_authors	漫画作者库。	Manga author library.
+db.tbl_plugin_manga_pics	漫画图片	Manga images
+db.hint_plugin_manga_pics	章节里每一张图一行。	One row per image in a chapter.
+db.tbl_plugin_manga_comments	漫画评论	Manga comments
+db.hint_plugin_manga_comments	漫画详情页评论，不是影片评论。	Comments on the manga detail page, not video comments.
+db.tbl_plugin_manga_favors	漫画书架	Manga bookshelf
+db.hint_plugin_manga_favors	会员收藏的漫画，不是影片收藏。	Member-favorited manga, not video favorites.
+db.tbl_plugin_manga_histories	漫画阅读记录	Manga reading history
+db.hint_plugin_manga_histories	会员读到哪一话。	Which chapter the member reached.
+db.tbl_plugin_novels	小说作品	Novel works
+db.hint_plugin_novels	独立小说库，不是影片。	A separate novel library, not videos.
+db.tbl_plugin_novel_chapters	小说章节	Novel chapters
+db.hint_plugin_novel_chapters	一章正文一行。	One row of body text per chapter.
+db.tbl_plugin_novel_types	小说分类	Novel categories
+db.hint_plugin_novel_types	小说自己的分类。	Novel’s own categories.
+db.tbl_plugin_novel_tags	小说标签	Novel tags
+db.hint_plugin_novel_tags	小说聚合词。	Novel cloud words.
+db.tbl_plugin_novel_authors	小说作者	Novel authors
+db.hint_plugin_novel_authors	小说作者库。	Novel author library.
+db.tbl_plugin_novel_comments	小说评论	Novel comments
+db.hint_plugin_novel_comments	小说详情页评论。	Comments on the novel detail page.
+db.tbl_plugin_novel_favors	小说书架	Novel bookshelf
+db.hint_plugin_novel_favors	会员收藏的小说。	Member-favorited novels.
+db.tbl_plugin_novel_histories	小说阅读记录	Novel reading history
+db.hint_plugin_novel_histories	会员读到哪一章。	Which chapter the member reached.
+db.hint_plugin_galleries	独立图集，不是影片分类。	A separate gallery, not a video category.
+db.tbl_plugin_gallery_pics	图集图片	Gallery images
+db.hint_plugin_gallery_pics	图集里每一张图一行。	One row per image in a gallery.
+db.tbl_plugin_gallery_types	图集分类	Gallery categories
+db.hint_plugin_gallery_types	图集自己的分类。	Gallery’s own categories.
+db.tbl_plugin_gallery_tags	图集标签	Gallery tags
+db.hint_plugin_gallery_tags	图集聚合词。	Gallery cloud words.
+db.tbl_plugin_gallery_authors	图集作者	Gallery authors
+db.hint_plugin_gallery_authors	图集作者 / 模特库。	Gallery author / model library.
+db.tbl_plugin_gallery_comments	图集评论	Gallery comments
+db.hint_plugin_gallery_comments	图集详情页评论。	Comments on the gallery detail page.
+db.tbl_plugin_gallery_favors	图集收藏	Gallery favorites
+db.hint_plugin_gallery_favors	会员收藏的图集。	Member-favorited galleries.
+db.tbl_plugin_live_channels	直播频道	Live channels
+db.hint_plugin_live_channels	直播流地址和封面。	Live stream URLs and cover.
+db.tbl_plugin_live_categories	直播分类	Live categories
+db.hint_plugin_live_categories	直播频道分类。	Live channel categories.
+db.tbl_plugin_mall_goods	积分商品	Points goods
+db.hint_plugin_mall_goods	商城插件。积分兑换，不接微信支付宝。	Mall plugin. Redeem with points; no WeChat/Alipay.
+db.tbl_plugin_mall_orders	兑换订单	Redeem orders
+db.hint_plugin_mall_orders	谁用积分换了哪个商品。属于商城插件。	Who redeemed which goods. Mall plugin.
+db.hint_plugin_friend_links	友链插件。普通按排序，强化按来路；申请先待审。关掉插件后台入口会消失，表还在。	Friend-link plugin. Normal sorts by order; strong uses referrers; applications start pending. Turning the plugin off hides admin; tables stay.
+db.tbl_plugin_friend_link_cates	友链分类	Friend-link categories
+db.hint_plugin_friend_link_cates	友情链接插件的分类，不是影片分类。	Categories for the friend-link plugin, not video categories.
+db.tbl_plugin_friend_link_clicks	友链出站	Friend-link outbound
+db.hint_plugin_friend_link_clicks	点页脚友链跳走时记一笔。由前台产生。	Logged when someone leaves via a footer friend link. Created on the front.
+db.tbl_plugin_friend_link_hits	友链来路	Friend-link referrers
+db.hint_plugin_friend_link_hits	别的站带着本站友链点进来。强化模式用来路激活待审。由前台产生。	Inbound hits from another site that links here. Strong mode uses referrers to activate pending. Created on the front.
+db.tbl_plugin_friend_link_options	友链参数	Friend-link options
+db.hint_plugin_friend_link_options	普通/强化、最少来路、是否允许申请和自助改。	Normal/strong, minimum referrers, whether apply and self-edit are allowed.
+db.hint_plugin_ads	广告插件。文字或图片，顶栏/底栏/播放器/正文。关掉插件后台入口会消失，表还在。	Ad plugin. Text or image; top/bottom/player/body. Turning the plugin off hides admin; tables stay.
+db.tbl_plugin_ad_clicks	广告点击	Ad clicks
+db.hint_plugin_ad_clicks	点广告跳走时记一笔。由前台产生。	Logged when someone leaves via an ad. Created on the front.
+db.tbl_plugin_ad_days	广告按日	Ads by day
+db.hint_plugin_ad_days	每天每条广告的展示和点击汇总。	Daily impressions and clicks per ad.
+db.tbl_plugin_publish_options	发布页参数	Publish-page options
+db.hint_plugin_publish_options	发布页插件。首次进首页根路径可拦一层；进入本站写 Cookie，不是服务器 HTML 缓存。默认关闭。	Publish-page plugin. First hit of the home root can show a gate; entering writes a cookie, not server HTML cache. Off by default.
+db.tbl_plugin_chat_messages	播放页聊天	Play-page chat
+db.hint_plugin_chat_messages	聊天室插件，挂在某部片子播放页。	Chatroom plugin on a title’s play page.
+db.tbl_plugin_sms_codes	短信验证码	SMS codes
+db.hint_plugin_sms_codes	短信插件发出去的验证码，有过期时间。	Codes the SMS plugin sent, with expiry.
+db.tbl_video_danmaku	弹幕	Danmaku
+db.hint_video_danmaku	弹幕插件。一条弹幕一行，挂在片子或某一集。	Danmaku plugin. One row per comment, on a title or episode.
+db.tbl_sys_user	管理员	Admins
+db.hint_sys_user	能进后台的人。前台会员不在这里。	People who can open admin. Front members are not here.
+db.tbl_sys_user_log	登录日志	Login logs
+db.hint_sys_user_log	管理员登录成功记一笔。	Logged when an admin signs in successfully.
+db.tbl_sys_user_role	管理员-角色	Admin-role
+db.hint_sys_user_role	哪个管理员挂了哪个角色。	Which admin has which role.
+db.hint_sys_role	后台角色名。影片角色卡不在这里。	Admin role names. Video role cards are not here.
+db.tbl_sys_perm	权限点	Permission points
+db.hint_sys_perm	菜单和接口权限。	Menu and API permissions.
+db.tbl_sys_role_perm	角色-权限	Role-permission
+db.hint_sys_role_perm	角色拥有哪些权限点。	Which permission points a role has.
+db.tbl_sys_schedule	计划任务	Scheduled tasks
+db.hint_sys_schedule	自己加的定时任务。系统自带的人气日清不写在这。	Tasks you added. Built-in daily hit reset is not stored here.
+db.tbl_sys_schedule_log	任务执行记录	Task run logs
+db.hint_sys_schedule_log	自己加的任务每次跑一行：成败、耗时、输出。系统自带任务不记在这。	One row per run of a task you added: ok/fail, duration, output. Built-in tasks are not logged here.
+db.tbl_video_monitor_min	运行监控分钟	Runtime monitor (minute)
+db.hint_video_monitor_min	每分钟一条指标。采不到的键不写行，不是写成 0。	One metric row per minute. Missing keys omit the row; they are not written as 0.
+db.tbl_video_monitor_hour	运行监控小时	Runtime monitor (hour)
+db.hint_video_monitor_hour	由分钟表卷上来，给更长的曲线用。	Rolled up from the minute table for longer charts.
+db.tbl_video_monitor_state	运行监控状态	Runtime monitor state
+db.hint_video_monitor_state	心跳、闸门、告警 pending。不是业务数据。	Heartbeat, gates, alert pending. Not business data.
+db.tbl_video_monitor_rules	运行监控规则	Runtime monitor rules
+db.hint_video_monitor_rules	默认停用。触发后只记事件，不外发。	Off by default. Fires only write events; nothing is sent out.
+db.tbl_video_monitor_events	运行监控事件	Runtime monitor events
+db.hint_video_monitor_events	规则触发、恢复、确认。没有推送渠道。	Rule fired, recovered, or acked. No push channel.
+db.tbl_sys_dict	字典选项	Dictionary options
+db.hint_sys_dict	下拉框、状态码。影片分类不在这里。	Dropdowns and status codes. Video categories are not here.
+db.hint_sys_file	后台传过的文件记录。	Files uploaded in admin.
+db.tbl_sys_operate_log	操作日志	Operate logs
+db.hint_sys_operate_log	谁在后台改过什么。	Who changed what in admin.
+db.tbl_sys_system_log	系统日志	System logs
+db.hint_sys_system_log	程序抛错会记一行，不是谁改了数据。	One row when the app throws; not who edited data.
+db.tbl_users	Laravel 用户	Laravel users
+db.hint_users	框架自带。本站后台账号在「管理员」，前台在「会员」。这张多半空着。	Framework table. Admin accounts are “Admins”; front users are “Members”. Usually empty here.
+db.tbl_password_reset_tokens	重置密码令牌	Password-reset tokens
+db.hint_password_reset_tokens	Laravel 邮件重置密码用。会员登录未必走这张。	Laravel mail reset. Member login may not use this.
+db.tbl_sessions	会话	Sessions
+db.hint_sessions	SESSION_DRIVER=database 时才写这里。	Written only when SESSION_DRIVER=database.
+db.tbl_cache	数据缓存	Data cache
+db.hint_cache	CACHE_STORE=database 时才写这里。清缓存页在系统工具。	Written only when CACHE_STORE=database. Clear-cache is under system tools.
+db.tbl_cache_locks	缓存锁	Cache locks
+db.hint_cache_locks	防并发的锁，一般不用手改。	Concurrency locks; rarely edit by hand.
+db.tbl_jobs	队列任务	Queue jobs
+db.hint_jobs	QUEUE_CONNECTION=database 时才有积压。	Backlog only when QUEUE_CONNECTION=database.
+db.tbl_job_batches	队列批次	Queue batches
+db.hint_job_batches	一批队列任务的进度。	Progress of a batch of queue jobs.
+db.tbl_failed_jobs	失败队列	Failed queue
+db.hint_failed_jobs	队列跑失败后的记录。	Rows after a queue job fails.
+db.tbl_migrations	迁移记录	Migration records
+db.hint_migrations	哪些数据库迁移已经跑过。不要手改。	Which database migrations already ran. Do not edit by hand.
+db.cf_id	本表主键	Primary key of this table
+db.cf_created_at	写入时间（多为 Unix 秒）	Written at (usually Unix seconds)
+db.cf_updated_at	最后改动时间（多为 Unix 秒）	Last changed at (usually Unix seconds)
+db.cf_create_time	写入时间（Unix 秒）	Written at (Unix seconds)
+db.cf_update_time	最后改动时间（Unix 秒）	Last changed at (Unix seconds)
+db.cf_create_at	写入时间的可读文本（和 create_time 一起存）	Readable written-at text (stored with create_time)
+db.cf_update_at	改动时间的可读文本（和 update_time 一起存）	Readable changed-at text (stored with update_time)
+db.cf_deleted_at	进回收站的时间；0 表示还在片库	Time moved to recycle; 0 means still in the library
+db.cf_status	开关或状态。不同表取值不一样，看这张表的说明	On/off or status. Values differ by table; see that table’s notes
+db.cf_sort	排序，越大越靠前或按后台约定	Sort; larger is first, or as admin defines
+db.cf_slug	网址用的英文标识	English slug for URLs
+db.cf_cover	封面图地址	Cover image URL
+db.cf_url	链接或播放地址	Link or play URL
+db.cf_content	正文或详情	Body or details
+db.cf_remarks	备注，如前台角标「更新至 12」	Remarks, e.g. the front badge “updated to 12”
+db.cf_blurb	一句话简介	One-line blurb
+db.cf_login_ip	登录 IP	Login IP
+db.cf_ip_address	IP 归属地（能解析才有）	IP geo (only if it resolved)
+db.cf_member_id	会员编号，对应 members.id	Member id, members.id
+db.cf_video_id	影片编号，对应 videos.id	Video id, videos.id
+db.cf_type_id	分类编号，对应 video_types.id	Category id, video_types.id
+db.cf_parent_id	上级编号，0 表示没有上级	Parent id; 0 means none
+db.cf_user_id	用户编号	User id
+db.cf_role_id	角色编号	Role id
+db.cf_hits	人气 / 点击次数	Hits / click count
+db.cf_password	密码哈希，不是明文	Password hash, not plaintext
+db.cf_token	令牌	Token
+db.cf_uid	管理员编号，对应 sys_user.id	Admin id, sys_user.id
+db.cf_code	标识码	Code / identifier
+db.cf_label	给人看的名字	Name shown to people
+db.cf_icon	图标名	Icon name
+db.cf_method	HTTP 方法或调用方式	HTTP method or call style
+db.cf_module	模块名	Module name
+db.cf_level	推荐等级或权重	Recommend level or weight
+db.cf_amount	数量或金额（本站订单是积分，不是人民币收款）	Qty or amount (orders here are points, not RMB payouts)
+db.cf_avatar	头像地址	Avatar URL
+db.cf_logo	标志图	Logo image
+db.cf_banner	横幅图	Banner image
+db.cf_year	年代	Year
+db.cf_letter	首字母，方便检索	First letter, for lookup
+db.cf_seo_keywords	SEO 关键词	SEO keywords
+db.cf_tpl	指定模板文件	Specific template file
+db.cf_parse	解析地址或脚本，空则直链播放	Parse URL or script; empty plays the direct URL
+db.cf_engine	播放内核：artplayer / dplayer / videojs / iframe	Play engine: artplayer / dplayer / videojs / iframe
+db.cf_is_read	是否已读：1 已读 0 未读	Read flag: 1 read 0 unread
+db.cf_is_bot	是否识别成爬虫：1 是 0 不是	Detected as bot: 1 yes 0 no
+db.cf_is_spider	是否识别成爬虫	Detected as bot
+db.cf_is_recommend	是否推荐	Whether recommended
+db.cf_is_hot	是否热门	Whether hot
+db.cf_is_regex	词表是否按正则匹配	Whether the word list matches as regex
+db.cf_remember_token	「记住我」登录令牌	“Remember me” login token
+db.cf_email_verified_at	邮箱验证时间；本站会员未必用	Email verified at; site members may not use this
+db.cf_payload	序列化内容	Serialized payload
+db.cf_user_agent	浏览器 UA	Browser UA
+db.cf_referer	来源页	Referrer page
+db.cf_locale	语言代码	Locale code
+db.cf_query	查询串	Query string
+db.cf_host	域名主机名	Host name
+db.cf_theme	主题目录名	Theme directory name
+db.cf_slot	投放位置标识	Slot id
+db.cf_msg	结果说明	Result note
+db.cf_last_msg	上次运行说明	Last run note
+db.cf_last_error	上次失败原因	Last failure reason
+db.cf_expire_at	过期时间；0 表示不限	Expires at; 0 means none
+db.cf_used_by	谁用过（会员编号）	Who used it (member id)
+db.cf_used_at	使用时间；0 表示还没人用	Used at; 0 means unused
+db.cf_from_id	发送人会员编号	Sender member id
+db.cf_to_id	接收人会员编号	Recipient member id
+db.cf_order_no	订单号	Order number
+db.cf_trade_no	渠道流水号；手工单可空	Channel trade no; manual orders may be empty
+db.cf_channel	渠道。订单默认 manual，不是微信支付	Channel. Orders default to manual, not WeChat pay
+db.cf_account	收款账号，提现人工打款用	Payout account, for handing withdraws
+db.cf_group_id	会员组编号	Member-group id
+db.cf_collect_source_id	采集源编号	Collect-source id
+db.cf_collect_id	资源站那边的影片 ID	Title id on the resource site
+db.cf_source_id	播放线路编号	Play-line id
+db.cf_episode_id	剧集编号	Episode id
+db.cf_episode_num	第几集	Episode number
+db.cf_episode_name	集标题	Episode title
+db.cf_actor_id	演员编号	Actor id
+db.cf_tag_id	标签编号	Tag id
+db.cf_topic_id	专题编号	Topic id
+db.cf_art_id	文章编号	Article id
+db.cf_perm_id	权限点编号	Permission-point id
+db.cf_server_id	服务器组编号	Server-group id
+db.cf_type_pid	父分类编号，方便列表筛选	Parent category id, for list filters
+db.cf_hits_day	今日人气	Hits today
+db.cf_hits_week	本周人气	Hits this week
+db.cf_hits_month	本月人气	Hits this month
+db.cf_score_all	评分总分	Score total
+db.cf_score_num	评分人数	Number of scores
+db.cf_up	顶	Upvote
+db.cf_down	踩	Downvote
+db.cf_pv	浏览次数	Page views
+db.cf_uv	独立访客大约数	Approx unique visitors
+db.cf_day	日期，常用 YYYYMMDD 数字	Date, usually YYYYMMDD as a number
+db.cf_weekday	更新日期，如周一	Update weekday, e.g. Monday
+db.cf_publish_at	定时上架时间；0 表示立刻或已上	Scheduled publish at; 0 means now or already on
+db.cf_published_at	定时发布时间戳；0 表示用创建时间，大于当前则前台不可见	Scheduled publish timestamp; 0 uses created time; future values stay hidden on the front
+db.cf_writer	编剧	Writer
+db.cf_serial	连载信息	Serial info
+db.cf_total	总集数	Total episodes
+db.cf_isend	是否完结：1 完结 0 连载	Ended flag: 1 ended 0 ongoing
+db.cf_lock	是否锁定，锁定后采集不会覆盖	Lock flag; locked rows are not overwritten by collect
+db.cf_class	扩展分类文本	Extra-class text
+db.cf_author_name	显示名（未登录时手填）	Display name (typed when not signed in)
+db.cf_reply	管理员回复	Admin reply
+db.cf_phone	手机号	Phone
+db.cf_qq_openid	QQ 登录标识；没接 OAuth 就空着	QQ login id; empty if OAuth is not wired
+db.cf_wechat_openid	微信登录标识；没接 OAuth 就空着	WeChat login id; empty if OAuth is not wired
+db.cf_last_login_at	上次登录时间	Last login at
+db.cf_points_min	进入该会员组所需最低积分	Minimum points to enter this member group
+db.cf_trysee	试看秒数；0 表示按站点默认	Trial seconds; 0 uses the site default
+db.cf_day_free	每天免费看几部；0 表示不限这套规则	Free titles per day; 0 means this rule is unlimited
+db.cf_need_login	是否必须登录才能看	Whether login is required to play
+db.cf_balance	变动后的积分余额	Points balance after the change
+db.cf_from_word	搜索里的原词	Original search word
+db.cf_to_word	当成这个词去搜	Search as this word
+db.cf_words	词表，一行一个或按规则拼	Word list, one per line or joined by rule
+db.cf_scope	作用范围，如 title	Scope, e.g. title
+db.cf_action	命中后怎么处理：跳过、待审等	What to do on a hit: skip, hold, etc.
+db.cf_cron_expression	多久跑一次（cron）	How often to run (cron)
+db.cf_pages	每次采几页	Pages to collect each time
+db.cf_hours	只采最近多少小时的更新	Only collect updates from the last N hours
+db.cf_last_run_at	上次运行时间	Last run at
+db.cf_last_collect_at	上次采集时间	Last collect at
+db.cf_last_page	上次采到第几页	Last page collected
+db.cf_last_created	上次新建条数	Rows created last time
+db.cf_last_updated	上次更新条数	Rows updated last time
+db.cf_page	页码	Page number
+db.cf_created_n	新建条数	Created count
+db.cf_updated_n	更新条数	Updated count
+db.cf_skipped_n	跳过条数	Skipped count
+db.cf_ok	这次是否成功：1 成功 0 失败	Whether this run succeeded: 1 ok 0 fail
+db.cf_api_type	接口格式，如 json	API format, e.g. json
+db.cf_mid	资源类型：1 影片 2 文章 3 网址	Resource mid: 1 video 2 article 3 website
+db.cf_param	额外请求参数	Extra request params
+db.cf_bind_json	分类绑定（JSON）	Category binds (JSON)
+db.cf_list_rule	列表页提取规则（占位）	List-page extract rule (placeholder)
+db.cf_title_rule	标题提取规则（占位）	Title extract rule (placeholder)
+db.cf_url_rule	地址提取规则（占位）	URL extract rule (placeholder)
+db.cf_content_rule	正文提取规则（占位）	Body extract rule (placeholder)
+db.cf_downer	下载器代码	Downloader code
+db.cf_player	播放器代码	Player code
+db.cf_type	类型。各表含义不同，看该表说明	Type. Meaning differs by table; see that table’s notes
+db.cf_k	配置键	Config key
+db.cf_v	配置值	Config value
+db.cf_dict_type	字典分组	Dictionary group
+db.cf_dict_key	字典标识	Dictionary key
+db.cf_value_type	值类型：文本、整数、JSON 等	Value type: text, int, JSON, etc.
+db.cf_value_string	文本值	String value
+db.cf_value_int	整数值	Int value
+db.cf_value_float	小数值	Float value
+db.cf_value_json	JSON 值	JSON value
+db.cf_value_text	长文本值	Long text value
+db.cf_enum_limit	枚举可选范围	Enum allowed values
+db.cf_size	字节数	Size in bytes
+db.cf_md5	文件指纹	File fingerprint
+db.cf_mime	MIME 类型	MIME type
+db.cf_file	出错文件路径	Error file path
+db.cf_line	出错行号	Error line
+db.cf_trace	堆栈	Stack
+db.cf_message	日志正文	Log body
+db.cf_context	上下文 JSON	Context JSON
+db.cf_extra	附加信息	Extra info
+db.cf_exception_class	异常类名	Exception class
+db.cf_exception_message	异常说明	Exception message
+db.cf_request_id	请求追踪号	Request id
+db.cf_request_data	请求体摘要	Request-body summary
+db.cf_response_code	接口返回码	API response code
+db.cf_response_msg	接口返回说明	API response message
+db.cf_duration_ms	耗时毫秒	Duration in ms
+db.cf_target_type	对象类型	Target type
+db.cf_target_id	对象编号	Target id
+db.cf_permission	权限码	Permission code
+db.cf_route	路由名或路径	Route name or path
+db.cf_login_agent	登录时的 UA	UA at login
+db.cf_role	旧的角色标记，以 role_id 为准	Legacy role flag; role_id wins
+db.cf_login_time	最近登录时间	Last login time
+db.cf_ui_locale	后台界面语言	Admin UI locale
+db.cf_pid	父权限编号，0 表示顶级	Parent permission id; 0 is top
+db.cf_api	接口路径	API path
+db.cf_command	要跑的命令或网址	Command or URL to run
+db.cf_params	命令参数	Command params
+db.cf_timezone	时区	Timezone
+db.cf_without_overlapping	上一轮没跑完是否跳过这一轮	Skip this run if the last one is still going
+db.cf_on_one_server	多机是否只跑一台	Whether only one machine runs it
+db.cf_run_in_maintenance	维护模式是否仍跑	Whether it still runs in maintenance
+db.cf_timeout	超时秒数；0 表示不限	Timeout seconds; 0 means none
+db.cf_max_attempts	最多尝试几次	Max attempts
+db.cf_last_status	上次结果：成功/失败	Last result: ok/fail
+db.cf_next_run_time	下次计划时间	Next scheduled time
+db.cf_key	缓存键	Cache key
+db.cf_value	缓存内容	Cache value
+db.cf_expiration	过期时间戳	Expiry timestamp
+db.cf_owner	锁持有者	Lock owner
+db.cf_queue	队列名	Queue name
+db.cf_attempts	已尝试次数	Attempts so far
+db.cf_reserved_at	被取出执行的时间	Reserved (taken) at
+db.cf_available_at	最早可执行时间	Earliest available at
+db.cf_uuid	唯一编号	Unique id
+db.cf_connection	队列连接名	Queue connection name
+db.cf_exception	失败堆栈	Failure stack
+db.cf_failed_at	失败时间	Failed at
+db.cf_total_jobs	这一批共几条	Jobs in this batch
+db.cf_pending_jobs	还没跑完几条	Jobs still pending
+db.cf_failed_jobs	失败几条	Failed job count
+db.cf_failed_job_ids	失败任务编号列表	Failed job id list
+db.cf_options	批次选项	Batch options
+db.cf_cancelled_at	取消时间	Cancelled at
+db.cf_finished_at	完成时间	Finished at
+db.cf_visitor_hash	访客指纹，用来大约算 UV	Visitor fingerprint, for approx UV
+db.cf_status_code	HTTP 状态码	HTTP status code
+db.cf_spider_name	认出的爬虫名	Detected spider name
+db.cf_min_points	使用门槛积分	Minimum points to use
+db.cf_day_key	签到日期键，如 20260917	Sign-in date key, e.g. 20260917
+db.cf_days	连续签到天数	Streak days
+db.cf_cover_thumb	缩略封面	Thumb cover
+db.cf_cover_slide	专题幻灯图	Topic slide image
+db.cf_color	标题颜色	Title color
+db.cf_tag	专题标签文本	Topic tag text
+db.cf_extend	扩展 JSON	Extra JSON
+db.cf_time_hits	人气更新时间	Hits updated at
+db.cf_tpl_list	列表页模板	List-page template
+db.cf_tpl_detail	详情页模板	Detail-page template
+db.cf_tpl_play	播放页模板	Play-page template
+db.cf_douban_id	豆瓣条目 ID；0 表示没有	Douban id; 0 means none
+db.cf_douban_score	豆瓣分	Douban score
+db.cf_comment_up	评论被顶次数	Comment upvote count
+db.cf_comment_report	评论被举报次数	Comment report count
+db.cf_role_type	1 主演 其它为配角等	1 lead; other values are supporting, etc.
+db.cf_pics	图片地址列表（多为多行或 JSON）	Image URL list (usually multiline or JSON)
+db.cf_stock	库存件数	Stock count
+db.cf_hint	兑换说明	Redeem hint
+db.cf_goods_id	商品编号	Goods id
+db.cf_goods_name	下单时的商品名（快照）	Goods name at order time (snapshot)
+db.cf_text	文本内容	Text content
+db.cf_scene	使用场景，如 register	Scene, e.g. register
+db.cf_manga_id	漫画作品编号	Manga work id
+db.cf_chapter_id	章节编号	Chapter id
+db.cf_mode	弹幕样式	Danmaku style
+db.cf_last_activity	最后活动时间	Last activity at
+db.tf_videos_title	片名	Title name
+db.tf_videos_status	1 已发布 0 隐藏；定时上架看 publish_at	1 published 0 hidden; scheduled publish uses publish_at
+db.tf_videos_type	不用这列区分影片类型，分类在 type_id	Do not use this column for video type; category is type_id
+db.tf_video_types_mid	1 影片栏目 2 文章栏目 3 网址栏目	1 video column 2 article column 3 website column
+db.tf_video_types_kind	文章栏目形态：list 列表 hub 频道 single 单页 link 外链；影片分类不用	Article column kind: list, hub, single, link; unused on video categories
+db.tf_video_types_jump_url	外链栏目的跳转地址	Jump URL for a link column
+db.tf_video_types_page_size	列表栏目前台每页篇数；0 用默认	Front page size for a list column; 0 uses default
+db.tf_video_types_status	1 显示 0 隐藏	1 show 0 hide
+db.tf_video_sources_name	线路名，如「高清」	Line name, e.g. “HD”
+db.tf_video_sources_type	地址形态，如 m3u8	URL kind, e.g. m3u8
+db.tf_video_sources_status	1 启用 0 停用这条线路	1 enable 0 disable this line
+db.tf_video_episodes_url	这一集的播放地址	Play URL for this episode
+db.tf_video_episodes_duration	时长秒数；0 表示未知	Duration in seconds; 0 means unknown
+db.tf_video_players_code	线路里填写的播放器代码	Player code filled on the line
+db.tf_video_players_parse	解析接口。带 {url} 或 http 时按 iframe 打开	Parse API. Opens in an iframe when it has {url} or http
+db.tf_video_roles_video_id	出现在哪部片子；0 表示还没挂片	Which title it appears on; 0 means not attached yet
+db.tf_video_roles_actor_id	谁演的；0 表示没绑演员	Who plays it; 0 means no actor bound
+db.tf_video_actor_rel_role_type	1 主演，其它为配角等	1 lead, other values supporting, etc.
+db.tf_sys_user_role	旧字段，权限以 role_id 为准	Legacy field; permissions follow role_id
+db.tf_sys_user_token	后台登录令牌	Admin login token
+db.tf_sys_user_status	1 允许登录 0 停用	1 allow login 0 disabled
+db.tf_sys_role_code	角色标识码	Role code
+db.tf_sys_role_status	1 可用 0 停用	1 usable 0 disabled
+db.tf_sys_perm_type	权限类型（菜单/接口）	Permission type (menu/API)
+db.tf_sys_schedule_status	1 开着 0 停用	1 on 0 disabled
+db.tf_sys_schedule_code	可选内部代号	Optional internal code
+db.tf_sys_schedule_last_duration_ms	上次跑完用了多少毫秒	Milliseconds the last run took
+db.tf_sys_schedule_log_schedule_id	对应 sys_schedule.id	sys_schedule.id
+db.tf_sys_schedule_log_status	1 成功 2 失败	1 success 2 fail
+db.tf_sys_schedule_log_duration_ms	这次跑完用了多少毫秒	Milliseconds this run took
+db.tf_sys_schedule_log_output	命令输出摘要	Command output summary
+db.tf_sys_schedule_log_error	失败原因	Failure reason
+db.tf_sys_schedule_log_create_time	这次开始跑的时间	When this run started
+db.tf_video_monitor_min_metric_key	指标键，如 sys.disk.used_pct、http.req	Metric key, e.g. sys.disk.used_pct, http.req
+db.tf_video_monitor_min_stat_min	这一分钟的起点（Unix 秒）	Start of this minute (Unix seconds)
+db.tf_video_monitor_min_metric_type	1 瞬时值 2 计数	1 gauge 2 counter
+db.tf_video_monitor_min_metric_value	这一分钟的值。没有行表示没采到，不是 0	Value for this minute. No row means not sampled, not 0
+db.tf_video_monitor_hour_metric_key	指标键，与分钟表相同	Metric key, same as the minute table
+db.tf_video_monitor_hour_stat_hour	这个整点的起点（Unix 秒）	Start of this hour (Unix seconds)
+db.tf_video_monitor_hour_val_avg	这一小时的平均	Average for this hour
+db.tf_video_monitor_hour_val_max	这一小时的最大	Max for this hour
+db.tf_video_monitor_hour_val_min	这一小时的最小	Min for this hour
+db.tf_video_monitor_hour_val_sum	这一小时的合计（计数用）	Sum for this hour (for counters)
+db.tf_video_monitor_hour_sample_cnt	这一小时实际落到分钟表的点数	Minute-table sample count in this hour
+db.tf_video_monitor_state_state_key	状态键，如 cron_heartbeat、capabilities	State key, e.g. cron_heartbeat, capabilities
+db.tf_video_monitor_state_state_num	数字槽：时间戳或闸门	Numeric slot: timestamp or gate
+db.tf_video_monitor_state_state_val	文本槽，多半是 JSON	Text slot, usually JSON
+db.tf_video_monitor_rules_metric_key	要看的指标键	Metric key to watch
+db.tf_video_monitor_rules_agg	窗口聚合：avg / max / sum / last	Window aggregation: avg / max / sum / last
+db.tf_video_monitor_rules_window_min	评估窗口，单位分钟	Eval window in minutes
+db.tf_video_monitor_rules_op	比较符号 gt gte lt lte	Compare op: gt gte lt lte
+db.tf_video_monitor_rules_for_min	连续满足多少分钟才开事件	Minutes it must stay true before opening an event
+db.tf_video_monitor_rules_silence_min	同一指纹正在触发时不再新开一条	Do not open another while the same fingerprint is firing
+db.tf_video_monitor_rules_status	1 启用 0 停用。种子规则默认停	1 enable 0 disable. Seed rules start off
+db.tf_video_monitor_rules_hint	给人看的说明	Note shown to people
+db.tf_video_monitor_events_fingerprint	同一规则同一指标的指纹，用来去重	Fingerprint of the same rule and metric, for dedupe
+db.tf_video_monitor_events_status	1 触发中 2 已恢复 3 已确认	1 firing 2 recovered 3 acked
+db.tf_video_monitor_events_message	触发时的说明	Note at fire time
+db.tf_video_monitor_events_value	当时的指标值	Metric value then
+db.tf_video_monitor_events_opened_at	开始触发的时间	Opened at
+db.tf_video_monitor_events_closed_at	恢复时间；0 表示还没恢复	Recovered at; 0 means still open
+db.tf_video_monitor_events_acked_at	确认时间；0 表示还没确认	Acked at; 0 means not acked
+db.tf_sys_dict_status	1 启用 0 停用这条选项	1 enable 0 disable this option
+db.tf_sys_operate_log_title	做了什么（给人看的一句）	What was done (one line for people)
+db.tf_sys_operate_log_action	动作码，如 save、delete	Action code, e.g. save, delete
+db.tf_sys_operate_log_status	这次请求是否成功记下	Whether this request was stored as success
+db.tf_sys_system_log_level	error / warning / info 等	error / warning / info, etc.
+db.tf_sys_system_log_channel	日志通道	Log channel
+db.tf_members_name	会员昵称或登录名	Member nickname or login name
+db.tf_members_status	1 正常 0 禁用	1 normal 0 banned
+db.tf_members_points	当前积分	Current points
+db.tf_member_orders_status	0 待处理 1 已完成等，按订单页为准	0 pending 1 done, etc.; follow the order page
+db.tf_member_orders_amount	标价积分，不是人民币	List-price points, not RMB
+db.tf_member_orders_channel	来源，默认 manual；没有微信支付	Source, default manual; no WeChat pay
+db.tf_member_withdraws_status	0 待审 1 已处理等	0 pending 1 handled, etc.
+db.tf_member_withdraws_amount	申请兑出的积分	Points requested to cash out
+db.tf_member_point_logs_points	本次加减的积分（可负）	Points added or subtracted this time (can be negative)
+db.tf_member_point_logs_type	来源，如 sys、card、sign、task、milestone	Source, e.g. sys, card, sign, task, milestone
+db.tf_member_tasks_action	任务动作，如 daily_sign、watch_vod	Task action, e.g. daily_sign, watch_vod
+db.tf_member_tasks_type	1 每日 2 新手	1 daily 2 newbie
+db.tf_member_tasks_status	1 启用 0 未启用	1 enabled 0 not enabled
+db.tf_member_task_logs_status	0 进行中 1 待领 2 已入账	0 in progress 1 claimable 2 posted
+db.tf_member_task_logs_day_key	每日 Ymd，新手任务写 newbie	Daily Ymd; newbie tasks write newbie
+db.tf_member_task_logs_progress	这条任务做到哪一步，满了才能领	How far this task is; claim when full
+db.tf_member_sign_milestones_days	所需连续签到天数	Required streak days
+db.tf_member_pms_title	私信标题	Private-mail title
+db.tf_video_comments_status	1 显示 0 隐藏待审	1 show 0 hide pending
+db.tf_video_comments_parent_id	回复哪条评论；0 表示顶层	Which comment this replies to; 0 is top-level
+db.tf_video_comments_mid	1 影片 2 文章。video_id 是对应稿件 ID	1 video 2 article. video_id is that item’s id
+db.tf_video_comments_video_id	影片或文章编号，由 mid 决定	Video or article id, by mid
+db.tf_video_reports_status	0 未处理 1 已处理	0 open 1 handled
+db.tf_video_reports_content	用户填写的问题	Problem the user typed
+db.tf_video_play_fails_status	0 未处理 1 已看过	0 open 1 seen
+db.tf_video_play_fails_content	失败说明	Failure note
+db.tf_video_play_fails_url	播不了的地址	URL that would not play
+db.tf_video_ads_content	广告 HTML 或代码	Ad HTML or code
+db.tf_video_ads_type_id	只在某分类下展示；0 表示不限	Show only under this category; 0 means any
+db.tf_video_collect_temps_status	0 待审 1 已转入等	0 pending 1 promoted, etc.
+db.tf_video_collect_temps_payload	采回来的原始数据	Raw payload from collect
+db.tf_video_collect_temps_title	待转入的片名	Title waiting to promote
+db.tf_video_collect_tasks_status	1 开着 0 停用这条定时采集	1 on 0 disable this scheduled collect
+db.tf_video_cj_rules_type	html 网站页面 / rss / json	html page / rss / json
+db.tf_video_cj_rules_status	1 启用，到点跟着到期采集跑；0 停用	1 enabled, runs with due collect; 0 disabled
+db.tf_video_cj_rules_url	列表页、订阅或接口地址	List page, feed, or API URL
+db.tf_video_cj_rules_list_rule	旧正则列表规则；网站页面以 options 里的选择器为准	Legacy regex list rule; HTML pages use selectors in options
+db.tf_video_cj_rules_title_rule	旧正则标题规则	Legacy regex title rule
+db.tf_video_cj_rules_url_rule	旧正则链接规则	Legacy regex URL rule
+db.tf_video_cj_rules_content_rule	旧正则简介规则	Legacy regex blurb rule
+db.tf_video_cj_rules_options	into 写入影片/文章/漫画，以及选择器、翻页、JSON 字段	into writes video/article/manga, plus selectors, paging, JSON fields
+db.tf_video_cj_rules_interval_minutes	两次自动采集最少间隔	Minimum minutes between auto collects
+db.tf_video_cj_rules_limit_items	每次最多入库条数	Max rows to ingest per run
+db.tf_video_cj_rules_publish_immediately	1 直接上架或发布；影片没有播放地址始终下架	1 publish immediately; videos without a play URL stay off
+db.tf_video_cj_rules_last_run_at	上次跑完的时间戳；0 还没跑过	Last finished timestamp; 0 means never run
+db.tf_video_cj_rules_last_status	上次 ok 或 fail	Last ok or fail
+db.tf_video_cj_rules_last_message	上次结果说明	Last result note
+db.tf_video_cj_rule_logs_rule_id	对应 video_cj_rules.id	video_cj_rules.id
+db.tf_video_cj_rule_logs_status	ok 成功 fail 失败	ok success fail failure
+db.tf_video_cj_rule_logs_fetched	这次拉到的条数	Rows fetched this run
+db.tf_video_cj_rule_logs_skipped	已存在而跳过的条数	Rows skipped because they already existed
+db.tf_video_cj_rule_logs_message	这次结果说明	This run’s result note
+db.tf_video_ulogs_type	行为类型，如 play	Action type, e.g. play
+db.tf_video_options_k	设置项键名	Setting key
+db.tf_video_options_v	设置项内容	Setting value
+db.tf_video_domains_host	访问主机名，不含协议和路径	Visit host, no scheme or path
+db.tf_video_domains_theme	覆盖站点模板；空则跟站点设置	Override site theme; empty follows site settings
+db.tf_video_domains_site_name	覆盖站点名；空则跟站点设置	Override site name; empty follows site settings
+db.tf_video_domains_site_keyword	覆盖关键词；空则跟站点设置	Override keywords; empty follows site settings
+db.tf_video_domains_site_description	覆盖描述；空则跟站点设置	Override description; empty follows site settings
+db.tf_video_domains_status	1 启用 0 停用；停用不换站名和模板	1 enable 0 disable; disabled hosts do not swap name or theme
+db.tf_video_access_logs_url	访问的路径	Path visited
+db.tf_stat_hits_path	访问路径	Visit path
+db.tf_stat_hits_created_at	访问时间（时间戳列）	Visit time (timestamp column)
+db.tf_sessions_id	会话 ID	Session id
+db.tf_sessions_user_id	对应 Laravel users，本站会员通常不写这里	Laravel users; site members are usually not written here
+db.tf_users_name	框架用户名。后台请看 sys_user	Framework user name. Admin is sys_user
+db.tf_migrations_migration	迁移文件名	Migration file name
+db.tf_migrations_batch	第几批执行的	Which batch ran it
+db.tf_video_topics_type	专题扩展类型文本，不是影片分类 ID	Topic extra-type text, not a video category id
+db.tf_video_topics_tag	专题上的标签词	Tag words on the topic
+db.tf_video_arts_status	1 已发布 0 草稿；定时看 published_at	1 published 0 draft; schedule uses published_at
+db.tf_video_arts_source	来源说明	Source note
+db.tf_video_arts_author	署名，纯文本，不是会员账号	Byline, plain text, not a member account
+db.tf_video_arts_tag	逗号分隔的标签，保存时与 video_art_tags 同步	Comma-separated tags; saving syncs video_art_tags
+db.tf_video_arts_deleted_at	回收站时间戳；0 表示在列表里	Recycle timestamp; 0 means in the list
+db.tf_video_arts_flags	逗号：top 置顶、recommend 推荐、hot 热门。不是独立 flags 表	Comma: top, recommend, hot. Not a separate flags table
+db.tf_video_arts_sort	排序，越大越靠前	Sort; larger is first
+db.tf_video_arts_published_at	定时发布时间戳；0 用 created_at；大于当前则前台不可见	Scheduled publish timestamp; 0 uses created_at; future values stay hidden on the front
+db.tf_video_arts_seo_title	搜索标题，空则用标题	Search title; empty uses the title
+db.tf_video_arts_seo_key	搜索关键字	Search keywords
+db.tf_video_arts_seo_des	搜索描述，空则用摘要或正文截取	Search description; empty uses blurb or a body snippet
+db.tf_video_art_tags_name	标签名称，唯一	Tag name, unique
+db.tf_video_art_tags_slug	前台 /art/tag/ 地址	Front /art/tag/ URL
+db.tf_video_art_tags_status	1 启用 0 停用	1 enable 0 disable
+db.tf_video_art_tag_rel_art_id	文章 ID	Article id
+db.tf_video_art_tag_rel_tag_id	文章标签 ID	Article-tag id
+db.tf_member_follows_target_type	关注对象种类，默认 actor	Follow target kind, default actor
+db.tf_member_dynamics_type	动态形态，如 text	Dynamic kind, e.g. text
+db.tf_video_audit_rules_status	1 启用这条词 0 停用	1 enable this word 0 disable
+db.tf_video_danmaku_text	弹幕内容，最长 120 字	Danmaku text, max 120 characters
+db.tf_video_danmaku_color	弹幕颜色	Danmaku color
+db.tf_video_danmaku_time	出现在播放第几秒	Second in the playback
+db.tf_video_danmaku_mode	0 滚动 1 顶部 2 底部	0 scroll 1 top 2 bottom
+db.tf_video_danmaku_report	被会员举报的次数，同一人同一条只记一次	Member report count; same person and row counted once
+db.tf_video_danmaku_episode_id	分集编号，0 表示整部片子	Episode id; 0 means the whole title
+db.tf_video_danmaku_member_id	发弹幕的会员，0 是游客	Member who sent it; 0 is guest
+db.tf_video_danmaku_ip	发送时的 IP	IP at send time
+db.tf_plugin_manga_chapters_name	话名，如第 1 话	Chapter name, e.g. Ch. 1
+db.tf_plugin_manga_chapters_pics	这一话的图片地址，一行一张；有图片表时作后备	Image URLs for this chapter, one per line; fallback when the image table exists
+db.tf_plugin_manga_chapters_manga_id	所属漫画作品编号	Parent manga work id
+db.tf_plugin_mangas_title	漫画名	Manga title
+db.tf_plugin_mangas_status	1 上架 0 下架	1 on 0 off
+db.tf_plugin_mangas_type_id	漫画分类编号，对应 plugin_manga_types.id，不是影片分类	Manga category id, plugin_manga_types.id, not a video category
+db.tf_plugin_mangas_serialize	0 连载 1 完结	0 ongoing 1 ended
+db.tf_plugin_mangas_tags	标签文本	Tag text
+db.tf_plugin_mangas_recommend	1 推荐 0 否	1 recommend 0 no
+db.tf_plugin_mangas_yid	0 已审 1 待审；待审前台不列出	0 audited 1 pending; pending is hidden on the front
+db.tf_plugin_manga_types_name	分类名	Category name
+db.tf_plugin_manga_types_parent_id	上级分类编号，0 表示顶级	Parent category id; 0 is top
+db.tf_plugin_manga_pics_chapter_id	所属章节编号	Parent chapter id
+db.tf_plugin_manga_pics_url	图片地址，http(s) 或站内路径	Image URL, http(s) or site path
+db.tf_plugin_manga_pics_sort	同一话里的顺序	Order inside the chapter
+db.tf_plugin_manga_comments_member_id	发评论的会员，0 是游客	Member who commented; 0 is guest
+db.tf_plugin_manga_comments_author_name	当时记下的昵称	Nickname stored then
+db.tf_plugin_manga_comments_content	评论内容	Comment body
+db.tf_plugin_manga_comments_status	1 显示 0 待审；跟站点「评论审核」走	1 show 0 pending; follows site “comment review”
+db.tf_plugin_manga_favors_member_id	收藏的会员	Member who favorited
+db.tf_plugin_manga_favors_manga_id	收藏的漫画作品编号	Favorited manga work id
+db.tf_plugin_manga_tags_name	标签名	Tag name
+db.tf_plugin_manga_authors_name	作者名	Author name
+db.tf_plugin_manga_histories_member_id	阅读的会员	Member who read
+db.tf_plugin_manga_histories_chapter_id	读到的章节编号	Chapter id reached
+db.tf_plugin_novels_title	小说名	Novel title
+db.tf_plugin_novels_type_id	小说分类编号	Novel category id
+db.tf_plugin_novels_yid	0 已审 1 待审	0 audited 1 pending
+db.tf_plugin_novel_chapters_novel_id	所属小说编号	Parent novel id
+db.tf_plugin_novel_chapters_vip	0 免费 1 VIP	0 free 1 VIP
+db.tf_plugin_novel_comments_status	1 显示 0 待审	1 show 0 pending
+db.tf_plugin_novel_favors_novel_id	收藏的小说编号	Favorited novel id
+db.tf_plugin_novel_histories_novel_id	小说编号	Novel id
+db.tf_plugin_galleries_title	图集名	Gallery title
+db.tf_plugin_galleries_type_id	图集分类编号	Gallery category id
+db.tf_plugin_gallery_pics_gallery_id	所属图集编号	Parent gallery id
+db.tf_plugin_gallery_pics_sort	同一图集里的顺序	Order inside the gallery
+db.tf_plugin_gallery_authors_name	作者 / 模特名	Author / model name
+db.tf_plugin_gallery_favors_gallery_id	收藏的图集编号	Favorited gallery id
+db.tf_plugin_live_channels_title	频道名	Channel name
+db.tf_plugin_live_channels_urls	播放地址，可多行	Play URLs, can be multiple lines
+db.tf_plugin_live_channels_cate_id	直播分类编号	Live category id
+db.tf_plugin_live_channels_status	1 上架 0 待审 / 下架	1 on 0 pending / off
+db.tf_plugin_live_channels_recommend	推荐等级 0-9	Recommend level 0-9
+db.tf_plugin_mall_goods_points	兑换所需积分	Points to redeem
+db.tf_plugin_mall_goods_status	1 可兑 0 下架	1 redeemable 0 off
+db.tf_plugin_mall_orders_status	兑换单状态	Redeem-order status
+db.tf_plugin_mall_orders_points	扣掉的积分	Points deducted
+db.tf_plugin_friend_links_status	0 待审 1 显示 2 拒绝 3 冻结；强化模式下来路够了才从待审改成显示	0 pending 1 show 2 reject 3 freeze; strong mode promotes from pending when referrers are enough
+db.tf_plugin_friend_links_type	text 文字链 image 图片链	text text-link image image-link
+db.tf_plugin_friend_links_referer_total	累计来路次数，不是出站点击	Total referrer hits, not outbound clicks
+db.tf_plugin_friend_links_clicks	点本站友链跳走的次数	Clicks leaving via this site’s friend link
+db.tf_plugin_friend_links_edit_token	申请成功后给站长自助改资料的令牌	Token for the webmaster to edit after apply succeeds
+db.tf_plugin_friend_link_clicks_link_id	点的哪条友链	Which friend link was clicked
+db.tf_plugin_friend_link_clicks_ip	点击者 IP	Clicker IP
+db.tf_plugin_friend_link_hits_from_host	来路域名，去掉 www	Referrer host, www stripped
+db.tf_plugin_friend_link_hits_day_key	哪一天，同一 IP 同一链一天只记一次	Which day; same IP and link counted once per day
+db.tf_plugin_friend_link_options_k	参数名：mode / min_referer / allow_apply / allow_edit	Option name: mode / min_referer / allow_apply / allow_edit
+db.tf_plugin_friend_link_options_v	参数值。mode=normal 普通，strong 强化	Option value. mode=normal normal, strong strong
+db.tf_plugin_ads_type	text 文字 image 图片	text text image image
+db.tf_plugin_ads_slot	top 顶栏 bottom 底栏 player 播放器 content 正文	top header bottom footer player player content body
+db.tf_plugin_ads_start_at	开始时间戳，0 表示立刻	Start timestamp; 0 means now
+db.tf_plugin_ads_expire_at	结束时间戳，0 表示不限期	End timestamp; 0 means no expiry
+db.tf_plugin_ads_impressions	展示次数，渲染时加	Impressions, incremented on render
+db.tf_plugin_ads_clicks	点击次数，点跳转时加	Clicks, incremented on jump
+db.tf_plugin_ad_clicks_ad_id	点的哪条广告	Which ad was clicked
+db.tf_plugin_ad_clicks_page	当时所在页	Page they were on
+db.tf_plugin_ad_days_day_key	哪一天 Ymd	Which day Ymd
+db.tf_plugin_ad_days_impressions	当天展示	Impressions that day
+db.tf_plugin_ad_days_clicks	当天点击	Clicks that day
+db.tf_plugin_publish_options_k	参数名：status / title / groups 等	Option name: status / title / groups, etc.
+db.tf_plugin_publish_options_v	status 默认 0 关闭；groups 是线路组 JSON。记住访客靠 Cookie，不是整页缓存	status defaults to 0 off; groups is line-group JSON. Guests are remembered with a cookie, not full-page cache
+db.tf_plugin_chat_messages_text	聊天内容，最长 500 字	Chat text, max 500 characters
+db.tf_plugin_chat_messages_name	当时显示的昵称	Nickname shown then
+db.tf_plugin_chat_messages_member_id	发言会员，0 是游客	Member who spoke; 0 is guest
+db.tf_plugin_chat_messages_video_id	所属影片	Parent video
+db.tf_plugin_chat_messages_ip	发言时的 IP	IP at send time
+db.tf_plugin_sms_codes_code	验证码	Verification code
+db.tf_plugin_sms_codes_scene	发给谁用，如 register 注册	Who it was sent for, e.g. register
+db.hint_plugin_content	内容插件建的表，目录里还没写死字段说明。关掉插件后表可能还在。	A content-plugin table; this catalog has no field notes yet. The table may remain after the plugin is turned off.
+db.hint_plugin_unknown	插件建的表，代码目录里还没写这一张的用途。关掉插件后表可能还在。	A plugin table; this catalog has no purpose written for it. The table may remain after the plugin is turned off.
+db.hint_other_unknown	后来加的表，代码目录里没有写死用途。	A later table; this catalog has no hard-coded purpose.
+db.guess_rel_id	关联编号	Related ID
+db.guess_yesno	是/否	Yes/no
+db.guess_seo	给搜索引擎看的文字	Text for search engines
+db.guess_tpl	模板文件名	Template file name
+db.guess_hits	人气计数	Hit counter
+db.guess_fallback	这一列在库里有，目录按列名推断用途。	This column exists; purpose is inferred from the name.
+db.group_catalog	片库	Library
+db.group_manga	漫画	Manga
+db.group_member	会员	Members
+db.group_collect	采集	Collect
+db.group_site	站点	Site
+db.group_system	后台	Admin
+db.group_other	其它	Other

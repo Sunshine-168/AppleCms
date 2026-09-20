@@ -99,7 +99,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($tagJsLang);
+    var L = @json($tagJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['unused'];
     var form = document.getElementById('video-tag-search');
     var batchBar = document.getElementById('tag-batch');

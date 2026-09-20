@@ -6,17 +6,27 @@
     $yesterday = $yesterday ?? now()->subDay()->toDateString();
     $weekFrom = $weekFrom ?? now()->subDays(6)->toDateString();
     $monthFrom = $monthFrom ?? now()->subDays(29)->toDateString();
+    $jsLang = [
+        'unknown_admin' => admin_t('ui.unknown_admin'),
+        'current_account' => admin_t('ui.current_account'),
+        'did_an_op' => admin_t('ui.did_an_op'),
+        'toggle_extra' => admin_t('ui.toggle_extra'),
+        'no_match' => admin_t('ui.no_match'),
+        'clear_filter' => admin_t('ui.clear_filter'),
+        'empty_operate' => admin_t('ui.empty_operate'),
+        'empty_operate_hint' => admin_t('ui.empty_operate_hint'),
+    ];
 @endphp
 
 @section('plain')
 <div class="card card-panel log-index operate-log-index">
     <div class="card-header">
-        <span>操作日志 <em id="operate-log-count"></em></span>
+        <span>{{ admin_t('page.operate_logs') }} <em id="operate-log-count"></em></span>
     </div>
     <div class="card-body">
         @include('admin.partials.log-tabs', ['tab' => 'operate'])
         @include('admin.partials.log-filters', ['kind' => 'operate'])
-        <p class="muted recycle-lead">后台改数据会记一行。打开页面不会记。前台会员操作不记。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.operate_lead') }}</p>
         <div id="operate-log-table"></div>
     </div>
 </div>
@@ -26,15 +36,16 @@
 <script>
 (function () {
     var U = AdminUi;
+    var L = @json($jsLang, JSON_UNESCAPED_UNICODE);
     var form = document.getElementById('operate-log-search');
     var countEl = document.getElementById('operate-log-count');
     var ipChip = document.getElementById('operate-log-ip-chip');
     var whenSel = document.getElementById('operate-log-when');
     var datesWrap = document.getElementById('operate-log-dates');
-    var TODAY = @json($today);
-    var YESTERDAY = @json($yesterday);
-    var WEEK_FROM = @json($weekFrom);
-    var MONTH_FROM = @json($monthFrom);
+    var TODAY = @json($today, JSON_UNESCAPED_UNICODE);
+    var YESTERDAY = @json($yesterday, JSON_UNESCAPED_UNICODE);
+    var WEEK_FROM = @json($weekFrom, JSON_UNESCAPED_UNICODE);
+    var MONTH_FROM = @json($monthFrom, JSON_UNESCAPED_UNICODE);
     var typing = 0;
 
     function cleanWhere(data) {
@@ -102,9 +113,9 @@
         runSearch();
     }
     function rowHtml(d) {
-        var name = d.username || '未知管理员';
-        var badges = d.is_self ? '<span class="badge badge-ok">当前账号</span>' : '';
-        var summary = d.summary || d.title || '做了一次操作';
+        var name = d.username || L.unknown_admin;
+        var badges = d.is_self ? '<span class="badge badge-ok">' + U.escape(L.current_account) + '</span>' : '';
+        var summary = d.summary || d.title || L.did_an_op;
         var meta = [];
         if (d.module_text) meta.push(U.escape(d.module_text));
         if (d.time_text) meta.push(U.escape(d.time_text));
@@ -113,7 +124,7 @@
                 + (d.place_text ? '<span class="log-ip-place">' + U.escape(d.place_text) + '</span>' : ''));
         }
         var extra = d.extra_text ? '<div class="log-extra">' + U.escape(d.extra_text) + '</div>' : '';
-        var toggle = extra ? ' <button type="button" class="log-extra-toggle js-extra" aria-expanded="false">详情</button>' : '';
+        var toggle = extra ? ' <button type="button" class="log-extra-toggle js-extra" aria-expanded="false">' + U.escape(L.toggle_extra) + '</button>' : '';
         return '<div class="entry-row-title-line"><span class="entry-row-title">' + U.escape(summary) + '</span> ' + badges + toggle + '</div>'
             + '<div class="entry-row-meta">' + U.escape(name) + (meta.length ? ' · ' + meta.join(' · ') : '') + '</div>'
             + extra;
@@ -126,9 +137,9 @@
         where: queryWhere(),
         emptyHtml: function (_parsed, where) {
             if (isFiltered(where)) {
-                return '<div class="list-empty"><p>没有符合条件的记录。</p><p><button type="button" class="btn btn-muted btn-sm" id="operate-log-empty-reset">清除筛选</button></p></div>';
+                return '<div class="list-empty"><p>' + U.escape(L.no_match) + '</p><p><button type="button" class="btn btn-muted btn-sm" id="operate-log-empty-reset">' + U.escape(L.clear_filter) + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>还没有操作记录。</p><p class="muted">后台改数据会记一行，写清谁改了什么。打开页面不会记。</p></div>';
+            return '<div class="list-empty"><p>' + U.escape(L.empty_operate) + '</p><p class="muted">' + U.escape(L.empty_operate_hint) + '</p></div>';
         },
         onDraw: function (_wrap, list) {
             markExtra();

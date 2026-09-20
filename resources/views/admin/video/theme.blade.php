@@ -7,45 +7,50 @@
     $desk = 'look';
     $hasPlayView = (bool) ($hasPlayView ?? false);
     $tabs = [
-        'base' => '基本设置',
-        'home' => '首页配置',
-        'page' => '页面配置',
-        'nav' => '导航菜单',
-        'other' => '其他设置',
-        'seo' => 'SEO设置',
-        'ads' => '广告设置',
+        'base' => admin_t('ui.basic_settings'),
+        'home' => admin_t('ui.home_config'),
+        'page' => admin_t('ui.page_config'),
+        'nav' => admin_t('ui.nav_menu'),
+        'other' => admin_t('ui.other_settings'),
+        'seo' => admin_t('ui.seo_settings'),
+        'ads' => admin_t('ui.ad_settings'),
     ];
     if (! $hasPlayView) {
         unset($tabs['page']);
     }
     $on = fn (string $k, string $d = '1') => (string) ($s[$k] ?? $d) === '1';
     $assets = [
-        ['name' => 'theme_logo', 'label' => '顶部 Logo', 'empty' => '还没有 Logo', 'kind' => 'logo', 'hint' => '出现在前台页头。建议用透明底的横图。'],
-        ['name' => 'theme_logo_foot', 'label' => '底部 Logo', 'empty' => '还没有底部 Logo', 'kind' => 'logo', 'hint' => '出现在页脚。留空则不显示。'],
-        ['name' => 'theme_favicon', 'label' => '网站图标', 'empty' => '还没有图标', 'kind' => 'favicon', 'hint' => '浏览器标签上的小图标，建议正方形 png / ico。'],
-        ['name' => 'theme_webapp', 'label' => 'webapp 图标', 'empty' => '还没有 webapp 图标', 'kind' => 'favicon', 'hint' => '添加到主屏幕时用的图标，建议正方形。'],
-        ['name' => 'theme_lazy', 'label' => '懒加载占位', 'empty' => '还没有占位图', 'kind' => 'logo', 'hint' => '封面为空时用这张图顶上，不是独立的 JS 懒加载库。'],
+        ['name' => 'theme_logo', 'label' => admin_t('ui.logo_top'), 'empty' => admin_t('ui.no_logo'), 'kind' => 'logo', 'hint' => admin_t('ui.logo_hint')],
+        ['name' => 'theme_logo_foot', 'label' => admin_t('ui.logo_foot'), 'empty' => admin_t('ui.no_logo_foot'), 'kind' => 'logo', 'hint' => admin_t('ui.logo_foot_hint')],
+        ['name' => 'theme_favicon', 'label' => admin_t('ui.site_icon'), 'empty' => admin_t('ui.no_icon'), 'kind' => 'favicon', 'hint' => admin_t('ui.favicon_hint')],
+        ['name' => 'theme_webapp', 'label' => admin_t('ui.webapp_icon'), 'empty' => admin_t('ui.no_webapp_icon'), 'kind' => 'favicon', 'hint' => admin_t('ui.webapp_hint')],
+        ['name' => 'theme_lazy', 'label' => admin_t('ui.lazy_placeholder'), 'empty' => admin_t('ui.no_placeholder'), 'kind' => 'logo', 'hint' => admin_t('ui.lazy_hint')],
     ];
     $navToggles = [
-        ['name' => 'theme_nav_latest', 'label' => '最新'],
-        ['name' => 'theme_nav_topic', 'label' => '专题'],
-        ['name' => 'theme_nav_actor', 'label' => '演员'],
-        ['name' => 'theme_nav_role', 'label' => '角色'],
-        ['name' => 'theme_nav_art', 'label' => '资讯'],
-        ['name' => 'theme_nav_website', 'label' => '网址导航'],
+        ['name' => 'theme_nav_latest', 'label' => admin_t('ui.nav_latest')],
+        ['name' => 'theme_nav_topic', 'label' => admin_t('ui.topics')],
+        ['name' => 'theme_nav_actor', 'label' => admin_t('ui.actors')],
+        ['name' => 'theme_nav_role', 'label' => admin_t('ui.cast')],
+        ['name' => 'theme_nav_art', 'label' => admin_t('ui.nav_news')],
+        ['name' => 'theme_nav_website', 'label' => admin_t('ui.websites_nav')],
+    ];
+    $themeJsLang = [
+        'uploaded' => admin_t('ui.uploaded'),
+        'upload_fail' => admin_t('ui.upload_fail'),
+        'finished' => admin_t('ui.finished'),
     ];
 @endphp
 
 @section('plain')
 <div class="card card-panel desk-board" id="theme-index">
     <div class="card-header">
-        <span>模板</span>
+        <span>{{ admin_t('nav.templates') }}</span>
         <div>
             @include('admin.video.partials.theme-desks', ['desk' => 'look'])
         </div>
     </div>
     <div class="card-body">
-        <p class="muted recycle-lead">改 Logo、导航和页头代码。广告位、标签向导仍是独立入口。</p>
+        <p class="muted recycle-lead">{{ admin_t('ui.theme_lead') }}</p>
         <div class="tabs settings-tabs" id="themeTabs">
             @foreach($tabs as $key => $label)
                 <button type="button" class="{{ $tab === $key ? 'active' : '' }}" data-tab="{{ $key }}">{{ $label }}</button>
@@ -55,7 +60,7 @@
             <input type="hidden" name="tab" value="theme">
 
             <div class="settings-pane{{ $tab === 'base' ? ' active' : '' }}" data-pane="base">
-                <p class="muted field-hint">默认主题只有一套顶栏，没有深浅双套 Lottie。</p>
+                <p class="muted field-hint">{{ admin_t('ui.theme_lottie_hint') }}</p>
                 @foreach($assets as $field)
                     @php
                         $val = trim((string) ($s[$field['name']] ?? ''));
@@ -67,39 +72,39 @@
                             <span class="settings-file-empty muted" data-empty @if($val !== '') hidden @endif>{{ $field['empty'] }}</span>
                         </div>
                         <div class="field-inline">
-                            <input id="{{ $field['name'] }}" type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="图片地址，或点上传" data-url>
-                            <button type="button" class="btn btn-muted btn-sm" data-upload>上传图片</button>
+                            <input id="{{ $field['name'] }}" type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="{{ admin_t('ui.ph_image_or_upload') }}" data-url>
+                            <button type="button" class="btn btn-muted btn-sm" data-upload>{{ admin_t('ui.upload_image') }}</button>
                         </div>
                     </div>
                     <p class="muted field-hint">{{ $field['hint'] }}</p>
                 @endforeach
 
-                <label for="theme_head_code">头部代码</label>
-                <textarea id="theme_head_code" name="theme_head_code" rows="5" placeholder="统计、验证等 HTML，会原样插到 &lt;head&gt;">{{ $s['theme_head_code'] ?? '' }}</textarea>
-                <p class="muted field-hint">管理员专用，原样输出，不会剥掉 HTML。</p>
+                <label for="theme_head_code">{{ admin_t('ui.head_code') }}</label>
+                <textarea id="theme_head_code" name="theme_head_code" rows="5" placeholder="{{ admin_t('ui.ph_head_code') }}">{{ $s['theme_head_code'] ?? '' }}</textarea>
+                <p class="muted field-hint">{{ admin_t('ui.head_code_hint') }}</p>
 
-                <label for="theme_foot_code">底部说明</label>
-                <textarea id="theme_foot_code" name="theme_foot_code" rows="4" placeholder="页脚补充 HTML">{{ $s['theme_foot_code'] ?? '' }}</textarea>
-                <p class="muted field-hint">出现在前台页脚，可写版权补充或统计。</p>
+                <label for="theme_foot_code">{{ admin_t('ui.foot_note') }}</label>
+                <textarea id="theme_foot_code" name="theme_foot_code" rows="4" placeholder="{{ admin_t('ui.ph_foot_code') }}">{{ $s['theme_foot_code'] ?? '' }}</textarea>
+                <p class="muted field-hint">{{ admin_t('ui.foot_code_hint') }}</p>
             </div>
 
             <div class="settings-pane{{ $tab === 'home' ? ' active' : '' }}" data-pane="home">
-                <p class="muted field-hint">幻灯片在「幻灯」slot=<code>home</code>，到「<a href="/admin/video/slides">幻灯片</a>」里改。本页只改首页推荐条数。</p>
-                <label for="theme_home_rec_num">首页推荐条数</label>
+                <p class="muted field-hint">{{ admin_t('ui.theme_home_hint_a') }}<code>home</code>{{ admin_t('ui.theme_home_hint_b') }}<a href="/admin/video/slides">{{ admin_t('nav.slides') }}</a>{{ admin_t('ui.theme_home_hint_c') }}</p>
+                <label for="theme_home_rec_num">{{ admin_t('ui.home_rec_num') }}</label>
                 <input id="theme_home_rec_num" type="number" name="theme_home_rec_num" min="1" max="100" value="{{ $s['theme_home_rec_num'] ?? 12 }}">
-                <p class="muted field-hint">默认主题首页「推荐」区块的 <code>@@vod</code> 条数，默认 12。</p>
+                <p class="muted field-hint">{{ admin_t('ui.home_rec_hint_a') }}<code>@@vod</code>{{ admin_t('ui.home_rec_hint_b') }}</p>
             </div>
 
             @if($hasPlayView)
             <div class="settings-pane{{ $tab === 'page' ? ' active' : '' }}" data-pane="page">
-                <label for="theme_play_notice">播放页提示</label>
-                <textarea id="theme_play_notice" name="theme_play_notice" rows="3" placeholder="出现在播放器上方，例如版权或线路说明">{{ $s['theme_play_notice'] ?? '' }}</textarea>
-                <p class="muted field-hint">默认主题播放页会显示这段文字。留空则不显示。</p>
+                <label for="theme_play_notice">{{ admin_t('ui.play_notice') }}</label>
+                <textarea id="theme_play_notice" name="theme_play_notice" rows="3" placeholder="{{ admin_t('ui.ph_play_notice') }}">{{ $s['theme_play_notice'] ?? '' }}</textarea>
+                <p class="muted field-hint">{{ admin_t('ui.play_notice_hint') }}</p>
             </div>
             @endif
 
             <div class="settings-pane{{ $tab === 'nav' ? ' active' : '' }}" data-pane="nav">
-                <p class="muted field-hint">顶部分类和专题仍由模板标签输出。下面开关控制默认主题写死的那几项，以及 4 条自定义链接。</p>
+                <p class="muted field-hint">{{ admin_t('ui.theme_nav_hint') }}</p>
                 <div class="theme-nav-toggles">
                     @foreach($navToggles as $nav)
                         <input type="hidden" name="{{ $nav['name'] }}" value="0">
@@ -109,46 +114,46 @@
                         </label>
                     @endforeach
                 </div>
-                <h3>自定义链接</h3>
+                <h3>{{ admin_t('ui.custom_links') }}</h3>
                 @for($i = 1; $i <= 4; $i++)
                     <div class="settings-two">
                         <div>
-                            <label for="theme_nav_name{{ $i }}">名称 {{ $i }}</label>
+                            <label for="theme_nav_name{{ $i }}">{{ admin_t('ui.name') }} {{ $i }}</label>
                             <input id="theme_nav_name{{ $i }}" type="text" name="theme_nav_name{{ $i }}" value="{{ $s['theme_nav_name'.$i] ?? '' }}" maxlength="40">
                         </div>
                         <div>
-                            <label for="theme_nav_url{{ $i }}">地址 {{ $i }}</label>
-                            <input id="theme_nav_url{{ $i }}" type="text" name="theme_nav_url{{ $i }}" value="{{ $s['theme_nav_url'.$i] ?? '' }}" placeholder="https:// 或 /path">
+                            <label for="theme_nav_url{{ $i }}">{{ admin_t('ui.label_address') }} {{ $i }}</label>
+                            <input id="theme_nav_url{{ $i }}" type="text" name="theme_nav_url{{ $i }}" value="{{ $s['theme_nav_url'.$i] ?? '' }}" placeholder="{{ admin_t('ui.ph_http_or_path') }}">
                         </div>
                     </div>
                 @endfor
-                <p class="muted field-hint">名称和地址都填了才会出现在顶栏。地址只接受 http(s) 或以 / 开头的站点路径。</p>
+                <p class="muted field-hint">{{ admin_t('ui.custom_nav_hint') }}</p>
             </div>
 
             <div class="settings-pane{{ $tab === 'other' ? ' active' : '' }}" data-pane="other">
-                <label for="theme_primary">主色</label>
+                <label for="theme_primary">{{ admin_t('ui.primary_color') }}</label>
                 <input id="theme_primary" type="text" name="theme_primary" value="{{ $s['theme_primary'] ?? '' }}" placeholder="#1b4f72" maxlength="7">
-                <p class="muted field-hint">如 #1b4f72。留空则用模板自带配色。采集封面水印在「<a href="/admin/video/settings?tab=look">站点设置</a>」，不是主题文件。</p>
+                <p class="muted field-hint">{{ admin_t('ui.primary_hint') }}{{ admin_t('ui.watermark_in_settings_a') }}<a href="/admin/video/settings?tab=look">{{ admin_t('nav.settings') }}</a>{{ admin_t('ui.watermark_in_settings_b') }}</p>
             </div>
 
             <div class="settings-pane{{ $tab === 'seo' ? ' active' : '' }}" data-pane="seo">
-                <p class="muted field-hint">与站点设置「更多」同一套键，<code>@@vodSeo</code> 会用到。</p>
-                <label for="seo_title_vod">影片页</label>
+                <p class="muted field-hint">{{ admin_t('ui.theme_seo_hint_a') }}{{ admin_t('nav.settings') }}{{ admin_t('ui.theme_seo_hint_mid') }}{{ admin_t('nav.more') }}{{ admin_t('ui.theme_seo_hint_b') }}<code>@@vodSeo</code>{{ admin_t('ui.theme_seo_hint_c') }}</p>
+                <label for="seo_title_vod">{{ admin_t('ui.seo_vod_page') }}</label>
                 <input id="seo_title_vod" type="text" name="seo_title_vod" value="{{ $s['seo_title_vod'] ?? '' }}" placeholder="{name} - {site}">
-                <label for="seo_title_type">分类页</label>
+                <label for="seo_title_type">{{ admin_t('ui.seo_type_page') }}</label>
                 <input id="seo_title_type" type="text" name="seo_title_type" value="{{ $s['seo_title_type'] ?? '' }}" placeholder="{type} - {site}">
-                <label for="seo_title_play">播放页</label>
-                <input id="seo_title_play" type="text" name="seo_title_play" value="{{ $s['seo_title_play'] ?? '' }}" placeholder="{name} 在线播放 - {site}">
-                <p class="muted field-hint">可用 <code>{name}</code> <code>{type}</code> <code>{site}</code>。</p>
+                <label for="seo_title_play">{{ admin_t('ui.seo_play_page') }}</label>
+                <input id="seo_title_play" type="text" name="seo_title_play" value="{{ $s['seo_title_play'] ?? '' }}" placeholder="{{ admin_t('ui.ph_seo_play') }}">
+                <p class="muted field-hint">{{ admin_t('ui.seo_tokens_pre') }} <code>{name}</code> <code>{type}</code> <code>{site}</code>{{ admin_t('ui.seo_tokens_end') }}</p>
             </div>
 
             <div class="settings-pane{{ $tab === 'ads' ? ' active' : '' }}" data-pane="ads">
-                <p class="muted recycle-lead">广告不写在主题配置里。页头、页脚、播放页用 <code>@@vodAd</code>，位置分别是 <code>header</code>、<code>footer</code>、<code>play</code>。</p>
-                <p><a class="btn btn-muted btn-sm" href="/admin/video/ads">广告位</a></p>
+                <p class="muted recycle-lead">{{ admin_t('ui.theme_ads_lead_a') }}<code>@@vodAd</code>{{ admin_t('ui.theme_ads_lead_b') }}<code>header</code>{{ admin_t('ui.list_sep') }}<code>footer</code>{{ admin_t('ui.list_sep') }}<code>play</code>{{ admin_t('ui.seo_tokens_end') }}</p>
+                <p><a class="btn btn-muted btn-sm" href="/admin/video/ads">{{ admin_t('ui.ads') }}</a></p>
             </div>
 
             <div class="form-actions settings-save">
-                <button type="button" class="btn" id="theme-save">{{ admin_t('page.save') }}</button>
+                <button type="button" class="btn" id="theme-save">{{ admin_t('ui.save') }}</button>
             </div>
         </form>
     </div>
@@ -158,6 +163,7 @@
 @push('scripts')
 <script>
 (function () {
+    var L = @json($themeJsLang, JSON_UNESCAPED_UNICODE);
     var tabs = document.getElementById('themeTabs');
     if (tabs) {
         tabs.querySelectorAll('[data-tab]').forEach(function (btn) {
@@ -212,9 +218,9 @@
                         if (res && res.code === 0 && res.data && res.data.url) {
                             if (input) input.value = res.data.url;
                             showPreview(box, res.data.url);
-                            AdminUi.toast('上传成功', 'ok');
+                            AdminUi.toast(L.uploaded, 'ok');
                         } else {
-                            AdminUi.toast((res && res.msg) || '上传失败', 'err');
+                            AdminUi.toast((res && res.msg) || L.upload_fail, 'err');
                         }
                     });
                 });
@@ -227,7 +233,7 @@
     if (save && form) {
         var doSave = function () {
             AdminUi.post('/admin/video/theme', AdminUi.formData(form)).then(function (res) {
-                AdminUi.toast((res && res.msg) || '完成', res && res.code === 0 ? 'ok' : 'err');
+                AdminUi.toast((res && res.msg) || L.finished, res && res.code === 0 ? 'ok' : 'err');
             });
         };
         save.addEventListener('click', doSave);

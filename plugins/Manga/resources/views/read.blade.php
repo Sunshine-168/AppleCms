@@ -113,10 +113,10 @@
 (function () {
     var mangaId = @json((int) $manga->id);
     var chapterId = @json((int) $chapter->id);
-    var epName = @json($epName);
+    var epName = @json($epName, JSON_UNESCAPED_UNICODE);
     var title = @json((string) $manga->title);
-    var catalogUrl = @json($catalogUrl);
-    var total = @json($picCount);
+    var catalogUrl = @json($catalogUrl, JSON_UNESCAPED_UNICODE);
+    var total = @json($picCount, JSON_UNESCAPED_UNICODE);
     var pages = Array.prototype.slice.call(document.querySelectorAll('#manga-read .manga-page'));
     var readEl = document.getElementById('manga-read');
     var modeBtn = document.getElementById('manga-mode');

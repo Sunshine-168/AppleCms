@@ -99,7 +99,7 @@
 <script>
 (function () {
     var U = AdminUi;
-    var L = @json($extClassJsLang);
+    var L = @json($extClassJsLang, JSON_UNESCAPED_UNICODE);
     var QUEUE_KEYS = ['unused'];
     var form = document.getElementById('extclass-search');
     var batchBar = document.getElementById('extclass-batch');
