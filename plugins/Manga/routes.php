@@ -16,6 +16,7 @@ use Plugins\Manga\Http\Controllers\MangaWorkAdminController;
 
 Route::middleware('web')->group(function () {
     Route::get('/manga', [MangaController::class, 'index']);
+    Route::get('/manga/type/{type}', [MangaController::class, 'index'])->whereNumber('type');
     Route::get('/manga/rank', [MangaController::class, 'rank']);
     Route::get('/manga/update', [MangaController::class, 'updates']);
     Route::get('/manga/shelf', [MangaController::class, 'shelf']);

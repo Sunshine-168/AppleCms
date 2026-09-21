@@ -25,11 +25,16 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('模板 → 外观', $html);
         $this->assertStringContainsString('/admin/video/templates', $html);
         $this->assertStringContainsString('允许前台注册', $html);
+        $this->assertStringContainsString('data-pane="member"', $html);
         $this->assertStringContainsString('新评论要先审再显示', $html);
         $this->assertStringContainsString('保存设置', $html);
         $this->assertStringContainsString('data-pane="site"', $html);
+        $this->assertStringContainsString('data-pane="play"', $html);
+        $this->assertStringContainsString('data-pane="mail"', $html);
+        $this->assertStringContainsString('data-pane="seo"', $html);
+        $this->assertStringContainsString('data-pane="storage"', $html);
         $this->assertStringContainsString('settings-pane active', $html);
-        $this->assertStringContainsString('缓存、采集、发信、密钥在「更多」里', $html);
+        $this->assertStringContainsString('缓存、采集和密钥在「更多」', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('SMTP 主机', $html);
         $this->assertStringNotContainsString('S3 Key', $html);

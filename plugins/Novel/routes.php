@@ -13,6 +13,7 @@ use Plugins\Novel\Http\Controllers\NovelWorkAdminController;
 
 Route::middleware('web')->group(function () {
     Route::get('/novel', [NovelController::class, 'index']);
+    Route::get('/novel/type/{type}', [NovelController::class, 'index'])->whereNumber('type');
     Route::get('/novel/shelf', [NovelController::class, 'shelf']);
     Route::get('/novel/history', [NovelController::class, 'history']);
     Route::post('/novel/{id}/comment', [NovelController::class, 'comment'])->whereNumber('id');

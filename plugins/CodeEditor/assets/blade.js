@@ -6,8 +6,8 @@
     /* Keep in sync with tests/Unit/BladeHighlightRulesTest.php */
     var BLADE_WORDS = 'if|elseif|else|endif|unless|endunless|isset|endisset|empty|endempty|foreach|endforeach|forelse|endforelse|for|endfor|while|endwhile|continue|break|php|endphp|includeIf|includeWhen|includeUnless|includeFirst|include|each|once|endonce|pushOnce|push|endpush|prependOnce|prepend|endprepend|stack|inject|yield|extends|section|endsection|show|parent|overwrite|stop|append|hasSection|sectionMissing|production|endproduction|env|endenv|auth|endauth|guest|endguest|canany|endcanany|cannot|endcannot|can|endcan|session|endsession|error|enderror|selected|checked|disabled|readonly|required|old|class|style|csrf|method|json|js|vite|props|aware|slot|endslot|component|endcomponent|verbatim|endverbatim|switch|case|default|endswitch|lang|dump|dd|true|false|use|example';
     var bladeDirRe = new RegExp('^@(?:' + BLADE_WORDS + ')\\b');
-    var vodDirRe = /^@(?:end)?vod[A-Za-z]*\b/;
-    var cutRe = new RegExp('\\{\\{--|\\{!!|\\{\\{|@@|@\\{\\{|@(?:end)?vod[A-Za-z]*\\b|@conf\\b|@(?:' + BLADE_WORDS + ')\\b');
+    var vodDirRe = /^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/;
+    var cutRe = new RegExp('\\{\\{--|\\{!!|\\{\\{|@@|@\\{\\{|@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\\b|@conf\\b|@(?:' + BLADE_WORDS + ')\\b');
 
     function exprToken(stream, skipParen) {
         if (stream.eatSpace()) return null;

@@ -144,7 +144,7 @@
                 var id = encodeURIComponent(d.id);
                 var html = '';
                 if (String(d.status) === '1') {
-                    html += '<a href="/manga?type=' + id + '" target="_blank" rel="noopener">' + AdminUi.t('front') + '</a>';
+                    html += '<a href="/manga/type/' + id + '" target="_blank" rel="noopener">' + AdminUi.t('front') + '</a>';
                 }
                 html += '<a href="' + base + '/create?parent_id=' + id + '">' + AdminUi.t('child') + '</a>';
                 html += '<a href="/admin/video/mangas?type_id=' + id + '">' + AdminUi.t('works') + '</a>';

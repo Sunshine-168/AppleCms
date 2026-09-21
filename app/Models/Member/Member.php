@@ -53,4 +53,34 @@ class Member extends Authenticatable
 
         return date('Y-m-d H:i', $expire);
     }
+
+    /** Extend current timed group, or assign $fallbackGroupId from now. Permanent groups (expire 0) stay untouched. */
+    public function grantTimedGroupDays(int $days, int $fallbackGroupId): bool
+    {
+        $days = max(0, $days);
+        if ($days < 1 || ! Schema::hasColumn($this->getTable(), 'group_expire_at')) {
+            return false;
+        }
+        $gid = (int) ($this->group_id ?? 0);
+        $expire = (int) ($this->group_expire_at ?? 0);
+        $now = time();
+        if ($gid > 0 && $expire === 0) {
+            return false;
+        }
+        if ($gid > 0 && $expire > $now) {
+            $this->group_expire_at = $expire + ($days * 86400);
+            $this->save();
+
+            return true;
+        }
+        $target = $gid > 0 ? $gid : $fallbackGroupId;
+        if ($target < 1) {
+            return false;
+        }
+        $this->group_id = $target;
+        $this->group_expire_at = $now + ($days * 86400);
+        $this->save();
+
+        return true;
+    }
 }

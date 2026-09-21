@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Video;
 
 use App\Http\Controllers\Controller;
+use App\Models\Member\MemberGroup;
 use App\Services\Video\VideoSettingService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
@@ -18,13 +19,23 @@ class SiteSetting extends Controller
     public function index(Request $request): View
     {
         $tab = (string) $request->query('tab', 'site');
-        if (! in_array($tab, ['site', 'look', 'interact', 'more'], true)) {
+        if (! in_array($tab, ['site', 'look', 'member', 'interact', 'play', 'mail', 'seo', 'storage', 'more'], true)) {
             $tab = 'site';
+        }
+
+        $groups = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('member_groups')) {
+                $groups = MemberGroup::query()->where('status', 1)->orderBy('sort')->orderBy('id')->get(['id', 'name']);
+            }
+        } catch (\Throwable) {
+            $groups = [];
         }
 
         return view('admin.video.settings', [
             'site' => $this->settings->site(),
             'tab' => $tab,
+            'groups' => $groups,
             'pluginLinks' => app(\App\Support\Plugins\PluginHost::class)->settingsLinks(),
         ]);
     }

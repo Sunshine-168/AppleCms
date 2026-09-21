@@ -431,7 +431,7 @@ class AdminNav
                     self::cat('/admin/video/withdraws', 'item.withdraws', 'hint.withdraws'),
                     self::cat('/admin/video/invites', 'item.invites', 'hint.invites'),
                     self::cat('/admin/video/favorites', 'item.favorites', 'hint.favorites'),
-                    self::cat('/admin/video/settings?tab=interact', 'item.config_user', 'hint.config_user', 'moved', 'hint.config_user_keys'),
+                    self::cat('/admin/video/settings?tab=member', 'item.config_user', 'hint.config_user', 'moved', 'hint.config_user_keys'),
                 ],
             ],
             [

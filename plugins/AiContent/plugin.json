@@ -1,10 +1,12 @@
 {
     "id": "ai_content",
-    "name": "AI 写内容",
-    "name_en": "AI content",
-    "description": "按影片标题调用 OpenAI 兼容接口写简介。没配密钥会失败，不会假装写好。",
-    "description_en": "Generate a synopsis via an OpenAI-compatible API. Empty keys fail.",
-    "version": "1.1.0",
+    "name": "AI SEO",
+    "name_en": "AI SEO",
+    "name_zh_tw": "AI SEO",
+    "description": "按影片资料调用 OpenAI 兼容接口写简介和 SEO。没配密钥会失败，不会假装写好。",
+    "description_en": "Generate synopsis and SEO via an OpenAI-compatible API. Empty keys fail.",
+    "description_zh_tw": "依影片資料呼叫 OpenAI 相容接口寫簡介和 SEO。沒配密鑰會失敗，不會假裝寫好。",
+    "version": "1.2.1",
     "enabled": true,
     "capability": "ready",
     "group": "ai",
@@ -14,12 +16,7 @@
             "ai": {
                 "title": "item.config_ai",
                 "hint": "ai.cfg_hint",
-                "fields": [
-                    {"name": "ai_provider", "label": "ai.cfg_provider", "type": "text", "placeholder": "ai.cfg_provider_ph"},
-                    {"name": "ai_key", "label": "ai.cfg_key", "type": "text"},
-                    {"name": "ai_model", "label": "ai.cfg_model", "type": "text", "placeholder": "ai.cfg_model_ph"},
-                    {"name": "ai_endpoint", "label": "ai.cfg_endpoint", "type": "text", "placeholder": "ai.cfg_endpoint_ph"}
-                ]
+                "url": "/admin/video/config/ai"
             }
         },
         "catalog": {

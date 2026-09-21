@@ -195,9 +195,10 @@ class VideoService
         $hasPlot = (string) ($params['has_plot'] ?? '') === '1';
         $emptyPic = (string) ($params['empty_pic'] ?? '') === '1';
         $emptyContent = (string) ($params['empty_content'] ?? '') === '1';
+        $emptySeo = (string) ($params['empty_seo'] ?? '') === '1';
         $noActor = (string) ($params['no_actor'] ?? '') === '1';
         $missingEp = (string) ($params['missing_ep'] ?? '') === '1';
-        if ($emptyUrl || $repeat || $needPoints || $hasPlot || $emptyPic || $emptyContent || $noActor || $missingEp) {
+        if ($emptyUrl || $repeat || $needPoints || $hasPlot || $emptyPic || $emptyContent || $emptySeo || $noActor || $missingEp) {
             $q = VideoModel::query();
             if ($title !== '') {
                 $q->where('title', 'like', '%'.$title.'%');
@@ -228,6 +229,9 @@ class VideoService
             }
             if ($emptyContent) {
                 $this->scopeEmptyContent($q);
+            }
+            if ($emptySeo) {
+                $this->scopeEmptySeo($q);
             }
             if ($noActor) {
                 $this->scopeNoActor($q);
@@ -333,6 +337,7 @@ class VideoService
             'empty_url' => 0,
             'empty_pic' => 0,
             'empty_content' => 0,
+            'empty_seo' => 0,
             'no_actor' => 0,
             'repeat' => 0,
             'repeat_groups' => 0,
@@ -364,6 +369,7 @@ class VideoService
             'empty_url' => 0,
             'empty_pic' => 0,
             'empty_content' => 0,
+            'empty_seo' => 0,
             'no_actor' => 0,
             'repeat' => 0,
             'repeat_groups' => 0,
@@ -380,6 +386,7 @@ class VideoService
                 'empty_url' => $this->issueCount('empty_url'),
                 'empty_pic' => $this->issueCount('empty_pic'),
                 'empty_content' => $this->issueCount('empty_content'),
+                'empty_seo' => $this->issueCount('empty_seo'),
                 'no_actor' => $this->issueCount('no_actor'),
                 'repeat' => $dupTitles === [] ? 0 : (int) VideoModel::query()->whereIn('title', $dupTitles)->count(),
                 'repeat_groups' => count($dupTitles),
@@ -397,6 +404,7 @@ class VideoService
             'empty_url' => $this->scopeEmptyUrl($q),
             'empty_pic' => $this->scopeEmptyPic($q),
             'empty_content' => $this->scopeEmptyContent($q),
+            'empty_seo' => $this->scopeEmptySeo($q),
             'no_actor' => $this->scopeNoActor($q),
             'missing_ep' => $this->scopeMissingEp($q),
             default => $q->whereRaw('0 = 1'),
@@ -429,6 +437,21 @@ class VideoService
     {
         $q->where(function ($inner) {
             $inner->whereNull('description')->orWhere('description', '');
+        });
+    }
+
+    /** @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Video\VideoModel>  $q */
+    private function scopeEmptySeo($q): void
+    {
+        if (! Schema::hasColumn('videos', 'seo_title')) {
+            $q->whereRaw('0 = 1');
+
+            return;
+        }
+        $q->where(function ($inner) {
+            $inner->whereNull('seo_title')->orWhere('seo_title', '')
+                ->orWhereNull('seo_keywords')->orWhere('seo_keywords', '')
+                ->orWhereNull('seo_description')->orWhere('seo_description', '');
         });
     }
 
@@ -596,6 +619,11 @@ class VideoService
         }
         if (Schema::hasColumn('videos', 'publish_at')) {
             $payload['publish_at'] = $this->toUnix($data['publish_at'] ?? 0);
+        }
+        if (Schema::hasColumn('videos', 'seo_title')) {
+            $payload['seo_title'] = mb_substr(trim((string) ($data['seo_title'] ?? '')), 0, 255);
+            $payload['seo_keywords'] = mb_substr(trim((string) ($data['seo_keywords'] ?? '')), 0, 255);
+            $payload['seo_description'] = mb_substr(trim((string) ($data['seo_description'] ?? '')), 0, 500);
         }
         if (!empty($payload['type_id'])) {
             $type = $this->videoTypeModel->findById((int) $payload['type_id']);

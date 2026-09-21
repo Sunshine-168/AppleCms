@@ -100,6 +100,7 @@ Route::middleware('member.auth')->group(function () {
     Route::post('/member/password', [MemberController::class, 'password']);
     Route::post('/member/redeem', [MemberController::class, 'redeem']);
     Route::post('/member/invite/generate', [MemberController::class, 'generateInvite']);
+    Route::get('/member/invite/poster', [MemberController::class, 'invitePoster']);
     Route::get('/member/favorites', [MemberController::class, 'favorites']);
     Route::get('/member/history', [MemberController::class, 'histories']);
     Route::get('/member/inbox', [MemberController::class, 'inbox']);

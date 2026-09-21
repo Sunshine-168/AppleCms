@@ -16,8 +16,9 @@ class LiveController extends Controller
     ) {}
 
     /** 显示直播频道目录。 */
-    public function index(Request $request)
+    public function index(Request $request, ?int $cate = null)
     {
+        $this->bindQueryIfMissing($request, 'cate', $cate);
         if (! $this->service->ready()) {
             throw new NotFoundHttpException;
         }

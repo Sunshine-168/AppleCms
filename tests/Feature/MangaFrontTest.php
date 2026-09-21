@@ -80,6 +80,7 @@ class MangaFrontTest extends TestCase
         $this->assertStringContainsString('manga-search', $list->getContent());
         $this->assertStringContainsString('name="wd"', $list->getContent());
         $this->assertStringContainsString('/manga?recommend=1', $list->getContent());
+        $this->assertStringContainsString('/manga/type/'.$parent->id, $list->getContent());
         $this->assertStringContainsString('manga-badge', $list->getContent());
         $this->assertStringNotContainsString('内容折叠菜单', $list->getContent());
 
@@ -89,6 +90,7 @@ class MangaFrontTest extends TestCase
         $this->get('/manga?author=作者甲')->assertOk()->assertSee('人气本')->assertDontSee('新连载');
         $this->get('/manga?tag=热血')->assertOk()->assertSee('人气本')->assertSee('同类本')->assertDontSee('新连载');
         $this->get('/manga?type='.$parent->id)->assertOk()->assertSee('人气本')->assertDontSee('新连载')->assertSee('少年');
+        $this->get('/manga/type/'.$parent->id)->assertOk()->assertSee('人气本')->assertDontSee('新连载')->assertSee('少年');
         $this->get('/manga?order=hits')->assertOk()->assertSee('人气本');
         $this->get('/manga?wd=没有这本')->assertOk()->assertSee('没有符合条件的漫画');
 

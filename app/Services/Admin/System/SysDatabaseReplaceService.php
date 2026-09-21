@@ -274,6 +274,9 @@ class SysDatabaseReplaceService
                 'fields' => [
                     ['key' => 'title', 'label' => admin_t('ui.repl_title')],
                     ['key' => 'description', 'label' => admin_t('ui.repl_blurb')],
+                    ['key' => 'seo_title', 'label' => admin_t('ui.repl_seo_title')],
+                    ['key' => 'seo_keywords', 'label' => admin_t('ui.repl_seo_kw')],
+                    ['key' => 'seo_description', 'label' => admin_t('ui.repl_seo_desc')],
                     ['key' => 'subtitle', 'label' => admin_t('ui.repl_subtitle')],
                     ['key' => 'remarks', 'label' => admin_t('ui.repl_remarks')],
                     ['key' => 'director', 'label' => admin_t('ui.repl_director')],

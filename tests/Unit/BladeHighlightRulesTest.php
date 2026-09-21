@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class BladeHighlightRulesTest extends TestCase
 {
+    private const CMS_DIR = '/^(end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*$/';
+
     public function test_all_theme_directives_are_in_the_highlighter(): void
     {
         $js = (string) file_get_contents(base_path('plugins/CodeEditor/assets/blade.js'));
@@ -29,7 +31,7 @@ class BladeHighlightRulesTest extends TestCase
             preg_match_all('/@(?!@)[A-Za-z_][A-Za-z0-9_]*/', $src, $found);
             foreach (array_unique($found[0]) as $dir) {
                 $name = substr($dir, 1);
-                if (preg_match('/^(end)?vod[A-Za-z]*$/', $name) || $name === 'conf') {
+                if (preg_match(self::CMS_DIR, $name) || $name === 'conf') {
                     continue;
                 }
                 if (! in_array($name, $blade, true)) {
@@ -72,8 +74,12 @@ class BladeHighlightRulesTest extends TestCase
         ] as $dir) {
             $this->assertSame(1, preg_match($re, $dir), $dir);
         }
-        $this->assertSame(1, preg_match('/^@(?:end)?vod[A-Za-z]*\b/', '@vodSource'));
-        $this->assertSame(1, preg_match('/^@(?:end)?vod[A-Za-z]*\b/', '@endvodSource'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@vodSource'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@endvodSource'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@manga'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@endgallery'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@novelType'));
+        $this->assertSame(1, preg_match('/^@(?:end)?(?:vod|manga|gallery|novel|live)[A-Za-z]*\b/', '@liveCate'));
     }
 
     public function test_css_at_rules_are_not_treated_as_blade(): void

@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\HttpSsl;
 use App\Support\Plugins\PluginHost;
 use App\Support\Plugins\PluginManager;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::defaultView('pagination.default');
         Paginator::defaultSimpleView('pagination.simple');
+        Http::globalOptions([
+            'verify' => HttpSsl::verify(),
+        ]);
         try {
             app(\App\Services\Video\VideoSettingService::class)->applyRuntime();
         } catch (\Throwable) {

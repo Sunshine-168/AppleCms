@@ -15,8 +15,9 @@ class NovelController extends Controller
     public function __construct(private readonly NovelService $service, private readonly SiteFrontService $front) {}
 
     /** 显示小说列表。 */
-    public function index()
+    public function index(Request $request, ?int $type = null)
     {
+        $this->bindQueryIfMissing($request, 'type', $type);
         if (! $this->service->ready()) {
             throw new NotFoundHttpException;
         }

@@ -73,6 +73,50 @@ class LiveService
         return $page;
     }
 
+    /** @return Collection|\Illuminate\Support\Collection */
+    public function listForTag(array $options = []): Collection|\Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection
+    {
+        if (! $this->ready()) {
+            return collect();
+        }
+        $num = max(1, (int) ($options['num'] ?? 12));
+        $cateId = (int) ($options['typeid'] ?? $options['cate'] ?? 0);
+        $wd = trim((string) ($options['wd'] ?? ''));
+        $q = LiveChannel::query()->published()->with('category')
+            ->when($cateId > 0, fn ($query) => $query->where('cate_id', $cateId))
+            ->when($wd !== '', fn ($query) => $query->where(function ($inner) use ($wd) {
+                $inner->where('title', 'like', '%'.$wd.'%')
+                    ->orWhere('sub', 'like', '%'.$wd.'%')
+                    ->orWhere('remarks', 'like', '%'.$wd.'%');
+            }));
+        if (! empty($options['ids'])) {
+            $ids = is_array($options['ids'])
+                ? $options['ids']
+                : (preg_split('/\s*,\s*/', (string) $options['ids']) ?: []);
+            $q->whereIn('id', array_map('intval', $ids));
+        }
+        $order = (string) ($options['order'] ?? 'time');
+        if (($options['flag'] ?? '') === 'recommend' && Schema::hasColumn('plugin_live_channels', 'recommend')) {
+            $q->where('recommend', '>', 0);
+        }
+        if (($options['flag'] ?? '') === 'hot' || $order === 'hits') {
+            $q->orderByDesc('hits')->orderByDesc('id');
+        } else {
+            $q->when(Schema::hasColumn('plugin_live_channels', 'recommend'), fn ($query) => $query->orderByDesc('recommend'))
+                ->orderByDesc('sort')
+                ->orderByDesc('id');
+        }
+        if (! empty($options['page'])) {
+            $page = $q->paginate($num)->withQueryString();
+            $page->getCollection()->transform(fn (LiveChannel $channel) => $this->decorate($channel));
+
+            return $page;
+        }
+        $rows = $q->limit($num)->get();
+
+        return $rows->each(fn (LiveChannel $channel) => $this->decorate($channel));
+    }
+
     /** 推荐频道（recommend > 0）。 */
     public function recommendedChannels(int $limit = 8): Collection
     {

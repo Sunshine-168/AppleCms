@@ -27,7 +27,6 @@
         'empty_plogs' => admin_t('ui.empty_plogs'),
         'empty_plogs_hint' => admin_t('ui.empty_plogs_hint'),
         'no_match_plogs' => admin_t('ui.no_match_plogs'),
-        'go_members' => admin_t('ui.go_members'),
         'please_fill_member_id' => admin_t('ui.please_fill_member_id'),
         'please_points_change_nonzero' => admin_t('ui.please_points_change_nonzero'),
         'please_select_plogs' => admin_t('ui.please_select_plogs'),
@@ -43,8 +42,6 @@
     <div class="card-header">
         <span>{{ admin_t('ui.plogs') }} <em id="plog-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/orders">{{ admin_t('ui.orders') }}</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/cards">{{ admin_t('ui.cards') }}</a>
             <button type="button" class="btn btn-sm" id="plog-add-btn">{{ admin_t('ui.adjust_points') }}</button>
         </div>
@@ -173,7 +170,7 @@
             if (isFiltered(where)) {
                 return '<div class="list-empty"><p>' + L.no_match_plogs + '</p><p><button type="button" class="btn btn-muted btn-sm" id="plog-empty-reset">' + L.clear_filter + '</button></p></div>';
             }
-            return '<div class="list-empty"><p>' + L.empty_plogs + '</p><p class="muted">' + L.empty_plogs_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="plog-empty-add">' + L.adjust_points + '</button> <a class="btn btn-muted btn-sm" href="/admin/video/members">' + L.go_members + '</a></p></div>';
+            return '<div class="list-empty"><p>' + L.empty_plogs + '</p><p class="muted">' + L.empty_plogs_hint + '</p><p><button type="button" class="btn btn-primary btn-sm" id="plog-empty-add">' + L.adjust_points + '</button></p></div>';
         },
         onDraw: function (_wrap, list) {
             var add = document.getElementById('plog-empty-add');

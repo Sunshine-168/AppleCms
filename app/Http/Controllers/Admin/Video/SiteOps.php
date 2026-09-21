@@ -168,6 +168,7 @@ class SiteOps extends Controller
             'actors' => $catalog['actors'],
             'roles' => $catalog['roles'],
             'hasArts' => $catalog['hasArts'],
+            'pluginMakes' => $catalog['plugins'] ?? [],
             'detailCap' => $catalog['detailCap'],
         ]);
     }

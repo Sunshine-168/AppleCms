@@ -58,6 +58,18 @@ class DiskHtmlService
             'website' => '网址',
             'vod_day' => '当天视频',
             'art_day' => '当天文章',
+            'manga' => '漫画',
+            'manga_type' => '漫画分类',
+            'manga_day' => '当天漫画',
+            'gallery' => '图集',
+            'gallery_type' => '图集分类',
+            'gallery_day' => '当天图集',
+            'novel' => '小说',
+            'novel_type' => '小说分类',
+            'novel_day' => '当天小说',
+            'live' => '直播',
+            'live_cate' => '直播分类',
+            'live_day' => '当天直播',
         ];
     }
 
@@ -402,6 +414,34 @@ class DiskHtmlService
         if ($all || $scope === 'website') {
             $this->collectWebsiteUrls($urls, $filter);
         }
+        $mangaDay = $scope === 'manga_day';
+        $galleryDay = $scope === 'gallery_day';
+        $novelDay = $scope === 'novel_day';
+        $liveDay = $scope === 'live_day';
+        if ($all || $scope === 'manga_type' || $mangaDay) {
+            $this->collectPluginTypeUrls($urls, $mangaDay ? $todayFilter : $filter, 'manga', 'plugin_manga_types', \Plugins\Manga\Models\MangaType::class, '/manga/type/', '/manga');
+        }
+        if ($all || $scope === 'manga' || $mangaDay) {
+            $this->collectPluginDetailUrls($urls, $mangaDay ? $todayFilter : $filter, 'manga', 'plugin_mangas', \Plugins\Manga\Models\Manga::class, '/manga/', 'type_id');
+        }
+        if ($all || $scope === 'gallery_type' || $galleryDay) {
+            $this->collectPluginTypeUrls($urls, $galleryDay ? $todayFilter : $filter, 'gallery', 'plugin_gallery_types', \Plugins\Gallery\Models\GalleryType::class, '/gallery/type/', '/gallery');
+        }
+        if ($all || $scope === 'gallery' || $galleryDay) {
+            $this->collectPluginDetailUrls($urls, $galleryDay ? $todayFilter : $filter, 'gallery', 'plugin_galleries', \Plugins\Gallery\Models\Gallery::class, '/gallery/', 'type_id');
+        }
+        if ($all || $scope === 'novel_type' || $novelDay) {
+            $this->collectPluginTypeUrls($urls, $novelDay ? $todayFilter : $filter, 'novel', 'plugin_novel_types', \Plugins\Novel\Models\NovelType::class, '/novel/type/', '/novel');
+        }
+        if ($all || $scope === 'novel' || $novelDay) {
+            $this->collectPluginDetailUrls($urls, $novelDay ? $todayFilter : $filter, 'novel', 'plugin_novels', \Plugins\Novel\Models\Novel::class, '/novel/', 'type_id');
+        }
+        if ($all || $scope === 'live_cate' || $liveDay) {
+            $this->collectPluginTypeUrls($urls, $liveDay ? $todayFilter : $filter, 'live', 'plugin_live_categories', \Plugins\Live\Models\LiveCategory::class, '/live/cate/', '/live');
+        }
+        if ($all || $scope === 'live' || $liveDay) {
+            $this->collectPluginDetailUrls($urls, $liveDay ? $todayFilter : $filter, 'live', 'plugin_live_channels', \Plugins\Live\Models\LiveChannel::class, '/live/', 'cate_id');
+        }
 
         $out = $this->uniqueUrls($urls);
         if ($filter['when'] === 'missing') {
@@ -418,6 +458,7 @@ class DiskHtmlService
      *     topics: list<array{id:int,name:string}>,
      *     actors: list<array{id:int,name:string}>,
      *     roles: list<array{id:int,name:string}>,
+     *     plugins: list<array<string, mixed>>,
      *     hasArts: bool,
      *     detailCap: int,
      *     listCap: int
@@ -438,6 +479,7 @@ class DiskHtmlService
             'topics' => $this->pickNameRows('video_topics', VideoTopicModel::class, self::PICK_CAP),
             'actors' => $this->pickNameRows('actors', ActorModel::class, self::PICK_CAP),
             'roles' => $this->pickNameRows('video_roles', VideoRole::class, self::PICK_CAP),
+            'plugins' => $this->pluginMakeBlocks(),
             'hasArts' => $hasArts,
             'detailCap' => self::DETAIL_CAP,
             'listCap' => self::LIST_CAP,
@@ -508,6 +550,26 @@ class DiskHtmlService
 
             return;
         }
+        if (in_array($scope, ['manga', 'manga_type'], true)) {
+            $this->pushUrl($urls, '/manga');
+
+            return;
+        }
+        if (in_array($scope, ['gallery', 'gallery_type'], true)) {
+            $this->pushUrl($urls, '/gallery');
+
+            return;
+        }
+        if (in_array($scope, ['novel', 'novel_type'], true)) {
+            $this->pushUrl($urls, '/novel');
+
+            return;
+        }
+        if (in_array($scope, ['live', 'live_cate'], true)) {
+            $this->pushUrl($urls, '/live');
+
+            return;
+        }
         if (in_array($scope, ['art', 'art_type', 'art_tag'], true)) {
             $this->pushUrl($urls, '/arts');
 
@@ -525,6 +587,20 @@ class DiskHtmlService
         $this->pushUrl($urls, '/topics');
         $this->pushUrl($urls, '/arts');
         $this->pushUrl($urls, '/website');
+        if ($this->pluginOn('manga')) {
+            $this->pushUrl($urls, '/manga');
+            $this->pushUrl($urls, '/manga/rank');
+            $this->pushUrl($urls, '/manga/update');
+        }
+        if ($this->pluginOn('gallery')) {
+            $this->pushUrl($urls, '/gallery');
+        }
+        if ($this->pluginOn('novel')) {
+            $this->pushUrl($urls, '/novel');
+        }
+        if ($this->pluginOn('live')) {
+            $this->pushUrl($urls, '/live');
+        }
     }
 
     /**
@@ -720,6 +796,130 @@ class DiskHtmlService
                 $this->pushUrl($urls, $this->pathOf(vod_url('website', ['id' => $website->id]), '/website/'.$website->id));
             });
         });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     * @param  class-string  $class
+     */
+    protected function collectPluginTypeUrls(array &$urls, array $filter, string $plugin, string $table, string $class, string $prefix, string $home): void
+    {
+        $this->collectGroup($urls, $this->pluginOn($plugin) && Schema::hasTable($table) && class_exists($class), function () use (&$urls, $filter, $table, $class, $prefix, $home) {
+            $this->pushUrl($urls, $home);
+            $q = $class::query()->orderBy('id');
+            if (Schema::hasColumn($table, 'status')) {
+                $q->where('status', 1);
+            }
+            if ($filter['ids'] !== []) {
+                $q->whereIn('id', $filter['ids']);
+            }
+            if ($filter['when'] === 'today') {
+                if (Schema::hasColumn($table, 'updated_at')) {
+                    $this->constrainWhen($q, $table, 'today');
+                } elseif (Schema::hasColumn($table, 'created_at')) {
+                    $q->where('created_at', '>=', $this->todayStart());
+                }
+            }
+            $q->limit(self::LIST_CAP)->each(function ($row) use (&$urls, $prefix) {
+                $this->pushUrl($urls, $prefix.(int) $row->id);
+            });
+        });
+    }
+
+    /**
+     * @param  list<string>  $urls
+     * @param  array{ids: list<int>, type_ids: list<int>, when: string, extra: string}  $filter
+     * @param  class-string  $class
+     */
+    protected function collectPluginDetailUrls(array &$urls, array $filter, string $plugin, string $table, string $class, string $prefix, string $typeCol): void
+    {
+        $this->collectGroup($urls, $this->pluginOn($plugin) && Schema::hasTable($table) && class_exists($class), function () use (&$urls, $filter, $table, $class, $prefix, $typeCol) {
+            $q = $class::query()->orderByDesc('id');
+            if (method_exists($class, 'scopePublished')) {
+                $q->published();
+            } elseif (Schema::hasColumn($table, 'status')) {
+                $q->where('status', 1);
+            }
+            if ($filter['type_ids'] !== [] && Schema::hasColumn($table, $typeCol)) {
+                $q->whereIn($typeCol, $filter['type_ids']);
+            }
+            $this->constrainWhen($q, $table, $filter['when']);
+            $q->limit(self::DETAIL_CAP)->each(function ($row) use (&$urls, $prefix) {
+                $this->pushUrl($urls, $prefix.(int) $row->id);
+            });
+        });
+    }
+
+    /** @return list<array<string, mixed>> */
+    protected function pluginMakeBlocks(): array
+    {
+        $out = [];
+        foreach ([
+            ['id' => 'manga', 'label' => 'ui.make_manga', 'home' => 'ui.manga_home', 'table' => 'plugin_manga_types', 'class' => \Plugins\Manga\Models\MangaType::class, 'from' => 'manga_types', 'typeScope' => 'manga_type', 'detailScope' => 'manga', 'dayScope' => 'manga_day'],
+            ['id' => 'gallery', 'label' => 'ui.make_gallery', 'home' => 'ui.gallery_home', 'table' => 'plugin_gallery_types', 'class' => \Plugins\Gallery\Models\GalleryType::class, 'from' => 'gallery_types', 'typeScope' => 'gallery_type', 'detailScope' => 'gallery', 'dayScope' => 'gallery_day'],
+            ['id' => 'novel', 'label' => 'ui.make_novel', 'home' => 'ui.novel_home', 'table' => 'plugin_novel_types', 'class' => \Plugins\Novel\Models\NovelType::class, 'from' => 'novel_types', 'typeScope' => 'novel_type', 'detailScope' => 'novel', 'dayScope' => 'novel_day'],
+            ['id' => 'live', 'label' => 'ui.make_live', 'home' => 'ui.live_home', 'table' => 'plugin_live_categories', 'class' => \Plugins\Live\Models\LiveCategory::class, 'from' => 'live_cates', 'typeScope' => 'live_cate', 'detailScope' => 'live', 'dayScope' => 'live_day'],
+        ] as $row) {
+            if (! $this->pluginOn($row['id'])) {
+                continue;
+            }
+            $out[] = [
+                'id' => $row['id'],
+                'label' => admin_t($row['label']),
+                'home_label' => admin_t($row['home']),
+                'from' => $row['from'],
+                'type_scope' => $row['typeScope'],
+                'detail_scope' => $row['detailScope'],
+                'day_scope' => $row['dayScope'],
+                'types' => $this->pluginTypeCatalog($row['table'], $row['class']),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  class-string  $class
+     * @return list<array{id:int,name:string,parent_id:int,depth:int}>
+     */
+    protected function pluginTypeCatalog(string $table, string $class): array
+    {
+        try {
+            if (! Schema::hasTable($table) || ! class_exists($class)) {
+                return [];
+            }
+            $q = $class::query()->orderByDesc('sort')->orderBy('id');
+            if (Schema::hasColumn($table, 'status')) {
+                $q->where('status', 1);
+            }
+            $cols = ['id', 'name'];
+            $hasParent = Schema::hasColumn($table, 'parent_id');
+            if ($hasParent) {
+                $cols[] = 'parent_id';
+            }
+            $rows = [];
+            foreach ($q->get($cols) as $row) {
+                $rows[] = [
+                    'id' => (int) $row->id,
+                    'name' => (string) $row->name,
+                    'parent_id' => $hasParent ? (int) ($row->parent_id ?? 0) : 0,
+                ];
+            }
+
+            return $this->treeTypes($rows);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    protected function pluginOn(string $id): bool
+    {
+        try {
+            return app(\App\Support\Plugins\PluginManager::class)->isEnabled($id);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     protected function constrainMid(\Illuminate\Database\Eloquent\Builder $query, int $mid): void

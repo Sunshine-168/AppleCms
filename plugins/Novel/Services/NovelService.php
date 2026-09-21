@@ -47,8 +47,8 @@ class NovelService
                 ->orWhere('author', 'like', '%'.$wd.'%')
                 ->orWhere('tags', 'like', '%'.$wd.'%'));
         }
-        if ((int) request()->query('type', 0) > 0) {
-            $q->where('type_id', (int) request()->query('type'));
+        if ((int) request()->query('type', request()->route('type', 0)) > 0) {
+            $q->where('type_id', (int) request()->query('type', request()->route('type')));
         }
         $tag = trim((string) request()->query('tag', ''));
         if ($tag !== '') {
@@ -67,18 +67,72 @@ class NovelService
         return $this->decorateFrontRows($q->paginate($perPage)->withQueryString());
     }
 
+    /** @return Collection<int, Novel>|\Illuminate\Contracts\Pagination\LengthAwarePaginator */
+    public function listForTag(array $options = []): Collection|\Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        if (! $this->ready()) {
+            return collect();
+        }
+        $num = max(1, (int) ($options['num'] ?? 12));
+        $q = Novel::query()->published();
+        if ((int) ($options['typeid'] ?? 0) > 0) {
+            $q->where('type_id', (int) $options['typeid']);
+        }
+        if (($options['flag'] ?? '') === 'recommend' && Schema::hasColumn('plugin_novels', 'recommend')) {
+            $q->where('recommend', 1);
+        }
+        $wd = trim((string) ($options['wd'] ?? ''));
+        if ($wd !== '') {
+            $q->where(fn ($x) => $x->where('title', 'like', '%'.$wd.'%')
+                ->orWhere('author', 'like', '%'.$wd.'%')
+                ->orWhere('tags', 'like', '%'.$wd.'%'));
+        }
+        $tag = trim((string) ($options['tag'] ?? ''));
+        if ($tag !== '') {
+            $q->where('tags', 'like', '%'.$tag.'%');
+        }
+        if (! empty($options['ids'])) {
+            $ids = is_array($options['ids'])
+                ? $options['ids']
+                : (preg_split('/\s*,\s*/', (string) $options['ids']) ?: []);
+            $q->whereIn('id', array_map('intval', $ids));
+        }
+        $order = (string) ($options['order'] ?? 'time');
+        if (($options['flag'] ?? '') === 'hot' || $order === 'hits') {
+            $q->orderByDesc('hits')->orderByDesc('id');
+        } else {
+            $q->orderByDesc('sort')->orderByDesc('id');
+        }
+        if (! empty($options['page'])) {
+            $page = $q->paginate($num)->withQueryString();
+            $this->decorateFrontRows($page);
+
+            return $page;
+        }
+        $rows = $q->limit($num)->get();
+        $this->decorateRowList($rows);
+
+        return $rows;
+    }
+
     /** 给列表附加收藏数。 */
     public function decorateFrontRows($page)
     {
-        $items = collect($page->items());
+        $this->decorateRowList(collect($page->items()));
+
+        return $page;
+    }
+
+    /** @param  Collection<int, Novel>|Collection  $items */
+    public function decorateRowList($items): void
+    {
+        $items = collect($items);
         $ids = $items->pluck('id')->map(fn ($id) => (int) $id)->all();
         $counts = $this->favorCounts($ids);
         foreach ($items as $row) {
             $row->favor_count = $counts[(int) $row->id] ?? (int) ($row->favor_count ?? 0);
             $row->tag_list = self::splitTags((string) ($row->tags ?? ''));
         }
-
-        return $page;
     }
 
     /** 批量统计收藏数。 */

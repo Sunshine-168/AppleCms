@@ -18,6 +18,7 @@
     $topics = is_array($topics ?? null) ? $topics : [];
     $actors = is_array($actors ?? null) ? $actors : [];
     $roles = is_array($roles ?? null) ? $roles : [];
+    $pluginMakes = is_array($pluginMakes ?? null) ? $pluginMakes : [];
     $hasArts = (bool) ($hasArts ?? false);
     $detailCap = (int) ($detailCap ?? 2000);
     $makeJsLang = [
@@ -150,6 +151,35 @@
                     </div>
                 </div>
                 @endif
+
+                @foreach($pluginMakes as $block)
+                <div class="make-opt-row">
+                    <div class="make-opt-label">{{ $block['label'] }}</div>
+                    <div class="make-opt-body">
+                        <div class="make-opt-list" id="{{ $block['from'] }}-list">
+                            @forelse(($block['types'] ?? []) as $type)
+                                <label class="make-opt-d{{ min(3, (int) ($type['depth'] ?? 0)) }}">
+                                    <input type="checkbox" name="{{ $block['from'] }}" value="{{ (int) $type['id'] }}">
+                                    {{ $type['name'] }}
+                                </label>
+                            @empty
+                                <p class="muted">{{ admin_t('ui.empty_types') }}</p>
+                            @endforelse
+                        </div>
+                        <div class="make-opt-btns">
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['type_scope'] }}" data-from="{{ $block['from'] }}" data-need="ids">{{ admin_t('ui.pick_types') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['type_scope'] }}">{{ admin_t('ui.make_all_cats') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['type_scope'] }}" data-when="today">{{ admin_t('ui.today_types') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['detail_scope'] }}" data-type-from="{{ $block['from'] }}" data-need="types">{{ admin_t('ui.pick_content') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['detail_scope'] }}">{{ admin_t('ui.all_content') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['detail_scope'] }}" data-when="today">{{ admin_t('ui.today_content') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['detail_scope'] }}" data-when="missing" data-type-from="{{ $block['from'] }}">{{ admin_t('ui.not_generated') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['day_scope'] }}">{{ admin_t('ui.one_click_today') }}</button>
+                            <button type="button" class="btn btn-primary" data-make="1" data-scope="{{ $block['detail_scope'] }}" data-extra="index">{{ $block['home_label'] }}</button>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
 
                 <div class="make-opt-row">
                     <div class="make-opt-label">{{ admin_t('ui.topics') }}</div>

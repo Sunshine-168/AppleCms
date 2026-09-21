@@ -4,6 +4,11 @@
 @php
     $queues = $queues ?? ['all' => 0, 'unused' => 0, 'used' => 0, 'void' => 0, 'today' => 0];
     $q = fn (string $k) => (int) ($queues[$k] ?? 0);
+    $desk = request()->query('desk', request()->filled('rank') ? 'rank' : 'codes');
+    if (! in_array($desk, ['codes', 'rank'], true)) {
+        $desk = 'codes';
+    }
+    $rankPeriod = $rankPeriod ?? 'month';
     $inviteJsLang = [
         'status' => admin_t('ui.status'),
         'actions' => admin_t('ui.actions'),
@@ -59,13 +64,17 @@
     <div class="card-header">
         <span>{{ admin_t('ui.invites') }} <em id="invite-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
-            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=interact">{{ admin_t('ui.register_settings') }}</a>
+            <a class="btn btn-muted btn-sm" href="/admin/video/settings?tab=member">{{ admin_t('ui.register_settings') }}</a>
             <a class="btn btn-muted btn-sm" href="/admin/video/cards">{{ admin_t('ui.cards') }}</a>
             <button type="button" class="btn btn-sm" id="invite-gen-btn">{{ admin_t('ui.gen_cards') }}</button>
         </div>
     </div>
     <div class="card-body">
+        <div class="tabs" id="inviteDesks">
+            <button type="button" class="{{ $desk === 'codes' ? 'active' : '' }}" data-desk="codes">{{ admin_t('ui.invites') }}</button>
+            <button type="button" class="{{ $desk === 'rank' ? 'active' : '' }}" data-desk="rank">{{ admin_t('ui.invite_rank') }}</button>
+        </div>
+        <div class="invite-desk{{ $desk === 'codes' ? ' is-on' : '' }}" data-desk="codes">
         <form class="filter-bar" id="invite-search" onsubmit="return false;">
             <input type="hidden" name="queue">
             <input type="hidden" name="today">
@@ -89,6 +98,47 @@
             <button type="button" class="btn btn-muted btn-sm" id="invite-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
         <div id="invite-table"></div>
+        </div>
+        <div class="invite-desk{{ $desk === 'rank' ? ' is-on' : '' }}" data-desk="rank">
+            <div class="queue-chips" id="invite-rank-period">
+                <a class="chip{{ $rankPeriod === 'month' ? ' active' : '' }}" href="/admin/video/invites?desk=rank&rank=month">{{ admin_t('ui.this_month') }}</a>
+                <a class="chip{{ $rankPeriod === 'all' ? ' active' : '' }}" href="/admin/video/invites?desk=rank&rank=all">{{ admin_t('ui.all_time') }}</a>
+            </div>
+            @if(!empty($rankRows))
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{ admin_t('ui.rank') }}</th>
+                            <th>{{ admin_t('ui.members') }}</th>
+                            <th>{{ admin_t('ui.direct_invites') }}</th>
+                            <th>{{ admin_t('ui.reward_days_col') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($rankRows as $row)
+                            <tr>
+                                <td>{{ $row['rank'] }}</td>
+                                <td>
+                                    @if((int) ($row['member_id'] ?? 0) > 0)
+                                        <a href="/admin/video/members?q={{ (int) $row['member_id'] }}">{{ $row['name'] }}</a>
+                                        <span class="muted">#{{ $row['member_id'] }}</span>
+                                    @else
+                                        {{ $row['name'] }}
+                                    @endif
+                                </td>
+                                <td>{{ $row['invites'] }}</td>
+                                <td>{{ $row['days'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="list-empty">
+                    <p>{{ admin_t('ui.empty_invite_rank') }}</p>
+                    <p class="muted"><a href="/admin/video/settings?tab=member">{{ admin_t('ui.register_settings') }}</a></p>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 <template id="invite-gen-tpl">
@@ -180,15 +230,17 @@
             ta.remove();
         }
     }
-    function badgeHtml(state) {
-        if (state === 'used') return '<span class="badge badge-ok">' + L.invite_used + '</span>';
-        if (state === 'void') return '<span class="badge badge-off">' + L.card_void + '</span>';
-        return '<span class="badge badge-warn">' + L.card_unused + '</span>';
-    }
     function memberHref(id) {
         id = parseInt(id, 10) || 0;
         if (id > 0) return '/admin/video/members?q=' + encodeURIComponent(id);
         return '/admin/video/members';
+    }
+    function namedMeta(tpl, name, id) {
+        var safe = U.escape(name || '');
+        if (parseInt(id, 10) > 0) {
+            safe = '<a href="' + memberHref(id) + '">' + safe + '</a>';
+        }
+        return String(tpl || '').replace('__NAME__', safe);
     }
     function ownerName(d) {
         if (d.owner_name) return d.owner_name;
@@ -198,26 +250,20 @@
         return L.system_owner;
     }
     function titleHtml(d) {
-        var owner = ownerName(d);
-        var meta = [String(L.inviter_meta || '').replace('__NAME__', owner)];
+        var bits = [namedMeta(L.inviter_meta, ownerName(d), d.member_id)];
         if (d.state === 'used') {
             var regName = d.used_name || String(L.member_hash || '').replace('__ID__', String(d.used_by));
-            meta.push(String(L.registrant_meta || '').replace('__NAME__', regName));
+            bits.push(namedMeta(L.registrant_meta, regName, d.used_by));
         }
-        meta.push(String(L.points_n || '').replace('__N__', String(parseInt(d.points, 10) || 0)));
-        if (d.created_at_text) meta.push(d.created_at_text);
-        return '<div class="entry-row-title-line"><a class="entry-row-title invite-code js-copy" href="#">' + U.escape(d.code || '') + '</a> ' + badgeHtml(d.state) + '</div>'
-            + '<div class="entry-row-meta">' + U.escape(meta.join(' · ')) + '</div>';
+        bits.push(U.escape(String(L.points_n || '').replace('__N__', String(parseInt(d.points, 10) || 0))));
+        if (d.created_at_text) bits.push(U.escape(d.created_at_text));
+        return '<div class="entry-row-title-line"><a class="entry-row-title invite-code js-copy" href="#">' + U.escape(d.code || '') + '</a></div>'
+            + '<div class="entry-row-meta">' + bits.join(' · ') + '</div>';
     }
     function statusHtml(d) {
         if (d.state === 'used') return U.status(true, L.invite_used);
         if (d.state === 'void') return U.status(false, L.card_void);
         return '<span class="status status-warn">' + L.card_unused + '</span>';
-    }
-    function memberLinkId(d) {
-        if (parseInt(d.used_by, 10) > 0) return d.used_by;
-        if (parseInt(d.member_id, 10) > 0) return d.member_id;
-        return 0;
     }
 
     var table = U.table({
@@ -262,12 +308,34 @@
                 } else if (d.state === 'void') {
                     html += '<a href="#" class="btn-link js-on">' + L.restore + '</a><a href="#" class="btn-link js-del">' + L.delete + '</a>';
                 }
-                html += '<a class="btn-link" href="' + memberHref(memberLinkId(d)) + '">' + L.members + '</a>';
                 return html;
             }}
         ]
     });
     markChips();
+
+    var desks = document.getElementById('inviteDesks');
+    if (desks) {
+        desks.querySelectorAll('[data-desk]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var desk = btn.getAttribute('data-desk') || 'codes';
+                desks.querySelectorAll('[data-desk]').forEach(function (item) {
+                    item.classList.toggle('active', item === btn);
+                });
+                document.querySelectorAll('.invite-desk').forEach(function (pane) {
+                    pane.classList.toggle('is-on', pane.getAttribute('data-desk') === desk);
+                });
+                var url = new URL(window.location.href);
+                if (desk === 'codes') {
+                    url.searchParams.delete('desk');
+                    url.searchParams.delete('rank');
+                } else {
+                    url.searchParams.set('desk', 'rank');
+                }
+                history.replaceState(null, '', url);
+            });
+        });
+    }
 
     function openGenerate() {
         U.dialog({

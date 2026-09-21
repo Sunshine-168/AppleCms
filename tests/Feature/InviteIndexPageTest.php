@@ -25,8 +25,13 @@ class InviteIndexPageTest extends TestCase
         $this->assertStringContainsString('未用', $html);
         $this->assertStringContainsString('已用', $html);
         $this->assertStringContainsString('搜邀请码或会员', $html);
-        $this->assertStringContainsString('/admin/video/settings?tab=interact', $html);
+        $this->assertStringContainsString('/admin/video/settings?tab=member', $html);
         $this->assertStringContainsString('/admin/video/cards', $html);
+        $this->assertStringContainsString('data-desk="rank"', $html);
+        $this->assertStringContainsString('id="inviteDesks"', $html);
+        $this->assertStringNotContainsString('<a class="btn btn-muted btn-sm" href="/admin/video/members">', $html);
+        $this->assertStringNotContainsString("L.members + '</a>'", $html);
+        $this->assertStringContainsString('function memberHref', $html);
         $this->assertStringContainsString('invite-batch', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('mod-add', $html);

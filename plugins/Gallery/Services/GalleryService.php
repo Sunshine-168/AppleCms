@@ -43,8 +43,8 @@ class GalleryService
                 ->orWhere('author', 'like', '%'.$wd.'%')
                 ->orWhere('tags', 'like', '%'.$wd.'%'));
         }
-        if ((int) request()->query('type', 0) > 0) {
-            $q->where('type_id', (int) request()->query('type'));
+        if ((int) request()->query('type', request()->route('type', 0)) > 0) {
+            $q->where('type_id', (int) request()->query('type', request()->route('type')));
         }
         $tag = trim((string) request()->query('tag', ''));
         if ($tag !== '') {
@@ -63,17 +63,68 @@ class GalleryService
         return $this->decorateFrontRows($q->paginate($perPage)->withQueryString());
     }
 
+    /** @return Collection<int, Gallery>|\Illuminate\Contracts\Pagination\LengthAwarePaginator */
+    public function listForTag(array $options = []): Collection|\Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        if (! $this->ready()) {
+            return collect();
+        }
+        $num = max(1, (int) ($options['num'] ?? 12));
+        $q = Gallery::query()->published();
+        if ((int) ($options['typeid'] ?? 0) > 0) {
+            $q->where('type_id', (int) $options['typeid']);
+        }
+        $wd = trim((string) ($options['wd'] ?? ''));
+        if ($wd !== '') {
+            $q->where(fn ($x) => $x->where('title', 'like', '%'.$wd.'%')
+                ->orWhere('author', 'like', '%'.$wd.'%')
+                ->orWhere('tags', 'like', '%'.$wd.'%'));
+        }
+        $tag = trim((string) ($options['tag'] ?? ''));
+        if ($tag !== '') {
+            $q->where('tags', 'like', '%'.$tag.'%');
+        }
+        if (! empty($options['ids'])) {
+            $ids = is_array($options['ids'])
+                ? $options['ids']
+                : (preg_split('/\s*,\s*/', (string) $options['ids']) ?: []);
+            $q->whereIn('id', array_map('intval', $ids));
+        }
+        $order = (string) ($options['order'] ?? 'time');
+        if (($options['flag'] ?? '') === 'hot' || $order === 'hits') {
+            $q->orderByDesc('hits')->orderByDesc('id');
+        } else {
+            $q->orderByDesc('sort')->orderByDesc('id');
+        }
+        if (! empty($options['page'])) {
+            $page = $q->paginate($num)->withQueryString();
+            $this->decorateFrontRows($page);
+
+            return $page;
+        }
+        $rows = $q->limit($num)->get();
+        $this->decorateRowList($rows);
+
+        return $rows;
+    }
+
     /** 给列表附加收藏数与标签。 */
     public function decorateFrontRows($page)
     {
-        $items = collect($page->items());
+        $this->decorateRowList(collect($page->items()));
+
+        return $page;
+    }
+
+    /** @param  Collection<int, Gallery>|Collection  $items */
+    public function decorateRowList($items): void
+    {
+        $items = collect($items);
         $counts = $this->favorCounts($items->pluck('id')->map(fn ($id) => (int) $id)->all());
         foreach ($items as $row) {
             $row->favor_count = $counts[(int) $row->id] ?? (int) ($row->favor_count ?? 0);
             $row->tag_list = self::splitTags((string) ($row->tags ?? ''));
         }
-
-        return $page;
     }
 
     /** 批量统计收藏数。 */

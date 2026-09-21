@@ -25,6 +25,11 @@ class VideoFormPageTest extends TestCase
         $this->assertStringContainsString('保存并加播放地址', $html);
         $this->assertStringContainsString('video-form-page', $html);
         $this->assertStringContainsString('name="title"', $html);
+        $this->assertStringContainsString('name="seo_title"', $html);
+        $this->assertStringContainsString('name="seo_keywords"', $html);
+        $this->assertStringContainsString('name="seo_description"', $html);
+        $this->assertStringContainsString('用 AI 写简介', $html);
+        $this->assertStringContainsString('用 AI 写 SEO', $html);
         $this->assertStringContainsString('value="2"', $html);
         $this->assertStringContainsString('/admin/video', $html);
         $this->assertStringNotContainsString('ui-dialog', $html);

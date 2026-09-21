@@ -74,6 +74,7 @@ class LivePluginTest extends TestCase
             ->assertSee('搜频道名');
         $this->get('/live?q='.urlencode('测试'))->assertOk()->assertSee('测试频道')->assertDontSee('地方台');
         $this->get('/live?cate='.$cateId)->assertOk()->assertSee('测试频道')->assertDontSee('地方台');
+        $this->get('/live/cate/'.$cateId)->assertOk()->assertSee('测试频道')->assertDontSee('地方台');
         $this->get('/live/'.$channel->id)->assertOk()
             ->assertSee('测试频道')
             ->assertSee('推荐 HLS');

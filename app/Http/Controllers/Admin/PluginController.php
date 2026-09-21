@@ -23,11 +23,15 @@ class PluginController extends Controller
         ]);
     }
 
-    public function show(string $id, PluginManager $plugins, VideoSettingService $settings): View
+    public function show(string $id, PluginManager $plugins, VideoSettingService $settings): View|RedirectResponse
     {
         $plugin = $plugins->findForAdmin($id);
         if ($plugin === null) {
             abort(404);
+        }
+        $open = $this->dedicatedConfigUrl($plugin);
+        if ($open !== null) {
+            return redirect($open);
         }
 
         return view('admin.plugins.show', [
@@ -106,5 +110,42 @@ class PluginController extends Controller
         ]);
 
         return Ajax::success(['id' => $id], admin_t('plugin.uninstall_ok'));
+    }
+
+    /** @param array<string, mixed> $plugin */
+    private function dedicatedConfigUrl(array $plugin): ?string
+    {
+        $open = null;
+        foreach ($plugin['pages'] ?? [] as $page) {
+            if (! is_array($page)) {
+                continue;
+            }
+            $url = $this->safeAdminPath((string) ($page['url'] ?? ''));
+            $fields = is_array($page['fields'] ?? null) ? $page['fields'] : [];
+            if ($url !== null && $fields === []) {
+                if ($open === null) {
+                    $open = $url;
+                }
+                continue;
+            }
+            if ($fields !== []) {
+                return null;
+            }
+        }
+
+        return $open;
+    }
+
+    private function safeAdminPath(string $url): ?string
+    {
+        $url = trim($url);
+        if ($url === '' || ! str_starts_with($url, '/admin/')) {
+            return null;
+        }
+        if (str_contains($url, '//') || str_contains($url, '\\') || str_contains($url, "\n") || str_contains($url, "\r")) {
+            return null;
+        }
+
+        return $url;
     }
 }

@@ -15,8 +15,9 @@ class GalleryController extends Controller
     public function __construct(private readonly GalleryService $service, private readonly SiteFrontService $front) {}
 
     /** 显示图集列表。 */
-    public function index()
+    public function index(Request $request, ?int $type = null)
     {
+        $this->bindQueryIfMissing($request, 'type', $type);
         if (! $this->service->ready()) {
             throw new NotFoundHttpException;
         }

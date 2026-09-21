@@ -189,17 +189,12 @@ class PluginManager
     /** @return list<array<string, mixed>> */
     public function listForAdmin(): array
     {
-        $zh = AdminUi::isChinese();
         $out = [];
         foreach ($this->manifests() as $meta) {
             $out[] = [
                 'id' => (string) ($meta['id'] ?? ''),
-                'name' => $zh
-                    ? (string) ($meta['name'] ?? '')
-                    : (string) ($meta['name_en'] ?? $meta['name'] ?? ''),
-                'description' => $zh
-                    ? (string) ($meta['description'] ?? '')
-                    : (string) ($meta['description_en'] ?? $meta['description'] ?? ''),
+                'name' => $this->localizedMeta($meta, 'name'),
+                'description' => $this->localizedMeta($meta, 'description'),
                 'version' => (string) ($meta['version'] ?? '1.0.0'),
                 'enabled' => self::flagOn($meta['enabled'] ?? false),
                 'capability' => (string) ($meta['capability'] ?? 'stub'),
@@ -233,6 +228,7 @@ class PluginManager
                 'key' => $key,
                 'title' => (string) ($page['title'] ?? $key),
                 'hint' => (string) ($page['hint'] ?? ''),
+                'url' => trim((string) ($page['url'] ?? '')),
                 'fields' => is_array($page['fields'] ?? null) ? $page['fields'] : [],
             ]);
         }
@@ -289,6 +285,24 @@ class PluginManager
         $this->manifests = $out;
 
         return $this->manifests;
+    }
+
+    /** @param  array<string, mixed>  $meta */
+    private function localizedMeta(array $meta, string $field): string
+    {
+        $code = AdminUi::current();
+        $zh = (string) ($meta[$field] ?? '');
+        if ($code === 'zh_tw') {
+            $tw = trim((string) ($meta[$field.'_zh_tw'] ?? ''));
+
+            return $tw !== '' ? $tw : $zh;
+        }
+        if ($code === AdminUi::ZH) {
+            return $zh;
+        }
+        $en = (string) ($meta[$field.'_en'] ?? '');
+
+        return $en !== '' ? $en : $zh;
     }
 
     private function manifestFile(string $id): string

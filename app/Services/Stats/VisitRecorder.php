@@ -35,7 +35,7 @@ class VisitRecorder
         }
 
         try {
-            StatHit::query()->create([
+            StatHit::query()->insert([
                 'path' => mb_substr($path, 0, 500),
                 'query' => mb_substr((string) $request->getQueryString(), 0, 500) ?: null,
                 'ip' => mb_substr($ip, 0, 45) ?: null,
@@ -43,10 +43,10 @@ class VisitRecorder
                 'user_agent' => mb_substr($ua, 0, 500) ?: null,
                 'referer' => mb_substr((string) $request->headers->get('referer'), 0, 500) ?: null,
                 'locale' => app()->getLocale(),
-                'is_spider' => $isSpider,
+                'is_spider' => $isSpider ? 1 : 0,
                 'spider_name' => $spiderName,
                 'status_code' => $response->getStatusCode(),
-                'created_at' => now(),
+                'created_at' => now()->toDateTimeString(),
             ]);
         } catch (\Throwable) {
             // 统计失败不影响前台

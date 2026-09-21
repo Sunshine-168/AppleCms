@@ -54,7 +54,7 @@ class MemberController extends Controller
 
     public function register(Request $request): JsonResponse
     {
-        $result = $this->interaction->register($request->all());
+        $result = $this->interaction->register($request->all() + ['ip' => (string) $request->ip()]);
         if ($result['code'] !== 0) {
             return AppApi::fail((string) $result['msg']);
         }
@@ -95,9 +95,14 @@ class MemberController extends Controller
                 ])->values()->all()
             : [];
 
+        $growth = app(\App\Services\Member\MemberGrowthService::class);
+        $stats = $growth->myStats($member);
+
         return AppApi::ok([
             'member' => AppApi::member($member),
             'invites' => $invites,
+            'invite' => $stats,
+            'rank' => $growth->rank('month', 10),
         ]);
     }
 
@@ -135,6 +140,34 @@ class MemberController extends Controller
             'msg' => $result['msg'],
             'data' => $result['data'] ?? [],
         ], 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    public function inviteRank(Request $request): JsonResponse
+    {
+        $period = (string) $request->query('period', 'month');
+        if (! in_array($period, ['month', 'all'], true)) {
+            $period = 'month';
+        }
+        $growth = app(\App\Services\Member\MemberGrowthService::class);
+
+        return AppApi::ok([
+            'period' => $period,
+            'rank' => $growth->rank($period, 50),
+            'mine' => $growth->myStats(Auth::guard('member')->user()),
+        ]);
+    }
+
+    public function invitePoster()
+    {
+        $png = app(\App\Services\Member\MemberGrowthService::class)->posterPng(Auth::guard('member')->user());
+        if ($png === null || $png === '') {
+            return AppApi::fail('无法生成海报');
+        }
+
+        return response($png, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="invite.png"',
+        ]);
     }
 
     public function favorites(): JsonResponse

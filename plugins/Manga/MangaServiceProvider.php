@@ -23,5 +23,9 @@ class MangaServiceProvider extends ServiceProvider
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');
         }
+        PluginBoot::cmsLoops([
+            'manga' => \Plugins\Manga\Tags\MangaTag::class,
+            'mangaType' => \Plugins\Manga\Tags\MangaTypeTag::class,
+        ]);
     }
 }

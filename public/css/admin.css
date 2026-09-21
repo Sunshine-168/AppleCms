@@ -2704,6 +2704,9 @@ hr.soft { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
     font-size: 13px;
     letter-spacing: 0.04em;
 }
+.invite-index .invite-desk { display: none; }
+.invite-index .invite-desk.is-on { display: block; }
+.invite-index .tabs { margin: 0 0 12px; }
 .card-index .card-codes,
 .invite-index .invite-codes {
     width: 100%;

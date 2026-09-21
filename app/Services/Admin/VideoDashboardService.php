@@ -279,10 +279,7 @@ class VideoDashboardService
         $yesterday = now()->subDay()->toDateString();
         if (Schema::hasTable('stat_hits')) {
             try {
-                return [
-                    'today' => $this->stats->playPageStats($today, $today),
-                    'yesterday' => $this->stats->playPageStats($yesterday, $yesterday),
-                ];
+                return $this->stats->playPagePair($today, $yesterday);
             } catch (\Throwable) {
             }
         }

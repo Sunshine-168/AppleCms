@@ -6,7 +6,6 @@ use App\Models\Member\Member;
 use App\Models\Member\MemberFavorite;
 use App\Models\Member\MemberGroup;
 use App\Models\Member\MemberHistory;
-use App\Models\Member\MemberInvite;
 use App\Models\Member\MemberPointLog;
 use App\Models\Video\VideoArt;
 use App\Models\Video\VideoComment;
@@ -17,7 +16,6 @@ use App\Models\Video\VideoUlog;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 class InteractionService
 {
@@ -69,94 +67,21 @@ class InteractionService
         if ($phone !== '' && Schema::hasColumn('members', 'phone')) {
             $payload['phone'] = $phone;
         }
+        $code = (string) ($data['invite'] ?? '');
+        $growth = app(\App\Services\Member\MemberGrowthService::class);
+        $gate = $growth->assertInvite($code);
+        if (($gate['code'] ?? 1) !== 0) {
+            return $gate;
+        }
         $member = Member::query()->create($payload);
-        $this->applyInvite($member, (string) ($data['invite'] ?? ''));
-        $this->issueInvite($member);
+        $growth->afterRegister($member, $code, (string) ($data['ip'] ?? ''));
 
         return Result::success(['id' => $member->id], '注册成功');
     }
 
-    private function applyInvite(Member $member, string $code): void
-    {
-        $code = trim($code);
-        if ($code === '' || ! Schema::hasTable('member_invites')) {
-            return;
-        }
-        $invite = MemberInvite::query()
-            ->where('code', $code)
-            ->where('status', 1)
-            ->where('used_by', 0)
-            ->first();
-        if (! $invite) {
-            return;
-        }
-        $invite->used_by = (int) $member->id;
-        $invite->status = 0;
-        $invite->save();
-        $points = (int) $invite->points;
-        if ($points < 1) {
-            return;
-        }
-        $member->increment('points', $points);
-        $inviterId = (int) $invite->member_id;
-        if ($inviterId > 0 && $inviterId !== (int) $member->id) {
-            Member::query()->where('id', $inviterId)->increment('points', $points);
-        }
-        if (! Schema::hasTable('member_point_logs')) {
-            return;
-        }
-        \App\Models\Member\MemberPointLog::query()->create([
-            'member_id' => (int) $member->id,
-            'points' => $points,
-            'balance' => (int) $member->fresh()->points,
-            'type' => 'invite',
-            'remark' => '邀请码 '.$code,
-            'created_at' => time(),
-        ]);
-    }
-
-    private function issueInvite(Member $member): void
-    {
-        if (! Schema::hasTable('member_invites')) {
-            return;
-        }
-        $code = strtoupper(Str::random(8));
-        while (MemberInvite::query()->where('code', $code)->exists()) {
-            $code = strtoupper(Str::random(8));
-        }
-        MemberInvite::query()->create([
-            'code' => $code,
-            'member_id' => (int) $member->id,
-            'used_by' => 0,
-            'points' => 10,
-            'status' => 1,
-            'created_at' => time(),
-        ]);
-    }
-
     public function generateInvite(Member $member, int $points = 10): array
     {
-        if (! Schema::hasTable('member_invites')) {
-            return Result::fail('邀请码未启用');
-        }
-        $unused = MemberInvite::query()->where('member_id', $member->id)->where('status', 1)->count();
-        if ($unused >= 20) {
-            return Result::fail('未使用邀请码已达 20 个');
-        }
-        $code = strtoupper(Str::random(8));
-        while (MemberInvite::query()->where('code', $code)->exists()) {
-            $code = strtoupper(Str::random(8));
-        }
-        MemberInvite::query()->create([
-            'code' => $code,
-            'member_id' => (int) $member->id,
-            'used_by' => 0,
-            'points' => max(0, $points),
-            'status' => 1,
-            'created_at' => time(),
-        ]);
-
-        return Result::success(['code' => $code], '已生成邀请码 '.$code);
+        return app(\App\Services\Member\MemberGrowthService::class)->generateInvite($member, $points);
     }
 
     public function toggleFavorite(int $memberId, int $videoId): array

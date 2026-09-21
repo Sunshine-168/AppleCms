@@ -117,6 +117,14 @@ class VideoSettingService
             'analytics_code' => '',
             'seo_title_play' => '{name} 在线播放 - {site}',
             'member_invite' => '0',
+            'member_growth_mode' => 'points',
+            'member_trial_days' => '7',
+            'member_invite_reward_days' => '30',
+            'member_invite_month_cap' => '5',
+            'member_invite_ip_daily_cap' => '1',
+            'member_invite_l2_days' => '0',
+            'member_invite_l3_days' => '0',
+            'member_trial_group_id' => '0',
             'upload_ext' => 'jpg,png,gif,webp,mp4',
             'upload_max_mb' => '8',
             'ai_provider' => '',
@@ -157,7 +165,7 @@ class VideoSettingService
             'pay_wechat_appid', 'pay_wechat_mchid', 'pay_wechat_key', 'pay_alipay_appid', 'pay_alipay_key', 'pay_alipay_public', 'storage_disk',
             's3_key', 's3_secret', 's3_region', 's3_bucket', 's3_endpoint', 's3_url',
             'icp', 'site_closed', 'site_close_tip', 'collect_in_status', 'collect_sync_pic', 'collect_hours',
-            'inbound_key', 'member_register', 'member_comment_login', 'comment_audit', 'gbook_audit',
+            'inbound_key', 'member_register', 'member_invite', 'member_comment_login', 'comment_audit', 'gbook_audit',
             'trysee_seconds', 'banned_words', 'seo_title_vod', 'seo_title_type', 'filter_area', 'filter_lang', 'filter_year',
             'provide_key', 'app_key', 'collect_hits_min', 'collect_hits_max', 'collect_pic_local',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
@@ -170,6 +178,8 @@ class VideoSettingService
             'theme_nav_name1', 'theme_nav_url1', 'theme_nav_name2', 'theme_nav_url2',
             'theme_nav_name3', 'theme_nav_url3', 'theme_nav_name4', 'theme_nav_url4',
             'watermark_text', 'analytics_code', 'seo_title_play',
+            'member_growth_mode', 'member_trial_days', 'member_invite_reward_days',
+            'member_invite_month_cap', 'member_invite_ip_daily_cap', 'member_invite_l2_days', 'member_invite_l3_days', 'member_trial_group_id',
             'ai_provider', 'ai_key', 'ai_model', 'ai_endpoint',
             'scout_search_enabled', 'scout_driver', 'scout_meili_host', 'scout_meili_key',
         ];
@@ -408,6 +418,14 @@ class VideoSettingService
             'analytics_code' => (string) ($all['analytics_code'] ?? ''),
             'seo_title_play' => (string) ($all['seo_title_play'] ?? ''),
             'member_invite' => (string) ($all['member_invite'] ?? '0'),
+            'member_growth_mode' => (string) ($all['member_growth_mode'] ?? 'points'),
+            'member_trial_days' => (string) ($all['member_trial_days'] ?? '7'),
+            'member_invite_reward_days' => (string) ($all['member_invite_reward_days'] ?? '30'),
+            'member_invite_month_cap' => (string) ($all['member_invite_month_cap'] ?? '5'),
+            'member_invite_ip_daily_cap' => (string) ($all['member_invite_ip_daily_cap'] ?? '1'),
+            'member_invite_l2_days' => (string) ($all['member_invite_l2_days'] ?? '0'),
+            'member_invite_l3_days' => (string) ($all['member_invite_l3_days'] ?? '0'),
+            'member_trial_group_id' => (string) ($all['member_trial_group_id'] ?? '0'),
             'upload_ext' => (string) ($all['upload_ext'] ?? ''),
             'upload_max_mb' => (string) ($all['upload_max_mb'] ?? '8'),
             'app_key' => (string) ($all['app_key'] ?? ''),
@@ -453,6 +471,18 @@ class VideoSettingService
                 'fields' => [
                     ['name' => 'member_register', 'label' => 'ui.cfg_open_register', 'type' => 'select', 'options' => ['1' => 'ui.yes', '0' => 'ui.no']],
                     ['name' => 'member_invite', 'label' => 'ui.cfg_invite_required', 'type' => 'select', 'options' => ['0' => 'ui.no', '1' => 'ui.yes']],
+                    ['name' => 'member_growth_mode', 'label' => 'ui.cfg_growth_mode', 'type' => 'select', 'options' => [
+                        'points' => 'ui.growth_mode_points',
+                        'vip_days' => 'ui.growth_mode_vip',
+                        'off' => 'ui.growth_mode_off',
+                    ]],
+                    ['name' => 'member_trial_days', 'label' => 'ui.cfg_trial_days', 'type' => 'text'],
+                    ['name' => 'member_invite_reward_days', 'label' => 'ui.cfg_invite_reward_days', 'type' => 'text'],
+                    ['name' => 'member_invite_month_cap', 'label' => 'ui.cfg_invite_month_cap', 'type' => 'text'],
+                    ['name' => 'member_invite_ip_daily_cap', 'label' => 'ui.cfg_invite_ip_cap', 'type' => 'text'],
+                    ['name' => 'member_invite_l2_days', 'label' => 'ui.cfg_invite_l2_days', 'type' => 'text'],
+                    ['name' => 'member_invite_l3_days', 'label' => 'ui.cfg_invite_l3_days', 'type' => 'text'],
+                    ['name' => 'member_trial_group_id', 'label' => 'ui.cfg_trial_group', 'type' => 'text'],
                     ['name' => 'trysee_seconds', 'label' => 'ui.cfg_trysee_seconds', 'type' => 'text'],
                 ],
             ],
@@ -623,21 +653,30 @@ class VideoSettingService
         return Result::success(['value' => implode("\n", $rules)]);
     }
 
-    /** @return array{site: array<string, mixed>, has_key: bool, key_tail: string, empty_n: int, provider_kind: string} */
+    /** @return array{site: array<string, mixed>, has_key: bool, key_tail: string, empty_n: int, empty_seo_n: int, provider_kind: string} */
     public function aiPage(): array
     {
         $site = $this->site();
         $key = trim((string) ($site['ai_key'] ?? ''));
         $provider = trim((string) ($site['ai_provider'] ?? ''));
         $empty = 0;
+        $emptySeo = 0;
         try {
             if (Schema::hasTable('videos')) {
                 $empty = (int) \App\Models\Video\VideoModel::query()->where(function ($q) {
                     $q->whereNull('description')->orWhere('description', '');
                 })->count();
+                if (Schema::hasColumn('videos', 'seo_title')) {
+                    $emptySeo = (int) \App\Models\Video\VideoModel::query()->where(function ($q) {
+                        $q->whereNull('seo_title')->orWhere('seo_title', '')
+                            ->orWhereNull('seo_keywords')->orWhere('seo_keywords', '')
+                            ->orWhereNull('seo_description')->orWhere('seo_description', '');
+                    })->count();
+                }
             }
         } catch (\Throwable) {
             $empty = 0;
+            $emptySeo = 0;
         }
 
         return [
@@ -645,6 +684,7 @@ class VideoSettingService
             'has_key' => $key !== '',
             'key_tail' => $key !== '' ? substr($key, -4) : '',
             'empty_n' => $empty,
+            'empty_seo_n' => $emptySeo,
             'provider_kind' => $this->aiProviderKind($provider),
         ];
     }
@@ -657,6 +697,9 @@ class VideoSettingService
         }
         if (in_array($p, ['openai', 'gpt', 'chatgpt', 'azure'], true) || str_contains($p, 'openai')) {
             return 'openai';
+        }
+        if (in_array($p, ['deepseek'], true) || str_contains($p, 'deepseek')) {
+            return 'deepseek';
         }
         if (in_array($p, ['qwen', 'tongyi', 'dashscope', '通义'], true) || str_contains($provider, '通义')) {
             return 'qwen';

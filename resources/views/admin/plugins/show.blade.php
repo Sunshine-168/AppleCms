@@ -26,6 +26,9 @@
         @if($page['hint'] !== '')
             <p class="hint">{{ $page['hint'] }}</p>
         @endif
+        @if(trim((string) ($page['url'] ?? '')) !== '' && ($page['fields'] ?? []) === [])
+            <p><a class="btn" href="{{ $page['url'] }}">{{ $page['title'] }}</a></p>
+        @else
         <form class="js-plugin-form" id="site-form">
             @foreach($page['fields'] as $field)
                 <label>{{ $field['label'] }}</label>
@@ -48,6 +51,7 @@
                 <button type="button" class="btn" id="site-save">{{ admin_t('plugin.save') }}</button>
             </div>
         </form>
+        @endif
     </div>
 </div>
 @empty

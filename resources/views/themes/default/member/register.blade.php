@@ -42,8 +42,8 @@
                         <input name="password" type="password" placeholder="至少 6 位" required minlength="6">
                     </label>
                     <label class="auth-field">
-                        <span>邀请码 <em class="muted">选填</em></span>
-                        <input name="invite" placeholder="有邀请码可填这里" value="{{ old('invite') }}">
+                        <span>邀请码 @if((int) ($site['member_invite'] ?? 0) !== 1)<em class="muted">选填</em>@endif</span>
+                        <input name="invite" placeholder="有邀请码可填这里" value="{{ old('invite', request('invite')) }}" @if((int) ($site['member_invite'] ?? 0) === 1) required @endif>
                     </label>
 
                     <div class="auth-actions">

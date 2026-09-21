@@ -187,6 +187,29 @@ class PluginAdminTest extends TestCase
         $this->assertStringNotContainsString('placeholder="host"', $html);
     }
 
+    public function test_plugins_page_uses_traditional_chinese_copy(): void
+    {
+        $html = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'zh_tw',
+        ])->get('/admin/plugins')->assertOk()->getContent();
+
+        $this->assertStringContainsString('html lang="zh-TW"', $html);
+        $this->assertStringContainsString('優惠券', $html);
+        $this->assertStringContainsString('簡訊閘道', $html);
+        $this->assertStringContainsString('線上支付', $html);
+        $this->assertStringContainsString('程式碼編輯器', $html);
+        $this->assertStringContainsString('友情連結', $html);
+        $this->assertStringContainsString('設定', $html);
+        $this->assertStringNotContainsString('优惠券', $html);
+        $this->assertStringNotContainsString('短信网关', $html);
+        $this->assertStringNotContainsString('在线支付', $html);
+        $this->assertStringNotContainsString('代码编辑器', $html);
+        $this->assertStringNotContainsString('友情链接', $html);
+        $this->assertStringNotContainsString('admin.plugin.group_site', $html);
+    }
+
     public function test_plugins_page_offers_upload_not_a_store(): void
     {
         $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])

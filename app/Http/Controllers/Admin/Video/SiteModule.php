@@ -386,9 +386,16 @@ class SiteModule extends Controller
             ]);
         }
         if ($module === 'invites') {
+            $rankPeriod = (string) request()->query('rank', 'month');
+            if (! in_array($rankPeriod, ['month', 'all'], true)) {
+                $rankPeriod = 'month';
+            }
+
             return view('admin.video.invites', [
                 'title' => $cfg['title'],
                 'queues' => $this->modules->inviteQueues(),
+                'rankPeriod' => $rankPeriod,
+                'rankRows' => app(\App\Services\Member\MemberGrowthService::class)->rank($rankPeriod, 50),
             ]);
         }
         if ($module === 'audits') {

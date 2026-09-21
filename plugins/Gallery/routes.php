@@ -13,6 +13,7 @@ use Plugins\Gallery\Http\Controllers\GalleryWorkAdminController;
 
 Route::middleware('web')->group(function () {
     Route::get('/gallery', [GalleryController::class, 'index']);
+    Route::get('/gallery/type/{type}', [GalleryController::class, 'index'])->whereNumber('type');
     Route::get('/gallery/shelf', [GalleryController::class, 'shelf']);
     Route::post('/gallery/{id}/comment', [GalleryController::class, 'comment'])->whereNumber('id');
     Route::post('/gallery/{id}/favor', [GalleryController::class, 'favor'])->whereNumber('id');

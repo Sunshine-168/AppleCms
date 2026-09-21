@@ -107,6 +107,53 @@ class DiskHtmlFilterTest extends TestCase
         $this->assertFalse($this->urlsHavePlayOrWap($urls));
     }
 
+    public function test_plugin_make_collects_manga_type_and_detail_paths(): void
+    {
+        $now = time();
+        $picked = \Plugins\Manga\Models\MangaType::query()->create([
+            'parent_id' => 0,
+            'name' => '热血',
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+        ]);
+        $other = \Plugins\Manga\Models\MangaType::query()->create([
+            'parent_id' => 0,
+            'name' => '日常',
+            'sort' => 1,
+            'status' => 1,
+            'created_at' => $now,
+        ]);
+        $work = \Plugins\Manga\Models\Manga::query()->create([
+            'title' => '静态漫画',
+            'cover' => '',
+            'author' => '',
+            'remarks' => '',
+            'tags' => '',
+            'content' => '',
+            'type_id' => $picked->id,
+            'serialize' => 0,
+            'recommend' => 0,
+            'yid' => 0,
+            'status' => 1,
+            'hits' => 0,
+            'sort' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $types = app(DiskHtmlService::class)->collectUrls('manga_type', ['ids' => [$picked->id]]);
+        $this->assertContains('/manga', $types);
+        $this->assertContains('/manga/type/'.$picked->id, $types);
+        $this->assertNotContains('/manga/type/'.$other->id, $types);
+
+        $details = app(DiskHtmlService::class)->collectUrls('manga', ['type_ids' => [$picked->id]]);
+        $this->assertContains('/manga/'.$work->id, $details);
+
+        $home = app(DiskHtmlService::class)->collectUrls('manga', ['extra' => 'index']);
+        $this->assertSame(['/manga'], $home);
+    }
+
     /** @param list<string> $urls */
     private function urlsHavePlayOrWap(array $urls): bool
     {

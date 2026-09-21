@@ -12,10 +12,7 @@
     <p class="muted">精选 IPTV 电视频道。推荐使用 HLS（.m3u8）线路。</p>
 </div>
 
-<form class="search list-search" method="get" action="{{ url('/live') }}">
-    @if($cateId > 0)
-        <input type="hidden" name="cate" value="{{ $cateId }}">
-    @endif
+<form class="search list-search" method="get" action="{{ $cateId > 0 ? url('/live/cate/'.$cateId) : url('/live') }}">
     <input type="search" name="q" value="{{ $q }}" placeholder="搜频道名、副标题" aria-label="搜直播">
     <button type="submit" class="btn-ghost">搜索</button>
 </form>
@@ -23,7 +20,7 @@
 <nav class="queue-chips live-cates" aria-label="直播分类">
     <a class="chip{{ $cateId === 0 ? ' is-on' : '' }}" href="{{ url('/live'.($q !== '' ? '?q='.urlencode($q) : '')) }}">全部</a>
     @foreach($categories as $category)
-        <a class="chip{{ $cateId === (int) $category->id ? ' is-on' : '' }}" href="{{ url('/live?cate='.$category->id.($q !== '' ? '&q='.urlencode($q) : '')) }}">{{ $category->name }}</a>
+        <a class="chip{{ $cateId === (int) $category->id ? ' is-on' : '' }}" href="{{ url('/live/cate/'.$category->id.($q !== '' ? '?q='.urlencode($q) : '')) }}">{{ $category->name }}</a>
     @endforeach
 </nav>
 

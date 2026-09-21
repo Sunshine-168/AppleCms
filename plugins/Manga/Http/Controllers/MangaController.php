@@ -20,8 +20,9 @@ class MangaController extends Controller
         private readonly CmsViewContext $context,
     ) {}
 
-    public function index(): View
+    public function index(Request $request, ?int $type = null): View
     {
+        $this->bindQueryIfMissing($request, 'type', $type);
         if (! $this->manga->ready()) {
             throw new NotFoundHttpException();
         }

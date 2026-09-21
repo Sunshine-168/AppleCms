@@ -7,7 +7,12 @@
     $tabs = [
         'site' => admin_t('ui.tab_website'),
         'look' => admin_t('ui.look'),
+        'member' => admin_t('ui.tab_members'),
         'interact' => admin_t('ui.comments'),
+        'play' => admin_t('ui.playback'),
+        'mail' => admin_t('ui.mail_out'),
+        'seo' => admin_t('ui.tab_titles'),
+        'storage' => admin_t('ui.tab_storage'),
         'more' => admin_t('nav.more'),
     ];
     $on = fn (string $k, string $d = '0') => (string) ($s[$k] ?? $d) === '1';
@@ -78,7 +83,7 @@
                 <p class="muted field-hint">{{ admin_t('ui.watermark_hint') }}</p>
             </div>
 
-            <div class="settings-pane{{ $tab === 'interact' ? ' active' : '' }}" data-pane="interact">
+            <div class="settings-pane{{ $tab === 'member' ? ' active' : '' }}" data-pane="member">
                 <div class="theme-nav-toggles">
                 <input type="hidden" name="member_register" value="0">
                 <label class="inline">
@@ -90,6 +95,51 @@
                     <input type="checkbox" name="member_invite" value="1" @checked($on('member_invite'))>
                     {{ admin_t('ui.require_invite') }}
                 </label>
+                </div>
+                <p class="muted field-hint">{{ admin_t('ui.settings_member_lead') }}</p>
+
+                <label for="member_growth_mode">{{ admin_t('ui.growth_mode') }}</label>
+                <select id="member_growth_mode" name="member_growth_mode">
+                    <option value="points" @selected(($s['member_growth_mode'] ?? 'points') === 'points')>{{ admin_t('ui.growth_mode_points') }}</option>
+                    <option value="vip_days" @selected(($s['member_growth_mode'] ?? '') === 'vip_days')>{{ admin_t('ui.growth_mode_vip') }}</option>
+                    <option value="off" @selected(($s['member_growth_mode'] ?? '') === 'off')>{{ admin_t('ui.growth_mode_off') }}</option>
+                </select>
+                <p class="muted field-hint">{{ admin_t('ui.growth_mode_hint') }}</p>
+
+                <label for="member_trial_days">{{ admin_t('ui.trial_days') }}</label>
+                <input id="member_trial_days" type="number" name="member_trial_days" min="0" value="{{ $s['member_trial_days'] ?? 7 }}">
+                <p class="muted field-hint">{{ admin_t('ui.trial_days_hint') }}</p>
+
+                <label for="member_invite_reward_days">{{ admin_t('ui.invite_reward_days') }}</label>
+                <input id="member_invite_reward_days" type="number" name="member_invite_reward_days" min="0" value="{{ $s['member_invite_reward_days'] ?? 30 }}">
+
+                <label for="member_invite_month_cap">{{ admin_t('ui.invite_month_cap') }}</label>
+                <input id="member_invite_month_cap" type="number" name="member_invite_month_cap" min="0" value="{{ $s['member_invite_month_cap'] ?? 5 }}">
+
+                <label for="member_invite_ip_daily_cap">{{ admin_t('ui.invite_ip_daily_cap') }}</label>
+                <input id="member_invite_ip_daily_cap" type="number" name="member_invite_ip_daily_cap" min="0" value="{{ $s['member_invite_ip_daily_cap'] ?? 1 }}">
+
+                <label for="member_invite_l2_days">{{ admin_t('ui.invite_l2_days') }}</label>
+                <input id="member_invite_l2_days" type="number" name="member_invite_l2_days" min="0" value="{{ $s['member_invite_l2_days'] ?? 0 }}">
+                <p class="muted field-hint">{{ admin_t('ui.invite_l2_hint') }}</p>
+
+                <label for="member_invite_l3_days">{{ admin_t('ui.invite_l3_days') }}</label>
+                <input id="member_invite_l3_days" type="number" name="member_invite_l3_days" min="0" value="{{ $s['member_invite_l3_days'] ?? 0 }}">
+                <p class="muted field-hint">{{ admin_t('ui.invite_l3_hint') }}</p>
+
+                <label for="member_trial_group_id">{{ admin_t('ui.trial_group_id') }}</label>
+                <select id="member_trial_group_id" name="member_trial_group_id">
+                    <option value="0" @selected((int) ($s['member_trial_group_id'] ?? 0) === 0)>{{ admin_t('ui.trial_group_auto') }}</option>
+                    @foreach($groups ?? [] as $group)
+                        <option value="{{ $group->id }}" @selected((int) ($s['member_trial_group_id'] ?? 0) === (int) $group->id)>{{ $group->name }} (#{{ $group->id }})</option>
+                    @endforeach
+                </select>
+                <p class="muted field-hint">{{ admin_t('ui.trial_group_hint') }}</p>
+                <p class="muted field-hint"><a href="/admin/video/invites">{{ admin_t('ui.invites') }}</a></p>
+            </div>
+
+            <div class="settings-pane{{ $tab === 'interact' ? ' active' : '' }}" data-pane="interact">
+                <div class="theme-nav-toggles">
                 <input type="hidden" name="member_comment_login" value="0">
                 <label class="inline">
                     <input type="checkbox" name="member_comment_login" value="1" @checked($on('member_comment_login'))>
@@ -107,35 +157,12 @@
                 </label>
                 </div>
 
-                <label for="trysee_seconds">{{ admin_t('ui.trysee_seconds') }}</label>
-                <input id="trysee_seconds" type="number" name="trysee_seconds" min="0" value="{{ $s['trysee_seconds'] ?? 0 }}">
-                <p class="muted field-hint">{{ admin_t('ui.trysee_hint') }}</p>
-
                 <label for="banned_words">{{ admin_t('ui.banned_words') }}</label>
                 <textarea id="banned_words" name="banned_words" rows="4" placeholder="{{ admin_t('ui.ph_csv_or_nl') }}">{{ $s['banned_words'] ?? '' }}</textarea>
                 <p class="muted field-hint">{{ admin_t('ui.banned_hint') }}</p>
             </div>
 
-            <div class="settings-pane{{ $tab === 'more' ? ' active' : '' }}" data-pane="more">
-                <p class="muted field-hint">{{ admin_t('ui.settings_more_lead') }}</p>
-
-                <h3>{{ admin_t('ui.vod_urls') }}</h3>
-                <label for="rewrite_mode">{{ admin_t('ui.rewrite_how') }}</label>
-                <select id="rewrite_mode" name="rewrite_mode">
-                    <option value="laravel" @selected(($s['rewrite_mode'] ?? 'laravel') === 'laravel')>{{ admin_t('ui.rewrite_laravel') }}</option>
-                    <option value="mac" @selected(($s['rewrite_mode'] ?? '') === 'mac')>{{ admin_t('ui.rewrite_mac') }}</option>
-                </select>
-                <label for="rewrite_suffix">{{ admin_t('ui.rewrite_suffix') }}</label>
-                <input id="rewrite_suffix" type="text" name="rewrite_suffix" value="{{ $s['rewrite_suffix'] ?? '.html' }}">
-                <p class="muted field-hint">{{ admin_t('ui.rewrite_suffix_hint_a') }}<code>/vod/123</code>{{ admin_t('ui.rewrite_suffix_hint_b') }}<a href="/admin/video/rewrite">{{ admin_t('page.rewrite') }}</a>{{ admin_t('ui.rewrite_suffix_hint_c') }}</p>
-
-                <h3>{{ admin_t('ui.page_cache') }}</h3>
-                <p class="muted field-hint">{{ admin_t('ui.page_cache_hint_a') }}<a href="/admin/video/make">{{ admin_t('nav.make') }}</a>{{ admin_t('ui.page_cache_hint_b') }}</p>
-
-                <h3>{{ admin_t('ui.collect_ingest') }}</h3>
-                <p class="muted field-hint">{{ admin_t('ui.collect_ingest_hint_a') }}<a href="/admin/video/config/collect">{{ admin_t('page.config_collect') }}</a>{{ admin_t('ui.collect_ingest_hint_b') }}</p>
-
-                <h3>{{ admin_t('ui.playback') }}</h3>
+            <div class="settings-pane{{ $tab === 'play' ? ' active' : '' }}" data-pane="play">
                 <label for="play_buffer">{{ admin_t('ui.play_buffer_sec') }}</label>
                 <input id="play_buffer" type="number" name="play_buffer" min="0" value="{{ $s['play_buffer'] ?? 5 }}">
                 <input type="hidden" name="play_encrypt" value="0">
@@ -145,7 +172,12 @@
                 </label>
                 <p class="muted field-hint">{{ admin_t('ui.play_encrypt_hint') }}</p>
 
-                <h3>{{ admin_t('ui.mail_out') }}</h3>
+                <label for="trysee_seconds">{{ admin_t('ui.trysee_seconds') }}</label>
+                <input id="trysee_seconds" type="number" name="trysee_seconds" min="0" value="{{ $s['trysee_seconds'] ?? 0 }}">
+                <p class="muted field-hint">{{ admin_t('ui.trysee_hint') }}</p>
+            </div>
+
+            <div class="settings-pane{{ $tab === 'mail' ? ' active' : '' }}" data-pane="mail">
                 <p class="muted field-hint">{{ admin_t('ui.mail_hint') }}</p>
                 <label for="smtp_host">{{ admin_t('ui.mail_server') }}</label>
                 <input id="smtp_host" type="text" name="smtp_host" value="{{ $s['smtp_host'] ?? '' }}" placeholder="smtp.example.com">
@@ -167,8 +199,9 @@
                     <input type="email" id="test-mail-to" placeholder="{{ admin_t('ui.ph_mail_to') }}">
                     <button type="button" class="btn btn-muted" id="site-test-mail">{{ admin_t('ui.send_test_mail') }}</button>
                 </div>
+            </div>
 
-                <h3>{{ admin_t('ui.title_tpl') }}</h3>
+            <div class="settings-pane{{ $tab === 'seo' ? ' active' : '' }}" data-pane="seo">
                 <label for="seo_title_vod">{{ admin_t('ui.seo_vod_page') }}</label>
                 <input id="seo_title_vod" type="text" name="seo_title_vod" value="{{ $s['seo_title_vod'] ?? '' }}" placeholder="{name} - {site}">
                 <label for="seo_title_type">{{ admin_t('ui.seo_type_page') }}</label>
@@ -177,20 +210,12 @@
                 <input id="seo_title_play" type="text" name="seo_title_play" value="{{ $s['seo_title_play'] ?? '' }}" placeholder="{{ admin_t('ui.ph_seo_play') }}">
                 <p class="muted field-hint">{{ admin_t('ui.seo_tokens_pre') }} <code>{name}</code> <code>{type}</code> <code>{site}</code>{{ admin_t('ui.seo_tokens_end') }}</p>
 
-                <h3>{{ admin_t('ui.front_filters') }}</h3>
-                <label for="filter_area">{{ admin_t('ui.area') }}</label>
-                <input id="filter_area" type="text" name="filter_area" value="{{ $s['filter_area'] ?? '' }}">
-                <label for="filter_lang">{{ admin_t('ui.lang_label') }}</label>
-                <input id="filter_lang" type="text" name="filter_lang" value="{{ $s['filter_lang'] ?? '' }}">
-                <label for="filter_year">{{ admin_t('ui.era') }}</label>
-                <input id="filter_year" type="text" name="filter_year" value="{{ $s['filter_year'] ?? '' }}">
-                <p class="muted field-hint">{{ admin_t('ui.filter_csv_hint') }}<a href="/admin/system/dicts">{{ admin_t('ui.go_dict_items') }}</a>{{ admin_t('ui.seo_tokens_end') }}</p>
-
                 <h3>{{ admin_t('item.config_analytics') }}</h3>
                 <textarea id="analytics_code" name="analytics_code" rows="4" placeholder="{{ admin_t('ui.ph_analytics') }}">{{ $s['analytics_code'] ?? '' }}</textarea>
                 <p class="muted field-hint">{{ admin_t('ui.analytics_hint') }}</p>
+            </div>
 
-                <h3>{{ admin_t('ui.attach_storage') }}</h3>
+            <div class="settings-pane{{ $tab === 'storage' ? ' active' : '' }}" data-pane="storage">
                 <label for="storage_disk">{{ admin_t('ui.store_where') }}</label>
                 <select id="storage_disk" name="storage_disk">
                     <option value="local" @selected(($s['storage_disk'] ?? 'local') === 'local')>{{ admin_t('ui.local_disk') }}</option>
@@ -213,6 +238,42 @@
                     <p class="muted field-hint">{{ admin_t('ui.s3_url_hint') }}</p>
                 </details>
 
+                <h3>{{ admin_t('ui.upload') }}</h3>
+                <label for="upload_ext">{{ admin_t('ui.allowed_ext') }}</label>
+                <input id="upload_ext" type="text" name="upload_ext" value="{{ $s['upload_ext'] ?? '' }}">
+                <label for="upload_max_mb">{{ admin_t('ui.max_mb') }}</label>
+                <input id="upload_max_mb" type="number" name="upload_max_mb" min="1" value="{{ $s['upload_max_mb'] ?? 8 }}">
+                <p class="muted field-hint">{{ admin_t('ui.upload_ip_hint_a') }}<a href="/admin/video/config/ip">{{ admin_t('page.config_ip') }}</a>{{ admin_t('ui.upload_ip_hint_b') }}</p>
+            </div>
+
+            <div class="settings-pane{{ $tab === 'more' ? ' active' : '' }}" data-pane="more">
+                <p class="muted field-hint">{{ admin_t('ui.settings_more_lead') }}</p>
+
+                <h3>{{ admin_t('ui.vod_urls') }}</h3>
+                <label for="rewrite_mode">{{ admin_t('ui.rewrite_how') }}</label>
+                <select id="rewrite_mode" name="rewrite_mode">
+                    <option value="laravel" @selected(($s['rewrite_mode'] ?? 'laravel') === 'laravel')>{{ admin_t('ui.rewrite_laravel') }}</option>
+                    <option value="mac" @selected(($s['rewrite_mode'] ?? '') === 'mac')>{{ admin_t('ui.rewrite_mac') }}</option>
+                </select>
+                <label for="rewrite_suffix">{{ admin_t('ui.rewrite_suffix') }}</label>
+                <input id="rewrite_suffix" type="text" name="rewrite_suffix" value="{{ $s['rewrite_suffix'] ?? '.html' }}">
+                <p class="muted field-hint">{{ admin_t('ui.rewrite_suffix_hint_a') }}<code>/vod/123</code>{{ admin_t('ui.rewrite_suffix_hint_b') }}<a href="/admin/video/rewrite">{{ admin_t('page.rewrite') }}</a>{{ admin_t('ui.rewrite_suffix_hint_c') }}</p>
+
+                <h3>{{ admin_t('ui.page_cache') }}</h3>
+                <p class="muted field-hint">{{ admin_t('ui.page_cache_hint_a') }}<a href="/admin/video/make">{{ admin_t('nav.make') }}</a>{{ admin_t('ui.page_cache_hint_b') }}</p>
+
+                <h3>{{ admin_t('ui.collect_ingest') }}</h3>
+                <p class="muted field-hint">{{ admin_t('ui.collect_ingest_hint_a') }}<a href="/admin/video/config/collect">{{ admin_t('page.config_collect') }}</a>{{ admin_t('ui.collect_ingest_hint_b') }}</p>
+
+                <h3>{{ admin_t('ui.front_filters') }}</h3>
+                <label for="filter_area">{{ admin_t('ui.area') }}</label>
+                <input id="filter_area" type="text" name="filter_area" value="{{ $s['filter_area'] ?? '' }}">
+                <label for="filter_lang">{{ admin_t('ui.lang_label') }}</label>
+                <input id="filter_lang" type="text" name="filter_lang" value="{{ $s['filter_lang'] ?? '' }}">
+                <label for="filter_year">{{ admin_t('ui.era') }}</label>
+                <input id="filter_year" type="text" name="filter_year" value="{{ $s['filter_year'] ?? '' }}">
+                <p class="muted field-hint">{{ admin_t('ui.filter_csv_hint') }}<a href="/admin/system/dicts">{{ admin_t('ui.go_dict_items') }}</a>{{ admin_t('ui.seo_tokens_end') }}</p>
+
                 <details class="settings-details">
                     <summary>{{ admin_t('ui.ingest_api') }}</summary>
                     <p class="muted field-hint">{{ admin_t('ui.ingest_api_hint_a') }}<a href="/admin/video/config/api">{{ admin_t('page.config_api') }}</a>{{ admin_t('ui.ingest_api_hint_b') }}<a href="/admin/video/config/interface">{{ admin_t('page.config_interface') }}</a>{{ admin_t('ui.ingest_api_hint_c') }}<a href="/admin/video/collects">{{ admin_t('ui.collects') }}</a>{{ admin_t('ui.ingest_api_hint_d') }}</p>
@@ -221,15 +282,6 @@
                 <details class="settings-details">
                     <summary>{{ admin_t('ui.engine_push') }}</summary>
                     <p class="muted field-hint">{{ admin_t('ui.engine_push_hint_a') }}<a href="/admin/video/push">{{ admin_t('page.push') }}</a>{{ admin_t('ui.engine_push_hint_b') }}</p>
-                </details>
-
-                <details class="settings-details">
-                    <summary>{{ admin_t('ui.upload') }}</summary>
-                    <label for="upload_ext">{{ admin_t('ui.allowed_ext') }}</label>
-                    <input id="upload_ext" type="text" name="upload_ext" value="{{ $s['upload_ext'] ?? '' }}">
-                    <label for="upload_max_mb">{{ admin_t('ui.max_mb') }}</label>
-                    <input id="upload_max_mb" type="number" name="upload_max_mb" min="1" value="{{ $s['upload_max_mb'] ?? 8 }}">
-                    <p class="muted field-hint">{{ admin_t('ui.upload_ip_hint_a') }}<a href="/admin/video/config/ip">{{ admin_t('page.config_ip') }}</a>{{ admin_t('ui.upload_ip_hint_b') }}</p>
                 </details>
 
                 @if($pluginLinks !== [])

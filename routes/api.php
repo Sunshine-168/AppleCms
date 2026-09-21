@@ -70,6 +70,8 @@ Route::prefix('app')->middleware([AppApiKey::class])->group(function () {
         Route::post('member/password', [AppMemberController::class, 'password']);
         Route::post('member/redeem', [AppMemberController::class, 'redeem']);
         Route::post('member/invite', [AppMemberController::class, 'generateInvite']);
+        Route::get('member/invite/rank', [AppMemberController::class, 'inviteRank']);
+        Route::get('member/invite/poster', [AppMemberController::class, 'invitePoster']);
         Route::get('member/favorites', [AppMemberController::class, 'favorites']);
         Route::get('member/history', [AppMemberController::class, 'histories']);
         Route::get('member/inbox', [AppMemberController::class, 'inbox']);

@@ -68,6 +68,7 @@
             <input type="hidden" name="empty_url">
             <input type="hidden" name="empty_pic">
             <input type="hidden" name="empty_content">
+            <input type="hidden" name="empty_seo">
             <input type="hidden" name="no_actor">
             <input type="hidden" name="missing_ep">
             <input type="hidden" name="repeat">
@@ -122,6 +123,7 @@
             <summary>{{ admin_t('ui.fill_tools') }}</summary>
             <div class="queue-chips">
                 <button type="button" class="chip" data-queue="empty_content" data-value="1">{{ admin_t('ui.no_intro') }}@if($q('empty_content') > 0)<em>{{ $q('empty_content') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="empty_seo" data-value="1">{{ admin_t('ui.no_seo') }}@if($q('empty_seo') > 0)<em>{{ $q('empty_seo') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="no_actor" data-value="1">{{ admin_t('ui.no_actor') }}@if($q('no_actor') > 0)<em>{{ $q('no_actor') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="missing_ep" data-value="1">{{ admin_t('ui.missing_ep') }}@if($q('missing_ep') > 0)<em>{{ $q('missing_ep') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="status" data-value="2">{{ admin_t('ui.draft') }}</button>
@@ -145,6 +147,7 @@
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-points">{{ admin_t('ui.change_points') }}</button>
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-merge">{{ admin_t('ui.merge_dup') }}</button>
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-replace-url">{{ admin_t('ui.replace_play_url') }}</button>
+            @includeIf('ai_content::batch_button')
             <button type="button" class="btn btn-danger btn-sm" id="video-batch-del">{{ admin_t('ui.delete') }}</button>
             <button type="button" class="btn btn-muted btn-sm" id="video-batch-clear">{{ admin_t('ui.clear_selection') }}</button>
         </div>
@@ -159,7 +162,7 @@
 (function () {
     var U = AdminUi;
     var L = @json($videoJsLang, JSON_UNESCAPED_UNICODE);
-    var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'no_actor', 'missing_ep', 'repeat', 'need_points', 'has_plot'];
+    var QUEUE_KEYS = ['empty_url', 'empty_pic', 'empty_content', 'empty_seo', 'no_actor', 'missing_ep', 'repeat', 'need_points', 'has_plot'];
     var form = document.getElementById('video-search');
     var moreBox = document.getElementById('video-filter-more');
     var batchBar = document.getElementById('video-batch');
@@ -200,7 +203,7 @@
         moreBox.classList.add('is-open');
         document.getElementById('video-more-toggle').classList.add('is-on');
     }
-    if (['empty_content','no_actor','missing_ep','need_points','has_plot'].some(function (k) { return qs.get(k); })
+    if (['empty_content','empty_seo','no_actor','missing_ep','need_points','has_plot'].some(function (k) { return qs.get(k); })
         || ['2','3','4'].indexOf(qs.get('status') || '') >= 0) {
         document.querySelector('.queue-more').open = true;
     }
@@ -283,7 +286,7 @@
             + '</div></div>';
     }
 
-    var table = U.table({
+    var table = window.videoIndexTable = U.table({
         el: '#video-table',
         countEl: document.getElementById('video-count'),
         queueKeys: QUEUE_KEYS,

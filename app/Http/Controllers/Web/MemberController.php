@@ -54,7 +54,7 @@ class MemberController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
-        $result = $this->interaction->register($request->all());
+        $result = $this->interaction->register($request->all() + ['ip' => (string) $request->ip()]);
         if ($result['code'] !== 0) {
             return back()->withErrors(['email' => $result['msg']])->withInput();
         }
@@ -79,8 +79,16 @@ class MemberController extends Controller
         $invites = \Illuminate\Support\Facades\Schema::hasTable('member_invites')
             ? \App\Models\Member\MemberInvite::query()->where('member_id', $member->id)->orderByDesc('id')->get()
             : collect();
+        $growth = app(\App\Services\Member\MemberGrowthService::class);
+        $growthMode = $growth->mode();
+        if ($growthMode === 'vip_days') {
+            $growth->ensurePersonalCode($member);
+            $member->refresh();
+        }
+        $inviteStats = $growth->myStats($member);
+        $inviteRank = $growth->rank('month', 10);
 
-        return view($this->front->themeView('member.center'), compact('site', 'member', 'invites'));
+        return view($this->front->themeView('member.center'), compact('site', 'member', 'invites', 'growthMode', 'inviteStats', 'inviteRank'));
     }
 
     public function password(Request $request): RedirectResponse
@@ -118,6 +126,19 @@ class MemberController extends Controller
         }
 
         return back()->with('status', $result['msg']);
+    }
+
+    public function invitePoster()
+    {
+        $png = app(\App\Services\Member\MemberGrowthService::class)->posterPng(Auth::guard('member')->user());
+        if ($png === null || $png === '') {
+            return back()->with('error', '无法生成海报');
+        }
+
+        return response($png, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="invite.png"',
+        ]);
     }
 
     public function favorites(): View

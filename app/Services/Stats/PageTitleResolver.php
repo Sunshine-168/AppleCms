@@ -10,15 +10,25 @@ class PageTitleResolver
     /** @var array<string, string> */
     protected array $cache = [];
 
+    /** @var array<string, bool> */
+    protected array $ready = [];
+
+    /** @var array<string, array<int|string, string>> */
+    protected array $names = [];
+
     /**
      * @param  iterable<int, string>  $paths
      * @return array<string, string>
      */
     public function forPaths(iterable $paths): array
     {
-        $out = [];
+        $list = [];
         foreach ($paths as $path) {
-            $path = (string) $path;
+            $list[] = (string) $path;
+        }
+        $this->preload(array_values(array_unique($list)));
+        $out = [];
+        foreach ($list as $path) {
             $out[$path] = $this->title($path);
         }
 
@@ -94,13 +104,101 @@ class PageTitleResolver
         return $path;
     }
 
+    /**
+     * @param  list<string>  $paths
+     */
+    protected function preload(array $paths): void
+    {
+        $videoIds = [];
+        $typeIds = [];
+        $typeSlugs = [];
+        $actorIds = [];
+        $topicIds = [];
+        $artIds = [];
+        foreach ($paths as $path) {
+            $path = $this->normalize($path);
+            if (preg_match('#(?:^/vod/|/play/|/down/|/player/|/index\.php/vod/(?:detail|play|down)/id/)(\d+)#', $path, $m)) {
+                $videoIds[] = (int) $m[1];
+            } elseif (preg_match('#(?:^/type/|/index\.php/vod/type/id/)([^/]+)#', $path, $m)) {
+                if (ctype_digit($m[1])) {
+                    $typeIds[] = (int) $m[1];
+                } else {
+                    $typeSlugs[] = $m[1];
+                }
+            } elseif (preg_match('#(?:^/actor/|/index\.php/vod/actor/id/)(\d+)#', $path, $m)) {
+                $actorIds[] = (int) $m[1];
+            } elseif (preg_match('#(?:^/topic/|/index\.php/vod/topic/id/)(\d+)#', $path, $m)) {
+                $topicIds[] = (int) $m[1];
+            } elseif (preg_match('#(?:^/art/|/index\.php/vod/art/id/)(\d+)#', $path, $m)) {
+                $artIds[] = (int) $m[1];
+            }
+        }
+        $this->loadNames('videos', 'title', $videoIds);
+        $this->loadNames('video_types', 'name', $typeIds);
+        $this->loadSlugs('video_types', $typeSlugs);
+        $this->loadNames('actors', 'name', $actorIds);
+        $this->loadNames('video_topics', 'name', $topicIds);
+        $this->loadNames('video_arts', 'title', $artIds);
+    }
+
+    /** @param  list<int>  $ids */
+    protected function loadNames(string $table, string $column, array $ids): void
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($ids === [] || ! $this->ready($table, $column)) {
+            return;
+        }
+        try {
+            foreach (DB::table($table)->whereIn('id', $ids)->pluck($column, 'id') as $id => $value) {
+                $this->names[$table][(int) $id] = (string) $value;
+            }
+        } catch (\Throwable) {
+        }
+    }
+
+    /** @param  list<string>  $slugs */
+    protected function loadSlugs(string $table, array $slugs): void
+    {
+        $slugs = array_values(array_unique($slugs));
+        if ($slugs === [] || ! $this->ready($table, 'name') || ! $this->ready($table, 'slug')) {
+            return;
+        }
+        try {
+            foreach (DB::table($table)->whereIn('slug', $slugs)->get(['slug', 'name']) as $row) {
+                $this->names[$table.':slug'][(string) $row->slug] = (string) $row->name;
+            }
+        } catch (\Throwable) {
+        }
+    }
+
+    protected function ready(string $table, string $column): bool
+    {
+        $key = $table.'.'.$column;
+        if (array_key_exists($key, $this->ready)) {
+            return $this->ready[$key];
+        }
+        try {
+            $ok = Schema::hasTable($table) && Schema::hasColumn($table, $column);
+        } catch (\Throwable) {
+            $ok = false;
+        }
+
+        return $this->ready[$key] = $ok;
+    }
+
     protected function named(string $table, int $id, string $column, string $fallback): string
     {
+        if (isset($this->names[$table][$id])) {
+            $value = trim((string) $this->names[$table][$id]);
+
+            return $value !== '' ? $value : $fallback;
+        }
         try {
-            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
+            if (! $this->ready($table, $column)) {
                 return $fallback;
             }
             $value = trim((string) DB::table($table)->where('id', $id)->value($column));
+            $this->names[$table][$id] = $value;
             if ($value !== '') {
                 return $value;
             }
@@ -112,11 +210,18 @@ class PageTitleResolver
 
     protected function typeBySlug(string $slug): string
     {
+        if (isset($this->names['video_types:slug'][$slug])) {
+            $name = trim((string) $this->names['video_types:slug'][$slug]);
+            if ($name !== '') {
+                return $name;
+            }
+        }
         try {
-            if (! Schema::hasTable('video_types')) {
+            if (! $this->ready('video_types', 'name') || ! $this->ready('video_types', 'slug')) {
                 return admin_t('ui.page_type_slug', ['slug' => $slug]);
             }
             $name = trim((string) DB::table('video_types')->where('slug', $slug)->value('name'));
+            $this->names['video_types:slug'][$slug] = $name;
             if ($name !== '') {
                 return $name;
             }

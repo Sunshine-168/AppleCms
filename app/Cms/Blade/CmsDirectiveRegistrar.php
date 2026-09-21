@@ -86,7 +86,7 @@ class CmsDirectiveRegistrar
     }
 
     /** @param  class-string  $tagClass */
-    private function registerLoop(string $name, string $tagClass): void
+    public function registerLoop(string $name, string $tagClass): void
     {
         Blade::directive($name, function (?string $expression) use ($tagClass): string {
             $expression = $this->expressionOrEmptyArray($expression);

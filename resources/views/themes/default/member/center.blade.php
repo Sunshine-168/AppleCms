@@ -10,6 +10,9 @@
             <div class="member-points">
                 <span class="muted">积分</span>
                 <strong>{{ (int) $member->points }}</strong>
+                @if($member->effectiveGroupId() > 0)
+                    <p class="muted">会员至 {{ $member->groupExpireLabel() }}</p>
+                @endif
             </div>
         </header>
 
@@ -59,7 +62,18 @@
 
             <section class="member-card">
                 <div class="sec-head"><h2>邀请码</h2></div>
-                @if(isset($invites) && $invites->isNotEmpty())
+                @php
+                    $personal = trim((string) ($inviteStats['invite_code'] ?? $member->invite_code ?? ''));
+                    $inviteUrl = (string) ($inviteStats['invite_url'] ?? '');
+                @endphp
+                @if($personal !== '')
+                    <p>我的邀请码 <code>{{ $personal }}</code></p>
+                    @if($inviteUrl !== '')
+                        <p class="muted">邀请链接 <a href="{{ $inviteUrl }}">{{ $inviteUrl }}</a></p>
+                    @endif
+                    <p class="muted">直邀 {{ (int) ($inviteStats['invites'] ?? 0) }} 人，下级 {{ (int) ($inviteStats['downlines'] ?? 0) }} 人，累计 {{ (int) ($inviteStats['days'] ?? 0) }} 天。</p>
+                    <p><a class="btn-ghost" href="{{ url('/member/invite/poster') }}">下载分享海报</a></p>
+                @elseif(isset($invites) && $invites->isNotEmpty())
                     <ul class="member-invite-list">
                         @foreach($invites as $row)
                             <li>
@@ -71,10 +85,29 @@
                 @else
                     <p class="muted">还没有邀请码，生成后可分享给朋友注册。</p>
                 @endif
+                @if(($growthMode ?? '') !== 'vip_days')
                 <form method="post" action="{{ url('/member/invite/generate') }}">
                     @csrf
                     <button type="submit" class="btn-ghost">生成邀请码</button>
                 </form>
+                @endif
+            </section>
+
+            <section class="member-card">
+                <div class="sec-head"><h2>邀请排行</h2></div>
+                @if(!empty($inviteRank))
+                    <ol class="member-invite-list">
+                        @foreach($inviteRank as $row)
+                            <li>
+                                <strong>{{ $row['rank'] }}.</strong>
+                                {{ $row['name'] }}
+                                <span class="muted">{{ $row['invites'] }} 人</span>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <p class="muted">本月还没有人上榜。</p>
+                @endif
             </section>
         </div>
 

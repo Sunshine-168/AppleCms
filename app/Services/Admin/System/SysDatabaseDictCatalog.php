@@ -560,6 +560,9 @@ class SysDatabaseDictCatalog
                 'title' => admin_t('db.tf_videos_title'),
                 'status' => admin_t('db.tf_videos_status'),
                 'type' => admin_t('db.tf_videos_type'),
+                'seo_title' => admin_t('ui.seo_title'),
+                'seo_keywords' => admin_t('db.cf_seo_keywords'),
+                'seo_description' => admin_t('ui.seo_des'),
             ],
             'video_types' => [
                 'mid' => admin_t('db.tf_video_types_mid'),

@@ -22,6 +22,8 @@ class VideoIndexPageTest extends TestCase
         $this->assertStringContainsString('queue-chips', $html);
         $this->assertStringContainsString('无地址', $html);
         $this->assertStringContainsString('无封面', $html);
+        $this->assertStringContainsString('无简介', $html);
+        $this->assertStringContainsString('无 SEO', $html);
         $this->assertStringContainsString('video-batch', $html);
         $this->assertStringContainsString('更多筛选', $html);
         $this->assertStringContainsString('/admin/video/create', $html);

@@ -12,25 +12,38 @@ class StatService
     /** 概览：今日/昨日/7天/30天 */
     public function overview(): array
     {
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+        $days7 = now()->subDays(6)->toDateString();
+        $days30 = now()->subDays(29)->toDateString();
+        $row = StatHit::query()
+            ->where('created_at', '>=', $days30.' 00:00:00')
+            ->where('created_at', '<=', $today.' 23:59:59')
+            ->selectRaw(implode(', ', [
+                $this->periodSelectSql('today', $today, $today),
+                $this->periodSelectSql('yesterday', $yesterday, $yesterday),
+                $this->periodSelectSql('days7', $days7, $today),
+                $this->periodSelectSql('days30', $days30, $today),
+            ]))
+            ->first();
+
         return [
-            'today' => $this->periodStats(now()->toDateString(), now()->toDateString()),
-            'yesterday' => $this->periodStats(now()->subDay()->toDateString(), now()->subDay()->toDateString()),
-            'days7' => $this->periodStats(now()->subDays(6)->toDateString(), now()->toDateString()),
-            'days30' => $this->periodStats(now()->subDays(29)->toDateString(), now()->toDateString()),
+            'today' => $this->periodFromRow($row, 'today'),
+            'yesterday' => $this->periodFromRow($row, 'yesterday'),
+            'days7' => $this->periodFromRow($row, 'days7'),
+            'days30' => $this->periodFromRow($row, 'days30'),
         ];
     }
 
     /** @return array{pv:int,uv:int,ip:int,spider_pv:int} */
     public function periodStats(string $from, string $to): array
     {
-        $base = StatHit::query()->betweenDates($from, $to);
+        $row = StatHit::query()
+            ->betweenDates($from, $to)
+            ->selectRaw($this->periodSelectSql('p', $from, $to))
+            ->first();
 
-        return [
-            'pv' => (clone $base)->human()->count(),
-            'uv' => (clone $base)->human()->distinct('visitor_hash')->count('visitor_hash'),
-            'ip' => (clone $base)->human()->whereNotNull('ip')->distinct('ip')->count('ip'),
-            'spider_pv' => (clone $base)->spider()->count(),
-        ];
+        return $this->periodFromRow($row, 'p');
     }
 
     /**
@@ -40,15 +53,41 @@ class StatService
      */
     public function playPageStats(string $from, string $to): array
     {
-        $base = StatHit::query()->betweenDates($from, $to)->human()->where(function ($q) {
-            $q->where('path', '/play')
-                ->orWhere('path', 'like', '/play/%')
-                ->orWhere('path', 'like', '/index.php/vod/play/%');
-        });
+        $row = $this->playPageQuery()
+            ->betweenDates($from, $to)
+            ->selectRaw('COUNT(*) as pv')
+            ->selectRaw('COUNT(DISTINCT visitor_hash) as uv')
+            ->first();
 
         return [
-            'pv' => (clone $base)->count(),
-            'uv' => (clone $base)->distinct('visitor_hash')->count('visitor_hash'),
+            'pv' => (int) ($row->pv ?? 0),
+            'uv' => (int) ($row->uv ?? 0),
+        ];
+    }
+
+    /**
+     * 今日 + 昨日播放页，一次扫描。
+     *
+     * @return array{today: array{pv:int,uv:int}, yesterday: array{pv:int,uv:int}}
+     */
+    public function playPagePair(string $today, string $yesterday): array
+    {
+        $todayStart = $today.' 00:00:00';
+        $todayEnd = $today.' 23:59:59';
+        $yStart = $yesterday.' 00:00:00';
+        $yEnd = $yesterday.' 23:59:59';
+        $row = $this->playPageQuery()
+            ->where('created_at', '>=', $yStart)
+            ->where('created_at', '<=', $todayEnd)
+            ->selectRaw('SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN 1 ELSE 0 END) as today_pv', [$todayStart, $todayEnd])
+            ->selectRaw('COUNT(DISTINCT CASE WHEN created_at >= ? AND created_at <= ? THEN visitor_hash END) as today_uv', [$todayStart, $todayEnd])
+            ->selectRaw('SUM(CASE WHEN created_at >= ? AND created_at <= ? THEN 1 ELSE 0 END) as yesterday_pv', [$yStart, $yEnd])
+            ->selectRaw('COUNT(DISTINCT CASE WHEN created_at >= ? AND created_at <= ? THEN visitor_hash END) as yesterday_uv', [$yStart, $yEnd])
+            ->first();
+
+        return [
+            'today' => ['pv' => (int) ($row->today_pv ?? 0), 'uv' => (int) ($row->today_uv ?? 0)],
+            'yesterday' => ['pv' => (int) ($row->yesterday_pv ?? 0), 'uv' => (int) ($row->yesterday_uv ?? 0)],
         ];
     }
 
@@ -665,22 +704,25 @@ class StatService
     public function searchEnginePresence(int $absentAfter = 3): array
     {
         $detector = app(SpiderDetector::class);
+        $names = $detector->watchEngines();
         $today = now()->toDateString();
         $todayNames = StatHit::query()
             ->betweenDates($today, $today)
             ->spider()
-            ->whereIn('spider_name', $detector->watchEngines())
+            ->whereIn('spider_name', $names)
             ->distinct()
             ->pluck('spider_name')
             ->all();
+        $lastHits = StatHit::query()
+            ->spider()
+            ->whereIn('spider_name', $names)
+            ->select('spider_name', DB::raw('MAX(created_at) as last_at'))
+            ->groupBy('spider_name')
+            ->pluck('last_at', 'spider_name');
 
         $out = [];
-        foreach ($detector->watchEngines() as $name) {
-            $last = StatHit::query()
-                ->spider()
-                ->where('spider_name', $name)
-                ->orderByDesc('created_at')
-                ->value('created_at');
+        foreach ($names as $name) {
+            $last = $lastHits[$name] ?? null;
             $lastAt = $last ? Carbon::parse($last) : null;
             $absentDays = $lastAt ? (int) $lastAt->copy()->startOfDay()->diffInDays(now()->startOfDay()) : null;
             $todayHit = in_array($name, $todayNames, true);
@@ -757,6 +799,40 @@ class StatService
         $before = Carbon::now()->subDays(max(1, $keepDays));
 
         return StatHit::query()->where('created_at', '<', $before)->delete();
+    }
+
+    private function playPageQuery()
+    {
+        return StatHit::query()->human()->where(function ($q) {
+            $q->where('path', '/play')
+                ->orWhere('path', 'like', '/play/%')
+                ->orWhere('path', 'like', '/index.php/vod/play/%');
+        });
+    }
+
+    private function periodSelectSql(string $alias, string $from, string $to): string
+    {
+        $fromAt = addslashes($from.' 00:00:00');
+        $toAt = addslashes($to.' 23:59:59');
+        $in = "created_at >= '{$fromAt}' AND created_at <= '{$toAt}'";
+
+        return implode(', ', [
+            "SUM(CASE WHEN {$in} AND is_spider = 0 THEN 1 ELSE 0 END) as {$alias}_pv",
+            "COUNT(DISTINCT CASE WHEN {$in} AND is_spider = 0 THEN visitor_hash END) as {$alias}_uv",
+            "COUNT(DISTINCT CASE WHEN {$in} AND is_spider = 0 AND ip IS NOT NULL THEN ip END) as {$alias}_ip",
+            "SUM(CASE WHEN {$in} AND is_spider = 1 THEN 1 ELSE 0 END) as {$alias}_spider_pv",
+        ]);
+    }
+
+    /** @return array{pv:int,uv:int,ip:int,spider_pv:int} */
+    private function periodFromRow(?object $row, string $alias): array
+    {
+        return [
+            'pv' => (int) ($row->{$alias.'_pv'} ?? 0),
+            'uv' => (int) ($row->{$alias.'_uv'} ?? 0),
+            'ip' => (int) ($row->{$alias.'_ip'} ?? 0),
+            'spider_pv' => (int) ($row->{$alias.'_spider_pv'} ?? 0),
+        ];
     }
 
     /** @return array{pv:string,uv:string,width:int,height:int} */

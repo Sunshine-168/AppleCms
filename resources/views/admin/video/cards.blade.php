@@ -66,7 +66,6 @@
     <div class="card-header">
         <span>{{ admin_t('ui.cards') }} <em id="card-count"></em></span>
         <div>
-            <a class="btn btn-muted btn-sm" href="/admin/video/members">{{ admin_t('ui.members') }}</a>
             <button type="button" class="btn btn-muted btn-sm" id="card-add-btn">{{ admin_t('ui.add_card') }}</button>
             <button type="button" class="btn btn-sm" id="card-gen-btn">{{ admin_t('ui.gen_cards') }}</button>
         </div>

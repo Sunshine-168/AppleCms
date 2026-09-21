@@ -17,5 +17,9 @@ class GalleryServiceProvider extends ServiceProvider
         PluginBoot::migrateFile(__DIR__.'/database/migrations/2026_09_19_112000_expand_plugin_gallery_tags_authors_comments.php');
         $this->loadViewsFrom(__DIR__.'/resources/views', 'gallery');
         if (! $this->app->routesAreCached()) $this->loadRoutesFrom(__DIR__.'/routes.php');
+        PluginBoot::cmsLoops([
+            'gallery' => \Plugins\Gallery\Tags\GalleryTag::class,
+            'galleryType' => \Plugins\Gallery\Tags\GalleryTypeTag::class,
+        ]);
     }
 }

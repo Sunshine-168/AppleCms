@@ -156,6 +156,17 @@
             <textarea id="video-desc" name="description" rows="8" placeholder="{{ admin_t('ui.ph_plot') }}">{{ $video['description'] ?? '' }}</textarea>
             @includeIf('ai_content::form_button')
 
+            <details class="settings-details" id="video-seo" @if(trim((string) ($video['seo_title'] ?? '').($video['seo_keywords'] ?? '').($video['seo_description'] ?? '')) !== '') open @endif>
+                <summary>{{ admin_t('ui.seo_pack') }}</summary>
+                <p class="muted field-hint">{{ admin_t('ui.seo_engine_hint') }}</p>
+                <label for="video-seo-title">{{ admin_t('ui.seo_title') }}</label>
+                <input id="video-seo-title" type="text" name="seo_title" value="{{ $video['seo_title'] ?? '' }}" placeholder="{{ admin_t('ui.ph_seo_title') }}">
+                <label for="video-seo-keywords">{{ admin_t('ui.seo_key') }}</label>
+                <input id="video-seo-keywords" type="text" name="seo_keywords" value="{{ $video['seo_keywords'] ?? '' }}" placeholder="{{ admin_t('ui.ph_seo_key') }}">
+                <label for="video-seo-description">{{ admin_t('ui.seo_des') }}</label>
+                <textarea id="video-seo-description" name="seo_description" rows="3" placeholder="{{ admin_t('ui.ph_seo_des') }}">{{ $video['seo_description'] ?? '' }}</textarea>
+            </details>
+
             @if($isEdit)
                 <h3>{{ admin_t('nav.roles') }}</h3>
                 @php $roleRows = is_array($roles ?? null) ? $roles : []; @endphp

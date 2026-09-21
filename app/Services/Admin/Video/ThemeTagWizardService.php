@@ -14,6 +14,7 @@ use App\Services\Video\Tags\TagListTag;
 use App\Services\Video\Tags\TopicTag;
 use App\Services\Video\Tags\TypeTag;
 use App\Services\Video\Tags\VodTag;
+use App\Support\Plugins\PluginManager;
 use App\Support\Utils\Result;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -230,7 +231,7 @@ class ThemeTagWizardService
             return trim((string) $row);
         }
         $candidates = match ($tag) {
-            'vod' => ['title', 'name'],
+            'vod', 'manga', 'gallery', 'novel', 'live' => ['title', 'name'],
             'vodFilter' => ['label', 'name'],
             'vodArt' => ['title', 'name'],
             'vodComment', 'vodGbook' => ['author_name', 'content'],
@@ -358,6 +359,9 @@ class ThemeTagWizardService
                 ['name' => 'len', 'label' => '字数', 'type' => 'number', 'value' => '80'],
             ], "@vodSubstr(['name' => \$video->description, 'len' => 80])", '这是截字符串，把值填进 name。', true),
         ];
+        foreach ($this->pluginLoops() as $def) {
+            $list[] = $def;
+        }
         $out = [];
         foreach ($list as $def) {
             $out[$def['name']] = $def;
@@ -399,6 +403,124 @@ class ThemeTagWizardService
             ['code' => '$item->year', 'label' => '年份'],
             ['code' => '$item->remarks', 'label' => '备注'],
         ], "    <a href=\"{{ \$item->url }}\">{{ \$item->title }}</a>");
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function pluginLoops(): array
+    {
+        $manager = app(PluginManager::class);
+        $out = [];
+        if ($manager->isEnabled('manga')) {
+            $out[] = $this->loop('manga', '漫画', '首页、栏目拉漫画。关掉漫画插件后这个标签会消失。', \Plugins\Manga\Tags\MangaTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => '12'],
+                ['name' => 'order', 'label' => '排序', 'type' => 'select', 'options' => [
+                    'time' => '更新时间',
+                    'hits' => '人气',
+                    'sort' => '后台排序',
+                ], 'value' => 'time'],
+                ['name' => 'flag', 'label' => '标记', 'type' => 'select', 'options' => [
+                    '' => '不限',
+                    'recommend' => '推荐',
+                    'hot' => '热门',
+                ]],
+                ['name' => 'typeid', 'label' => '分类 ID', 'type' => 'number', 'advanced' => true],
+                ['name' => 'page', 'label' => '分页', 'type' => 'checkbox', 'hint' => '分页后下面要加 @vodPaginate。', 'advanced' => true],
+                ['name' => 'wd', 'label' => '关键词', 'type' => 'text', 'advanced' => true],
+                ['name' => 'tag', 'label' => '标签', 'type' => 'text', 'advanced' => true],
+            ], [
+                ['code' => '$item->title', 'label' => '作品名'],
+                ['code' => '$item->url', 'label' => '详情页'],
+                ['code' => '$item->cover', 'label' => '封面'],
+                ['code' => '$item->author', 'label' => '作者'],
+                ['code' => '$item->remarks', 'label' => '备注'],
+            ], "    <a href=\"{{ \$item->url }}\">{{ \$item->title }}</a>");
+            $out[] = $this->loop('mangaType', '漫画分类', '漫画自己的栏目，不是影片分类。', \Plugins\Manga\Tags\MangaTypeTag::class, [
+                ['name' => 'type', 'label' => '范围', 'type' => 'select', 'options' => [
+                    'top' => '一级栏目',
+                    'all' => '全部',
+                ], 'value' => 'top'],
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => ''],
+            ], [['code' => '$item->name', 'label' => '名称'], ['code' => '$item->url', 'label' => '栏目页']], "    <a href=\"{{ \$item->url }}\">{{ \$item->name }}</a>");
+        }
+        if ($manager->isEnabled('gallery')) {
+            $out[] = $this->loop('gallery', '图集', '首页、栏目拉图集。关掉图集插件后这个标签会消失。', \Plugins\Gallery\Tags\GalleryTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => '12'],
+                ['name' => 'order', 'label' => '排序', 'type' => 'select', 'options' => [
+                    'time' => '后台排序',
+                    'hits' => '人气',
+                ], 'value' => 'time'],
+                ['name' => 'flag', 'label' => '标记', 'type' => 'select', 'options' => [
+                    '' => '不限',
+                    'hot' => '热门',
+                ]],
+                ['name' => 'typeid', 'label' => '分类 ID', 'type' => 'number', 'advanced' => true],
+                ['name' => 'page', 'label' => '分页', 'type' => 'checkbox', 'hint' => '分页后下面要加 @vodPaginate。', 'advanced' => true],
+                ['name' => 'wd', 'label' => '关键词', 'type' => 'text', 'advanced' => true],
+                ['name' => 'tag', 'label' => '标签', 'type' => 'text', 'advanced' => true],
+            ], [
+                ['code' => '$item->title', 'label' => '标题'],
+                ['code' => '$item->url', 'label' => '详情页'],
+                ['code' => '$item->cover', 'label' => '封面'],
+            ], "    <a href=\"{{ \$item->url }}\">{{ \$item->title }}</a>");
+            $out[] = $this->loop('galleryType', '图集分类', '图集自己的栏目。', \Plugins\Gallery\Tags\GalleryTypeTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => ''],
+            ], [['code' => '$item->name', 'label' => '名称'], ['code' => '$item->url', 'label' => '栏目页']], "    <a href=\"{{ \$item->url }}\">{{ \$item->name }}</a>");
+        }
+        if ($manager->isEnabled('novel')) {
+            $out[] = $this->loop('novel', '小说', '首页、栏目拉小说。关掉小说插件后这个标签会消失。', \Plugins\Novel\Tags\NovelTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => '12'],
+                ['name' => 'order', 'label' => '排序', 'type' => 'select', 'options' => [
+                    'time' => '后台排序',
+                    'hits' => '人气',
+                ], 'value' => 'time'],
+                ['name' => 'flag', 'label' => '标记', 'type' => 'select', 'options' => [
+                    '' => '不限',
+                    'recommend' => '推荐',
+                    'hot' => '热门',
+                ]],
+                ['name' => 'typeid', 'label' => '分类 ID', 'type' => 'number', 'advanced' => true],
+                ['name' => 'page', 'label' => '分页', 'type' => 'checkbox', 'hint' => '分页后下面要加 @vodPaginate。', 'advanced' => true],
+                ['name' => 'wd', 'label' => '关键词', 'type' => 'text', 'advanced' => true],
+                ['name' => 'tag', 'label' => '标签', 'type' => 'text', 'advanced' => true],
+            ], [
+                ['code' => '$item->title', 'label' => '书名'],
+                ['code' => '$item->url', 'label' => '详情页'],
+                ['code' => '$item->cover', 'label' => '封面'],
+                ['code' => '$item->author', 'label' => '作者'],
+            ], "    <a href=\"{{ \$item->url }}\">{{ \$item->title }}</a>");
+            $out[] = $this->loop('novelType', '小说分类', '小说自己的栏目。', \Plugins\Novel\Tags\NovelTypeTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => ''],
+            ], [['code' => '$item->name', 'label' => '名称'], ['code' => '$item->url', 'label' => '栏目页']], "    <a href=\"{{ \$item->url }}\">{{ \$item->name }}</a>");
+        }
+        if ($manager->isEnabled('live')) {
+            $out[] = $this->loop('live', '直播', '首页拉 IPTV 频道。关掉直播插件后这个标签会消失。', \Plugins\Live\Tags\LiveTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => '12'],
+                ['name' => 'order', 'label' => '排序', 'type' => 'select', 'options' => [
+                    'time' => '后台排序',
+                    'hits' => '人气',
+                ], 'value' => 'time'],
+                ['name' => 'flag', 'label' => '标记', 'type' => 'select', 'options' => [
+                    '' => '不限',
+                    'recommend' => '推荐',
+                    'hot' => '热门',
+                ]],
+                ['name' => 'typeid', 'label' => '分类 ID', 'type' => 'number', 'hint' => '直播分类 ID，对应 ?cate=', 'advanced' => true],
+                ['name' => 'page', 'label' => '分页', 'type' => 'checkbox', 'hint' => '分页后下面要加 @vodPaginate。', 'advanced' => true],
+                ['name' => 'wd', 'label' => '关键词', 'type' => 'text', 'advanced' => true],
+            ], [
+                ['code' => '$item->title', 'label' => '频道名'],
+                ['code' => '$item->url', 'label' => '播放页'],
+                ['code' => '$item->cover', 'label' => '封面'],
+                ['code' => '$item->cate_name', 'label' => '分类名'],
+            ], "    <a href=\"{{ \$item->url }}\">{{ \$item->title }}</a>");
+            $out[] = $this->loop('liveCate', '直播分类', '直播频道分类。', \Plugins\Live\Tags\LiveCateTag::class, [
+                ['name' => 'num', 'label' => '条数', 'type' => 'number', 'value' => ''],
+            ], [['code' => '$item->name', 'label' => '名称'], ['code' => '$item->url', 'label' => '分类页']], "    <a href=\"{{ \$item->url }}\">{{ \$item->name }}</a>");
+        }
+
+        return $out;
     }
 
     /**

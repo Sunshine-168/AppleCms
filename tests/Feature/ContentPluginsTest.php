@@ -125,6 +125,7 @@ class ContentPluginsTest extends TestCase
         ]);
         $this->get('/manga')->assertOk()->assertSee('分类里的')->assertSee('分类外的')->assertSee('热血');
         $this->get('/manga?type='.$type->id)->assertOk()->assertSee('分类里的')->assertDontSee('分类外的');
+        $this->get('/manga/type/'.$type->id)->assertOk()->assertSee('分类里的')->assertDontSee('分类外的');
 
         $ep = MangaChapter::query()->create([
             'manga_id' => $in->id,

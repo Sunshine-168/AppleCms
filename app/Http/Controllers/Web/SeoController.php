@@ -8,6 +8,7 @@ use App\Models\Video\VideoTypeModel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class SeoController extends Controller
 {
@@ -44,24 +45,7 @@ class SeoController extends Controller
         foreach ($videos as $video) {
             $xml .= '<url><loc>'.e($video->url).'</loc><lastmod>'.e(date('Y-m-d', (int) $video->updated_at)).'</lastmod></url>';
         }
-        if (class_exists(\Plugins\Manga\Services\MangaService::class)) {
-            try {
-                $mangaSvc = app(\Plugins\Manga\Services\MangaService::class);
-                if ($mangaSvc->ready()) {
-                    $xml .= '<url><loc>'.e(url('/manga')).'</loc><changefreq>hourly</changefreq></url>';
-                    $xml .= '<url><loc>'.e(url('/manga/rank')).'</loc><changefreq>daily</changefreq></url>';
-                    $xml .= '<url><loc>'.e(url('/manga/update')).'</loc><changefreq>hourly</changefreq></url>';
-                    $mangaQ = \Plugins\Manga\Models\Manga::query()->published()->orderByDesc('id');
-                    if ($request->boolean('inc')) {
-                        $mangaQ->where('updated_at', '>=', time() - 86400 * 2);
-                    }
-                    foreach ($mangaQ->limit(2000)->get(['id', 'updated_at']) as $manga) {
-                        $xml .= '<url><loc>'.e(url('/manga/'.$manga->id)).'</loc><lastmod>'.e(date('Y-m-d', (int) $manga->updated_at)).'</lastmod></url>';
-                    }
-                }
-            } catch (\Throwable) {
-            }
-        }
+        $xml .= $this->pluginSitemapXml($request);
         $xml .= '</urlset>';
 
         return $xml;
@@ -95,6 +79,110 @@ class SeoController extends Controller
         $txt = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /member\nSitemap: ".url('/sitemap.xml')."\n";
 
         return response($txt, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+    }
+
+    private function pluginSitemapXml(Request $request): string
+    {
+        $since = $request->boolean('inc') ? time() - 86400 * 2 : 0;
+        $xml = '';
+        $xml .= $this->appendPluginSitemap(
+            \Plugins\Manga\Services\MangaService::class,
+            [['/manga', 'hourly'], ['/manga/rank', 'daily'], ['/manga/update', 'hourly']],
+            \Plugins\Manga\Models\MangaType::class,
+            '/manga/type/',
+            \Plugins\Manga\Models\Manga::class,
+            '/manga/',
+            $since
+        );
+        $xml .= $this->appendPluginSitemap(
+            \Plugins\Gallery\Services\GalleryService::class,
+            [['/gallery', 'hourly']],
+            \Plugins\Gallery\Models\GalleryType::class,
+            '/gallery/type/',
+            \Plugins\Gallery\Models\Gallery::class,
+            '/gallery/',
+            $since
+        );
+        $xml .= $this->appendPluginSitemap(
+            \Plugins\Novel\Services\NovelService::class,
+            [['/novel', 'hourly']],
+            \Plugins\Novel\Models\NovelType::class,
+            '/novel/type/',
+            \Plugins\Novel\Models\Novel::class,
+            '/novel/',
+            $since
+        );
+        $xml .= $this->appendPluginSitemap(
+            \Plugins\Live\Services\LiveService::class,
+            [['/live', 'hourly']],
+            \Plugins\Live\Models\LiveCategory::class,
+            '/live/cate/',
+            \Plugins\Live\Models\LiveChannel::class,
+            '/live/',
+            $since
+        );
+
+        return $xml;
+    }
+
+    /**
+     * @param  class-string  $svcClass
+     * @param  list<array{0:string,1:string}>  $homes
+     * @param  class-string  $typeClass
+     * @param  class-string  $itemClass
+     */
+    private function appendPluginSitemap(string $svcClass, array $homes, string $typeClass, string $typePrefix, string $itemClass, string $itemPrefix, int $since): string
+    {
+        if (! class_exists($svcClass)) {
+            return '';
+        }
+        try {
+            $svc = app($svcClass);
+            if (! method_exists($svc, 'ready') || ! $svc->ready()) {
+                return '';
+            }
+            $xml = '';
+            foreach ($homes as $home) {
+                $xml .= '<url><loc>'.e(url($home[0])).'</loc><changefreq>'.$home[1].'</changefreq></url>';
+            }
+            if (class_exists($typeClass)) {
+                $typeTable = (new $typeClass)->getTable();
+                $tq = $typeClass::query()->orderBy('id');
+                if (method_exists($typeClass, 'scopePublished')) {
+                    $tq->published();
+                } elseif (Schema::hasColumn($typeTable, 'status')) {
+                    $tq->where('status', 1);
+                }
+                foreach ($tq->limit(500)->get(['id']) as $type) {
+                    $xml .= '<url><loc>'.e(url($typePrefix.$type->id)).'</loc><changefreq>daily</changefreq></url>';
+                }
+            }
+            if (class_exists($itemClass)) {
+                $iq = $itemClass::query()->orderByDesc('id');
+                if (method_exists($itemClass, 'scopePublished')) {
+                    $iq->published();
+                }
+                $table = (new $itemClass)->getTable();
+                if ($since > 0 && Schema::hasColumn($table, 'updated_at')) {
+                    $iq->where('updated_at', '>=', $since);
+                }
+                $cols = ['id'];
+                if (Schema::hasColumn($table, 'updated_at')) {
+                    $cols[] = 'updated_at';
+                }
+                foreach ($iq->limit(2000)->get($cols) as $row) {
+                    $last = '';
+                    if (isset($row->updated_at) && (int) $row->updated_at > 0) {
+                        $last = '<lastmod>'.e(date('Y-m-d', (int) $row->updated_at)).'</lastmod>';
+                    }
+                    $xml .= '<url><loc>'.e(url($itemPrefix.$row->id)).'</loc>'.$last.'</url>';
+                }
+            }
+
+            return $xml;
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     private function rssBaidu(Collection $videos): string

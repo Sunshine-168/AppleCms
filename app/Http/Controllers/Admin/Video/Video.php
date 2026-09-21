@@ -132,6 +132,7 @@ class Video extends Controller
             'has_plot' => $request->input('has_plot', ''),
             'empty_pic' => $request->input('empty_pic', ''),
             'empty_content' => $request->input('empty_content', ''),
+            'empty_seo' => $request->input('empty_seo', ''),
             'missing_ep' => $request->input('missing_ep', ''),
             'no_actor' => $request->input('no_actor', ''),
             'weekday' => (string) $request->input('weekday', ''),
@@ -191,6 +192,9 @@ class Video extends Controller
             'publish_at' => $request->input('publish_at', 0),
             'tags_text' => (string)$request->input('tags_text', ''),
             'actors_text' => (string)$request->input('actors_text', ''),
+            'seo_title' => (string) $request->input('seo_title', ''),
+            'seo_keywords' => (string) $request->input('seo_keywords', ''),
+            'seo_description' => (string) $request->input('seo_description', ''),
         ];
 
         $data = $this->videoService->saveVideo($payload, $id);

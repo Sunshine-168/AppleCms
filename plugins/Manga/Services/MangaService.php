@@ -106,6 +106,47 @@ class MangaService
         return $rows;
     }
 
+    /** @return Collection<int, Manga>|LengthAwarePaginator */
+    public function listForTag(array $options = []): Collection|LengthAwarePaginator
+    {
+        if (! $this->ready()) {
+            return collect();
+        }
+        $num = max(1, (int) ($options['num'] ?? 12));
+        $filters = [
+            'type' => (int) ($options['typeid'] ?? 0),
+            'wd' => trim((string) ($options['wd'] ?? '')),
+            'tag' => trim((string) ($options['tag'] ?? '')),
+            'recommend' => (($options['flag'] ?? '') === 'recommend') ? '1' : '',
+            'order' => match ((string) ($options['order'] ?? 'time')) {
+                'hits', 'hot' => 'hits',
+                'sort' => 'new',
+                default => 'update',
+            },
+        ];
+        if (($options['flag'] ?? '') === 'hot') {
+            $filters['order'] = 'hits';
+        }
+        $q = Manga::query()->published();
+        $this->applyFrontFilters($q, $filters);
+        if (! empty($options['ids'])) {
+            $ids = is_array($options['ids'])
+                ? $options['ids']
+                : (preg_split('/\s*,\s*/', (string) $options['ids']) ?: []);
+            $q->whereIn('id', array_map('intval', $ids));
+        }
+        if (! empty($options['page'])) {
+            $page = $q->paginate($num)->withQueryString();
+            $this->decorateFrontRows(collect($page->items()));
+
+            return $page;
+        }
+        $rows = $q->limit($num)->get();
+        $this->decorateFrontRows($rows);
+
+        return $rows;
+    }
+
     /** @return list<array{name:string,count:int,slug?:string}> */
     public function tagCloud(int $limit = 24): array
     {
@@ -509,7 +550,7 @@ class MangaService
         if (! in_array($board, ['hits', 'new', 'end', 'favor'], true)) {
             $board = 'hits';
         }
-        $typeRaw = trim((string) request()->query('type', ''));
+        $typeRaw = trim((string) request()->query('type', request()->route('type') ?? ''));
         $typeId = 0;
         if ($typeRaw !== '') {
             if (ctype_digit($typeRaw)) {
@@ -547,9 +588,8 @@ class MangaService
     {
         $f = array_merge($this->frontFilters(), $over);
         $q = [];
-        if ((int) ($f['type'] ?? 0) > 0) {
-            $q['type'] = (int) $f['type'];
-        }
+        $typeId = (int) ($f['type'] ?? 0);
+        $base = $typeId > 0 ? '/manga/type/'.$typeId : '/manga';
         $serialize = (string) ($f['serialize'] ?? '');
         if ($serialize === '0' || $serialize === '1') {
             $q['serialize'] = $serialize;
@@ -574,7 +614,7 @@ class MangaService
             $q['order'] = $order;
         }
 
-        return url('/manga'.($q !== [] ? '?'.http_build_query($q) : ''));
+        return url($base.($q !== [] ? '?'.http_build_query($q) : ''));
     }
 
     /**

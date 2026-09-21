@@ -19,5 +19,9 @@ class NovelServiceProvider extends ServiceProvider
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');
         }
+        PluginBoot::cmsLoops([
+            'novel' => \Plugins\Novel\Tags\NovelTag::class,
+            'novelType' => \Plugins\Novel\Tags\NovelTypeTag::class,
+        ]);
     }
 }

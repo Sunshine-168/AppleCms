@@ -35,6 +35,10 @@ class WizardIndexPageTest extends TestCase
         $this->assertStringContainsString('/admin/video/wizard/try', $html);
         $this->assertStringContainsString('{maccms:vod}', $html);
         $this->assertStringContainsString("selectTag('vod')", $html);
+        $this->assertStringContainsString('"name":"manga"', $html);
+        $this->assertStringContainsString('"name":"gallery"', $html);
+        $this->assertStringContainsString('"name":"novel"', $html);
+        $this->assertStringContainsString('"name":"live"', $html);
         preg_match('/id="wizard-index"[\s\S]*?<div class="card-header">([\s\S]*?)<\/div>/', $html, $header);
         $this->assertStringNotContainsString('href="/admin/video/templates"', $header[1] ?? '');
         $this->assertStringNotContainsString('href="/admin/video/tags"', $header[1] ?? '');
@@ -97,5 +101,46 @@ class WizardIndexPageTest extends TestCase
         $comment = $svc->tryTag('vodComment', ['num' => 10]);
         $this->assertSame(1, $comment['code']);
         $this->assertStringContainsString('影片 ID', $comment['msg']);
+    }
+
+    public function test_plugin_content_tags_are_in_the_catalog_and_can_try(): void
+    {
+        $svc = app(ThemeTagWizardService::class);
+        $now = time();
+        \Plugins\Manga\Models\Manga::query()->create([
+            'title' => '一人之下',
+            'cover' => '',
+            'author' => '',
+            'remarks' => '',
+            'tags' => '',
+            'content' => '',
+            'type_id' => 0,
+            'serialize' => 0,
+            'recommend' => 0,
+            'yid' => 0,
+            'status' => 1,
+            'hits' => 0,
+            'sort' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $snippet = $svc->snippet('manga', ['num' => 8, 'order' => 'hits']);
+        $this->assertSame(0, $snippet['code'], $snippet['msg'] ?? '');
+        $text = (string) ($snippet['data']['snippet'] ?? '');
+        $this->assertStringContainsString("@manga(['num' => 8, 'order' => 'hits'])", $text);
+        $this->assertStringContainsString('$item->title', $text);
+        $this->assertStringContainsString('@endmanga', $text);
+
+        $try = $svc->tryTag('manga', ['num' => 8]);
+        $this->assertSame(0, $try['code'], $try['msg'] ?? '');
+        $this->assertGreaterThanOrEqual(1, (int) ($try['data']['count'] ?? 0));
+        $this->assertContains('一人之下', $try['data']['samples'] ?? []);
+
+        foreach (['gallery', 'novel', 'live', 'mangaType', 'galleryType', 'novelType', 'liveCate'] as $name) {
+            $row = $svc->snippet($name, ['num' => 6]);
+            $this->assertSame(0, $row['code'], $name.': '.($row['msg'] ?? ''));
+            $this->assertStringContainsString('@'.$name, (string) ($row['data']['snippet'] ?? ''));
+        }
     }
 }

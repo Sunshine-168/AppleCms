@@ -29,5 +29,10 @@ class CardIndexPageTest extends TestCase
         $this->assertStringContainsString('未用', $html);
         $this->assertStringNotContainsString('mod-refresh', $html);
         $this->assertStringNotContainsString('placeholder="code"', $html);
+        if (preg_match('/<div class="card-header">(.*?)<\/div>/s', $html, $m)) {
+            $this->assertStringNotContainsString('href="/admin/video/members"', $m[1]);
+        } else {
+            $this->fail('card-header not found');
+        }
     }
 }

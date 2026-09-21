@@ -18,5 +18,9 @@ class LiveServiceProvider extends ServiceProvider
         if (! $this->app->routesAreCached()) {
             $this->loadRoutesFrom(__DIR__.'/routes.php');
         }
+        PluginBoot::cmsLoops([
+            'live' => \Plugins\Live\Tags\LiveTag::class,
+            'liveCate' => \Plugins\Live\Tags\LiveCateTag::class,
+        ]);
     }
 }

@@ -70,15 +70,8 @@ class VodController extends Controller
         $this->context->setVideo($video);
         $this->context->setType($video->type);
         $this->front->bumpHits($video);
-        $this->context->setSeo(
-            $this->seoTitle((string) ($site['seo_title_vod'] ?? '{name} - {site}'), [
-                '{name}' => (string) $video->title,
-                '{type}' => (string) ($video->type?->name ?? ''),
-                '{site}' => (string) $site['title'],
-            ]),
-            $video->title,
-            (string) $video->description
-        );
+        [$seoTitle, $seoKw, $seoDes] = $this->videoSeo($video, $site, 'detail');
+        $this->context->setSeo($seoTitle, $seoKw, $seoDes);
         $member = Auth::guard('member')->user();
         $favorited = $member ? $this->interaction->isFavorited((int) $member->id, $video->id) : false;
         $plots = $video->relationLoaded('plots') ? $video->plots : collect();
@@ -121,11 +114,8 @@ class VodController extends Controller
         $this->context->setSource($source);
         $this->context->setEpisode($episode);
         $epName = $episode?->display_name ?? '';
-        $this->context->setSeo(
-            trim($video->title.' '.$epName).' - '.$site['title'],
-            $video->title,
-            (string) $video->description
-        );
+        [$seoTitle, $seoKw, $seoDes] = $this->videoSeo($video, $site, 'play', $epName);
+        $this->context->setSeo($seoTitle, $seoKw, $seoDes);
         if ($member && $trysee < 1) {
             $this->interaction->recordHistory((int) $member->id, $video, (int) ($source?->id ?: 0), (int) ($episode?->id ?: 0));
         }
@@ -157,7 +147,8 @@ class VodController extends Controller
         $this->context->setType($video->type);
         $this->context->setSource($source);
         $this->context->setEpisode($episode);
-        $this->context->setSeo($video->title.' 下载 - '.$site['title'], $video->title, (string) $video->description);
+        [$seoTitle, $seoKw, $seoDes] = $this->videoSeo($video, $site, 'down');
+        $this->context->setSeo($seoTitle, $seoKw, $seoDes);
 
         return view($this->front->themeView('vod.down'), compact('site', 'video', 'source', 'episode', 'downSources'));
     }
@@ -554,7 +545,48 @@ class VodController extends Controller
         return view($this->front->themeView('vod.plot'), compact('site', 'plot', 'video'));
     }
 
-    /** @param  array<string, string>  $vars */
+    /** @return array{0:string,1:string,2:string} */
+    private function videoSeo(\App\Models\Video\VideoModel $video, array $site, string $page, string $extra = ''): array
+    {
+        $customTitle = \Illuminate\Support\Facades\Schema::hasColumn('videos', 'seo_title')
+            ? trim((string) ($video->seo_title ?? ''))
+            : '';
+        $customKw = \Illuminate\Support\Facades\Schema::hasColumn('videos', 'seo_keywords')
+            ? trim((string) ($video->seo_keywords ?? ''))
+            : '';
+        $customDes = \Illuminate\Support\Facades\Schema::hasColumn('videos', 'seo_description')
+            ? trim((string) ($video->seo_description ?? ''))
+            : '';
+        if ($customTitle !== '') {
+            $title = $customTitle;
+            if ($page === 'play' && $extra !== '') {
+                $title = trim($customTitle.' '.$extra);
+            } elseif ($page === 'down') {
+                $title = $customTitle.' 下载';
+            }
+        } elseif ($page === 'play') {
+            $title = $this->seoTitle((string) ($site['seo_title_play'] ?? '{name} 在线播放 - {site}'), [
+                '{name}' => trim($video->title.($extra !== '' ? ' '.$extra : '')),
+                '{type}' => (string) ($video->type?->name ?? ''),
+                '{site}' => (string) $site['title'],
+            ]);
+        } elseif ($page === 'down') {
+            $title = $video->title.' 下载 - '.$site['title'];
+        } else {
+            $title = $this->seoTitle((string) ($site['seo_title_vod'] ?? '{name} - {site}'), [
+                '{name}' => (string) $video->title,
+                '{type}' => (string) ($video->type?->name ?? ''),
+                '{site}' => (string) $site['title'],
+            ]);
+        }
+
+        return [
+            $title,
+            $customKw !== '' ? $customKw : (string) $video->title,
+            $customDes !== '' ? $customDes : (string) $video->description,
+        ];
+    }
+
     private function seoTitle(string $tpl, array $vars): string
     {
         $tpl = trim($tpl);

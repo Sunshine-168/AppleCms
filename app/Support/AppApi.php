@@ -55,6 +55,8 @@ class AppApi
             'theme' => (string) ($site['theme'] ?? config('video.theme', 'default')),
             'icp' => (string) ($site['icp'] ?? ''),
             'member_register' => (int) ($site['member_register'] ?? 1) === 1,
+            'member_invite' => (int) ($site['member_invite'] ?? 0) === 1,
+            'member_growth_mode' => (string) ($site['member_growth_mode'] ?? 'points'),
             'member_comment_login' => (int) ($site['member_comment_login'] ?? 0) === 1,
             'trysee_seconds' => (int) ($site['trysee_seconds'] ?? 0),
         ];
@@ -198,6 +200,8 @@ class AppApi
             'points' => (int) ($member->points ?? 0),
             'group_id' => (int) $member->effectiveGroupId(),
             'group_expire' => $member->groupExpireLabel(),
+            'group_expire_at' => (int) ($member->group_expire_at ?? 0),
+            'invite_code' => (string) ($member->invite_code ?? ''),
         ];
     }
 
