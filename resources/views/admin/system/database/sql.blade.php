@@ -67,7 +67,7 @@
     var L = {!! json_encode([
         'need_sql' => admin_t('ui.need_sql'),
         'sql_word' => admin_t('ui.sql_word'),
-        'sql_typed_wrong' => admin_t('ui.sql_typed_wrong'),
+        'sql_typed_wrong' => admin_t('ui.sql_typed_wrong', ['word' => admin_t('ui.sql_word')]),
         'sql_run_fail' => admin_t('ui.sql_run_fail'),
     ], JSON_UNESCAPED_UNICODE) !!};
     var input = document.getElementById('sql-input');

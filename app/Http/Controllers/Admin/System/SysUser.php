@@ -179,12 +179,12 @@ class SysUser extends Controller
         try {
             $data = $this->systemUserService->login($username, $password, $vscode);
         } catch (\Throwable $e) {
-            $msg = config('app.debug') && trim($e->getMessage()) !== '' ? $e->getMessage() : '登录失败';
+            $msg = config('app.debug') && trim($e->getMessage()) !== '' ? $e->getMessage() : admin_t('auth.fail');
 
             return Ajax::message(1, $msg);
         }
 
-        return Ajax::message((int) $data['code'], (string) ($data['msg'] ?? '登录失败'), is_array($data['data'] ?? null) ? $data['data'] : []);
+        return Ajax::message((int) $data['code'], (string) ($data['msg'] ?? admin_t('auth.fail')), is_array($data['data'] ?? null) ? $data['data'] : []);
 
     }
 

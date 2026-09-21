@@ -45,7 +45,7 @@ class ArtTagService
     public function paginate(array $params): array
     {
         if (! $this->ready()) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $this->harvest();
         $limit = max(1, (int) ($params['limit'] ?? 20));
@@ -85,18 +85,18 @@ class ArtTagService
     public function save(array $data, ?int $id = null): array
     {
         if (! $this->ready()) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $name = mb_substr(trim((string) ($data['name'] ?? $data['title'] ?? '')), 0, 60);
         if ($name === '') {
-            return Result::fail('请填写标签名称');
+            return Result::fail(admin_t('ui.please_fill_tag_name'));
         }
         $dup = VideoArtTag::query()->where('name', $name);
         if ($id) {
             $dup->where('id', '!=', $id);
         }
         if ($dup->exists()) {
-            return Result::fail('已经有这个标签了');
+            return Result::fail(admin_t('ui.tag_dup'));
         }
         $now = time();
         $slugIn = trim((string) ($data['slug'] ?? ''));
@@ -110,7 +110,7 @@ class ArtTagService
         if ($id) {
             $row = VideoArtTag::query()->find($id);
             if (! $row) {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $old = (string) $row->name;
             $row->fill($payload)->save();
@@ -132,11 +132,11 @@ class ArtTagService
     public function delete(int $id): array
     {
         if (! $this->ready()) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $row = VideoArtTag::query()->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $name = (string) $row->name;
         $count = (int) $row->arts()->count();
@@ -145,7 +145,7 @@ class ArtTagService
         $this->rewriteComma($name, null);
         AdminOpLog::write('delete', $count > 0 ? '删了文章标签「'.$name.'」，并从 '.$count.' 篇上拿掉' : '删了文章标签「'.$name.'」', ['id' => $id]);
 
-        return Result::success([], $count > 0 ? '已删除标签，并从 '.$count.' 篇上移除' : '已删除');
+        return Result::success([], $count > 0 ? admin_t('ui.tag_deleted_from_n', ['n' => $count]) : admin_t('ui.deleted'));
     }
 
     /**
@@ -155,7 +155,7 @@ class ArtTagService
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if ($ids === []) {
-            return Result::fail('请先勾选标签');
+            return Result::fail(admin_t('ui.please_select_tags'));
         }
         $ok = 0;
         $fail = 0;
@@ -163,7 +163,7 @@ class ArtTagService
             $res = match ($action) {
                 'status' => $this->save(['status' => (int) $value], $id),
                 'delete' => $this->delete($id),
-                default => Result::fail('不支持的操作'),
+                default => Result::fail(admin_t('ui.unsupported_op')),
             };
             if ((int) ($res['code'] ?? 1) === 0) {
                 $ok++;
@@ -172,10 +172,10 @@ class ArtTagService
             }
         }
         if ($ok === 0) {
-            return Result::fail('操作失败');
+            return Result::fail(admin_t('ui.op_fail'));
         }
 
-        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理') : '操作成功');
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? admin_t('ui.batch_n_unhandled', ['ok' => $ok, 'fail' => $fail]) : admin_t('ui.op_ok'));
     }
 
     public function find(int $id): ?VideoArtTag

@@ -108,12 +108,12 @@ class SysRoleService
         $code = trim($code);
         $remark = trim($remark);
         if ($name === '') {
-            return Result::fail('请填写名称');
+            return Result::fail(admin_t('ui.need_name'));
         }
         if ($code === '') {
             $code = $this->uniqueCode($name);
         } elseif ($this->sysRoleModel->existsBy([['code', '=', $code]])) {
-            return Result::fail('这个标识已经有了');
+            return Result::fail(admin_t('ui.code_taken'));
         }
 
         $time = time();
@@ -127,33 +127,33 @@ class SysRoleService
             'update_time' => $time,
         ]);
         if (! $id) {
-            return Result::fail('没能添加');
+            return Result::fail(admin_t('ui.add_fail'));
         }
 
-        return Result::success(['id' => (int) $id], '已添加，接着勾能进哪些菜单');
+        return Result::success(['id' => (int) $id], admin_t('ui.role_added_tick'));
     }
 
     public function updateRole(int $id, string $name, string $code, string $remark = '', int $status = 1, int $sort = 0): array
     {
         if ($id < 1) {
-            return Result::fail('角色不存在');
+            return Result::fail(admin_t('ui.role_missing'));
         }
         $row = $this->sysRoleModel->findById($id);
         if (! $row) {
-            return Result::fail('角色不存在');
+            return Result::fail(admin_t('ui.role_missing'));
         }
         $name = trim($name);
         $code = trim($code);
         $remark = trim($remark);
         if ($name === '') {
-            return Result::fail('请填写名称');
+            return Result::fail(admin_t('ui.need_name'));
         }
         if ($code === '') {
             $code = (string) ($row['code'] ?? $this->uniqueCode($name, $id));
         }
         $dup = $this->sysRoleModel->findByCondition([['code', '=', $code]]);
         if ($dup && (int) ($dup['id'] ?? 0) !== $id) {
-            return Result::fail('这个标识已经有了');
+            return Result::fail(admin_t('ui.code_taken'));
         }
 
         $res = $this->sysRoleModel->updateById($id, [
@@ -165,36 +165,36 @@ class SysRoleService
             'update_time' => time(),
         ]);
         if (! $res) {
-            return Result::fail('没能保存');
+            return Result::fail(admin_t('ui.cant_save'));
         }
 
-        return Result::success([], '已保存');
+        return Result::success([], admin_t('ui.saved'));
     }
 
     public function deleteRole(int $id): array
     {
         if ($id < 1) {
-            return Result::fail('角色不存在');
+            return Result::fail(admin_t('ui.role_missing'));
         }
         $users = $this->sysUserModel->countByCondition([['role_id', '=', $id]]);
         if ($users > 0) {
-            return Result::fail('有人在用这个角色，先换人再删');
+            return Result::fail(admin_t('ui.role_in_use'));
         }
 
         $res = $this->sysRoleModel->deleteById($id);
         if (! $res) {
-            return Result::fail('没能删除');
+            return Result::fail(admin_t('ui.cant_delete'));
         }
         $this->sysRolePermModel->deleteByCondition(['role_id' => $id]);
         Cache::forget('role_perm_'.$id);
 
-        return Result::success([], '已删除');
+        return Result::success([], admin_t('ui.deleted'));
     }
 
     public function setRolePerms(int $roleId, array $permIds): array
     {
         if ($roleId < 1) {
-            return Result::fail('角色不存在');
+            return Result::fail(admin_t('ui.role_missing'));
         }
 
         $this->sysRolePermModel->deleteByCondition(['role_id' => $roleId]);
@@ -219,7 +219,7 @@ class SysRoleService
         }
         Cache::forget('role_perm_'.$roleId);
 
-        return Result::success([], '已保存权限');
+        return Result::success([], admin_t('ui.perms_saved'));
     }
 
     public function getRolePermIds(int $roleId): array

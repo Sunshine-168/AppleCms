@@ -12,37 +12,37 @@
     "admin": {
         "extra_pages": {
             "manga": {
-                "title": "漫画参数",
-                "hint": "采集进待审、VIP 试看页数、VIP 会员组、采集图本地化。资源接口 /api/provide/manga 与影片共用 provide_key。",
+                "title": "item.config_manga",
+                "hint": "manga.cfg_hint",
                 "fields": [
                     {
                         "name": "manga_collect_audit",
-                        "label": "采集进待审",
+                        "label": "manga.cfg_audit",
                         "type": "select",
                         "options": [
-                            "否（直接已审）",
-                            "是（进待审台）"
+                            "manga.cfg_audit_no",
+                            "manga.cfg_audit_yes"
                         ]
                     },
                     {
                         "name": "manga_trysee_pages",
-                        "label": "VIP试看页数",
+                        "label": "manga.cfg_trysee",
                         "type": "text",
-                        "hint": "非 VIP 可读前 N 页，默认 3。填 0 则完全锁。"
+                        "hint": "manga.cfg_trysee_hint"
                     },
                     {
                         "name": "manga_vip_group_ids",
-                        "label": "VIP会员组ID",
+                        "label": "manga.cfg_vip_group",
                         "type": "text",
-                        "hint": "可多组，逗号分隔。留空=任意已分配会员组都算 VIP。"
+                        "hint": "manga.cfg_vip_hint"
                     },
                     {
                         "name": "manga_collect_localize",
-                        "label": "采集图片本地化",
+                        "label": "manga.cfg_localize",
                         "type": "select",
                         "options": [
-                            "否（保留远程地址）",
-                            "是（下载到 /uploads/manga）"
+                            "manga.cfg_loc_no",
+                            "manga.cfg_loc_yes"
                         ]
                     }
                 ]

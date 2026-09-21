@@ -12,25 +12,25 @@
     "admin": {
         "extra_pages": {
             "danmaku": {
-                "title": "弹幕参数",
-                "hint": "关闭后播放器不再加载弹幕层。不是聊天室。违禁词走站点设置，没有 DPlayer 第三方接口。",
+                "title": "item.config_danmaku",
+                "hint": "danmaku.cfg_hint",
                 "fields": [
                     {
                         "name": "danmaku_enabled",
-                        "label": "弹幕",
+                        "label": "danmaku.cfg_on",
                         "type": "select",
                         "options": {
-                            "1": "开启",
-                            "0": "关闭"
+                            "1": "ui.on_switch",
+                            "0": "ui.off_switch"
                         }
                     },
                     {
                         "name": "danmaku_login",
-                        "label": "发送需登录",
+                        "label": "danmaku.cfg_login",
                         "type": "select",
                         "options": {
-                            "0": "否",
-                            "1": "是"
+                            "0": "ui.no",
+                            "1": "ui.yes"
                         }
                     }
                 ]

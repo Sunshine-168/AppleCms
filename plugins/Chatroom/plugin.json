@@ -12,25 +12,25 @@
     "admin": {
         "extra_pages": {
             "chatroom": {
-                "title": "聊天室",
-                "hint": "关闭后播放页不再出现本片讨论。弹幕插件单独开关。违禁词走站点设置，没有独立 IP 黑名单。",
+                "title": "chatroom.cfg_title",
+                "hint": "chatroom.cfg_hint",
                 "fields": [
                     {
                         "name": "chatroom_enabled",
-                        "label": "聊天室",
+                        "label": "chatroom.cfg_on",
                         "type": "select",
                         "options": {
-                            "1": "开启",
-                            "0": "关闭"
+                            "1": "ui.on_switch",
+                            "0": "ui.off_switch"
                         }
                     },
                     {
                         "name": "chatroom_login",
-                        "label": "发言需登录",
+                        "label": "chatroom.cfg_login",
                         "type": "select",
                         "options": {
-                            "0": "否",
-                            "1": "是"
+                            "0": "ui.no",
+                            "1": "ui.yes"
                         }
                     }
                 ]

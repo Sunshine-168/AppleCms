@@ -480,7 +480,7 @@ class VideoService
     {
         $info = $this->videoModel->findById($id);
         if (empty($info)) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
 
         $tagRelRows = $this->videoTagRelModel->selectByCondition([['video_id', '=', $id]], ['tag_id'], ['tag_id' => 'asc']);
@@ -545,7 +545,7 @@ class VideoService
     {
         $title = trim((string)($data['title'] ?? ''));
         if ($title === '') {
-            return Result::fail('标题不能为空');
+            return Result::fail(admin_t('ui.title_empty'));
         }
 
         $now = time();
@@ -612,7 +612,7 @@ class VideoService
                     $exists = $this->videoModel->findById($id);
                     if (empty($exists))
                     {
-                        return Result::fail('数据不存在');
+                        return Result::fail(admin_t('ui.data_missing'));
                     }
 
                     $ok = $this->videoModel->updateById($id, $payload);
@@ -655,7 +655,7 @@ class VideoService
             });
         } catch (Exception $e)
         {
-            return Result::fail($e->getMessage() ?: '操作失败');
+            return Result::fail($e->getMessage() ?: admin_t('ui.op_fail'));
         }
         if ((int) ($result['code'] ?? 1) === 0) {
             $vid = (int) ($result['data']['id'] ?? $id ?? 0);
@@ -677,7 +677,7 @@ class VideoService
         $info = $this->videoModel->findById($id);
         if (empty($info))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $title = (string) ($info['title'] ?? '');
         if (Schema::hasColumn('videos', 'deleted_at')) {
@@ -686,7 +686,7 @@ class VideoService
                 'updated_at' => time(),
             ]);
 
-            return AdminOpLog::ifOk(Result::success([], '已移入回收站'), 'delete', '删除了'.AdminOpLog::named('影片', $title, $id), [
+            return AdminOpLog::ifOk(Result::success([], admin_t('ui.moved_to_recycle')), 'delete', '删除了'.AdminOpLog::named('影片', $title, $id), [
                 'module' => '影片',
                 'target_type' => 'videos',
                 'target_id' => $id,
@@ -705,21 +705,21 @@ class VideoService
     public function restoreVideo(int $id): array
     {
         if (! Schema::hasColumn('videos', 'deleted_at')) {
-            return Result::fail('未启用回收站');
+            return Result::fail(admin_t('ui.recycle_off'));
         }
         $n = VideoModel::query()->withoutGlobalScope('alive')->where('id', $id)->where('deleted_at', '>', 0)->update([
             'deleted_at' => 0,
             'updated_at' => time(),
         ]);
 
-        return $n > 0 ? Result::success() : Result::fail('记录不在回收站');
+        return $n > 0 ? Result::success() : Result::fail(admin_t('ui.not_in_recycle'));
     }
 
     public function purgeVideo(int $id): array
     {
         $row = VideoModel::query()->withoutGlobalScope('alive')->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         try {
             return DB::transaction(function () use ($id) {
@@ -751,7 +751,7 @@ class VideoService
             });
         } catch (Exception $e)
         {
-            return Result::fail($e->getMessage() ?: '删除失败');
+            return Result::fail($e->getMessage() ?: admin_t('ui.delete_fail'));
         }
     }
     /**
@@ -952,7 +952,7 @@ class VideoService
     {
         $row = $this->videoTypeModel->findById($id);
         if (empty($row)) {
-            return Result::fail('分类不存在');
+            return Result::fail(admin_t('ui.type_missing'));
         }
 
         return Result::success($row);
@@ -983,35 +983,35 @@ class VideoService
             $mid = 1;
         }
         $noun = match ($mid) {
-            2 => '栏目',
-            3 => '导航分类',
-            default => '分类',
+            2 => admin_t('ui.noun_art_type'),
+            3 => admin_t('ui.noun_web_type'),
+            default => admin_t('ui.noun_vod_type'),
         };
         $name = trim((string)($data['name'] ?? ''));
         if ($name === '')
         {
-            return Result::fail($noun.'名称不能为空');
+            return Result::fail(admin_t('ui.name_required', ['noun' => $noun]));
         }
         if ($parentId > 0) {
             $parent = $this->videoTypeModel->findById($parentId);
             if (empty($parent)) {
-                return Result::fail('上级不存在');
+                return Result::fail(admin_t('ui.parent_missing'));
             }
             $parentMid = (int) ($parent['mid'] ?? 1);
             if ($parentMid < 1) {
                 $parentMid = 1;
             }
             if ($parentMid !== $mid) {
-                return Result::fail('上级必须和本栏目同一类');
+                return Result::fail(admin_t('ui.parent_same_kind'));
             }
         }
         if ($id !== null && $id > 0) {
             if ($parentId === $id) {
-                return Result::fail('不能把自己设为上级');
+                return Result::fail(admin_t('ui.parent_self'));
             }
             $node = VideoTypeModel::query()->find($id);
             if ($node && in_array($parentId, $node->descendantIds(), true)) {
-                return Result::fail('不能挂到自己的下级下面');
+                return Result::fail(admin_t('ui.parent_descendant'));
             }
         }
 
@@ -1023,7 +1023,7 @@ class VideoService
             if ($kind === 'link') {
                 $safe = VideoTypeModel::safeJumpUrl((string) ($data['jump_url'] ?? ''));
                 if ($safe === null) {
-                    return Result::fail('外链栏目请填写 http(s) 地址或站内路径，例如 /arts');
+                    return Result::fail(admin_t('ui.need_jump_url'));
                 }
                 $jump = $safe;
             }
@@ -1061,7 +1061,7 @@ class VideoService
             $exists = $this->videoTypeModel->findById($id);
             if (empty($exists))
             {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->videoTypeModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1078,7 +1078,7 @@ class VideoService
         $exists = $this->videoTypeModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
 
         $isArt = (int) ($exists['mid'] ?? 1) === 2;
@@ -1086,14 +1086,14 @@ class VideoService
         $childCount = $this->videoTypeModel->countByCondition([['parent_id', '=', $id]]);
         if ($childCount > 0)
         {
-            return Result::fail($isArt ? '请先删掉下级栏目' : '请先删除子分类');
+            return Result::fail($isArt ? admin_t('ui.del_child_arts') : admin_t('ui.del_child_types'));
         }
 
         if (! $isArt && ! $isWebsite) {
             $useCount = $this->videoModel->countByCondition([['type_id', '=', $id]]);
             if ($useCount > 0)
             {
-                return Result::fail('该分类下还有影片，无法删除');
+                return Result::fail(admin_t('ui.type_has_videos'));
             }
         }
         if ($isArt) {
@@ -1105,7 +1105,7 @@ class VideoService
             } catch (\Throwable) {
             }
             if ($artCount > 0) {
-                return Result::fail('该栏目下还有文章，无法删除');
+                return Result::fail(admin_t('ui.type_has_arts'));
             }
         }
         if ($isWebsite) {
@@ -1117,7 +1117,7 @@ class VideoService
             } catch (\Throwable) {
             }
             if ($siteCount > 0) {
-                return Result::fail('该分类下还有导航站点，无法删除');
+                return Result::fail(admin_t('ui.type_has_sites'));
             }
         }
 
@@ -1132,7 +1132,7 @@ class VideoService
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if ($ids === []) {
-            return Result::fail('请先勾选分类');
+            return Result::fail(admin_t('ui.please_select_types'));
         }
         $ok = 0;
         $fail = 0;
@@ -1147,7 +1147,7 @@ class VideoService
                 'status' => $this->saveVideoType(array_merge($row, ['status' => (int) $value]), $id),
                 'parent' => $this->saveVideoType(array_merge($row, ['parent_id' => (int) $value]), $id),
                 'delete' => $this->deleteVideoType($id),
-                default => Result::fail('不支持的操作'),
+                default => Result::fail(admin_t('ui.unsupported_op')),
             };
             if (($res['code'] ?? 1) === 0) {
                 $ok++;
@@ -1157,10 +1157,10 @@ class VideoService
             }
         }
         if ($ok === 0) {
-            return Result::fail($last !== '' ? $last : '操作失败');
+            return Result::fail($last !== '' ? $last : admin_t('ui.op_fail'));
         }
 
-        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理。'.$last) : '操作成功');
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? (admin_t('ui.batch_n_unhandled', ['ok' => $ok, 'fail' => $fail]).($last !== '' ? '。'.$last : '')) : admin_t('ui.op_ok'));
     }
 
     /**
@@ -1208,7 +1208,7 @@ class VideoService
             $item['has_break'] = (int) ($item['last_page'] ?? 0) > 0;
             $item['last_error'] = $err;
             $item['mid'] = (int) ($item['mid'] ?? 1);
-            $item['mid_label'] = $item['mid'] === 2 ? '漫画' : '影片';
+            $item['mid_label'] = $item['mid'] === 2 ? admin_t('nav.manga') : admin_t('nav.videos');
             $item['last_collect_at_text'] = $lastAt > 0 ? date('Y-m-d H:i', $lastAt) : '';
             $item['api_host'] = is_string($host) && $host !== '' ? $host : $url;
             $item['created_at_text'] = ! empty($item['created_at']) ? date('Y-m-d H:i:s', (int) $item['created_at']) : '';
@@ -1244,11 +1244,11 @@ class VideoService
         $name = trim((string)($data['name'] ?? ''));
         if ($name === '')
         {
-            return Result::fail('采集源名称不能为空');
+            return Result::fail(admin_t('ui.need_collect_name'));
         }
         $apiUrl = trim((string) ($data['api_url'] ?? ''));
         if ($apiUrl === '') {
-            return Result::fail('请填写接口地址');
+            return Result::fail(admin_t('ui.please_fill_api'));
         }
         $mid = (int) ($data['mid'] ?? 1) === 2 ? 2 : 1;
         if ($mid === 2) {
@@ -1256,7 +1256,7 @@ class VideoService
                 ? app(\Plugins\Manga\Services\MangaCollectService::class)
                 : null;
             if (! $manga || ! $manga->ready()) {
-                return Result::fail('漫画插件未启用');
+                return Result::fail(admin_t('ui.manga_plugin_off'));
             }
         }
 
@@ -1282,7 +1282,7 @@ class VideoService
             $exists = $this->collectSourceModel->findById($id);
             if (empty($exists))
             {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->collectSourceModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1299,17 +1299,17 @@ class VideoService
         $exists = $this->collectSourceModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
 
         $useCount = $this->videoModel->countByCondition([['collect_source_id', '=', $id]]);
         if ($useCount > 0)
         {
-            return Result::fail('该采集源已被视频使用，无法删除');
+            return Result::fail(admin_t('ui.collect_used_video'));
         }
         if (class_exists(\Plugins\Manga\Models\Manga::class) && Schema::hasTable('plugin_mangas') && Schema::hasColumn('plugin_mangas', 'collect_source_id')) {
             if (\Plugins\Manga\Models\Manga::query()->where('collect_source_id', $id)->exists()) {
-                return Result::fail('该采集源已被漫画使用，无法删除');
+                return Result::fail(admin_t('ui.collect_used_manga'));
             }
         }
 
@@ -1381,7 +1381,7 @@ class VideoService
     {
         $name = trim((string) ($data['name'] ?? ''));
         if (($id === null || $id < 1) && $name === '') {
-            return Result::fail('标签名称不能为空');
+            return Result::fail(admin_t('ui.need_tag_name'));
         }
 
         $now = time();
@@ -1411,7 +1411,7 @@ class VideoService
             $exists = $this->videoTagModel->findById($id);
             if (empty($exists))
             {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->videoTagModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1428,7 +1428,7 @@ class VideoService
         $exists = $this->videoTagModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
 
         $this->videoTagRelModel->deleteByCondition([['tag_id', '=', $id]]);
@@ -1444,7 +1444,7 @@ class VideoService
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if ($ids === []) {
-            return Result::fail('请先勾选标签');
+            return Result::fail(admin_t('ui.please_select_tags'));
         }
         $ok = 0;
         $fail = 0;
@@ -1452,7 +1452,7 @@ class VideoService
             $res = match ($action) {
                 'status' => $this->saveVideoTag(['status' => (int) $value], $id),
                 'delete' => $this->deleteVideoTag($id),
-                default => Result::fail('不支持的操作'),
+                default => Result::fail(admin_t('ui.unsupported_op')),
             };
             if (($res['code'] ?? 1) === 0) {
                 $ok++;
@@ -1461,10 +1461,10 @@ class VideoService
             }
         }
         if ($ok === 0) {
-            return Result::fail('操作失败');
+            return Result::fail(admin_t('ui.op_fail'));
         }
 
-        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理') : '操作成功');
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? admin_t('ui.batch_n_unhandled', ['ok' => $ok, 'fail' => $fail]) : admin_t('ui.op_ok'));
     }
     /**
      * 获取视频演员列表
@@ -1529,6 +1529,12 @@ class VideoService
         }
         foreach ($rows as &$row) {
             $row['video_count'] = $counts[(int) ($row['id'] ?? 0)] ?? 0;
+            $sex = trim((string) ($row['sex'] ?? ''));
+            $row['sex_label'] = match ($sex) {
+                '男' => admin_t('ui.gender_m'),
+                '女' => admin_t('ui.gender_f'),
+                default => $sex,
+            };
         }
         unset($row);
 
@@ -1541,7 +1547,7 @@ class VideoService
     {
         $name = trim((string) ($data['name'] ?? ''));
         if (($id === null || $id < 1) && $name === '') {
-            return Result::fail('演员名称不能为空');
+            return Result::fail(admin_t('ui.need_actor_name'));
         }
 
         $now = time();
@@ -1594,7 +1600,7 @@ class VideoService
             $exists = $this->actorModel->findById($id);
             if (empty($exists))
             {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->actorModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1611,7 +1617,7 @@ class VideoService
         $exists = $this->actorModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
 
         $this->videoActorRelModel->deleteByCondition([['actor_id', '=', $id]]);
@@ -1627,7 +1633,7 @@ class VideoService
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if ($ids === []) {
-            return Result::fail('请先勾选演员');
+            return Result::fail(admin_t('ui.please_select_actors'));
         }
         $ok = 0;
         $fail = 0;
@@ -1635,7 +1641,7 @@ class VideoService
             $res = match ($action) {
                 'status' => $this->saveActor(['status' => (int) $value], $id),
                 'delete' => $this->deleteActor($id),
-                default => Result::fail('不支持的操作'),
+                default => Result::fail(admin_t('ui.unsupported_op')),
             };
             if (($res['code'] ?? 1) === 0) {
                 $ok++;
@@ -1644,10 +1650,10 @@ class VideoService
             }
         }
         if ($ok === 0) {
-            return Result::fail('操作失败');
+            return Result::fail(admin_t('ui.op_fail'));
         }
 
-        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? ('完成 '.$ok.' 个，'.$fail.' 个未处理') : '操作成功');
+        return Result::success(['ok' => $ok, 'fail' => $fail], $fail > 0 ? admin_t('ui.batch_n_unhandled', ['ok' => $ok, 'fail' => $fail]) : admin_t('ui.op_ok'));
     }
     /**
      * 获取视频采集源列表
@@ -1700,13 +1706,13 @@ class VideoService
         $videoId = (int)($data['video_id'] ?? 0);
         if ($videoId < 1)
         {
-            return Result::fail('参数错误');
+            return Result::fail(admin_t('ui.sched_bad_param'));
         }
 
         $name = trim((string)($data['name'] ?? ''));
         if ($name === '')
         {
-            return Result::fail('线路名不能为空');
+            return Result::fail(admin_t('ui.need_line_name'));
         }
 
         $now = time();
@@ -1732,7 +1738,7 @@ class VideoService
             $exists = $this->videoSourceModel->findById($id);
             if (empty($exists))
              {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->videoSourceModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1750,7 +1756,7 @@ class VideoService
         $exists = $this->videoSourceModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $ok = $this->videoSourceModel->deleteById($id);
         return $ok ? Result::success() : Result::fail();
@@ -1789,13 +1795,13 @@ class VideoService
         $sourceId = (int)($data['source_id'] ?? 0);
         if ($sourceId < 1)
         {
-            return Result::fail('参数错误');
+            return Result::fail(admin_t('ui.sched_bad_param'));
         }
 
         $source = $this->videoSourceModel->findById($sourceId);
         if (empty($source))
         {
-            return Result::fail('线路不存在');
+            return Result::fail(admin_t('ui.line_missing'));
         }
 
         $episodeNum = (int)($data['episode_num'] ?? 1);
@@ -1807,7 +1813,7 @@ class VideoService
         $url = trim((string)($data['url'] ?? ''));
         if ($url === '')
         {
-            return Result::fail('播放地址不能为空');
+            return Result::fail(admin_t('ui.need_play_url'));
         }
 
         $now = time();
@@ -1828,7 +1834,7 @@ class VideoService
             $exists = $this->videoEpisodeModel->findById($id);
             if (empty($exists))
             {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             $ok = $this->videoEpisodeModel->updateById($id, $payload);
             return $ok ? Result::success() : Result::fail();
@@ -1846,7 +1852,7 @@ class VideoService
         $exists = $this->videoEpisodeModel->findById($id);
         if (empty($exists))
         {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $ok = $this->videoEpisodeModel->deleteById($id);
         return $ok ? Result::success() : Result::fail();
@@ -2029,7 +2035,7 @@ class VideoService
     {
         $ids = VideoMeta::ids($ids);
         if ($ids === []) {
-            return Result::fail('请选择数据');
+            return Result::fail(admin_t('ui.please_select_rows'));
         }
 
         $now = time();
@@ -2095,7 +2101,7 @@ class VideoService
             default => null,
         };
         if (count($payload) === 1) {
-            return Result::fail('不支持的批量操作');
+            return Result::fail(admin_t('ui.unsupported_op'));
         }
         if ($action === 'type') {
             $type = $this->videoTypeModel->findById((int) $value);
@@ -2127,14 +2133,14 @@ class VideoService
     {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if (count($ids) < 2) {
-            return Result::fail('请至少选择两部影片');
+            return Result::fail(admin_t('ui.please_select_two_videos'));
         }
         if ($keepId < 1 || ! in_array($keepId, $ids, true)) {
             $keepId = min($ids);
         }
         $keep = $this->videoModel->findById($keepId);
         if (empty($keep)) {
-            return Result::fail('保留影片不存在');
+            return Result::fail(admin_t('ui.keep_video_missing'));
         }
         $drop = array_values(array_filter($ids, fn ($id) => $id !== $keepId));
         AdminOpLog::quiet(function () use ($drop, $keepId) {
@@ -2146,7 +2152,7 @@ class VideoService
         });
 
         return AdminOpLog::ifOk(
-            Result::success(['keep_id' => $keepId, 'merged' => count($drop)], '已合并到 ID '.$keepId),
+            Result::success(['keep_id' => $keepId, 'merged' => count($drop)], admin_t('ui.merged_to_id', ['id' => $keepId])),
             'batch',
             '合并了 '.count($drop).' 部影片到《'.(string) ($keep['title'] ?? '').'》',
             ['module' => '影片', 'target_type' => 'videos', 'target_id' => $keepId]
@@ -2157,13 +2163,13 @@ class VideoService
     {
         $row = $this->videoSourceModel->findById($sourceId);
         if (empty($row)) {
-            return Result::fail('线路不存在');
+            return Result::fail(admin_t('ui.line_missing'));
         }
         $ok = $this->videoSourceModel->updateById($sourceId, ['status' => 0, 'updated_at' => time()]);
         $name = (string) ($row['name'] ?? '');
 
         return $ok
-            ? AdminOpLog::ifOk(Result::success([], '已下线该线路'), 'save', '下线了线路'.($name !== '' ? '《'.$name.'》' : ' #'.$sourceId), [
+            ? AdminOpLog::ifOk(Result::success([], admin_t('ui.line_offlined')), 'save', '下线了线路'.($name !== '' ? '《'.$name.'》' : ' #'.$sourceId), [
                 'module' => '线路',
                 'target_type' => 'sources',
                 'target_id' => $sourceId,

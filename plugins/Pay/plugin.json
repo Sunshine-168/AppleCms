@@ -33,15 +33,15 @@
         },
         "extra_pages": {
             "pay": {
-                "title": "支付参数",
-                "hint": "官方微信 Native / 支付宝电脑网站。聚合通道请到「支付通道」。密钥留空会下单失败，后台仍可补录已付。",
+                "title": "item.config_pay",
+                "hint": "pay.cfg_hint",
                 "fields": [
-                    {"name": "pay_wechat_appid", "label": "微信 AppId", "type": "text"},
-                    {"name": "pay_wechat_mchid", "label": "微信商户号", "type": "text"},
-                    {"name": "pay_wechat_key", "label": "微信 API 密钥", "type": "text"},
-                    {"name": "pay_alipay_appid", "label": "支付宝 AppId", "type": "text"},
-                    {"name": "pay_alipay_key", "label": "支付宝 RSA 私钥", "type": "textarea", "placeholder": "PKCS8，含 BEGIN 或纯 Base64"},
-                    {"name": "pay_alipay_public", "label": "支付宝公钥", "type": "textarea", "placeholder": "验签用，没有则支付宝回调会拒绝"}
+                    {"name": "pay_wechat_appid", "label": "pay.cfg_wx_appid", "type": "text"},
+                    {"name": "pay_wechat_mchid", "label": "pay.cfg_wx_mch", "type": "text"},
+                    {"name": "pay_wechat_key", "label": "pay.cfg_wx_key", "type": "text"},
+                    {"name": "pay_alipay_appid", "label": "pay.cfg_ali_appid", "type": "text"},
+                    {"name": "pay_alipay_key", "label": "pay.cfg_ali_key", "type": "textarea", "placeholder": "pay.cfg_ali_key_ph"},
+                    {"name": "pay_alipay_public", "label": "pay.cfg_ali_pub", "type": "textarea", "placeholder": "pay.cfg_ali_pub_ph"}
                 ]
             }
         },

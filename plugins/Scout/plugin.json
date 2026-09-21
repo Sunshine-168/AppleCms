@@ -12,32 +12,39 @@
     "admin": {
         "extra_pages": {
             "scout": {
-                "title": "全文搜索",
-                "hint": "基于 Laravel Scout。默认 database，不用另装搜索引擎；填 Meilisearch 主机后可改驱动。首次改驱动请点「重建索引」。",
+                "title": "scout.cfg_title",
+                "hint": "scout.cfg_hint",
                 "fields": [
                     {
                         "name": "scout_search_enabled",
-                        "label": "启用 Scout 搜影片",
+                        "label": "scout.cfg_enable",
                         "type": "select",
-                        "options": ["否（用 LIKE）", "是"]
+                        "options": {
+                            "0": "scout.cfg_like",
+                            "1": "ui.yes"
+                        }
                     },
                     {
                         "name": "scout_driver",
-                        "label": "驱动",
+                        "label": "scout.cfg_driver",
                         "type": "select",
-                        "options": {"database": "database（推荐）", "collection": "collection（内存）", "meilisearch": "meilisearch"}
+                        "options": {
+                            "database": "scout.cfg_db",
+                            "collection": "scout.cfg_mem",
+                            "meilisearch": "scout.cfg_meili_opt"
+                        }
                     },
                     {
                         "name": "scout_meili_host",
-                        "label": "Meilisearch 主机",
+                        "label": "scout.cfg_meili_host",
                         "type": "text",
                         "placeholder": "http://127.0.0.1:7700"
                     },
                     {
                         "name": "scout_meili_key",
-                        "label": "Meilisearch Key",
+                        "label": "scout.cfg_meili_key",
                         "type": "text",
-                        "hint": "留空则不改已存密钥"
+                        "hint": "scout.cfg_meili_hint"
                     }
                 ]
             }

@@ -590,7 +590,7 @@ class SiteModule extends Controller
     public function showArtTags(): View
     {
         return view('admin.video.art_tags', [
-            'title' => '标签',
+            'title' => admin_t('nav.art_tags'),
             'ready' => app(\App\Services\Admin\Video\ArtTagService::class)->ready(),
         ]);
     }
@@ -664,7 +664,7 @@ class SiteModule extends Controller
     public function showArtRecycle(): View
     {
         return view('admin.video.art_recycle', [
-            'title' => '回收站',
+            'title' => admin_t('nav.art_recycle'),
             'ready' => \Illuminate\Support\Facades\Schema::hasTable('video_arts')
                 && \Illuminate\Support\Facades\Schema::hasColumn('video_arts', 'deleted_at'),
             'count' => $this->modules->artRecycleCount(),
@@ -682,10 +682,10 @@ class SiteModule extends Controller
     {
         $board = app(\App\Services\Admin\System\SysFileService::class)->pageBoard();
         $ui = is_array($board['ui'] ?? null) ? $board['ui'] : [];
-        $ui['title'] = '媒体';
-        $ui['lead'] = '写稿封面和正文用的文件。和系统「附件」是同一库，这里不改系统菜单。';
-        $ui['empty'] = '还没有文件';
-        $ui['empty_hint'] = '点右上角上传。图片会出现缩略图，可复制地址贴进封面或正文。';
+        $ui['title'] = admin_t('nav.art_media');
+        $ui['lead'] = admin_t('ui.art_media_lead');
+        $ui['empty'] = admin_t('ui.art_media_empty');
+        $ui['empty_hint'] = admin_t('ui.art_media_empty_hint');
         $board['ui'] = $ui;
         $board['hide_extras'] = true;
 
@@ -698,7 +698,7 @@ class SiteModule extends Controller
             && \Illuminate\Support\Facades\Schema::hasColumn('video_comments', 'mid');
 
         return view('admin.video.comments', [
-            'title' => '评论',
+            'title' => admin_t('nav.art_comments'),
             'queues' => $ready ? $this->modules->commentQueues(2) : ['all' => 0, 'pending' => 0, 'pass' => 0, 'report' => 0],
             'scope' => 'art',
             'ready' => $ready,
@@ -756,7 +756,7 @@ class SiteModule extends Controller
         $board = $this->modules->artFlagBoard();
 
         return view('admin.video.art_flags', [
-            'title' => '推荐属性',
+            'title' => admin_t('nav.art_flags'),
             'ready' => $board['ready'],
             'flags' => $board['flags'],
         ]);

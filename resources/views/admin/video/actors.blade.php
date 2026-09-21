@@ -181,7 +181,7 @@
         var meta = '#' + U.escape(d.id);
         var n = parseInt(d.video_count, 10) || 0;
         meta += n > 0 ? ' · ' + String(L.videos_n || '').replace('__N__', String(n)) : ' · ' + U.escape(L.no_videos_yet);
-        if (d.sex) meta += ' · ' + U.escape(d.sex);
+        if (d.sex_label || d.sex) meta += ' · ' + U.escape(d.sex_label || d.sex);
         if (d.area) meta += ' · ' + U.escape(d.area);
         return '<div class="vod-cell">' + thumb + '<div><a class="vod-title js-edit" href="#">' + U.escape(d.name || '') + '</a>'
             + '<div class="muted">' + meta + '</div></div></div>';

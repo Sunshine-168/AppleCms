@@ -320,18 +320,18 @@ class SysScheduleService
         $name = trim($name);
         if ($name === '')
         {
-            return Result::fail('请输入任务名称');
+            return Result::fail(admin_t('ui.sched_need_name'));
         }
 
         if (!in_array($type, ['artisan', 'shell', 'http'], true))
         {
-            return Result::fail('任务类型不正确');
+            return Result::fail(admin_t('ui.sched_bad_type'));
         }
 
         $command = trim($command);
         if ($command === '')
         {
-            return Result::fail('请输入执行内容');
+            return Result::fail(admin_t('ui.sched_need_cmd'));
         }
 
         $checked = $this->normalizeJob($type, $command, $params);
@@ -344,7 +344,7 @@ class SysScheduleService
 
         if (mb_strlen($command) > 2000)
         {
-            return Result::fail('执行内容过长');
+            return Result::fail(admin_t('ui.sched_cmd_long'));
         }
 
         $cronExpression = trim($cronExpression);
@@ -354,10 +354,10 @@ class SysScheduleService
 
         try {
             if (! CronExpression::isValidExpression($cronExpression)) {
-                return Result::fail('cron表达式格式错误');
+                return Result::fail(admin_t('ui.sched_bad_cron'));
             }
         } catch (\Throwable) {
-            return Result::fail('cron表达式格式错误');
+            return Result::fail(admin_t('ui.sched_bad_cron'));
         }
 
         if ($timezone === '' || !in_array($timezone, timezone_identifiers_list()))
@@ -413,7 +413,7 @@ class SysScheduleService
 
         if ($this->sysScheduleModel->existsBy($existsWhere))
         {
-            return Result::fail('任务名称已存在');
+            return Result::fail(admin_t('ui.sched_name_taken'));
         }
 
         if ($id > 0)
@@ -422,10 +422,10 @@ class SysScheduleService
             $ok = $this->sysScheduleModel->updateById($id, $update);
 
             if (!$ok) {
-                return Result::fail('保存失败');
+                return Result::fail(admin_t('ui.save_fail'));
             }
 
-            return Result::success(['id' => $id], '保存成功');
+            return Result::success(['id' => $id], admin_t('ui.save_ok'));
         }
 
         $insert = $update;
@@ -436,10 +436,10 @@ class SysScheduleService
         $newId = $this->sysScheduleModel->insertsGetId($insert);
 
         if (!$newId) {
-            return Result::fail('保存失败');
+            return Result::fail(admin_t('ui.save_fail'));
         }
 
-        return Result::success(['id' => $newId], '保存成功');
+        return Result::success(['id' => $newId], admin_t('ui.save_ok'));
     }
 
 
@@ -451,14 +451,14 @@ class SysScheduleService
 
         if ($id <= 0)
         {
-            return Result::fail('参数错误');
+            return Result::fail(admin_t('ui.sched_bad_param'));
         }
 
         $row = $this->sysScheduleModel->findById($id);
 
         if (!$row)
         {
-            return Result::fail('任务不存在');
+            return Result::fail(admin_t('ui.sched_missing'));
         }
 
         $ok = $this->sysScheduleModel->deleteById($id);
@@ -467,8 +467,8 @@ class SysScheduleService
         }
 
         return $ok
-            ? Result::success([], '删除成功')
-            : Result::fail('删除失败');
+            ? Result::success([], admin_t('ui.deleted'))
+            : Result::fail(admin_t('ui.delete_fail'));
     }
 
 
@@ -479,12 +479,12 @@ class SysScheduleService
     {
 
         if ($id <= 0) {
-            return Result::fail('参数错误');
+            return Result::fail(admin_t('ui.sched_bad_param'));
         }
 
         $row = $this->sysScheduleModel->findById($id);
         if ($row === []) {
-            return Result::fail('任务不存在');
+            return Result::fail(admin_t('ui.sched_missing'));
         }
 
         $ok = $this->sysScheduleModel->updateById($id, [
@@ -496,8 +496,8 @@ class SysScheduleService
         ]);
 
         return $ok
-            ? Result::success([], $status ? '已开着，到点会跑' : '已停，到点不跑')
-            : Result::fail('没能改状态');
+            ? Result::success([], $status ? admin_t('ui.sched_on_msg') : admin_t('ui.sched_off_msg'))
+            : Result::fail(admin_t('ui.sched_status_fail'));
     }
 
 
@@ -510,7 +510,7 @@ class SysScheduleService
         $task = $this->sysScheduleModel->findById($id);
 
         if (!$task) {
-            return Result::fail('任务不存在');
+            return Result::fail(admin_t('ui.sched_missing'));
         }
 
         $lock = null;
@@ -521,7 +521,7 @@ class SysScheduleService
             $lock = Cache::lock('schedule_lock_' . $id, 600);
 
             if (!$lock->get()) {
-                return Result::fail('任务正在执行中');
+                return Result::fail(admin_t('ui.sched_running'));
             }
         }
 
@@ -609,8 +609,8 @@ class SysScheduleService
                 'output' => $output,
                 'duration_ms' => $durationMs,
                 'duration_text' => $this->durationText($durationMs),
-            ], '跑完了，'.$this->durationText($durationMs))
-            : Result::fail($error !== '' ? $error : '执行失败', [
+            ], admin_t('ui.sched_ran_ok', ['d' => $this->durationText($durationMs)]))
+            : Result::fail($error !== '' ? $error : admin_t('ui.sql_run_fail'), [
                 'duration_ms' => $durationMs,
                 'duration_text' => $this->durationText($durationMs),
             ]);
@@ -638,7 +638,7 @@ class SysScheduleService
         $code = Artisan::call($name, $args);
 
         if ($code !== 0) {
-            throw new \RuntimeException(trim(Artisan::output()) ?: '命令返回 '.$code);
+            throw new \RuntimeException(trim(Artisan::output()) ?: admin_t('ui.cmd_exit', ['code' => (string) $code]));
         }
 
         return Artisan::output();
@@ -680,7 +680,7 @@ class SysScheduleService
 
         $url = trim($url);
         if (! preg_match('#^https?://#i', $url)) {
-            throw new \RuntimeException('只接受 http 或 https 地址');
+            throw new \RuntimeException(admin_t('ui.http_only'));
         }
 
         $resp = Http::timeout($timeout ?: 30)
@@ -768,27 +768,27 @@ class SysScheduleService
         }
         if ($type === 'http') {
             if (! preg_match('#^https?://#i', $command)) {
-                return Result::fail('网址要以 http:// 或 https:// 开头');
+                return Result::fail(admin_t('ui.sched_need_http'));
             }
 
             return Result::success(['type' => 'http', 'command' => $command, 'params' => '']);
         }
         if ($type === 'shell') {
             if ($command === '') {
-                return Result::fail('请填写要在服务器上跑的命令');
+                return Result::fail(admin_t('ui.sched_need_shell'));
             }
 
             return Result::success(['type' => 'shell', 'command' => $command, 'params' => $params]);
         }
 
-        return Result::fail('任务类型不正确');
+        return Result::fail(admin_t('ui.sched_bad_type'));
     }
 
     protected function artisanDenied(string $name, string $command = '', string $params = ''): string
     {
         $name = trim($name);
         if ($name === '') {
-            return '请选择要跑的本站命令';
+            return admin_t('ui.sched_pick_cmd');
         }
         if ($name === 'plugin:run') {
             try {
@@ -810,11 +810,11 @@ class SysScheduleService
         $deny = ['migrate', 'db:', 'tinker', 'env', 'down', 'up', 'serve', 'key:', 'make:', 'queue:', 'vendor:', 'package:', 'inspire', 'test', 'plugin:'];
         foreach ($deny as $prefix) {
             if ($name === rtrim($prefix, ':') || str_starts_with($name, $prefix)) {
-                return '这条命令不能当定时任务跑';
+                return admin_t('ui.sched_cmd_denied');
             }
         }
 
-        return '只接受本站命令，或已启用插件在 plugin.json 里声明的任务';
+        return admin_t('ui.sched_cmd_site_only');
     }
 
     /**
@@ -831,7 +831,7 @@ class SysScheduleService
         $plugin = strtolower(trim((string) ($parts[0] ?? '')));
         $job = strtolower(trim((string) ($parts[1] ?? '')));
         if ($plugin === '' || $job === '') {
-            throw new \RuntimeException('插件任务要写成 plugin:run 插件id 任务id');
+            throw new \RuntimeException(admin_t('ui.sched_plugin_args'));
         }
         foreach ($this->pluginJobs() as $row) {
             if (($row['plugin'] ?? '') === $plugin && ($row['id'] ?? '') === $job) {
@@ -839,7 +839,7 @@ class SysScheduleService
             }
         }
 
-        throw new \RuntimeException('没有这条插件任务，或插件没启用');
+        throw new \RuntimeException(admin_t('ui.sched_plugin_missing'));
     }
 
     /**
@@ -956,7 +956,7 @@ class SysScheduleService
 
         return [
             'ok' => $ok,
-            'status_text' => $ok ? '成功' : '失败',
+            'status_text' => $ok ? admin_t('ui.success') : admin_t('ui.fail'),
             'duration_ms' => $ms,
             'duration_text' => $this->durationText($ms),
             'time_text' => $at > 0 ? date('Y-m-d H:i:s', $at) : '',

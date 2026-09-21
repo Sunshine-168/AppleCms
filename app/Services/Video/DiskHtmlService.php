@@ -197,9 +197,9 @@ class DiskHtmlService
             }
         }
 
-        $msg = '已写出 '.$ok.' 个静态文件到 public/html';
+        $msg = admin_t('ui.disk_wrote', ['ok' => $ok]);
         if ($fail > 0) {
-            $msg .= '，'.$fail.' 页没写上';
+            $msg .= admin_t('ui.disk_fail_n', ['fail' => $fail]);
         }
 
         return Result::success([
@@ -234,9 +234,9 @@ class DiskHtmlService
         $job['started_at'] = now()->toIso8601String();
         if ($urls === []) {
             $job['finished_at'] = now()->toIso8601String();
-            $job['message'] = '没有可生成的页面';
+            $job['message'] = admin_t('ui.disk_no_pages');
         } else {
-            $job['message'] = '准备写 '.$job['total'].' 个页面';
+            $job['message'] = admin_t('ui.disk_ready_write', ['n' => $job['total']]);
         }
         $this->putJob($job);
 
@@ -263,9 +263,9 @@ class DiskHtmlService
         $job['started_at'] = now()->toIso8601String();
         if ($files === []) {
             $job['finished_at'] = now()->toIso8601String();
-            $job['message'] = '没有可删的静态文件';
+            $job['message'] = admin_t('ui.disk_no_files');
         } else {
-            $job['message'] = '准备删 '.$job['total'].' 个文件';
+            $job['message'] = admin_t('ui.disk_ready_del', ['n' => $job['total']]);
         }
         $this->putJob($job);
 
@@ -293,8 +293,8 @@ class DiskHtmlService
         for ($i = (int) $job['index']; $i < $end; $i++) {
             $url = (string) ($urls[$i] ?? '');
             $job['current'] = $url;
-            $job['message'] = $url === '' ? '正在写…' : '正在写 '.$url;
-            $result = $url === '' ? ['file' => null, 'error' => '空地址'] : $this->capture($url);
+            $job['message'] = $url === '' ? admin_t('ui.disk_writing') : admin_t('ui.disk_writing_url', ['url' => $url]);
+            $result = $url === '' ? ['file' => null, 'error' => admin_t('ui.disk_empty_url')] : $this->capture($url);
             if ($result['file']) {
                 $job['ok']++;
             } else {
@@ -308,12 +308,12 @@ class DiskHtmlService
             $job['status'] = 'done';
             $job['current'] = '';
             $job['finished_at'] = now()->toIso8601String();
-            $job['message'] = '写好了 '.$job['ok'].' 个文件';
+            $job['message'] = admin_t('ui.disk_wrote_ok', ['ok' => $job['ok']]);
             if ((int) $job['fail'] > 0) {
                 $shown = array_slice($job['errors'] ?? [], 0, 5);
-                $job['message'] .= '，'.$job['fail'].' 页没写上';
+                $job['message'] .= admin_t('ui.disk_fail_n', ['fail' => $job['fail']]);
                 if ($shown !== []) {
-                    $job['message'] .= '：'.implode('、', $shown);
+                    $job['message'] .= admin_t('ui.disk_fail_list', ['list' => implode('、', $shown)]);
                 }
             }
             unset($job['urls']);
@@ -336,10 +336,10 @@ class DiskHtmlService
             $job['finished_at'] = now()->toIso8601String();
             if ($kind === 'clear') {
                 $this->pruneEmptyDirs($this->rootPath());
-                $job['message'] = '已停止。已经删掉 '.$job['ok'].' 个文件';
+                $job['message'] = admin_t('ui.disk_stopped_del', ['ok' => $job['ok']]);
                 unset($job['files']);
             } else {
-                $job['message'] = '已停止。已经写好 '.$job['ok'].' 个文件';
+                $job['message'] = admin_t('ui.disk_stopped_write', ['ok' => $job['ok']]);
                 unset($job['urls']);
             }
             $this->putJob($job);
@@ -894,7 +894,7 @@ class DiskHtmlService
     {
         $urlPath = $this->normalizeUrl($urlPath);
         if ($urlPath === null) {
-            return ['file' => null, 'error' => '地址无效'];
+            return ['file' => null, 'error' => admin_t('ui.disk_bad_url')];
         }
 
         try {
@@ -982,7 +982,7 @@ class DiskHtmlService
         for ($i = (int) $job['index']; $i < $end; $i++) {
             $file = (string) ($files[$i] ?? '');
             $job['current'] = $file === '' ? '' : $this->relativeHtmlPath($file);
-            $job['message'] = $file === '' ? '正在删…' : '正在删 '.$job['current'];
+            $job['message'] = $file === '' ? admin_t('ui.disk_deleting') : admin_t('ui.disk_deleting_path', ['path' => $job['current']]);
             if ($file === '' || ! is_file($file) || File::delete($file)) {
                 $job['ok']++;
             } else {
@@ -997,9 +997,9 @@ class DiskHtmlService
             $job['status'] = 'done';
             $job['current'] = '';
             $job['finished_at'] = now()->toIso8601String();
-            $job['message'] = '已删掉 '.$job['ok'].' 个文件';
+            $job['message'] = admin_t('ui.disk_deleted_ok', ['ok' => $job['ok']]);
             if ((int) $job['fail'] > 0) {
-                $job['message'] .= '，'.$job['fail'].' 个没删掉';
+                $job['message'] .= admin_t('ui.disk_del_fail_n', ['fail' => $job['fail']]);
             }
             unset($job['files']);
         }
@@ -1049,8 +1049,8 @@ class DiskHtmlService
         if ((string) ($current['kind'] ?? 'build') !== $wantKind) {
             $pub['conflict'] = true;
             $pub['message'] = ($current['kind'] ?? 'build') === 'clear'
-                ? '正在删除，请先停止'
-                : '正在生成，请先停止';
+                ? admin_t('ui.disk_busy_clear')
+                : admin_t('ui.disk_busy_build');
         }
 
         return $pub;

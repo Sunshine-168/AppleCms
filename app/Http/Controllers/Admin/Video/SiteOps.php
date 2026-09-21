@@ -71,7 +71,7 @@ class SiteOps extends Controller
 
             return Ajax::message($data['code'], $data['msg'], $data['data'] ?? []);
         } catch (\Throwable $e) {
-            return Ajax::fail($e->getMessage() !== '' ? $e->getMessage() : '读取失败');
+            return Ajax::fail($e->getMessage() !== '' ? $e->getMessage() : admin_t('ui.read_fail'));
         }
     }
 
@@ -119,9 +119,9 @@ class SiteOps extends Controller
         $engine = (string) $request->input('engine', 'baidu');
         $data = $this->ops->seoPush($engine, (int) $request->input('limit', 50));
         $label = match ($engine) {
-            'shenma' => '神马',
-            'bing' => '必应',
-            default => '百度',
+            'shenma' => admin_t('ui.push_shenma'),
+            'bing' => admin_t('ui.push_bing'),
+            default => admin_t('ui.push_baidu'),
         };
         $n = (int) (($data['data']['count'] ?? 0));
         $data = AdminOpLog::ifOk($data, 'push', '向'.$label.'推了 '.$n.' 条', [
@@ -180,7 +180,7 @@ class SiteOps extends Controller
             'html_cache_ttl' => (string) max(0, (int) $request->input('html_cache_ttl', 3600)),
         ]);
         if (($saved['code'] ?? 1) !== 0) {
-            return redirect($this->makeUrl('cache'))->with('error', (string) ($saved['msg'] ?? '没能保存'));
+            return redirect($this->makeUrl('cache'))->with('error', (string) ($saved['msg'] ?? admin_t('ui.cant_save')));
         }
         $this->htmlCache->forgetAll('settings');
         AdminOpLog::write('save', $on ? '开启了全页缓存' : '关闭了全页缓存', [
@@ -188,7 +188,7 @@ class SiteOps extends Controller
             'target_type' => 'cache',
         ]);
 
-        return redirect($this->makeUrl('cache'))->with('status', $on ? '已开启全页缓存' : '已关闭全页缓存');
+        return redirect($this->makeUrl('cache'))->with('status', $on ? admin_t('ui.html_cache_on') : admin_t('ui.html_cache_off'));
     }
 
     public function makeCacheClear(): RedirectResponse
@@ -199,19 +199,18 @@ class SiteOps extends Controller
             'target_type' => 'cache',
         ]);
 
-        return redirect($this->makeUrl('cache'))->with('status', '已清空。访客下一次打开会重新生成页面。');
+        return redirect($this->makeUrl('cache'))->with('status', admin_t('ui.html_cache_cleared'));
     }
 
     public function makeCacheWarm(Request $request): RedirectResponse
     {
         if (! $this->htmlCache->enabled()) {
-            return redirect($this->makeUrl('cache'))->with('error', '请先打开全页缓存并保存');
+            return redirect($this->makeUrl('cache'))->with('error', admin_t('ui.html_cache_need_on'));
         }
         $result = $this->htmlCache->warm((int) $request->input('entries', 30));
-        $msg = '已预热 '.$result['ok'].' 页';
-        if ($result['fail'] > 0) {
-            $msg .= '，'.$result['fail'].' 页没生成好';
-        }
+        $msg = $result['fail'] > 0
+            ? admin_t('ui.html_cache_warmed_fail', ['ok' => $result['ok'], 'fail' => $result['fail']])
+            : admin_t('ui.html_cache_warmed', ['ok' => $result['ok']]);
 
         return redirect($this->makeUrl('cache'))->with('status', $msg);
     }
@@ -224,16 +223,16 @@ class SiteOps extends Controller
         ]);
         $desk = (string) $request->input('desk', 'opt');
         if (($saved['code'] ?? 1) !== 0) {
-            return redirect($this->makeUrl($desk))->with('error', (string) ($saved['msg'] ?? '没能保存'));
+            return redirect($this->makeUrl($desk))->with('error', (string) ($saved['msg'] ?? admin_t('ui.cant_save')));
         }
 
-        return redirect($this->makeUrl($desk))->with('status', $on ? '已打开磁盘静态页，可以开始生成' : '已关闭磁盘静态页');
+        return redirect($this->makeUrl($desk))->with('status', $on ? admin_t('ui.disk_html_on') : admin_t('ui.disk_html_off'));
     }
 
     public function makeStart(Request $request): JsonResponse
     {
         if (! $this->diskHtml->enabled()) {
-            return Ajax::fail('请先打开磁盘静态页并保存');
+            return Ajax::fail(admin_t('ui.disk_html_need_on'));
         }
         $job = $this->diskHtml->startJob((string) $request->input('scope', 'all'), [
             'ids' => $request->input('ids', []),
@@ -242,7 +241,7 @@ class SiteOps extends Controller
             'extra' => (string) $request->input('extra', ''),
         ]);
         if (! empty($job['conflict'])) {
-            return Ajax::message(1, (string) ($job['message'] ?? '请先停止当前任务'), $job);
+            return Ajax::message(1, (string) ($job['message'] ?? admin_t('ui.job_stop_first')), $job);
         }
 
         return Ajax::message(0, (string) ($job['message'] ?? ''), $job);
@@ -253,7 +252,7 @@ class SiteOps extends Controller
         $job = $this->diskHtml->publicJob();
         $kind = (string) ($job['kind'] ?? 'build');
         if ($kind !== 'clear' && ! $this->diskHtml->enabled()) {
-            return Ajax::fail('请先打开磁盘静态页并保存');
+            return Ajax::fail(admin_t('ui.disk_html_need_on'));
         }
         $chunk = (int) $request->input('chunk', $kind === 'clear' ? 40 : 6);
         $job = $this->diskHtml->stepJob($chunk);
@@ -279,7 +278,7 @@ class SiteOps extends Controller
     {
         $job = $this->diskHtml->startClearJob();
         if (! empty($job['conflict'])) {
-            return Ajax::message(1, (string) ($job['message'] ?? '请先停止当前任务'), $job);
+            return Ajax::message(1, (string) ($job['message'] ?? admin_t('ui.job_stop_first')), $job);
         }
 
         return Ajax::message(0, (string) ($job['message'] ?? ''), $job);
@@ -367,7 +366,7 @@ class SiteOps extends Controller
         }
         \Illuminate\Support\Facades\Artisan::call('video:hits-reset', $opts);
 
-        return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: '已重置', []);
+        return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: admin_t('ui.reset_ok'), []);
     }
 
     public function rewrite(): View
@@ -411,6 +410,6 @@ class SiteOps extends Controller
     {
         \Illuminate\Support\Facades\Artisan::call('video:collect-due');
 
-        return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: '已执行', []);
+        return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: admin_t('ui.ran_ok'), []);
     }
 }

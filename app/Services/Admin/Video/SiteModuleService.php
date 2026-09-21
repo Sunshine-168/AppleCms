@@ -2079,37 +2079,37 @@ class SiteModuleService
     public function save(string $module, array $data, ?int $id = null): array
     {
         if ($module === 'collect_logs') {
-            return Result::fail('采集日志由采集任务写入，不能手工改。');
+            return Result::fail(admin_t('ui.ro_collect_logs'));
         }
         if ($module === 'collect_temps') {
-            return Result::fail('待审记录由采集写入。要进片库请点转入，不要在这里改字段。');
+            return Result::fail(admin_t('ui.ro_collect_temps'));
         }
         if ($module === 'guestbooks' && $id === null) {
-            return Result::fail('留言由前台提交。后台只回复和审核。');
+            return Result::fail(admin_t('ui.ro_guestbooks'));
         }
         if ($module === 'playfails' && $id === null) {
-            return Result::fail('播放失败由前台播放页上报。后台只处理和下线线路。');
+            return Result::fail(admin_t('ui.ro_playfails'));
         }
         if ($module === 'favorites') {
-            return Result::fail('收藏由会员在影片页点出来。后台只查看和删除。');
+            return Result::fail(admin_t('ui.ro_favorites'));
         }
         if ($module === 'manga_favors') {
-            return Result::fail('书架由会员在漫画页点出来。后台只查看和取消。');
+            return Result::fail(admin_t('ui.ro_manga_favors'));
         }
         if ($module === 'task_logs') {
-            return Result::fail('任务记录由前台完成产生，不能手添或改。');
+            return Result::fail(admin_t('ui.ro_task_logs'));
         }
         if ($module === 'signs') {
-            return Result::fail('签到由会员在前台点。后台只查看和删除。');
+            return Result::fail(admin_t('ui.ro_signs'));
         }
         if ($module === 'botlogs') {
-            return Result::fail('爬虫日志是前台访问记下来的，不能手添。');
+            return Result::fail(admin_t('ui.ro_botlogs'));
         }
         if ($module === 'accesslogs') {
-            return Result::fail('访问流水是前台打开页面记下来的，不能手添。');
+            return Result::fail(admin_t('ui.ro_accesslogs'));
         }
         if ($module === 'withdraws' && $id === null) {
-            return Result::fail('提现由会员申请。后台只审核打款或拒绝。');
+            return Result::fail(admin_t('ui.ro_withdraws'));
         }
         $cfg = $this->config($module);
         $handled = $this->dispatchPlugin($cfg, 'save', [$data, $id]);
@@ -2279,15 +2279,15 @@ class SiteModuleService
                     }
                     $type = VideoTypeModel::query()->find($tid);
                     if (! $type) {
-                        return Result::fail('请选择文章栏目');
+                        return Result::fail(admin_t('ui.need_art_type'));
                     }
                     if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 2) {
-                        return Result::fail('请选择文章栏目，不要用影片分类');
+                        return Result::fail(admin_t('ui.need_art_type_not_vod'));
                     }
                     if (! $type->acceptsArticles()) {
                         return Result::fail($type->kind() === 'link'
-                            ? '外链栏目不能挂文章，请换到列表或单页栏目'
-                            : '频道栏目只做目录，请把文章挂到下级列表栏目');
+                            ? admin_t('ui.art_no_link_col')
+                            : admin_t('ui.art_no_hub_col'));
                     }
                 }
                 $payload['type_id'] = $tid;
@@ -2509,7 +2509,7 @@ class SiteModuleService
         if ($module === 'links') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写网站名称');
+                return Result::fail(admin_t('ui.need_link_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2517,11 +2517,11 @@ class SiteModuleService
             if (array_key_exists('url', $payload) || $id === null) {
                 $raw = trim((string) ($payload['url'] ?? ''));
                 if ($raw === '') {
-                    return Result::fail('请填写网址');
+                    return Result::fail(admin_t('ui.please_fill_url'));
                 }
                 $url = $this->normalizeLinkUrl($raw);
                 if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
-                    return Result::fail('网址格式不对');
+                    return Result::fail(admin_t('ui.bad_url'));
                 }
                 $payload['url'] = $url;
             }
@@ -2540,7 +2540,7 @@ class SiteModuleService
         if ($module === 'websites') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写站点名称');
+                return Result::fail(admin_t('ui.need_site_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2548,11 +2548,11 @@ class SiteModuleService
             if (array_key_exists('url', $payload) || $id === null) {
                 $raw = trim((string) ($payload['url'] ?? ''));
                 if ($raw === '') {
-                    return Result::fail('请填写网址');
+                    return Result::fail(admin_t('ui.please_fill_url'));
                 }
                 $url = $this->normalizeLinkUrl($raw);
                 if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
-                    return Result::fail('网址格式不对');
+                    return Result::fail(admin_t('ui.bad_url'));
                 }
                 $payload['url'] = $url;
             }
@@ -2563,14 +2563,14 @@ class SiteModuleService
                 $payload['type_id'] = $typeId;
                 if ($typeId > 0) {
                     if (! Schema::hasTable('video_types')) {
-                        return Result::fail('分类不存在');
+                        return Result::fail(admin_t('ui.type_missing'));
                     }
                     $type = VideoTypeModel::query()->find($typeId);
                     if (! $type) {
-                        return Result::fail('分类不存在');
+                        return Result::fail(admin_t('ui.type_missing'));
                     }
                     if (Schema::hasColumn('video_types', 'mid') && (int) ($type->mid ?? 0) !== 3) {
-                        return Result::fail('这个分类不是网址导航，请到「导航分类」里新建');
+                        return Result::fail(admin_t('ui.not_website_type'));
                     }
                 }
             }
@@ -2601,21 +2601,21 @@ class SiteModuleService
             if ($rawHost !== null) {
                 $host = DomainBindService::normalizeHost($rawHost);
                 if ($host === '') {
-                    return Result::fail('请填写域名，不要带 http 和路径');
+                    return Result::fail(admin_t('ui.need_host'));
                 }
                 $dup = VideoDomain::query()->where('host', $host);
                 if ($id) {
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个域名已经绑过');
+                    return Result::fail(admin_t('ui.host_taken'));
                 }
                 $payload['host'] = $host;
             }
             if (array_key_exists('theme', $payload) || $id === null) {
                 $theme = trim((string) ($payload['theme'] ?? ''));
                 if ($theme !== '' && ! DomainBindService::themeExists($theme)) {
-                    return Result::fail('这个模板目录不存在');
+                    return Result::fail(admin_t('ui.theme_dir_missing'));
                 }
                 $payload['theme'] = $theme;
             }
@@ -2646,11 +2646,11 @@ class SiteModuleService
         if ($module === 'classes') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写类型词');
+                return Result::fail(admin_t('ui.need_class_word'));
             }
             if ($name !== '') {
                 if (preg_match('/[,，]/u', $name)) {
-                    return Result::fail('一次只写一个词，不要逗号');
+                    return Result::fail(admin_t('ui.one_word'));
                 }
                 $name = mb_substr($name, 0, 80);
                 $dup = VideoClass::query()->where('name', $name);
@@ -2658,7 +2658,7 @@ class SiteModuleService
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个词已经有了');
+                    return Result::fail(admin_t('ui.word_taken'));
                 }
                 $payload['name'] = $name;
             }
@@ -2674,11 +2674,11 @@ class SiteModuleService
                 ? mb_substr(trim((string) ($payload['from_word'] ?? '')), 0, 80)
                 : null;
             if ($id === null && ($from === null || $from === '')) {
-                return Result::fail('请填写原词');
+                return Result::fail(admin_t('ui.need_from_word'));
             }
             if ($from !== null) {
                 if ($from === '') {
-                    return Result::fail('请填写原词');
+                    return Result::fail(admin_t('ui.need_from_word'));
                 }
                 $payload['from_word'] = $from;
             }
@@ -2686,11 +2686,11 @@ class SiteModuleService
                 ? mb_substr(trim((string) ($payload['to_word'] ?? '')), 0, 80)
                 : null;
             if ($id === null && ($to === null || $to === '')) {
-                return Result::fail('请填写要当成的词');
+                return Result::fail(admin_t('ui.need_to_word'));
             }
             if ($to !== null) {
                 if ($to === '') {
-                    return Result::fail('请填写要当成的词');
+                    return Result::fail(admin_t('ui.need_to_word'));
                 }
                 $payload['to_word'] = $to;
             }
@@ -2708,7 +2708,7 @@ class SiteModuleService
                 }
             }
             if ($checkFrom !== null && $checkTo !== null && $checkFrom !== '' && $checkFrom === $checkTo) {
-                return Result::fail('原词和当成的词不能一样');
+                return Result::fail(admin_t('ui.from_to_same'));
             }
             if ($checkFrom !== null && $checkFrom !== '') {
                 $dup = VideoSynonym::query()->where('from_word', $checkFrom);
@@ -2716,7 +2716,7 @@ class SiteModuleService
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个原词已经有了');
+                    return Result::fail(admin_t('ui.from_taken'));
                 }
             }
             if (array_key_exists('status', $payload)) {
@@ -2737,24 +2737,24 @@ class SiteModuleService
             if (array_key_exists('code', $payload) || $id === null) {
                 $code = strtolower(trim((string) ($payload['code'] ?? '')));
                 if ($code === '') {
-                    return Result::fail('请填写标识，要和线路上的下载器字段一致');
+                    return Result::fail(admin_t('ui.need_downer_code'));
                 }
                 if (! preg_match('/^[a-z][a-z0-9._-]{0,39}$/', $code)) {
-                    return Result::fail('标识用英文字母开头，如 http、xunlei');
+                    return Result::fail(admin_t('ui.code_alpha_downer'));
                 }
                 $dup = VideoDownloader::query()->where('code', $code);
                 if ($id) {
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个标识已经有了');
+                    return Result::fail(admin_t('ui.code_taken'));
                 }
                 $payload['code'] = $code;
             }
             if (array_key_exists('parse', $payload)) {
                 $parse = trim((string) $payload['parse']);
                 if (preg_match('#^(javascript|data|vbscript):#i', $parse)) {
-                    return Result::fail('模板地址不能用这种协议');
+                    return Result::fail(admin_t('ui.bad_tpl_protocol'));
                 }
                 $payload['parse'] = $parse;
             }
@@ -2780,23 +2780,23 @@ class SiteModuleService
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个名称已经有了');
+                    return Result::fail(admin_t('ui.name_taken'));
                 }
             }
             if (array_key_exists('url', $payload) || $id === null) {
                 $raw = trim((string) ($payload['url'] ?? ''));
                 if (preg_match('#^(javascript|data|vbscript):#i', $raw)) {
-                    return Result::fail('前缀不能用这种协议');
+                    return Result::fail(admin_t('ui.bad_prefix_protocol'));
                 }
                 if (preg_match('#^(https?:)?/+$#i', $raw)) {
-                    return Result::fail('前缀不完整');
+                    return Result::fail(admin_t('ui.prefix_incomplete'));
                 }
                 $url = $this->normalizeServerPrefix($raw);
                 if ($raw !== '' && $url === '') {
-                    return Result::fail('前缀不能用这种协议');
+                    return Result::fail(admin_t('ui.bad_prefix_protocol'));
                 }
                 if (mb_strlen($url) > 255) {
-                    return Result::fail('前缀太长');
+                    return Result::fail(admin_t('ui.prefix_long'));
                 }
                 $payload['url'] = $url;
             }
@@ -2821,7 +2821,7 @@ class SiteModuleService
             if (array_key_exists('api_url', $payload) || $id === null) {
                 $url = $this->normalizeUnionUrl((string) ($payload['api_url'] ?? ''));
                 if ($url === '') {
-                    return Result::fail('请填写接口地址');
+                    return Result::fail(admin_t('ui.need_api_url'));
                 }
                 $payload['api_url'] = $url;
             }
@@ -2840,10 +2840,10 @@ class SiteModuleService
             $sourceId = (int) ($payload['collect_source_id'] ?? 0);
             $cron = trim((string) ($payload['cron_expression'] ?? ''));
             if ($sourceId < 1) {
-                return Result::fail('请选择采集源');
+                return Result::fail(admin_t('ui.please_pick_source'));
             }
             if (! Schema::hasTable('collect_sources') || ! CollectSourceModel::query()->where('id', $sourceId)->exists()) {
-                return Result::fail('采集源不存在，先到采集源里加一个');
+                return Result::fail(admin_t('ui.source_gone_add'));
             }
             if ($cron === '') {
                 $cron = '0 * * * *';
@@ -2851,7 +2851,7 @@ class SiteModuleService
             try {
                 new \Cron\CronExpression($cron);
             } catch (\Throwable) {
-                return Result::fail('周期表达式不对');
+                return Result::fail(admin_t('ui.bad_cron_expr'));
             }
             if ($name === '') {
                 $name = (string) (CollectSourceModel::query()->where('id', $sourceId)->value('name') ?? '');
@@ -2925,17 +2925,17 @@ class SiteModuleService
             if (array_key_exists('code', $payload) || $id === null) {
                 $code = strtolower(trim((string) ($payload['code'] ?? '')));
                 if ($code === '') {
-                    return Result::fail('请填写标识，要和线路上的播放器字段一致');
+                    return Result::fail(admin_t('ui.need_player_code'));
                 }
                 if (! preg_match('/^[a-z][a-z0-9._-]{0,39}$/', $code)) {
-                    return Result::fail('标识用英文字母开头，如 artplayer、dplayer');
+                    return Result::fail(admin_t('ui.code_alpha_player'));
                 }
                 $dup = VideoPlayerModel::query()->where('code', $code);
                 if ($id) {
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个标识已经有了');
+                    return Result::fail(admin_t('ui.code_taken'));
                 }
                 $payload['code'] = $code;
             }
@@ -2962,7 +2962,7 @@ class SiteModuleService
         if ($module === 'roles') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写角色名');
+                return Result::fail(admin_t('ui.need_role_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2974,7 +2974,7 @@ class SiteModuleService
                 $payload['video_id'] = $videoId;
                 if ($videoId > 0) {
                     if (! Schema::hasTable('videos') || ! VideoModel::query()->where('id', $videoId)->exists()) {
-                        return Result::fail('影片不存在');
+                        return Result::fail(admin_t('ui.video_missing'));
                     }
                 }
             }
@@ -2985,7 +2985,7 @@ class SiteModuleService
                 $payload['actor_id'] = $actorId;
                 if ($actorId > 0) {
                     if (! Schema::hasTable('actors') || ! ActorModel::query()->where('id', $actorId)->exists()) {
-                        return Result::fail('演员不存在');
+                        return Result::fail(admin_t('ui.actor_missing'));
                     }
                 }
             }
@@ -3010,14 +3010,14 @@ class SiteModuleService
                 ? (int) ($payload['video_id'] ?? 0)
                 : null;
             if ($id === null && $videoId < 1) {
-                return Result::fail('请填写影片 ID');
+                return Result::fail(admin_t('ui.please_fill_video_id'));
             }
             if ($videoId !== null) {
                 if ($videoId < 1) {
-                    return Result::fail('请填写影片 ID');
+                    return Result::fail(admin_t('ui.please_fill_video_id'));
                 }
                 if (! Schema::hasTable('videos') || ! VideoModel::query()->where('id', $videoId)->exists()) {
-                    return Result::fail('影片不存在');
+                    return Result::fail(admin_t('ui.video_missing'));
                 }
                 $payload['video_id'] = $videoId;
             }
@@ -3025,17 +3025,17 @@ class SiteModuleService
                 ? (int) ($payload['episode_num'] ?? 0)
                 : null;
             if ($id === null && $ep < 1) {
-                return Result::fail('请填写集数，从 1 开始');
+                return Result::fail(admin_t('ui.need_episode'));
             }
             if ($ep !== null) {
                 if ($ep < 1) {
-                    return Result::fail('请填写集数，从 1 开始');
+                    return Result::fail(admin_t('ui.need_episode'));
                 }
                 $payload['episode_num'] = $ep;
             }
             $content = array_key_exists('content', $payload) ? trim((string) $payload['content']) : null;
             if ($id === null && ($content === null || $content === '')) {
-                return Result::fail('请填写这一集的剧情');
+                return Result::fail(admin_t('ui.need_plot'));
             }
             if ($content !== null) {
                 $payload['content'] = $content;
@@ -3065,7 +3065,7 @@ class SiteModuleService
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这一集已经写过剧情');
+                    return Result::fail(admin_t('ui.plot_dup'));
                 }
             }
         }
@@ -3076,10 +3076,10 @@ class SiteModuleService
                 if ($existing && Schema::hasColumn('video_comments', 'mid')) {
                     $existingMid = (int) ($existing->mid ?: 1);
                     if ($existingMid === 2 && $wantMid !== 2) {
-                        return Result::fail('这条是文章评论，请到文章里处理');
+                        return Result::fail(admin_t('ui.comment_is_art'));
                     }
                     if ($existingMid !== 2 && $wantMid === 2) {
-                        return Result::fail('这条是影片评论，请到影片里处理');
+                        return Result::fail(admin_t('ui.comment_is_vod'));
                     }
                     $wantMid = $existingMid === 2 ? 2 : 1;
                 }
@@ -3088,15 +3088,15 @@ class SiteModuleService
             }
             $rid = (int) ($payload['video_id'] ?? 0);
             if ($id === null && $rid < 1) {
-                return Result::fail($wantMid === 2 ? '请填写文章编号' : '请填写影片ID');
+                return Result::fail($wantMid === 2 ? admin_t('ui.need_art_id') : admin_t('ui.need_vod_id_ns'));
             }
             if ($rid > 0) {
                 if ($wantMid === 2) {
                     if (! Schema::hasTable('video_arts') || ! VideoArt::query()->where('id', $rid)->exists()) {
-                        return Result::fail('文章不存在');
+                        return Result::fail(admin_t('ui.art_missing'));
                     }
                 } elseif (Schema::hasTable('videos') && ! VideoModel::query()->where('id', $rid)->exists()) {
-                    return Result::fail('影片不存在');
+                    return Result::fail(admin_t('ui.video_missing'));
                 }
             }
         }
@@ -3278,7 +3278,7 @@ class SiteModuleService
             }
             $row->save();
 
-            return $this->loggedModule($module, 'delete', AdminOpLog::moduleDeleteSummary($module, $subject, $id), $id, Result::success([], '已移入回收站'));
+            return $this->loggedModule($module, 'delete', AdminOpLog::moduleDeleteSummary($module, $subject, $id), $id, Result::success([], admin_t('ui.moved_to_recycle')));
         }
         if ($module === 'arts') {
             app(ArtTagService::class)->detachArt($id);
@@ -5087,7 +5087,7 @@ class SiteModuleService
             $row['source_name'] = $source ? (string) $source->name : '';
             $row['source_player'] = $source ? (string) $source->player : '';
             $row['source_status'] = $sourceStatus;
-            $row['episode_label'] = $episode ? (string) $episode->display_name : ($eid > 0 ? ('集 #'.$eid) : '');
+            $row['episode_label'] = $episode ? (string) $episode->display_name : ($eid > 0 ? admin_t('ui.ep_hash', ['id' => $eid]) : '');
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['open'] = (int) ($row['status'] ?? 0) === 0 ? 1 : 0;
             $row['can_offline'] = $sid > 0 && $sourceStatus !== 0 ? 1 : 0;
@@ -5224,8 +5224,8 @@ class SiteModuleService
             $ts = (int) ($row['created_at'] ?? 0);
             $row['video_title'] = (string) ($titles[$vid] ?? '');
             $row['video_missing'] = $vid > 0 && ! array_key_exists($vid, $titles) ? 1 : 0;
-            $row['episode_label'] = $ep > 0 ? '第'.$ep.'集' : '未写集数';
-            $row['title_text'] = $title !== '' ? $title : ($ep > 0 ? '第'.$ep.'集' : '未写标题');
+            $row['episode_label'] = $ep > 0 ? admin_t('ui.ep_n', ['n' => $ep]) : admin_t('ui.ep_missing');
+            $row['title_text'] = $title !== '' ? $title : ($ep > 0 ? admin_t('ui.ep_n', ['n' => $ep]) : admin_t('ui.title_missing'));
             $row['has_content'] = $content !== '' ? 1 : 0;
             $row['content_preview'] = mb_substr($content, 0, 80);
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
@@ -6028,7 +6028,7 @@ class SiteModuleService
         foreach ($rows as &$row) {
             $logo = trim((string) ($row['logo'] ?? ''));
             $row['has_logo'] = $logo !== '';
-            $row['kind_label'] = $logo !== '' ? '图片' : '文字';
+            $row['kind_label'] = $logo !== '' ? admin_t('ui.kind_image') : admin_t('ui.kind_text');
         }
         unset($row);
 
@@ -6146,9 +6146,9 @@ class SiteModuleService
             $row['is_on'] = (int) ($row['status'] ?? 0) === 1;
             $row['parse_kind'] = $kind;
             $row['parse_kind_label'] = match ($kind) {
-                'tpl' => '模板',
-                'prefix' => '前缀',
-                default => '原样',
+                'tpl' => admin_t('ui.tpl'),
+                'prefix' => admin_t('ui.parse_prefix'),
+                default => admin_t('ui.parse_raw'),
             };
             $row['source_count'] = ($counts[$code] ?? 0) + ($name !== '' && $name !== $code ? ($counts[$name] ?? 0) : 0);
             $row['parse_preview'] = $parse === '' ? '' : mb_substr($parse, 0, 80);

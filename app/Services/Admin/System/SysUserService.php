@@ -177,19 +177,19 @@ class SysUserService
         $email = trim($email);
         $remark = trim($remark);
         if ($username === '') {
-            return Result::fail('请填写登录名');
+            return Result::fail(admin_t('ui.need_username'));
         }
         if (mb_strlen($username) < 2) {
-            return Result::fail('登录名至少 2 个字');
+            return Result::fail(admin_t('ui.username_min2'));
         }
         if ($password === '') {
-            return Result::fail('请填写密码');
+            return Result::fail(admin_t('ui.need_password'));
         }
         if (strlen($password) < 6) {
-            return Result::fail('密码至少 6 位');
+            return Result::fail(admin_t('ui.password_min6'));
         }
         if ($this->sysUserModel->findByCondition([['username', '=', $username]])) {
-            return Result::fail('这个登录名已经有人用了');
+            return Result::fail(admin_t('ui.username_taken'));
         }
 
         $insert = [
@@ -206,10 +206,10 @@ class SysUserService
 
         $res = $this->sysUserModel->inserts($insert);
         if (! $res) {
-            return Result::fail('没能添加');
+            return Result::fail(admin_t('ui.add_fail'));
         }
 
-        return AdminOpLog::ifOk(Result::success([], '已添加，可以登录后台'), 'save', '新增了管理员 '.$username, [
+        return AdminOpLog::ifOk(Result::success([], admin_t('ui.added_can_login')), 'save', '新增了管理员 '.$username, [
             'module' => '管理员',
             'target_type' => 'users',
             'payload' => ['username' => $username],
@@ -227,25 +227,25 @@ class SysUserService
     public function updateSysUser(int $id, string $username, string $password, string $email = '', string $remark = '', ?int $role = null, ?int $roleId = null): array
     {
         if ($id < 1) {
-            return Result::fail('管理员不存在');
+            return Result::fail(admin_t('ui.admin_missing'));
         }
         $user = $this->sysUserModel->findById($id);
         if (! $user) {
-            return Result::fail('管理员不存在');
+            return Result::fail(admin_t('ui.admin_missing'));
         }
         $username = trim($username);
         $password = trim($password);
         $email = trim($email);
         $remark = trim($remark);
         if ($username === '') {
-            return Result::fail('请填写登录名');
+            return Result::fail(admin_t('ui.need_username'));
         }
         $dup = $this->sysUserModel->findByCondition([['username', '=', $username]]);
         if ($dup && (int) ($dup['id'] ?? 0) !== $id) {
-            return Result::fail('这个登录名已经有人用了');
+            return Result::fail(admin_t('ui.username_taken'));
         }
         if ($password !== '' && strlen($password) < 6) {
-            return Result::fail('密码至少 6 位');
+            return Result::fail(admin_t('ui.password_min6'));
         }
 
         $update = [
@@ -268,14 +268,14 @@ class SysUserService
 
         $res = $this->sysUserModel->updateById($id, $update);
         if (! $res) {
-            return Result::fail('没能保存');
+            return Result::fail(admin_t('ui.cant_save'));
         }
         $this->forgetUserCache($id);
         if ($id === (int) session('admin_uid', 0)) {
             session(['admin_username' => $username]);
         }
 
-        return AdminOpLog::ifOk(Result::success([], '已保存'), 'save', '保存了管理员 '.$username, [
+        return AdminOpLog::ifOk(Result::success([], admin_t('ui.saved')), 'save', '保存了管理员 '.$username, [
             'module' => '管理员',
             'target_type' => 'users',
             'target_id' => $id,
@@ -291,27 +291,27 @@ class SysUserService
     public function deleteSysUser(int $id): array
     {
         if ($id < 1) {
-            return Result::fail('管理员不存在');
+            return Result::fail(admin_t('ui.admin_missing'));
         }
         if ($id === 1) {
-            return Result::fail('创始人不能删');
+            return Result::fail(admin_t('ui.founder_no_delete'));
         }
         if ($id === (int) session('admin_uid', 0)) {
-            return Result::fail('不能删自己正在用的账号');
+            return Result::fail(admin_t('ui.cannot_delete_self'));
         }
         $total = $this->sysUserModel->countByCondition([]);
         if ($total <= 1) {
-            return Result::fail('至少留一位管理员');
+            return Result::fail(admin_t('ui.keep_one_admin'));
         }
         $gone = (string) (($this->sysUserModel->findById($id)['username'] ?? ''));
 
         $res = $this->sysUserModel->deleteById($id);
         if (! $res) {
-            return Result::fail('没能删除');
+            return Result::fail(admin_t('ui.cant_delete'));
         }
         $this->forgetUserCache($id);
 
-        return AdminOpLog::ifOk(Result::success([], '已删除'), 'delete', '删除了管理员'.($gone !== '' ? ' '.$gone : ' #'.$id), [
+        return AdminOpLog::ifOk(Result::success([], admin_t('ui.deleted')), 'delete', '删除了管理员'.($gone !== '' ? ' '.$gone : ' #'.$id), [
             'module' => '管理员',
             'target_type' => 'users',
             'target_id' => $id,
@@ -336,9 +336,9 @@ class SysUserService
         $item['is_self'] = $isSelf;
         $item['can_delete'] = ! $isFounder && ! $isSelf;
         $item['role_name'] = $roleName;
-        $item['kind_label'] = $isFounder ? '创始人' : ($roleName !== '' ? $roleName : '未分角色');
+        $item['kind_label'] = $isFounder ? admin_t('ui.founder') : ($roleName !== '' ? $roleName : admin_t('ui.no_role_assigned'));
         $item['login_text'] = $this->loginText($item);
-        $item['never_login'] = ($item['login_text'] === '从未登录');
+        $item['never_login'] = ((int) ($item['login_time'] ?? 0)) <= 0;
         $stamp = (int) ($item['login_time'] ?? 0);
         $item['login_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : '';
 
@@ -350,15 +350,15 @@ class SysUserService
     {
         $stamp = (int) ($item['login_time'] ?? 0);
         if ($stamp <= 0) {
-            return '从未登录';
+            return admin_t('ui.never_logged_in');
         }
         $today = strtotime('today');
         $time = date('H:i', $stamp);
         if ($stamp >= $today) {
-            return '今天 '.$time;
+            return admin_t('ui.today_at', ['time' => $time, 't' => $time]);
         }
         if ($stamp >= $today - 86400) {
-            return '昨天 '.$time;
+            return admin_t('ui.yesterday_at', ['time' => $time, 't' => $time]);
         }
 
         return date('m-d H:i', $stamp);
@@ -684,23 +684,23 @@ class SysUserService
         $username = trim($username);
         $password = trim($password);
         if ($username === '' || $password === '') {
-            return Result::fail('请填写账号和密码');
+            return Result::fail(admin_t('auth.need_account'));
         }
         $lockKey = 'admin.login.lock.'.md5((string) $ip);
         if (Cache::has($lockKey)) {
-            return Result::fail('登录失败次数过多，请 15 分钟后再试');
+            return Result::fail(admin_t('auth.locked'));
         }
 
         $captcha = trim($vscode);
 
         if ($captcha === '')
         {
-            return Result::fail('请输入验证码');
+            return Result::fail(admin_t('auth.need_captcha'));
         }
 
         if (! Captcha::check($captcha))
         {
-            return Result::fail('验证码错误');
+            return Result::fail(admin_t('auth.captcha_wrong'));
         }
 
         $user = $this->sysUserModel->findByCondition([['username', '=', $username]]);
@@ -708,7 +708,7 @@ class SysUserService
         if (! $user || ! $this->passwordMatches($password, $this->storedPassword((int) ($user['id'] ?? 0), $user)))
         {
             if (! $user && (int) DB::table('sys_user')->count() === 0) {
-                return Result::fail('还没有管理员，请重新安装');
+                return Result::fail(admin_t('auth.no_admin'));
             }
             $failKey = 'admin.login.fail.'.md5((string) $ip);
             $fails = (int) Cache::get($failKey, 0) + 1;
@@ -717,10 +717,10 @@ class SysUserService
                 Cache::put($lockKey, 1, 900);
             }
 
-            return Result::fail('账号或者密码错误');
+            return Result::fail(admin_t('auth.bad_pass'));
         }
         if ((int) ($user['status'] ?? 1) !== 1) {
-            return Result::fail('账号已停用');
+            return Result::fail(admin_t('auth.disabled'));
         }
         Cache::forget('admin.login.fail.'.md5((string) $ip));
 
@@ -743,7 +743,7 @@ class SysUserService
             if (!$res)
             {
                 DB::rollBack();
-                return Result::fail('登入失败');
+                return Result::fail(admin_t('auth.fail'));
             }
 
             $insert = [
@@ -761,7 +761,7 @@ class SysUserService
             if (!$res)
             {
                 DB::rollBack();
-                return Result::fail('登入失败');
+                return Result::fail(admin_t('auth.fail'));
             }
 
             DB::commit();
@@ -771,13 +771,13 @@ class SysUserService
                 'admin_username' => (string) $user['username'],
             ]);
 
-            return Result::success($update, '登录成功');
+            return Result::success($update, admin_t('auth.ok'));
         }
         catch (Exception $e)
         {
             DB::rollBack();
             Syslog::exception('admin', $e);
-            return Result::fail('登入失败');
+            return Result::fail(admin_t('auth.fail'));
         }
     }
     /**
@@ -813,7 +813,7 @@ class SysUserService
             }
         }
 
-        return Result::success([], '退出成功');
+        return Result::success([], admin_t('ui.logout_ok'));
     }
 
     /**
@@ -994,7 +994,7 @@ class SysUserService
     {
         if ($uid <= 0)
         {
-            return Result::fail('未登录');
+            return Result::fail(admin_t('ui.not_signed_in'));
         }
 
         $currentPassword = (string) $currentPassword;
@@ -1003,38 +1003,38 @@ class SysUserService
 
         if (trim($currentPassword) === '')
         {
-            return Result::fail('请输入当前密码');
+            return Result::fail(admin_t('ui.need_current_password'));
         }
 
         if (trim($newPassword) === '')
         {
-            return Result::fail('请输入新密码');
+            return Result::fail(admin_t('ui.need_new_password'));
         }
 
         if (strlen($newPassword) < 6)
         {
-            return Result::fail('新密码至少6位');
+            return Result::fail(admin_t('ui.new_password_min6'));
         }
 
         if ($newPassword !== $confirmPassword)
         {
-            return Result::fail('两次新密码不一致');
+            return Result::fail(admin_t('ui.passwords_mismatch'));
         }
 
         if ($currentPassword === $newPassword)
         {
-            return Result::fail('新密码不能与当前密码相同');
+            return Result::fail(admin_t('ui.new_password_same'));
         }
 
         $user = $this->sysUserModel->findById($uid);
         if (!$user)
         {
-            return Result::fail('用户不存在');
+            return Result::fail(admin_t('ui.user_missing'));
         }
 
         if (! $this->passwordMatches($currentPassword, $this->storedPassword($uid, $user)))
         {
-            return Result::fail('当前密码错误');
+            return Result::fail(admin_t('ui.current_password_wrong'));
         }
 
         $res = $this->sysUserModel->updateById($uid, [
@@ -1044,10 +1044,10 @@ class SysUserService
 
         if (!$res)
         {
-            return Result::fail('修改失败');
+            return Result::fail(admin_t('ui.change_fail'));
         }
 
-        return AdminOpLog::ifOk(Result::success([], '修改成功'), 'save', '修改了自己的密码', [
+        return AdminOpLog::ifOk(Result::success([], admin_t('ui.change_ok')), 'save', '修改了自己的密码', [
             'module' => '管理员',
             'target_type' => 'users',
             'target_id' => $uid,
@@ -1058,7 +1058,7 @@ class SysUserService
     {
         $password = trim($password);
         if ($uid <= 0) {
-            return Result::fail('未登录');
+            return Result::fail(admin_t('ui.not_signed_in'));
         }
         if ($password === '') {
             return Result::fail(admin_t('top.unlock_empty'));
@@ -1073,7 +1073,7 @@ class SysUserService
             }
         }
         if (! $user) {
-            return Result::fail('用户不存在');
+            return Result::fail(admin_t('ui.user_missing'));
         }
         if (! $this->passwordMatches($password, $this->storedPassword($uid, $user))) {
             return Result::fail(admin_t('top.unlock_fail'));

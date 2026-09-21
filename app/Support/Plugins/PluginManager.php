@@ -229,12 +229,12 @@ class PluginManager
             if (! is_string($key) || ! is_array($page)) {
                 continue;
             }
-            $out[] = [
+            $out[] = admin_localize_extra_page([
                 'key' => $key,
                 'title' => (string) ($page['title'] ?? $key),
                 'hint' => (string) ($page['hint'] ?? ''),
                 'fields' => is_array($page['fields'] ?? null) ? $page['fields'] : [],
-            ];
+            ]);
         }
 
         return $out;

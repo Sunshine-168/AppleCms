@@ -12,7 +12,7 @@ class SetAdminUiLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('admin') || $request->is('admin/*')) {
+        if ($request->is('admin') || $request->is('admin/*') || $request->is('api/admin') || $request->is('api/admin/*')) {
             $ui = $request->query('ui');
             if (is_string($ui) && AdminUi::isValid($ui)) {
                 $remembered = AdminUi::remember($ui, saveUser: (int) session('admin_uid', 0) > 0);

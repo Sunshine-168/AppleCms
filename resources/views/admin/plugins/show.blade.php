@@ -40,6 +40,9 @@
                 @else
                     <input type="{{ preg_match('/(secret|password|_key)$/i', (string) $field['name']) ? 'password' : 'text' }}" name="{{ $field['name'] }}" value="{{ $site[$field['name']] ?? '' }}" placeholder="{{ $field['placeholder'] ?? '' }}" autocomplete="off">
                 @endif
+                @if(! empty($field['hint']))
+                    <p class="muted field-hint">{{ $field['hint'] }}</p>
+                @endif
             @endforeach
             <div class="form-actions">
                 <button type="button" class="btn" id="site-save">{{ admin_t('plugin.save') }}</button>

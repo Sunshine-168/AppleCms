@@ -13,44 +13,49 @@ use Illuminate\Support\Facades\Schema;
 
 class SysCacheService
 {
-    /** @var array<string, array{commands: list<string>, msg: string, log: string}> */
-    private const KINDS = [
-        'data' => [
-            'commands' => ['cache:clear'],
-            'msg' => '已清掉数据缓存。设置和查询会重新算。',
-            'log' => '清了数据缓存',
-        ],
-        'views' => [
-            'commands' => ['view:clear'],
-            'msg' => '已清掉编译模板。下次打开页面会重新编译。',
-            'log' => '清了模板缓存',
-        ],
-        'config' => [
-            'commands' => ['config:clear', 'route:clear', 'event:clear'],
-            'msg' => '已解开配置和路由打包。改过的配置会重新读。',
-            'log' => '解开了配置和路由打包',
-        ],
-        'all' => [
-            'commands' => ['optimize:clear'],
-            'msg' => '已全部清掉。前台会稍慢一会儿。',
-            'log' => '清空了全部缓存',
-        ],
-        'pack-config' => [
-            'commands' => ['config:cache'],
-            'msg' => '已打包配置。之后改配置文件不会马上生效，要先解开。',
-            'log' => '打包了配置',
-        ],
-        'pack-routes' => [
-            'commands' => ['route:cache'],
-            'msg' => '已打包路由。改路由文件后要先解开再打包。',
-            'log' => '打包了路由',
-        ],
-        'pack-views' => [
-            'commands' => ['view:cache'],
-            'msg' => '已预编译模板。改模板后要先清掉再预编译。',
-            'log' => '预编译了模板',
-        ],
-    ];
+    /**
+     * @return array<string, array{commands: list<string>, msg: string, log: string}>
+     */
+    private function kinds(): array
+    {
+        return [
+            'data' => [
+                'commands' => ['cache:clear'],
+                'msg' => admin_t('ui.cache_msg_data'),
+                'log' => admin_t('ui.cache_msg_data'),
+            ],
+            'views' => [
+                'commands' => ['view:clear'],
+                'msg' => admin_t('ui.cache_msg_views'),
+                'log' => admin_t('ui.cache_msg_views'),
+            ],
+            'config' => [
+                'commands' => ['config:clear', 'route:clear', 'event:clear'],
+                'msg' => admin_t('ui.cache_msg_config'),
+                'log' => admin_t('ui.cache_msg_config'),
+            ],
+            'all' => [
+                'commands' => ['optimize:clear'],
+                'msg' => admin_t('ui.cache_msg_all'),
+                'log' => admin_t('ui.cache_msg_all'),
+            ],
+            'pack-config' => [
+                'commands' => ['config:cache'],
+                'msg' => admin_t('ui.cache_msg_pack_config'),
+                'log' => admin_t('ui.cache_msg_pack_config'),
+            ],
+            'pack-routes' => [
+                'commands' => ['route:cache'],
+                'msg' => admin_t('ui.cache_msg_pack_routes'),
+                'log' => admin_t('ui.cache_msg_pack_routes'),
+            ],
+            'pack-views' => [
+                'commands' => ['view:cache'],
+                'msg' => admin_t('ui.cache_msg_pack_views'),
+                'log' => admin_t('ui.cache_msg_pack_views'),
+            ],
+        ];
+    }
 
     /**
      * 缓存工作台
@@ -101,11 +106,12 @@ class SysCacheService
     public function clear(string $kind): array
     {
         $kind = trim($kind);
-        if (! isset(self::KINDS[$kind])) {
-            return Result::fail('不知道要清哪一项');
+        $kinds = $this->kinds();
+        if (! isset($kinds[$kind])) {
+            return Result::fail(admin_t('ui.cache_unknown_kind'));
         }
 
-        $plan = self::KINDS[$kind];
+        $plan = $kinds[$kind];
 
         try {
             foreach ($plan['commands'] as $command) {
@@ -113,7 +119,7 @@ class SysCacheService
                 if ($code !== 0) {
                     $out = trim((string) Artisan::output());
 
-                    return Result::fail($out !== '' ? $out : '没能执行');
+                    return Result::fail($out !== '' ? $out : admin_t('ui.cache_run_fail'));
                 }
             }
 
@@ -125,14 +131,14 @@ class SysCacheService
             }
 
             return AdminOpLog::ifOk(Result::success($this->pageBoard(), $plan['msg']), 'flush', $plan['log'], [
-                'module' => '缓存',
+                'module' => admin_t('page.cache'),
                 'target_type' => 'cache',
                 'payload' => ['kind' => $kind],
             ]);
         } catch (\Throwable $e) {
             $msg = trim($e->getMessage());
 
-            return Result::fail($msg !== '' ? $msg : '没能执行');
+            return Result::fail($msg !== '' ? $msg : admin_t('ui.cache_run_fail'));
         }
     }
 
@@ -151,7 +157,7 @@ class SysCacheService
     {
         $command = trim($command);
         if ($command === '') {
-            return Result::fail('不知道要执行哪一项');
+            return Result::fail(admin_t('ui.cache_unknown_kind'));
         }
 
         $fromCommand = [
@@ -170,7 +176,7 @@ class SysCacheService
             return $this->clear($fromCommand[$command]);
         }
 
-        return Result::fail('不允许执行该命令');
+        return Result::fail(admin_t('ui.cache_cmd_denied'));
     }
 
     /**
@@ -179,12 +185,12 @@ class SysCacheService
     private function driverMeta(string $driver): array
     {
         return match ($driver) {
-            'file' => ['label' => '文件', 'hint' => '缓存在服务器磁盘，单机够用'],
-            'redis' => ['label' => 'Redis', 'hint' => '缓存在 Redis，多机可共用'],
-            'database' => ['label' => '数据库', 'hint' => '缓存在数据表里'],
-            'array' => ['label' => '内存', 'hint' => '只在这次请求里，关掉就没了'],
-            'memcached' => ['label' => 'Memcached', 'hint' => '缓存在 Memcached'],
-            default => ['label' => $driver !== '' ? $driver : '未知', 'hint' => ''],
+            'file' => ['label' => admin_t('ui.cache_driver_file'), 'hint' => admin_t('ui.cache_driver_file_h')],
+            'redis' => ['label' => 'Redis', 'hint' => admin_t('ui.cache_driver_redis_h')],
+            'database' => ['label' => admin_t('ui.cache_driver_db'), 'hint' => admin_t('ui.cache_driver_db_h')],
+            'array' => ['label' => admin_t('ui.cache_driver_mem'), 'hint' => admin_t('ui.cache_driver_mem_h')],
+            'memcached' => ['label' => 'Memcached', 'hint' => admin_t('ui.cache_driver_mc_h')],
+            default => ['label' => $driver !== '' ? $driver : admin_t('ui.unknown'), 'hint' => ''],
         };
     }
 
@@ -210,8 +216,8 @@ class SysCacheService
             }
             $state['count'] = $count;
             $state['detail'] = $count === null
-                ? '数据库'
-                : ('数据库 · '.$count.' 条');
+                ? admin_t('ui.cache_detail_db')
+                : admin_t('ui.cache_detail_db_n', ['n' => $count]);
 
             return $state;
         }
@@ -222,20 +228,20 @@ class SysCacheService
             $state['count'] = $stats['count'];
             $state['size_text'] = $stats['size_text'];
             $state['detail'] = $stats['count'] === 0
-                ? '文件 · 空'
-                : ('文件 · '.$stats['size_text'].($stats['count'] > 0 ? ' · '.$stats['count'].' 个文件' : ''));
+                ? admin_t('ui.cache_detail_file_empty')
+                : admin_t('ui.cache_detail_file_n', ['size' => $stats['size_text'], 'n' => $stats['count']]);
 
             return $state;
         }
 
         if ($driver === 'array') {
-            $state['detail'] = '内存，不持久';
+            $state['detail'] = admin_t('ui.cache_detail_array');
 
             return $state;
         }
 
         if ($driver === 'redis') {
-            $state['detail'] = '在 Redis 里，条数不在这里数';
+            $state['detail'] = admin_t('ui.cache_detail_redis');
 
             return $state;
         }
@@ -255,8 +261,10 @@ class SysCacheService
             'count' => $phpCount,
             'size_text' => $stats['size_text'],
             'detail' => $phpCount === 0
-                ? '还没有编译文件'
-                : ('已编译 '.$phpCount.' 个'.($stats['count'] > 0 ? ' · '.$stats['size_text'] : '')),
+                ? admin_t('ui.cache_views_empty')
+                : ($stats['count'] > 0
+                    ? admin_t('ui.cache_views_n_size', ['n' => $phpCount, 'size' => $stats['size_text']])
+                    : admin_t('ui.cache_views_n', ['n' => $phpCount])),
         ];
     }
 
@@ -274,11 +282,11 @@ class SysCacheService
     private function configDetail(bool $configPacked, bool $routesPacked, bool $eventsPacked): string
     {
         $parts = [
-            $configPacked ? '配置已打包' : '配置每次读最新',
-            $routesPacked ? '路由已打包' : '路由每次读最新',
+            $configPacked ? admin_t('ui.cache_cfg_packed') : admin_t('ui.cache_cfg_fresh'),
+            $routesPacked ? admin_t('ui.cache_rt_packed') : admin_t('ui.cache_rt_fresh'),
         ];
         if ($eventsPacked) {
-            $parts[] = '事件已打包';
+            $parts[] = admin_t('ui.cache_ev_packed');
         }
 
         return implode(' · ', $parts);
@@ -309,7 +317,7 @@ class SysCacheService
      */
     private function dirStats(string $path, int $maxFiles = 4000): array
     {
-        $empty = ['bytes' => 0, 'count' => 0, 'size_text' => '空', 'capped' => false];
+        $empty = ['bytes' => 0, 'count' => 0, 'size_text' => admin_t('ui.cache_empty_size'), 'capped' => false];
         if ($path === '' || ! is_dir($path)) {
             return $empty;
         }
@@ -344,7 +352,7 @@ class SysCacheService
             return $empty;
         }
 
-        $text = ($capped ? '约 ' : '').Usage::bytes($bytes);
+        $text = $capped ? admin_t('ui.cache_about', ['size' => Usage::bytes($bytes)]) : Usage::bytes($bytes);
 
         return [
             'bytes' => $bytes,

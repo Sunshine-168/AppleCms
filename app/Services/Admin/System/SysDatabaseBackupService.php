@@ -23,7 +23,7 @@ class SysDatabaseBackupService
         } elseif ($driver === 'mysql' || $driver === 'mariadb') {
             $res = $this->runMysqlDump();
         } else {
-            return Result::fail('只支持 SQLite 文件库和 MySQL/MariaDB');
+            return Result::fail(admin_t('ui.bak_reason_driver'));
         }
         if ((int) ($res['code'] ?? 1) !== 0) {
             return $res;
@@ -38,7 +38,7 @@ class SysDatabaseBackupService
             'name' => $name,
             'size' => $size,
             'size_text' => $this->sizeText($size),
-        ], '已备份到磁盘');
+        ], admin_t('ui.bak_ok'));
     }
 
     private function runMysqlDump(): array
@@ -57,7 +57,7 @@ class SysDatabaseBackupService
         $driver     = (string) ($cfg['driver'] ?? '');
         if ($driver !== 'mysql' && $driver !== 'mariadb')
         {
-            return Result::fail('仅支持 MySQL/MariaDB 备份');
+            return Result::fail(admin_t('ui.bak_unsupported_dump'));
         }
 
         $host     = (string) ($cfg['host'] ?? '127.0.0.1');
@@ -68,13 +68,13 @@ class SysDatabaseBackupService
 
         if ($database === '' || $username === '')
         {
-            return Result::fail('数据库配置不完整');
+            return Result::fail(admin_t('ui.bak_cfg_incomplete'));
         }
 
         $dir = $this->getBackupDir();
         if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir))
         {
-            return Result::fail('备份目录创建失败');
+            return Result::fail(admin_t('ui.bak_dir_fail'));
         }
 
         $safe = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $database) ?: 'mysql';
@@ -86,7 +86,7 @@ class SysDatabaseBackupService
 
         if (@file_put_contents($tmpCnf, $cnf) === false)
         {
-            return Result::fail('临时配置写入失败');
+            return Result::fail(admin_t('ui.bak_tmp_cfg_fail'));
         }
 
         try {
@@ -156,12 +156,12 @@ class SysDatabaseBackupService
                                 $err2 = trim((string) $process2->getOutput());
                             }
                             $err2 = $this->toUtf8($err2);
-                            return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : '备份失败'));
+                return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : admin_t('ui.bak_fail')));
                         }
                     }
                     else
                     {
-                        return Result::fail($err !== '' ? $err : '备份失败');
+                        return Result::fail($err !== '' ? $err : admin_t('ui.bak_fail'));
                     }
                 }
             }
@@ -195,12 +195,12 @@ class SysDatabaseBackupService
                         if (!is_file($path) || filesize($path) < 1)
                         {
                             $err2 = is_string($output2) ? $this->toUtf8(trim($output2)) : '';
-                            return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : '备份失败'));
+                return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : admin_t('ui.bak_fail')));
                         }
                     }
                     else
                     {
-                        return Result::fail($err !== '' ? $err : '备份失败');
+                        return Result::fail($err !== '' ? $err : admin_t('ui.bak_fail'));
                     }
                 }
             }
@@ -251,19 +251,19 @@ class SysDatabaseBackupService
         $driverHint = '';
         if ($driver === 'sqlite' && $memory) {
             $driverLabel = admin_t('ui.driver_sqlite_mem');
-            $driverHint = '测试或没配文件库时会这样。本机请把 DB_DATABASE 指到 database/database.sqlite。';
+            $driverHint = admin_t('ui.bak_hint_mem');
         } elseif ($driver === 'sqlite') {
             $driverLabel = admin_t('ui.driver_sqlite_file');
-            $driverHint = '备份是复制库文件，不是导出 SQL 文本。';
+            $driverHint = admin_t('ui.bak_hint_sqlite');
         } elseif ($driver === 'mysql') {
             $driverLabel = 'MySQL';
-            $driverHint = '用 mysqldump 写出 .sql。机器上要有这个命令。';
+            $driverHint = admin_t('ui.bak_hint_mysql');
         } elseif ($driver === 'mariadb') {
             $driverLabel = 'MariaDB';
-            $driverHint = '用 mysqldump 写出 .sql。机器上要有这个命令。';
+            $driverHint = admin_t('ui.bak_hint_mysql');
         } else {
             $driverLabel = $driver !== '' ? $driver : admin_t('ui.driver_unknown');
-            $driverHint = '现在这种库不能在这里备份。';
+            $driverHint = admin_t('ui.bak_hint_unsupported');
         }
 
         return [
@@ -291,53 +291,53 @@ class SysDatabaseBackupService
             'restore_unavailable' => $this->cannotRestoreReason(),
             'can_snapshot' => $this->canBackup(),
             'ui' => [
-                'title' => '数据库备份',
-                'lead' => '把当前库导出到这台服务器的磁盘。定时备份走计划任务。本机 artisan serve 不会自动跑。',
-                'restore' => '恢复',
-                'sql' => '执行 SQL',
-                'schedule' => '计划任务',
-                'replace' => '批量替换',
-                'now' => '立刻备份',
-                'now_hint' => '马上写一份到磁盘。打开着的后台不用关。',
-                'timer' => '到点自动备份',
-                'timer_hint' => '默认每天凌晨 3 点。只留最近几份，避免把磁盘写满。',
-                'keep' => '留最近几份',
-                'when' => '多久跑一次',
-                'save_timer' => '保存定时',
-                'on' => '到点自动备份',
-                'install' => '服务器还要装这一行',
-                'install_hint' => 'Linux / 宝塔放进 crontab。Windows 用任务计划每分钟跑同一条。没装的话，上面开了也不会自己备份。',
-                'copy' => '复制',
-                'copied' => '已复制',
-                'files' => '已经备份的文件',
-                'empty' => '还没有备份。',
-                'empty_hint' => '先点「立刻备份」试一次，看这份能不能打开。',
-                'download' => '下载',
-                'delete' => '删除',
-                'restore_one' => '恢复',
-                'del_confirm' => '删除这份备份？',
-                'busy' => '正在备份…',
-                'ok' => '已备份到磁盘',
-                'memory' => '当前是内存库，没法备份到文件。',
-                'restore_title' => '数据库恢复',
-                'restore_lead' => '把一份备份盖回当前库。盖上之后，现在的数据找不回来。',
-                'restore_note' => '只能还原本页列出的备份。能备份时会先另存当前库。确定后请输入「盖回」。',
-                'restore_now' => '当前库',
-                'restore_files' => '可以盖回去的备份',
-                'restore_blocked' => '种类对不上',
-                'restore_confirm' => '会盖掉当前库，确定用这份？',
-                'restore_confirm_save' => '会先把现在这份存到磁盘，再盖上选中的备份。确定后还要输入「盖回」。',
-                'restore_confirm_nosave' => '当前库没法另存。盖上之后现在的数据找不回来。确定后还要输入「盖回」。',
-                'restore_type' => '会盖掉当前库。要继续请输入：盖回',
-                'restore_type_err' => '没输入对，没有盖',
-                'restore_word' => '盖回',
-                'restore_mismatch' => '这份备份和当前库不是同一种，不能直接还原。',
-                'restore_empty' => '还没有可恢复的备份。',
-                'restore_empty_hint' => '先到备份页导出一份。点「立刻备份」试一次。选好后点「盖回这份」，再输入「盖回」。',
-                'restore_run' => '盖回这份',
-                'restore_go' => '去备份',
-                'restore_cache' => '缓存',
-                'backup' => '去备份',
+                'title' => admin_t('page.db_backup'),
+                'lead' => admin_t('ui.bak_lead'),
+                'restore' => admin_t('ui.restore'),
+                'sql' => 'SQL',
+                'schedule' => admin_t('page.schedule'),
+                'replace' => admin_t('ui.tab_replace'),
+                'now' => admin_t('ui.bak_now'),
+                'now_hint' => admin_t('ui.bak_now_hint'),
+                'timer' => admin_t('ui.bak_timer'),
+                'timer_hint' => admin_t('ui.bak_timer_hint'),
+                'keep' => admin_t('ui.bak_keep'),
+                'when' => admin_t('ui.sched_every'),
+                'save_timer' => admin_t('ui.bak_save_timer'),
+                'on' => admin_t('ui.bak_timer'),
+                'install' => admin_t('ui.bak_install'),
+                'install_hint' => admin_t('ui.bak_install_hint'),
+                'copy' => admin_t('ui.copy'),
+                'copied' => admin_t('ui.copied'),
+                'files' => admin_t('ui.bak_files'),
+                'empty' => admin_t('ui.bak_empty'),
+                'empty_hint' => admin_t('ui.bak_empty_hint'),
+                'download' => admin_t('ui.download'),
+                'delete' => admin_t('ui.delete'),
+                'restore_one' => admin_t('ui.restore'),
+                'del_confirm' => admin_t('ui.bak_del_confirm'),
+                'busy' => admin_t('ui.bak_busy'),
+                'ok' => admin_t('ui.bak_ok'),
+                'memory' => admin_t('ui.bak_memory'),
+                'restore_title' => admin_t('ui.bak_restore_title'),
+                'restore_lead' => admin_t('ui.bak_restore_lead'),
+                'restore_note' => admin_t('ui.bak_restore_note', ['word' => admin_t('ui.restore_word')]),
+                'restore_now' => admin_t('ui.bak_restore_now'),
+                'restore_files' => admin_t('ui.bak_restore_files'),
+                'restore_blocked' => admin_t('ui.bak_restore_blocked'),
+                'restore_confirm' => admin_t('ui.bak_restore_confirm'),
+                'restore_confirm_save' => admin_t('ui.bak_restore_confirm_save', ['word' => admin_t('ui.restore_word')]),
+                'restore_confirm_nosave' => admin_t('ui.bak_restore_confirm_nosave', ['word' => admin_t('ui.restore_word')]),
+                'restore_type' => admin_t('ui.bak_restore_type', ['word' => admin_t('ui.restore_word')]),
+                'restore_type_err' => admin_t('ui.bak_restore_type_err'),
+                'restore_word' => admin_t('ui.restore_word'),
+                'restore_mismatch' => admin_t('ui.bak_restore_mismatch'),
+                'restore_empty' => admin_t('ui.bak_restore_empty'),
+                'restore_empty_hint' => admin_t('ui.bak_restore_empty_hint', ['word' => admin_t('ui.restore_word')]),
+                'restore_run' => admin_t('ui.bak_restore_run'),
+                'restore_go' => admin_t('ui.bak_restore_go'),
+                'restore_cache' => admin_t('page.cache'),
+                'backup' => admin_t('ui.bak_restore_go'),
             ],
         ];
     }
@@ -373,13 +373,13 @@ class SysDatabaseBackupService
         }
         try {
             if (! CronExpression::isValidExpression($cron)) {
-                return Result::fail('时间格式不对');
+                return Result::fail(admin_t('ui.bak_cron_bad'));
             }
         } catch (\Throwable) {
-            return Result::fail('时间格式不对');
+            return Result::fail(admin_t('ui.bak_cron_bad'));
         }
         if ($cron === '* * * * *') {
-            return Result::fail('备份别每分钟跑，磁盘会很快写满');
+            return Result::fail(admin_t('ui.bak_not_every_minute'));
         }
 
         $row = $this->findBackupScheduleRow();
@@ -388,15 +388,15 @@ class SysDatabaseBackupService
         $prevCron = (string) ($row['cron_expression'] ?? '');
         $prevKeep = $id > 0 ? $this->parseKeep((string) ($row['params'] ?? '')) : 7;
         if ($id < 1 && ! $on) {
-            return Result::fail('没有改动，不用保存');
+            return Result::fail(admin_t('ui.bak_no_change'));
         }
         if ($id > 0 && $prevOn === $on && $prevCron === $cron && $prevKeep === $keep) {
-            return Result::fail('没有改动，不用保存');
+            return Result::fail(admin_t('ui.bak_no_change'));
         }
 
         $name = trim((string) ($row['name'] ?? ''));
         if ($name === '') {
-            $name = '每天备份库';
+            $name = admin_t('ui.sched_job_backup');
         }
 
         $schedule = app(SysScheduleService::class);
@@ -450,7 +450,7 @@ class SysDatabaseBackupService
             }
             $bak = $this->runBackup(0);
             if ((int) ($bak['code'] ?? 1) !== 0) {
-                return Result::fail('没能先另存当前库：'.(string) ($bak['msg'] ?? '备份失败'));
+                return Result::fail(admin_t('ui.bak_snapshot_fail', ['msg' => (string) ($bak['msg'] ?? admin_t('ui.bak_fail'))]));
             }
             $snapshotName = (string) ($bak['data']['name'] ?? '');
         }
@@ -460,7 +460,7 @@ class SysDatabaseBackupService
             return $this->finishRestore($this->restoreSqliteBackup($path, $kind), $file, $snapshotName);
         }
         if ($kind === 'sqlite') {
-            return Result::fail('这份是 SQLite 文件，当前库是 MySQL，不能直接还原');
+            return Result::fail(admin_t('ui.bak_sqlite_on_mysql'));
         }
 
         $binRes = $this->resolveMysqlBinary();
@@ -477,7 +477,7 @@ class SysDatabaseBackupService
         $driver     = (string) ($cfg['driver'] ?? '');
         if ($driver !== 'mysql' && $driver !== 'mariadb')
         {
-            return Result::fail('仅支持 MySQL/MariaDB 恢复');
+            return Result::fail(admin_t('ui.bak_mysql_only_restore'));
         }
 
         $host     = (string) ($cfg['host'] ?? '127.0.0.1');
@@ -488,31 +488,31 @@ class SysDatabaseBackupService
 
         if ($database === '' || $username === '')
         {
-            return Result::fail('数据库配置不完整');
+            return Result::fail(admin_t('ui.bak_cfg_incomplete'));
         }
 
         $dir = $this->getBackupDir();
         if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir))
         {
-            return Result::fail('备份目录不存在且创建失败');
+            return Result::fail(admin_t('ui.bak_dir_missing'));
         }
 
         $lockFile = storage_path('app' . DIRECTORY_SEPARATOR . 'db_restore.lock');
         if (is_file($lockFile))
         {
-            return Result::fail('恢复任务正在执行中，请稍后再试');
+            return Result::fail(admin_t('ui.bak_restore_busy'));
         }
 
         if (@file_put_contents($lockFile, (string) time()) === false)
         {
-            return Result::fail('恢复锁创建失败');
+            return Result::fail(admin_t('ui.bak_lock_fail'));
         }
 
         $sqlPath = (string) ($fileRes['data']['path'] ?? '');
         if ($sqlPath === '' || !is_file($sqlPath))
         {
             @unlink($lockFile);
-            return Result::fail('SQL 文件不存在');
+            return Result::fail(admin_t('ui.bak_sql_missing'));
         }
 
         $tmpCnf = $dir . DIRECTORY_SEPARATOR . '.mysql_' . uniqid('', true) . '.cnf';
@@ -521,7 +521,7 @@ class SysDatabaseBackupService
         if (@file_put_contents($tmpCnf, $cnf) === false)
         {
             @unlink($lockFile);
-            return Result::fail('临时配置写入失败');
+            return Result::fail(admin_t('ui.bak_tmp_cfg_fail'));
         }
 
         try {
@@ -570,10 +570,10 @@ class SysDatabaseBackupService
                 }
 
                 $err2 = (string) ($ok2['msg'] ?? '');
-                return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : '恢复失败'));
+                return Result::fail($err2 !== '' ? $err2 : ($err !== '' ? $err : admin_t('ui.bak_restore_fail')));
             }
 
-            return Result::fail($err !== '' ? $err : '恢复失败');
+            return Result::fail($err !== '' ? $err : admin_t('ui.bak_restore_fail'));
         } finally {
             @unlink($tmpCnf);
             @unlink($lockFile);
@@ -602,12 +602,12 @@ class SysDatabaseBackupService
         $file = trim($file);
         if ($file === '')
         {
-            return Result::fail('请选择文件');
+            return Result::fail(admin_t('ui.bak_pick_file'));
         }
 
         if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]*\\.(sql|sqlite)$/', $file))
         {
-            return Result::fail('非法文件名');
+            return Result::fail(admin_t('ui.bak_bad_name'));
         }
 
         $dir  = $this->getBackupDir();
@@ -615,7 +615,7 @@ class SysDatabaseBackupService
 
         if (!is_file($path))
         {
-            return Result::fail('文件不存在');
+            return Result::fail(admin_t('ui.bak_file_missing'));
         }
 
         return Result::success([
@@ -639,12 +639,12 @@ class SysDatabaseBackupService
         $path = (string) ($res['data']['path'] ?? '');
         if ($path === '' || !is_file($path))
         {
-            return Result::fail('文件不存在');
+            return Result::fail(admin_t('ui.bak_file_missing'));
         }
 
         if (!@unlink($path))
         {
-            return Result::fail('删除失败');
+            return Result::fail(admin_t('ui.bak_del_fail'));
         }
 
         return Result::success([], '删除成功');
@@ -690,7 +690,7 @@ class SysDatabaseBackupService
                 'time' => $mtime > 0 ? date('Y-m-d H:i:s', $mtime) : '',
                 'mtime' => $mtime,
                 'kind' => $kind,
-                'kind_label' => $kind === 'sqlite' ? 'SQLite 文件' : 'SQL 文本',
+                'kind_label' => $kind === 'sqlite' ? admin_t('ui.bak_kind_sqlite') : admin_t('ui.bak_kind_sql'),
                 'can_restore' => $canRestore,
                 'restore_hint' => $canRestore ? '' : $this->fileRestoreHint($kind),
             ];
@@ -743,14 +743,14 @@ class SysDatabaseBackupService
     {
         $path = $this->sqliteDatabasePath();
         if ($this->isMemorySqlite($path)) {
-            return Result::fail('当前是内存库，没法备份到文件。本地请用 database/database.sqlite');
+            return Result::fail($this->cannotBackupReason());
         }
         if ($path === '' || ! is_file($path)) {
-            return Result::fail('找不到 SQLite 文件');
+            return Result::fail(admin_t('ui.bak_reason_sqlite_missing'));
         }
         $dir = $this->getBackupDir();
         if (! is_dir($dir) && ! mkdir($dir, 0755, true) && ! is_dir($dir)) {
-            return Result::fail('备份目录创建失败');
+            return Result::fail(admin_t('ui.bak_dir_fail'));
         }
         $filename = $this->uniqueBackupName('sqlite', 'sqlite');
         $dest = $dir.DIRECTORY_SEPARATOR.$filename;
@@ -760,13 +760,13 @@ class SysDatabaseBackupService
                 @unlink($dest);
             }
             if (! @copy($path, $dest) || ! is_file($dest) || (int) filesize($dest) < 1) {
-                return Result::fail('复制 SQLite 文件失败');
+                return Result::fail(admin_t('ui.bak_copy_fail'));
             }
         }
         $size = (int) filesize($dest);
         if ($size < 1) {
             @unlink($dest);
-            return Result::fail('备份文件是空的');
+            return Result::fail(admin_t('ui.bak_empty_file'));
         }
 
         return Result::success([
@@ -778,26 +778,26 @@ class SysDatabaseBackupService
     private function restoreSqliteBackup(string $backupPath, string $kind): array
     {
         if ($kind !== 'sqlite') {
-            return Result::fail('这份是 SQL 文本，当前是 SQLite 文件库，请选 .sqlite 备份');
+            return Result::fail(admin_t('ui.bak_sql_on_sqlite_pick'));
         }
         $db = $this->sqliteDatabasePath();
         if ($this->isMemorySqlite($db)) {
-            return Result::fail('当前是内存库，没法还原到文件');
+            return Result::fail(admin_t('ui.bak_reason_restore_file'));
         }
         if ($db === '') {
-            return Result::fail('数据库配置不完整');
+            return Result::fail(admin_t('ui.bak_cfg_incomplete'));
         }
         $realBackup = realpath($backupPath) ?: $backupPath;
         $realDb = is_file($db) ? (realpath($db) ?: $db) : $db;
         if ($realBackup !== '' && $realDb !== '' && $realBackup === $realDb) {
-            return Result::fail('不能把当前库还原到自己');
+            return Result::fail(admin_t('ui.bak_self_restore'));
         }
         $lockFile = storage_path('app'.DIRECTORY_SEPARATOR.'db_restore.lock');
         if (is_file($lockFile)) {
-            return Result::fail('恢复任务正在执行中，请稍后再试');
+            return Result::fail(admin_t('ui.bak_restore_busy'));
         }
         if (@file_put_contents($lockFile, (string) time()) === false) {
-            return Result::fail('恢复锁创建失败');
+            return Result::fail(admin_t('ui.bak_lock_fail'));
         }
         $live = $this->sqlitePdoIsThisFile($db);
         try {
@@ -807,24 +807,24 @@ class SysDatabaseBackupService
             }
             $dir = dirname($db);
             if ($dir !== '' && $dir !== '.' && ! is_dir($dir) && ! mkdir($dir, 0755, true) && ! is_dir($dir)) {
-                return Result::fail('库目录不存在且创建失败');
+                return Result::fail(admin_t('ui.bak_db_dir_fail'));
             }
             $tmp = $db.'.restore-'.str_replace('.', '', uniqid('', true));
             if (! @copy($backupPath, $tmp)) {
-                return Result::fail('还原失败，写临时文件失败');
+                return Result::fail(admin_t('ui.bak_tmp_write_fail'));
             }
             if (is_file($db)) {
                 $old = $db.'.old-'.str_replace('.', '', uniqid('', true));
                 if (! @rename($db, $old) && ! @unlink($db)) {
                     @unlink($tmp);
-                    return Result::fail('还原失败，库文件可能正被占用');
+                    return Result::fail(admin_t('ui.bak_file_busy'));
                 }
                 @unlink($old);
             }
             if (! @rename($tmp, $db)) {
                 if (! @copy($tmp, $db)) {
                     @unlink($tmp);
-                    return Result::fail('还原失败，盖不回去');
+                    return Result::fail(admin_t('ui.bak_cover_fail'));
                 }
                 @unlink($tmp);
             }
@@ -838,7 +838,7 @@ class SysDatabaseBackupService
             }
         }
 
-        return Result::success([], '已盖回这份备份。刷新后台确认数据对不对');
+        return Result::success([], admin_t('ui.bak_restored_ok'));
     }
 
     private function uniqueBackupName(string $prefix, string $ext): string
@@ -949,10 +949,10 @@ class SysDatabaseBackupService
         if ($driver === 'sqlite') {
             $path = $this->sqliteDatabasePath();
             if ($this->isMemorySqlite($path)) {
-                return '当前是内存库，没法备份到文件。本地请用 database/database.sqlite';
+                return admin_t('ui.bak_reason_mem');
             }
             if ($path === '' || ! is_file($path)) {
-                return '找不到 SQLite 文件';
+                return admin_t('ui.bak_reason_sqlite_missing');
             }
 
             return '';
@@ -961,7 +961,7 @@ class SysDatabaseBackupService
             return '';
         }
 
-        return '只支持 SQLite 文件库和 MySQL/MariaDB';
+        return admin_t('ui.bak_reason_driver');
     }
 
     private function cannotRestoreReason(): string
@@ -970,10 +970,10 @@ class SysDatabaseBackupService
         if ($driver === 'sqlite') {
             $path = $this->sqliteDatabasePath();
             if ($this->isMemorySqlite($path)) {
-                return '当前是内存库，没法盖回去。本地请用 database/database.sqlite';
+                return admin_t('ui.bak_reason_restore_mem');
             }
             if ($path === '' || ! is_file($path)) {
-                return '找不到 SQLite 文件';
+                return admin_t('ui.bak_reason_sqlite_missing');
             }
 
             return '';
@@ -982,7 +982,7 @@ class SysDatabaseBackupService
             return '';
         }
 
-        return '现在这种库不能在这里恢复';
+        return admin_t('ui.bak_reason_restore_driver');
     }
 
     private function fileCanRestore(string $kind): bool
@@ -1009,13 +1009,13 @@ class SysDatabaseBackupService
         }
         $driver = $this->connectionDriver();
         if ($driver === 'sqlite' && $kind !== 'sqlite') {
-            return '这份是 SQL 文本，当前是 SQLite 文件库，不能直接还原';
+            return admin_t('ui.bak_sql_on_sqlite');
         }
         if (($driver === 'mysql' || $driver === 'mariadb') && $kind !== 'sql') {
-            return '这份是 SQLite 文件，当前库是 MySQL，不能直接还原';
+            return admin_t('ui.bak_sqlite_on_mysql');
         }
 
-        return '这份备份和当前库不是同一种，不能直接还原';
+        return admin_t('ui.bak_restore_mismatch');
     }
 
     /**
@@ -1037,10 +1037,10 @@ class SysDatabaseBackupService
     private function restoreDoneMsg(string $file, string $snapshotName): string
     {
         $msg = $snapshotName !== ''
-            ? '已先另存当前库为 '.$snapshotName.'，再盖回 '.$file.'。'
-            : '已盖回 '.$file.'。';
+            ? admin_t('ui.bak_restored_snapshot', ['snap' => $snapshotName, 'file' => $file])
+            : admin_t('ui.bak_restored', ['file' => $file]);
 
-        return $msg.'后台账号以备份里的为准，可能要重新登录。';
+        return $msg.admin_t('ui.bak_restored_login');
     }
 
     private function fileKind(string $file): string
@@ -1332,7 +1332,7 @@ class SysDatabaseBackupService
                 $err = trim((string) $process->getOutput());
             }
             $err = $this->toUtf8($err);
-            return Result::fail($err !== '' ? $err : '恢复失败');
+            return Result::fail($err !== '' ? $err : admin_t('ui.bak_restore_fail'));
         }
 
         $output = @shell_exec($shellCmd . ' 2>&1');

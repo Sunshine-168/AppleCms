@@ -46,23 +46,24 @@ class SysDatabaseSqlService
     {
         $driver = $this->connectionDriver();
         $memory = $driver === 'sqlite' && $this->isMemorySqlite($this->sqliteDatabasePath());
-        $driverLabel = '未知';
+        $word = admin_t('ui.sql_word');
+        $driverLabel = admin_t('ui.unknown');
         $driverHint = '';
         if ($driver === 'sqlite' && $memory) {
-            $driverLabel = '内存 SQLite';
-            $driverHint = '这是内存库。能查，改了也留不住文件。正式环境请把 DB_DATABASE 指到 database/database.sqlite。';
+            $driverLabel = admin_t('ui.driver_sqlite_mem');
+            $driverHint = admin_t('ui.sql_hint_mem');
         } elseif ($driver === 'sqlite') {
-            $driverLabel = 'SQLite 文件';
-            $driverHint = '语法按 SQLite。没有 SHOW TABLES，用下面「有哪些表」。';
+            $driverLabel = admin_t('ui.driver_sqlite_file');
+            $driverHint = admin_t('ui.sql_hint_sqlite');
         } elseif ($driver === 'mysql') {
             $driverLabel = 'MySQL';
-            $driverHint = '语法按 MySQL。一次一条，不要把整段备份 SQL 贴进来。';
+            $driverHint = admin_t('ui.sql_hint_mysql');
         } elseif ($driver === 'mariadb') {
             $driverLabel = 'MariaDB';
-            $driverHint = '语法按 MariaDB。一次一条，不要把整段备份 SQL 贴进来。';
+            $driverHint = admin_t('ui.sql_hint_maria');
         } else {
-            $driverLabel = $driver !== '' ? $driver : '未知';
-            $driverHint = '现在这种库这里没试过，跑失败会把原文回给你。';
+            $driverLabel = $driver !== '' ? $driver : admin_t('ui.unknown');
+            $driverHint = admin_t('ui.sql_hint_unknown');
         }
 
         return [
@@ -72,29 +73,29 @@ class SysDatabaseSqlService
             'can_delete' => $this->isFirstAdmin(),
             'examples' => $this->examples($driver),
             'ui' => [
-                'title' => '执行 SQL',
-                'lead' => '对当前库执行一条 SQL。写入不能撤销，先备份。查询最多 200 行；改库请输入「执行」。',
-                'note' => '一次一条。不能建表、删表、改结构。改错字用批量替换。',
-                'now' => '当前库',
-                'stmt' => '语句',
-                'placeholder' => '一条语句。带 FROM 的 SELECT 请写 LIMIT，最多 200 行。',
-                'examples' => '示例',
-                'run' => '执行',
-                'clear' => '清空',
-                'result' => '结果',
-                'idle' => '还没跑过。',
-                'idle_hint' => '写好语句再点执行。查到 0 行会照实显示。',
-                'backup' => '备份',
-                'restore' => '恢复',
-                'replace' => '批量替换',
-                'dict' => '字段',
-                'confirm_write' => '会改当前库，不能撤销。确定后还要输入「执行」。',
-                'type_hint' => '会改当前库。要继续请输入：执行',
-                'type_err' => '没输入对，没有改库',
-                'word' => self::CONFIRM_WORD,
-                'empty_rows' => '查到 0 行。',
-                'busy' => '正在执行…',
-                'need_sql' => '请先写一条 SQL',
+                'title' => admin_t('page.db_sql'),
+                'lead' => admin_t('ui.sql_lead', ['word' => $word]),
+                'note' => admin_t('ui.sql_note'),
+                'now' => admin_t('ui.bak_restore_now'),
+                'stmt' => admin_t('ui.sql_stmt'),
+                'placeholder' => admin_t('ui.sql_ph'),
+                'examples' => admin_t('ui.sql_examples'),
+                'run' => $word,
+                'clear' => admin_t('ui.clear'),
+                'result' => admin_t('ui.result'),
+                'idle' => admin_t('ui.sql_idle'),
+                'idle_hint' => admin_t('ui.sql_idle_hint'),
+                'backup' => admin_t('ui.tab_backup'),
+                'restore' => admin_t('ui.restore'),
+                'replace' => admin_t('page.db_replace'),
+                'dict' => admin_t('page.db_dict'),
+                'confirm_write' => admin_t('ui.sql_confirm_write', ['word' => $word]),
+                'type_hint' => admin_t('ui.sql_type_hint', ['word' => $word]),
+                'type_err' => admin_t('ui.sql_type_err'),
+                'word' => $word,
+                'empty_rows' => admin_t('ui.sql_empty_rows'),
+                'busy' => admin_t('ui.sql_busy'),
+                'need_sql' => admin_t('ui.sql_need_stmt'),
             ],
         ];
     }
@@ -103,10 +104,10 @@ class SysDatabaseSqlService
     {
         $sql = trim($sql);
         if ($sql === '') {
-            return Result::fail('请先写一条 SQL');
+            return Result::fail(admin_t('ui.sql_need_stmt'));
         }
         if (mb_strlen($sql, 'UTF-8') > self::MAX_SQL_CHARS) {
-            return Result::fail('语句太长，最多 '.self::MAX_SQL_CHARS.' 字');
+            return Result::fail(admin_t('ui.sql_too_long', ['n' => self::MAX_SQL_CHARS]));
         }
 
         $parts = preg_split('/;(?=(?:[^\'"]|\'[^\']*\'|"[^"]*")*$)/', $sql) ?: [];
@@ -118,44 +119,44 @@ class SysDatabaseSqlService
             }
         }
         if ($statements === []) {
-            return Result::fail('请先写一条 SQL');
+            return Result::fail(admin_t('ui.sql_need_stmt'));
         }
         if (count($statements) !== 1) {
-            return Result::fail('一次只能一条。多条请拆开跑，备份 SQL 请去恢复页盖回去。');
+            return Result::fail(admin_t('ui.sql_one_only'));
         }
 
         $statement = $this->stripLeadingComments($statements[0]);
         if ($statement === '') {
-            return Result::fail('去掉注释之后没有语句');
+            return Result::fail(admin_t('ui.sql_no_stmt'));
         }
 
         foreach (self::FORBIDDEN_SNIPS as $snip) {
             if (stripos($statement, $snip) !== false) {
-                return Result::fail('这类写法不能在这里跑');
+                return Result::fail(admin_t('ui.sql_forbidden_snip'));
             }
         }
 
         $keyword = $this->firstKeyword($statement);
         if ($keyword === '') {
-            return Result::fail('看不出是什么语句');
+            return Result::fail(admin_t('ui.sql_unknown_stmt'));
         }
         if (in_array($keyword, self::FORBIDDEN_WORDS, true)) {
-            return Result::fail('不能建表、删表、改结构，也不能 TRUNCATE / VACUUM / PRAGMA。');
+            return Result::fail(admin_t('ui.sql_no_ddl'));
         }
 
         $isQuery = in_array($keyword, self::QUERY_WORDS, true);
         $isWrite = in_array($keyword, self::WRITE_WORDS, true);
         if (! $isQuery && ! $isWrite) {
-            return Result::fail('只接受 SELECT / SHOW / 说明表，以及 INSERT / UPDATE / DELETE / REPLACE。');
+            return Result::fail(admin_t('ui.sql_only_dml'));
         }
 
         if ($keyword === 'delete' && ! $this->isFirstAdmin()) {
-            return Result::fail('只有 1 号管理员能跑 DELETE。换文字请去批量替换。');
+            return Result::fail(admin_t('ui.sql_delete_admin'));
         }
 
         if ($isWrite) {
-            if (trim($word) !== self::CONFIRM_WORD) {
-                return Result::fail('改数据请输入「执行」。没输入对，没有改库。');
+            if (trim($word) !== admin_t('ui.sql_word')) {
+                return Result::fail(admin_t('ui.sql_typed_wrong', ['word' => admin_t('ui.sql_word')]));
             }
         }
 
@@ -163,10 +164,10 @@ class SysDatabaseSqlService
             $needsFrom = preg_match('/\b(from|join)\b/i', $statement) === 1;
             $limit = $this->trailingLimit($statement);
             if ($needsFrom && $limit === null) {
-                return Result::fail('带 FROM 的查询请自己写 LIMIT，最多 '.self::MAX_LIMIT.' 行。');
+                return Result::fail(admin_t('ui.sql_need_limit', ['n' => self::MAX_LIMIT]));
             }
             if ($limit !== null && $limit > self::MAX_LIMIT) {
-                return Result::fail('LIMIT 最多 '.self::MAX_LIMIT.'，避免把整张片库拉进浏览器。');
+                return Result::fail(admin_t('ui.sql_limit_max', ['n' => self::MAX_LIMIT]));
             }
         }
 
@@ -185,8 +186,8 @@ class SysDatabaseSqlService
                 }
                 $count = count($list);
                 $msg = $count === 0
-                    ? '查到 0 行，用了 '.$elapsed.' 毫秒'
-                    : '查到 '.$count.' 行，用了 '.$elapsed.' 毫秒';
+                    ? admin_t('ui.sql_query_0', ['ms' => $elapsed])
+                    : admin_t('ui.sql_query_n', ['n' => $count, 'ms' => $elapsed]);
 
                 return Result::success([
                     'type' => 'query',
@@ -207,11 +208,11 @@ class SysDatabaseSqlService
                 'type' => 'affecting',
                 'affected' => $n,
                 'elapsed_ms' => $elapsed,
-            ], '改了 '.$n.' 行，用了 '.$elapsed.' 毫秒');
+            ], admin_t('ui.sql_affect', ['n' => $n, 'ms' => $elapsed]));
         } catch (\Throwable $e) {
             $msg = trim($e->getMessage());
 
-            return Result::fail($msg !== '' ? $msg : '执行失败');
+            return Result::fail($msg !== '' ? $msg : admin_t('ui.sql_run_fail'));
         }
     }
 
@@ -225,25 +226,25 @@ class SysDatabaseSqlService
             if (Schema::hasTable('videos')) {
                 $out[] = [
                     'id' => 'videos',
-                    'label' => '最近片子',
+                    'label' => admin_t('ui.sql_ex_videos'),
                     'sql' => 'SELECT id, title, status FROM videos ORDER BY id DESC LIMIT 10',
-                    'hint' => '片名在 videos.title。播放地址不在这张表。',
+                    'hint' => admin_t('ui.sql_ex_videos_hint'),
                 ];
             }
             if (Schema::hasTable('video_episodes')) {
                 $out[] = [
                     'id' => 'episodes',
-                    'label' => '最近剧集',
+                    'label' => admin_t('ui.sql_ex_episodes'),
                     'sql' => 'SELECT id, video_id, name, url FROM video_episodes ORDER BY id DESC LIMIT 10',
-                    'hint' => '某一集的播放地址在这里。',
+                    'hint' => admin_t('ui.sql_ex_episodes_hint'),
                 ];
             }
             if (Schema::hasTable('video_arts')) {
                 $out[] = [
                     'id' => 'arts',
-                    'label' => '最近文章',
+                    'label' => admin_t('ui.sql_ex_arts'),
                     'sql' => 'SELECT id, title, status FROM video_arts ORDER BY id DESC LIMIT 10',
-                    'hint' => '资讯文章，不是影片简介。',
+                    'hint' => admin_t('ui.sql_ex_arts_hint'),
                 ];
             }
         } catch (\Throwable) {
@@ -252,16 +253,16 @@ class SysDatabaseSqlService
         if ($driver === 'sqlite') {
             $out[] = [
                 'id' => 'tables',
-                'label' => '有哪些表',
+                'label' => admin_t('ui.sql_ex_tables'),
                 'sql' => "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name LIMIT 50",
-                'hint' => '当前是 SQLite。表干什么去「字段」。',
+                'hint' => admin_t('ui.sql_ex_tables_hint_sqlite'),
             ];
         } elseif ($driver === 'mysql' || $driver === 'mariadb') {
             $out[] = [
                 'id' => 'tables',
-                'label' => '有哪些表',
+                'label' => admin_t('ui.sql_ex_tables'),
                 'sql' => 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name LIMIT 50',
-                'hint' => '只列出当前库。表干什么去「字段」。',
+                'hint' => admin_t('ui.sql_ex_tables_hint_mysql'),
             ];
         }
 

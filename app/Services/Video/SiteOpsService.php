@@ -59,9 +59,15 @@ class SiteOpsService
                 'label' => $meta['label'],
             ];
         }
-        $order = ['layout' => '首页与布局', 'vod' => '影片', 'member' => '会员', 'partials' => '公共块', 'other' => '其他'];
+        $order = [
+            'layout' => 'ui.tpl_g_layout',
+            'vod' => 'ui.tpl_g_vod',
+            'member' => 'ui.rewrite_g_member',
+            'partials' => 'ui.tpl_g_partials',
+            'other' => 'ui.tpl_g_other',
+        ];
         $out = [];
-        foreach ($order as $key => $label) {
+        foreach ($order as $key => $labelKey) {
             if (empty($grouped[$key]['files'])) {
                 continue;
             }
@@ -69,7 +75,7 @@ class SiteOpsService
             usort($files, fn ($a, $b) => strcmp($a['label'], $b['label']));
             $out[] = [
                 'key' => $key,
-                'label' => $grouped[$key]['label'] ?? $label,
+                'label' => $grouped[$key]['label'] ?? admin_t($labelKey),
                 'files' => $files,
             ];
         }
@@ -97,10 +103,10 @@ class SiteOpsService
     {
         $path = $this->safeThemePath($rel);
         if ($path === null) {
-            return Result::fail('非法路径');
+            return Result::fail(admin_t('ui.tpl_bad_path'));
         }
         if (! is_file($path)) {
-            return Result::fail('文件不存在');
+            return Result::fail(admin_t('ui.bak_file_missing'));
         }
 
         return Result::success([
@@ -115,13 +121,13 @@ class SiteOpsService
     {
         $path = $this->safeThemePath($rel);
         if ($path === null) {
-            return Result::fail('非法路径');
+            return Result::fail(admin_t('ui.tpl_bad_path'));
         }
         if (! str_ends_with(strtolower($rel), '.blade.php')) {
-            return Result::fail('只能编辑 blade 模板');
+            return Result::fail(admin_t('ui.tpl_blade_only'));
         }
         if (! is_file($path)) {
-            return Result::fail('文件不存在');
+            return Result::fail(admin_t('ui.bak_file_missing'));
         }
         $this->backupThemeFile($rel);
         File::put($path, $content);
@@ -130,32 +136,32 @@ class SiteOpsService
         } catch (\Throwable) {
         }
 
-        return Result::success(['backup_at' => $this->latestBackupTime($rel)], '已保存，并做了备份');
+        return Result::success(['backup_at' => $this->latestBackupTime($rel)], admin_t('ui.tpl_saved_backup'));
     }
 
     public function backupThemeFile(string $rel): array
     {
         $path = $this->safeThemePath($rel);
         if ($path === null || ! is_file($path)) {
-            return Result::fail('文件不存在');
+            return Result::fail(admin_t('ui.bak_file_missing'));
         }
         $stamp = date('YmdHis');
         $dest = storage_path('app/theme-backups/'.$stamp.'/'.str_replace('\\', '/', $rel));
         File::ensureDirectoryExists(dirname($dest));
         File::copy($path, $dest);
 
-        return Result::success(['backup' => $dest, 'backup_at' => $this->latestBackupTime($rel)], '已备份');
+        return Result::success(['backup' => $dest, 'backup_at' => $this->latestBackupTime($rel)], admin_t('ui.tpl_backed_up'));
     }
 
     public function rollbackThemeFile(string $rel): array
     {
         $path = $this->safeThemePath($rel);
         if ($path === null) {
-            return Result::fail('非法路径');
+            return Result::fail(admin_t('ui.tpl_bad_path'));
         }
         $root = storage_path('app/theme-backups');
         if (! is_dir($root)) {
-            return Result::fail('没有备份');
+            return Result::fail(admin_t('ui.tpl_no_backup'));
         }
         $dirs = File::directories($root);
         rsort($dirs);
@@ -168,7 +174,7 @@ class SiteOpsService
             }
         }
         if ($latest === null) {
-            return Result::fail('没有该文件的备份');
+            return Result::fail(admin_t('ui.tpl_no_file_backup'));
         }
         File::copy($latest, $path);
         try {
@@ -176,7 +182,7 @@ class SiteOpsService
         } catch (\Throwable) {
         }
 
-        return Result::success(['backup_at' => $this->latestBackupTime($rel)], '已回到上次备份');
+        return Result::success(['backup_at' => $this->latestBackupTime($rel)], admin_t('ui.tpl_rolled'));
     }
 
     public function runDueCollectTasks(): int
@@ -248,9 +254,9 @@ class SiteOpsService
         $siteUrl = rtrim((string) config('app.url'), '/');
         $host = strtolower((string) (parse_url($siteUrl, PHP_URL_HOST) ?: ''));
         $engines = [
-            ['id' => 'baidu', 'label' => '百度', 'token_key' => 'baidu_push_token', 'hint' => '站长平台 → 普通收录'],
-            ['id' => 'shenma', 'label' => '神马', 'token_key' => 'shenma_push_token', 'hint' => '神马站长 → 数据推送'],
-            ['id' => 'bing', 'label' => '必应', 'token_key' => 'bing_push_token', 'hint' => 'Bing Webmaster API Key'],
+            ['id' => 'baidu', 'label' => admin_t('ui.push_baidu'), 'token_key' => 'baidu_push_token', 'hint' => admin_t('ui.push_hint_baidu')],
+            ['id' => 'shenma', 'label' => admin_t('ui.push_shenma'), 'token_key' => 'shenma_push_token', 'hint' => admin_t('ui.push_hint_shenma')],
+            ['id' => 'bing', 'label' => admin_t('ui.push_bing'), 'token_key' => 'bing_push_token', 'hint' => admin_t('ui.push_hint_bing')],
         ];
         foreach ($engines as &$row) {
             $row['token'] = trim((string) ($site[$row['token_key']] ?? ''));
@@ -278,9 +284,9 @@ class SiteOpsService
     {
         $engine = in_array($engine, ['baidu', 'shenma', 'bing'], true) ? $engine : 'baidu';
         $label = match ($engine) {
-            'shenma' => '神马',
-            'bing' => '必应',
-            default => '百度',
+            'shenma' => admin_t('ui.push_shenma'),
+            'bing' => admin_t('ui.push_bing'),
+            default => admin_t('ui.push_baidu'),
         };
         $tokenKey = match ($engine) {
             'shenma' => 'shenma_push_token',
@@ -289,7 +295,7 @@ class SiteOpsService
         };
         $token = trim((string) $this->settings->get($tokenKey, ''));
         if ($token === '') {
-            return Result::fail('还没填'.$label.'的 Token，填了才能推');
+            return Result::fail(admin_t('ui.push_need_token', ['label' => $label]));
         }
         $limit = max(1, min(100, $limit));
         $urls = [];
@@ -305,7 +311,7 @@ class SiteOpsService
             $urls = [];
         }
         if ($urls === []) {
-            return Result::fail('没有已发布的影片可推');
+            return Result::fail(admin_t('ui.push_no_videos'));
         }
         $site = rtrim((string) config('app.url'), '/');
         $host = (string) (parse_url($site, PHP_URL_HOST) ?: '');
@@ -323,7 +329,7 @@ class SiteOpsService
                     ->post($endpoint);
             }
         } catch (ConnectionException $e) {
-            return Result::fail($label.'连不上：'.($e->getMessage() ?: '网络错误'));
+            return Result::fail(admin_t('ui.push_unreach', ['label' => $label, 'err' => $e->getMessage() !== '' ? $e->getMessage() : admin_t('auth.network')]));
         }
 
         return $this->readPushResponse($engine, $label, $urls, $res);
@@ -380,7 +386,7 @@ class SiteOpsService
             }
         }
         if ($err !== '') {
-            return Result::fail($label.'没收下：'.$err);
+            return Result::fail(admin_t('ui.push_reject', ['label' => $label, 'err' => $err]));
         }
 
         $n = count($urls);
@@ -393,9 +399,9 @@ class SiteOpsService
                 $remain = $json['remain'];
             }
         }
-        $msg = $label.'收下了 '.$n.' 条';
+        $msg = admin_t('ui.push_ok', ['label' => $label, 'n' => $n]);
         if ($remain !== null) {
-            $msg .= '，额度还剩 '.$remain;
+            $msg = admin_t('ui.push_ok_remain', ['label' => $label, 'n' => $n, 'remain' => $remain]);
         }
 
         return Result::success([
@@ -432,7 +438,7 @@ class SiteOpsService
         return Result::success([
             'files' => $written,
             'count' => count($written),
-        ], '已生成 public/'.implode(', ', $written));
+        ], admin_t('ui.push_map_ok', ['files' => implode(', ', $written)]));
     }
 
     public function visitSummary(): array
@@ -472,28 +478,28 @@ class SiteOpsService
     {
         $fail = VideoPlayFail::query()->find($failId);
         if (! $fail) {
-            return Result::fail('记录不存在');
+            return Result::fail(admin_t('ui.record_missing'));
         }
         $sid = (int) $fail->source_id;
         if ($sid < 1) {
-            return Result::fail('没有关联线路');
+            return Result::fail(admin_t('ui.no_linked_line'));
         }
         VideoSourceModel::query()->where('id', $sid)->update(['status' => 0, 'updated_at' => time()]);
         $fail->status = 1;
         $fail->save();
 
-        return Result::success([], '已下线线路 #'.$sid);
+        return Result::success([], admin_t('ui.line_offlined_id', ['id' => $sid]));
     }
 
     public function addGuestbook(string $name, string $content, int $memberId = 0, string $ip = ''): array
     {
         $content = trim($content);
         if (mb_strlen($content) < 2) {
-            return Result::fail('留言太短');
+            return Result::fail(admin_t('ui.gbook_too_short'));
         }
         VideoGuestbook::query()->create([
             'member_id' => $memberId,
-            'author_name' => mb_substr($name !== '' ? $name : '游客', 0, 80),
+            'author_name' => mb_substr($name !== '' ? $name : admin_t('ui.guest'), 0, 80),
             'content' => mb_substr($content, 0, 2000),
             'reply' => '',
             'status' => (int) app(VideoSettingService::class)->get('gbook_audit', '0') === 1 ? 0 : 1,
@@ -501,7 +507,7 @@ class SiteOpsService
             'created_at' => time(),
         ]);
 
-        return Result::success([], '已提交');
+        return Result::success([], admin_t('ui.submitted'));
     }
 
     public function addPlayFail(int $videoId, int $sourceId, int $episodeId, string $url, string $content, string $ip): array
@@ -511,13 +517,13 @@ class SiteOpsService
             'source_id' => $sourceId,
             'episode_id' => $episodeId,
             'url' => mb_substr($url, 0, 500),
-            'content' => mb_substr($content !== '' ? $content : '播放失败', 0, 500),
+            'content' => mb_substr($content !== '' ? $content : admin_t('ui.play_fail_default'), 0, 500),
             'ip' => $ip,
             'status' => 0,
             'created_at' => time(),
         ]);
 
-        return Result::success([], '已记录');
+        return Result::success([], admin_t('ui.recorded'));
     }
 
     public function memberInbox(int $memberId)
@@ -599,17 +605,17 @@ NGINX;
 APACHE;
 
         $routeGroups = $this->rewriteRouteGroups($mac, $suffix);
-        $exampleLabels = ['首页', '分类', '详情', '播放', '搜索'];
+        $exampleIds = ['home', 'type', 'detail', 'play', 'search'];
         $examples = [];
         foreach ($routeGroups[0]['rows'] ?? [] as $row) {
-            if (in_array($row['label'], $exampleLabels, true)) {
+            if (in_array((string) ($row['id'] ?? ''), $exampleIds, true)) {
                 $examples[] = ['label' => $row['label'], 'path' => $row['path']];
             }
         }
 
         return [
             'mode' => $mode,
-            'mode_label' => $mac ? '苹果风格' : '本站路由',
+            'mode_label' => $mac ? admin_t('ui.rewrite_mac_mode') : admin_t('ui.rewrite_local_mode'),
             'mode_sample' => $mac ? '/index.php/vod/detail/id/123'.$suffix : '/vod/123',
             'suffix' => $suffix,
             'mac' => $mac,
@@ -620,113 +626,104 @@ APACHE;
         ];
     }
 
-    /** @return list<array{title:string, rows:list<array{label:string, path:string, note?:string}>}> */
+    /** @return list<array{title:string, rows:list<array{id:string,label:string,path:string,note?:string}>}> */
     private function rewriteRouteGroups(bool $mac, string $suffix): array
     {
+        $row = function (string $id, string $labelKey, string $path, ?string $noteKey = null): array {
+            $label = str_contains($labelKey, '.') ? admin_t($labelKey) : $labelKey;
+            $item = ['id' => $id, 'label' => $label, 'path' => $path];
+            if ($noteKey !== null) {
+                $item['note'] = admin_t($noteKey);
+            }
+
+            return $item;
+        };
+        $group = function (string $titleKey, array $rows): array {
+            return ['title' => admin_t($titleKey), 'rows' => $rows];
+        };
+        $local = 'ui.rewrite_local_path';
+        $needLogin = 'ui.rewrite_need_login';
+
         if ($mac) {
             return [
-                [
-                    'title' => '片子',
-                    'rows' => [
-                        ['label' => '首页', 'path' => '/'],
-                        ['label' => '分类', 'path' => '/index.php/vod/type/id/1'.$suffix],
-                        ['label' => '详情', 'path' => '/index.php/vod/detail/id/1'.$suffix],
-                        ['label' => '播放', 'path' => '/index.php/vod/play/id/1/sid/1/nid/1'.$suffix],
-                        ['label' => '下载', 'path' => '/index.php/vod/down/id/1/sid/1/nid/1'.$suffix],
-                        ['label' => '播放器内嵌', 'path' => '/player/1/1/1', 'note' => '本站路径'],
-                        ['label' => '筛选', 'path' => '/index.php/vod/show'.$suffix],
-                        ['label' => '搜索', 'path' => '/index.php/vod/search'.$suffix],
-                        ['label' => '最近更新', 'path' => '/latest', 'note' => '本站路径'],
-                    ],
-                ],
-                [
-                    'title' => '其它栏目',
-                    'rows' => [
-                        ['label' => '标签', 'path' => '/index.php/vod/tag/id/1'.$suffix],
-                        ['label' => '演员列表', 'path' => '/actors', 'note' => '本站路径'],
-                        ['label' => '演员', 'path' => '/index.php/vod/actor/id/1'.$suffix],
-                        ['label' => '专题列表', 'path' => '/topics', 'note' => '本站路径'],
-                        ['label' => '专题', 'path' => '/index.php/vod/topic/id/1'.$suffix],
-                        ['label' => '文章列表', 'path' => '/index.php/vod/art'.$suffix],
-                        ['label' => '文章', 'path' => '/index.php/vod/art/id/1'.$suffix],
-                        ['label' => '角色列表', 'path' => '/index.php/vod/role'.$suffix],
-                        ['label' => '角色', 'path' => '/index.php/vod/role/id/1'.$suffix],
-                        ['label' => '剧情列表', 'path' => '/index.php/vod/plot'.$suffix],
-                        ['label' => '剧情', 'path' => '/index.php/vod/plot/id/1'.$suffix],
-                        ['label' => '网址导航列表', 'path' => '/index.php/vod/website'.$suffix],
-                        ['label' => '网址导航', 'path' => '/index.php/vod/website/id/1'.$suffix],
-                        ['label' => '留言', 'path' => '/gbook'],
-                    ],
-                ],
-                [
-                    'title' => '会员',
-                    'rows' => [
-                        ['label' => '登录', 'path' => '/member/login'],
-                        ['label' => '注册', 'path' => '/member/register'],
-                        ['label' => '会员中心', 'path' => '/member', 'note' => '要登录'],
-                    ],
-                ],
-                [
-                    'title' => '给搜索引擎',
-                    'rows' => [
-                        ['label' => '站点地图', 'path' => '/sitemap.xml'],
-                        ['label' => 'RSS', 'path' => '/rss.xml'],
-                        ['label' => 'robots', 'path' => '/robots.txt'],
-                    ],
-                ],
+                $group('ui.rewrite_g_vod', [
+                    $row('home', 'ui.rewrite_home', '/'),
+                    $row('type', 'ui.rewrite_type', '/index.php/vod/type/id/1'.$suffix),
+                    $row('detail', 'ui.rewrite_detail', '/index.php/vod/detail/id/1'.$suffix),
+                    $row('play', 'ui.rewrite_play', '/index.php/vod/play/id/1/sid/1/nid/1'.$suffix),
+                    $row('down', 'ui.rewrite_down', '/index.php/vod/down/id/1/sid/1/nid/1'.$suffix),
+                    $row('player', 'ui.rewrite_player', '/player/1/1/1', $local),
+                    $row('show', 'ui.rewrite_show', '/index.php/vod/show'.$suffix),
+                    $row('search', 'ui.rewrite_search', '/index.php/vod/search'.$suffix),
+                    $row('latest', 'ui.rewrite_latest', '/latest', $local),
+                ]),
+                $group('ui.rewrite_g_other', [
+                    $row('tag', 'ui.rewrite_tag', '/index.php/vod/tag/id/1'.$suffix),
+                    $row('actors', 'ui.rewrite_actors', '/actors', $local),
+                    $row('actor', 'ui.rewrite_actor', '/index.php/vod/actor/id/1'.$suffix),
+                    $row('topics', 'ui.rewrite_topics', '/topics', $local),
+                    $row('topic', 'ui.rewrite_topic', '/index.php/vod/topic/id/1'.$suffix),
+                    $row('arts', 'ui.rewrite_arts', '/index.php/vod/art'.$suffix),
+                    $row('art', 'ui.rewrite_art', '/index.php/vod/art/id/1'.$suffix),
+                    $row('roles', 'ui.rewrite_roles', '/index.php/vod/role'.$suffix),
+                    $row('role', 'ui.rewrite_role', '/index.php/vod/role/id/1'.$suffix),
+                    $row('plots', 'ui.rewrite_plots', '/index.php/vod/plot'.$suffix),
+                    $row('plot', 'ui.rewrite_plot', '/index.php/vod/plot/id/1'.$suffix),
+                    $row('sites', 'ui.rewrite_sites', '/index.php/vod/website'.$suffix),
+                    $row('site', 'ui.rewrite_site', '/index.php/vod/website/id/1'.$suffix),
+                    $row('gbook', 'ui.rewrite_gbook', '/gbook'),
+                ]),
+                $group('ui.rewrite_g_member', [
+                    $row('login', 'ui.rewrite_login', '/member/login'),
+                    $row('register', 'ui.rewrite_register', '/member/register'),
+                    $row('center', 'ui.rewrite_center', '/member', $needLogin),
+                ]),
+                $group('ui.rewrite_g_seo', [
+                    $row('sitemap', 'ui.rewrite_sitemap', '/sitemap.xml'),
+                    $row('rss', 'RSS', '/rss.xml'),
+                    $row('robots', 'robots', '/robots.txt'),
+                ]),
             ];
         }
 
         return [
-            [
-                'title' => '片子',
-                'rows' => [
-                    ['label' => '首页', 'path' => '/'],
-                    ['label' => '分类', 'path' => '/type/1'],
-                    ['label' => '详情', 'path' => '/vod/1'],
-                    ['label' => '播放', 'path' => '/play/1/1/1'],
-                    ['label' => '下载', 'path' => '/down/1/1/1'],
-                    ['label' => '播放器内嵌', 'path' => '/player/1/1/1'],
-                    ['label' => '筛选', 'path' => '/show'],
-                    ['label' => '搜索', 'path' => '/search'],
-                    ['label' => '最近更新', 'path' => '/latest'],
-                ],
-            ],
-            [
-                'title' => '其它栏目',
-                'rows' => [
-                    ['label' => '标签', 'path' => '/tag/贺岁'],
-                    ['label' => '演员列表', 'path' => '/actors'],
-                    ['label' => '演员', 'path' => '/actor/1'],
-                    ['label' => '专题列表', 'path' => '/topics'],
-                    ['label' => '专题', 'path' => '/topic/1'],
-                    ['label' => '文章列表', 'path' => '/arts'],
-                    ['label' => '文章', 'path' => '/art/1'],
-                    ['label' => '角色列表', 'path' => '/roles'],
-                    ['label' => '角色', 'path' => '/role/1'],
-                    ['label' => '剧情列表', 'path' => '/plot'],
-                    ['label' => '剧情', 'path' => '/plot/1'],
-                    ['label' => '网址导航列表', 'path' => '/website'],
-                    ['label' => '网址导航', 'path' => '/website/1'],
-                    ['label' => '留言', 'path' => '/gbook'],
-                ],
-            ],
-            [
-                'title' => '会员',
-                'rows' => [
-                    ['label' => '登录', 'path' => '/member/login'],
-                    ['label' => '注册', 'path' => '/member/register'],
-                    ['label' => '会员中心', 'path' => '/member', 'note' => '要登录'],
-                ],
-            ],
-            [
-                'title' => '给搜索引擎',
-                'rows' => [
-                    ['label' => '站点地图', 'path' => '/sitemap.xml'],
-                    ['label' => 'RSS', 'path' => '/rss.xml'],
-                    ['label' => 'robots', 'path' => '/robots.txt'],
-                ],
-            ],
+            $group('ui.rewrite_g_vod', [
+                $row('home', 'ui.rewrite_home', '/'),
+                $row('type', 'ui.rewrite_type', '/type/1'),
+                $row('detail', 'ui.rewrite_detail', '/vod/1'),
+                $row('play', 'ui.rewrite_play', '/play/1/1/1'),
+                $row('down', 'ui.rewrite_down', '/down/1/1/1'),
+                $row('player', 'ui.rewrite_player', '/player/1/1/1'),
+                $row('show', 'ui.rewrite_show', '/show'),
+                $row('search', 'ui.rewrite_search', '/search'),
+                $row('latest', 'ui.rewrite_latest', '/latest'),
+            ]),
+            $group('ui.rewrite_g_other', [
+                $row('tag', 'ui.rewrite_tag', '/tag/贺岁'),
+                $row('actors', 'ui.rewrite_actors', '/actors'),
+                $row('actor', 'ui.rewrite_actor', '/actor/1'),
+                $row('topics', 'ui.rewrite_topics', '/topics'),
+                $row('topic', 'ui.rewrite_topic', '/topic/1'),
+                $row('arts', 'ui.rewrite_arts', '/arts'),
+                $row('art', 'ui.rewrite_art', '/art/1'),
+                $row('roles', 'ui.rewrite_roles', '/roles'),
+                $row('role', 'ui.rewrite_role', '/role/1'),
+                $row('plots', 'ui.rewrite_plots', '/plot'),
+                $row('plot', 'ui.rewrite_plot', '/plot/1'),
+                $row('sites', 'ui.rewrite_sites', '/website'),
+                $row('site', 'ui.rewrite_site', '/website/1'),
+                $row('gbook', 'ui.rewrite_gbook', '/gbook'),
+            ]),
+            $group('ui.rewrite_g_member', [
+                $row('login', 'ui.rewrite_login', '/member/login'),
+                $row('register', 'ui.rewrite_register', '/member/register'),
+                $row('center', 'ui.rewrite_center', '/member', $needLogin),
+            ]),
+            $group('ui.rewrite_g_seo', [
+                $row('sitemap', 'ui.rewrite_sitemap', '/sitemap.xml'),
+                $row('rss', 'RSS', '/rss.xml'),
+                $row('robots', 'robots', '/robots.txt'),
+            ]),
         ];
     }
 
@@ -738,7 +735,7 @@ APACHE;
         $from = (string) $from;
         $to = (string) $to;
         if ($from === '') {
-            return Result::fail('格式为 from|to');
+            return Result::fail(admin_t('ui.replace_from_to'));
         }
         $idList = is_array($ids) ? array_values(array_filter(array_map('intval', $ids))) : VideoMeta::ids($ids);
         $q = VideoEpisodeModel::query();
@@ -760,63 +757,78 @@ APACHE;
             }
         });
 
-        return Result::success(['count' => $n], '已替换 '.$n.' 条');
+        return Result::success(['count' => $n], admin_t('ui.replaced_n', ['n' => $n]));
     }
 
     /** @return array{label:string,group:string,group_label:string} */
     private function themeFileMeta(string $rel): array
     {
         $map = [
-            'layout.blade.php' => ['整站头尾', 'layout', '首页与布局'],
-            'index/index.blade.php' => ['首页', 'layout', '首页与布局'],
-            'partials/vod-card.blade.php' => ['影片卡片', 'partials', '公共块'],
-            'partials/filters.blade.php' => ['筛选条', 'partials', '公共块'],
-            'partials/paginate.blade.php' => ['分页', 'partials', '公共块'],
-            'vod/type.blade.php' => ['分类列表', 'vod', '影片'],
-            'vod/show.blade.php' => ['筛选结果', 'vod', '影片'],
-            'vod/detail.blade.php' => ['影片详情', 'vod', '影片'],
-            'vod/play.blade.php' => ['播放页', 'vod', '影片'],
-            'vod/player.blade.php' => ['播放器', 'vod', '影片'],
-            'vod/down.blade.php' => ['下载页', 'vod', '影片'],
-            'vod/search.blade.php' => ['搜索', 'vod', '影片'],
-            'vod/latest.blade.php' => ['最近更新', 'vod', '影片'],
-            'vod/tag.blade.php' => ['标签页', 'vod', '影片'],
-            'vod/topic.blade.php' => ['专题详情', 'vod', '影片'],
-            'vod/topics.blade.php' => ['专题列表', 'vod', '影片'],
-            'vod/actor.blade.php' => ['演员详情', 'vod', '影片'],
-            'vod/actors.blade.php' => ['演员列表', 'vod', '影片'],
-            'vod/art.blade.php' => ['文章详情', 'vod', '影片'],
-            'vod/arts.blade.php' => ['文章列表', 'vod', '影片'],
-            'vod/gbook.blade.php' => ['留言本', 'vod', '影片'],
-            'vod/role.blade.php' => ['角色详情', 'vod', '影片'],
-            'vod/roles.blade.php' => ['角色列表', 'vod', '影片'],
-            'vod/website.blade.php' => ['网址详情', 'vod', '影片'],
-            'vod/websites.blade.php' => ['网址列表', 'vod', '影片'],
-            'vod/plot.blade.php' => ['剧情', 'vod', '影片'],
-            'member/login.blade.php' => ['登录', 'member', '会员'],
-            'member/register.blade.php' => ['注册', 'member', '会员'],
-            'member/center.blade.php' => ['会员中心', 'member', '会员'],
-            'member/list.blade.php' => ['我的影片', 'member', '会员'],
-            'member/inbox.blade.php' => ['站内信', 'member', '会员'],
+            'layout.blade.php' => ['ui.tpl_f_chrome', 'layout'],
+            'index/index.blade.php' => ['ui.rewrite_home', 'layout'],
+            'partials/vod-card.blade.php' => ['ui.tpl_f_card', 'partials'],
+            'partials/filters.blade.php' => ['ui.tpl_f_filters', 'partials'],
+            'partials/paginate.blade.php' => ['ui.tpl_f_pager', 'partials'],
+            'vod/type.blade.php' => ['ui.tpl_f_type_list', 'vod'],
+            'vod/show.blade.php' => ['ui.tpl_f_show', 'vod'],
+            'vod/detail.blade.php' => ['ui.tpl_f_vod_detail', 'vod'],
+            'vod/play.blade.php' => ['ui.tpl_f_play', 'vod'],
+            'vod/player.blade.php' => ['ui.tpl_f_player', 'vod'],
+            'vod/down.blade.php' => ['ui.tpl_f_down', 'vod'],
+            'vod/search.blade.php' => ['ui.rewrite_search', 'vod'],
+            'vod/latest.blade.php' => ['ui.rewrite_latest', 'vod'],
+            'vod/tag.blade.php' => ['ui.tpl_f_tag', 'vod'],
+            'vod/topic.blade.php' => ['ui.tpl_f_topic', 'vod'],
+            'vod/topics.blade.php' => ['ui.rewrite_topics', 'vod'],
+            'vod/actor.blade.php' => ['ui.tpl_f_actor', 'vod'],
+            'vod/actors.blade.php' => ['ui.rewrite_actors', 'vod'],
+            'vod/art.blade.php' => ['ui.tpl_f_art', 'vod'],
+            'vod/arts.blade.php' => ['ui.tpl_f_arts', 'vod'],
+            'vod/gbook.blade.php' => ['ui.tpl_f_gbook', 'vod'],
+            'vod/role.blade.php' => ['ui.tpl_f_role', 'vod'],
+            'vod/roles.blade.php' => ['ui.tpl_f_roles', 'vod'],
+            'vod/website.blade.php' => ['ui.tpl_f_site', 'vod'],
+            'vod/websites.blade.php' => ['ui.tpl_f_sites', 'vod'],
+            'vod/plot.blade.php' => ['ui.rewrite_plot', 'vod'],
+            'member/login.blade.php' => ['ui.rewrite_login', 'member'],
+            'member/register.blade.php' => ['ui.rewrite_register', 'member'],
+            'member/center.blade.php' => ['ui.rewrite_center', 'member'],
+            'member/list.blade.php' => ['ui.tpl_f_my_videos', 'member'],
+            'member/inbox.blade.php' => ['ui.tpl_f_inbox', 'member'],
         ];
         if (isset($map[$rel])) {
-            return ['label' => $map[$rel][0], 'group' => $map[$rel][1], 'group_label' => $map[$rel][2]];
+            return [
+                'label' => admin_t($map[$rel][0]),
+                'group' => $map[$rel][1],
+                'group_label' => $this->themeGroupLabel($map[$rel][1]),
+            ];
         }
         $base = basename($rel, '.blade.php');
         if (str_starts_with($rel, 'member/')) {
-            return ['label' => $base, 'group' => 'member', 'group_label' => '会员'];
+            return ['label' => $base, 'group' => 'member', 'group_label' => $this->themeGroupLabel('member')];
         }
         if (str_starts_with($rel, 'partials/')) {
-            return ['label' => $base, 'group' => 'partials', 'group_label' => '公共块'];
+            return ['label' => $base, 'group' => 'partials', 'group_label' => $this->themeGroupLabel('partials')];
         }
         if (str_starts_with($rel, 'index/')) {
-            return ['label' => $base, 'group' => 'layout', 'group_label' => '首页与布局'];
+            return ['label' => $base, 'group' => 'layout', 'group_label' => $this->themeGroupLabel('layout')];
         }
         if (str_starts_with($rel, 'vod/')) {
-            return ['label' => $base, 'group' => 'vod', 'group_label' => '影片'];
+            return ['label' => $base, 'group' => 'vod', 'group_label' => $this->themeGroupLabel('vod')];
         }
 
-        return ['label' => $base, 'group' => 'other', 'group_label' => '其他'];
+        return ['label' => $base, 'group' => 'other', 'group_label' => $this->themeGroupLabel('other')];
+    }
+
+    private function themeGroupLabel(string $group): string
+    {
+        return admin_t(match ($group) {
+            'layout' => 'ui.tpl_g_layout',
+            'vod' => 'ui.tpl_g_vod',
+            'member' => 'ui.rewrite_g_member',
+            'partials' => 'ui.tpl_g_partials',
+            default => 'ui.tpl_g_other',
+        });
     }
 
     private function latestBackupTime(string $rel): int

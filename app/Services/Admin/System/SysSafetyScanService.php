@@ -146,31 +146,31 @@ class SysSafetyScanService
     private function ui(): array
     {
         return [
-            'title' => '挂马扫描',
-            'lead' => '在 PHP 文件里查找危险函数。命中只说明出现了函数名，要对照这一行。',
-            'note' => '不是杀毒软件。只扫 .php，不删文件。不扫数据库，也不能和官方包对比。改了后缀或藏在图里的扫不到。',
-            'needles' => '会找这些调用',
-            'where' => '默认扫这些目录',
-            'where_app' => '程序目录默认不扫',
-            'where_app_hint' => '程序里本来就有这些函数。怀疑被改过再连着扫。',
-            'scan' => '扫一遍',
-            'scan_app' => '连程序目录一起扫',
-            'confirm_app' => '程序目录也会命中备份、加密这些函数。继续扫？',
-            'listing' => '正在列出要扫的文件',
-            'progress' => '正在扫',
-            'stop' => '停下来',
-            'empty' => '还没扫过',
-            'empty_hint' => '点上面扫一遍。结果只出路径和行号。',
-            'stale' => '这是缓存里的上次结果，文件可能已经改过。清缓存会没有。',
-            'result' => '扫描结果',
-            'other' => '要人工看',
-            'known' => '本站已知代码',
-            'none_other' => '没有额外可疑调用',
-            'ip' => 'IP 白名单',
-            'plugins' => '插件',
-            'files' => '附件',
-            'logs' => '操作日志',
-            'missing' => '目录还不存在，扫的时候会跳过',
+            'title' => admin_t('page.safety'),
+            'lead' => admin_t('ui.safety_lead'),
+            'note' => admin_t('ui.safety_note'),
+            'needles' => admin_t('ui.safety_needles'),
+            'where' => admin_t('ui.safety_where'),
+            'where_app' => admin_t('ui.safety_where_app'),
+            'where_app_hint' => admin_t('ui.safety_where_app_hint'),
+            'scan' => admin_t('ui.safety_scan'),
+            'scan_app' => admin_t('ui.safety_scan_app'),
+            'confirm_app' => admin_t('ui.safety_confirm_app'),
+            'listing' => admin_t('ui.safety_listing'),
+            'progress' => admin_t('ui.safety_progress'),
+            'stop' => admin_t('ui.safety_stop'),
+            'empty' => admin_t('ui.safety_empty'),
+            'empty_hint' => admin_t('ui.safety_empty_hint'),
+            'stale' => admin_t('ui.safety_stale'),
+            'result' => admin_t('ui.safety_result'),
+            'other' => admin_t('ui.safety_other'),
+            'known' => admin_t('ui.safety_known'),
+            'none_other' => admin_t('ui.safety_none_other'),
+            'ip' => admin_t('ui.safety_ip'),
+            'plugins' => admin_t('ui.plugins'),
+            'files' => admin_t('ui.files_title'),
+            'logs' => admin_t('page.operate_logs'),
+            'missing' => admin_t('ui.safety_missing'),
         ];
     }
 
@@ -198,15 +198,15 @@ class SysSafetyScanService
     private function needleCatalog(): array
     {
         return [
-            ['id' => 'eval', 'fn' => 'eval', 'label' => '动态执行代码', 'hint' => '一句话木马常用'],
-            ['id' => 'assert', 'fn' => 'assert', 'label' => '断言执行', 'hint' => '老环境里也能当执行用'],
-            ['id' => 'base64_decode', 'fn' => 'base64_decode', 'label' => '解码', 'hint' => '常被用来藏代码，本站加密也会用'],
-            ['id' => 'system', 'fn' => 'system', 'label' => '调系统命令', 'hint' => ''],
-            ['id' => 'passthru', 'fn' => 'passthru', 'label' => '输出系统命令', 'hint' => ''],
-            ['id' => 'shell_exec', 'fn' => 'shell_exec', 'label' => '执行系统命令', 'hint' => '本站备份调 mysqldump 会用'],
-            ['id' => 'proc_open', 'fn' => 'proc_open', 'label' => '打开进程', 'hint' => ''],
-            ['id' => 'popen', 'fn' => 'popen', 'label' => '管道执行', 'hint' => ''],
-            ['id' => 'create_function', 'fn' => 'create'.'_function', 'label' => '动态建函数', 'hint' => '已废弃，马里还常见'],
+            ['id' => 'eval', 'fn' => 'eval', 'label' => admin_t('ui.safety_n_eval'), 'hint' => admin_t('ui.safety_n_eval_h')],
+            ['id' => 'assert', 'fn' => 'assert', 'label' => admin_t('ui.safety_n_assert'), 'hint' => admin_t('ui.safety_n_assert_h')],
+            ['id' => 'base64_decode', 'fn' => 'base64_decode', 'label' => admin_t('ui.safety_n_b64'), 'hint' => admin_t('ui.safety_n_b64_h')],
+            ['id' => 'system', 'fn' => 'system', 'label' => admin_t('ui.safety_n_system'), 'hint' => ''],
+            ['id' => 'passthru', 'fn' => 'passthru', 'label' => admin_t('ui.safety_n_passthru'), 'hint' => ''],
+            ['id' => 'shell_exec', 'fn' => 'shell_exec', 'label' => admin_t('ui.safety_n_shell'), 'hint' => admin_t('ui.safety_n_shell_h')],
+            ['id' => 'proc_open', 'fn' => 'proc_open', 'label' => admin_t('ui.safety_n_proc'), 'hint' => ''],
+            ['id' => 'popen', 'fn' => 'popen', 'label' => admin_t('ui.safety_n_popen'), 'hint' => ''],
+            ['id' => 'create_function', 'fn' => 'create'.'_function', 'label' => admin_t('ui.safety_n_cf'), 'hint' => admin_t('ui.safety_n_cf_h')],
         ];
     }
 
@@ -216,11 +216,11 @@ class SysSafetyScanService
     private function knownMap(): array
     {
         return [
-            'app/Support/Utils/Password.php' => ['base64_decode' => '本站密码解密'],
-            'app/Support/Utils/Encryption.php' => ['base64_decode' => '本站加解密'],
-            'app/Http/Middleware/RateLimit.php' => ['eval' => '本站限流用 Redis 脚本，不是 PHP eval'],
-            'app/Services/Admin/System/SysDatabaseBackupService.php' => ['shell_exec' => '本站备份调 mysqldump'],
-            'plugins/Pay/Services/PayService.php' => ['base64_decode' => '支付宝验签解码'],
+            'app/Support/Utils/Password.php' => ['base64_decode' => admin_t('ui.safety_k_password')],
+            'app/Support/Utils/Encryption.php' => ['base64_decode' => admin_t('ui.safety_k_encrypt')],
+            'app/Http/Middleware/RateLimit.php' => ['eval' => admin_t('ui.safety_k_rate')],
+            'app/Services/Admin/System/SysDatabaseBackupService.php' => ['shell_exec' => admin_t('ui.safety_k_dump')],
+            'plugins/Pay/Services/PayService.php' => ['base64_decode' => admin_t('ui.safety_k_alipay')],
         ];
     }
 
@@ -231,14 +231,14 @@ class SysSafetyScanService
     {
         $rows = $app
             ? [
-                ['path' => 'app/', 'label' => '程序代码', 'hint' => '本站功能在这里，误报会比较多。', 'abs' => app_path()],
-                ['path' => 'bootstrap/', 'label' => '启动文件', 'hint' => '跳过已打包的 cache。', 'abs' => base_path('bootstrap')],
-                ['path' => 'resources/views/', 'label' => '模板', 'hint' => '模板里一般不该有这些调用。', 'abs' => resource_path('views')],
+                ['path' => 'app/', 'label' => admin_t('ui.safety_dir_app'), 'hint' => admin_t('ui.safety_dir_app_h'), 'abs' => app_path()],
+                ['path' => 'bootstrap/', 'label' => admin_t('ui.safety_dir_boot'), 'hint' => admin_t('ui.safety_dir_boot_h'), 'abs' => base_path('bootstrap')],
+                ['path' => 'resources/views/', 'label' => admin_t('ui.safety_dir_views'), 'hint' => admin_t('ui.safety_dir_views_h'), 'abs' => resource_path('views')],
             ]
             : [
-                ['path' => 'public/', 'label' => '网站入口', 'hint' => '访客能直接请求的 PHP。', 'abs' => public_path()],
-                ['path' => 'plugins/', 'label' => '插件', 'hint' => '后台上传或自己装的插件。', 'abs' => base_path('plugins')],
-                ['path' => 'storage/app/', 'label' => '本地存储', 'hint' => '上传落盘的地方，通常不该有 PHP。', 'abs' => storage_path('app')],
+                ['path' => 'public/', 'label' => admin_t('ui.safety_dir_public'), 'hint' => admin_t('ui.safety_dir_public_h'), 'abs' => public_path()],
+                ['path' => 'plugins/', 'label' => admin_t('ui.safety_dir_plugins'), 'hint' => admin_t('ui.safety_dir_plugins_h'), 'abs' => base_path('plugins')],
+                ['path' => 'storage/app/', 'label' => admin_t('ui.safety_dir_storage'), 'hint' => admin_t('ui.safety_dir_storage_h'), 'abs' => storage_path('app')],
             ];
         $out = [];
         foreach ($rows as $row) {

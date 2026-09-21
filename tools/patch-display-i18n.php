@@ -6,6 +6,30 @@ if (! is_array($overlay)) {
     fwrite(STDERR, "overlay missing\n");
     exit(1);
 }
+$boards = include $root.'/tools/overlays/rest_keys_boards_ui.php';
+if (is_array($boards)) {
+    $overlay = array_merge($overlay, $boards);
+}
+$loginCache = include $root.'/tools/overlays/rest_keys_login_cache.php';
+if (is_array($loginCache)) {
+    $overlay = array_merge($overlay, $loginCache);
+}
+$userSafety = include $root.'/tools/overlays/rest_keys_user_safety.php';
+if (is_array($userSafety)) {
+    $overlay = array_merge($overlay, $userSafety);
+}
+$tplPush = include $root.'/tools/overlays/rest_keys_tpl_push.php';
+if (is_array($tplPush)) {
+    $overlay = array_merge($overlay, $tplPush);
+}
+$makeTypes = include $root.'/tools/overlays/rest_keys_make_types.php';
+if (is_array($makeTypes)) {
+    $overlay = array_merge($overlay, $makeTypes);
+}
+$extraCfg = include $root.'/tools/overlays/rest_keys_extra_cfg.php';
+if (is_array($extraCfg)) {
+    $overlay = array_merge($overlay, $extraCfg);
+}
 
 function convert_tw(mixed $v)
 {
@@ -299,7 +323,11 @@ foreach ($locales as $code) {
             $val = $langs[$code] ?? '';
         }
         if (is_string($val) && $val !== '') {
-            if (in_array($code, ['en', 'zh_cn', 'zh_tw'], true) && key_exists_path($cur, $keyPath)) {
+            $forceEn = ['ui.restore_word', 'ui.sql_word', 'ui.restore_typed_wrong', 'ui.sql_typed_wrong', 'ui.rewrite_local_mode'];
+            $skipExisting = in_array($code, ['en', 'zh_cn', 'zh_tw'], true)
+                && key_exists_path($cur, $keyPath)
+                && ! ($code === 'en' && in_array($keyPath, $forceEn, true));
+            if ($skipExisting) {
                 continue;
             }
             $map[$keyPath] = $val;

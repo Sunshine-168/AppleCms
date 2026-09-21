@@ -184,6 +184,19 @@ $detailKeys = is_file($root.'/tools/overlays/rest_keys_details.php') ? include $
 $leftoverKeys = is_file($root.'/tools/overlays/rest_keys_leftover.php') ? include $root.'/tools/overlays/rest_keys_leftover.php' : [];
 $missingKeys = is_file($root.'/tools/overlays/rest_keys_missing.php') ? include $root.'/tools/overlays/rest_keys_missing.php' : [];
 $displayKeys = is_file($root.'/tools/overlays/rest_keys_display.php') ? include $root.'/tools/overlays/rest_keys_display.php' : [];
+$boardsUiKeys = is_file($root.'/tools/overlays/rest_keys_boards_ui.php') ? include $root.'/tools/overlays/rest_keys_boards_ui.php' : [];
+$loginCacheKeys = is_file($root.'/tools/overlays/rest_keys_login_cache.php') ? include $root.'/tools/overlays/rest_keys_login_cache.php' : [];
+$userSafetyKeys = is_file($root.'/tools/overlays/rest_keys_user_safety.php') ? include $root.'/tools/overlays/rest_keys_user_safety.php' : [];
+$tplPushKeys = is_file($root.'/tools/overlays/rest_keys_tpl_push.php') ? include $root.'/tools/overlays/rest_keys_tpl_push.php' : [];
+$makeTypesKeys = is_file($root.'/tools/overlays/rest_keys_make_types.php') ? include $root.'/tools/overlays/rest_keys_make_types.php' : [];
+$extraCfgKeys = is_file($root.'/tools/overlays/rest_keys_extra_cfg.php') ? include $root.'/tools/overlays/rest_keys_extra_cfg.php' : [];
+$displayKeys = (is_array($displayKeys) ? $displayKeys : [])
+    + (is_array($boardsUiKeys) ? $boardsUiKeys : [])
+    + (is_array($loginCacheKeys) ? $loginCacheKeys : [])
+    + (is_array($userSafetyKeys) ? $userSafetyKeys : [])
+    + (is_array($tplPushKeys) ? $tplPushKeys : [])
+    + (is_array($makeTypesKeys) ? $makeTypesKeys : [])
+    + (is_array($extraCfgKeys) ? $extraCfgKeys : []);
 $seedKeys = $displayKeys + $chromeKeys + $boardKeys + $detailKeys + $leftoverKeys + $missingKeys + $restKeys + $seedKeys;
 
 foreach ($locales as $code) {

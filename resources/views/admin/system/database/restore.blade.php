@@ -98,7 +98,7 @@
     var UI = @json($ui, JSON_UNESCAPED_UNICODE);
     var L = {!! json_encode([
         'delete_fail' => admin_t('ui.delete_fail'),
-        'restore_typed_wrong' => admin_t('ui.restore_typed_wrong'),
+        'restore_typed_wrong' => admin_t('ui.restore_typed_wrong', ['word' => admin_t('ui.restore_word')]),
         'restore_fail' => admin_t('ui.restore_fail'),
         'restore_word' => admin_t('ui.restore_word'),
     ], JSON_UNESCAPED_UNICODE) !!};

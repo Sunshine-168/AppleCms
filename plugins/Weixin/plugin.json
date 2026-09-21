@@ -12,22 +12,22 @@
     "admin": {
         "extra_pages": {
             "weixin": {
-                "title": "微信公众号",
-                "hint": "公众号后台把服务器 URL 填成 /weixin，Token 与这里一致。GET 做验签，POST 收消息。没配 Token 不会通过微信接入。",
+                "title": "item.config_weixin",
+                "hint": "weixin.cfg_hint",
                 "fields": [
                     {
                         "name": "weixin_appid",
-                        "label": "AppId",
+                        "label": "weixin.cfg_appid",
                         "type": "text"
                     },
                     {
                         "name": "weixin_secret",
-                        "label": "AppSecret",
+                        "label": "weixin.cfg_secret",
                         "type": "text"
                     },
                     {
                         "name": "weixin_token",
-                        "label": "Token",
+                        "label": "weixin.cfg_token",
                         "type": "text"
                     }
                 ]

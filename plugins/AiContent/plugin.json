@@ -12,13 +12,13 @@
     "admin": {
         "extra_pages": {
             "ai": {
-                "title": "AI 写内容",
-                "hint": "填密钥后可在本页试写，或在影片编辑点「用 AI 写简介」。只改文本框，需再保存才会入库。接口失败会把错误原样返回。",
+                "title": "item.config_ai",
+                "hint": "ai.cfg_hint",
                 "fields": [
-                    {"name": "ai_provider", "label": "服务商", "type": "text", "placeholder": "openai / 通义 / 文心"},
-                    {"name": "ai_key", "label": "API Key", "type": "text"},
-                    {"name": "ai_model", "label": "模型", "type": "text", "placeholder": "如 gpt-4.1-mini"},
-                    {"name": "ai_endpoint", "label": "兼容接口", "type": "text", "placeholder": "可空。其他服务商填 /v1/chat/completions 地址"}
+                    {"name": "ai_provider", "label": "ai.cfg_provider", "type": "text", "placeholder": "ai.cfg_provider_ph"},
+                    {"name": "ai_key", "label": "ai.cfg_key", "type": "text"},
+                    {"name": "ai_model", "label": "ai.cfg_model", "type": "text", "placeholder": "ai.cfg_model_ph"},
+                    {"name": "ai_endpoint", "label": "ai.cfg_endpoint", "type": "text", "placeholder": "ai.cfg_endpoint_ph"}
                 ]
             }
         },

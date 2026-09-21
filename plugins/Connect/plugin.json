@@ -12,24 +12,24 @@
     "admin": {
         "extra_pages": {
             "connect": {
-                "title": "第三方登录",
-                "hint": "每项写成 AppId,Secret。登录页会出现 QQ / 微信按钮。微博与苹果 CMS 一样不接通登录。回调地址 /connect/qq/callback、/connect/wechat/callback。",
+                "title": "item.config_connect",
+                "hint": "connect.cfg_hint",
                 "fields": [
                     {
                         "name": "oauth_qq",
-                        "label": "QQ AppId,Secret",
+                        "label": "connect.cfg_qq",
                         "type": "text",
                         "placeholder": "101XXXX,secret"
                     },
                     {
                         "name": "oauth_wechat",
-                        "label": "微信开放平台 AppId,Secret",
+                        "label": "connect.cfg_wechat",
                         "type": "text",
                         "placeholder": "wxXXXX,secret"
                     },
                     {
                         "name": "oauth_weibo",
-                        "label": "微博（只存，不登录）",
+                        "label": "connect.cfg_weibo",
                         "type": "text"
                     }
                 ]

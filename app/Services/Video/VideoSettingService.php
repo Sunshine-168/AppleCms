@@ -421,70 +421,76 @@ class VideoSettingService
     {
         $core = [
             'theme' => [
-                'title' => '主题配置',
-                'hint' => '完整项在主题配置工作台',
+                'title' => 'item.theme_config',
+                'hint' => 'ui.cfg_theme_hint',
                 'fields' => [
-                    ['name' => 'theme_logo', 'label' => 'Logo 地址', 'type' => 'text'],
-                    ['name' => 'theme_primary', 'label' => '主色', 'type' => 'text', 'placeholder' => '#1e9fff'],
+                    ['name' => 'theme_logo', 'label' => 'ui.cfg_logo', 'type' => 'text'],
+                    ['name' => 'theme_primary', 'label' => 'ui.cfg_primary', 'type' => 'text', 'placeholder' => '#1e9fff'],
                 ],
             ],
             'watermark' => [
-                'title' => '图片水印',
+                'title' => 'item.config_watermark',
                 'fields' => [
-                    ['name' => 'watermark_text', 'label' => '水印文字', 'type' => 'text', 'placeholder' => '本地化封面时写入右下角'],
+                    ['name' => 'watermark_text', 'label' => 'ui.cfg_watermark_text', 'type' => 'text', 'placeholder' => 'ui.cfg_watermark_ph'],
                 ],
             ],
             'analytics' => [
-                'title' => '统计代码',
+                'title' => 'item.config_analytics',
                 'fields' => [
-                    ['name' => 'analytics_code', 'label' => '统计脚本', 'type' => 'textarea', 'placeholder' => '百度/CNZZ 等粘贴到页脚'],
+                    ['name' => 'analytics_code', 'label' => 'ui.cfg_analytics_code', 'type' => 'textarea', 'placeholder' => 'ui.cfg_analytics_ph'],
                 ],
             ],
             'seo' => [
-                'title' => 'SEO 标题',
+                'title' => 'item.config_seo',
                 'fields' => [
-                    ['name' => 'seo_title_vod', 'label' => '详情标题', 'type' => 'text'],
-                    ['name' => 'seo_title_type', 'label' => '分类标题', 'type' => 'text'],
-                    ['name' => 'seo_title_play', 'label' => '播放标题', 'type' => 'text'],
+                    ['name' => 'seo_title_vod', 'label' => 'ui.cfg_seo_vod', 'type' => 'text'],
+                    ['name' => 'seo_title_type', 'label' => 'ui.cfg_seo_type', 'type' => 'text'],
+                    ['name' => 'seo_title_play', 'label' => 'ui.cfg_seo_play', 'type' => 'text'],
                 ],
             ],
             'user' => [
-                'title' => '会员参数',
+                'title' => 'item.config_user',
                 'fields' => [
-                    ['name' => 'member_register', 'label' => '开放注册', 'type' => 'select', 'options' => ['1' => '是', '0' => '否']],
-                    ['name' => 'member_invite', 'label' => '邀请码必填', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
-                    ['name' => 'trysee_seconds', 'label' => '试看秒数', 'type' => 'text'],
+                    ['name' => 'member_register', 'label' => 'ui.cfg_open_register', 'type' => 'select', 'options' => ['1' => 'ui.yes', '0' => 'ui.no']],
+                    ['name' => 'member_invite', 'label' => 'ui.cfg_invite_required', 'type' => 'select', 'options' => ['0' => 'ui.no', '1' => 'ui.yes']],
+                    ['name' => 'trysee_seconds', 'label' => 'ui.cfg_trysee_seconds', 'type' => 'text'],
                 ],
             ],
             'upload' => [
-                'title' => '上传限制',
+                'title' => 'item.config_upload',
                 'fields' => [
-                    ['name' => 'upload_ext', 'label' => '扩展名', 'type' => 'text'],
-                    ['name' => 'upload_max_mb', 'label' => '最大 MB', 'type' => 'text'],
+                    ['name' => 'upload_ext', 'label' => 'ui.cfg_upload_ext', 'type' => 'text'],
+                    ['name' => 'upload_max_mb', 'label' => 'ui.cfg_upload_max', 'type' => 'text'],
                 ],
             ],
             'comment' => [
-                'title' => '评论留言',
+                'title' => 'item.config_comment',
                 'fields' => [
-                    ['name' => 'comment_audit', 'label' => '评论审核', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
-                    ['name' => 'gbook_audit', 'label' => '留言审核', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
-                    ['name' => 'member_comment_login', 'label' => '评论需登录', 'type' => 'select', 'options' => ['0' => '否', '1' => '是']],
-                    ['name' => 'banned_words', 'label' => '屏蔽词', 'type' => 'textarea'],
+                    ['name' => 'comment_audit', 'label' => 'ui.cfg_comment_audit', 'type' => 'select', 'options' => ['0' => 'ui.no', '1' => 'ui.yes']],
+                    ['name' => 'gbook_audit', 'label' => 'ui.cfg_gbook_audit', 'type' => 'select', 'options' => ['0' => 'ui.no', '1' => 'ui.yes']],
+                    ['name' => 'member_comment_login', 'label' => 'ui.cfg_comment_login', 'type' => 'select', 'options' => ['0' => 'ui.no', '1' => 'ui.yes']],
+                    ['name' => 'banned_words', 'label' => 'ui.cfg_banned_words', 'type' => 'textarea'],
                 ],
             ],
             'url' => [
-                'title' => 'URL 规则',
+                'title' => 'item.config_url',
                 'fields' => [
-                    ['name' => 'rewrite_mode', 'label' => '链接怎么写', 'type' => 'select', 'options' => ['laravel' => '本站路由 /vod/123', 'mac' => '苹果风格 /index.php/vod/detail/id/123.html']],
-                    ['name' => 'rewrite_suffix', 'label' => '后缀', 'type' => 'text'],
+                    ['name' => 'rewrite_mode', 'label' => 'ui.cfg_rewrite_mode', 'type' => 'select', 'options' => ['laravel' => 'ui.cfg_rewrite_laravel', 'mac' => 'ui.cfg_rewrite_mac']],
+                    ['name' => 'rewrite_suffix', 'label' => 'ui.cfg_rewrite_suffix', 'type' => 'text'],
                 ],
             ],
         ];
         try {
-            return array_merge($core, app(\App\Support\Plugins\PluginHost::class)->extraPages());
+            $core = array_merge($core, app(\App\Support\Plugins\PluginHost::class)->extraPages());
         } catch (\Throwable) {
-            return $core;
         }
+        foreach ($core as $key => $page) {
+            if (is_array($page)) {
+                $core[$key] = admin_localize_extra_page($page);
+            }
+        }
+
+        return $core;
     }
 
     /**

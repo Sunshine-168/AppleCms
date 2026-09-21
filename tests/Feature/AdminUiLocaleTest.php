@@ -234,6 +234,32 @@ class AdminUiLocaleTest extends TestCase
         $this->assertStringContainsString('ui=de', $html);
     }
 
+    public function test_manga_config_form_follows_ui_locale(): void
+    {
+        $zh = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'zh_cn',
+        ])->get('/admin/video/config/manga')->assertOk()->getContent();
+        $this->assertStringContainsString('漫画参数', $zh);
+        $this->assertStringContainsString('采集进待审', $zh);
+        $this->assertStringContainsString('否（直接已审）', $zh);
+        $this->assertStringContainsString('否（保留远程地址）', $zh);
+
+        $en = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'en',
+        ])->get('/admin/video/config/manga')->assertOk()->getContent();
+        $this->assertStringContainsString('Manga settings', $en);
+        $this->assertStringContainsString('Collect into pending', $en);
+        $this->assertStringContainsString('No (publish as approved)', $en);
+        $this->assertStringContainsString('No (keep remote URLs)', $en);
+        $this->assertStringNotContainsString('漫画参数', $en);
+        $this->assertStringNotContainsString('采集进待审', $en);
+        $this->assertStringNotContainsString('manga.cfg_', $en);
+    }
+
     public function test_unlock_rejects_empty_password(): void
     {
         $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
