@@ -109,6 +109,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'member.auth' => \App\Http\Middleware\MemberAuth::class,
+            'member.api' => \App\Http\Middleware\MemberApiAuth::class,
             'vod.html' => \App\Http\Middleware\VideoHtmlCache::class,
         ]);
         $middleware->web(prepend: [

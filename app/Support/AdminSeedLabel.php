@@ -19,6 +19,40 @@ class AdminSeedLabel
         ]);
     }
 
+    public static function remark(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return '';
+        }
+
+        return self::pick($name, [
+            '超级管理员' => 'ui.super_admin',
+            '超級管理員' => 'ui.super_admin',
+        ]);
+    }
+
+    public static function ipPlace(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return '';
+        }
+
+        return self::pick($name, [
+            '本机地址' => 'ui.ip_local',
+            '本機地址' => 'ui.ip_local',
+            '本机' => 'ui.local_chip',
+            '本機' => 'ui.local_chip',
+            '局域网' => 'ui.ip_lan',
+            '局域網' => 'ui.ip_lan',
+            '内网' => 'ui.ip_lan',
+            '內網' => 'ui.ip_lan',
+            '内网（Docker）' => 'ui.ip_docker',
+            '內網（Docker）' => 'ui.ip_docker',
+        ]);
+    }
+
     public static function type(?string $name): string
     {
         $name = trim((string) $name);

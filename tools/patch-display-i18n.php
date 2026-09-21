@@ -30,6 +30,14 @@ $extraCfg = include $root.'/tools/overlays/rest_keys_extra_cfg.php';
 if (is_array($extraCfg)) {
     $overlay = array_merge($overlay, $extraCfg);
 }
+$statsLog = include $root.'/tools/overlays/rest_keys_stats_log.php';
+if (is_array($statsLog)) {
+    $overlay = array_merge($overlay, $statsLog);
+}
+$adminList = include $root.'/tools/overlays/rest_keys_admin_list.php';
+if (is_array($adminList)) {
+    $overlay = array_merge($overlay, $adminList);
+}
 
 function convert_tw(mixed $v)
 {

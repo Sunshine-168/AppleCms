@@ -141,10 +141,10 @@ class StatService
                 $ref = trim((string) $row->referer);
                 $hits = (int) $row->hits;
                 if ($ref === '') {
-                    $host = '直接访问';
+                    $host = admin_t('ui.direct_visit');
                 } else {
                     $parsed = strtolower((string) (parse_url($ref, PHP_URL_HOST) ?: ''));
-                    $host = $parsed === '' ? '其他' : ($appHost !== '' && $parsed === $appHost ? '站内跳转' : $parsed);
+                    $host = $parsed === '' ? admin_t('ui.other') : ($appHost !== '' && $parsed === $appHost ? admin_t('ui.internal_jump') : $parsed);
                 }
                 $grouped[$host] = ($grouped[$host] ?? 0) + $hits;
             });
@@ -201,10 +201,10 @@ class StatService
             'current' => $current,
             'previous' => $previous,
             'changes' => [
-                'pv' => $this->change($current['pv'], $previous['pv'], '较上期'),
-                'uv' => $this->change($current['uv'], $previous['uv'], '较上期'),
-                'ip' => $this->change($current['ip'], $previous['ip'], '较上期'),
-                'spider_pv' => $this->change($current['spider_pv'], $previous['spider_pv'], '较上期'),
+                'pv' => $this->change($current['pv'], $previous['pv'], admin_t('dash.vs_prev')),
+                'uv' => $this->change($current['uv'], $previous['uv'], admin_t('dash.vs_prev')),
+                'ip' => $this->change($current['ip'], $previous['ip'], admin_t('dash.vs_prev')),
+                'spider_pv' => $this->change($current['spider_pv'], $previous['spider_pv'], admin_t('dash.vs_prev')),
             ],
         ];
     }
@@ -227,7 +227,12 @@ class StatService
             ->groupBy('user_agent')
             ->get();
 
-        $devices = ['桌面' => 0, '手机' => 0, '平板' => 0, '未知' => 0];
+        $devices = [
+            admin_t('ui.device_desktop') => 0,
+            admin_t('ui.device_mobile') => 0,
+            admin_t('ui.device_tablet') => 0,
+            admin_t('ui.unknown') => 0,
+        ];
         $browsers = [];
         foreach ($rows as $row) {
             $hits = (int) $row->hits;
@@ -255,15 +260,15 @@ class StatService
     {
         $ref = trim((string) $referer);
         if ($ref === '') {
-            return '直接访问';
+            return admin_t('ui.direct_visit');
         }
         $host = strtolower((string) (parse_url($ref, PHP_URL_HOST) ?: ''));
         $appHost = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
         if ($host === '') {
-            return '其他';
+            return admin_t('ui.other');
         }
         if ($appHost !== '' && $host === $appHost) {
-            return '站内跳转';
+            return admin_t('ui.internal_jump');
         }
 
         return $host;
@@ -273,7 +278,7 @@ class StatService
     {
         $ua = (string) $ua;
         if ($ua === '') {
-            return '未知';
+            return admin_t('ui.unknown');
         }
         if (preg_match('/^curl\//i', $ua)) {
             return 'curl';
@@ -312,7 +317,7 @@ class StatService
             'query' => $hit->query,
             'ip' => $hit->ip,
             'hash' => (string) $hit->visitor_hash,
-            'visitor' => $hit->is_spider ? ((string) ($hit->spider_name ?: 'Bot')) : '人类',
+            'visitor' => $hit->is_spider ? ((string) ($hit->spider_name ?: 'Bot')) : admin_t('ui.human'),
             'visitor_kind' => $hit->is_spider ? 'bot' : 'human',
             'referer' => $this->refererLabel($hit->referer),
             'client' => $this->clientLabel($ua),
@@ -414,25 +419,25 @@ class StatService
     protected function guessDevice(string $ua): string
     {
         if ($ua === '') {
-            return '未知';
+            return admin_t('ui.unknown');
         }
         if (preg_match('/iPad|Tablet|PlayBook/i', $ua)) {
-            return '平板';
+            return admin_t('ui.device_tablet');
         }
         if (preg_match('/Mobile|Android|iPhone|webOS|Opera Mini/i', $ua)) {
-            return '手机';
+            return admin_t('ui.device_mobile');
         }
 
-        return '桌面';
+        return admin_t('ui.device_desktop');
     }
 
     protected function guessBrowser(string $ua): string
     {
         if ($ua === '') {
-            return '未知';
+            return admin_t('ui.unknown');
         }
         if (preg_match('/MicroMessenger/i', $ua)) {
-            return '微信';
+            return admin_t('ui.browser_wechat');
         }
         if (preg_match('/Edg\//i', $ua)) {
             return 'Edge';
@@ -447,7 +452,7 @@ class StatService
             return 'Safari';
         }
 
-        return '其他';
+        return admin_t('ui.other');
     }
 
     /**

@@ -22,6 +22,9 @@
                 <tr><td><code>&amp;t=分类ID &amp;wd=关键词 &amp;pg=页码 &amp;h=小时</code></td><td>{{ admin_t('ui.api_filters') }}</td></tr>
                 <tr><td><code>&amp;at=xml</code></td><td>{{ admin_t('ui.api_xml') }}</td></tr>
                 <tr><td><code>GET /api/app/vod</code></td><td>{{ admin_t('ui.api_app') }}</td></tr>
+                <tr><td><code>GET /api/app/home</code></td><td>{{ admin_t('ui.api_app_front') }}</td></tr>
+                <tr><td><code>GET /api/app/videos/{id}</code> · <code>/play/{id}</code></td><td>{{ admin_t('ui.api_app_play') }}</td></tr>
+                <tr><td><code>POST /api/app/member/login</code></td><td>{{ admin_t('ui.api_app_member') }}</td></tr>
                 <tr><td><code>POST /api/receive/vod</code></td><td>{{ admin_t('ui.api_recv_vod') }}</td></tr>
                 <tr><td><code>POST /api/receive/manga</code></td><td>{{ admin_t('ui.api_recv_manga') }}</td></tr>
             </tbody>

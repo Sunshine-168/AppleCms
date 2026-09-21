@@ -13,7 +13,7 @@ class Member extends Authenticatable
 
     protected $guarded = [];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'api_token'];
 
     public function getAuthPassword(): string
     {

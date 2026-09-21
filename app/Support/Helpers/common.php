@@ -9,7 +9,7 @@ function theme_asset($path): string
 
 function conf($val): string
 {
-    return (string) config('system.settings.'.$val);
+    return (string) config('settings.'.$val);
 }
 
 function vod_theme(): string

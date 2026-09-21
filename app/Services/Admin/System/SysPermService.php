@@ -418,7 +418,7 @@ class SysPermService
         $isSuperAdmin = $uid === 1;
 
         if ($isSuperAdmin && config('video.prefer_file_menus', true)) {
-            $menus = config('system.menus');
+            $menus = config('menus');
 
             return is_array($menus) ? $menus : [];
         }
@@ -428,7 +428,7 @@ class SysPermService
         {
             if ($isSuperAdmin)
             {
-                $menus = config('system.menus');
+                $menus = config('menus');
                 return is_array($menus) ? $menus : [];
             }
             return [];

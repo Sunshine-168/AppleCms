@@ -9,6 +9,7 @@ use App\Models\System\SysUserLogModel;
 use App\Models\System\SysUserModel;
 use App\Models\System\SysUserRoleModel;
 use App\Support\AdminOpLog;
+use App\Support\AdminSeedLabel;
 use App\Support\Captcha;
 use App\Support\Utils\Result;
 use App\Support\Utils\Syslog;
@@ -339,6 +340,8 @@ class SysUserService
         $item['kind_label'] = $isFounder ? admin_t('ui.founder') : ($roleName !== '' ? $roleName : admin_t('ui.no_role_assigned'));
         $item['login_text'] = $this->loginText($item);
         $item['never_login'] = ((int) ($item['login_time'] ?? 0)) <= 0;
+        $item['remark_label'] = AdminSeedLabel::remark((string) ($item['remark'] ?? ''));
+        $item['place_text'] = $this->ipPlaceText((string) ($item['login_ip'] ?? ''), (string) ($item['ip_address'] ?? ''));
         $stamp = (int) ($item['login_time'] ?? 0);
         $item['login_time'] = $stamp > 0 ? date('Y-m-d H:i:s', $stamp) : '';
 
@@ -598,10 +601,10 @@ class SysUserService
         $clock = date('H:i:s', $stamp);
         $today = strtotime('today');
         if ($stamp >= $today) {
-            return '今天 '.$clock;
+            return admin_t('ui.today_at', ['time' => $clock, 't' => $clock]);
         }
         if ($stamp >= $today - 86400) {
-            return '昨天 '.$clock;
+            return admin_t('ui.yesterday_at', ['time' => $clock, 't' => $clock]);
         }
         if ((int) date('Y', $stamp) === (int) date('Y')) {
             return date('m-d ', $stamp).$clock;
@@ -617,15 +620,15 @@ class SysUserService
             return '';
         }
         if ($ip === '::1' || $ip === '127.0.0.1' || str_starts_with($ip, '127.')) {
-            return '本机';
+            return admin_t('ui.local_chip');
         }
         if (str_starts_with($ip, '172.17.')) {
-            return '内网（Docker）';
+            return admin_t('ui.ip_docker');
         }
         $valid = filter_var($ip, FILTER_VALIDATE_IP);
         $public = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
         if ($valid && $public === false) {
-            return '内网';
+            return admin_t('ui.ip_lan');
         }
         $stored = trim(str_replace(['，'], ',', $stored));
         if ($stored === '' || $stored === '0') {
@@ -635,7 +638,7 @@ class SysUserService
         foreach (explode(',', $stored) as $part) {
             $part = trim($part);
             if ($part !== '' && $part !== '0') {
-                $parts[] = $part;
+                $parts[] = AdminSeedLabel::ipPlace($part);
             }
         }
 

@@ -424,35 +424,35 @@ return [
     'ui.sc_maintain' => $t('Wartung', 'Mantenimiento', 'Maintenance', '유지보수', 'Manutenção', '保守'),
     'ui.sc_plugins_hint' => $t('Manga, Shop und Chat hier installieren — nicht im Kernmenü', 'Manga, tienda y chat se instalan aquí, no en el menú núcleo', 'Manga, boutique et chat s’installent ici, pas au menu noyau', '만화·몰·채팅은 여기. 핵심 메뉴 아님', 'Manga, loja e chat instalam-se aqui, não no menu núcleo', '漫画・モール・チャットはここ。コアメニューではありません'),
     'auth.sub' => $t(
-        'Filme, Manga, Romane, Galerien und Live haben je einen Arbeitsbereich — kein endloses Menü.',
-        'Vídeo, manga, novelas, galerías y directo, cada uno con su mesa — no un menú interminable.',
-        'Vidéo, manga, romans, galeries et live ont chacun un bureau — pas un menu sans fin.',
-        '영상·만화·소설·도집·라이브를 나눠 관리합니다. 메뉴를 한 줄로 쌓지 않습니다.',
-        'Vídeo, manga, romances, galerias e live têm cada um a sua secretária — não um menu sem fim.',
-        '動画・漫画・小説・図集・ライブ配信を分けて管理。メニューを一列に積みません。'
+        'Filme, Manga, Romane, Galerien und Live getrennt verwalten — ohne überladenes Menü.',
+        'Gestiona películas, manga, novelas, galerías y directo por separado, sin un menú interminable.',
+        'Gérez films, manga, romans, galeries et live séparément, sans menu interminable.',
+        '영상·만화·소설·갤러리·라이브를 나눠 관리합니다. 메뉴가 한곳에 몰리지 않습니다.',
+        'Gira filmes, manga, romances, galerias e live em separado, sem um menu interminável.',
+        '動画・漫画・小説・図集・配信を分けて管理。メニューは混ざりません。'
     ),
     'auth.pitch_1' => $t(
-        'Oben wechseln Filme / Manga / Romane / Galerien / Live; die Seitenleiste bleibt bei diesem Bereich',
-        'La barra superior cambia Películas / Manga / Novelas / Galerías / Directo; la lateral se queda en esa mesa',
-        'La barre du haut passe Films / Manga / Romans / Galeries / Live ; la latérale reste sur ce bureau',
-        '위쪽에서 영상 / 만화 / 소설 / 도집 / 라이브를 바꾸고, 사이드바는 그 칸만',
-        'A barra de cima muda Filmes / Manga / Romances / Galerias / Live; a lateral fica nessa secretária',
-        'トップで 映像 / 漫画 / 小説 / 図集 / 配信 を切替え、サイドバーは今の欄だけ'
+        'Oben das Modul wechseln; die Seitenleiste zeigt nur den aktuellen Bereich',
+        'Cambia de módulo en la barra superior; la lateral muestra solo el actual',
+        'Changez de module en haut ; la barre latérale n’affiche que l’espace actuel',
+        '위쪽 바로 모듈을 바꾸면, 사이드바는 지금 작업만 보여 줍니다',
+        'Mude de módulo na barra de cima; a lateral mostra só o espaço atual',
+        '上部でモジュールを切り替え、サイドバーは今の作業だけ表示'
     ),
     'auth.pitch_2' => $t(
-        'Sammeln, prüfen, veröffentlichen in einer Linie; PV / UV / Spider sind eingebaut',
-        'Recolección, revisión y publicación en una línea; PV / UV / arañas van de serie',
-        'Collecte, relecture et publication sur une ligne ; PV / UV / spiders sont intégrés',
-        '수집·심사·공개가 한 줄. PV / UV / 스파이더 통계는 기본 제공',
-        'Recolha, revisão e publicação numa linha; PV / UV / spiders já vêm incluídos',
-        '収集・審査・公開が一本。PV / UV / クローラ統計は最初から入っています'
+        'Sammeln, prüfen und veröffentlichen in einem Ablauf; Traffic- und Crawler-Statistik sind eingebaut',
+        'Recoge, revisa y publica en un solo flujo; las estadísticas de tráfico y rastreo van de serie',
+        'Collectez, relisez et publiez d’un seul flux ; stats de trafic et de robots incluses',
+        '수집·심사·공개가 한 흐름; 트래픽과 크롤러 통계는 기본 제공',
+        'Recolha, reveja e publique num só fluxo; estatísticas de tráfego e crawlers já vêm incluídas',
+        '収集・審査・公開がひと流れ。アクセスとクローラ統計は標準搭載'
     ),
     'auth.pitch_3' => $t(
-        'Zahlung und SMS als Plugins; die Admin-Oberfläche spricht neun Sprachen',
-        'Pago y SMS se instalan como complementos; el admin habla nueve idiomas',
-        'Paiement et SMS s’installent en extensions ; l’admin parle neuf langues',
-        '결제와 문자는 플러그인. 관리 화면은 아홉 개 언어',
-        'Pagamento e SMS instalam-se como extensões; o admin fala nove idiomas',
-        '決済と SMS はプラグイン。管理画面は九つの言語'
+        'Zahlung und SMS als Plugins; die Oberfläche unterstützt neun Sprachen',
+        'Pago y SMS se instalan como complementos; el panel admite nueve idiomas',
+        'Paiement et SMS s’installent en extensions ; l’interface gère neuf langues',
+        '결제와 문자는 플러그인으로 설치; 관리 화면은 아홉 개 언어',
+        'Pagamento e SMS instalam-se como extensões; a interface suporta nove idiomas',
+        '決済と SMS はプラグイン。管理画面は 9 言語に対応'
     ),
 ];

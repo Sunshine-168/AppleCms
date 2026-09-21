@@ -20,6 +20,12 @@ class AdminLoginPromptTest extends TestCase
         $html = $this->get('/admin/login')->assertOk()->getContent();
 
         $this->assertStringContainsString('id="loginError"', $html);
+        $this->assertStringContainsString('影片、漫画、小说、图集、直播分栏管理', $html);
+        $this->assertStringContainsString('顶栏切换栏目，侧栏只显示当前工作区', $html);
+        $this->assertStringContainsString('采集、待审、发布连贯完成', $html);
+        $this->assertStringContainsString('后台支持九种语言', $html);
+        $this->assertStringNotContainsString('不堆成一长条', $html);
+        $this->assertStringNotContainsString('顶栏切 影片', $html);
         $this->assertStringContainsString('data-user="请填写账号"', $html);
         $this->assertStringContainsString('data-pass="请填写密码"', $html);
         $this->assertStringContainsString('data-captcha-empty="请填写验证码"', $html);

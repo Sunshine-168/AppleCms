@@ -237,11 +237,11 @@
         var page = parseInt(meta.page || meta.current_page || 1, 10) || 1;
         var last = parseInt(meta.last || meta.last_page || 1, 10) || 1;
         var total = parseInt(meta.total || 0, 10) || 0;
-        var html = '<nav class="pagination" aria-label="分页">';
-        html += '<span>共' + total + '条</span>';
-        if (page > 1) html += '<a href="#" data-p="' + (page - 1) + '" rel="prev">上一页</a>';
+        var html = '<nav class="pagination" aria-label="' + escape(_('pager', '分页')) + '">';
+        html += '<span>' + escape(String(_('n_items', '共:n条')).split(':n').join(String(total))) + '</span>';
+        if (page > 1) html += '<a href="#" data-p="' + (page - 1) + '" rel="prev">' + escape(_('prev_page', '上一页')) + '</a>';
         html += '<span>' + page + '/' + last + '</span>';
-        if (page < last) html += '<a href="#" data-p="' + (page + 1) + '" rel="next">下一页</a>';
+        if (page < last) html += '<a href="#" data-p="' + (page + 1) + '" rel="next">' + escape(_('next_page', '下一页')) + '</a>';
         html += '</nav>';
         el.innerHTML = html;
         Array.prototype.forEach.call(el.querySelectorAll('a[data-p]'), function (a) {

@@ -17,7 +17,7 @@ class RegisterCmsTagsProvider extends ServiceProvider
     public function boot(CmsDirectiveRegistrar $directives): void
     {
         Blade::directive('conf', function ($expression) {
-            return "<?php echo e(config('system.settings.' . {$expression})); ?>";
+            return "<?php echo e(config('settings.' . {$expression})); ?>";
         });
 
         $directives->register();

@@ -340,6 +340,10 @@
         'issued' => admin_t('ui.issued'),
         'showing' => admin_t('ui.showing'),
         'reported' => admin_t('ui.reported'),
+        'n_items' => admin_t('ui.pager_total'),
+        'prev_page' => admin_t('ui.prev_page'),
+        'next_page' => admin_t('ui.next_page'),
+        'pager' => admin_t('ui.pager'),
     ];
 @endphp
 <script>

@@ -186,12 +186,16 @@
         if (d.is_founder) badges += '<span class="badge badge-ok">' + U.escape(T.founder) + '</span>';
         else if (d.never_login) badges += '<span class="badge badge-off">' + U.escape(T.never_logged_in) + '</span>';
         var meta = U.escape(d.email || '');
-        var role = d.kind_label || d.role_name || '';
-        if (role) meta += (meta ? ' · ' : '') + U.escape(role);
-        if (d.remark) meta += (meta ? ' · ' : '') + U.escape(d.remark);
+        if (!d.is_founder) {
+            var role = d.kind_label || d.role_name || '';
+            if (role) meta += (meta ? ' · ' : '') + U.escape(role);
+        }
+        var remark = d.remark_label || d.remark || '';
+        if (remark) meta += (meta ? ' · ' : '') + U.escape(remark);
         if (d.login_text) meta += (meta ? ' · ' : '') + (d.never_login ? U.escape(d.login_text) : U.escape(String(T.last_login_at || '').replace('__TIME__', d.login_text)));
         if (d.login_ip) meta += (meta ? ' · ' : '') + U.escape(d.login_ip);
-        if (d.ip_address) meta += ' ' + U.escape(d.ip_address);
+        var place = d.place_text || '';
+        if (place) meta += ' ' + U.escape(place);
         return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.username || T.unnamed) + '</a> ' + badges + '</div>'
             + '<div class="entry-row-meta">' + meta + '</div>';
     }

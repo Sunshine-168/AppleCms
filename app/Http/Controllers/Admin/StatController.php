@@ -66,45 +66,45 @@ class StatController extends Controller
                 fputcsv($out, $row);
             };
 
-            $write(['概览']);
-            $write(['时段', 'PV', 'UV', '独立IP', '蜘蛛PV']);
-            foreach (['today' => '今日', 'yesterday' => '昨日', 'days7' => '近7天', 'days30' => '近30天'] as $key => $label) {
+            $write([admin_t('ui.stats_overview')]);
+            $write([admin_t('ui.csv_period'), 'PV', 'UV', admin_t('ui.unique_ip'), admin_t('ui.spider_pv')]);
+            foreach (['today' => admin_t('ui.today'), 'yesterday' => admin_t('ui.yesterday'), 'days7' => admin_t('ui.last_7d'), 'days30' => admin_t('ui.csv_days30')] as $key => $label) {
                 $row = $overview[$key];
                 $write([$label, $row['pv'], $row['uv'], $row['ip'], $row['spider_pv']]);
             }
             $write([]);
-            $write(['近7日 vs 前7日', $week['from'].' ~ '.$week['to'], '对比', $week['prev_from'].' ~ '.$week['prev_to']]);
-            $write(['指标', '本期', '上期', '变化']);
+            $write([admin_t('ui.week_vs_prev'), $week['from'].' ~ '.$week['to'], admin_t('ui.compare'), $week['prev_from'].' ~ '.$week['prev_to']]);
+            $write([admin_t('ui.metric'), admin_t('ui.this_period'), admin_t('ui.prev_period'), admin_t('ui.csv_change')]);
             foreach (['pv' => 'PV', 'uv' => 'UV'] as $key => $label) {
                 $write([$label, $week['current'][$key], $week['previous'][$key], $week['changes'][$key]['text']]);
             }
             $write([]);
-            $write(['所选时段', $range['from'].' ~ '.$range['to'], '上期', $range['prev_from'].' ~ '.$range['prev_to']]);
-            $write(['指标', '本期', '上期', '变化']);
-            foreach (['pv' => 'PV', 'uv' => 'UV', 'ip' => '独立IP', 'spider_pv' => '蜘蛛PV'] as $key => $label) {
+            $write([admin_t('ui.range_vs_prev'), $range['from'].' ~ '.$range['to'], admin_t('ui.prev_period'), $range['prev_from'].' ~ '.$range['prev_to']]);
+            $write([admin_t('ui.metric'), admin_t('ui.this_period'), admin_t('ui.prev_period'), admin_t('ui.csv_change')]);
+            foreach (['pv' => 'PV', 'uv' => 'UV', 'ip' => admin_t('ui.unique_ip'), 'spider_pv' => admin_t('ui.spider_pv')] as $key => $label) {
                 $write([$label, $range['current'][$key], $range['previous'][$key], $range['changes'][$key]['text']]);
             }
             $write([]);
-            $write(['热门页面']);
-            $write(['标题', '路径', 'PV']);
+            $write([admin_t('ui.hot_pages')]);
+            $write([admin_t('ui.title_label'), admin_t('ui.path_col'), 'PV']);
             foreach ($pages as $page) {
                 $write([$page['title'], $page['path'], $page['hits']]);
             }
             $write([]);
-            $write(['来路域名']);
-            $write(['来源', '次数']);
+            $write([admin_t('ui.csv_referer_hosts')]);
+            $write([admin_t('ui.csv_source'), admin_t('ui.times')]);
             foreach ($hosts as $host) {
                 $write([$host['host'], $host['hits']]);
             }
             $write([]);
-            $write(['设备']);
-            $write(['类型', '次数']);
+            $write([admin_t('ui.devices')]);
+            $write([admin_t('ui.csv_type'), admin_t('ui.times')]);
             foreach ($clients['devices'] as $row) {
                 $write([$row['name'], $row['hits']]);
             }
             $write([]);
-            $write(['浏览器']);
-            $write(['名称', '次数']);
+            $write([admin_t('ui.browsers')]);
+            $write([admin_t('ui.csv_name'), admin_t('ui.times')]);
             foreach ($clients['browsers'] as $row) {
                 $write([$row['name'], $row['hits']]);
             }
@@ -152,32 +152,32 @@ class StatController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             $write = fn (array $row) => fputcsv($out, $row);
-            $write(['时段', $from.' ~ '.$to]);
-            $write(['今日蜘蛛PV', $kpis['pv'], $kpis['change']['text']]);
-            $write(['本期独立URL', $kpis['urls']]);
-            $write(['非200次数', $kpis['errors']]);
-            $write(['工具+AI占比', $kpis['tool_ai_share'].'%']);
+            $write([admin_t('ui.csv_period'), $from.' ~ '.$to]);
+            $write([admin_t('ui.csv_today_spider_pv'), $kpis['pv'], $kpis['change']['text']]);
+            $write([admin_t('ui.csv_period_urls'), $kpis['urls']]);
+            $write([admin_t('ui.csv_non_200_n'), $kpis['errors']]);
+            $write([admin_t('ui.csv_tool_ai_share'), $kpis['tool_ai_share'].'%']);
             $write([]);
-            $write(['搜索引擎到访']);
-            $write(['引擎', '今日', '状态', '距上次天数']);
+            $write([admin_t('ui.csv_engine_visit')]);
+            $write([admin_t('ui.csv_engine'), admin_t('ui.today'), admin_t('ui.status'), admin_t('ui.csv_last_seen_days')]);
             foreach ($kpis['presence'] as $row) {
-                $write([$row['label'], $row['today'] ? '是' : '否', $row['status'], $row['absent_days'] ?? '']);
+                $write([$row['label'], $row['today'] ? admin_t('ui.yes') : admin_t('ui.no'), $row['status'], $row['absent_days'] ?? '']);
             }
             $write([]);
-            $write(['蜘蛛汇总']);
-            $write(['蜘蛛', '分类', '次数', '独立IP', '占比%']);
+            $write([admin_t('ui.csv_spider_summary')]);
+            $write([admin_t('ui.csv_spider'), admin_t('ui.page_type'), admin_t('ui.times'), admin_t('ui.unique_ip'), admin_t('ui.csv_share_pct')]);
             foreach ($summary as $row) {
                 $write([$row['spider_name'], $row['group_label'], $row['hits'], $row['ips'], $row['share']]);
             }
             $write([]);
-            $write(['被爬最多的页']);
-            $write(['标题', '路径', '次数']);
+            $write([admin_t('ui.csv_spider_pages')]);
+            $write([admin_t('ui.title_label'), admin_t('ui.path_col'), admin_t('ui.times')]);
             foreach ($pages as $page) {
                 $write([$page['title'], $page['path'], $page['hits']]);
             }
             $write([]);
-            $write(['非200抓取']);
-            $write(['时间', '蜘蛛', '路径', '状态']);
+            $write([admin_t('ui.csv_non_200')]);
+            $write([admin_t('ui.col_time'), admin_t('ui.csv_spider'), admin_t('ui.path_col'), admin_t('ui.status')]);
             foreach ($errors as $row) {
                 $write([(string) $row->created_at, $row->spider_name, $row->path, $row->status_code]);
             }
@@ -220,7 +220,17 @@ class StatController extends Controller
         return response()->streamDownload(function () use ($hits, $titles) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, ['时间', '访问者', '标题', '路径', 'IP', '来路', '客户端', '状态', '本机探测']);
+            fputcsv($out, [
+                admin_t('ui.col_time'),
+                admin_t('ui.visitor_col'),
+                admin_t('ui.title_label'),
+                admin_t('ui.path_col'),
+                'IP',
+                admin_t('ui.referrer'),
+                admin_t('ui.client_col'),
+                admin_t('ui.status'),
+                admin_t('ui.local_chip'),
+            ]);
             foreach ($hits as $hit) {
                 $row = $this->stats->presentLog($hit, $titles[$hit->path] ?? null);
                 fputcsv($out, [
@@ -232,7 +242,7 @@ class StatController extends Controller
                     $row['referer'],
                     $row['client'],
                     $row['status'],
-                    $row['local'] ? '是' : '',
+                    $row['local'] ? admin_t('ui.yes') : '',
                 ]);
             }
             fclose($out);

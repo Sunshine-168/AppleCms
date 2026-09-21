@@ -72,10 +72,10 @@ class SpiderDetector
     public function groupLabel(string $group): string
     {
         return match ($group) {
-            'search' => '搜索引擎',
-            'tool' => 'SEO 工具',
-            'ai' => 'AI 爬虫',
-            default => '其他',
+            'search' => admin_t('ui.spider_search_engine'),
+            'tool' => admin_t('ui.spider_seo_tools'),
+            'ai' => admin_t('ui.spider_ai'),
+            default => admin_t('ui.other'),
         };
     }
 
@@ -88,7 +88,7 @@ class SpiderDetector
     public function watchLabel(string $name): string
     {
         return match ($name) {
-            'Baiduspider' => '百度',
+            'Baiduspider' => admin_t('ui.engine_baidu'),
             'Googlebot' => 'Google',
             'Bingbot' => 'Bing',
             default => $name,
@@ -99,7 +99,7 @@ class SpiderDetector
     {
         $name = trim((string) $name);
         if ($name === '') {
-            return '爬虫';
+            return admin_t('ui.spider_default');
         }
         $watch = $this->watchLabel($name);
         if ($watch !== $name) {
@@ -108,11 +108,11 @@ class SpiderDetector
 
         return match ($name) {
             'YandexBot' => 'Yandex',
-            'Sogou' => '搜狗',
+            'Sogou' => admin_t('ui.engine_sogou'),
             '360Spider' => '360',
-            'Bytespider' => '字节',
+            'Bytespider' => admin_t('ui.engine_bytedance'),
             'DuckDuckBot' => 'DuckDuckGo',
-            'OtherBot' => '其他爬虫',
+            'OtherBot' => admin_t('ui.spider_other_bot'),
             'ClaudeBot' => 'Claude',
             'GPTBot' => 'GPT',
             default => $name,

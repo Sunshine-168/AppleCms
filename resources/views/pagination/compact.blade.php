@@ -8,16 +8,16 @@
         : ($paginator->count() > 0 || $current > 1 || $paginator->hasMorePages());
 @endphp
 @if ($show)
-<nav class="pagination" aria-label="分页">
+<nav class="pagination" aria-label="{{ admin_t('ui.pager') }}">
     @if ($hasTotal)
-        <span>共{{ $total }}条</span>
+        <span>{{ admin_t('ui.pager_total', ['n' => $total]) }}</span>
     @endif
     @if ($current > 1)
-        <a href="{{ $paginator->previousPageUrl() }}" rel="prev">上一页</a>
+        <a href="{{ $paginator->previousPageUrl() }}" rel="prev">{{ admin_t('ui.prev_page') }}</a>
     @endif
     <span>{{ $last !== null ? $current.'/'.$last : $current }}</span>
     @if ($paginator->hasMorePages())
-        <a href="{{ $paginator->nextPageUrl() }}" rel="next">下一页</a>
+        <a href="{{ $paginator->nextPageUrl() }}" rel="next">{{ admin_t('ui.next_page') }}</a>
     @endif
 </nav>
 @endif

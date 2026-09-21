@@ -38,55 +38,57 @@ class PageTitleResolver
     protected function resolve(string $path): string
     {
         $static = [
-            '/' => '首页',
-            '/search' => '搜索',
-            '/show' => '筛选',
-            '/latest' => '最新',
-            '/actors' => '演员库',
-            '/topics' => '专题',
-            '/website' => '网址导航',
-            '/arts' => '资讯',
-            '/roles' => '角色库',
-            '/plot' => '剧情',
-            '/gbook' => '留言',
-            '/member' => '会员中心',
-            '/member/login' => '会员登录',
-            '/member/register' => '会员注册',
-            '/member/favorites' => '收藏',
-            '/member/history' => '观看历史',
-            '/member/inbox' => '站内信',
+            '/' => admin_t('ui.rewrite_home'),
+            '/search' => admin_t('ui.page_search'),
+            '/show' => admin_t('ui.filter'),
+            '/latest' => admin_t('ui.page_latest'),
+            '/actors' => admin_t('ui.actors_lib'),
+            '/topics' => admin_t('nav.topics'),
+            '/website' => admin_t('item.websites'),
+            '/arts' => admin_t('ui.page_arts_news'),
+            '/roles' => admin_t('item.roles'),
+            '/plot' => admin_t('ui.page_plot'),
+            '/gbook' => admin_t('ui.page_gbook'),
+            '/member' => admin_t('ui.page_member'),
+            '/member/login' => admin_t('ui.page_member_login'),
+            '/member/register' => admin_t('ui.page_member_register'),
+            '/member/favorites' => admin_t('item.favorites'),
+            '/member/history' => admin_t('ui.page_history'),
+            '/member/inbox' => admin_t('ui.page_inbox'),
             '/rss.xml' => 'RSS',
-            '/sitemap.xml' => '站点地图',
+            '/sitemap.xml' => admin_t('ui.page_sitemap'),
+            '/manga' => admin_t('item.manga'),
+            '/live' => admin_t('live.title'),
         ];
         if (isset($static[$path])) {
             return $static[$path];
         }
 
         if (preg_match('#(?:^/vod/|/play/|/down/|/player/|/index\.php/vod/(?:detail|play|down)/id/)(\d+)#', $path, $m)) {
-            return $this->named('videos', (int) $m[1], 'title', '影片 #'.$m[1]);
+            return $this->named('videos', (int) $m[1], 'title', admin_t('ui.page_vod_n', ['id' => $m[1]]));
         }
         if (preg_match('#(?:^/type/|/index\.php/vod/type/id/)([^/]+)#', $path, $m)) {
             $key = $m[1];
             if (ctype_digit($key)) {
-                return $this->named('video_types', (int) $key, 'name', '分类');
+                return $this->named('video_types', (int) $key, 'name', admin_t('ui.page_type'));
             }
 
             return $this->typeBySlug($key);
         }
         if (preg_match('#(?:^/actor/|/index\.php/vod/actor/id/)(\d+)#', $path, $m)) {
-            return $this->named('actors', (int) $m[1], 'name', '演员');
+            return $this->named('actors', (int) $m[1], 'name', admin_t('ui.page_actor'));
         }
         if (preg_match('#(?:^/topic/|/index\.php/vod/topic/id/)(\d+)#', $path, $m)) {
-            return $this->named('video_topics', (int) $m[1], 'name', '专题');
+            return $this->named('video_topics', (int) $m[1], 'name', admin_t('ui.page_topic'));
         }
         if (preg_match('#(?:^/art/|/index\.php/vod/art/id/)(\d+)#', $path, $m)) {
-            return $this->named('video_arts', (int) $m[1], 'title', '文章');
+            return $this->named('video_arts', (int) $m[1], 'title', admin_t('ui.page_art'));
         }
         if (preg_match('#(?:^/tag/|/index\.php/vod/tag/id/)([^/]+)#', $path, $m)) {
-            return '标签 '.$m[1];
+            return admin_t('ui.page_tag', ['name' => $m[1]]);
         }
         if (str_starts_with($path, '/member/')) {
-            return '会员中心';
+            return admin_t('ui.page_member');
         }
 
         return $path;
@@ -112,7 +114,7 @@ class PageTitleResolver
     {
         try {
             if (! Schema::hasTable('video_types')) {
-                return '分类 '.$slug;
+                return admin_t('ui.page_type_slug', ['slug' => $slug]);
             }
             $name = trim((string) DB::table('video_types')->where('slug', $slug)->value('name'));
             if ($name !== '') {
@@ -121,7 +123,7 @@ class PageTitleResolver
         } catch (\Throwable) {
         }
 
-        return '分类 '.$slug;
+        return admin_t('ui.page_type_slug', ['slug' => $slug]);
     }
 
     public function normalize(string $path): string

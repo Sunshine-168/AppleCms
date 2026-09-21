@@ -561,6 +561,7 @@ class VideoSettingService
             'video_count' => $count,
             'provide_url' => url('/api/provide/vod'),
             'app_url' => url('/api/app/vod'),
+            'app_front_url' => url('/api/app/home'),
         ];
     }
 

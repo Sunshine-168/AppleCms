@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Support\AdminUi;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AdminUiLocaleTest extends TestCase
 {
+    use RefreshDatabase;
     protected function setUp(): void
     {
         parent::setUp();
@@ -159,6 +161,55 @@ class AdminUiLocaleTest extends TestCase
         }
     }
 
+    public function test_admin_user_list_json_follows_ui_locale(): void
+    {
+        $stamp = time();
+        \Illuminate\Support\Facades\DB::table('sys_user')->insert([
+            'id' => 1,
+            'username' => 'admin',
+            'password' => 'x',
+            'email' => '',
+            'remark' => '超级管理员',
+            'role' => 1,
+            'role_id' => 0,
+            'status' => 1,
+            'token' => '',
+            'login_time' => $stamp,
+            'login_ip' => '127.0.0.1',
+            'ip_address' => '本机地址',
+            'login_agent' => '',
+            'create_time' => $stamp,
+            'update_time' => $stamp,
+        ]);
+
+        $zh = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'zh_cn',
+        ])->get('/admin/user/list')->assertOk()->json();
+        $zhRow = $zh['data']['data'][0] ?? [];
+        $this->assertSame('创始人', $zhRow['kind_label'] ?? '');
+        $this->assertSame('超级管理员', $zhRow['remark_label'] ?? '');
+        $this->assertSame('超级管理员', $zhRow['remark'] ?? '');
+        $this->assertStringContainsString('今天', (string) ($zhRow['login_text'] ?? ''));
+        $this->assertSame('本机', $zhRow['place_text'] ?? '');
+
+        $en = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'en',
+        ])->get('/admin/user/list')->assertOk()->json();
+        $enRow = $en['data']['data'][0] ?? [];
+        $this->assertSame('Founder', $enRow['kind_label'] ?? '');
+        $this->assertSame('Super admin', $enRow['remark_label'] ?? '');
+        $this->assertSame('超级管理员', $enRow['remark'] ?? '');
+        $this->assertStringContainsString('Today', (string) ($enRow['login_text'] ?? ''));
+        $this->assertSame('Local', $enRow['place_text'] ?? '');
+        $this->assertStringNotContainsString('创始人', (string) ($enRow['kind_label'] ?? ''));
+        $this->assertStringNotContainsString('今天', (string) ($enRow['login_text'] ?? ''));
+        $this->assertStringNotContainsString('本机', (string) ($enRow['place_text'] ?? ''));
+    }
+
     public function test_tag_boards_and_menus_use_native_chrome_not_chinese(): void
     {
         $cases = [
@@ -258,6 +309,67 @@ class AdminUiLocaleTest extends TestCase
         $this->assertStringNotContainsString('漫画参数', $en);
         $this->assertStringNotContainsString('采集进待审', $en);
         $this->assertStringNotContainsString('manga.cfg_', $en);
+    }
+
+    public function test_stats_logs_follow_ui_locale(): void
+    {
+        \App\Models\Stat\StatHit::query()->create([
+            'path' => '/',
+            'query' => '',
+            'ip' => '127.0.0.1',
+            'visitor_hash' => 'locale-log',
+            'user_agent' => 'Mozilla/5.0 Chrome/120.0.0.0',
+            'referer' => '',
+            'locale' => 'zh-CN',
+            'is_spider' => false,
+            'spider_name' => null,
+            'status_code' => 200,
+            'created_at' => now(),
+        ]);
+        \App\Models\Stat\StatHit::query()->create([
+            'path' => '/website',
+            'query' => '',
+            'ip' => '127.0.0.1',
+            'visitor_hash' => 'locale-log',
+            'user_agent' => 'Mozilla/5.0 Chrome/120.0.0.0',
+            'referer' => config('app.url').'/latest',
+            'locale' => 'zh-CN',
+            'is_spider' => false,
+            'spider_name' => null,
+            'status_code' => 200,
+            'created_at' => now(),
+        ]);
+
+        $zh = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'zh_cn',
+        ])->get('/admin/stats/logs')->assertOk()->getContent();
+        $this->assertStringContainsString('人类', $zh);
+        $this->assertStringContainsString('首页', $zh);
+        $this->assertStringContainsString('网址导航', $zh);
+        $this->assertStringContainsString('直接访问', $zh);
+        $this->assertStringContainsString('站内跳转', $zh);
+        $this->assertStringContainsString('桌面', $zh);
+
+        $en = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'en',
+        ])->get('/admin/stats/logs')->assertOk()->getContent();
+        $this->assertStringContainsString('Human', $en);
+        $this->assertStringContainsString('>Home<', $en);
+        $this->assertStringContainsString('Site directory', $en);
+        $this->assertStringContainsString('Direct', $en);
+        $this->assertStringContainsString('Internal', $en);
+        $this->assertStringContainsString('Desktop', $en);
+        $this->assertStringNotContainsString('人类', $en);
+        $this->assertStringNotContainsString('直接访问', $en);
+        $this->assertStringNotContainsString('站内跳转', $en);
+        $this->assertStringNotContainsString('>首页<', $en);
+        $this->assertStringContainsString('2 rows', $en);
+        $this->assertStringNotContainsString('共2条', $en);
+        $this->assertStringNotContainsString('共1条', $en);
     }
 
     public function test_unlock_rejects_empty_password(): void
