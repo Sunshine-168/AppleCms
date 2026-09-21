@@ -182,7 +182,8 @@ $boardKeys = is_file($root.'/tools/overlays/rest_keys_boards.php') ? include $ro
 $chromeKeys = is_file($root.'/tools/overlays/rest_keys_chrome.php') ? include $root.'/tools/overlays/rest_keys_chrome.php' : [];
 $detailKeys = is_file($root.'/tools/overlays/rest_keys_details.php') ? include $root.'/tools/overlays/rest_keys_details.php' : [];
 $leftoverKeys = is_file($root.'/tools/overlays/rest_keys_leftover.php') ? include $root.'/tools/overlays/rest_keys_leftover.php' : [];
-$seedKeys = $chromeKeys + $boardKeys + $detailKeys + $leftoverKeys + $restKeys + $seedKeys;
+$missingKeys = is_file($root.'/tools/overlays/rest_keys_missing.php') ? include $root.'/tools/overlays/rest_keys_missing.php' : [];
+$seedKeys = $chromeKeys + $boardKeys + $detailKeys + $leftoverKeys + $missingKeys + $restKeys + $seedKeys;
 
 foreach ($locales as $code) {
     $path = $root.'/resources/lang/'.$code.'/admin.php';

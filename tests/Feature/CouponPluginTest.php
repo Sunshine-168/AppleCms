@@ -173,7 +173,8 @@ class CouponPluginTest extends TestCase
         $row->refresh();
         $this->assertSame(1, (int) $row->used);
         $member->refresh();
-        $this->assertSame(3000, (int) $member->points);
+        // 订单积分 3000 + 每日「在线充值」任务 5
+        $this->assertSame(3005, (int) $member->points);
 
         $center = $this->actingAs($member, 'member')->get('/member')->assertOk()->getContent();
         $this->assertStringContainsString('/member/coupons', $center);

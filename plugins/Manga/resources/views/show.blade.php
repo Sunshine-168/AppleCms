@@ -41,7 +41,7 @@
                 @if((int) ($manga->recommend ?? 0) === 1)<li class="is-hi">推荐</li>@endif
                 <li>人气 {{ $manga->hits }}</li>
                 <li>收藏 {{ $favorCount }}</li>
-                <li>{{ $commentCount }} 评</li>
+                <li>{{ $commentCount }} 条评论</li>
             </ul>
 
             @if($authors !== [])

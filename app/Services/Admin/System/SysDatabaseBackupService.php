@@ -293,7 +293,7 @@ class SysDatabaseBackupService
             'ui' => [
                 'title' => '数据库备份',
                 'lead' => '把当前库导出到这台服务器的磁盘。定时备份走计划任务。本机 artisan serve 不会自动跑。',
-                'restore' => '去恢复',
+                'restore' => '恢复',
                 'sql' => '执行 SQL',
                 'schedule' => '计划任务',
                 'replace' => '批量替换',

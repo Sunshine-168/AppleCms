@@ -198,9 +198,9 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: L.col_domain, html: hostHtml},
-            {title: L.site_name, html: function (d) { return U.escape(d.site_name_label || L.follow_site); }},
-            {title: L.tpl, html: themeHtml},
+            {title: '{{ admin_t('ui.col_domain') }}', html: hostHtml},
+            {title: '{{ admin_t('ui.site_name') }}', html: function (d) { return U.escape(d.site_name_label || L.follow_site); }},
+            {title: '{{ admin_t('ui.tpl') }}', html: themeHtml},
             {title: L.status, width: 72, html: function (d) {
                 return String(d.status) === '1' ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},

@@ -185,8 +185,8 @@
         cols: [
             {check: true, width: 36},
             {title: L.col_rule, html: wordHtml},
-            {title: L.col_from_word, width: 140, html: function (d) { return U.escape(d.from_word || ''); }},
-            {title: L.col_to_word, width: 140, html: function (d) { return d.empty_to ? '<span class="muted">' + L.empty_to_word + '</span>' : U.escape(d.to_word || ''); }},
+            {title: '{{ admin_t('ui.col_from_word') }}', width: 140, html: function (d) { return U.escape(d.from_word || ''); }},
+            {title: '{{ admin_t('ui.col_to_word') }}', width: 140, html: function (d) { return d.empty_to ? '<span class="muted">' + L.empty_to_word + '</span>' : U.escape(d.to_word || ''); }},
             {title: L.status, width: 72, html: function (d) {
                 return d.is_on ? U.status(true, L.enabled) : U.status(false, L.disabled);
             }},

@@ -175,7 +175,7 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: L.label_ext_class, html: nameHtml},
+            {title: '{{ admin_t('ui.label_ext_class') }}', html: nameHtml},
             {key: 'sort', title: L.sort, width: 64},
             {title: L.status, width: 72, html: function (d) {
                 return d.is_on ? U.status(true, L.enabled) : U.status(false, L.disabled);

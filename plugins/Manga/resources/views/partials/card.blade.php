@@ -9,6 +9,7 @@
     $subBits = array_filter([
         $row->serializeLabel(),
         ((int) ($row->chapter_count ?? 0) > 0) ? ((int) $row->chapter_count).'话' : null,
+        ((int) ($row->favor_count ?? 0) > 0) ? ('收藏 '.(int) $row->favor_count) : null,
     ]);
 @endphp
 <article class="vod-card manga-card" data-manga-id="{{ $row->id }}">
@@ -20,12 +21,12 @@
         <span class="vod-card-empty">暂无封面</span>
         <span class="vod-card-play" aria-hidden="true"></span>
         @if((int) ($row->recommend ?? 0) === 1)
-            <em class="vod-card-score">荐</em>
+            <em class="vod-card-score manga-badge">荐</em>
         @elseif($hasUpdate)
-            <em class="vod-card-score">新</em>
+            <em class="vod-card-score manga-badge">新</em>
         @endif
         @if($badge !== '')
-            <em class="vod-card-badge">{{ $badge }}</em>
+            <em class="vod-card-badge manga-badge">{{ $badge }}</em>
         @endif
     </a>
     <div class="vod-card-meta">

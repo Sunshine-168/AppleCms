@@ -102,7 +102,7 @@
     var U = AdminUi;
     var ui = @json($ui, JSON_UNESCAPED_UNICODE);
     var last = @json($last, JSON_UNESCAPED_UNICODE);
-    var L = @json([
+    var L = {!! json_encode([
         'safety_meta' => admin_t('ui.safety_meta'),
         'safety_need_review' => admin_t('ui.safety_need_review'),
         'safety_known_n' => admin_t('ui.safety_known_n'),
@@ -112,7 +112,7 @@
         'scan_done' => admin_t('ui.scan_done'),
         'scan_lost' => admin_t('ui.scan_lost'),
         'stopped_ok' => admin_t('ui.stopped_ok'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
 
     function hitCard(group, known) {
         var html = '<article class="safety-hit' + (known ? ' is-known' : ' is-other') + '">';

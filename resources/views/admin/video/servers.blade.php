@@ -228,8 +228,8 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: L.name, html: nameHtml},
-            {title: L.prefix, html: function (d) { return d.has_url ? U.escape(d.url_preview || '') : '<span class="muted">' + L.empty_cell + '</span>'; }},
+            {title: '{{ admin_t('ui.name') }}', html: nameHtml},
+            {title: '{{ admin_t('ui.prefix') }}', html: function (d) { return d.has_url ? U.escape(d.url_preview || '') : '<span class="muted">' + L.empty_cell + '</span>'; }},
             {title: L.col_lines, width: 80, html: function (d) {
                 var n = parseInt(d.source_count, 10) || 0;
                 return n > 0 ? String(L.sources_count || '').replace('__N__', String(n)) : '—';

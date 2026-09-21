@@ -4,6 +4,7 @@ namespace App\Services\Admin\System;
 use App\Models\System\SysDictModel;
 use App\Support\Utils\Result;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * 系统字典服务
@@ -47,12 +48,13 @@ class SysDictService
      */
     public function pageBoard(): array
     {
-        $groups = $this->groupRows();
+        $empty = ! Schema::hasTable('sys_dict');
+        $groups = $empty ? [] : $this->groupRows();
 
         return [
-            'families' => $this->familyRows($groups),
+            'families' => $empty ? [] : $this->familyRows($groups),
             'groups' => $groups,
-            'types' => $this->typeRows($groups),
+            'types' => $empty ? [] : $this->typeRows($groups),
             'queues' => $this->queueCounts(),
             'ui' => [
                 'title' => admin_t('page.dict'),
@@ -846,6 +848,10 @@ class SysDictService
      */
     private function queueCounts(): array
     {
+        if (! Schema::hasTable('sys_dict')) {
+            return ['all' => 0, 'off' => 0];
+        }
+
         return [
             'all' => (int) SysDictModel::query()->count(),
             'off' => (int) SysDictModel::query()->where('status', 1)->count(),

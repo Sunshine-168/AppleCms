@@ -51,7 +51,7 @@
                     </p>
                 @endif
                 @if($channels === [])
-                    <p class="muted">暂无可用支付方式。后台配置微信 / 支付宝密钥，或在「支付通道」接入易支付 / DfPay。</p>
+                    <p class="muted">未配置支付参数。暂无可用支付方式。请在后台配置微信 / 支付宝密钥，或在「支付通道」接入易支付 / DfPay。</p>
                 @else
                     <form method="post" action="{{ url('/member/pay') }}" class="member-form">
                         @csrf

@@ -9,10 +9,7 @@ class TagIndexPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (! is_dir(storage_path('app'))) {
-            mkdir(storage_path('app'), 0777, true);
-        }
-        file_put_contents(storage_path('app/install.lock'), 'test');
+        $this->actingAsAdmin();
     }
 
     public function test_tag_index_is_a_keyword_library_not_a_log_table(): void

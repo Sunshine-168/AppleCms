@@ -198,8 +198,8 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: L.name, html: nameHtml},
-            {title: L.slug, width: 100, html: function (d) { return U.escape(d.code || ''); }},
+            {title: '{{ admin_t('ui.name') }}', html: nameHtml},
+            {title: '{{ admin_t('ui.slug') }}', width: 100, html: function (d) { return U.escape(d.code || ''); }},
             {title: L.col_usage, width: 72, html: function (d) { return U.escape(d.parse_kind_label || ''); }},
             {title: L.status, width: 72, html: function (d) {
                 return d.is_on ? U.status(true, L.enabled) : U.status(false, L.disabled);

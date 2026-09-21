@@ -194,9 +194,9 @@
         },
         cols: [
             {check: true, width: 36},
-            {title: L.col_plot, html: plotHtml},
+            {title: '{{ admin_t('ui.col_plot') }}', html: plotHtml},
             {title: L.col_video, html: videoHtml},
-            {title: L.col_episode, width: 88, html: function (d) { return U.escape(d.episode_label || ''); }},
+            {title: '{{ admin_t('ui.col_episode') }}', width: 88, html: function (d) { return U.escape(d.episode_label || ''); }},
             {key: 'sort', title: L.sort, width: 64},
             {title: L.col_written, width: 140, html: function (d) { return U.escape(d.created_at_text || ''); }},
             {title: L.actions, cls: 'actions', html: function (d) {

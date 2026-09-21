@@ -104,11 +104,11 @@
     var root = document.getElementById('backup-index');
     if (!root || !U) return;
     var UI = @json($ui, JSON_UNESCAPED_UNICODE);
-    var L = @json([
+    var L = {!! json_encode([
         'backup_fail' => admin_t('ui.backup_fail'),
         'save_fail' => admin_t('ui.save_fail'),
         'delete_fail' => admin_t('ui.delete_fail'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
     var canBackup = @json($canBackup, JSON_UNESCAPED_UNICODE);
 
     function renderFiles(rows) {

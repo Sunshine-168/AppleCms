@@ -179,7 +179,10 @@ class ContentPluginsTest extends TestCase
 
         $this->get('/mall')->assertOk()->assertSee('徽章')->assertSee('没有在线支付');
         $this->actingAs($member, 'member')
-            ->post('/mall/'.$goods->id.'/buy')
+            ->post('/mall/'.$goods->id.'/buy', [
+                'contact' => '13800000000',
+                'address' => '前台自取',
+            ])
             ->assertRedirect()
             ->assertSessionHas('status', '兑换成功，等待发货');
 

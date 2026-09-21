@@ -6,6 +6,8 @@
     $ui = $board['ui'] ?? [];
     $cmds = $board['artisan_cmds'] ?? [];
     $cronPresets = $board['cron_presets'] ?? [];
+    $jsUi = $ui;
+    unset($jsUi['empty'], $jsUi['empty_hint']);
 @endphp
 
 @section('plain')
@@ -173,7 +175,7 @@
     if (!root || !U) return;
     var form = document.getElementById('schedule-form');
     var presets = @json($board['presets'] ?? [], JSON_UNESCAPED_UNICODE);
-    var ui = @json($ui, JSON_UNESCAPED_UNICODE);
+    var ui = @json($jsUi, JSON_UNESCAPED_UNICODE);
     var L = @json(['not_connected' => admin_t('ui.not_connected')], JSON_UNESCAPED_UNICODE);
     function say(res) { U.toast((res && res.msg) || '', res && res.code === 0 ? 'ok' : 'err'); }
     function reload() { location.reload(); }

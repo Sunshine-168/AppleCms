@@ -81,6 +81,13 @@
             @endif
         </p>
         @endif
+        @if(in_array($desk, ['works', 'pending'], true))
+            <p class="muted field-hint">
+                <a href="/admin/video/mangas?desk=chapters">{{ admin_t('nav.manga_chapters') }}</a>
+                ·
+                <a href="/admin/video/mangas?desk=pics">{{ admin_t('nav.manga_pics') }}</a>
+            </p>
+        @endif
 
         @if($desk === 'stats')
             <p class="muted recycle-lead manga-stats-lead">{{ admin_t('manga.lead_stats') }}</p>
@@ -329,7 +336,7 @@
         @if($desk === 'favors')
             <div class="queue-chips" id="manga-favor-queues">
                 <button type="button" class="chip" data-queue="">{{ admin_t('ui.all') }}@if($fq('all') > 0)<em>{{ $fq('all') }}</em>@endif</button>
-                <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.today') }}@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
+                <button type="button" class="chip" data-queue="today" data-value="1">{{ admin_t('ui.chip_today') }}@if($fq('today') > 0)<em>{{ $fq('today') }}</em>@endif</button>
                 <button type="button" class="chip" data-queue="missing" data-value="1">{{ admin_t('ui.work_gone') }}@if($fq('missing') > 0)<em>{{ $fq('missing') }}</em>@endif</button>
             </div>
         @endif
@@ -510,7 +517,7 @@
     if (desk === 'works' || desk === 'pending') {
         cols = [
             {check: true, width: 36},
-            {title: L.name, html: function (d) {
+            {title: '{{ admin_t('ui.name') }}', html: function (d) {
                 var badge = parseInt(d.recommend, 10) === 1 ? '<span class="badge">' + L.recommend + '</span> ' : '';
                 return badge + '<a class="entry-row-title" href="/admin/video/mangas/' + encodeURIComponent(d.id || '') + '/edit">' + U.escape(d.title || L.blank) + '</a>';
             }},

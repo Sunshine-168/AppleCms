@@ -95,6 +95,7 @@
                 <option value="0" @selected($recommend === '0')>{{ admin_t('ui.no') }}</option>
                 <option value="1" @selected($recommend === '1')>{{ admin_t('ui.yes') }}</option>
             </select>
+            <p class="muted field-hint">{{ admin_t('ui.recommend_home_hint') }}</p>
 
             <h3>{{ admin_t('ui.publish') }}</h3>
             <label for="work-yid">{{ admin_t('ui.audit') }}</label>

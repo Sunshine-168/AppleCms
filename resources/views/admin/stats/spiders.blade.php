@@ -216,14 +216,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 (function () {
-    const L = @json([
+    const L = {!! json_encode([
         'engine_search' => admin_t('ui.engine_search'),
         'engine_tool' => admin_t('ui.engine_tool'),
         'engine_ai' => admin_t('ui.engine_ai'),
         'engine_other' => admin_t('ui.engine_other'),
         'no_chart_data' => admin_t('ui.no_chart_data'),
         'times' => admin_t('ui.times'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
     const trend = @json($trend, JSON_UNESCAPED_UNICODE);
     const mix = @json($composition, JSON_UNESCAPED_UNICODE);
     const pages = @json($topPages->take(8)->values());

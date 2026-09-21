@@ -96,12 +96,12 @@
     var root = document.getElementById('restore-index');
     if (!root || !U) return;
     var UI = @json($ui, JSON_UNESCAPED_UNICODE);
-    var L = @json([
+    var L = {!! json_encode([
         'delete_fail' => admin_t('ui.delete_fail'),
         'restore_typed_wrong' => admin_t('ui.restore_typed_wrong'),
         'restore_fail' => admin_t('ui.restore_fail'),
         'restore_word' => admin_t('ui.restore_word'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
     var canSnapshot = @json($canSnapshot, JSON_UNESCAPED_UNICODE);
 
     function cardHtml(row, can) {

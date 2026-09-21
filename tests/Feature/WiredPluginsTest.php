@@ -98,11 +98,12 @@ class WiredPluginsTest extends TestCase
         $member->refresh();
         $order->refresh();
         $this->assertSame(1, (int) $order->status);
-        $this->assertSame(1000, (int) $member->points);
+        // 订单 1000 + 每日「在线充值」任务 5
+        $this->assertSame(1005, (int) $member->points);
 
         $this->call('POST', '/pay/notify/wechat', [], [], [], [], $xml)->assertOk();
         $member->refresh();
-        $this->assertSame(1000, (int) $member->points);
+        $this->assertSame(1005, (int) $member->points);
     }
 
     public function test_order_settle_is_idempotent(): void
@@ -122,7 +123,8 @@ class WiredPluginsTest extends TestCase
         $this->assertSame(0, $svc->settle((int) $order->id, 't1', 'wechat')['code']);
         $this->assertSame(0, $svc->settle((int) $order->id, 't1', 'wechat')['code']);
         $member->refresh();
-        $this->assertSame(105, (int) $member->points);
+        // 原有 5 + 订单 100 + 每日「在线充值」任务 5
+        $this->assertSame(110, (int) $member->points);
     }
 
     public function test_sms_send_fails_without_keys_and_verifies_code(): void

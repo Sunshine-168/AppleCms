@@ -6,6 +6,15 @@ use Tests\TestCase;
 
 class FrontPagesTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $lock = storage_path('app/install.lock');
+        if (is_file($lock)) {
+            unlink($lock);
+        }
+    }
+
     public function test_install_page_is_reachable(): void
     {
         $this->get('/install')->assertOk();

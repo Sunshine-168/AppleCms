@@ -2,7 +2,7 @@
 (function () {
     var U = AdminUi;
     if (!U) return;
-    var L = @json($accessJsLang ?? [
+    var L = {!! json_encode($accessJsLang ?? [
         'spider' => admin_t('ui.spider'),
         'visitor' => admin_t('ui.visitor'),
         'no_match' => admin_t('ui.no_match_rows'),
@@ -15,7 +15,7 @@
         'confirm_del_access' => admin_t('ui.confirm_del_access'),
         'fail' => admin_t('ui.fail'),
         'deleted' => admin_t('ui.deleted'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
     var form = document.getElementById('accesslog-search');
     if (!form) return;
     var batchBar = document.getElementById('accesslog-batch');

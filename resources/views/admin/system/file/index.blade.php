@@ -87,7 +87,7 @@
         url: api.list,
         cols: [
             {check: true, width: 36},
-            {title: ui.preview || L.preview, width: 88, cls: 'file-preview-cell', html: previewCell},
+            {title: ui.preview || '{{ admin_t('ui.preview') }}', width: 88, cls: 'file-preview-cell', html: previewCell},
             {key: 'name', title: AdminUi.t('name'), html: nameCell},
             {key: 'kind_label', title: AdminUi.t('type'), width: 80},
             {key: 'size_text', title: AdminUi.t('size'), width: 90},

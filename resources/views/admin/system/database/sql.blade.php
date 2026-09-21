@@ -64,12 +64,12 @@
     var root = document.getElementById('sql-index');
     if (!root || !U) return;
     var UI = @json($ui, JSON_UNESCAPED_UNICODE);
-    var L = @json([
+    var L = {!! json_encode([
         'need_sql' => admin_t('ui.need_sql'),
         'sql_word' => admin_t('ui.sql_word'),
         'sql_typed_wrong' => admin_t('ui.sql_typed_wrong'),
         'sql_run_fail' => admin_t('ui.sql_run_fail'),
-    ], JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE) !!};
     var input = document.getElementById('sql-input');
     var msg = document.getElementById('sql-msg');
     var idle = document.getElementById('sql-idle');
