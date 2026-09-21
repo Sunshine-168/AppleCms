@@ -10,7 +10,7 @@ class HelpController extends Controller
 {
     /** @var list<string> */
     private const TOPICS = [
-        'use', 'admin', 'templates', 'tags', 'env', 'schedule', 'laravel', 'docker',
+        'use', 'admin', 'templates', 'tags', 'env', 'rewrite', 'schedule', 'laravel', 'docker',
     ];
 
     public function index(Request $request): View
@@ -20,10 +20,15 @@ class HelpController extends Controller
             $topic = 'use';
         }
 
-        return view('admin.help.index', [
+        $data = [
             'topic' => $topic,
             'urls' => $this->urls(),
-        ]);
+        ];
+        if ($topic === 'rewrite') {
+            $data = array_merge($data, app(\App\Services\Video\SiteOpsService::class)->rewriteRules());
+        }
+
+        return view('admin.help.index', $data);
     }
 
     /** @return array<string, string> */
@@ -56,7 +61,7 @@ class HelpController extends Controller
             'roles' => '/admin/system/roles',
             'menus' => '/admin/system/menus',
             'logs' => '/admin/system/monitor/login-logs',
-            'rewrite' => '/admin/video/rewrite',
+            'rewrite' => '/admin/help?topic=rewrite',
             'push' => '/admin/video/push',
             'domains' => '/admin/video/domains',
             'database' => '/admin/system/database/backup',

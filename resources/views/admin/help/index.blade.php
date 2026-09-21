@@ -18,6 +18,7 @@
         ],
         admin_t('guide.group_install') => [
             'env' => admin_t('guide.topic_env'),
+            'rewrite' => admin_t('guide.topic_rewrite'),
             'schedule' => admin_t('guide.topic_schedule'),
             'laravel' => admin_t('guide.topic_laravel'),
             'docker' => admin_t('guide.topic_docker'),
@@ -31,6 +32,15 @@
         'laravel' => [
             'deployUrl' => route('admin.help', ['topic' => 'env']),
             'webInstallUrl' => url('/install'),
+        ],
+        'rewrite' => [
+            'mode_label' => $mode_label ?? admin_t('ui.rewrite_local_mode'),
+            'mode_sample' => $mode_sample ?? '/vod/123',
+            'mac' => $mac ?? false,
+            'suffix' => $suffix ?? '.html',
+            'route_groups' => $route_groups ?? [],
+            'nginx' => $nginx ?? '',
+            'apache' => $apache ?? '',
         ],
         default => [],
     };
@@ -56,7 +66,7 @@
                 @endforeach
             </div>
 
-            <div class="help-body{{ in_array($topic, ['env', 'schedule', 'laravel', 'docker'], true) ? ' deploy-guide' : '' }}">
+            <div class="help-body{{ in_array($topic, ['env', 'rewrite', 'schedule', 'laravel', 'docker'], true) ? ' deploy-guide' : '' }}">
                 @include(admin_help_view($topic), array_merge(['urls' => $urls, 'hl' => $hl], $helpData))
             </div>
         </div>

@@ -370,6 +370,9 @@ class AdminNavModulesTest extends TestCase
         $this->assertContains('/admin/video/publish_pages', $urls);
         $this->assertNotContains('/admin/video/ads', $urls);
         $this->assertNotContains('/admin/video/links', $urls);
+        $foldUrls = array_column($site[0]['fold']['items'] ?? [], 'url');
+        $this->assertContains('/admin/video/wizard', $foldUrls);
+        $this->assertNotContains('/admin/video/rewrite', $foldUrls);
     }
 
     public function test_default_desk_sidebar_link_is_not_active_on_other_desks(): void

@@ -19,10 +19,17 @@ class RewriteIndexPageTest extends TestCase
         $this->actingAsAdmin();
     }
 
+    public function test_old_rewrite_url_redirects_to_help(): void
+    {
+        $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
+            ->get('/admin/video/rewrite')
+            ->assertRedirect(route('admin.help', ['topic' => 'rewrite']));
+    }
+
     public function test_rewrite_index_is_a_server_cheat_sheet_not_a_filename_dump(): void
     {
         $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/rewrite')
+            ->get('/admin/help?topic=rewrite')
             ->assertOk()
             ->getContent();
 
@@ -87,7 +94,7 @@ class RewriteIndexPageTest extends TestCase
         $this->assertStringContainsString('/index.php/vod/detail/id/123', $board['mode_sample'] ?? '');
 
         $html = $this->withSession(['admin_uid' => 1, 'admin_username' => 'admin'])
-            ->get('/admin/video/rewrite')
+            ->get('/admin/help?topic=rewrite')
             ->assertOk()
             ->getContent();
 

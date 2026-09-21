@@ -257,7 +257,7 @@
                 </select>
                 <label for="rewrite_suffix">{{ admin_t('ui.rewrite_suffix') }}</label>
                 <input id="rewrite_suffix" type="text" name="rewrite_suffix" value="{{ $s['rewrite_suffix'] ?? '.html' }}">
-                <p class="muted field-hint">{{ admin_t('ui.rewrite_suffix_hint_a') }}<code>/vod/123</code>{{ admin_t('ui.rewrite_suffix_hint_b') }}<a href="/admin/video/rewrite">{{ admin_t('page.rewrite') }}</a>{{ admin_t('ui.rewrite_suffix_hint_c') }}</p>
+                <p class="muted field-hint">{{ admin_t('ui.rewrite_suffix_hint_a') }}<code>/vod/123</code>{{ admin_t('ui.rewrite_suffix_hint_b') }}<a href="/admin/help?topic=rewrite">{{ admin_t('page.rewrite') }}</a>{{ admin_t('ui.rewrite_suffix_hint_c') }}</p>
 
                 <h3>{{ admin_t('ui.page_cache') }}</h3>
                 <p class="muted field-hint">{{ admin_t('ui.page_cache_hint_a') }}<a href="/admin/video/make">{{ admin_t('nav.make') }}</a>{{ admin_t('ui.page_cache_hint_b') }}</p>

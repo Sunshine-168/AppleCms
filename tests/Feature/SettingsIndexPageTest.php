@@ -54,8 +54,9 @@ class SettingsIndexPageTest extends TestCase
         $this->assertStringContainsString('内容接入', $html);
         $this->assertStringContainsString('/admin/video/config/ip', $html);
         $this->assertStringContainsString('后台 IP 白名单', $html);
-        $this->assertStringContainsString('/admin/video/rewrite', $html);
+        $this->assertStringContainsString('/admin/help?topic=rewrite', $html);
         $this->assertStringContainsString('伪静态', $html);
+        $this->assertStringNotContainsString('/admin/video/rewrite', $html);
         $this->assertStringContainsString('/admin/video/config/api', $html);
         $this->assertStringContainsString('开放 API', $html);
         $this->assertStringContainsString('/admin/video/push', $html);

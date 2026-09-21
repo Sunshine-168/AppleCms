@@ -370,9 +370,9 @@ class SiteOps extends Controller
         return Ajax::message(0, trim(\Illuminate\Support\Facades\Artisan::output()) ?: admin_t('ui.reset_ok'), []);
     }
 
-    public function rewrite(): View
+    public function rewrite(): RedirectResponse
     {
-        return view('admin.video.rewrite', $this->ops->rewriteRules());
+        return redirect()->route('admin.help', ['topic' => 'rewrite']);
     }
 
     public function safety(): View

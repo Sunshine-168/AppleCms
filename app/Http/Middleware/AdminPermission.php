@@ -84,6 +84,7 @@ class AdminPermission
             'admin/welcome',
             'admin/more',
             'admin/help',
+            'admin/video/rewrite',
             'admin/plugins',
         ]);
     }

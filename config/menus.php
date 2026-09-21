@@ -80,7 +80,7 @@ return [
                     ['name' => '扩展分类', 'url' => '/admin/video/classes'],
                     ['name' => '邀请码', 'url' => '/admin/video/invites'],
                     ['name' => '收藏', 'url' => '/admin/video/favorites'],
-                    ['name' => '伪静态规则', 'url' => '/admin/video/rewrite'],
+                    ['name' => '伪静态规则', 'url' => '/admin/help?topic=rewrite'],
                     ['name' => '挂马扫描', 'url' => '/admin/video/safety'],
                     ['name' => '草稿', 'url' => '/admin/video?status=2'],
                     ['name' => '未通过', 'url' => '/admin/video?status=3'],

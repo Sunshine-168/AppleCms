@@ -26,6 +26,7 @@ class HelpWorkbenchTest extends TestCase
         $this->assertStringContainsString('模板', $html);
         $this->assertStringContainsString('标签', $html);
         $this->assertStringContainsString('环境', $html);
+        $this->assertStringContainsString('伪静态', $html);
         $this->assertStringContainsString('定时', $html);
         $this->assertStringContainsString('Docker', $html);
         $this->assertStringContainsString('第一次建议按这个顺序', $html);
@@ -43,7 +44,9 @@ class HelpWorkbenchTest extends TestCase
         $this->assertStringContainsString('/admin/help?topic=admin', $html);
         $this->assertStringContainsString('/admin/help?topic=templates', $html);
         $this->assertStringContainsString('/admin/help?topic=tags', $html);
+        $this->assertStringContainsString('/admin/help?topic=rewrite', $html);
         $this->assertStringContainsString('href="/admin/help"', $html);
+        $this->assertStringNotContainsString('href="/admin/video/rewrite"', $html);
         $this->assertStringNotContainsString('建栏目', $html);
         $this->assertStringNotContainsString('内容模型', $html);
         $this->assertStringNotContainsString('cms:install', $html);
@@ -122,6 +125,16 @@ class HelpWorkbenchTest extends TestCase
             ->assertSee('127.0.0.1:8010')
             ->assertDontSee('admin@example.com')
             ->assertDontSee('127.0.0.1:8000');
+
+        $this->get('/admin/help?topic=rewrite')
+            ->assertOk()
+            ->assertSee('伪静态')
+            ->assertSee('当前写法')
+            ->assertSee('本站路由')
+            ->assertSee('Nginx')
+            ->assertSee('Apache')
+            ->assertSee('rewrite-index')
+            ->assertSee('/admin/video/settings?tab=more');
     }
 
     public function test_unknown_topic_falls_back_to_usage(): void
@@ -164,6 +177,13 @@ class HelpWorkbenchTest extends TestCase
             ->assertSee('What you need to go live')
             ->assertSee('robots.txt')
             ->assertDontSee('上线要准备什么');
+
+        $this->withSession($session)
+            ->get('/admin/help?topic=rewrite')
+            ->assertOk()
+            ->assertSee('Pretty URLs')
+            ->assertSee('Nginx')
+            ->assertDontSee('当前写法');
 
         $this->withSession($session)
             ->get('/admin/help?topic=templates')

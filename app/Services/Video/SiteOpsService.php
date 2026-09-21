@@ -645,7 +645,7 @@ APACHE;
         $needLogin = 'ui.rewrite_need_login';
 
         if ($mac) {
-            return [
+            $groups = [
                 $group('ui.rewrite_g_vod', [
                     $row('home', 'ui.rewrite_home', '/'),
                     $row('type', 'ui.rewrite_type', '/index.php/vod/type/id/1'.$suffix),
@@ -684,9 +684,12 @@ APACHE;
                     $row('robots', 'robots', '/robots.txt'),
                 ]),
             ];
+            array_splice($groups, 1, 0, $this->rewritePluginGroups($row, $group, $local, $needLogin));
+
+            return $groups;
         }
 
-        return [
+        $groups = [
             $group('ui.rewrite_g_vod', [
                 $row('home', 'ui.rewrite_home', '/'),
                 $row('type', 'ui.rewrite_type', '/type/1'),
@@ -725,6 +728,59 @@ APACHE;
                 $row('robots', 'robots', '/robots.txt'),
             ]),
         ];
+        array_splice($groups, 1, 0, $this->rewritePluginGroups($row, $group, null, $needLogin));
+
+        return $groups;
+    }
+
+    /**
+     * @param callable(string,string,string,?string): array{id:string,label:string,path:string,note?:string} $row
+     * @param callable(string,list<array{id:string,label:string,path:string,note?:string}>): array{title:string, rows:list<array{id:string,label:string,path:string,note?:string}>} $group
+     * @return list<array{title:string, rows:list<array{id:string,label:string,path:string,note?:string}>}>
+     */
+    private function rewritePluginGroups(callable $row, callable $group, ?string $localNote, string $needLogin): array
+    {
+        $manager = app(\App\Support\Plugins\PluginManager::class);
+        $out = [];
+        if ($manager->isEnabled('manga')) {
+            $out[] = $group('nav.manga', [
+                $row('manga_home', 'ui.rewrite_home', '/manga', $localNote),
+                $row('manga_type', 'ui.rewrite_type', '/manga/type/1', $localNote),
+                $row('manga_detail', 'ui.rewrite_detail', '/manga/1', $localNote),
+                $row('manga_read', 'ui.rewrite_read', '/manga/1/1', $localNote),
+                $row('manga_rank', 'ui.rewrite_rank', '/manga/rank', $localNote),
+                $row('manga_update', 'ui.rewrite_update', '/manga/update', $localNote),
+                $row('manga_shelf', 'nav.manga_favors', '/manga/shelf', $needLogin),
+                $row('manga_history', 'ui.rewrite_history', '/manga/history', $needLogin),
+            ]);
+        }
+        if ($manager->isEnabled('gallery')) {
+            $out[] = $group('nav.gallery', [
+                $row('gallery_home', 'ui.rewrite_home', '/gallery', $localNote),
+                $row('gallery_type', 'ui.rewrite_type', '/gallery/type/1', $localNote),
+                $row('gallery_detail', 'ui.rewrite_detail', '/gallery/1', $localNote),
+                $row('gallery_shelf', 'nav.gallery_favors', '/gallery/shelf', $needLogin),
+            ]);
+        }
+        if ($manager->isEnabled('novel')) {
+            $out[] = $group('nav.novel', [
+                $row('novel_home', 'ui.rewrite_home', '/novel', $localNote),
+                $row('novel_type', 'ui.rewrite_type', '/novel/type/1', $localNote),
+                $row('novel_detail', 'ui.rewrite_detail', '/novel/1', $localNote),
+                $row('novel_read', 'ui.rewrite_read', '/novel/1/1', $localNote),
+                $row('novel_shelf', 'nav.novel_favors', '/novel/shelf', $needLogin),
+                $row('novel_history', 'ui.rewrite_history', '/novel/history', $needLogin),
+            ]);
+        }
+        if ($manager->isEnabled('live')) {
+            $out[] = $group('nav.live', [
+                $row('live_home', 'ui.rewrite_home', '/live', $localNote),
+                $row('live_cate', 'ui.rewrite_type', '/live/cate/1', $localNote),
+                $row('live_detail', 'ui.rewrite_detail', '/live/1', $localNote),
+            ]);
+        }
+
+        return $out;
     }
 
     public function replacePlayUrl(string $from, string $to, mixed $ids = [], string $value = ''): array

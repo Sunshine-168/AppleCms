@@ -70,7 +70,7 @@ if (! function_exists('admin_localize_extra_page')) {
 if (! function_exists('admin_help_view')) {
     function admin_help_view(string $topic): string
     {
-        $allowed = ['use', 'admin', 'templates', 'tags', 'env', 'schedule', 'laravel', 'docker'];
+        $allowed = ['use', 'admin', 'templates', 'tags', 'env', 'rewrite', 'schedule', 'laravel', 'docker'];
         if (! in_array($topic, $allowed, true)) {
             $topic = 'use';
         }

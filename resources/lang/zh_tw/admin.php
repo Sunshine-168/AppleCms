@@ -6123,6 +6123,7 @@ return [
         'topic_templates' => '模板',
         'topic_tags' => '標籤',
         'topic_env' => '環境',
+        'topic_rewrite' => '偽靜態',
         'topic_schedule' => '排程',
         'topic_laravel' => '命令列',
         'topic_docker' => 'Docker',
