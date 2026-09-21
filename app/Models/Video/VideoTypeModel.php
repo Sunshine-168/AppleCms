@@ -2,6 +2,7 @@
 
 namespace App\Models\Video;
 
+use App\Support\AdminSeedLabel;
 use App\Support\QueryCacheTrait;
 use App\Support\QueryTrait;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,10 +48,10 @@ class VideoTypeModel extends Model
     public static function kindLabels(): array
     {
         return [
-            'hub' => '频道',
-            'list' => '列表',
-            'single' => '单页',
-            'link' => '外链',
+            'hub' => AdminSeedLabel::kind('hub'),
+            'list' => AdminSeedLabel::kind('list'),
+            'single' => AdminSeedLabel::kind('single'),
+            'link' => AdminSeedLabel::kind('link'),
         ];
     }
 

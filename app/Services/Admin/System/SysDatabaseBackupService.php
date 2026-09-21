@@ -239,21 +239,21 @@ class SysDatabaseBackupService
         $php = PHP_BINARY !== '' ? PHP_BINARY : 'php';
         $cronLine = '* * * * * '.$php.' '.base_path('artisan').' schedule:run';
         $cronPresets = [
-            '0 3 * * *' => '每天凌晨 3 点',
-            '0 2 * * *' => '每天凌晨 2 点',
-            '0 4 * * *' => '每天凌晨 4 点',
-            '0 */6 * * *' => '每 6 小时',
+            '0 3 * * *' => admin_t('ui.cron_daily_3am'),
+            '0 2 * * *' => admin_t('ui.cron_daily_2am'),
+            '0 4 * * *' => admin_t('ui.cron_daily_4am'),
+            '0 */6 * * *' => admin_t('ui.cron_every_6h'),
         ];
         if ($cron !== '' && ! isset($cronPresets[$cron])) {
             $cronPresets[$cron] = $cron;
         }
-        $driverLabel = '未知';
+        $driverLabel = admin_t('ui.driver_unknown');
         $driverHint = '';
         if ($driver === 'sqlite' && $memory) {
-            $driverLabel = '内存 SQLite';
+            $driverLabel = admin_t('ui.driver_sqlite_mem');
             $driverHint = '测试或没配文件库时会这样。本机请把 DB_DATABASE 指到 database/database.sqlite。';
         } elseif ($driver === 'sqlite') {
-            $driverLabel = 'SQLite 文件';
+            $driverLabel = admin_t('ui.driver_sqlite_file');
             $driverHint = '备份是复制库文件，不是导出 SQL 文本。';
         } elseif ($driver === 'mysql') {
             $driverLabel = 'MySQL';
@@ -262,7 +262,7 @@ class SysDatabaseBackupService
             $driverLabel = 'MariaDB';
             $driverHint = '用 mysqldump 写出 .sql。机器上要有这个命令。';
         } else {
-            $driverLabel = $driver !== '' ? $driver : '未知';
+            $driverLabel = $driver !== '' ? $driver : admin_t('ui.driver_unknown');
             $driverHint = '现在这种库不能在这里备份。';
         }
 
@@ -283,7 +283,7 @@ class SysDatabaseBackupService
                 'cron' => $cron,
                 'cron_label' => $cronPresets[$cron] ?? $cron,
                 'keep' => $keep,
-                'last_text' => $on ? ($lastRun > 0 ? date('Y-m-d H:i', $lastRun) : '还没跑过') : '还没开',
+                'last_text' => $on ? ($lastRun > 0 ? date('Y-m-d H:i', $lastRun) : admin_t('ui.never_ran')) : admin_t('ui.sched_off'),
                 'idle' => $on && $lastRun < 1,
             ],
             'cron_line' => $cronLine,

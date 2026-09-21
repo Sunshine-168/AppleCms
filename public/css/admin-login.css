@@ -152,23 +152,30 @@ body.mac-login {
 .mac-captcha {
     display: flex;
     gap: 10px;
-    align-items: stretch;
+    align-items: center;
 }
-.mac-captcha .mac-control { flex: 1; }
+.mac-captcha .mac-control { flex: 1; min-width: 0; }
 .mac-captcha-q {
     flex: 0 0 160px;
-    height: 48px;
+    width: 160px;
+    height: 40px;
     padding: 0;
+    margin: 0;
+    line-height: 0;
+    display: inline-flex;
+    align-items: stretch;
     overflow: hidden;
-    border: 1px solid #cfeedf;
+    border: 1px solid var(--mac-line);
     border-radius: 4px;
-    background: #ecfbf4;
+    background: #171b24;
     color: var(--mac-green-deep);
     font: inherit;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     letter-spacing: .02em;
+    appearance: none;
+    -webkit-appearance: none;
 }
 .mac-captcha-q img {
     display: block;
@@ -176,7 +183,7 @@ body.mac-login {
     height: 100%;
     object-fit: cover;
 }
-.mac-captcha-q:hover { background: #dff7eb; }
+.mac-captcha-q:hover img { opacity: .92; }
 
 .mac-remember {
     display: flex;
@@ -372,7 +379,7 @@ body.mac-login {
 @media (max-width: 420px) {
     .mac-login-card h1 { margin-bottom: 20px; font-size: 18px; }
     .mac-field { margin-bottom: 16px; }
-    .mac-captcha-q { flex-basis: 160px; height: 48px; }
+    .mac-captcha-q { flex-basis: 160px; height: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

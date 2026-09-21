@@ -29,14 +29,14 @@ class SysScheduleService
     public function cronPresets(): array
     {
         return [
-            '* * * * *' => '每分钟',
-            '0 * * * *' => '每小时',
-            '0 */3 * * *' => '每 3 小时',
-            '0 */6 * * *' => '每 6 小时',
-            '0 4 * * *' => '每天凌晨 4 点',
-            '0 3 * * *' => '每天凌晨 3 点',
-            '0 2 * * *' => '每天凌晨 2 点',
-            '0 6 * * *' => '每天早上 6 点',
+            '* * * * *' => admin_t('ui.cron_every_minute'),
+            '0 * * * *' => admin_t('ui.cron_hourly'),
+            '0 */3 * * *' => admin_t('ui.cron_every_3h'),
+            '0 */6 * * *' => admin_t('ui.cron_every_6h'),
+            '0 4 * * *' => admin_t('ui.cron_daily_4am'),
+            '0 3 * * *' => admin_t('ui.cron_daily_3am'),
+            '0 2 * * *' => admin_t('ui.cron_daily_2am'),
+            '0 6 * * *' => admin_t('ui.cron_daily_6am'),
         ];
     }
 
@@ -48,8 +48,8 @@ class SysScheduleService
         $jobs = [
             [
                 'key' => 'baidu',
-                'label' => '百度推送',
-                'hint' => '推已发布地址，要先在搜索推送里填 Token',
+                'label' => admin_t('ui.sched_job_baidu'),
+                'hint' => admin_t('ui.sched_job_baidu_hint'),
                 'type' => 'artisan',
                 'command' => 'video:baidu-push',
                 'params' => '--limit=50',
@@ -57,8 +57,8 @@ class SysScheduleService
             ],
             [
                 'key' => 'html',
-                'label' => '写出静态页',
-                'hint' => '生成 public/html，磁盘静态页要先打开',
+                'label' => admin_t('ui.sched_job_html'),
+                'hint' => admin_t('ui.sched_job_html_hint'),
                 'type' => 'artisan',
                 'command' => 'video:html-make',
                 'params' => '',
@@ -66,8 +66,8 @@ class SysScheduleService
             ],
             [
                 'key' => 'backup',
-                'label' => '每天备份库',
-                'hint' => '导出一份到磁盘，只留最近几份。本机 sqlite 是复制文件',
+                'label' => admin_t('ui.sched_job_backup'),
+                'hint' => admin_t('ui.sched_job_backup_hint'),
                 'type' => 'artisan',
                 'command' => 'video:db-backup',
                 'params' => '--keep=7',
@@ -95,15 +95,15 @@ class SysScheduleService
     public function artisanCommands(): array
     {
         $cmds = [
-            'video:baidu-push' => '百度推送',
-            'video:html-make' => '写出静态页',
-            'video:collect' => '采集入库（要填源 ID）',
-            'video:collect-due' => '到期采集',
-            'video:publish-due' => '到期上架',
-            'video:hits-reset' => '人气日清',
-            'stats:prune' => '访问统计清理',
-            'video:db-backup' => '备份数据库',
-            'monitor:tick' => '监控采集',
+            'video:baidu-push' => admin_t('ui.sched_job_baidu'),
+            'video:html-make' => admin_t('ui.sched_job_html'),
+            'video:collect' => admin_t('ui.sched_cmd_collect_id'),
+            'video:collect-due' => admin_t('ui.sched_cmd_collect_due'),
+            'video:publish-due' => admin_t('ui.sched_cmd_publish_due'),
+            'video:hits-reset' => admin_t('ui.sched_cmd_hits_reset'),
+            'stats:prune' => admin_t('ui.sched_cmd_stats_prune'),
+            'video:db-backup' => admin_t('ui.sched_cmd_backup'),
+            'monitor:tick' => admin_t('ui.sched_cmd_monitor'),
         ];
         foreach ($this->pluginJobs() as $job) {
             $cmds['plugin:run '.$job['params']] = $job['label'].'（'.$job['plugin_label'].'）';
@@ -181,71 +181,71 @@ class SysScheduleService
             'idle_on' => $idleOn,
             'presets' => $presets,
             'cron_presets' => $this->cronPresets(),
-            'collect_note' => $collectN > 0 ? ('定时采集里已有 '.$collectN.' 条') : '',
+            'collect_note' => $collectN > 0 ? admin_t('ui.sched_collect_n', ['n' => $collectN]) : '',
             'builtins' => [
-                ['label' => '到期采集', 'when' => '每分钟', 'hint' => '跑「定时采集」里到期的任务', 'url' => '/admin/video/collect_tasks'],
-                ['label' => '到期上架', 'when' => '每分钟', 'hint' => '到点把定时发布的片子上架', 'url' => ''],
-                ['label' => '人气日清', 'when' => '每天 00:05', 'hint' => '把今日人气归零', 'url' => ''],
-                ['label' => '访问统计清理', 'when' => '每天 03:20', 'hint' => '删过期统计', 'url' => '/admin/stats'],
-                ['label' => '监控', 'when' => '每分钟', 'hint' => '采指标、评估告警。曲线在系统里的监控。', 'url' => '/admin/system/runtime'],
+                ['label' => admin_t('ui.sched_builtin_collect'), 'when' => admin_t('ui.sched_when_minute'), 'hint' => admin_t('ui.sched_builtin_collect_hint'), 'url' => '/admin/video/collect_tasks'],
+                ['label' => admin_t('ui.sched_builtin_publish'), 'when' => admin_t('ui.sched_when_minute'), 'hint' => admin_t('ui.sched_builtin_publish_hint'), 'url' => ''],
+                ['label' => admin_t('ui.sched_builtin_hits'), 'when' => admin_t('ui.sched_when_0005'), 'hint' => admin_t('ui.sched_builtin_hits_hint'), 'url' => ''],
+                ['label' => admin_t('ui.sched_builtin_stats'), 'when' => admin_t('ui.sched_when_0320'), 'hint' => admin_t('ui.sched_builtin_stats_hint'), 'url' => '/admin/stats'],
+                ['label' => admin_t('ui.sched_builtin_monitor'), 'when' => admin_t('ui.sched_when_minute'), 'hint' => admin_t('ui.sched_builtin_monitor_hint'), 'url' => '/admin/system/runtime'],
             ],
             'artisan_cmds' => $this->artisanCommands(),
             'ui' => [
-                'title' => '定时任务',
-                'collect' => '定时采集',
-                'push' => '搜索推送',
-                'cache' => '缓存',
-                'lead' => '采集片子用左边那栏。备份、推送、插件任务（数据统计这类）加在下面。本机 artisan serve 不会执行。服务器要每分钟跑下面这条。',
-                'install' => '先装计划',
-                'install_hint' => 'Linux / 宝塔把这一行放进 crontab。Windows 用任务计划每分钟启动同一条。改完任务不用重装这一行。',
-                'copy' => '复制',
-                'copied' => '已复制',
-                'del_confirm' => '删除这条任务？',
-                'make' => '静态生成',
-                'idle' => '条开着的任务还从没跑过。多半是还没装上面这条计划。可以先点「立刻跑」试一次。',
-                'builtin' => '系统自带',
-                'builtin_hint' => '代码里写死的，不用在这再加一条。装好计划就会跑。成败和耗时不记在下面这份记录里。',
-                'look' => '去看看',
-                'custom' => '自己加的',
-                'custom_hint' => '每天推百度、写出静态页、备份库可以加在这里。启用中的插件若声明了定时任务，也会出现在上面。按资源站采片子请点「采集片子」。',
-                'add_custom' => '自定义',
-                'empty' => '还没有自己加的任务。',
-                'empty_hint' => '系统自带的不用加。要每天推百度，点上面的按钮。',
-                'on' => '开着',
-                'off' => '已停',
-                'last_fail' => '上次失败',
-                'next' => '下次',
-                'ran' => '上次',
-                'recent' => '最近几次',
-                'no_duration' => '升级前只记下了时间，没有耗时。再跑一次就会有。',
-                'ok' => '成功',
-                'fail' => '失败',
-                'output' => '输出',
-                'run' => '立刻跑',
-                'stop' => '停用',
-                'start' => '启用',
-                'edit' => '改',
-                'delete' => '删除',
-                'form_add' => '加一条',
-                'name' => '名称',
-                'name_ph' => '例如 每天推百度',
-                'kind' => '要跑什么',
-                'kind_artisan' => '本站命令 / 插件任务',
-                'kind_http' => '访问一个网址',
-                'kind_shell' => '服务器命令（高级）',
-                'cmd' => '命令',
-                'params' => '参数',
-                'params_ph' => '可空，例如 --limit=50 或采集源 ID',
-                'url' => '网址',
-                'http_hint' => '只发 GET。要 http 或 https。',
-                'shell_hint' => '填错可能把站点搞停。能用本站命令就别写这个。',
-                'every' => '多久跑一次',
-                'cron_custom' => '自定义',
-                'keep_on' => '保存后开着',
-                'save' => '保存',
-                'cancel' => '取消',
-                'added_prefix' => '已有',
-                'add_prefix' => '加',
+                'title' => admin_t('ui.sched_title'),
+                'collect' => admin_t('ui.collect_tasks'),
+                'push' => admin_t('ui.search_push'),
+                'cache' => admin_t('page.cache'),
+                'lead' => admin_t('ui.sched_lead'),
+                'install' => admin_t('ui.sched_install'),
+                'install_hint' => admin_t('ui.sched_install_hint'),
+                'copy' => admin_t('ui.copy'),
+                'copied' => admin_t('ui.copied'),
+                'del_confirm' => admin_t('ui.sched_del_confirm'),
+                'make' => admin_t('ui.sched_make'),
+                'idle' => admin_t('ui.sched_idle'),
+                'builtin' => admin_t('ui.sched_builtin'),
+                'builtin_hint' => admin_t('ui.sched_builtin_hint'),
+                'look' => admin_t('ui.sched_look'),
+                'custom' => admin_t('ui.sched_custom_jobs'),
+                'custom_hint' => admin_t('ui.sched_custom_hint'),
+                'add_custom' => admin_t('ui.sched_add_custom'),
+                'empty' => admin_t('ui.sched_empty'),
+                'empty_hint' => admin_t('ui.sched_empty_hint'),
+                'on' => admin_t('ui.sched_on'),
+                'off' => admin_t('ui.sched_off'),
+                'last_fail' => admin_t('ui.sched_last_fail'),
+                'next' => admin_t('ui.sched_next'),
+                'ran' => admin_t('ui.sched_ran'),
+                'recent' => admin_t('ui.sched_recent'),
+                'no_duration' => admin_t('ui.sched_no_duration'),
+                'ok' => admin_t('ui.success'),
+                'fail' => admin_t('ui.fail'),
+                'output' => admin_t('ui.sched_output'),
+                'run' => admin_t('ui.sched_run'),
+                'stop' => admin_t('ui.sched_stop'),
+                'start' => admin_t('ui.sched_start'),
+                'edit' => admin_t('ui.edit'),
+                'delete' => admin_t('ui.delete'),
+                'form_add' => admin_t('ui.sched_form_add'),
+                'name' => admin_t('ui.name'),
+                'name_ph' => admin_t('ui.sched_name_ph'),
+                'kind' => admin_t('ui.sched_kind'),
+                'kind_artisan' => admin_t('ui.sched_kind_artisan'),
+                'kind_http' => admin_t('ui.sched_kind_http'),
+                'kind_shell' => admin_t('ui.sched_kind_shell'),
+                'cmd' => admin_t('ui.sched_cmd'),
+                'params' => admin_t('ui.sched_params'),
+                'params_ph' => admin_t('ui.sched_params_ph'),
+                'url' => admin_t('ui.sched_url'),
+                'http_hint' => admin_t('ui.sched_http_hint'),
+                'shell_hint' => admin_t('ui.sched_shell_hint'),
+                'every' => admin_t('ui.sched_every'),
+                'cron_custom' => admin_t('ui.custom'),
+                'keep_on' => admin_t('ui.sched_keep_on'),
+                'save' => admin_t('ui.save'),
+                'cancel' => admin_t('ui.cancel'),
+                'added_prefix' => admin_t('ui.sched_added_prefix'),
+                'add_prefix' => admin_t('ui.sched_add_prefix'),
             ],
         ];
     }
@@ -710,17 +710,19 @@ class SysScheduleService
         $row['id'] = $id;
         $row['type'] = $type;
         $row['type_label'] = match ($type) {
-            'http' => '访问网址',
-            'shell' => '服务器命令',
-            default => '本站命令',
+            'http' => admin_t('ui.sched_type_http'),
+            'shell' => admin_t('ui.sched_type_shell'),
+            default => admin_t('ui.sched_type_artisan'),
         };
-        $row['cron_label'] = $presets[$cron] ?? ($cron !== '' ? $cron : '未设周期');
+        $row['cron_label'] = $presets[$cron] ?? ($cron !== '' ? $cron : admin_t('ui.cron_unset'));
         $row['status'] = $status;
         $row['on'] = $status === 1;
-        $row['last_run_text'] = $lastAt > 0 ? date('Y-m-d H:i', $lastAt) : '还没跑过';
+        $row['last_run_text'] = $lastAt > 0 ? date('Y-m-d H:i', $lastAt) : admin_t('ui.never_ran');
         $row['last_ok'] = $lastStatus === 1;
         $row['last_fail'] = $lastStatus === 2;
-        $row['last_status_text'] = $lastAt < 1 ? '还没跑过' : ($lastStatus === 1 ? '成功' : ($lastStatus === 2 ? '失败' : '没记下成败'));
+        $row['last_status_text'] = $lastAt < 1
+            ? admin_t('ui.never_ran')
+            : ($lastStatus === 1 ? admin_t('ui.success') : ($lastStatus === 2 ? admin_t('ui.fail') : admin_t('ui.last_unlogged')));
         $row['last_error'] = $lastErr;
         $row['duration_ms'] = $durationMs;
         $row['duration_text'] = $logged ? $this->durationText($durationMs) : '';
@@ -966,39 +968,39 @@ class SysScheduleService
     protected function lastRunSummary(int $lastAt, int $lastStatus, int $durationMs): string
     {
         if ($lastAt < 1) {
-            return '还没跑过';
+            return admin_t('ui.never_ran');
         }
         $when = date('Y-m-d H:i', $lastAt);
         if ($lastStatus !== 1 && $lastStatus !== 2) {
-            return '上次跑过 · '.$when.' · 没记下成败和耗时';
+            return admin_t('ui.last_ran_unlogged', ['when' => $when]);
         }
-        $ok = $lastStatus === 1 ? '成功' : '失败';
+        $key = $lastStatus === 1 ? 'ui.last_ok_summary' : 'ui.last_fail_summary';
 
-        return '上次'.$ok.' · '.$this->durationText($durationMs).' · '.$when;
+        return admin_t($key, ['dur' => $this->durationText($durationMs), 'when' => $when]);
     }
 
     protected function durationText(int $ms): string
     {
         $ms = max(0, $ms);
         if ($ms < 100) {
-            return '不到 0.1 秒';
+            return admin_t('ui.dur_lt_01s');
         }
         if ($ms < 1000) {
-            return '用了 '.$ms.' 毫秒';
+            return admin_t('ui.dur_ms', ['n' => $ms]);
         }
         if ($ms < 60000) {
             $sec = round($ms / 1000, 1);
             $text = rtrim(rtrim(number_format($sec, 1, '.', ''), '0'), '.');
 
-            return '用了 '.$text.' 秒';
+            return admin_t('ui.dur_sec', ['n' => $text]);
         }
         $m = intdiv($ms, 60000);
         $s = (int) round(($ms % 60000) / 1000);
         if ($s < 1) {
-            return '用了 '.$m.' 分钟';
+            return admin_t('ui.dur_min', ['n' => $m]);
         }
 
-        return '用了 '.$m.' 分 '.$s.' 秒';
+        return admin_t('ui.dur_min_sec', ['m' => $m, 's' => $s]);
     }
 
     protected function recordRunLog(int $scheduleId, int $status, int $durationMs, string $output, string $error): void
@@ -1045,16 +1047,16 @@ class SysScheduleService
     protected function nextRunText(string $cron, int $status): string
     {
         if ($status !== 1) {
-            return '已停';
+            return admin_t('ui.sched_off');
         }
         $cron = trim($cron);
         if ($cron === '') {
-            return '未设周期';
+            return admin_t('ui.cron_unset');
         }
         try {
             return (new CronExpression($cron))->getNextRunDate()->format('Y-m-d H:i');
         } catch (\Throwable) {
-            return '周期无效';
+            return admin_t('ui.cron_invalid');
         }
     }
 
@@ -1078,15 +1080,15 @@ class SysScheduleService
             }
         }
         $map = [
-            'video:baidu-push' => '百度推送',
-            'video:html-make' => '写出静态页',
-            'video:collect-due' => '到期采集',
-            'video:publish-due' => '到期上架',
-            'video:hits-reset' => '人气日清',
-            'video:collect' => '采集入库',
-            'stats:prune' => '访问统计清理',
-            'video:db-backup' => '备份数据库',
-            'monitor:tick' => '监控采集',
+            'video:baidu-push' => admin_t('ui.sched_job_baidu'),
+            'video:html-make' => admin_t('ui.sched_job_html'),
+            'video:collect-due' => admin_t('ui.sched_cmd_collect_due'),
+            'video:publish-due' => admin_t('ui.sched_cmd_publish_due'),
+            'video:hits-reset' => admin_t('ui.sched_cmd_hits_reset'),
+            'video:collect' => admin_t('ui.sched_cmd_collect'),
+            'stats:prune' => admin_t('ui.sched_cmd_stats_prune'),
+            'video:db-backup' => admin_t('ui.sched_cmd_backup'),
+            'monitor:tick' => admin_t('ui.sched_cmd_monitor'),
         ];
 
         $label = $map[$command] ?? $command;

@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MemberIndexPageTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,4 +33,19 @@ class MemberIndexPageTest extends TestCase
         $this->assertStringNotContainsString('placeholder="name"', $html);
         $this->assertStringNotContainsString('会员组ID', $html);
     }
+
+    public function test_english_ui_translates_seeded_member_groups(): void
+    {
+        $html = $this->withSession([
+            'admin_uid' => 1,
+            'admin_username' => 'admin',
+            'admin_ui_locale' => 'en',
+        ])->get('/admin/video/members')->assertOk()->getContent();
+
+        $this->assertStringContainsString('>Member<', $html);
+        $this->assertStringContainsString('>VIP<', $html);
+        $this->assertStringNotContainsString('普通会员', $html);
+        $this->assertStringContainsString('No members yet', $html);
+    }
 }
+

@@ -709,7 +709,7 @@ class SiteModule extends Controller
     {
         if (! \Illuminate\Support\Facades\Schema::hasTable('video_comments')
             || ! \Illuminate\Support\Facades\Schema::hasColumn('video_comments', 'mid')) {
-            return Ajax::fail('请先执行数据库迁移');
+            return Ajax::fail(admin_t('ui.migrate_first'));
         }
         $params = $request->all();
         $params['comment_mid'] = 2;

@@ -56,6 +56,7 @@ use App\Services\Video\DomainBindService;
 use App\Services\Video\SynonymService;
 use App\Support\AdminOpLog;
 use App\Support\AdminPage;
+use App\Support\AdminSeedLabel;
 use App\Support\Utils\Result;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -704,10 +705,10 @@ class SiteModuleService
         $class = $cfg['model'];
         try {
             if (! Schema::hasTable((new $class)->getTable())) {
-                return Result::fail('请先执行数据库迁移');
+                return Result::fail(admin_t('ui.migrate_first'));
             }
         } catch (\Throwable) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $limit = max(1, (int) ($params['limit'] ?? 15));
         $q = $class::query();
@@ -2136,13 +2137,13 @@ class SiteModuleService
             $email = trim((string) ($payload['email'] ?? ''));
             if ($id === null) {
                 if ($name === '') {
-                    return Result::fail('请填写昵称');
+                    return Result::fail(admin_t('ui.please_fill_nickname'));
                 }
                 if ($email === '') {
-                    return Result::fail('请填写邮箱');
+                    return Result::fail(admin_t('ui.please_fill_email'));
                 }
                 if (! isset($payload['password'])) {
-                    return Result::fail('请填写密码');
+                    return Result::fail(admin_t('ui.please_fill_password'));
                 }
             }
             if ($name !== '') {
@@ -2155,7 +2156,7 @@ class SiteModuleService
                     $dup->where('id', '!=', $id);
                 }
                 if ($dup->exists()) {
-                    return Result::fail('这个邮箱已经注册过');
+                    return Result::fail(admin_t('ui.email_taken'));
                 }
             }
             if (array_key_exists('group_id', $payload)) {
@@ -2175,15 +2176,15 @@ class SiteModuleService
                     return Result::fail('请填写收件会员 ID');
                 }
                 if (Schema::hasTable('members') && ! Member::query()->where('id', $toId)->exists()) {
-                    return Result::fail('会员不存在');
+                    return Result::fail(admin_t('ui.member_missing'));
                 }
                 $title = mb_substr(trim((string) ($payload['title'] ?? '')), 0, 120);
                 $content = trim((string) ($payload['content'] ?? ''));
                 if ($title === '') {
-                    return Result::fail('请填写标题');
+                    return Result::fail(admin_t('ui.please_fill_title'));
                 }
                 if ($content === '') {
-                    return Result::fail('请填写内容');
+                    return Result::fail(admin_t('ui.please_fill_content'));
                 }
                 $payload['to_id'] = $toId;
                 $payload['title'] = $title;
@@ -2203,15 +2204,15 @@ class SiteModuleService
             if ($id === null) {
                 $memberId = max(0, (int) ($payload['member_id'] ?? 0));
                 if ($memberId > 0 && Schema::hasTable('members') && ! Member::query()->where('id', $memberId)->exists()) {
-                    return Result::fail('会员不存在');
+                    return Result::fail(admin_t('ui.member_missing'));
                 }
                 $title = mb_substr(trim((string) ($payload['title'] ?? '')), 0, 120);
                 $content = trim((string) ($payload['content'] ?? ''));
                 if ($title === '') {
-                    return Result::fail('请填写标题');
+                    return Result::fail(admin_t('ui.please_fill_title'));
                 }
                 if ($content === '') {
-                    return Result::fail('请填写内容');
+                    return Result::fail(admin_t('ui.please_fill_content'));
                 }
                 $payload['member_id'] = $memberId;
                 $payload['title'] = $title;
@@ -2243,7 +2244,7 @@ class SiteModuleService
         if ($module === 'searchwords') {
             $word = mb_substr(trim((string) ($payload['word'] ?? '')), 0, 80);
             if ($word === '') {
-                return Result::fail('请填写关键词');
+                return Result::fail(admin_t('ui.please_fill_keywords'));
             }
             $dup = VideoSearchWord::query()->where('word', $word);
             if ($id) {
@@ -2266,7 +2267,7 @@ class SiteModuleService
             if (array_key_exists('title', $payload) || $id === null) {
                 $title = trim((string) ($payload['title'] ?? ''));
                 if ($title === '') {
-                    return Result::fail('请填写标题');
+                    return Result::fail(admin_t('ui.please_fill_title'));
                 }
                 $payload['title'] = $title;
             }
@@ -2274,7 +2275,7 @@ class SiteModuleService
                 $tid = max(0, (int) $payload['type_id']);
                 if ($tid > 0) {
                     if (! Schema::hasTable('video_types')) {
-                        return Result::fail('请先执行数据库迁移');
+                        return Result::fail(admin_t('ui.migrate_first'));
                     }
                     $type = VideoTypeModel::query()->find($tid);
                     if (! $type) {
@@ -2331,7 +2332,7 @@ class SiteModuleService
         if ($module === 'slides') {
             if ($id === null) {
                 if (trim((string) ($payload['name'] ?? '')) === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 if (trim((string) ($payload['pic'] ?? '')) === '') {
                     return Result::fail('请上传图片');
@@ -2355,7 +2356,7 @@ class SiteModuleService
                 $payload['amount'] = max(0, (int) round((float) $data['amount_yuan'] * 100));
             }
             if ($id === null && (int) ($payload['member_id'] ?? 0) < 1) {
-                return Result::fail('请填写会员 ID');
+                return Result::fail(admin_t('ui.please_fill_member_id'));
             }
             if (array_key_exists('member_id', $payload)) {
                 $payload['member_id'] = (int) $payload['member_id'];
@@ -2376,7 +2377,7 @@ class SiteModuleService
         if ($module === 'groups') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2458,13 +2459,13 @@ class SiteModuleService
             $delta = (int) ($payload['points'] ?? 0);
             $remark = trim((string) ($payload['remark'] ?? ''));
             if ($memberId < 1) {
-                return Result::fail('请填写会员 ID');
+                return Result::fail(admin_t('ui.please_fill_member_id'));
             }
             if ($delta === 0) {
                 return Result::fail('变动不能为 0');
             }
             if (! Member::query()->find($memberId)) {
-                return Result::fail('会员不存在');
+                return Result::fail(admin_t('ui.member_missing'));
             }
             $this->changePoints($memberId, $delta, 'admin', $remark !== '' ? $remark : '后台调积分');
 
@@ -2473,7 +2474,7 @@ class SiteModuleService
         if ($module === 'ads') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2728,7 +2729,7 @@ class SiteModuleService
         if ($module === 'downloaders') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = mb_substr($name, 0, 80);
@@ -2770,7 +2771,7 @@ class SiteModuleService
         if ($module === 'servers') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = mb_substr($name, 0, 80);
@@ -2812,7 +2813,7 @@ class SiteModuleService
         if ($module === 'unions') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -2916,7 +2917,7 @@ class SiteModuleService
         if ($module === 'players') {
             $name = trim((string) ($payload['name'] ?? ''));
             if ($id === null && $name === '') {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== '') {
                 $payload['name'] = $name;
@@ -3109,7 +3110,7 @@ class SiteModuleService
         if ($id) {
             $row = $class::query()->find($id);
             if (! $row) {
-                return Result::fail('数据不存在');
+                return Result::fail(admin_t('ui.data_missing'));
             }
             if ($this->hasColumn($row, 'status')) {
                 $oldStatus = (int) $row->status;
@@ -3203,7 +3204,7 @@ class SiteModuleService
         $class = $cfg['model'];
         $row = $class::query()->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         if ($module === 'topics' && Schema::hasTable('video_topic_rel')) {
             VideoTopicRelModel::query()->where('topic_id', $id)->delete();
@@ -3330,9 +3331,9 @@ class SiteModuleService
     public function artFlagBoard(): array
     {
         $defs = [
-            ['key' => 'top', 'label' => '置顶', 'hint' => '列表里排在最前。写稿时勾选。'],
-            ['key' => 'recommend', 'label' => '推荐', 'hint' => '给前台当推荐稿。写稿时勾选。'],
-            ['key' => 'hot', 'label' => '热门', 'hint' => '给前台当热门稿。写稿时勾选。'],
+            ['key' => 'top', 'label' => admin_t('ui.flag_top'), 'hint' => admin_t('ui.flag_top_hint')],
+            ['key' => 'recommend', 'label' => admin_t('ui.recommend'), 'hint' => admin_t('ui.flag_rec_hint')],
+            ['key' => 'hot', 'label' => admin_t('ui.flag_hot'), 'hint' => admin_t('ui.flag_hot_hint')],
         ];
         $ready = Schema::hasTable('video_arts') && Schema::hasColumn('video_arts', 'flags');
         $flags = [];
@@ -3528,60 +3529,59 @@ class SiteModuleService
         try {
             $cfg = $this->config($module);
         } catch (\InvalidArgumentException) {
-            return Result::fail('不支持的操作');
+            return Result::fail(admin_t('ui.unsupported_op'));
         }
         $handled = $this->dispatchPlugin($cfg, 'batch', [$ids, $action, $value]);
         if ($handled !== null) {
             return $handled;
         }
         if (! in_array($module, ['comments', 'topics', 'arts', 'slides', 'members', 'orders', 'withdraws', 'groups', 'cards', 'invites', 'plogs', 'ads', 'links', 'websites', 'domains', 'classes', 'synonyms', 'downloaders', 'servers', 'roles', 'plots', 'players', 'collect_logs', 'collect_tasks', 'collect_temps', 'audits', 'searchwords', 'reports', 'guestbooks', 'playfails', 'pms', 'notifies', 'favorites', 'botlogs', 'accesslogs', 'mangas', 'manga_comments', 'manga_favors', 'manga_chapters', 'manga_pics', 'manga_types'], true)) {
-            return Result::fail('不支持的操作');
+            return Result::fail(admin_t('ui.unsupported_op'));
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
         if ($ids === []) {
-            return Result::fail(match ($module) {
-                'topics' => '请先勾选专题',
-                'arts' => '请先勾选文章',
-                'slides' => '请先勾选幻灯片',
-                'members' => '请先勾选会员',
-                'orders' => '请先勾选订单',
-                'withdraws' => '请先勾选提现',
-                'groups' => '请先勾选会员组',
-                'cards' => '请先勾选卡密',
-                'invites' => '请先勾选邀请码',
-                'plogs' => '请先勾选流水',
-                'ads' => '请先勾选广告',
-                'links' => '请先勾选友链',
-                'websites' => '请先勾选站点',
-                'domains' => '请先勾选域名',
-                'classes' => '请先勾选类型词',
-                'synonyms' => '请先勾选同义词',
-                'downloaders' => '请先勾选下载器',
-                'servers' => '请先勾选服务器组',
-                'roles' => '请先勾选角色',
-                'plots' => '请先勾选剧情',
-                'players' => '请先勾选播放器',
-                'collect_logs' => '请先勾选日志',
-                'collect_tasks' => '请先勾选任务',
-                'collect_temps' => '请先勾选片子',
-                'searchwords' => '请先勾选搜索词',
-                'reports' => '请先勾选报错',
-                'guestbooks' => '请先勾选留言',
-                'playfails' => '请先勾选播放失败',
-                'pms' => '请先勾选站内信',
-                'notifies' => '请先勾选通知',
-                'favorites' => '请先勾选收藏',
-                'botlogs' => '请先勾选记录',
-                'accesslogs' => '请先勾选记录',
-                'audits' => '请先勾选规则',
-                'mangas' => '请先勾选作品',
-                'manga_comments' => '请先勾选评论',
-                'manga_favors' => '请先勾选书架记录',
-                'manga_chapters' => '请先勾选章节',
-                'manga_pics' => '请先勾选图片',
-                'manga_types' => '请先勾选分类',
-                default => '请先勾选评论',
-            });
+            return Result::fail(admin_t(match ($module) {
+                'topics' => 'ui.please_select_topics',
+                'arts' => 'ui.please_select_arts',
+                'slides' => 'ui.please_select_slides',
+                'members' => 'ui.please_select_members',
+                'orders' => 'ui.please_select_orders',
+                'withdraws' => 'ui.please_select_withdraws',
+                'groups' => 'ui.please_select_groups',
+                'cards' => 'ui.please_select_cards',
+                'invites' => 'ui.please_select_invites',
+                'plogs' => 'ui.please_select_plogs',
+                'ads' => 'ui.please_select_ads',
+                'links' => 'ui.please_select_links',
+                'websites' => 'ui.please_select_sites',
+                'domains' => 'ui.please_select_domains',
+                'classes' => 'ui.please_select_ext_classes',
+                'synonyms' => 'ui.please_select_synonyms',
+                'downloaders' => 'ui.please_select_downloaders',
+                'servers' => 'ui.please_select_servers',
+                'roles' => 'ui.please_select_roles',
+                'plots' => 'ui.please_select_plots',
+                'players' => 'ui.please_select_players',
+                'collect_logs' => 'ui.please_select_logs',
+                'collect_tasks' => 'ui.please_select_tasks',
+                'collect_temps' => 'ui.please_select_temps',
+                'searchwords' => 'ui.please_select_searchwords',
+                'reports' => 'ui.please_select_reports',
+                'guestbooks' => 'ui.please_select_guestbooks',
+                'playfails' => 'ui.please_select_playfails',
+                'pms' => 'ui.please_select_pms',
+                'notifies' => 'ui.please_select_notifies',
+                'favorites' => 'ui.please_select_favorites',
+                'botlogs', 'accesslogs' => 'ui.please_select_botlogs',
+                'audits' => 'ui.please_select_rules',
+                'mangas' => 'ui.please_select_mangas',
+                'manga_comments' => 'ui.please_select_comments',
+                'manga_favors' => 'ui.please_select_shelf',
+                'manga_chapters' => 'ui.please_select_chapters',
+                'manga_pics' => 'ui.please_select_pics',
+                'manga_types' => 'ui.please_select_manga_types',
+                default => 'ui.please_select_comments',
+            }));
         }
         $ok = 0;
         $fail = 0;
@@ -3591,13 +3591,13 @@ class SiteModuleService
                     'status' => $this->save($module, ['status' => (int) $value], $id),
                     'yid' => $module === 'mangas'
                         ? $this->save($module, ['yid' => (int) $value], $id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'recommend' => $module === 'mangas'
                         ? $this->save($module, ['recommend' => (int) $value], $id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'parent' => $module === 'manga_types'
                         ? $this->save($module, ['parent_id' => (int) $value], $id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'type' => $this->save($module, ['type_id' => (int) $value], $id),
                     'slot' => $this->save($module, ['slot' => (string) $value], $id),
                     'group' => $this->save($module, ['group_id' => (int) $value], $id),
@@ -3605,24 +3605,24 @@ class SiteModuleService
                     'points' => $this->adjustMemberPoints($id, (int) $value),
                     'flags' => $module === 'arts'
                         ? $this->save($module, ['flags' => (string) $value], $id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'flag_top', 'flag_recommend', 'flag_hot' => $module === 'arts'
                         ? $this->applyArtFlag($id, substr($action, 5), true)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'unflag_top', 'unflag_recommend', 'unflag_hot' => $module === 'arts'
                         ? $this->applyArtFlag($id, substr($action, 7), false)
-                        : Result::fail('不支持的操作'),
-                    'copy' => $module === 'arts' ? $this->copyArt($id) : Result::fail('不支持的操作'),
-                    'restore' => $module === 'arts' ? $this->restoreArt($id) : Result::fail('不支持的操作'),
-                    'purge' => $module === 'arts' ? $this->purgeArt($id) : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
+                    'copy' => $module === 'arts' ? $this->copyArt($id) : Result::fail(admin_t('ui.unsupported_op')),
+                    'restore' => $module === 'arts' ? $this->restoreArt($id) : Result::fail(admin_t('ui.unsupported_op')),
+                    'purge' => $module === 'arts' ? $this->purgeArt($id) : Result::fail(admin_t('ui.unsupported_op')),
                     'offline' => $module === 'playfails'
                         ? app(\App\Services\Video\SiteOpsService::class)->disablePlayFailSource($id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'read' => ($module === 'pms' || $module === 'notifies')
                         ? $this->save($module, ['is_read' => 1], $id)
-                        : Result::fail('不支持的操作'),
+                        : Result::fail(admin_t('ui.unsupported_op')),
                     'delete' => $this->delete($module, $id),
-                    default => Result::fail('不支持的操作'),
+                    default => Result::fail(admin_t('ui.unsupported_op')),
                 };
                 if (($res['code'] ?? 1) === 0) {
                     $ok++;
@@ -3632,10 +3632,12 @@ class SiteModuleService
             }
         });
         if ($ok === 0) {
-            return Result::fail('操作失败');
+            return Result::fail(admin_t('ui.op_fail'));
         }
 
-        $msg = $fail > 0 ? ('完成 '.$ok.' 条，'.$fail.' 条未处理') : '操作成功';
+        $msg = $fail > 0
+            ? admin_t('ui.batch_partial', ['ok' => $ok, 'fail' => $fail])
+            : admin_t('ui.op_ok');
 
         return $this->loggedModule(
             $module,
@@ -3650,11 +3652,11 @@ class SiteModuleService
     private function adjustMemberPoints(int $id, int $delta): array
     {
         if ($delta === 0) {
-            return Result::fail('请填写不为 0 的积分');
+            return Result::fail(admin_t('ui.points_nonzero'));
         }
         $member = Member::query()->find($id);
         if (! $member) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $this->changePoints($id, $delta, 'admin', '后台调整');
 
@@ -3683,7 +3685,7 @@ class SiteModuleService
                 $id = (int) $group->id;
                 $out[] = [
                     'id' => $id,
-                    'name' => (string) $group->name,
+                    'name' => AdminSeedLabel::group((string) $group->name),
                     'status' => (int) $group->status,
                     'count' => $counts[$id] ?? 0,
                 ];
@@ -3732,7 +3734,8 @@ class SiteModuleService
         }
         foreach ($rows as &$row) {
             $gid = (int) ($row['group_id'] ?? 0);
-            $row['group_name'] = $gid > 0 ? (string) ($names[$gid] ?? '未知分组') : '未分组';
+            $stored = $gid > 0 ? (string) ($names[$gid] ?? '') : '';
+            $row['group_name'] = AdminSeedLabel::group($stored, $gid > 0 && $stored === '');
             $ts = (int) ($row['created_at'] ?? 0);
             $row['joined_text'] = $ts > 0 ? date('Y-m-d', $ts) : '';
         }
@@ -3775,8 +3778,18 @@ class SiteModuleService
         if ($ids !== [] && Schema::hasTable('members')) {
             $members = Member::query()->whereIn('id', array_values(array_unique($ids)))->get(['id', 'name', 'email'])->keyBy('id');
         }
-        $channels = ['wechat' => '微信', 'alipay' => '支付宝', 'manual' => '人工', 'epay' => '易支付', 'dfpay' => 'DfPay'];
-        $statuses = ['0' => '待付', '1' => '已付', '2' => '关闭'];
+        $channels = [
+            'wechat' => admin_t('ui.channel_wechat'),
+            'alipay' => admin_t('ui.channel_alipay'),
+            'manual' => admin_t('ui.channel_manual'),
+            'epay' => admin_t('ui.channel_epay'),
+            'dfpay' => admin_t('ui.channel_dfpay'),
+        ];
+        $statuses = [
+            '0' => admin_t('ui.pay_pending'),
+            '1' => admin_t('ui.pay_paid'),
+            '2' => admin_t('ui.pay_closed'),
+        ];
         $channelTitles = [];
         try {
             if (Schema::hasTable('plugin_pay_channels') && class_exists(\Plugins\Pay\Models\PayChannel::class)) {
@@ -3793,13 +3806,13 @@ class SiteModuleService
             $fen = (int) ($row['amount'] ?? 0);
             $row['amount_yuan'] = number_format($fen / 100, 2, '.', '');
             $ch = trim((string) ($row['channel'] ?? ''));
-            $row['channel_label'] = $channels[$ch] ?? ($ch !== '' ? $ch : '人工');
+            $row['channel_label'] = $channels[$ch] ?? ($ch !== '' ? $ch : admin_t('ui.channel_manual'));
             $cid = (int) ($row['pay_channel_id'] ?? 0);
             $title = $cid > 0 ? trim((string) ($channelTitles[$cid] ?? '')) : '';
             if ($title !== '') {
                 $row['channel_label'] = $row['channel_label'].' · '.$title;
             }
-            $row['status_label'] = $statuses[(string) ($row['status'] ?? '0')] ?? '待付';
+            $row['status_label'] = $statuses[(string) ($row['status'] ?? '0')] ?? admin_t('ui.pay_pending');
             $row['paid_at_text'] = (int) ($row['paid_at'] ?? 0) > 0
                 ? date('Y-m-d H:i', (int) $row['paid_at'])
                 : '';
@@ -3853,7 +3866,11 @@ class SiteModuleService
                 $members = [];
             }
         }
-        $statuses = ['0' => '待审', '1' => '已打款', '2' => '拒绝'];
+        $statuses = [
+            '0' => admin_t('ui.pending'),
+            '1' => admin_t('ui.withdraw_paid'),
+            '2' => admin_t('ui.reject'),
+        ];
         foreach ($rows as &$row) {
             $mid = (int) ($row['member_id'] ?? 0);
             $member = $members[$mid] ?? null;
@@ -3868,7 +3885,7 @@ class SiteModuleService
             }
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $st = (int) ($row['status'] ?? 0);
-            $row['status_label'] = $statuses[(string) $st] ?? '待审';
+            $row['status_label'] = $statuses[(string) $st] ?? admin_t('ui.pending');
             $row['pending'] = $st === 0 ? 1 : 0;
         }
         unset($row);
@@ -3911,6 +3928,7 @@ class SiteModuleService
         foreach ($rows as &$row) {
             $id = (int) ($row['id'] ?? 0);
             $row['member_count'] = $counts[$id] ?? 0;
+            $row['name_label'] = AdminSeedLabel::group((string) ($row['name'] ?? ''));
         }
         unset($row);
 
@@ -3960,13 +3978,13 @@ class SiteModuleService
             $status = (int) ($row['status'] ?? 1);
             if ($usedBy > 0) {
                 $row['state'] = 'used';
-                $row['state_label'] = '已兑';
+                $row['state_label'] = admin_t('ui.card_used');
             } elseif ($status !== 1) {
                 $row['state'] = 'void';
-                $row['state_label'] = '作废';
+                $row['state_label'] = admin_t('ui.card_void');
             } else {
                 $row['state'] = 'unused';
-                $row['state_label'] = '未用';
+                $row['state_label'] = admin_t('ui.card_unused');
             }
             $member = $members[$usedBy] ?? null;
             $row['member_name'] = $member ? (string) $member->name : '';
@@ -4237,24 +4255,24 @@ class SiteModuleService
             $status = (int) ($row['status'] ?? 1);
             if ($usedBy > 0) {
                 $row['state'] = 'used';
-                $row['status_label'] = '已用';
+                $row['status_label'] = admin_t('ui.invite_used');
                 $row['used'] = 1;
             } elseif ($status !== 1) {
                 $row['state'] = 'void';
-                $row['status_label'] = '作废';
+                $row['status_label'] = admin_t('ui.card_void');
                 $row['used'] = 0;
             } else {
                 $row['state'] = 'unused';
-                $row['status_label'] = '未用';
+                $row['status_label'] = admin_t('ui.card_unused');
                 $row['used'] = 0;
             }
             $owner = $members[$ownerId] ?? null;
             $user = $members[$usedBy] ?? null;
             $row['owner_name'] = $ownerId > 0
-                ? ($owner ? (string) $owner->name : ('会员 #'.$ownerId))
-                : '系统';
+                ? ($owner ? (string) $owner->name : admin_t('ui.member_hash', ['id' => $ownerId]))
+                : admin_t('ui.plog_sys');
             $row['used_name'] = $usedBy > 0
-                ? ($user ? (string) $user->name : ('会员 #'.$usedBy))
+                ? ($user ? (string) $user->name : admin_t('ui.member_hash', ['id' => $usedBy]))
                 : '';
             $ts = (int) ($row['created_at'] ?? 0);
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
@@ -4306,14 +4324,14 @@ class SiteModuleService
                 ->all();
         }
         $types = [
-            'play' => '点播',
-            'order' => '订单',
-            'admin' => '后台',
-            'card' => '卡密',
-            'coupon' => '优惠券',
-            'invite' => '邀请',
-            'withdraw' => '提现',
-            'sys' => '系统',
+            'play' => admin_t('ui.plog_play'),
+            'order' => admin_t('ui.orders'),
+            'admin' => admin_t('ui.plog_admin'),
+            'card' => admin_t('ui.cards'),
+            'coupon' => admin_t('nav.coupons'),
+            'invite' => admin_t('ui.invites'),
+            'withdraw' => admin_t('ui.withdraws'),
+            'sys' => admin_t('ui.plog_sys'),
         ];
         foreach ($rows as &$row) {
             $mid = (int) ($row['member_id'] ?? 0);
@@ -4322,7 +4340,7 @@ class SiteModuleService
             $member = $members[$mid] ?? null;
             $row['member_name'] = $member ? (string) $member->name : '';
             $row['member_email'] = $member ? (string) $member->email : '';
-            $row['type_label'] = $types[$type] ?? ($type !== '' ? $type : '系统');
+            $row['type_label'] = $types[$type] ?? ($type !== '' ? $type : admin_t('ui.plog_sys'));
             $row['dir'] = $delta < 0 ? 'out' : 'in';
         }
         unset($row);
@@ -4393,24 +4411,26 @@ class SiteModuleService
             $skipped = (int) ($row['skipped_n'] ?? 0);
             $page = (int) ($row['page'] ?? 0);
             $source = $sources[$sid] ?? null;
-            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未知采集源');
+            $row['source_name'] = $source
+                ? (string) $source->name
+                : ($sid > 0 ? admin_t('ui.collect_source_n', ['id' => $sid]) : admin_t('ui.unknown_source'));
             $row['ok'] = $ok ? 1 : 0;
-            $row['ok_label'] = $ok ? '成功' : '失败';
+            $row['ok_label'] = $ok ? admin_t('ui.ok') : admin_t('ui.fail');
             $row['created_n'] = $created;
             $row['updated_n'] = $updated;
             $row['skipped_n'] = $skipped;
             $parts = [];
             if ($created > 0) {
-                $parts[] = '新建 '.$created;
+                $parts[] = admin_t('ui.stat_created_n', ['n' => $created]);
             }
             if ($updated > 0) {
-                $parts[] = '更新 '.$updated;
+                $parts[] = admin_t('ui.stat_updated_n', ['n' => $updated]);
             }
             if ($skipped > 0) {
-                $parts[] = '跳过 '.$skipped;
+                $parts[] = admin_t('ui.stat_skipped_n', ['n' => $skipped]);
             }
-            $row['stat_text'] = $parts !== [] ? implode(' · ', $parts) : '无入库';
-            $row['page_text'] = $page > 0 ? ('第 '.$page.' 页') : '';
+            $row['stat_text'] = $parts !== [] ? implode(' · ', $parts) : admin_t('ui.no_ingest');
+            $row['page_text'] = $page > 0 ? admin_t('ui.page_nth', ['n' => $page]) : '';
             $row['msg'] = trim((string) ($row['msg'] ?? ''));
         }
         unset($row);
@@ -4527,10 +4547,14 @@ class SiteModuleService
             $failed = $status === 0 && $msg !== '' && $msg !== '待转入';
             $source = $sources[$sid] ?? null;
             $type = $types[$tid] ?? null;
-            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未知采集源');
-            $row['type_name'] = $type ? (string) $type->name : '';
+            $row['source_name'] = $source
+                ? (string) $source->name
+                : ($sid > 0 ? admin_t('ui.collect_source_n', ['id' => $sid]) : admin_t('ui.unknown_source'));
+            $row['type_name'] = $type ? AdminSeedLabel::type((string) $type->name) : '';
             $row['status'] = $status;
-            $row['status_label'] = $status === 1 ? '已入库' : ($failed ? '转入失败' : '待转入');
+            $row['status_label'] = $status === 1
+                ? admin_t('ui.chip_promoted')
+                : ($failed ? admin_t('ui.chip_promote_fail') : admin_t('ui.chip_pending_promote'));
             $row['failed'] = $failed ? 1 : 0;
             $row['msg'] = $msg;
             $row['cover'] = trim((string) ($row['cover'] ?? ''));
@@ -4547,11 +4571,11 @@ class SiteModuleService
     public function collectCronPresets(): array
     {
         return [
-            '0 * * * *' => '每小时',
-            '0 */3 * * *' => '每 3 小时',
-            '0 */6 * * *' => '每 6 小时',
-            '0 2 * * *' => '每天凌晨 2 点',
-            '0 6 * * *' => '每天早上 6 点',
+            '0 * * * *' => admin_t('ui.cron_hourly'),
+            '0 */3 * * *' => admin_t('ui.cron_every_3h'),
+            '0 */6 * * *' => admin_t('ui.cron_every_6h'),
+            '0 2 * * *' => admin_t('ui.cron_daily_2am'),
+            '0 6 * * *' => admin_t('ui.cron_daily_6am'),
         ];
     }
 
@@ -4559,9 +4583,9 @@ class SiteModuleService
     public function collectHourPresets(): array
     {
         return [
-            24 => '当天更新',
-            168 => '近 7 天',
-            0 => '全库',
+            24 => admin_t('ui.hours_today'),
+            168 => admin_t('ui.hours_7d'),
+            0 => admin_t('ui.hours_all'),
         ];
     }
 
@@ -4673,11 +4697,13 @@ class SiteModuleService
             $msg = trim((string) ($row['last_msg'] ?? ''));
             $source = $sources[$sid] ?? null;
             $ok = $lastRun > 0 && str_starts_with($msg, '入库');
-            $row['source_name'] = $source ? (string) $source->name : ($sid > 0 ? ('采集源 #'.$sid) : '未选采集源');
+            $row['source_name'] = $source
+                ? (string) $source->name
+                : ($sid > 0 ? admin_t('ui.collect_source_n', ['id' => $sid]) : admin_t('ui.unknown_source'));
             $row['source_missing'] = $sid > 0 && $source === null ? 1 : 0;
             $row['source_off'] = $source && (int) $source->status !== 1 ? 1 : 0;
-            $row['cron_label'] = $cronLabels[$cron] ?? ($cron !== '' ? ('自定义 '.$cron) : '未设周期');
-            $row['hours_label'] = $hourLabels[$hours] ?? ('最近 '.$hours.' 小时');
+            $row['cron_label'] = $cronLabels[$cron] ?? ($cron !== '' ? admin_t('ui.cron_custom', ['cron' => $cron]) : admin_t('ui.cron_unset'));
+            $row['hours_label'] = $hourLabels[$hours] ?? admin_t('ui.hours_last_n', ['n' => $hours]);
             $row['pages'] = $pages;
             $row['status'] = $status;
             $row['status_label'] = $status === 1 ? admin_t('ui.enabled') : admin_t('ui.disabled');
@@ -4694,33 +4720,34 @@ class SiteModuleService
     private function collectTaskNextText(string $cron, int $status): string
     {
         if ($status !== 1) {
-            return '已停用';
+            return admin_t('ui.deactivated');
         }
         $cron = trim($cron);
         if ($cron === '') {
-            return '未设周期';
+            return admin_t('ui.cron_unset');
         }
         try {
             $next = (new \Cron\CronExpression($cron))->getNextRunDate();
             $ts = $next->getTimestamp();
             $now = time();
             if ($ts <= $now) {
-                return '即将执行';
+                return admin_t('ui.run_soon');
             }
             $diff = $ts - $now;
             if ($diff < 3600) {
-                return '约 '.max(1, (int) ceil($diff / 60)).' 分钟后';
+                return admin_t('ui.in_n_min', ['n' => max(1, (int) ceil($diff / 60))]);
             }
+            $clock = date('H:i', $ts);
             if (date('Y-m-d', $ts) === date('Y-m-d')) {
-                return '今天 '.date('H:i', $ts);
+                return admin_t('ui.today_at', ['time' => $clock, 't' => $clock]);
             }
             if (date('Y-m-d', $ts) === date('Y-m-d', strtotime('tomorrow'))) {
-                return '明天 '.date('H:i', $ts);
+                return admin_t('ui.tomorrow_at', ['time' => $clock, 't' => $clock]);
             }
 
             return date('m-d H:i', $ts);
         } catch (\Throwable) {
-            return '周期无效';
+            return admin_t('ui.cron_invalid');
         }
     }
 
@@ -5293,12 +5320,16 @@ class SiteModuleService
             $names = VideoTypeModel::query()->whereIn('id', array_values(array_unique($typeIds)))->pluck('name', 'id')->all();
         }
         $now = time();
-        $flagMap = ['top' => '置顶', 'recommend' => '推荐', 'hot' => '热门'];
+        $flagMap = [
+            'top' => admin_t('ui.slot_top'),
+            'recommend' => admin_t('ui.badge_rec'),
+            'hot' => admin_t('ui.badge_hot'),
+        ];
         $tagMap = $this->artTagMap(array_values(array_filter(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows))));
         foreach ($rows as &$row) {
             $tid = (int) ($row['type_id'] ?? 0);
             $ts = (int) ($row['updated_at'] ?? ($row['created_at'] ?? 0));
-            $row['type_name'] = (string) ($names[$tid] ?? '');
+            $row['type_name'] = AdminSeedLabel::type((string) ($names[$tid] ?? ''));
             $row['created_at_text'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['updated_at_unix'] = $ts;
             $row['deleted_at_unix'] = (int) ($row['deleted_at'] ?? 0);
@@ -5454,11 +5485,11 @@ class SiteModuleService
     {
         $flag = strtolower(trim($flag));
         if (! in_array($flag, VideoArt::FLAGS, true)) {
-            return Result::fail('不支持的操作');
+            return Result::fail(admin_t('ui.unsupported_op'));
         }
         $row = VideoArt::query()->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $list = $row->flagList();
         if ($on) {
@@ -5643,7 +5674,7 @@ class SiteModuleService
     {
         $row = VideoArt::query()->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         $now = time();
         $payload = $row->getAttributes();
@@ -5670,11 +5701,11 @@ class SiteModuleService
     public function restoreArt(int $id): array
     {
         if (! Schema::hasColumn('video_arts', 'deleted_at')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $row = VideoArt::query()->withoutGlobalScope('alive')->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         if ((int) ($row->deleted_at ?? 0) < 1) {
             return Result::fail('不在回收站');
@@ -5694,7 +5725,7 @@ class SiteModuleService
             ? VideoArt::query()->withoutGlobalScope('alive')->find($id)
             : VideoArt::query()->find($id);
         if (! $row) {
-            return Result::fail('数据不存在');
+            return Result::fail(admin_t('ui.data_missing'));
         }
         if (Schema::hasColumn('video_arts', 'deleted_at') && (int) ($row->deleted_at ?? 0) < 1) {
             return Result::fail('请先删进回收站');
@@ -5709,7 +5740,7 @@ class SiteModuleService
     public function emptyArtRecycle(): array
     {
         if (! Schema::hasColumn('video_arts', 'deleted_at')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $ids = VideoArt::query()->withoutGlobalScope('alive')->where('deleted_at', '>', 0)->orderBy('id')->pluck('id')->map(fn ($id) => (int) $id)->all();
         if ($ids === []) {
@@ -5725,7 +5756,7 @@ class SiteModuleService
             }
         });
         if ($ok === 0) {
-            return Result::fail('操作失败');
+            return Result::fail(admin_t('ui.op_fail'));
         }
 
         return $this->loggedModule('arts', 'purge', '清空了文章回收站 '.$ok.' 篇', 0, Result::success(['ok' => $ok], '已清空回收站'), ['count' => $ok]);
@@ -5790,10 +5821,13 @@ class SiteModuleService
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function decorateSlides(array $rows): array
     {
-        $labels = ['home' => '首页', 'play' => '播放页'];
+        $labels = [
+            'home' => admin_t('ui.slot_home'),
+            'play' => admin_t('ui.slot_play'),
+        ];
         foreach ($rows as &$row) {
             $slot = trim((string) ($row['slot'] ?? ''));
-            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : '未分区');
+            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : admin_t('ui.ungrouped'));
             $row['has_pic'] = trim((string) ($row['pic'] ?? '')) !== '';
         }
         unset($row);
@@ -5902,7 +5936,11 @@ class SiteModuleService
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function decorateAds(array $rows): array
     {
-        $labels = ['header' => '页头', 'footer' => '页脚', 'play' => '播放页'];
+        $labels = [
+            'header' => admin_t('ui.slot_header'),
+            'footer' => admin_t('ui.slot_footer'),
+            'play' => admin_t('ui.slot_play'),
+        ];
         $typeIds = [];
         foreach ($rows as $row) {
             $tid = (int) ($row['type_id'] ?? 0);
@@ -5920,12 +5958,15 @@ class SiteModuleService
         $now = time();
         foreach ($rows as &$row) {
             $slot = trim((string) ($row['slot'] ?? ''));
-            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : '未分区');
+            $row['slot_label'] = $labels[$slot] ?? ($slot !== '' ? $slot : admin_t('ui.ungrouped'));
             $tid = (int) ($row['type_id'] ?? 0);
-            $row['type_name'] = $tid > 0 ? (string) ($typeNames[$tid] ?? $typeNames[(string) $tid] ?? '分类#'.$tid) : '全部分类';
+            $row['type_name'] = $tid > 0
+                ? AdminSeedLabel::type((string) ($typeNames[$tid] ?? $typeNames[(string) $tid] ?? ''))
+                    ?: (admin_t('ui.types').' #'.$tid)
+                : admin_t('ui.all_categories');
             $exp = (int) ($row['expire_at'] ?? 0);
             $row['is_expired'] = $exp > 0 && $exp < $now;
-            $row['expire_text'] = $exp < 1 ? '不过期' : date('Y-m-d H:i', $exp);
+            $row['expire_text'] = $exp < 1 ? admin_t('ui.no_expire') : date('Y-m-d H:i', $exp);
             $row['expire_local'] = $exp < 1 ? '' : date('Y-m-d\TH:i', $exp);
             $html = (string) ($row['content'] ?? '');
             $img = '';
@@ -6029,7 +6070,7 @@ class SiteModuleService
             $url = trim((string) ($row['url'] ?? ''));
             $ts = (int) ($row['created_at'] ?? 0);
             $id = (int) ($row['id'] ?? 0);
-            $row['type_name'] = $type ? (string) $type->name : '';
+            $row['type_name'] = $type ? AdminSeedLabel::type((string) $type->name) : '';
             $row['type_missing'] = $tid > 0 && $type === null ? 1 : 0;
             $row['type_wrong'] = $type && $hasMid && (int) ($type->mid ?? 0) !== 3 ? 1 : 0;
             $row['has_logo'] = $logo !== '' ? 1 : 0;
@@ -6270,9 +6311,9 @@ class SiteModuleService
             $theme = trim((string) ($row['theme'] ?? ''));
             $name = trim((string) ($row['site_name'] ?? ''));
             $row['is_current'] = $host !== '' && in_array($host, $current, true);
-            $row['theme_label'] = $theme === '' ? '跟站点设置' : DomainBindService::themeTitle($theme);
+            $row['theme_label'] = $theme === '' ? admin_t('ui.follow_site') : DomainBindService::themeTitle($theme);
             $row['theme_missing'] = $theme !== '' && ! DomainBindService::themeExists($theme);
-            $row['site_name_label'] = $name !== '' ? $name : '跟站点设置';
+            $row['site_name_label'] = $name !== '' ? $name : admin_t('ui.follow_site');
             $row['status'] = (int) ($row['status'] ?? 0);
         }
         unset($row);
@@ -6598,10 +6639,10 @@ class SiteModuleService
     {
         try {
             if (! Schema::hasTable('video_players')) {
-                return Result::fail('请先执行数据库迁移');
+                return Result::fail(admin_t('ui.migrate_first'));
             }
         } catch (\Throwable) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $this->ensurePlayerEngineColumn();
         $probe = new VideoPlayerModel;
@@ -6740,7 +6781,7 @@ class SiteModuleService
             return Result::fail('没有接口地址，先编辑补上');
         }
         if (! Schema::hasTable('collect_sources')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $exist = $this->findCollectByApiUrl($url);
         if ($exist) {
@@ -7025,7 +7066,7 @@ class SiteModuleService
             return Result::fail('专题不存在');
         }
         if (! Schema::hasTable('video_topic_art_rel') || ! Schema::hasTable('video_arts')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
         $list = array_values(array_unique(array_filter(array_map('intval', preg_split('/[,\s]+/', $ids) ?: []))));
         VideoTopicArtRelModel::query()->where('topic_id', $topicId)->delete();
@@ -7173,11 +7214,11 @@ class SiteModuleService
                 ? trim((string) ($payload['title'] ?? ''))
                 : null;
             if ($id === null && ($title === null || $title === '')) {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($title !== null) {
                 if ($title === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 $payload['title'] = mb_substr($title, 0, 200);
             }
@@ -7303,11 +7344,11 @@ class SiteModuleService
                 ? trim((string) ($payload['name'] ?? ''))
                 : null;
             if ($id === null && ($name === null || $name === '')) {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== null) {
                 if ($name === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 $payload['name'] = mb_substr($name, 0, 80);
             }
@@ -7413,11 +7454,11 @@ class SiteModuleService
                 ? trim((string) ($payload['name'] ?? ''))
                 : null;
             if ($id === null && ($name === null || $name === '')) {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== null) {
                 if ($name === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 $payload['name'] = mb_substr($name, 0, 40);
             }
@@ -7469,11 +7510,11 @@ class SiteModuleService
                 ? trim((string) ($payload['name'] ?? ''))
                 : null;
             if ($id === null && ($name === null || $name === '')) {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== null) {
                 if ($name === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 $payload['name'] = mb_substr($name, 0, 40);
             }
@@ -7515,11 +7556,11 @@ class SiteModuleService
                 ? trim((string) ($payload['name'] ?? ''))
                 : null;
             if ($id === null && ($name === null || $name === '')) {
-                return Result::fail('请填写名称');
+                return Result::fail(admin_t('ui.please_fill_name'));
             }
             if ($name !== null) {
                 if ($name === '') {
-                    return Result::fail('请填写名称');
+                    return Result::fail(admin_t('ui.please_fill_name'));
                 }
                 $payload['name'] = mb_substr($name, 0, 120);
             }
@@ -7618,7 +7659,7 @@ class SiteModuleService
             $type = \Plugins\Mall\Services\MallService::normalizeType((string) ($row['type'] ?? 'goods'));
             $row['type'] = $type;
             $row['type_label'] = \Plugins\Mall\Services\MallService::typeLabel($type);
-            $row['status_label'] = (int) ($row['status'] ?? 0) === 1 ? '上架' : '下架';
+            $row['status_label'] = (int) ($row['status'] ?? 0) === 1 ? admin_t('ui.on') : admin_t('ui.off');
             $ext = \Plugins\Mall\Services\MallService::decodeExt($row['ext'] ?? '');
             $row['group_id'] = (int) ($ext['group_id'] ?? 0);
             $row['vip_days'] = (int) ($ext['days'] ?? $ext['vip_days'] ?? 0);
@@ -7752,7 +7793,7 @@ class SiteModuleService
         foreach ($rows as &$row) {
             $id = (int) ($row['id'] ?? 0);
             $typeId = (int) ($row['type_id'] ?? 0);
-            $row['type_name'] = (string) ($typeNames[$typeId] ?? '');
+            $row['type_name'] = AdminSeedLabel::type((string) ($typeNames[$typeId] ?? ''));
             $row['chapter_count'] = (int) ($chapterCounts[$id] ?? 0);
             $row['favor_count'] = (int) ($favorCounts[$id] ?? 0);
             $row['tag_ids'] = array_values($tagMap[$id] ?? []);
@@ -7810,7 +7851,7 @@ class SiteModuleService
             $mangaId = (int) ($row['manga_id'] ?? 0);
             $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
             $row['vip'] = (int) ($row['vip'] ?? 0);
-            $row['vip_label'] = $row['vip'] === 1 ? 'VIP' : '免费';
+            $row['vip_label'] = $row['vip'] === 1 ? admin_t('ui.group_vip') : admin_t('ui.free');
             if (isset($picCounts[$id])) {
                 $row['pic_count'] = (int) $picCounts[$id];
             } else {
@@ -7884,7 +7925,7 @@ class SiteModuleService
     private function listMangaTypes(array $params): array
     {
         if (! Schema::hasTable('plugin_manga_types')) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
 
         $all = \Plugins\Manga\Models\MangaType::query()
@@ -8030,7 +8071,7 @@ class SiteModuleService
             $mangaId = (int) ($row['manga_id'] ?? 0);
             $row['manga_title'] = (string) ($titles[$mangaId] ?? '');
             $row['status'] = (int) ($row['status'] ?? 0);
-            $row['status_label'] = $row['status'] === 1 ? '显示' : '待审';
+            $row['status_label'] = $row['status'] === 1 ? admin_t('ui.visible') : admin_t('ui.pending');
             $ts = (int) ($row['created_at'] ?? 0);
             $row['created_label'] = $ts > 0 ? date('Y-m-d H:i', $ts) : '';
             $row['front_url'] = $mangaId > 0 ? '/manga/'.$mangaId : '';

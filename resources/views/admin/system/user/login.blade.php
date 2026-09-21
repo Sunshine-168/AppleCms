@@ -49,7 +49,7 @@
                         </svg>
                         <input type="text" id="captcha" name="captcha" required inputmode="numeric" autocomplete="off" maxlength="4">
                     </div>
-                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="{{ admin_t('ui.captcha_refresh') }}"><img id="captchaImg" src="/admin/captcha" width="160" height="48" alt="{{ admin_t('auth.captcha') }}"></button>
+                    <button type="button" class="mac-captcha-q" id="captchaLabel" title="{{ admin_t('ui.captcha_refresh') }}"><img id="captchaImg" src="/admin/captcha" width="160" height="40" alt="{{ admin_t('auth.captcha') }}"></button>
                 </div>
             </div>
             <label class="mac-remember"><input type="checkbox" name="remember" value="1"> {{ admin_t('auth.remember') }}</label>

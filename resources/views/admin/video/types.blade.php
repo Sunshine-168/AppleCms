@@ -157,7 +157,7 @@
         }
         if (parseInt(d.child_count, 10) > 0) meta += ' · ' + String(L.children_n || '').replace('__N__', U.escape(String(d.child_count)));
         return '<div class="cat-cell" style="padding-left:' + (depth * 22) + 'px">' + branch
-            + '<div><a class="vod-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name || '') + '</a>'
+            + '<div><a class="vod-title" href="' + base + '/' + encodeURIComponent(d.id) + '/edit">' + U.escape(d.name_label || d.name || '') + '</a>'
             + '<div class="muted">' + meta + '</div></div></div>';
     }
 

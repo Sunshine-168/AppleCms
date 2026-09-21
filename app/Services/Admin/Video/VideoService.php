@@ -16,6 +16,7 @@ use App\Models\Video\VideoTypeModel;
 use App\Models\Video\VideoWebsite;
 use App\Support\AdminOpLog;
 use App\Support\AdminPage;
+use App\Support\AdminSeedLabel;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Exception;
@@ -181,7 +182,7 @@ class VideoService
             }
             foreach ($data['data'] as &$row) {
                 $tid = (int) ($row['type_id'] ?? 0);
-                $row['type_name'] = (string) ($typeMap[$tid]['name'] ?? '');
+                $row['type_name'] = AdminSeedLabel::type((string) ($typeMap[$tid]['name'] ?? ''));
             }
             unset($row);
 
@@ -306,7 +307,7 @@ class VideoService
             $vid = (int) ($item['id'] ?? 0);
             $epCount = (int) ($playMap[$vid] ?? 0);
             $total = (int) ($item['total'] ?? 0);
-            $item['type_name'] = $tid > 0 && isset($typeMap[$tid]) ? (string)$typeMap[$tid]['name'] : '';
+            $item['type_name'] = $tid > 0 && isset($typeMap[$tid]) ? AdminSeedLabel::type((string)$typeMap[$tid]['name']) : '';
             $item['hits'] = (int)($statMap[$vid]['hits'] ?? 0);
             $createdTs = (int)($item['created_at'] ?? ($item['create_time'] ?? 0));
             $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
@@ -793,9 +794,10 @@ class VideoService
     {
         foreach ($byParent[$parentId] ?? [] as $row) {
             $pad = $depth > 0 ? str_repeat('└ ', $depth) : '';
+            $rawName = (string) ($row['name'] ?? '');
             $out[] = [
                 'id' => (int) ($row['id'] ?? 0),
-                'name' => $pad.(string) ($row['name'] ?? ''),
+                'name' => $pad.AdminSeedLabel::type($rawName),
             ];
             $this->walkTypeOptions($byParent, (int) ($row['id'] ?? 0), $depth + 1, $out);
         }
@@ -918,7 +920,8 @@ class VideoService
         foreach ($flat as &$item) {
             $id = (int) ($item['id'] ?? 0);
             $pid = (int) ($item['parent_id'] ?? 0);
-            $item['parent_name'] = $pid > 0 ? (string) ($byId[$pid]['name'] ?? '') : '顶级';
+            $item['parent_name'] = $pid > 0 ? AdminSeedLabel::type((string) ($byId[$pid]['name'] ?? '')) : admin_t('ui.top_level');
+            $item['name_label'] = AdminSeedLabel::type((string) ($item['name'] ?? ''));
             $item['video_count'] = $videoCounts[$id] ?? 0;
             $item['art_count'] = $artCounts[$id] ?? 0;
             $item['website_count'] = $websiteCounts[$id] ?? 0;
@@ -1321,10 +1324,10 @@ class VideoService
         $limit = max(1, (int) ($params['limit'] ?? 20));
         try {
             if (! Schema::hasTable('video_tags')) {
-                return Result::fail('请先执行数据库迁移');
+                return Result::fail(admin_t('ui.migrate_first'));
             }
         } catch (\Throwable) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
 
         $q = VideoTagModel::query();
@@ -1471,10 +1474,10 @@ class VideoService
         $limit = max(1, (int) ($params['limit'] ?? 20));
         try {
             if (! Schema::hasTable('actors')) {
-                return Result::fail('请先执行数据库迁移');
+                return Result::fail(admin_t('ui.migrate_first'));
             }
         } catch (\Throwable) {
-            return Result::fail('请先执行数据库迁移');
+            return Result::fail(admin_t('ui.migrate_first'));
         }
 
         $q = ActorModel::query();

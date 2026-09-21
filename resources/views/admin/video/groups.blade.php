@@ -169,7 +169,7 @@
         bits.push(min > 0 ? String(L.group_points_min || '').replace('__N__', String(min)) : L.group_no_threshold);
         if (trysee > 0) bits.push(String(L.group_trysee || '').replace('__N__', String(trysee)));
         if (free > 0) bits.push(String(L.group_day_free || '').replace('__N__', String(free)));
-        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name || L.unnamed) + '</a> ' + badge + '</div>'
+        return '<div class="entry-row-title-line"><a class="entry-row-title js-edit" href="#">' + U.escape(d.name_label || d.name || L.unnamed) + '</a> ' + badge + '</div>'
             + '<div class="entry-row-meta">' + U.escape(bits.join(' · ')) + '</div>';
     }
     function peopleHtml(d) {
