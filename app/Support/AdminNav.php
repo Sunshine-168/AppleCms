@@ -480,6 +480,7 @@ class AdminNav
                     self::cat('/admin/system/monitor/login-logs', 'nav.logs', 'hint.logs'),
                     self::cat('/admin/system/database/backup', 'nav.database', 'hint.database', '', 'hint.database_keys'),
                     self::cat('/admin/system/shortcut', 'item.shortcut', 'hint.shortcut'),
+                    self::cat('/admin/help', 'nav.help', 'hint.help'),
                 ],
             ],
         ];
@@ -674,6 +675,7 @@ class AdminNav
                     ['url' => '/admin/system/monitor/login-logs', 'icon' => 'history', 'label' => 'nav.logs'],
                     ['url' => '/admin/system/runtime', 'icon' => 'heartbeat', 'label' => 'nav.runtime'],
                     ['url' => '/admin/system/database/backup', 'icon' => 'database', 'label' => 'nav.database'],
+                    ['url' => '/admin/help', 'icon' => 'question-circle', 'label' => 'nav.help', 'force' => true],
                 ],
                 'fold' => [
                     'label' => 'nav.more',
@@ -795,6 +797,7 @@ class AdminNav
             '/admin/set' => 'system',
             '/admin/stats' => 'work',
             '/admin/more' => 'work',
+            '/admin/help' => 'system',
             '/admin/welcome' => 'work',
             '/admin/video' => 'vod',
             '/admin' => 'work',

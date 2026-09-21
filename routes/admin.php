@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\Video\SiteModule;
 use App\Http\Controllers\Admin\Video\SiteOps;
 use App\Http\Controllers\Admin\Video\SiteSetting;
 use App\Http\Controllers\Admin\Video\SiteTools;
+use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\Index;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\StatController;
@@ -48,6 +49,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::get('/welcome', [Index::class, 'welcome'])->name('admin.welcome');// 欢迎页
     Route::get('/welcome/stats', [Index::class, 'welcomeStats'])->name('admin.welcome.stats');// 欢迎页统计数据
     Route::get('/more', [Index::class, 'more'])->name('admin.more');
+    Route::get('/help', [HelpController::class, 'index'])->name('admin.help');
     Route::get('/plugins', [PluginController::class, 'index'])->name('admin.plugins');
     Route::post('/plugins/upload', [PluginController::class, 'upload'])->name('admin.plugins.upload');
     Route::get('/plugins/{id}', [PluginController::class, 'show'])->where('id', '[a-z][a-z0-9_]*')->name('admin.plugins.show');

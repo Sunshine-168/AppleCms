@@ -20,12 +20,42 @@ class InstallController extends Controller
         }
         $checks = $this->install->checks();
         $db = $this->install->databaseStatus();
+        $failN = 0;
+        $warnN = 0;
+        $passN = 0;
+        foreach ($checks as $check) {
+            if ($check['ok']) {
+                $passN++;
+            } elseif ($check['required']) {
+                $failN++;
+            } else {
+                $warnN++;
+            }
+        }
+        usort($checks, static function (array $a, array $b): int {
+            $rank = static function (array $row): int {
+                if (! $row['ok'] && $row['required']) {
+                    return 0;
+                }
+                if (! $row['ok']) {
+                    return 1;
+                }
+
+                return 2;
+            };
+
+            return $rank($a) <=> $rank($b);
+        });
 
         return view('install.index', [
             'checks' => $checks,
             'requiredOk' => $this->install->requiredPassed($checks),
+            'failN' => $failN,
+            'warnN' => $warnN,
+            'passN' => $passN,
             'dbOk' => $db['ok'],
             'dbError' => $db['error'],
+            'sqlitePath' => 'database/database.sqlite',
         ]);
     }
 

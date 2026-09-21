@@ -66,3 +66,22 @@ if (! function_exists('admin_localize_extra_page')) {
         return $page;
     }
 }
+
+if (! function_exists('admin_help_view')) {
+    function admin_help_view(string $topic): string
+    {
+        $allowed = ['use', 'admin', 'templates', 'tags', 'env', 'schedule', 'laravel', 'docker'];
+        if (! in_array($topic, $allowed, true)) {
+            $topic = 'use';
+        }
+        $zh = 'admin.help._'.$topic;
+        if (\App\Support\AdminUi::current() === \App\Support\AdminUi::EN) {
+            $en = 'admin.help.en._'.$topic;
+            if (view()->exists($en)) {
+                return $en;
+            }
+        }
+
+        return $zh;
+    }
+}

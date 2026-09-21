@@ -83,6 +83,7 @@ class AdminPermission
             'admin/unlock',
             'admin/welcome',
             'admin/more',
+            'admin/help',
             'admin/plugins',
         ]);
     }
