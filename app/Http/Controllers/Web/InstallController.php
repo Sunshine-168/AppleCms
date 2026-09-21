@@ -13,11 +13,34 @@ class InstallController extends Controller
 {
     public function __construct(private readonly VideoInstallService $install) {}
 
-    public function index(): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
-        if ($this->install->alreadyInstalled()) {
+        $way = (string) $request->query('way', 'web');
+        if (! in_array($way, ['web', 'laravel', 'docker', 'deploy'], true)) {
+            $way = 'web';
+        }
+        if ($this->install->alreadyInstalled() && $way === 'web') {
             return redirect('/admin/login');
         }
+
+        $data = [
+            'way' => $way,
+            'checks' => [],
+            'requiredOk' => true,
+            'failN' => 0,
+            'warnN' => 0,
+            'passN' => 0,
+            'dbOk' => false,
+            'dbError' => '',
+            'sqlitePath' => 'database/database.sqlite',
+            'deployUrl' => url('/install?way=deploy'),
+            'webInstallUrl' => url('/install'),
+            'scheduleUrl' => url('/admin/help?topic=schedule'),
+        ];
+        if ($way !== 'web') {
+            return view('install.index', $data);
+        }
+
         $checks = $this->install->checks();
         $db = $this->install->databaseStatus();
         $failN = 0;
@@ -46,17 +69,15 @@ class InstallController extends Controller
 
             return $rank($a) <=> $rank($b);
         });
+        $data['checks'] = $checks;
+        $data['requiredOk'] = $this->install->requiredPassed($checks);
+        $data['failN'] = $failN;
+        $data['warnN'] = $warnN;
+        $data['passN'] = $passN;
+        $data['dbOk'] = $db['ok'];
+        $data['dbError'] = $db['error'];
 
-        return view('install.index', [
-            'checks' => $checks,
-            'requiredOk' => $this->install->requiredPassed($checks),
-            'failN' => $failN,
-            'warnN' => $warnN,
-            'passN' => $passN,
-            'dbOk' => $db['ok'],
-            'dbError' => $db['error'],
-            'sqlitePath' => 'database/database.sqlite',
-        ]);
+        return view('install.index', $data);
     }
 
     public function probe(Request $request): JsonResponse

@@ -18,6 +18,21 @@
 @endphp
 <div class="wrap install-index">
     <div class="brand"><span class="logo">苹</span> 苹果v12 安装</div>
+    <nav class="ways" aria-label="安装方式">
+        <a class="{{ ($way ?? 'web') === 'web' ? 'is-on' : '' }}" href="{{ url('/install') }}">网页安装</a>
+        <a class="{{ ($way ?? 'web') === 'laravel' ? 'is-on' : '' }}" href="{{ url('/install?way=laravel') }}">Laravel 命令行</a>
+        <a class="{{ ($way ?? 'web') === 'docker' ? 'is-on' : '' }}" href="{{ url('/install?way=docker') }}">Docker</a>
+        <a class="{{ ($way ?? 'web') === 'deploy' ? 'is-on' : '' }}" href="{{ url('/install?way=deploy') }}">上线部署</a>
+    </nav>
+    @if(($way ?? 'web') !== 'web')
+    <div class="card install-guide">
+        @include(match ($way) {
+            'laravel' => 'admin.help._laravel',
+            'docker' => 'admin.help._docker',
+            default => 'admin.help._env',
+        })
+    </div>
+    @else
     <div class="card">
         <aside class="rail">
             <h1>三步即可用</h1>
@@ -51,6 +66,7 @@
                             </li>
                         @endforeach
                     </ul>
+                    <p class="hint">完整 php.ini、nginx 和定时任务见 <a href="{{ url('/install?way=deploy') }}">上线部署</a>。</p>
                     <div class="actions">
                         <span class="muted">{{ $requiredOk ? '' : '先处理标成必须修复的项。' }}</span>
                         <button class="btn" type="button" data-next @disabled(! $requiredOk)>下一步：数据库</button>
@@ -147,7 +163,9 @@
             </form>
         </div>
     </div>
+    @endif
 </div>
+@if(($way ?? 'web') === 'web')
 <script>
 (function () {
     var form = document.getElementById('installForm');
@@ -322,6 +340,36 @@
         }
     });
 })();
+</script>
+@endif
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var code = btn.parentElement && btn.parentElement.querySelector('code');
+        if (!code) return;
+        var text = code.innerText;
+        function done() {
+            btn.textContent = '已复制';
+            setTimeout(function () { btn.textContent = '复制'; }, 1500);
+        }
+        function fallback() {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(done).catch(fallback);
+        } else {
+            fallback();
+        }
+    });
+});
 </script>
 </body>
 </html>

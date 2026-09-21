@@ -21,6 +21,7 @@
             <div class="btns">
                 <a class="btn" href="{{ url('/admin/login') }}">进入后台</a>
                 <a class="btn-muted" href="{{ url('/') }}">打开前台</a>
+                <a class="btn-muted" href="{{ url('/install?way=deploy') }}">上线部署说明</a>
             </div>
         </div>
     </div>

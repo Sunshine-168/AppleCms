@@ -29,6 +29,28 @@ body {
 }
 .wrap { max-width: 920px; margin: 0 auto; padding: 40px 20px 56px; }
 .brand { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-weight: 700; font-size: 16px; }
+.ways {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 16px;
+    flex-wrap: wrap;
+}
+.ways a {
+    padding: 7px 12px;
+    border-radius: 99px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+}
+.ways a:hover { color: var(--primary-deep); border-color: var(--primary-border); }
+.ways a.is-on {
+    background: var(--primary-soft);
+    border-color: var(--primary-border);
+    color: var(--primary-deep);
+    font-weight: 600;
+}
 .logo {
     width: 32px;
     height: 32px;
@@ -188,6 +210,66 @@ input:focus {
 .done h1 { margin: 0 0 8px; font-size: 22px; }
 .done .btns { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
 .done .account { margin: 12px auto 0; max-width: 360px; padding: 10px 12px; background: #f7f9fc; border-radius: 8px; color: var(--muted); }
+.install-guide {
+    display: block;
+    min-height: 0;
+}
+.install-guide .card.guide {
+    display: block;
+    min-height: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+.install-guide .card.guide .pane { padding: 28px 32px 24px; }
+.install-guide h2 { margin: 0 0 8px; font-size: 18px; }
+.install-guide h3 { margin: 18px 0 6px; font-size: 14px; }
+.install-guide .muted { line-height: 1.6; }
+.install-guide a { color: var(--primary-deep); }
+.install-guide .help-doc {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px;
+    font-size: 13px;
+}
+.install-guide .help-doc th,
+.install-guide .help-doc td {
+    text-align: left;
+    vertical-align: top;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.55;
+}
+.install-guide .code {
+    position: relative;
+    margin: 8px 0 10px;
+    background: #1e2228;
+    color: #e8eaed;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.install-guide .code pre {
+    margin: 0;
+    padding: 14px 72px 16px 16px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.install-guide .code code { font-family: Consolas, "SF Mono", Menlo, monospace; }
+.install-guide .code .copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 0;
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
 [hidden] { display: none !important; }
 form.is-running .actions [data-prev],
 form.is-running .actions #installBack { visibility: hidden; }
@@ -200,4 +282,5 @@ form.is-running .actions #installBack { visibility: hidden; }
     .steps li { flex: 1; padding: 8px 6px; font-size: 12px; }
     .pane { padding: 20px 16px 16px; }
     .choice, .field-grid { grid-template-columns: 1fr; }
+    .install-guide .card.guide .pane { padding: 20px 16px 16px; }
 }
