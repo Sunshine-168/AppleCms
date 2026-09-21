@@ -98,7 +98,7 @@
                 <input type="hidden" name="comment_audit" value="0">
                 <label class="inline">
                     <input type="checkbox" name="comment_audit" value="1" @checked($on('comment_audit'))>
-                    {{ admin_t('ui.comment_audit') }}
+                    {{ admin_t('ui.comment_need_audit') }}
                 </label>
                 <input type="hidden" name="gbook_audit" value="0">
                 <label class="inline">

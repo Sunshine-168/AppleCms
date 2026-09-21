@@ -423,4 +423,36 @@ return [
     'ui.sc_library' => $t('Mediathek', 'Mediateca', 'Médiathèque', '영상 라이브러리', 'Biblioteca', 'ライブラリ'),
     'ui.sc_maintain' => $t('Wartung', 'Mantenimiento', 'Maintenance', '유지보수', 'Manutenção', '保守'),
     'ui.sc_plugins_hint' => $t('Manga, Shop und Chat hier installieren — nicht im Kernmenü', 'Manga, tienda y chat se instalan aquí, no en el menú núcleo', 'Manga, boutique et chat s’installent ici, pas au menu noyau', '만화·몰·채팅은 여기. 핵심 메뉴 아님', 'Manga, loja e chat instalam-se aqui, não no menu núcleo', '漫画・モール・チャットはここ。コアメニューではありません'),
+    'auth.sub' => $t(
+        'Filme, Manga, Romane, Galerien und Live haben je einen Arbeitsbereich — kein endloses Menü.',
+        'Vídeo, manga, novelas, galerías y directo, cada uno con su mesa — no un menú interminable.',
+        'Vidéo, manga, romans, galeries et live ont chacun un bureau — pas un menu sans fin.',
+        '영상·만화·소설·도집·라이브를 나눠 관리합니다. 메뉴를 한 줄로 쌓지 않습니다.',
+        'Vídeo, manga, romances, galerias e live têm cada um a sua secretária — não um menu sem fim.',
+        '動画・漫画・小説・図集・ライブ配信を分けて管理。メニューを一列に積みません。'
+    ),
+    'auth.pitch_1' => $t(
+        'Oben wechseln Filme / Manga / Romane / Galerien / Live; die Seitenleiste bleibt bei diesem Bereich',
+        'La barra superior cambia Películas / Manga / Novelas / Galerías / Directo; la lateral se queda en esa mesa',
+        'La barre du haut passe Films / Manga / Romans / Galeries / Live ; la latérale reste sur ce bureau',
+        '위쪽에서 영상 / 만화 / 소설 / 도집 / 라이브를 바꾸고, 사이드바는 그 칸만',
+        'A barra de cima muda Filmes / Manga / Romances / Galerias / Live; a lateral fica nessa secretária',
+        'トップで 映像 / 漫画 / 小説 / 図集 / 配信 を切替え、サイドバーは今の欄だけ'
+    ),
+    'auth.pitch_2' => $t(
+        'Sammeln, prüfen, veröffentlichen in einer Linie; PV / UV / Spider sind eingebaut',
+        'Recolección, revisión y publicación en una línea; PV / UV / arañas van de serie',
+        'Collecte, relecture et publication sur une ligne ; PV / UV / spiders sont intégrés',
+        '수집·심사·공개가 한 줄. PV / UV / 스파이더 통계는 기본 제공',
+        'Recolha, revisão e publicação numa linha; PV / UV / spiders já vêm incluídos',
+        '収集・審査・公開が一本。PV / UV / クローラ統計は最初から入っています'
+    ),
+    'auth.pitch_3' => $t(
+        'Zahlung und SMS als Plugins; die Admin-Oberfläche spricht neun Sprachen',
+        'Pago y SMS se instalan como complementos; el admin habla nueve idiomas',
+        'Paiement et SMS s’installent en extensions ; l’admin parle neuf langues',
+        '결제와 문자는 플러그인. 관리 화면은 아홉 개 언어',
+        'Pagamento e SMS instalam-se como extensões; o admin fala nove idiomas',
+        '決済と SMS はプラグイン。管理画面は九つの言語'
+    ),
 ];

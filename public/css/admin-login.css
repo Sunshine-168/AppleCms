@@ -9,7 +9,7 @@
     --mac-muted: #4b5563;
     --mac-line: #e5e7eb;
     --mac-field: #f9fafb;
-    --mac-font: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    --mac-font: "PingFang SC", "PingFang TC", "Microsoft YaHei", "Microsoft JhengHei", "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -57,14 +57,14 @@ body.mac-login {
     margin: 14px 0 0 auto;
     font-size: 16px;
     color: #6b7280;
-    max-width: 420px;
+    max-width: 480px;
     line-height: 1.6;
 }
 
 .mac-login-pitch {
     margin: 18px 0 0 auto;
     padding: 0;
-    max-width: 420px;
+    max-width: 480px;
     list-style: none;
     text-align: left;
 }
