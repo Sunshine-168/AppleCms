@@ -13,6 +13,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->ensureCompiledViewPath();
         $this->app->singleton(PluginHost::class);
         $this->app->singleton(PluginManager::class);
         $manager = $this->app->make(PluginManager::class);
@@ -40,6 +41,25 @@ class AppServiceProvider extends ServiceProvider
         try {
             app(\App\Services\Video\VideoSettingService::class)->applyRuntime();
         } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * 新装时 storage/framework/views 经常还不存在。配置一旦把编译路径读成空，
+     * 插件注册 Blade 指令就会在 package:discover 里中断。
+     */
+    private function ensureCompiledViewPath(): void
+    {
+        $dir = storage_path('framework/views');
+        if (! is_dir($dir)) {
+            try {
+                mkdir($dir, 0775, true);
+            } catch (\Throwable) {
+            }
+        }
+        $compiled = config('view.compiled');
+        if (! is_string($compiled) || $compiled === '') {
+            config(['view.compiled' => $dir]);
         }
     }
 }
