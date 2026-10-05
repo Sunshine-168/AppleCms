@@ -13,6 +13,19 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
+foreach ([
+    dirname(__DIR__).'/storage/framework/views',
+    dirname(__DIR__).'/storage/framework/cache/data',
+    dirname(__DIR__).'/storage/framework/sessions',
+    dirname(__DIR__).'/storage/logs',
+    dirname(__DIR__).'/storage/app',
+    dirname(__DIR__).'/bootstrap/cache',
+] as $runtimeDir) {
+    if (! is_dir($runtimeDir)) {
+        @mkdir($runtimeDir, 0775, true);
+    }
+}
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -126,11 +139,27 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {
-            Syslog::exception('system', $e);
+            try {
+                Syslog::exception('system', $e);
+            } catch (\Throwable) {
+            }
         });
         $exceptions->render(function (\Throwable $e, Request $request) {
             if (ApiError::shouldRender($request)) {
                 return ApiError::json($e);
+            }
+            if ($request->is('install') || $request->is('install/*')) {
+                $detail = trim($e->getMessage());
+                if ($detail === '') {
+                    $detail = $e::class;
+                }
+                $body = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>安装出错</title></head>'
+                    .'<body style="font:15px/1.6 sans-serif;max-width:720px;margin:48px auto;padding:0 16px">'
+                    .'<h1>安装页面出错</h1><p>'.htmlspecialchars($detail, ENT_QUOTES, 'UTF-8').'</p>'
+                    .'<p>请把网站 PHP 设为 8.4，并让 storage 和 bootstrap/cache 对运行用户可写，然后刷新。</p>'
+                    .'</body></html>';
+
+                return response($body, 500, ['Content-Type' => 'text/html; charset=UTF-8']);
             }
 
             return null;
