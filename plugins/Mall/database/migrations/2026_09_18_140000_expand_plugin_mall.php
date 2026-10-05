@@ -16,7 +16,7 @@ return new class extends Migration
             }
             if (! Schema::hasColumn('plugin_mall_goods', 'ext')) {
                 Schema::table('plugin_mall_goods', function (Blueprint $table) {
-                    $table->text('ext')->default('');
+                    $table->text('ext')->nullable();
                 });
             }
         }
@@ -29,7 +29,7 @@ return new class extends Migration
             }
             if (! Schema::hasColumn('plugin_mall_orders', 'delivery')) {
                 Schema::table('plugin_mall_orders', function (Blueprint $table) {
-                    $table->text('delivery')->default('');
+                    $table->text('delivery')->nullable();
                 });
             }
             if (! Schema::hasColumn('plugin_mall_orders', 'complete_at')) {
