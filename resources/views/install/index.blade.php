@@ -20,7 +20,7 @@
     <div class="brand"><span class="logo">苹</span> 苹果v12 安装</div>
     <nav class="ways" aria-label="安装方式">
         <a class="{{ ($way ?? 'web') === 'web' ? 'is-on' : '' }}" href="{{ url('/install') }}">网页安装</a>
-        <a class="{{ ($way ?? 'web') === 'laravel' ? 'is-on' : '' }}" href="{{ url('/install?way=laravel') }}">Laravel 命令行</a>
+        <a class="{{ ($way ?? 'web') === 'laravel' ? 'is-on' : '' }}" href="{{ url('/install?way=laravel') }}">Shell</a>
         <a class="{{ ($way ?? 'web') === 'docker' ? 'is-on' : '' }}" href="{{ url('/install?way=docker') }}">Docker</a>
         <a class="{{ ($way ?? 'web') === 'deploy' ? 'is-on' : '' }}" href="{{ url('/install?way=deploy') }}">上线部署</a>
     </nav>

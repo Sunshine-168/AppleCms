@@ -50,7 +50,7 @@ class InstallPageTest extends TestCase
         $this->assertStringContainsString('installError', $html);
         $this->assertStringContainsString('测试并继续', $html);
         $this->assertStringContainsString('网页安装', $html);
-        $this->assertStringContainsString('Laravel 命令行', $html);
+        $this->assertStringContainsString('Shell', $html);
         $this->assertStringContainsString('Docker', $html);
         $this->assertStringContainsString('上线部署', $html);
         $this->assertStringContainsString('/install?way=deploy', $html);
@@ -64,8 +64,8 @@ class InstallPageTest extends TestCase
     {
         $this->get('/install?way=laravel')
             ->assertOk()
-            ->assertSee('用 Laravel 命令行安装')
-            ->assertSee('composer install')
+            ->assertSee('用 Shell 安装')
+            ->assertSee('bash install.sh')
             ->assertSee('php artisan video:install')
             ->assertSee('php artisan serve')
             ->assertSee('/install?way=deploy');

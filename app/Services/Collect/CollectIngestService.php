@@ -558,9 +558,9 @@ class CollectIngestService
                 'tag_id' => $tag->id,
             ]);
         }
-        $actors = preg_split('/[,，\/]+/u', (string) ($item['vod_actor'] ?? '')) ?: [];
-        $sort = 10;
-        foreach (array_unique(array_filter(array_map('trim', $actors))) as $name) {
+        $actors = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,，\/]+/u', (string) ($item['vod_actor'] ?? '')) ?: []))));
+        $sort = count($actors);
+        foreach ($actors as $name) {
             $actor = \App\Models\Video\ActorModel::query()->firstOrCreate(
                 ['name' => $name],
                 ['avatar' => '', 'status' => 1, 'sort' => 0, 'created_at' => $now, 'updated_at' => $now]
@@ -570,7 +570,7 @@ class CollectIngestService
                 'actor_id' => $actor->id,
                 'role_type' => 1,
             ];
-            $extra = ['sort' => $sort--];
+            $extra = ['sort' => max(0, $sort--)];
             if (Schema::hasColumn('video_actor_rel', 'role_name')) {
                 $extra['role_name'] = '';
             }

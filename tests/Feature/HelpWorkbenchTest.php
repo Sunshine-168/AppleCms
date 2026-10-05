@@ -114,7 +114,8 @@ class HelpWorkbenchTest extends TestCase
 
         $this->get('/admin/help?topic=laravel')
             ->assertOk()
-            ->assertSee('用 Laravel 命令行安装')
+            ->assertSee('用 Shell 安装')
+            ->assertSee('bash install.sh')
             ->assertSee('php artisan video:install')
             ->assertSee('/admin/help?topic=env');
 

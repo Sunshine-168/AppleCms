@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "applev12/cms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "苹果v12 影视 CMS。网页、Shell、Docker 三种安装。",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
