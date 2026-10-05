@@ -8,9 +8,13 @@ foreach (glob(__DIR__.'/Helpers/*.php') as $file)
 if (! function_exists('admin_t')) {
     function admin_t(string $key, array $replace = []): string
     {
-        $line = trans('admin.'.$key, $replace);
+        $full = 'admin.'.$key;
+        $line = trans($full, $replace);
+        if (! is_string($line) || $line === $full) {
+            $line = trans($full, $replace, 'zh_cn');
+        }
 
-        return is_string($line) ? $line : $key;
+        return is_string($line) && $line !== $full ? $line : $key;
     }
 }
 

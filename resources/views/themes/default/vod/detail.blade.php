@@ -90,26 +90,26 @@
 
     <section class="home-sec">
         <div class="sec-head"><h2>播放线路</h2></div>
-        @vodSource(['type' => 'play'])
-            <div class="source-block play-panel">
-                <h3 class="source-name">{{ $item->display_name ?? $item->name }}</h3>
-                <div class="eps">
+        <div class="source-row">
+            @vodSource(['type' => 'play'])
+                <div class="source-item">
+                    <span class="source-name">{{ $item->display_name ?? $item->name }}</span>
                     @foreach($item->episodes as $ep)
                         <a href="{{ $ep->play_url }}">{{ $ep->display_name }}</a>
                     @endforeach
                 </div>
-            </div>
-        @endvodSource
-        @vodSource(['type' => 'down'])
-            <div class="source-block play-panel">
-                <h3 class="source-name">下载 · {{ $item->display_name ?? $item->name }}</h3>
-                <div class="eps">
+            @endvodSource
+        </div>
+        <div class="source-row">
+            @vodSource(['type' => 'down'])
+                <div class="source-item">
+                    <span class="source-name">下载 · {{ $item->display_name ?? $item->name }}</span>
                     @foreach($item->episodes as $ep)
                         <a href="{{ $ep->url }}" target="_blank" rel="nofollow">{{ $ep->display_name }}</a>
                     @endforeach
                 </div>
-            </div>
-        @endvodSource
+            @endvodSource
+        </div>
     </section>
 
     <section class="home-sec">

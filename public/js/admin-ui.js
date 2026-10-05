@@ -134,17 +134,22 @@
         if (!el) {
             el = document.createElement('div');
             el.id = 'ui-loading';
+            document.body.appendChild(el);
+        }
+        if (!el.querySelector('.ui-loading-log')) {
             el.innerHTML = '<div class="ui-loading-card">'
                 + '<span class="ui-loading-orbit" aria-hidden="true"><i></i></span>'
                 + '<strong class="ui-loading-title"></strong>'
                 + '<p class="ui-loading-text"></p>'
                 + '<div class="ui-loading-stats" hidden></div>'
                 + '<p class="ui-loading-meta" hidden></p>'
+                + '<div class="ui-loading-log" hidden></div>'
                 + '<div class="ui-loading-bar"><i></i></div>'
                 + '</div>';
-            document.body.appendChild(el);
         }
-        el.className = 'ui-loading' + (kind ? ' is-' + kind : '');
+        var done = !!(msg && typeof msg === 'object' && msg.done);
+        el.className = 'ui-loading' + (kind ? ' is-' + kind : '') + (done ? ' is-done' : '');
+        el.onclick = done ? function (e) { if (e.target === el) loading(false); } : null;
         var t = el.querySelector('.ui-loading-title');
         var p = el.querySelector('.ui-loading-text');
         var statsEl = el.querySelector('.ui-loading-stats');
@@ -173,6 +178,25 @@
         if (metaEl) {
             metaEl.textContent = meta;
             metaEl.hidden = meta === '';
+        }
+        var logEl = el.querySelector('.ui-loading-log');
+        var logs = (msg && typeof msg === 'object' && Array.isArray(msg.logs)) ? msg.logs : [];
+        if (logEl) {
+            if (logs.length) {
+                logEl.hidden = false;
+                logEl.innerHTML = logs.map(function (row) {
+                    var tone = String((row && row.tone) || '').replace(/[^a-z0-9_-]/gi, '');
+                    var tag = (row && row.tag) || '';
+                    var body = (row && row.text) || '';
+                    return '<div class="ui-loading-log-row is-' + tone + '"><span class="tag">' + escape(tag) + '</span><span class="body">' + escape(body) + '</span></div>';
+                }).join('');
+                logEl.scrollTop = logEl.scrollHeight;
+                if (p) p.hidden = true;
+            } else {
+                logEl.hidden = true;
+                logEl.innerHTML = '';
+                if (p) p.hidden = false;
+            }
         }
     }
 

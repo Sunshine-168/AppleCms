@@ -14,7 +14,7 @@
     @if(!empty($site['theme_head_code']))
     {!! $site['theme_head_code'] !!}
     @endif
-    <link rel="stylesheet" href="{{ asset('css/vod.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/vod.css') }}?v={{ @filemtime(public_path('css/vod.css')) ?: '1' }}">
     @stack('head')
     @if(!empty($site['theme_primary']))
     <style>:root{--vod-primary: {{ $site['theme_primary'] }};}</style>

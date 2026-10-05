@@ -784,16 +784,47 @@ input, textarea, button, select {
     font-size: 13px;
     line-height: 1.7;
 }
+.source-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+.source-row:empty { display: none; margin: 0; }
+.source-item {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 8px 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
 .source-block {
     margin: 0 0 12px;
 }
 .source-block:last-child { margin-bottom: 0; }
 .source-block.play-panel { margin-bottom: 12px; }
 .source-name {
-    margin: 0 0 10px;
-    font-size: 14px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 650;
+    padding: 0 4px 0 2px;
+}
+.source-item a {
+    background: var(--bg2);
     color: var(--text);
-    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid var(--line);
+}
+.source-item a:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: #fff;
 }
 .chip-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .chip-list a {
@@ -1067,12 +1098,21 @@ footer.site {
 }
 .breadcrumb { color:var(--muted); font-size:13px; margin-bottom:16px; }
 .desc { line-height:1.7; color:#c5c9d0; }
-.pager { margin: 28px 0 8px; }
+.pager {
+    margin: 28px 0 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
 .pager .pagination,
 .pager nav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; padding: 0; }
 .pager .pagination > a,
 .pager .pagination > span,
-.pager a, .pager span {
+.pager > a,
+.pager > span {
     background: var(--card);
     color: var(--muted);
     padding: 0 12px;
@@ -1092,6 +1132,7 @@ footer.site {
     color: var(--text);
     border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
+.pager .on,
 .pager .active span,
 .pager span[aria-current="page"],
 .pager .pagination > span.active {
@@ -1100,6 +1141,15 @@ footer.site {
     color: #fff;
     font-weight: 600;
 }
+.pager .is-off,
+.pager .is-gap {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+    min-width: auto;
+    pointer-events: none;
+}
+.pager .is-off { opacity: .4; }
 .type-block { margin-top:28px; }
 .type-block h2 { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
 .type-block .more { font-size:13px; font-weight:400; color:var(--muted); }

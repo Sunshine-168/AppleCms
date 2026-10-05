@@ -11,7 +11,21 @@
     @endif
     <style>
         html, body { margin:0; height:100%; background:#000; overflow:hidden; }
-        #player-shell { width:100%; height:100%; position:relative; overflow:hidden; background:#000; }
+        #player-shell {
+            width:100%;
+            height:100%;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+            background:#000;
+        }
+        #player-stage {
+            flex:1;
+            min-height:0;
+            position:relative;
+            overflow:hidden;
+            background:#000;
+        }
         #vod-player {
             position: absolute;
             inset: 0;
@@ -53,6 +67,7 @@
     $encrypt = (int) ($playEncrypt ?? 0) === 1;
     $buffer = (int) ($playBuffer ?? 5);
 @endphp
+    <div id="player-stage">
 @if($payError)
     <p class="muted">{{ $payError }}</p>
 @elseif($engine === 'iframe' && ($parsed || $raw))
@@ -62,6 +77,7 @@
 @else
     <p class="muted">暂无播放地址</p>
 @endif
+    </div>
 @if($media)
     @includeIf('danmaku::overlay')
 @endif
@@ -97,15 +113,16 @@
             if (inst && typeof inst.destroy === 'function') inst.destroy();
             if (inst && typeof inst.dispose === 'function') inst.dispose();
         } catch (e) {}
-        var shell = document.getElementById('player-shell');
-        if (!shell) return false;
-        shell.innerHTML = '';
+        var stage = document.getElementById('player-stage') || document.getElementById('player-shell');
+        if (!stage) return false;
+        var old = document.getElementById('vod-player');
+        if (old) old.remove();
         var frame = document.createElement('iframe');
         frame.id = 'vod-player';
         frame.src = url;
         frame.allow = 'autoplay; fullscreen';
         frame.setAttribute('allowfullscreen', '');
-        shell.appendChild(frame);
+        stage.appendChild(frame);
         return true;
     }
 

@@ -51,6 +51,15 @@
         'collect_fx_item_new' => admin_t('ui.collect_fx_item_new'),
         'collect_fx_item_upd' => admin_t('ui.collect_fx_item_upd'),
         'collect_fx_item_skip' => admin_t('ui.collect_fx_item_skip'),
+        'collect_fx_tag_new' => admin_t('ui.collect_fx_tag_new'),
+        'collect_fx_tag_upd' => admin_t('ui.collect_fx_tag_upd'),
+        'collect_fx_tag_skip' => admin_t('ui.collect_fx_tag_skip'),
+        'collect_fx_tag_fail' => admin_t('ui.collect_fx_tag_fail'),
+        'collect_fx_tag_done' => admin_t('ui.collect_fx_tag_done'),
+        'collect_fx_tag_page' => admin_t('ui.collect_fx_tag_page'),
+        'collect_fx_tag_run' => admin_t('ui.collect_fx_tag_run'),
+        'collect_fx_tag_temp' => admin_t('ui.collect_fx_tag_temp'),
+        'collect_fx_click_close' => admin_t('ui.collect_fx_click_close'),
         'resume_done' => admin_t('ui.resume_done'),
         'retry_done' => admin_t('ui.retry_done'),
         'confirm_collect_all' => admin_t('ui.confirm_collect_all'),
@@ -296,13 +305,37 @@
     }
 
     var collectFxTimer = 0;
+    var collectFxHide = 0;
+    var lastProgress = {};
     function collectStats(p) {
         p = p || {};
         return [
-            {key: 'created', label: L.collect_fx_new || '新建', n: parseInt(p.created, 10) || 0},
+            {key: 'created', label: L.collect_fx_new || '新增', n: parseInt(p.created, 10) || 0},
             {key: 'updated', label: L.collect_fx_upd || '更新', n: parseInt(p.updated, 10) || 0},
             {key: 'skipped', label: L.collect_fx_skip || '跳过', n: parseInt(p.skipped, 10) || 0}
         ];
+    }
+    function collectTag(action, page) {
+        if (action === 'created') return L.collect_fx_tag_new || '【新增】';
+        if (action === 'updated') return L.collect_fx_tag_upd || '【更新】';
+        if (action === 'skipped') return L.collect_fx_tag_skip || '【跳过】';
+        if (action === 'temp') return L.collect_fx_tag_temp || '【缓冲】';
+        if (action === 'fail') return L.collect_fx_tag_fail || '【错误】';
+        if (action === 'done') return L.collect_fx_tag_done || '【完成】';
+        if (parseInt(page, 10) > 0) {
+            return String(L.collect_fx_tag_page || '【第__P__页】').replace('__P__', String(page));
+        }
+        return L.collect_fx_tag_run || '【采集】';
+    }
+    function collectLogs(p) {
+        return (p && Array.isArray(p.lines) ? p.lines : []).map(function (line) {
+            line = line || {};
+            var action = String(line.action || '');
+            var title = String(line.title || '');
+            var msg = String(line.msg || '');
+            var text = title ? (title + (msg ? '  ' + msg : '')) : msg;
+            return {tone: action || 'page', tag: collectTag(action, line.page), text: text};
+        });
     }
     function collectLine(p) {
         p = p || {};
@@ -311,7 +344,7 @@
         var action = String(p.action || '');
         if (title) {
             var tpl = action === 'created'
-                ? (L.collect_fx_item_new || '新建「__TITLE__」')
+                ? (L.collect_fx_item_new || '新增「__TITLE__」')
                 : (action === 'updated'
                     ? (L.collect_fx_item_upd || '更新「__TITLE__」')
                     : (L.collect_fx_item_skip || '跳过「__TITLE__」'));
@@ -323,6 +356,7 @@
     }
     function paintCollect(name, p) {
         p = p || {};
+        lastProgress = p;
         var title = String(L.collecting_named || '正在采集「__NAME__」').replace('__NAME__', name || p.name || '');
         var meta = '';
         var page = parseInt(p.page, 10) || 0;
@@ -332,52 +366,84 @@
                 .replace('__P__', String(page))
                 .replace('__N__', pages > 0 ? String(pages) : '…');
         }
+        if (p.done) {
+            meta = (meta ? meta + ' · ' : '') + (L.collect_fx_click_close || '点击空白处关闭');
+        }
         U.loading(true, {
             kind: 'collect',
             title: title,
             text: collectLine(p),
             meta: meta,
-            stats: collectStats(p)
+            stats: collectStats(p),
+            logs: collectLogs(p),
+            done: !!p.done
+        });
+    }
+    function pollCollect(name, sourceId) {
+        U.get('/admin/video/collects/progress', {id: sourceId}).then(function (res) {
+            var p = (res && res.data) || {};
+            paintCollect(name, p);
         });
     }
     function startCollectFx(name, sourceId) {
-        paintCollect(name, {msg: L.collect_tip_connect || '正在连接资源站…'});
+        if (collectFxHide) { clearTimeout(collectFxHide); collectFxHide = 0; }
+        paintCollect(name, {msg: L.collect_tip_connect || '正在连接资源站…', lines: []});
         if (collectFxTimer) clearInterval(collectFxTimer);
         if (!sourceId) return;
-        collectFxTimer = setInterval(function () {
-            U.get('/admin/video/collects/progress', {id: sourceId}).then(function (res) {
-                var p = (res && res.data) || {};
-                paintCollect(name, p);
-            });
-        }, 700);
+        pollCollect(name, sourceId);
+        collectFxTimer = setInterval(function () { pollCollect(name, sourceId); }, 500);
     }
     function stopCollectFx() {
         if (collectFxTimer) {
             clearInterval(collectFxTimer);
             collectFxTimer = 0;
         }
+        if (collectFxHide) {
+            clearTimeout(collectFxHide);
+            collectFxHide = 0;
+        }
         U.loading(false);
     }
-    function finishCollectFx(name, res, fallbackMsg) {
-        var p = (res && res.data) || {};
-        var pageInfo = p.page && typeof p.page === 'object' ? p.page : {};
-        paintCollect(name, {
-            created: p.created,
-            updated: p.updated,
-            skipped: p.skipped,
-            action: (res && res.code === 0) ? 'done' : 'fail',
-            msg: (res && res.msg) || fallbackMsg || L.collect_done,
-            page: pageInfo.page || p.page || 0,
-            pages: pageInfo.pagecount || pageInfo.pageCount || 0
-        });
-        setTimeout(stopCollectFx, 900);
+    function finishCollectFx(name, res, fallbackMsg, sourceId) {
+        if (collectFxTimer) {
+            clearInterval(collectFxTimer);
+            collectFxTimer = 0;
+        }
+        if (collectFxHide) {
+            clearTimeout(collectFxHide);
+            collectFxHide = 0;
+        }
+        var apply = function (p) {
+            p = p || {};
+            var pageInfo = (res && res.data && res.data.page && typeof res.data.page === 'object') ? res.data.page : {};
+            paintCollect(name, {
+                created: (res && res.data && res.data.created) != null ? res.data.created : p.created,
+                updated: (res && res.data && res.data.updated) != null ? res.data.updated : p.updated,
+                skipped: (res && res.data && res.data.skipped) != null ? res.data.skipped : p.skipped,
+                action: (res && res.code === 0) ? 'done' : 'fail',
+                msg: (res && res.msg) || fallbackMsg || L.collect_done,
+                page: pageInfo.page || p.page || 0,
+                pages: pageInfo.pagecount || pageInfo.pageCount || p.pages || 0,
+                lines: p.lines || [],
+                done: true,
+                name: name || p.name
+            });
+            collectFxHide = setTimeout(stopCollectFx, 8000);
+        };
+        if (sourceId) {
+            U.get('/admin/video/collects/progress', {id: sourceId}).then(function (r) {
+                apply((r && r.data) || lastProgress);
+            });
+            return;
+        }
+        apply(lastProgress);
     }
     function runCollect(row, hours, pages, confirmText) {
         if (String(row.status) === '0') { U.toast(L.please_enable_collect, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
         startCollectFx(row.name, row.id);
         U.post('/admin/video/collects/run', {id: row.id, page: 1, pages: pages || 999, hours: hours || 0}).then(function (res) {
-            finishCollectFx(row.name, res, L.collect_done);
+            finishCollectFx(row.name, res, L.collect_done, row.id);
             table.refresh();
             U.toast((res && res.msg) || L.collect_done, res && res.code === 0 ? 'ok' : 'err');
         });
@@ -470,7 +536,7 @@
         if (a.classList.contains('js-resume')) {
             startCollectFx(row.name, row.id);
             U.post('/admin/video/collects/resume', {id: row.id, pages: 999, hours: 0}).then(function (res) {
-                finishCollectFx(row.name, res, L.resume_done);
+                finishCollectFx(row.name, res, L.resume_done, row.id);
                 table.refresh();
                 U.toast((res && res.msg) || L.resume_done, res && res.code === 0 ? 'ok' : 'err');
             });
@@ -478,7 +544,7 @@
         if (a.classList.contains('js-retry')) {
             startCollectFx(row.name, row.id);
             U.post('/admin/video/collects/retry', {id: row.id}).then(function (res) {
-                finishCollectFx(row.name, res, L.retry_done);
+                finishCollectFx(row.name, res, L.retry_done, row.id);
                 table.refresh();
                 U.toast((res && res.msg) || L.retry_done, res && res.code === 0 ? 'ok' : 'err');
             });

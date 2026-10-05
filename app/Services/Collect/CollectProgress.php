@@ -27,25 +27,57 @@ class CollectProgress
             'title' => '',
             'action' => '',
             'msg' => '正在连接资源站…',
+            'lines' => [],
         ]);
     }
 
-    /** @param  array<string, mixed>  $patch */
-    public static function tick(int $sourceId, array $patch): void
+    /**
+     * @param  array<string, mixed>  $patch
+     * @param  array{action?:string,title?:string,msg?:string,page?:int}|null  $line
+     */
+    public static function tick(int $sourceId, array $patch, ?array $line = null): void
     {
-        self::write($sourceId, array_merge(self::get($sourceId), $patch, [
+        self::write($sourceId, self::merge($sourceId, $patch, [
             'running' => true,
             'done' => false,
-        ]));
+        ], $line));
     }
 
-    /** @param  array<string, mixed>  $patch */
-    public static function finish(int $sourceId, array $patch = []): void
+    /**
+     * @param  array<string, mixed>  $patch
+     * @param  array{action?:string,title?:string,msg?:string,page?:int}|null  $line
+     */
+    public static function finish(int $sourceId, array $patch = [], ?array $line = null): void
     {
-        self::write($sourceId, array_merge(self::get($sourceId), $patch, [
+        self::write($sourceId, self::merge($sourceId, $patch, [
             'running' => false,
             'done' => true,
-        ]));
+        ], $line));
+    }
+
+    /**
+     * @param  array<string, mixed>  $patch
+     * @param  array<string, mixed>  $flags
+     * @param  array{action?:string,title?:string,msg?:string,page?:int}|null  $line
+     * @return array<string, mixed>
+     */
+    private static function merge(int $sourceId, array $patch, array $flags, ?array $line): array
+    {
+        $cur = self::get($sourceId);
+        unset($patch['lines']);
+        $row = array_merge($cur, $patch, $flags);
+        if ($line) {
+            $lines = is_array($row['lines'] ?? null) ? $row['lines'] : [];
+            $lines[] = [
+                'action' => (string) ($line['action'] ?? ''),
+                'title' => (string) ($line['title'] ?? ''),
+                'msg' => (string) ($line['msg'] ?? ''),
+                'page' => (int) ($line['page'] ?? 0),
+            ];
+            $row['lines'] = array_slice($lines, -200);
+        }
+
+        return $row;
     }
 
     /** @return array<string, mixed> */

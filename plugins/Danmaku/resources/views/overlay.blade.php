@@ -6,13 +6,14 @@
 @endphp
 @if($dmOn)
 <div id="danmaku-layer" aria-hidden="true"></div>
-<button type="button" id="danmaku-toggle" aria-expanded="false" aria-controls="danmaku-bar" title="发弹幕">弹</button>
 @if($needLogin && ! $loggedIn)
-    <div id="danmaku-login">
+    <div id="danmaku-bar" class="is-login">
+        <button type="button" id="danmaku-toggle" class="on" aria-pressed="true" title="开关弹幕">弹幕</button>
         <a href="{{ url('/member/login') }}" target="_top">登录后发弹幕</a>
     </div>
 @else
 <form id="danmaku-bar" autocomplete="off">
+    <button type="button" id="danmaku-toggle" class="on" aria-pressed="true" title="开关弹幕">弹幕</button>
     <div class="dm-modes" id="danmaku-modes" role="group" aria-label="弹幕位置">
         <button type="button" data-mode="0" class="on" title="滚动">滚</button>
         <button type="button" data-mode="1" title="顶部">顶</button>
@@ -29,8 +30,9 @@
 </form>
 @endif
 <style>
-#player-shell{position:relative;width:100%;height:100%;overflow:hidden}
-#danmaku-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
+#danmaku-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:4}
+#player-stage #danmaku-layer,#player-shell>#danmaku-layer{position:absolute;top:0;left:0;right:0;bottom:0}
+#player-shell>#danmaku-layer{bottom:auto;height:calc(100% - 44px)}
 .dm-item{
     position:absolute;white-space:nowrap;
     font:600 16px/1.25 "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
@@ -38,35 +40,28 @@
     left:100%;transition:transform 8s linear;will-change:transform;pointer-events:none;
 }
 .dm-item.is-top,.dm-item.is-bottom{left:50%;transform:translateX(-50%);transition:opacity .35s ease}
-#danmaku-toggle{
-    position:absolute;top:10px;right:10px;z-index:6;
-    width:36px;height:36px;padding:0;border:0;border-radius:50%;
-    background:rgba(12,14,19,.62);color:#fff;
-    font:700 13px/1 "PingFang SC","Microsoft YaHei",sans-serif;
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:0 4px 14px rgba(0,0,0,.35);
-    cursor:pointer;backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-}
-#danmaku-toggle[aria-expanded="true"]{background:rgba(47,126,240,.92);border-color:rgba(255,255,255,.2)}
-#danmaku-bar,#danmaku-login{
-    position:absolute;left:10px;right:10px;bottom:10px;z-index:5;
+#danmaku-bar{
+    flex:0 0 44px;
+    height:44px;
+    z-index:6;
     display:flex;gap:8px;align-items:center;flex-wrap:nowrap;
-    padding:6px;
-    border-radius:12px;
-    background:rgba(12,14,19,.78);
-    border:1px solid rgba(255,255,255,.08);
-    backdrop-filter:blur(12px) saturate(1.2);
-    -webkit-backdrop-filter:blur(12px) saturate(1.2);
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
-    opacity:0;pointer-events:none;transform:translateY(8px);
-    transition:opacity .18s ease, transform .18s ease;
+    padding:6px 8px;
+    background:#12151c;
+    border-top:1px solid rgba(255,255,255,.08);
+    box-sizing:border-box;
 }
-#danmaku-bar.is-open,#danmaku-login.is-open{
-    opacity:1;pointer-events:auto;transform:none;
+#danmaku-bar.is-login{justify-content:flex-start}
+#danmaku-bar.is-login a{
+    color:#fff;text-decoration:none;padding:6px 12px;border-radius:999px;
+    background:rgba(61,139,253,.28);border:1px solid rgba(61,139,253,.5);font-size:13px
 }
-#danmaku-login{justify-content:center;margin:0;color:rgba(255,255,255,.85);font-size:13px}
-#danmaku-login a{color:#fff;text-decoration:none;padding:4px 12px;border-radius:999px;background:rgba(61,139,253,.25);border:1px solid rgba(61,139,253,.45)}
+#danmaku-toggle{
+    flex:0 0 auto;height:32px;padding:0 10px;border:0;border-radius:8px;
+    background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);
+    font:700 12px/1 "PingFang SC","Microsoft YaHei",sans-serif;
+    cursor:pointer;
+}
+#danmaku-toggle.on{background:#2f7ef0;color:#fff}
 .dm-modes{
     display:inline-flex;flex:0 0 auto;
     padding:2px;gap:2px;
@@ -79,9 +74,7 @@
     font:500 12px/1 "PingFang SC","Microsoft YaHei",sans-serif;
     cursor:pointer;
 }
-.dm-modes button.on{
-    background:rgba(61,139,253,.95);color:#fff;
-}
+.dm-modes button.on{background:rgba(61,139,253,.95);color:#fff}
 .dm-compose{
     flex:1;min-width:0;display:flex;align-items:center;gap:6px;
     height:32px;padding:2px 2px 2px 10px;
@@ -116,9 +109,8 @@
 }
 @media (max-width:560px){
     .dm-item{font-size:14px}
-    #danmaku-toggle{top:8px;right:8px;width:32px;height:32px;font-size:12px}
-    #danmaku-bar,#danmaku-login{left:8px;right:8px;bottom:8px;padding:5px}
-    .dm-modes button{padding:0 6px;min-width:26px}
+    .dm-modes{display:none}
+    #danmaku-toggle{padding:0 8px}
     .dm-send{padding:0 10px}
 }
 </style>
@@ -130,33 +122,36 @@
     var listUrl = @json(url('/danmaku')) + '/' + videoId + '?episode_id=' + episodeId;
     var sendUrl = @json(url('/danmaku')) + '/' + videoId;
     var layer = document.getElementById('danmaku-layer');
-    var form = document.getElementById('danmaku-bar') || document.getElementById('danmaku-login');
+    var form = document.getElementById('danmaku-bar');
     var toggle = document.getElementById('danmaku-toggle');
     var input = document.getElementById('danmaku-text');
     var colorEl = document.getElementById('danmaku-color');
     var colorDot = document.querySelector('.dm-color-dot');
     var modes = document.getElementById('danmaku-modes');
+    var stage = document.getElementById('player-stage');
     if (!layer) return;
+    if (stage && layer.parentNode !== stage) stage.appendChild(layer);
     var mode = 0;
     var pool = [];
     var fired = {};
     var wall = Date.now();
-    var hideTimer = 0;
-    function barOpen() {
-        return !!(form && form.classList.contains('is-open'));
+    var show = true;
+    try { show = localStorage.getItem('vod_danmaku_on') !== '0'; } catch (e) {}
+    function setShow(on) {
+        show = !!on;
+        if (layer) layer.hidden = !show;
+        if (toggle) {
+            toggle.classList.toggle('on', show);
+            toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+        }
+        try { localStorage.setItem('vod_danmaku_on', show ? '1' : '0'); } catch (e) {}
     }
-    function setOpen(on) {
-        if (!form) return;
-        form.classList.toggle('is-open', !!on);
-        if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
-        if (on && input) setTimeout(function () { input.focus(); }, 40);
-        if (hideTimer) { clearTimeout(hideTimer); hideTimer = 0; }
-    }
+    setShow(show);
     if (toggle) {
         toggle.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            setOpen(!barOpen());
+            setShow(!show);
         });
     }
     function syncColor() {
@@ -164,13 +159,14 @@
     }
     syncColor();
     if (colorEl) colorEl.addEventListener('input', syncColor);
-    function media() { return document.querySelector('video'); }
+    function media() { return document.querySelector('#player-stage video, video'); }
     function now() {
         var v = media();
         if (v && !isNaN(v.currentTime)) return v.currentTime;
         return (Date.now() - wall) / 1000;
     }
     function spawn(d) {
+        if (!show) return;
         var el = document.createElement('span');
         el.className = 'dm-item';
         if (d.mode === 1) el.classList.add('is-top');
@@ -200,14 +196,18 @@
         pool = (res && res.data && res.data.list) ? res.data.list : [];
         tick();
     }).catch(function () { tick(); });
-    var v = media();
-    if (v) {
+    function bindSeek() {
+        var v = media();
+        if (!v || v._dmSeek) return;
+        v._dmSeek = true;
         v.addEventListener('seeked', function () {
             var t = now();
             fired = {};
             pool.forEach(function (d, i) { if (d.time < t) fired[i] = true; });
         });
     }
+    bindSeek();
+    setInterval(bindSeek, 1500);
     if (modes) {
         modes.addEventListener('click', function (e) {
             var btn = e.target.closest('[data-mode]');
@@ -218,7 +218,7 @@
             });
         });
     }
-    if (form && form.id === 'danmaku-bar' && input) {
+    if (form && form.tagName === 'FORM' && input) {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var text = (input.value || '').trim();
@@ -236,7 +236,6 @@
                 }
                 input.value = '';
                 spawn(res.data || payload);
-                hideTimer = setTimeout(function () { setOpen(false); }, 600);
             }).catch(function () {
                 if (window.vodToast) window.vodToast('发送失败', 'err');
             });

@@ -6002,8 +6002,71 @@ pre.out, pre.code-block {
     text-align: center;
 }
 .ui-loading.is-collect .ui-loading-card {
-    min-width: 340px;
-    padding: 24px 24px 20px;
+    min-width: 480px;
+    max-width: 560px;
+    padding: 20px 20px 16px;
+    align-items: stretch;
+    text-align: left;
+}
+.ui-loading.is-collect .ui-loading-orbit {
+    align-self: center;
+    width: 36px;
+    height: 36px;
+}
+.ui-loading.is-collect .ui-loading-title,
+.ui-loading.is-collect .ui-loading-text,
+.ui-loading.is-collect .ui-loading-meta,
+.ui-loading.is-collect .ui-loading-stats {
+    text-align: center;
+}
+.ui-loading.is-collect.is-done .ui-loading-orbit,
+.ui-loading.is-collect.is-done .ui-loading-bar {
+    display: none;
+}
+.ui-loading.is-collect .ui-loading-bar {
+    width: 100%;
+    align-self: stretch;
+}
+.ui-loading-log {
+    width: 100%;
+    max-height: 260px;
+    overflow: auto;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #111827;
+    color: #d1d5db;
+    font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, "PingFang SC", "Microsoft YaHei", monospace;
+}
+.ui-loading-log-row {
+    display: flex;
+    gap: 8px;
+    white-space: nowrap;
+}
+.ui-loading-log-row .tag {
+    flex: 0 0 auto;
+    font-weight: 700;
+}
+.ui-loading-log-row .body {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ui-loading-log-row.is-created .tag { color: #4ade80; }
+.ui-loading-log-row.is-updated .tag { color: #60a5fa; }
+.ui-loading-log-row.is-skipped .tag { color: #fb923c; }
+.ui-loading-log-row.is-fail .tag { color: #f87171; }
+.ui-loading-log-row.is-done .tag { color: #4ade80; }
+.ui-loading-log-row.is-temp .tag { color: #a78bfa; }
+.ui-loading-log-row.is-fetch .tag,
+.ui-loading-log-row.is-page .tag,
+.ui-loading-log-row.is-page_done .tag { color: #94a3b8; }
+@media (max-width: 640px) {
+    .ui-loading.is-collect .ui-loading-card {
+        min-width: 0;
+        width: calc(100vw - 28px);
+        max-width: none;
+    }
 }
 .ui-loading-orbit {
     width: 48px;
