@@ -77,14 +77,18 @@ class VideoInstallService
                 'key' => 'storage',
                 'label' => 'storage 目录可写',
                 'ok' => is_writable(storage_path()),
-                'detail' => storage_path(),
+                'detail' => is_writable(storage_path())
+                    ? '可以写入'
+                    : '还不能写。请在宝塔里把 storage 和 bootstrap/cache 交给 www，并允许写入',
                 'required' => true,
             ],
             [
                 'key' => 'cache',
                 'label' => 'bootstrap/cache 可写',
                 'ok' => is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache')),
-                'detail' => 'bootstrap/cache',
+                'detail' => is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache'))
+                    ? '可以写入'
+                    : '还不能写。请和 storage 一起交给 www，并允许写入',
                 'required' => true,
             ],
             [

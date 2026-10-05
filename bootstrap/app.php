@@ -149,15 +149,35 @@ return Application::configure(basePath: dirname(__DIR__))
                 return ApiError::json($e);
             }
             if ($request->is('install') || $request->is('install/*')) {
-                $detail = trim($e->getMessage());
-                if ($detail === '') {
-                    $detail = $e::class;
+                $raw = trim($e->getMessage());
+                $blocked = $raw === ''
+                    || str_contains($raw, 'Permission denied')
+                    || str_contains($raw, 'failed to open stream')
+                    || str_contains($raw, 'could not be opened');
+                if ($blocked) {
+                    $title = '目录还不能写';
+                    $lead = '安装要把会话和日志写到 storage。当前运行网站的用户还没有写入权限，所以先停在这里。';
+                    $hint = '在宝塔的文件管理里打开网站目录，把 storage 和 bootstrap/cache 的所有者改为 www，并允许写入。改完后刷新这个页面。';
+                } else {
+                    $title = '安装暂时没能继续';
+                    $plain = preg_replace('/The exception occurred while attempting to log:\s*/', '', $raw) ?? $raw;
+                    $plain = preg_replace('/Context:\s*\{"exception":\{\}\}\s*/', '', $plain) ?? $plain;
+                    $plain = trim(preg_replace('/\s+/', ' ', $plain) ?? $plain);
+                    if (mb_strlen($plain) > 180) {
+                        $plain = mb_substr($plain, 0, 180).'…';
+                    }
+                    $lead = $plain !== '' ? $plain : '请稍后再试。';
+                    $hint = '刷新页面重试。若仍停在这里，把 storage 和 bootstrap/cache 交给网站运行用户（宝塔里一般是 www）。';
                 }
-                $body = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>安装出错</title></head>'
-                    .'<body style="font:15px/1.6 sans-serif;max-width:720px;margin:48px auto;padding:0 16px">'
-                    .'<h1>安装页面出错</h1><p>'.htmlspecialchars($detail, ENT_QUOTES, 'UTF-8').'</p>'
-                    .'<p>请把网站 PHP 设为 8.4，并让 storage 和 bootstrap/cache 对运行用户可写，然后刷新。</p>'
-                    .'</body></html>';
+                $body = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                    .'<title>'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'</title>'
+                    .'<link rel="stylesheet" href="'.e(asset('css/install.css')).'">'
+                    .'</head><body><div class="wrap"><div class="brand"><span class="logo">苹</span> 苹果v12 安装</div>'
+                    .'<div class="card" style="display:block;padding:28px 32px"><h1 style="margin:0 0 8px;font-size:22px">'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'</h1>'
+                    .'<p class="lead">'.htmlspecialchars($lead, ENT_QUOTES, 'UTF-8').'</p>'
+                    .'<p class="hint">'.htmlspecialchars($hint, ENT_QUOTES, 'UTF-8').'</p>'
+                    .'<div class="actions"><a class="btn" href="'.e(url('/install')).'">刷新重试</a></div>'
+                    .'</div></div></body></html>';
 
                 return response($body, 500, ['Content-Type' => 'text/html; charset=UTF-8']);
             }

@@ -15,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->ensureAppKey();
         $this->ensureCompiledViewPath();
+        $this->ensureWritableLog();
         $this->app->singleton(PluginHost::class);
         $this->app->singleton(PluginManager::class);
         $manager = $this->app->make(PluginManager::class);
@@ -28,8 +29,8 @@ class AppServiceProvider extends ServiceProvider
     {
         if (! is_file(storage_path('app/install.lock'))) {
             config([
-                'session.driver' => 'file',
-                'cache.default' => 'file',
+                'session.driver' => $this->writableDir(storage_path('framework/sessions')) ? 'file' : 'cookie',
+                'cache.default' => $this->writableDir(storage_path('framework/cache/data')) ? 'file' : 'array',
                 'queue.default' => 'sync',
             ]);
         }
@@ -93,6 +94,32 @@ class AppServiceProvider extends ServiceProvider
             @file_put_contents($stored, $key);
         }
         config(['app.key' => $key]);
+    }
+
+    /**
+     * 日志目录不可写时，写 laravel.log 会失败，再把这个失败套进原来的异常里。
+     */
+    private function ensureWritableLog(): void
+    {
+        if ($this->writableDir(storage_path('logs'))) {
+            return;
+        }
+        config([
+            'logging.default' => 'errorlog',
+            'logging.channels.stack.ignore_exceptions' => true,
+        ]);
+    }
+
+    private function writableDir(string $dir): bool
+    {
+        if (! is_dir($dir)) {
+            try {
+                mkdir($dir, 0775, true);
+            } catch (\Throwable) {
+            }
+        }
+
+        return is_dir($dir) && is_writable($dir);
     }
 
     /**
