@@ -18,14 +18,14 @@
         <tr><td><code>monitor:tick</code></td><td>每分钟</td><td>运行监控采样</td></tr>
     </tbody>
 </table>
-<p class="hint">本机 <code>php artisan serve</code> 或 Docker 试用可以不配。正式站至少要有下面那一行 cron，否则后台点「立即采集」才能跑。</p>
+<p class="hint">本机 <code>php artisan serve</code> 或 Docker 试用可以不配。正式站至少要有下面那一行，路径已按当前服务器填好。</p>
 
 <h3>推荐：上线最小配置</h3>
 <div class="code">
     <button type="button" class="copy" data-copy>复制</button>
-<pre><code>* * * * * cd /var/www/laravideo && php artisan schedule:run >> /dev/null 2>&amp;1</code></pre>
+<pre><code>{{ \App\Support\PhpCli::scheduleCronLine() }}</code></pre>
 </div>
-<p class="hint">把路径换成你的项目根。Linux 用 crontab；Windows 用任务计划程序，每分钟执行同一条 <code>php artisan schedule:run</code>。</p>
+<p class="hint">Linux / 宝塔把这一行加进计划任务，每分钟执行。Windows 用任务计划程序跑同一条命令（不要前面的 <code>* * * * *</code>）。</p>
 
 <h3>手动命令</h3>
 <div class="code">

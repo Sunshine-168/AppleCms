@@ -129,9 +129,8 @@ class SysScheduleService
      */
     public function pageBoard(): array
     {
-        $php = PHP_BINARY !== '' ? PHP_BINARY : 'php';
-        $artisan = base_path('artisan');
-        $cronLine = '* * * * * '.$php.' '.$artisan.' schedule:run';
+        $php = \App\Support\PhpCli::binary();
+        $cronLine = \App\Support\PhpCli::scheduleCronLine();
         $collectN = 0;
         try {
             if (Schema::hasTable('video_collect_tasks')) {

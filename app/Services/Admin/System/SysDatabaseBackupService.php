@@ -236,8 +236,7 @@ class SysDatabaseBackupService
         }
         $on = $task !== null && (int) ($task['status'] ?? 0) === 1;
         $lastRun = (int) ($task['last_run_time'] ?? 0);
-        $php = PHP_BINARY !== '' ? PHP_BINARY : 'php';
-        $cronLine = '* * * * * '.$php.' '.base_path('artisan').' schedule:run';
+        $cronLine = \App\Support\PhpCli::scheduleCronLine();
         $cronPresets = [
             '0 3 * * *' => admin_t('ui.cron_daily_3am'),
             '0 2 * * *' => admin_t('ui.cron_daily_2am'),

@@ -18,14 +18,14 @@
         <tr><td><code>monitor:tick</code></td><td>Every minute</td><td>Runtime samples</td></tr>
     </tbody>
 </table>
-<p class="hint"><code>php artisan serve</code> and Docker trials can skip this. Production needs the cron line below, or you only collect from the admin button.</p>
+<p class="hint"><code>php artisan serve</code> and Docker trials can skip this. Production needs the line below. Paths are filled for this server.</p>
 
 <h3>Minimum production cron</h3>
 <div class="code">
     <button type="button" class="copy" data-copy>Copy</button>
-<pre><code>* * * * * cd /var/www/laravideo && php artisan schedule:run >> /dev/null 2>&amp;1</code></pre>
+<pre><code>{{ \App\Support\PhpCli::scheduleCronLine() }}</code></pre>
 </div>
-<p class="hint">Change the path. Linux: crontab. Windows: Task Scheduler, same <code>php artisan schedule:run</code> every minute.</p>
+<p class="hint">Linux / BaoTa: run that line every minute. Windows Task Scheduler: same command without the leading <code>* * * * *</code>.</p>
 
 <h3>Manual commands</h3>
 <div class="code">
