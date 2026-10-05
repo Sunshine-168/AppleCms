@@ -39,6 +39,11 @@
         'please_fill_api' => admin_t('ui.please_fill_api'),
         'please_enable_collect' => admin_t('ui.please_enable_collect'),
         'collect_done' => admin_t('ui.collect_done'),
+        'collecting_named' => admin_t('ui.collecting_named'),
+        'collect_tip_connect' => admin_t('ui.collect_tip_connect'),
+        'collect_tip_list' => admin_t('ui.collect_tip_list'),
+        'collect_tip_save' => admin_t('ui.collect_tip_save'),
+        'collect_tip_people' => admin_t('ui.collect_tip_people'),
         'resume_done' => admin_t('ui.resume_done'),
         'retry_done' => admin_t('ui.retry_done'),
         'confirm_collect_all' => admin_t('ui.confirm_collect_all'),
@@ -283,12 +288,39 @@
         });
     }
 
+    var collectFxTimer = 0;
+    function collectTips() {
+        return [
+            L.collect_tip_connect || '正在连接资源站…',
+            L.collect_tip_list || '正在拉取片目…',
+            L.collect_tip_save || '正在写入片库…',
+            L.collect_tip_people || '正在同步演员和分类…'
+        ];
+    }
+    function startCollectFx(name) {
+        var tips = collectTips();
+        var i = 0;
+        var title = String(L.collecting_named || '正在采集「__NAME__」').replace('__NAME__', name || '');
+        if (collectFxTimer) clearInterval(collectFxTimer);
+        U.loading(true, { kind: 'collect', title: title, text: tips[0] });
+        collectFxTimer = setInterval(function () {
+            i = (i + 1) % tips.length;
+            U.loading(true, { kind: 'collect', title: title, text: tips[i] });
+        }, 1400);
+    }
+    function stopCollectFx() {
+        if (collectFxTimer) {
+            clearInterval(collectFxTimer);
+            collectFxTimer = 0;
+        }
+        U.loading(false);
+    }
     function runCollect(row, hours, pages, confirmText) {
         if (String(row.status) === '0') { U.toast(L.please_enable_collect, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
-        U.loading(true);
+        startCollectFx(row.name);
         U.post('/admin/video/collects/run', {id: row.id, page: 1, pages: pages || 999, hours: hours || 0}).then(function (res) {
-            U.loading(false);
+            stopCollectFx();
             table.refresh();
             U.toast((res && res.msg) || L.collect_done, res && res.code === 0 ? 'ok' : 'err');
         });
@@ -379,17 +411,17 @@
         if (a.classList.contains('js-week')) runCollect(row, 168, 999);
         if (a.classList.contains('js-all')) runCollect(row, 0, 999, L.confirm_collect_all);
         if (a.classList.contains('js-resume')) {
-            U.loading(true);
+            startCollectFx(row.name);
             U.post('/admin/video/collects/resume', {id: row.id, pages: 999, hours: 0}).then(function (res) {
-                U.loading(false);
+                stopCollectFx();
                 table.refresh();
                 U.toast((res && res.msg) || L.resume_done, res && res.code === 0 ? 'ok' : 'err');
             });
         }
         if (a.classList.contains('js-retry')) {
-            U.loading(true);
+            startCollectFx(row.name);
             U.post('/admin/video/collects/retry', {id: row.id}).then(function (res) {
-                U.loading(false);
+                stopCollectFx();
                 table.refresh();
                 U.toast((res && res.msg) || L.retry_done, res && res.code === 0 ? 'ok' : 'err');
             });

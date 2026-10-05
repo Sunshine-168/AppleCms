@@ -115,19 +115,41 @@
         setTimeout(function () { el.remove(); }, 2400);
     }
 
-    function loading(on) {
+    function loading(on, msg) {
         var el = document.getElementById('ui-loading');
-        if (on) {
-            if (!el) {
-                el = document.createElement('div');
-                el.id = 'ui-loading';
-                el.className = 'ui-loading';
-                el.textContent = '处理中…';
-                document.body.appendChild(el);
-            }
+        if (!on) {
+            if (el) el.remove();
             return;
         }
-        if (el) el.remove();
+        var title = '';
+        var text = '处理中…';
+        var kind = '';
+        if (typeof msg === 'string' && msg !== '') {
+            text = msg;
+        } else if (msg && typeof msg === 'object') {
+            title = String(msg.title || '');
+            text = String(msg.text || text);
+            kind = String(msg.kind || '').replace(/[^a-z0-9_-]/gi, '');
+        }
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'ui-loading';
+            el.innerHTML = '<div class="ui-loading-card">'
+                + '<span class="ui-loading-orbit" aria-hidden="true"><i></i></span>'
+                + '<strong class="ui-loading-title"></strong>'
+                + '<p class="ui-loading-text"></p>'
+                + '<div class="ui-loading-bar"><i></i></div>'
+                + '</div>';
+            document.body.appendChild(el);
+        }
+        el.className = 'ui-loading' + (kind ? ' is-' + kind : '');
+        var t = el.querySelector('.ui-loading-title');
+        var p = el.querySelector('.ui-loading-text');
+        if (t) {
+            t.textContent = title;
+            t.hidden = title === '';
+        }
+        if (p) p.textContent = text;
     }
 
     function formData(form) {

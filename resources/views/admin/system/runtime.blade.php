@@ -77,7 +77,7 @@
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
                     <button type="button" class="btn btn-muted js-copy-cron">{{ admin_t('ui.copy_cmd') }}</button>
-                    <button type="button" class="btn js-tick-now">{{ admin_t('ui.tick_now') }}</button>
+                    <a class="btn js-tick-now" href="/admin/system/runtime/tick">{{ admin_t('ui.tick_now') }}</a>
                 </div>
             </div>
         @endif
@@ -358,14 +358,15 @@
         btn.addEventListener('click', function () { copyCron(btn); });
     });
     document.querySelectorAll('.js-tick-now').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            if (!U || btn.disabled) return;
-            btn.disabled = true;
-            U.post('/admin/system/runtime/tick', {}).then(function (res) {
+        btn.addEventListener('click', function (e) {
+            if (!U || btn.getAttribute('data-busy') === '1') return;
+            e.preventDefault();
+            btn.setAttribute('data-busy', '1');
+            U.post('/admin/system/runtime/tick', { _token: U.csrf ? U.csrf() : '' }).then(function (res) {
                 if (U.toast) U.toast(U.pickMsg(res, L.tick_ok || ''));
-                window.location.reload();
+                window.location.href = '/admin/system/runtime';
             }).catch(function () {
-                btn.disabled = false;
+                window.location.href = '/admin/system/runtime/tick';
             });
         });
     });

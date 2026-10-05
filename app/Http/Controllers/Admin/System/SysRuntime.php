@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Monitor\MonitorService;
 use App\Support\Utils\Ajax;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -35,15 +36,18 @@ class SysRuntime extends Controller
         return Ajax::success($this->monitor->livePayload());
     }
 
-    public function tick(): JsonResponse
+    public function tick(Request $request): JsonResponse|RedirectResponse
     {
         $res = app(\App\Services\Monitor\MonitorTick::class)->run(0, true);
         $msg = (string) ($res['msg'] ?? '');
         if ($msg === '' || $msg === '已采集') {
             $msg = admin_t('ui.tick_ok');
         }
+        if ($request->expectsJson() || $request->ajax()) {
+            return Ajax::success(['ok' => true], $msg);
+        }
 
-        return Ajax::success(['ok' => true], $msg);
+        return redirect('/admin/system/runtime')->with('status', $msg);
     }
 
     public function saveSettings(Request $request): JsonResponse
