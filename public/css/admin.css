@@ -5990,7 +5990,7 @@ pre.out, pre.code-block {
 }
 .ui-loading-card {
     min-width: 220px;
-    max-width: 320px;
+    max-width: 420px;
     padding: 28px 32px 24px;
     border-radius: 16px;
     background: #fff;
@@ -6000,6 +6000,10 @@ pre.out, pre.code-block {
     align-items: center;
     gap: 12px;
     text-align: center;
+}
+.ui-loading.is-collect .ui-loading-card {
+    min-width: 340px;
+    padding: 24px 24px 20px;
 }
 .ui-loading-orbit {
     width: 48px;
@@ -6026,6 +6030,35 @@ pre.out, pre.code-block {
 .ui-loading-text {
     margin: 0;
     min-height: 1.4em;
+    color: var(--muted);
+}
+.ui-loading-stats {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+.ui-loading-stat {
+    flex: 1;
+    padding: 8px 6px 7px;
+    border-radius: 10px;
+    background: #f4f7fb;
+    font-size: 12px;
+    color: var(--muted);
+}
+.ui-loading-stat b {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 18px;
+    line-height: 1.2;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+.ui-loading-stat.is-created b { color: #16a34a; }
+.ui-loading-stat.is-updated b { color: #2563eb; }
+.ui-loading-stat.is-skipped b { color: #b45309; }
+.ui-loading-meta {
+    margin: 0;
+    font-size: 12px;
     color: var(--muted);
 }
 .ui-loading-bar {

@@ -168,6 +168,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
     Route::post('/video/collects/save', [Video::class, 'saveCollectSource'])->name('admin.video.collects.save');// 保存视频采集源
     Route::post('/video/collects/delete', [Video::class, 'deleteCollectSource'])->name('admin.video.collects.delete');// 删除视频采集源
     Route::get('/video/collects/classes', [Collect::class, 'classes'])->name('admin.video.collects.classes');
+    Route::get('/video/collects/progress', [Collect::class, 'progress'])->name('admin.video.collects.progress');
     Route::post('/video/collects/bind', [Collect::class, 'bind'])->name('admin.video.collects.bind');
     Route::post('/video/collects/run', [Collect::class, 'run'])->name('admin.video.collects.run');
     Route::post('/video/collects/resume', [Collect::class, 'resume']);

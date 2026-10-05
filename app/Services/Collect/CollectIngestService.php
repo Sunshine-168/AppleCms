@@ -182,8 +182,17 @@ class CollectIngestService
         $pageCount = $start;
         $lastPage = $start;
         $failMsg = '';
+        $sourcePk = (int) $source->id;
+        CollectProgress::start($sourcePk, trim((string) $source->name));
 
         for ($page = $start; $page < $start + $pages; $page++) {
+            CollectProgress::tick($sourcePk, [
+                'page' => $page,
+                'pages' => $pageCount,
+                'msg' => '正在拉取第 '.$page.' 页…',
+                'action' => 'fetch',
+                'title' => '',
+            ]);
             $query = [
                 'ac' => $ids !== '' ? 'detail' : ($this->isMangaSource($source) ? 'detail' : 'videolist'),
                 'pg' => $page,
@@ -210,12 +219,28 @@ class CollectIngestService
             if (! ($fetched['ok'] ?? false)) {
                 $failMsg = (string) $fetched['msg'];
                 $this->persistCollectState($source, $page, $created, $updated, $failMsg, false);
+                CollectProgress::finish($sourcePk, [
+                    'ok' => 0,
+                    'page' => $page,
+                    'pages' => $pageCount,
+                    'created' => $created,
+                    'updated' => $updated,
+                    'skipped' => $skipped,
+                    'msg' => $failMsg,
+                    'action' => 'fail',
+                    'title' => '',
+                ]);
 
                 return Result::fail($failMsg);
             }
             $lastPage = $page;
             $pageInfo = $fetched['page'] ?? [];
             $pageCount = (int) ($pageInfo['pagecount'] ?? $pageInfo['pageCount'] ?? $page);
+            CollectProgress::tick($sourcePk, [
+                'page' => $page,
+                'pages' => $pageCount,
+                'msg' => '第 '.$page.' 页，共 '.count($fetched['list'] ?? []).' 条',
+            ]);
             foreach ($fetched['list'] as $item) {
                 $result = $this->upsert($source, $item);
                 $logs[] = $result;
@@ -226,6 +251,16 @@ class CollectIngestService
                 } else {
                     $skipped++;
                 }
+                CollectProgress::tick($sourcePk, [
+                    'page' => $page,
+                    'pages' => $pageCount,
+                    'created' => $created,
+                    'updated' => $updated,
+                    'skipped' => $skipped,
+                    'title' => (string) ($result['title'] ?? ''),
+                    'action' => (string) ($result['action'] ?? ''),
+                    'msg' => (string) ($result['msg'] ?? ''),
+                ]);
             }
             if ($ids !== '' || ($pageCount > 0 && $page >= $pageCount)) {
                 break;
@@ -233,6 +268,17 @@ class CollectIngestService
         }
 
         $this->persistCollectState($source, $lastPage, $created, $updated, "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}", true, $skipped);
+        CollectProgress::finish($sourcePk, [
+            'ok' => 1,
+            'page' => $lastPage,
+            'pages' => $pageCount,
+            'created' => $created,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'action' => 'done',
+            'title' => '',
+            'msg' => "入库新建 {$created}，更新 {$updated}，跳过 {$skipped}",
+        ]);
 
         return AdminOpLog::ifOk(Result::success([
             'page' => $pageInfo,

@@ -101,29 +101,107 @@ class VideoPlayerModel extends Model
     public static function looksLikeHtmlPlayPage(string $url): bool
     {
         $url = trim($url);
-        if ($url === '') {
+        if ($url === '' || self::isDirectMedia($url)) {
             return false;
         }
-        if (preg_match('/\.(m3u8|mp4|webm|ogg|flv|ts)(\?|$)/i', $url)) {
-            return false;
-        }
-        if (preg_match('#/play/[A-Za-z0-9]+/?$#', $url)) {
+        if (preg_match('#/play/[A-Za-z0-9_-]+/?$#', $url)) {
             return true;
         }
 
-        return (bool) preg_match('#^https?://[^/]*(yun|play\.)#i', $url)
-            && ! preg_match('/\.(m3u8|mp4)(\?|$)/i', $url);
+        return (bool) preg_match('#^https?://[^/]*(yun|play\.)#i', $url);
+    }
+
+    public static function isDirectMedia(string $url): bool
+    {
+        return (bool) preg_match('/\.(m3u8|mp4|webm|ogg|flv|ts)(\?|$)/i', trim($url));
+    }
+
+    /**
+     * Cloud HTML pages (`/play/{id}`) usually share an HLS sibling.
+     * Playing that with ArtPlayer keeps seek / volume on our side.
+     */
+    public static function preferMediaUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '' || self::isDirectMedia($url)) {
+            return $url;
+        }
+        if (preg_match('#^(https?://[^\s]+/play/[A-Za-z0-9_-]+)/?$#i', $url, $m)) {
+            return rtrim($m[1], '/').'/index.m3u8';
+        }
+
+        return $url;
+    }
+
+    /**
+     * Lower is better. Direct HLS/MP4 beats cloud HTML pages.
+     */
+    public static function sourcePlayPriority(string $player, string $url): int
+    {
+        $player = strtolower(trim($player));
+        $url = strtolower(trim($url));
+        if (str_contains($player, 'm3u8') || preg_match('/\.m3u8(\?|$)/', $url)) {
+            return 10;
+        }
+        if (preg_match('/\.(mp4|webm|ogg)(\?|$)/', $url)) {
+            return 20;
+        }
+        if (str_contains($player, 'yun') || str_contains($player, 'iframe') || str_contains($player, 'parse') || self::looksLikeHtmlPlayPage($url)) {
+            return 80;
+        }
+
+        return 50;
+    }
+
+    /**
+     * @return array{engine:string,media:string,iframe:string,fallback:string}
+     */
+    public static function playPlan(?self $row, string $playUrl, string $rawUrl): array
+    {
+        $rawUrl = trim($rawUrl);
+        $playUrl = trim($playUrl);
+        $parse = trim((string) ($row?->parse ?? ''));
+        $hasParse = $parse !== '' && $playUrl !== '' && $playUrl !== $rawUrl;
+        if ($hasParse) {
+            return [
+                'engine' => 'iframe',
+                'media' => $playUrl,
+                'iframe' => $playUrl,
+                'fallback' => '',
+            ];
+        }
+
+        $original = $rawUrl !== '' ? $rawUrl : $playUrl;
+        $media = self::preferMediaUrl($original);
+        $engine = self::resolveEngine($row, $playUrl, $media);
+        if (self::isDirectMedia($media)) {
+            $col = strtolower(trim((string) ($row?->engine ?? '')));
+            $code = strtolower(trim((string) ($row?->code ?? '')));
+            $engine = match (true) {
+                in_array($col, ['artplayer', 'dplayer', 'videojs'], true) => $col,
+                in_array($code, ['dplayer', 'dp'], true) => 'dplayer',
+                in_array($code, ['videojs', 'video.js', 'vjs'], true) => 'videojs',
+                default => 'artplayer',
+            };
+        }
+
+        $fallback = ($media !== $original && self::looksLikeHtmlPlayPage($original)) ? $original : '';
+
+        return [
+            'engine' => $engine,
+            'media' => $engine === 'iframe' ? ($playUrl !== '' ? $playUrl : $rawUrl) : $media,
+            'iframe' => $engine === 'iframe' ? ($playUrl !== '' ? $playUrl : $rawUrl) : $fallback,
+            'fallback' => $fallback,
+        ];
     }
 
     public static function guessEngineFromUrl(string $url): string
     {
-        if (self::looksLikeHtmlPlayPage($url)) {
-            return 'iframe';
-        }
-        if (preg_match('/\.m3u8(\?|$)/i', $url)) {
+        $url = self::preferMediaUrl($url);
+        if (self::isDirectMedia($url) || ! self::looksLikeHtmlPlayPage($url)) {
             return 'artplayer';
         }
 
-        return 'artplayer';
+        return 'iframe';
     }
 }

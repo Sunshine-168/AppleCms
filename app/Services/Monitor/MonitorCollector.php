@@ -54,7 +54,7 @@ class MonitorCollector
     }
 
     /**
-     * Linux /proc/stat 可选。Windows 诚实跳过。
+     * Linux /proc/stat. Two snapshots in one tick so the first sample already has a percentage.
      *
      * @param  list<array{k:string,t:int,v:float}>  $metrics
      * @param  array<string, string>  $skipped
@@ -68,40 +68,85 @@ class MonitorCollector
                     : '没有可读的 /proc/stat';
                 return;
             }
-            $raw = @file_get_contents('/proc/stat');
-            if (! is_string($raw) || $raw === '') {
-                $skipped['sys.cpu.pct'] = '/proc/stat 读不到';
-                return;
-            }
-            $cur = self::parseProcStat($raw);
+            $cur = self::readProcCpu();
             if ($cur === null) {
                 $skipped['sys.cpu.pct'] = '/proc/stat 解析失败';
                 return;
             }
-            $now = microtime(true);
-            $cur['mode'] = 'jiffies';
-            $prevRaw = MonitorState::getVal('cpu.prev', '');
-            $prev = $prevRaw !== '' ? json_decode($prevRaw, true) : null;
-            MonitorState::set('cpu.prev', (int) $now, json_encode($cur) ?: '');
-            if (! is_array($prev) || ($prev['mode'] ?? '') !== 'jiffies') {
-                $skipped['sys.cpu.pct'] = '第一次采样，下一分钟才有 CPU 百分比';
+            $prev = self::storedProcCpu();
+            if ($prev === null || self::cpuPercent($prev, $cur) === null) {
+                if (function_exists('usleep')) {
+                    usleep(300000);
+                }
+                $again = self::readProcCpu();
+                if ($again !== null) {
+                    $prev = $cur;
+                    $cur = $again;
+                }
+            }
+            MonitorState::set('cpu.prev', time(), json_encode($cur, JSON_UNESCAPED_UNICODE) ?: '');
+            $pct = self::cpuPercent($prev, $cur);
+            if ($pct === null) {
+                $skipped['sys.cpu.pct'] = $prev === null
+                    ? '第一次采样，下一分钟才有 CPU 百分比'
+                    : 'CPU 计数没有前进';
+
                 return;
             }
-            $totalDelta = (int) $cur['total'] - (int) ($prev['total'] ?? 0);
-            $idleDelta = (int) $cur['idle'] - (int) ($prev['idle'] ?? 0);
-            if ($totalDelta <= 0) {
-                $skipped['sys.cpu.pct'] = 'CPU 计数没有前进';
-                return;
-            }
-            $pct = 100.0 * (1.0 - ($idleDelta / $totalDelta));
             $metrics[] = [
                 'k' => 'sys.cpu.pct',
                 't' => MonitorStore::TYPE_GAUGE,
-                'v' => round(min(100.0, max(0.0, $pct)), 2),
+                'v' => $pct,
             ];
         } catch (\Throwable $e) {
             $skipped['sys.cpu.pct'] = $e->getMessage();
         }
+    }
+
+    /** @return array{total:int,idle:int,mode:string}|null */
+    private static function readProcCpu(): ?array
+    {
+        $raw = @file_get_contents('/proc/stat');
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
+        $parsed = self::parseProcStat($raw);
+        if ($parsed === null) {
+            return null;
+        }
+        $parsed['mode'] = 'jiffies';
+
+        return $parsed;
+    }
+
+    /** @return array{total:int,idle:int,mode?:string}|null */
+    private static function storedProcCpu(): ?array
+    {
+        $raw = MonitorState::getVal('cpu.prev', '');
+        if ($raw === '') {
+            return null;
+        }
+        $prev = json_decode($raw, true);
+
+        return is_array($prev) ? $prev : null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $prev
+     * @param  array{total:int,idle:int,mode?:string}  $cur
+     */
+    public static function cpuPercent(?array $prev, array $cur): ?float
+    {
+        if (! is_array($prev) || ($prev['mode'] ?? '') !== 'jiffies') {
+            return null;
+        }
+        $totalDelta = (int) $cur['total'] - (int) ($prev['total'] ?? 0);
+        $idleDelta = (int) $cur['idle'] - (int) ($prev['idle'] ?? 0);
+        if ($totalDelta <= 0) {
+            return null;
+        }
+
+        return round(min(100.0, max(0.0, 100.0 * (1.0 - ($idleDelta / $totalDelta)))), 2);
     }
 
     /**

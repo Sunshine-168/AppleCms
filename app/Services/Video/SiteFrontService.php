@@ -6,6 +6,7 @@ use App\Models\Video\ActorModel;
 use App\Models\Video\VideoDownloader;
 use App\Models\Video\VideoEpisodeModel;
 use App\Models\Video\VideoModel;
+use App\Models\Video\VideoPlayerModel;
 use App\Models\Video\VideoServer;
 use App\Models\Video\VideoSourceModel;
 use App\Models\Video\VideoTagModel;
@@ -434,18 +435,8 @@ class SiteFrontService
             $player = strtolower(trim((string) ($source->player ?: $source->name ?: '')));
             $ep = $source->episodes->where('status', 1)->sortBy('episode_num')->first()
                 ?: $source->episodes->first();
-            $url = strtolower(trim((string) ($ep?->url ?? '')));
-            $score = 50;
-            if (str_contains($player, 'yun') || str_contains($player, 'iframe') || str_contains($player, 'parse')) {
-                // HTML/cloud players decode HEVC better in Chromium than raw m3u8.
-                $score = 0;
-            } elseif (str_contains($player, 'm3u8') || preg_match('/\.m3u8(\?|$)/', $url)) {
-                $score = 20;
-            } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/', $url)) {
-                $score = 10;
-            } elseif ($url !== '' && ! preg_match('/\.(m3u8|mp4|webm|ogg|flv)(\?|$)/', $url)) {
-                $score = 5;
-            }
+            $url = trim((string) ($ep?->url ?? ''));
+            $score = VideoPlayerModel::sourcePlayPriority($player, $url);
 
             return [$score, (int) ($source->sort ?? 0) * -1, (int) $source->id];
         })->values();

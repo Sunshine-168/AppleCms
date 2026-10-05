@@ -231,12 +231,10 @@ class VodController extends Controller
         if ($parser && trim((string) $parser->parse) !== '' && $rawUrl !== '') {
             $playUrl = str_replace(['{url}', '{id}'], [rawurlencode($rawUrl), (string) $id], (string) $parser->parse);
         }
-        $engine = VideoPlayerModel::resolveEngine($parser, $playUrl, $rawUrl);
-        if (preg_match('#^(https?://[^\s]+/play/[A-Za-z0-9_-]+)/index\.m3u8(?:\?.*)?$#i', $rawUrl, $m)) {
-            $playUrl = $m[1];
-            $rawUrl = $m[1];
-            $engine = 'iframe';
-        }
+        $engine = VideoPlayerModel::playPlan($parser, $playUrl, $rawUrl);
+        $playUrl = $engine['media'];
+        $rawUrl = $engine['media'];
+        $engine = $engine['engine'];
         if ($member && $payError === '' && $trysee < 1) {
             $this->interaction->recordHistory((int) $member->id, $video, (int) ($source?->id ?: 0), (int) ($episode?->id ?: 0));
         }

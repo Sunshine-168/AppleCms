@@ -138,6 +138,8 @@
                 + '<span class="ui-loading-orbit" aria-hidden="true"><i></i></span>'
                 + '<strong class="ui-loading-title"></strong>'
                 + '<p class="ui-loading-text"></p>'
+                + '<div class="ui-loading-stats" hidden></div>'
+                + '<p class="ui-loading-meta" hidden></p>'
                 + '<div class="ui-loading-bar"><i></i></div>'
                 + '</div>';
             document.body.appendChild(el);
@@ -145,11 +147,33 @@
         el.className = 'ui-loading' + (kind ? ' is-' + kind : '');
         var t = el.querySelector('.ui-loading-title');
         var p = el.querySelector('.ui-loading-text');
+        var statsEl = el.querySelector('.ui-loading-stats');
+        var metaEl = el.querySelector('.ui-loading-meta');
         if (t) {
             t.textContent = title;
             t.hidden = title === '';
         }
         if (p) p.textContent = text;
+        var stats = (msg && typeof msg === 'object' && Array.isArray(msg.stats)) ? msg.stats : [];
+        if (statsEl) {
+            if (stats.length) {
+                statsEl.hidden = false;
+                statsEl.innerHTML = stats.map(function (s) {
+                    var key = String((s && s.key) || '').replace(/[^a-z0-9_-]/gi, '');
+                    var n = (s && s.n != null) ? s.n : 0;
+                    var label = (s && s.label) || '';
+                    return '<span class="ui-loading-stat is-' + key + '"><b>' + escape(n) + '</b>' + escape(label) + '</span>';
+                }).join('');
+            } else {
+                statsEl.hidden = true;
+                statsEl.innerHTML = '';
+            }
+        }
+        var meta = (msg && typeof msg === 'object') ? String(msg.meta || '') : '';
+        if (metaEl) {
+            metaEl.textContent = meta;
+            metaEl.hidden = meta === '';
+        }
     }
 
     function formData(form) {

@@ -11,30 +11,32 @@
     @endif
     <style>
         html, body { margin:0; height:100%; background:#000; overflow:hidden; }
-        #player-shell { width:100%; height:100%; position:relative; overflow:hidden; }
+        #player-shell { width:100%; height:100%; position:relative; overflow:hidden; background:#000; }
         #vod-player {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
         }
-        #vod-player video,
-        #vod-player iframe,
-        #vod-player .video-js,
-        #vod-player .dplayer,
-        #vod-player .artplayer-app,
-        .artplayer-video-player,
-        video, iframe, .video-js, .dplayer, .artplayer-app {
-            width: 100% !important;
-            height: 100% !important;
-            max-width: 100%;
-            max-height: 100%;
+        #vod-player iframe {
+            width: 100%;
+            height: 100%;
             border: 0;
             display: block;
-            object-fit: contain;
             background: #000;
         }
-        .video-js { position:absolute; inset:0; }
+        #vod-player .art-video-player,
+        #vod-player .dplayer,
+        #vod-player .video-js {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        #vod-player .art-bottom,
+        #vod-player .art-controls,
+        #vod-player .dplayer-controller,
+        #vod-player .vjs-control-bar {
+            z-index: 20;
+        }
         .muted { color:#999; padding:20px; }
     </style>
 </head>
@@ -47,13 +49,14 @@
     $media = $engine === 'iframe'
         ? ($parsed !== '' ? $parsed : $raw)
         : ($raw !== '' ? $raw : $parsed);
+    $iframeFallback = (string) ($iframeFallback ?? '');
     $encrypt = (int) ($playEncrypt ?? 0) === 1;
     $buffer = (int) ($playBuffer ?? 5);
 @endphp
 @if($payError)
     <p class="muted">{{ $payError }}</p>
 @elseif($engine === 'iframe' && ($parsed || $raw))
-    <iframe id="vod-player" data-buffer="{{ $buffer }}" @if(!$encrypt) src="{{ $parsed !== '' ? $parsed : $raw }}" @endif allowfullscreen allow="autoplay"></iframe>
+    <iframe id="vod-player" data-buffer="{{ $buffer }}" @if(!$encrypt) src="{{ $parsed !== '' ? $parsed : $raw }}" @endif allowfullscreen allow="autoplay; fullscreen"></iframe>
 @elseif($media)
     <div id="vod-player" data-buffer="{{ $buffer }}"></div>
 @else
@@ -81,9 +84,30 @@
     var el = document.getElementById('vod-player');
     if (!el) return;
     var src = @if($encrypt) atob(@json(base64_encode($media))) @else @json($media) @endif;
+    var iframeFallback = @if($encrypt && $iframeFallback !== '') atob(@json(base64_encode($iframeFallback))) @else @json($iframeFallback) @endif;
     var engine = @json($engine);
     var kind = /\.m3u8(\?|$)/i.test(src) || /mpegurl/i.test(src) ? 'hls' : (/\.flv(\?|$)/i.test(src) ? 'flv' : 'mp4');
     var inst = null;
+    var fellBack = false;
+
+    function mountIframe(url) {
+        if (!url || fellBack) return false;
+        fellBack = true;
+        try {
+            if (inst && typeof inst.destroy === 'function') inst.destroy();
+            if (inst && typeof inst.dispose === 'function') inst.dispose();
+        } catch (e) {}
+        var shell = document.getElementById('player-shell');
+        if (!shell) return false;
+        shell.innerHTML = '';
+        var frame = document.createElement('iframe');
+        frame.id = 'vod-player';
+        frame.src = url;
+        frame.allow = 'autoplay; fullscreen';
+        frame.setAttribute('allowfullscreen', '');
+        shell.appendChild(frame);
+        return true;
+    }
 
     function customHls(video, url) {
         if (window.Hls && Hls.isSupported()) {
@@ -95,12 +119,13 @@
             });
             hls.on(Hls.Events.ERROR, function (_e, data) {
                 if (!data || !data.fatal) return;
+                try { hls.destroy(); } catch (err) {}
+                if (mountIframe(iframeFallback)) return;
                 var tip = document.createElement('p');
                 tip.className = 'muted';
                 tip.textContent = '线路加载失败，请切换到其它线路重试';
                 el.innerHTML = '';
                 el.appendChild(tip);
-                try { hls.destroy(); } catch (err) {}
             });
             hls.loadSource(url);
             hls.attachMedia(video);
@@ -137,6 +162,11 @@
         inst = new DPlayer({
             container: el,
             autoplay: true,
+            hotkey: true,
+            preload: 'auto',
+            volume: 0.8,
+            lang: 'zh-cn',
+            playbackSpeed: [0.5, 0.75, 1, 1.25, 1.5, 2],
             video: { url: src, type: kind === 'mp4' ? 'auto' : kind }
         });
         window.__vodPlayer = inst;
@@ -144,7 +174,17 @@
     }
     if (engine === 'videojs' && window.videojs) {
         el.innerHTML = '<video id="vod-vjs" class="video-js vjs-big-play-centered vjs-fill" controls playsinline></video>';
-        inst = videojs('vod-vjs', { autoplay: true, controls: true, preload: 'auto', fill: true });
+        inst = videojs('vod-vjs', {
+            autoplay: true,
+            controls: true,
+            preload: 'auto',
+            fill: true,
+            playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
+            controlBar: {
+                volumePanel: { inline: false },
+                pictureInPictureToggle: true
+            }
+        });
         var type = kind === 'hls' ? 'application/x-mpegURL' : (kind === 'flv' ? 'video/x-flv' : 'video/mp4');
         inst.src({ src: src, type: type });
         window.__vodPlayer = inst;
@@ -154,16 +194,35 @@
         inst = new Artplayer({
             container: el,
             url: src,
+            volume: 0.8,
             autoplay: true,
-            mutex: true,
+            muted: false,
+            pip: true,
+            screenshot: false,
+            setting: true,
+            loop: false,
+            flip: true,
+            playbackRate: true,
+            aspectRatio: true,
             fullscreen: true,
             fullscreenWeb: true,
-            playbackRate: true,
+            miniProgressBar: true,
+            mutex: true,
+            backdrop: true,
+            playsInline: true,
+            autoPlayback: true,
+            airplay: true,
+            hotkey: true,
+            lock: true,
+            fastForward: true,
+            autoOrientation: true,
+            lang: 'zh-cn',
             theme: '#10b981',
             type: kind === 'mp4' ? '' : kind,
             moreVideoAttr: {
                 playsInline: true,
                 'webkit-playsinline': true,
+                controls: false,
                 preload: 'auto'
             },
             customType: {
@@ -171,6 +230,9 @@
                 hls: function (video, url) { customHls(video, url); },
                 flv: function (video, url) { customFlv(video, url, 'mpegts'); }
             }
+        });
+        inst.on('error', function () {
+            mountIframe(iframeFallback);
         });
         window.__vodPlayer = inst;
         return;

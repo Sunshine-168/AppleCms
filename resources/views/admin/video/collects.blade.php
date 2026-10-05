@@ -44,6 +44,13 @@
         'collect_tip_list' => admin_t('ui.collect_tip_list'),
         'collect_tip_save' => admin_t('ui.collect_tip_save'),
         'collect_tip_people' => admin_t('ui.collect_tip_people'),
+        'collect_fx_new' => admin_t('ui.collect_fx_new'),
+        'collect_fx_upd' => admin_t('ui.collect_fx_upd'),
+        'collect_fx_skip' => admin_t('ui.collect_fx_skip'),
+        'collect_fx_page' => admin_t('ui.collect_fx_page'),
+        'collect_fx_item_new' => admin_t('ui.collect_fx_item_new'),
+        'collect_fx_item_upd' => admin_t('ui.collect_fx_item_upd'),
+        'collect_fx_item_skip' => admin_t('ui.collect_fx_item_skip'),
         'resume_done' => admin_t('ui.resume_done'),
         'retry_done' => admin_t('ui.retry_done'),
         'confirm_collect_all' => admin_t('ui.confirm_collect_all'),
@@ -289,24 +296,60 @@
     }
 
     var collectFxTimer = 0;
-    function collectTips() {
+    function collectStats(p) {
+        p = p || {};
         return [
-            L.collect_tip_connect || '正在连接资源站…',
-            L.collect_tip_list || '正在拉取片目…',
-            L.collect_tip_save || '正在写入片库…',
-            L.collect_tip_people || '正在同步演员和分类…'
+            {key: 'created', label: L.collect_fx_new || '新建', n: parseInt(p.created, 10) || 0},
+            {key: 'updated', label: L.collect_fx_upd || '更新', n: parseInt(p.updated, 10) || 0},
+            {key: 'skipped', label: L.collect_fx_skip || '跳过', n: parseInt(p.skipped, 10) || 0}
         ];
     }
-    function startCollectFx(name) {
-        var tips = collectTips();
-        var i = 0;
-        var title = String(L.collecting_named || '正在采集「__NAME__」').replace('__NAME__', name || '');
+    function collectLine(p) {
+        p = p || {};
+        var title = String(p.title || '');
+        var msg = String(p.msg || '');
+        var action = String(p.action || '');
+        if (title) {
+            var tpl = action === 'created'
+                ? (L.collect_fx_item_new || '新建「__TITLE__」')
+                : (action === 'updated'
+                    ? (L.collect_fx_item_upd || '更新「__TITLE__」')
+                    : (L.collect_fx_item_skip || '跳过「__TITLE__」'));
+            var line = String(tpl).replace('__TITLE__', title);
+            if (action === 'skipped' && msg && msg !== 'ok') line += ' · ' + msg;
+            return line;
+        }
+        return msg || L.collect_tip_connect || '正在连接资源站…';
+    }
+    function paintCollect(name, p) {
+        p = p || {};
+        var title = String(L.collecting_named || '正在采集「__NAME__」').replace('__NAME__', name || p.name || '');
+        var meta = '';
+        var page = parseInt(p.page, 10) || 0;
+        var pages = parseInt(p.pages, 10) || 0;
+        if (page > 0) {
+            meta = String(L.collect_fx_page || '第 __P__ / __N__ 页')
+                .replace('__P__', String(page))
+                .replace('__N__', pages > 0 ? String(pages) : '…');
+        }
+        U.loading(true, {
+            kind: 'collect',
+            title: title,
+            text: collectLine(p),
+            meta: meta,
+            stats: collectStats(p)
+        });
+    }
+    function startCollectFx(name, sourceId) {
+        paintCollect(name, {msg: L.collect_tip_connect || '正在连接资源站…'});
         if (collectFxTimer) clearInterval(collectFxTimer);
-        U.loading(true, { kind: 'collect', title: title, text: tips[0] });
+        if (!sourceId) return;
         collectFxTimer = setInterval(function () {
-            i = (i + 1) % tips.length;
-            U.loading(true, { kind: 'collect', title: title, text: tips[i] });
-        }, 1400);
+            U.get('/admin/video/collects/progress', {id: sourceId}).then(function (res) {
+                var p = (res && res.data) || {};
+                paintCollect(name, p);
+            });
+        }, 700);
     }
     function stopCollectFx() {
         if (collectFxTimer) {
@@ -315,12 +358,26 @@
         }
         U.loading(false);
     }
+    function finishCollectFx(name, res, fallbackMsg) {
+        var p = (res && res.data) || {};
+        var pageInfo = p.page && typeof p.page === 'object' ? p.page : {};
+        paintCollect(name, {
+            created: p.created,
+            updated: p.updated,
+            skipped: p.skipped,
+            action: (res && res.code === 0) ? 'done' : 'fail',
+            msg: (res && res.msg) || fallbackMsg || L.collect_done,
+            page: pageInfo.page || p.page || 0,
+            pages: pageInfo.pagecount || pageInfo.pageCount || 0
+        });
+        setTimeout(stopCollectFx, 900);
+    }
     function runCollect(row, hours, pages, confirmText) {
         if (String(row.status) === '0') { U.toast(L.please_enable_collect, 'err'); return; }
         if (confirmText && !U.confirm(confirmText)) return;
-        startCollectFx(row.name);
+        startCollectFx(row.name, row.id);
         U.post('/admin/video/collects/run', {id: row.id, page: 1, pages: pages || 999, hours: hours || 0}).then(function (res) {
-            stopCollectFx();
+            finishCollectFx(row.name, res, L.collect_done);
             table.refresh();
             U.toast((res && res.msg) || L.collect_done, res && res.code === 0 ? 'ok' : 'err');
         });
@@ -411,17 +468,17 @@
         if (a.classList.contains('js-week')) runCollect(row, 168, 999);
         if (a.classList.contains('js-all')) runCollect(row, 0, 999, L.confirm_collect_all);
         if (a.classList.contains('js-resume')) {
-            startCollectFx(row.name);
+            startCollectFx(row.name, row.id);
             U.post('/admin/video/collects/resume', {id: row.id, pages: 999, hours: 0}).then(function (res) {
-                stopCollectFx();
+                finishCollectFx(row.name, res, L.resume_done);
                 table.refresh();
                 U.toast((res && res.msg) || L.resume_done, res && res.code === 0 ? 'ok' : 'err');
             });
         }
         if (a.classList.contains('js-retry')) {
-            startCollectFx(row.name);
+            startCollectFx(row.name, row.id);
             U.post('/admin/video/collects/retry', {id: row.id}).then(function (res) {
-                stopCollectFx();
+                finishCollectFx(row.name, res, L.retry_done);
                 table.refresh();
                 U.toast((res && res.msg) || L.retry_done, res && res.code === 0 ? 'ok' : 'err');
             });
