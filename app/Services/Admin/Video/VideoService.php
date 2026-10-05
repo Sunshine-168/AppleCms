@@ -17,6 +17,7 @@ use App\Models\Video\VideoWebsite;
 use App\Support\AdminOpLog;
 use App\Support\AdminPage;
 use App\Support\AdminSeedLabel;
+use App\Support\PlayLineName;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Exception;
@@ -1716,6 +1717,7 @@ class VideoService
             {
                 $sid = (int)($item['id'] ?? 0);
                 $item['episode_total'] = (int)($episodeCountMap[$sid] ?? 0);
+                $item['name'] = PlayLineName::label((string) ($item['player'] ?? ''), (string) ($item['name'] ?? ''));
                 $createdTs = (int)($item['created_at'] ?? ($item['create_time'] ?? 0));
                 $updatedTs = (int)($item['updated_at'] ?? ($item['update_time'] ?? 0));
                 $item['created_at_text'] = $createdTs > 0 ? date('Y-m-d H:i:s', $createdTs) : '';

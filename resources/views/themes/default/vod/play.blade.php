@@ -3,7 +3,7 @@
 @section('content')
 @php
     $epName = trim((string) ($episode?->display_name ?? ''));
-    $lineName = trim((string) ($source?->name ?? ''));
+    $lineName = trim((string) ($source?->display_name ?? $source?->name ?? ''));
 @endphp
     @vodBreadcrumb
     <div class="play-head">
@@ -57,7 +57,7 @@
         <div class="sec-head"><h2>线路</h2></div>
         <div class="lines">
             @vodSource(['type' => 'play'])
-                <a class="{{ ($source?->id ?? 0) === $item->id ? 'on' : '' }}" href="{{ vod_url('play', ['id' => $video->id, 'sid' => $item->id]) }}">{{ $item->name }}</a>
+                <a class="{{ ($source?->id ?? 0) === $item->id ? 'on' : '' }}" href="{{ vod_url('play', ['id' => $video->id, 'sid' => $item->id]) }}">{{ $item->display_name ?? $item->name }}</a>
             @endvodSource
         </div>
     </section>

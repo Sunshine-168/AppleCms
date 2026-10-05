@@ -337,7 +337,7 @@ class ThemeTagWizardService
                     'play' => '播放',
                     'down' => '下载',
                 ], 'value' => 'play'],
-            ], [['code' => '$item->name', 'label' => '线路名'], ['code' => '$item->id', 'label' => '线路 ID']], "    <a href=\"{{ vod_url('play', ['id' => \$video->id, 'sid' => \$item->id]) }}\">{{ \$item->name }}</a>", '线路和分集只在播放页有当前片子，后台试不到。'),
+            ], [['code' => '$item->display_name', 'label' => '线路名'], ['code' => '$item->id', 'label' => '线路 ID']], "    <a href=\"{{ vod_url('play', ['id' => \$video->id, 'sid' => \$item->id]) }}\">{{ \$item->display_name }}</a>", '线路和分集只在播放页有当前片子，后台试不到。'),
             $this->untryable('vodEpisode', '分集', '当前线路的集。没有线路时会退回这部片全部集。', 'page', [
                 ['name' => 'sid', 'label' => '线路 ID', 'type' => 'number'],
             ], [['code' => '$item->display_name', 'label' => '集名'], ['code' => '$item->play_url', 'label' => '播放地址']], "    <a href=\"{{ \$item->play_url }}\">{{ \$item->display_name }}</a>", '线路和分集只在播放页有当前片子，后台试不到。'),

@@ -120,7 +120,7 @@ class ProvideController extends Controller
         $urls = [];
         if ($detail) {
             foreach ($video->sources as $source) {
-                $froms[] = $source->name;
+                $froms[] = trim((string) ($source->player ?: $source->getRawOriginal('name') ?: $source->name));
                 $eps = [];
                 foreach ($source->episodes as $ep) {
                     $eps[] = $ep->display_name.'$'.$ep->url;

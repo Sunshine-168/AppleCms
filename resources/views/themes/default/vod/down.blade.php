@@ -11,7 +11,7 @@
         <div class="sec-head"><h2>线路</h2></div>
         <div class="lines">
             @vodSource(['type' => 'down'])
-                <a class="{{ ($source?->id ?? 0) === $item->id ? 'on' : '' }}" href="{{ vod_url('down', ['id' => $video->id, 'sid' => $item->id]) }}">{{ $item->name }}</a>
+                <a class="{{ ($source?->id ?? 0) === $item->id ? 'on' : '' }}" href="{{ vod_url('down', ['id' => $video->id, 'sid' => $item->id]) }}">{{ $item->display_name ?? $item->name }}</a>
             @endvodSource
         </div>
     </section>
@@ -19,7 +19,7 @@
     @php $groups = $downSources ?? collect(); @endphp
     @forelse($groups as $item)
         <section class="play-panel">
-            <div class="sec-head"><h2>{{ $item->name }}</h2></div>
+            <div class="sec-head"><h2>{{ $item->display_name ?? $item->name }}</h2></div>
             <div class="eps">
                 @foreach($item->episodes as $ep)
                     <a href="{{ $ep->down_url ?? $ep->url }}" target="_blank" rel="nofollow">{{ $ep->display_name }}</a>

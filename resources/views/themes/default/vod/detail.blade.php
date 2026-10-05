@@ -92,7 +92,7 @@
         <div class="sec-head"><h2>播放线路</h2></div>
         @vodSource(['type' => 'play'])
             <div class="source-block play-panel">
-                <h3 class="source-name">{{ $item->name }}</h3>
+                <h3 class="source-name">{{ $item->display_name ?? $item->name }}</h3>
                 <div class="eps">
                     @foreach($item->episodes as $ep)
                         <a href="{{ $ep->play_url }}">{{ $ep->display_name }}</a>
@@ -102,7 +102,7 @@
         @endvodSource
         @vodSource(['type' => 'down'])
             <div class="source-block play-panel">
-                <h3 class="source-name">下载 · {{ $item->name }}</h3>
+                <h3 class="source-name">下载 · {{ $item->display_name ?? $item->name }}</h3>
                 <div class="eps">
                     @foreach($item->episodes as $ep)
                         <a href="{{ $ep->url }}" target="_blank" rel="nofollow">{{ $ep->display_name }}</a>

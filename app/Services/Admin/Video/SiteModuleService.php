@@ -5084,7 +5084,7 @@ class SiteModuleService
             $episode = $episodes[$eid] ?? null;
             $sourceStatus = $source ? (int) $source->status : -1;
             $row['video_title'] = (string) ($titles[$vid] ?? '');
-            $row['source_name'] = $source ? (string) $source->name : '';
+            $row['source_name'] = $source ? (string) $source->display_name : '';
             $row['source_player'] = $source ? (string) $source->player : '';
             $row['source_status'] = $sourceStatus;
             $row['episode_label'] = $episode ? (string) $episode->display_name : ($eid > 0 ? admin_t('ui.ep_hash', ['id' => $eid]) : '');

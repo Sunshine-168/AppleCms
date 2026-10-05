@@ -150,7 +150,7 @@ class AppApi
 
         return [
             'id' => (int) $source->id,
-            'name' => (string) $source->name,
+            'name' => (string) $source->display_name,
             'type' => (string) ($source->type ?: 'play'),
             'player' => (string) ($source->player ?? ''),
             'episodes' => $episodes->map(fn ($ep) => self::episode($ep, false))->values()->all(),

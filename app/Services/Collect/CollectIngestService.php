@@ -12,6 +12,7 @@ use App\Models\Video\VideoStatModel;
 use App\Models\Video\VideoTypeModel;
 use App\Services\Video\SynonymService;
 use App\Support\AdminOpLog;
+use App\Support\PlayLineName;
 use App\Support\Utils\Result;
 use App\Support\VideoMeta;
 use Illuminate\Support\Facades\DB;
@@ -459,10 +460,22 @@ class CollectIngestService
     private function mergePlay(VideoModel $video, string $from, string $url, int $now, string $kind = 'play'): void
     {
         foreach ($this->parser->parse($from, $url) as $group) {
-            $name = $kind === 'down' ? ('下载-'.$group['name']) : $group['name'];
+            $code = trim((string) ($group['name'] ?? ''));
+            if ($code === '') {
+                continue;
+            }
+            $label = PlayLineName::guess($code);
+            $name = $kind === 'down' ? ('下载-'.$label) : $label;
             $source = VideoSourceModel::query()
                 ->where('video_id', $video->id)
-                ->where('name', $name)
+                ->where(function ($q) use ($code, $name, $kind) {
+                    $q->where('player', $code)
+                        ->orWhere('name', $code)
+                        ->orWhere('name', $name);
+                    if ($kind === 'down') {
+                        $q->orWhere('name', '下载-'.$code);
+                    }
+                })
                 ->first();
             if (! $source) {
                 $source = new VideoSourceModel();
@@ -470,15 +483,30 @@ class CollectIngestService
                     'video_id' => $video->id,
                     'name' => $name,
                     'type' => $kind === 'down' ? 'down' : 'play',
-                    'player' => $group['name'],
+                    'player' => $code,
                     'status' => 1,
                     'sort' => $kind === 'down' ? 0 : 10,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
                 $source->save();
+            } else {
+                $dirty = false;
+                if ((string) $source->player !== $code) {
+                    $source->player = $code;
+                    $dirty = true;
+                }
+                $stored = (string) $source->name;
+                if (PlayLineName::isFlag($stored) || $stored === $code || $stored === '下载-'.$code) {
+                    $source->name = $name;
+                    $dirty = true;
+                }
+                if ($dirty) {
+                    $source->updated_at = $now;
+                    $source->save();
+                }
             }
-            $this->ensurePlayerCode((string) $group['name']);
+            $this->ensurePlayerCode($code);
             foreach ($group['episodes'] as $ep) {
                 $exists = VideoEpisodeModel::query()
                     ->where('source_id', $source->id)
@@ -521,12 +549,20 @@ class CollectIngestService
         if ($code === '' || ! Schema::hasTable('video_players')) {
             return;
         }
-        if (VideoPlayerModel::query()->where('code', $code)->exists()) {
+        $label = PlayLineName::guess($code);
+        $existing = VideoPlayerModel::query()->where('code', $code)->first();
+        if ($existing) {
+            if (PlayLineName::isFlag((string) $existing->name) || (string) $existing->name === $code) {
+                $existing->name = $label;
+                $existing->save();
+                PlayLineName::remember($code, $label);
+            }
+
             return;
         }
         $row = [
             'code' => $code,
-            'name' => $code,
+            'name' => $label,
             'parse' => '',
             'sort' => 0,
             'status' => 1,
@@ -541,6 +577,7 @@ class CollectIngestService
             $row['engine'] = $engine;
         }
         VideoPlayerModel::query()->create($row);
+        PlayLineName::remember($code, $label);
     }
 
     /** @param  array<string, mixed>  $item */

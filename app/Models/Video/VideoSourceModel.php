@@ -2,6 +2,7 @@
 
 namespace App\Models\Video;
 
+use App\Support\PlayLineName;
 use App\Support\QueryCacheTrait;
 use App\Support\QueryTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -14,8 +15,17 @@ class VideoSourceModel extends Model
     protected $primaryKey = 'id';
     public $timestamps = false;
     protected $guarded = [];
+    protected $appends = ['display_name'];
 
     use QueryTrait, QueryCacheTrait;
+
+    public function getDisplayNameAttribute(): string
+    {
+        $player = (string) ($this->attributes['player'] ?? '');
+        $name = (string) ($this->attributes['name'] ?? '');
+
+        return PlayLineName::label($player, $name);
+    }
 
     public function video(): BelongsTo
     {

@@ -22,6 +22,9 @@ class SourceTag
             ->when(($options['type'] ?? '') === 'play', fn ($q) => $q->where(function ($w) {
                 $w->where('type', 'play')->orWhere('type', 'm3u8')->orWhere('type', '')->orWhereNull('type');
             }))
-            ->get();
+            ->get()
+            ->each(function ($row) {
+                $row->setAttribute('name', $row->display_name);
+            });
     }
 }
