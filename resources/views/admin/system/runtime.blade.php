@@ -36,6 +36,8 @@
         'please_fill_threshold' => admin_t('ui.please_fill_threshold'),
         'no_result' => admin_t('ui.no_result'),
         'ack_ok' => admin_t('ui.ack_ok'),
+        'tick_now' => admin_t('ui.tick_now'),
+        'tick_ok' => admin_t('ui.tick_ok'),
     ];
 @endphp
 
@@ -71,10 +73,11 @@
 
         @if(!empty($heartbeat_dead) && in_array($desk, ['perf', 'live', 'settings'], true))
             <div class="runtime-dead">
-                <p>{{ admin_t('ui.cron_dead_before') }}<a href="/admin/system/tools/schedule">{{ admin_t('page.schedule') }}</a>{{ admin_t('ui.cron_dead_after') }}<code>schedule:run</code>{{ admin_t('ui.cron_dead_end') }}</p>
+                <p>{{ admin_t('ui.cron_dead_before') }}{{ admin_t('ui.cron_dead_after') }}「{{ admin_t('ui.tick_now') }}」{{ admin_t('ui.cron_dead_end') }}</p>
                 <div class="runtime-cron">
                     <code class="js-runtime-cron" data-cron="{{ $cron_line ?? '' }}">{{ $cron_line ?? '' }}</code>
                     <button type="button" class="btn btn-muted js-copy-cron">{{ admin_t('ui.copy_cmd') }}</button>
+                    <button type="button" class="btn js-tick-now">{{ admin_t('ui.tick_now') }}</button>
                 </div>
             </div>
         @endif
@@ -353,6 +356,18 @@
     }
     document.querySelectorAll('.js-copy-cron').forEach(function (btn) {
         btn.addEventListener('click', function () { copyCron(btn); });
+    });
+    document.querySelectorAll('.js-tick-now').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!U || btn.disabled) return;
+            btn.disabled = true;
+            U.post('/admin/system/runtime/tick', {}).then(function (res) {
+                if (U.toast) U.toast(U.pickMsg(res, L.tick_ok || ''));
+                window.location.reload();
+            }).catch(function () {
+                btn.disabled = false;
+            });
+        });
     });
 
     if (!U) return;

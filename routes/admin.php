@@ -290,6 +290,7 @@ Route::middleware([AdminIpAllow::class, AdminOperateLog::class, AdminAuth::class
         Route::get('/', 'index');
         Route::get('/series', 'series');
         Route::get('/live', 'live');
+        Route::post('/tick', 'tick');
         Route::post('/settings', 'saveSettings');
         Route::post('/rules/save', 'saveRule');
         Route::post('/rules/status', 'updateRuleStatus');

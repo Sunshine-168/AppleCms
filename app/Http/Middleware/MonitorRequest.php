@@ -52,7 +52,7 @@ class MonitorRequest
         if ($path === '//' || $path === '') {
             $path = '/';
         }
-        if ($path === '/admin/system/runtime/series' || $path === '/admin/system/runtime/live') {
+        if ($path === '/admin/system/runtime/series' || $path === '/admin/system/runtime/live' || $path === '/admin/system/runtime/tick') {
             return true;
         }
         if (str_starts_with($path, '/admin/system/runtime/series') || str_starts_with($path, '/admin/system/runtime/live')) {

@@ -35,6 +35,17 @@ class SysRuntime extends Controller
         return Ajax::success($this->monitor->livePayload());
     }
 
+    public function tick(): JsonResponse
+    {
+        $res = app(\App\Services\Monitor\MonitorTick::class)->run(0, true);
+        $msg = (string) ($res['msg'] ?? '');
+        if ($msg === '' || $msg === '已采集') {
+            $msg = admin_t('ui.tick_ok');
+        }
+
+        return Ajax::success(['ok' => true], $msg);
+    }
+
     public function saveSettings(Request $request): JsonResponse
     {
         $res = $this->monitor->saveSettings($request->all());

@@ -47,6 +47,8 @@ class RuntimeMonitorTest extends TestCase
         $this->assertStringContainsString('>异常访问<', $html);
         $this->assertStringContainsString('跟计划任务同一条 crontab', $html);
         $this->assertStringContainsString('/admin/system/runtime?desk=live', $html);
+        $this->assertStringContainsString('立刻采一次', $html);
+        $this->assertStringContainsString('js-tick-now', $html);
         $this->assertStringNotContainsString('>刷新<', $html);
         $this->assertStringNotContainsString('一键封', $html);
         $this->assertStringNotContainsString('钉钉', $html);
