@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__.'/../app/Support/helpers.php';
+require_once __DIR__.'/../app/Support/PcntlScheduleStub.php';
 
 use App\Models\System\SysScheduleModel;
 use App\Services\Admin\System\SysScheduleService;
@@ -36,9 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('video:hits-reset')->dailyAt('00:05')->timezone(config('app.timezone', 'Asia/Shanghai'));
         $schedule->command('stats:prune')->dailyAt('03:20')->timezone(config('app.timezone', 'Asia/Shanghai'));
-        $schedule->command('video:collect-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
-        $schedule->command('video:publish-due')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
-        $schedule->command('monitor:tick')->everyMinute()->withoutOverlapping()->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('video:collect-due')->everyMinute()->withoutOverlapping(10)->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('video:publish-due')->everyMinute()->withoutOverlapping(10)->timezone(config('app.timezone', 'Asia/Shanghai'));
+        $schedule->command('monitor:tick')->everyMinute()->withoutOverlapping(5)->timezone(config('app.timezone', 'Asia/Shanghai'));
 
         try {
             if (!Schema::hasTable('sys_schedule'))

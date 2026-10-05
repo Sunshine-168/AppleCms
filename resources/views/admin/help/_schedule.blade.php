@@ -25,7 +25,7 @@
     <button type="button" class="copy" data-copy>复制</button>
 <pre><code>{{ \App\Support\PhpCli::scheduleCronLine() }}</code></pre>
 </div>
-<p class="hint">Linux / 宝塔把这一行加进计划任务，每分钟执行。Windows 用任务计划程序跑同一条命令（不要前面的 <code>* * * * *</code>）。</p>
+<p class="hint">Linux / 宝塔把这一行加进计划任务，每分钟执行。Windows 用任务计划程序跑同一条命令（不要前面的 <code>* * * * *</code>）。若日志出现 <code>pcntl_signal</code>，是 PHP CLI 把该函数禁了；本程序已兼容，把站点文件更新后再跑 <code>schedule:run</code> 即可。</p>
 
 <h3>手动命令</h3>
 <div class="code">

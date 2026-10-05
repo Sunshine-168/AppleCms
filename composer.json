@@ -32,7 +32,8 @@
             "Plugins\\": "plugins/"
         },
         "files": [
-            "app/Support/helpers.php"
+            "app/Support/helpers.php",
+            "app/Support/PcntlScheduleStub.php"
         ]
     },
     "autoload-dev": {
