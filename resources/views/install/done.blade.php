@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>安装完成</title>
+    <title>安装完毕</title>
     <link rel="stylesheet" href="{{ asset('css/install.css') }}?v={{ @filemtime(public_path('css/install.css')) ?: '1' }}">
 </head>
 <body>
@@ -12,8 +12,8 @@
     <div class="card" style="display:block">
         <div class="done">
             <div class="mark">✓</div>
-            <h1>{{ $siteName }} 已经装好</h1>
-            <p class="muted">用刚才设置的密码登录后台。</p>
+            <h1>安装完毕</h1>
+            <p class="muted"><strong>{{ $siteName }}</strong> 可以使用了。请用刚才设置的密码登录后台。</p>
             <p class="account">后台账号 <strong>{{ $username }}</strong></p>
             @if($demo)
                 <p class="hint">已写入默认分类和示例影片。采集资源前，先在「采集资源」里绑定分类。</p>

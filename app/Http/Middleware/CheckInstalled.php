@@ -11,6 +11,17 @@ class CheckInstalled
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // 安装过程把会话固定成文件。锁写出后完成页若改回数据库会话，就读不到结果。
+        if (
+            ($request->is('install') || $request->is('install/*'))
+            && config('session.driver') !== 'array'
+        ) {
+            $sessionDir = storage_path('framework/sessions');
+            config([
+                'session.driver' => (is_dir($sessionDir) && is_writable($sessionDir)) ? 'file' : 'cookie',
+            ]);
+        }
+
         if (
             $request->is('install')
             || $request->is('install/*')

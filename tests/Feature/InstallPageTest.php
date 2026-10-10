@@ -112,8 +112,38 @@ class InstallPageTest extends TestCase
             'demo' => false,
         ]])->get('/install/done')
             ->assertOk()
-            ->assertSee('已经装好')
+            ->assertSee('安装完毕')
             ->assertSee('上线部署说明')
             ->assertSee('/install?way=deploy');
+    }
+
+    public function test_fresh_finish_retry_opens_done_page(): void
+    {
+        $lock = storage_path('app/install.lock');
+        file_put_contents($lock, 'installed_at='.date('c'));
+
+        $this->postJson('/install/task', [
+            'phase' => 'finish',
+            'site_name' => '重试站',
+            'admin_name' => 'admin',
+        ])->assertOk()->assertJsonPath('ok', true);
+
+        $this->get('/install/done')
+            ->assertOk()
+            ->assertSee('安装完毕')
+            ->assertSee('重试站');
+    }
+
+    public function test_old_lock_still_rejects_finish(): void
+    {
+        $lock = storage_path('app/install.lock');
+        file_put_contents($lock, 'installed_at=old');
+        touch($lock, time() - 600);
+
+        $this->postJson('/install/task', [
+            'phase' => 'finish',
+            'site_name' => '重试站',
+            'admin_name' => 'admin',
+        ])->assertStatus(422)->assertJsonPath('message', '已经安装过了');
     }
 }

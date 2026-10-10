@@ -95,10 +95,16 @@ class InstallController extends Controller
 
     public function task(Request $request): JsonResponse
     {
+        $phase = (string) $request->input('phase');
         if ($this->install->locked() && ! $request->session()->get('install.running')) {
+            if ($phase === 'finish' && $this->lockIsFresh()) {
+                $this->flashDone($request);
+
+                return response()->json(['ok' => true]);
+            }
+
             return response()->json(['ok' => false, 'message' => '已经安装过了'], 422);
         }
-        $phase = (string) $request->input('phase');
         $payload = $this->payload($request);
         try {
             if ($phase === 'prepare') {
@@ -178,10 +184,18 @@ class InstallController extends Controller
 
     private function flashDone(Request $request): void
     {
-        $request->session()->flash('install_done', [
+        $request->session()->put('install_done', [
             'username' => (string) $request->input('admin_name', 'admin'),
             'site_name' => (string) $request->input('site_name', 'LaraVideo'),
             'demo' => $request->boolean('seed_demo'),
         ]);
+    }
+
+    private function lockIsFresh(): bool
+    {
+        $path = $this->install->lockPath();
+        $mtime = is_file($path) ? filemtime($path) : false;
+
+        return $mtime !== false && (time() - $mtime) < 120;
     }
 }
